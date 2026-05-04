@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Student {
+  id          String   @id @default(uuid())
+  fullName    String   @map("full_name")
+  email       String   @unique
+  phoneNumber String?  @map("phone_number")
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([status])
+  @@map("students")
+}
+
+model University {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  status    String    @default("active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  colleges  College[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("universities")
+}
+
+model College {
+  id              String     @id @default(uuid())
+  universityId    String     @map("university_id")
+  name            String
+  slug            String     @unique
+  domain          String?
+  status          String     @default("active")
+  profileSections Json?      @map("profile_sections")
+  settings        Json?
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  university      University @relation(fields: [universityId], references: [id])
+
+  @@index([universityId])
+  @@index([slug])
+  @@index([status])
+  @@map("colleges")
+}
