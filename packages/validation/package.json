@@ -1,0 +1,27 @@
+{
+  "name": "@beaconu/validation",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
