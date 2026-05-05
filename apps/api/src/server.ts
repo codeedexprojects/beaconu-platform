@@ -29,7 +29,9 @@ async function startServer(): Promise<void> {
   process.on('SIGINT', () => void shutdown('SIGINT'))
 }
 
-startServer().catch((error) => {
-  console.error('Failed to start server:', error)
-  process.exit(1)
-})
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer().catch((error) => {
+    console.error('Failed to start server:', error)
+    process.exit(1)
+  })
+}
