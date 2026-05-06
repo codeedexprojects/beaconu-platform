@@ -7,11 +7,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================================
@@ -19,60 +19,63 @@ datasource db {
 // ============================================================
 
 model Student {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName          String    @map("full_name") @db.VarChar(255)
-  email             String?   @unique @db.VarChar(255)
-  phoneCountryCode  String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
-  phoneNumber       String?   @map("phone_number") @db.VarChar(15)
-  avatarUrl         String?   @map("avatar_url") @db.Text
-  passwordHash      String?   @map("password_hash") @db.Text
-  googleId          String?   @unique @map("google_id") @db.VarChar(255)
-  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
-  isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
-  source            String    @default("beaconu_app") @db.VarChar(30)
-  status            String    @default("active") @db.VarChar(20)
-  profileMetadata   Json      @default("{}") @map("profile_metadata")
-  lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName         String    @map("full_name") @db.VarChar(255)
+  email            String?   @unique @db.VarChar(255)
+  phoneCountryCode String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
+  phoneNumber      String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl        String?   @map("avatar_url") @db.Text
+  passwordHash     String?   @map("password_hash") @db.Text
+  googleId         String?   @unique @map("google_id") @db.VarChar(255)
+  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
+  isPhoneVerified  Boolean   @default(false) @map("is_phone_verified")
+  source           String    @default("beaconu_app") @db.VarChar(30)
+  status           String    @default("active") @db.VarChar(20)
+  profileMetadata  Json      @default("{}") @map("profile_metadata")
+  lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  studentLead           StudentLead?
-  applications          Application[]
+  studentLead             StudentLead?
+  applications            Application[]
   // applicationDocuments verified by student: resolved at app layer (see ApplicationDocument.verifiedBy)
-  enrollments           Enrollment[]
-  seatCancellations     SeatCancellation[]
-  courseSwitchRequests  CourseSwitchRequest[]
-  assessmentAttempts    AssessmentAttempt[]
-  assessmentReschedules AssessmentReschedule[]
-  interviewBookings     InterviewBooking[]
-  interviewReschedules  InterviewReschedule[]
-  offerLetters          OfferLetter[]
-  transactions          Transaction[]
+  enrollments             Enrollment[]
+  seatCancellations       SeatCancellation[]
+  courseSwitchRequests    CourseSwitchRequest[]
+  assessmentAttempts      AssessmentAttempt[]
+  assessmentReschedules   AssessmentReschedule[]
+  interviewBookings       InterviewBooking[]
+  interviewReschedules    InterviewReschedule[]
+  offerLetters            OfferLetter[]
+  transactions            Transaction[]
   scholarshipApplications ScholarshipApplication[]
-  collegeReviews        CollegeReview[]
-  eventRegistrations    EventRegistration[]
-  counsellingSessions   CounsellingSession[]
-  hostelEnrollments     HostelEnrollment[]
-  hostelWishlists       HostelWishlist[]
-  hostelReviews         HostelReview[]
-  commuteEnrollments    CommuteEnrollment[]
-  commuteRideHistory    CommuteRideHistory[]
-  blinkUsersLinked      BlinkUser[]           @relation("LinkedStudent")
-  referrals             Referral[]
-  communities           CommunityMember[]
-  communityPosts        CommunityPost[]
-  communityPostVotes    CommunityPostVote[]
-  communityComments     CommunityComment[]
-  squadSearches         SquadSearch[]
-  beaconuCard           BeaconuCard?
-  studentBankAccounts   StudentBankAccount[]
-  studentWalletTxns     StudentWalletTransaction[]
-  antiRaggingComplaints AntiRaggingComplaint[]
-  supportTickets        SupportTicket[]
-  documentRequests      DocumentRequest[]
-  issuedDocs            IssuedDocument[]
-  campusVisits          CampusVisit[]
+  collegeReviews          CollegeReview[]
+  eventRegistrations      EventRegistration[]
+  counsellingSessions     CounsellingSession[]
+  hostelEnrollments       HostelEnrollment[]
+  hostelWishlists         HostelWishlist[]
+  hostelReviews           HostelReview[]
+  commuteEnrollments      CommuteEnrollment[]
+  commuteRideHistory      CommuteRideHistory[]
+  blinkUsersLinked        BlinkUser[]                @relation("LinkedStudent")
+  referrals               Referral[]
+  communities             CommunityMember[]
+  communityPosts          CommunityPost[]
+  communityPostVotes      CommunityPostVote[]
+  communityComments       CommunityComment[]
+  squadSearches           SquadSearch[]
+  beaconuCard             BeaconuCard?
+  studentBankAccounts     StudentBankAccount[]
+  studentWalletTxns       StudentWalletTransaction[]
+  antiRaggingComplaints   AntiRaggingComplaint[]
+  supportTickets          SupportTicket[]
+  documentRequests        DocumentRequest[]
+  issuedDocs              IssuedDocument[]
+  campusVisits            CampusVisit[]
+  studentFeeLedgers       StudentFeeLedger[]
+  paymentReceipts         PaymentReceipt[]
+  refunds                 Refund[]
 
   @@unique([phoneCountryCode, phoneNumber], name: "uq_students_phone")
   @@index([email], name: "idx_students_email")
@@ -95,27 +98,27 @@ model PlatformAdmin {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  studentLeadsAssigned StudentLead[] @relation("AssignedAdmin")
-  newsAlerts        NewsAlert[]
-  entranceExams     EntranceExam[]
-  blogs             Blog[]          @relation("BlogReviewer")
+  studentLeadsAssigned StudentLead[]  @relation("AssignedAdmin")
+  newsAlerts           NewsAlert[]
+  entranceExams        EntranceExam[]
+  blogs                Blog[]         @relation("BlogReviewer")
 
   @@map("platform_admins")
 }
 
 model CollegeRole {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId    String    @map("college_id") @db.Uuid
-  name         String    @db.VarChar(100)
-  slug         String    @db.VarChar(50)
-  isSystemRole Boolean   @default(false) @map("is_system_role")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId    String   @map("college_id") @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college     College               @relation(fields: [collegeId], references: [id])
-  permissions CollegeRolePermission[]
+  college      College                 @relation(fields: [collegeId], references: [id])
+  permissions  CollegeRolePermission[]
   staffMembers StaffMember[]
 
   @@unique([collegeId, slug], name: "uq_college_role_slug")
@@ -154,30 +157,30 @@ model StaffMember {
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college         College     @relation(fields: [collegeId], references: [id])
-  collegeRole     CollegeRole @relation(fields: [collegeRoleId], references: [id])
-  inviter         StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
-  invitees        StaffMember[] @relation("StaffInviter")
+  college     College       @relation(fields: [collegeId], references: [id])
+  collegeRole CollegeRole   @relation(fields: [collegeRoleId], references: [id])
+  inviter     StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
+  invitees    StaffMember[] @relation("StaffInviter")
 
-  interviewSlots          InterviewSlot[]          @relation("InterviewerStaff")
-  interviewBookingsEval   InterviewBooking[]        @relation("EvaluatedByStaff")
-  interviewRescheduleReviews InterviewReschedule[]  @relation("IRescheduleReviewer")
-  offerLettersIssued      OfferLetter[]             @relation("IssuedByStaff")
-  assessmentRescheduleReviews AssessmentReschedule[] @relation("ARescheduleReviewer")
-  studentAnswersEval      StudentAnswer[]
-  scholarshipAppReviews   ScholarshipApplication[]
-  seatCancellationProcs   SeatCancellation[]
-  courseSwitchProcs       CourseSwitchRequest[]     @relation("ProcessedBySwitchStaff")
-  documentVerifications   ApplicationDocument[]     @relation("VerifiedByStaff")
-  docRequestsAssigned     DocumentRequest[]         @relation("AssignedStaff")
-  docRequestsProcessed    DocumentRequest[]         @relation("ProcessedByStaff")
-  issuedDocuments         IssuedDocument[]
-  transactionsVerified    Transaction[]
-  refundsProcessed        Refund[]
-  antiRaggingAssigned     AntiRaggingComplaint[]
-  supportTicketsAssigned  SupportTicket[]
-  announcements           Announcement[]
-  blinkUsersCreated       BlinkUser[]               @relation("CreatedByStaff")
+  interviewSlots              InterviewSlot[]          @relation("InterviewerStaff")
+  interviewBookingsEval       InterviewBooking[]       @relation("EvaluatedByStaff")
+  interviewRescheduleReviews  InterviewReschedule[]    @relation("IRescheduleReviewer")
+  offerLettersIssued          OfferLetter[]            @relation("IssuedByStaff")
+  assessmentRescheduleReviews AssessmentReschedule[]   @relation("ARescheduleReviewer")
+  studentAnswersEval          StudentAnswer[]
+  scholarshipAppReviews       ScholarshipApplication[]
+  seatCancellationProcs       SeatCancellation[]
+  courseSwitchProcs           CourseSwitchRequest[]    @relation("ProcessedBySwitchStaff")
+  documentVerifications       ApplicationDocument[]    @relation("VerifiedByStaff")
+  docRequestsAssigned         DocumentRequest[]        @relation("AssignedStaff")
+  docRequestsProcessed        DocumentRequest[]        @relation("ProcessedByStaff")
+  issuedDocuments             IssuedDocument[]
+  transactionsVerified        Transaction[]
+  refundsProcessed            Refund[]
+  antiRaggingAssigned         AntiRaggingComplaint[]
+  supportTicketsAssigned      SupportTicket[]
+  announcements               Announcement[]
+  blinkUsersCreated           BlinkUser[]              @relation("CreatedByStaff")
 
   @@unique([email, collegeId], name: "uq_staff_email_college")
   @@index([collegeId], name: "idx_staff_college")
@@ -188,13 +191,13 @@ model StaffMember {
 }
 
 model BlinkRole {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String    @db.VarChar(100)
-  slug         String    @unique @db.VarChar(50)
-  isSystemRole Boolean   @default(false) @map("is_system_role")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @unique @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   blinkUsers BlinkUser[]
@@ -211,15 +214,18 @@ model BlinkUser {
   fullName          String    @map("full_name") @db.VarChar(255)
   email             String    @unique @db.VarChar(255)
   passwordHash      String    @map("password_hash") @db.Text
+  phoneCountryCode  String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
   phoneNumber       String?   @map("phone_number") @db.VarChar(15)
+  country           String?   @db.VarChar(100)
   avatarUrl         String?   @map("avatar_url") @db.Text
   ambassadorType    String?   @map("ambassador_type") @db.VarChar(20)
   agencyName        String?   @map("agency_name") @db.VarChar(255)
-  agencyRegNumber   String?   @map("agency_reg_number") @db.VarChar(100)
+  agencyRegNumber   String?   @unique @map("agency_reg_number") @db.VarChar(100)
   status            String    @default("active") @db.VarChar(20)
   createdByStaffId  String?   @map("created_by_staff_id") @db.Uuid
   profileMetadata   Json      @default("{}") @map("profile_metadata")
   lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -231,13 +237,13 @@ model BlinkUser {
   linkedStudent   Student?     @relation("LinkedStudent", fields: [linkedStudentId], references: [id])
   createdByStaff  StaffMember? @relation("CreatedByStaff", fields: [createdByStaffId], references: [id])
 
-  referralCodes      ReferralCode[]
-  referrals          Referral[]
-  commissions        Commission[]
-  blinkWallet        BlinkWallet?
-  blinkWalletTxns    BlinkWalletTransaction[]
-  campusVisitsManaged CampusVisit[]           @relation("AmbassadorVisits")
-  campusVisitsReassigned CampusVisit[]        @relation("ReassignedFrom")
+  referralCodes          ReferralCode[]
+  referrals              Referral[]
+  commissions            Commission[]
+  blinkWallet            BlinkWallet?
+  blinkWalletTxns        BlinkWalletTransaction[]
+  campusVisitsManaged    CampusVisit[]            @relation("AmbassadorVisits")
+  campusVisitsReassigned CampusVisit[]            @relation("ReassignedFrom")
 
   @@index([blinkRoleId], name: "idx_blink_role")
   @@index([collegeId], name: "idx_blink_college")
@@ -263,9 +269,10 @@ model Counsellor {
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  availability        CounsellorAvailability[]
-  sessions            CounsellingSession[]
-  wallet              CounsellorWallet?
+  availability                 CounsellorAvailability[]
+  sessions                     CounsellingSession[]
+  wallet                       CounsellorWallet?
+  counsellorWalletTransactions CounsellorWalletTransaction[]
 
   @@index([counsellorType], name: "idx_counsellors_type")
   @@index([status], name: "idx_counsellors_status")
@@ -273,16 +280,16 @@ model Counsellor {
 }
 
 model UserSession {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userType     String    @map("user_type") @db.VarChar(20)
-  userId       String    @map("user_id") @db.Uuid
-  refreshToken String    @unique @map("refresh_token") @db.Text
-  deviceInfo   Json      @default("{}") @map("device_info")
-  ipAddress    String?   @map("ip_address") @db.Inet
-  isActive     Boolean   @default(true) @map("is_active")
-  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
-  lastActiveAt DateTime  @default(now()) @map("last_active_at") @db.Timestamptz
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userType     String   @map("user_type") @db.VarChar(20)
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @unique @map("refresh_token") @db.Text
+  deviceInfo   Json     @default("{}") @map("device_info")
+  ipAddress    String?  @map("ip_address") @db.Inet
+  isActive     Boolean  @default(true) @map("is_active")
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz
+  lastActiveAt DateTime @default(now()) @map("last_active_at") @db.Timestamptz
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Polymorphic: userId resolved at application layer based on userType.
   // No Prisma FK relations here — Prisma cannot model a single field referencing multiple tables.
@@ -314,7 +321,7 @@ model AuditLog {
 model StudentLead {
   id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   studentId         String    @unique @map("student_id") @db.Uuid
-  preferredStreams   Json      @default("[]") @map("preferred_streams")
+  preferredStreams  Json      @default("[]") @map("preferred_streams")
   preferredLevel    String?   @map("preferred_level") @db.VarChar(20)
   preferredStates   Json      @default("[]") @map("preferred_states")
   currentEducation  Json      @default("{}") @map("current_education")
@@ -328,8 +335,8 @@ model StudentLead {
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student        Student        @relation(fields: [studentId], references: [id])
-  assignedAdmin  PlatformAdmin? @relation("AssignedAdmin", fields: [assignedTo], references: [id])
+  student       Student        @relation(fields: [studentId], references: [id])
+  assignedAdmin PlatformAdmin? @relation("AssignedAdmin", fields: [assignedTo], references: [id])
 
   @@index([status], name: "idx_leads_status")
   @@index([assignedTo], name: "idx_leads_assigned")
@@ -342,12 +349,12 @@ model StudentLead {
 // ============================================================
 
 model UniversityType {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String   @unique @db.VarChar(100)
-  slug       String   @unique @db.VarChar(50)
-  sortOrder  Int      @default(0) @map("sort_order")
-  isActive   Boolean  @default(true) @map("is_active")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique @db.VarChar(100)
+  slug      String   @unique @db.VarChar(50)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   universities University[]
@@ -356,19 +363,19 @@ model UniversityType {
 }
 
 model University {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityTypeId   String    @map("university_type_id") @db.Uuid
-  name               String    @db.VarChar(255)
-  slug               String    @unique @db.VarChar(100)
-  state              String?   @db.VarChar(100)
-  city               String?   @db.VarChar(100)
-  accreditation      String?   @db.VarChar(255)
-  governanceDetails  String?   @map("governance_details") @db.Text
-  logoUrl            String?   @map("logo_url") @db.Text
-  status             String    @default("active") @db.VarChar(20)
-  metadata           Json      @default("{}")
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  universityTypeId  String   @map("university_type_id") @db.Uuid
+  name              String   @db.VarChar(255)
+  slug              String   @unique @db.VarChar(100)
+  state             String?  @db.VarChar(100)
+  city              String?  @db.VarChar(100)
+  accreditation     String?  @db.VarChar(255)
+  governanceDetails String?  @map("governance_details") @db.Text
+  logoUrl           String?  @map("logo_url") @db.Text
+  status            String   @default("active") @db.VarChar(20)
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   universityType UniversityType @relation(fields: [universityTypeId], references: [id])
@@ -382,66 +389,71 @@ model University {
 }
 
 model College {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityId    String    @map("university_id") @db.Uuid
-  name            String    @db.VarChar(255)
-  slug            String    @unique @db.VarChar(100)
-  code            String    @unique @db.VarChar(20)
-  domain          String?   @db.VarChar(255)
-  logoUrl         String?   @map("logo_url") @db.Text
-  coverImageUrl   String?   @map("cover_image_url") @db.Text
-  state           String?   @db.VarChar(100)
-  city            String?   @db.VarChar(100)
-  district        String?   @db.VarChar(100)
-  address         String?   @db.Text
-  pinCode         String?   @map("pin_code") @db.VarChar(10)
-  status          String    @default("active") @db.VarChar(20)
-  profileSections Json      @default("{}") @map("profile_sections")
-  settings        Json      @default("{}")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  universityId    String   @map("university_id") @db.Uuid
+  name            String   @db.VarChar(255)
+  slug            String   @unique @db.VarChar(100)
+  code            String   @unique @db.VarChar(20)
+  domain          String?  @db.VarChar(255)
+  logoUrl         String?  @map("logo_url") @db.Text
+  coverImageUrl   String?  @map("cover_image_url") @db.Text
+  state           String?  @db.VarChar(100)
+  city            String?  @db.VarChar(100)
+  district        String?  @db.VarChar(100)
+  address         String?  @db.Text
+  pinCode         String?  @map("pin_code") @db.VarChar(10)
+  status          String   @default("active") @db.VarChar(20)
+  profileSections Json     @default("{}") @map("profile_sections")
+  settings        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  university       University    @relation(fields: [universityId], references: [id])
-  campuses         Campus[]
-  courses          Course[]
-  gallery          CollegeGallery[]
-  reviews          CollegeReview[]
-  collegeRoles     CollegeRole[]
-  staffMembers     StaffMember[]
-  blinkUsers       BlinkUser[]
-  admissionCycles  AdmissionCycle[]
-  applications     Application[]
-  enrollments      Enrollment[]
-  assessmentSections AssessmentSection[]
-  assessmentTemplates AssessmentTemplate[]
-  assessmentSlots  AssessmentSlot[]
-  questionTypes    QuestionType[]
-  questions        Question[]
-  interviewSlots   InterviewSlot[]
-  offerLetters     OfferLetter[]
-  feeStructures    FeeStructure[]
-  studentFeeLedger StudentFeeLedger[]
-  transactions     Transaction[]
-  paymentReceipts  PaymentReceipt[]
-  refunds          Refund[]
-  scholarshipConfigs ScholarshipConfig[]
+  university             University              @relation(fields: [universityId], references: [id])
+  campuses               Campus[]
+  courses                Course[]
+  gallery                CollegeGallery[]
+  reviews                CollegeReview[]
+  collegeRoles           CollegeRole[]
+  staffMembers           StaffMember[]
+  blinkUsers             BlinkUser[]
+  admissionCycles        AdmissionCycle[]
+  applications           Application[]
+  enrollments            Enrollment[]
+  assessmentSections     AssessmentSection[]
+  assessmentTemplates    AssessmentTemplate[]
+  assessmentSlots        AssessmentSlot[]
+  questionTypes          QuestionType[]
+  questions              Question[]
+  interviewSlots         InterviewSlot[]
+  offerLetters           OfferLetter[]
+  feeStructures          FeeStructure[]
+  studentFeeLedger       StudentFeeLedger[]
+  transactions           Transaction[]
+  paymentReceipts        PaymentReceipt[]
+  refunds                Refund[]
+  scholarshipConfigs     ScholarshipConfig[]
   collegePaymentAccounts CollegePaymentAccount[]
-  documentTemplates DocumentTemplate[]
-  documentRequests  DocumentRequest[]
-  issuedDocuments   IssuedDocument[]
-  hostels           Hostel[]
-  commuteRoutes     CommuteRoute[]
-  newsAlerts        NewsAlert[]
-  articles          Article[]
-  referralCodes     ReferralCode[]
-  serviceChargeConfigs ServiceChargeConfig[]
-  mediaKits         MediaKit[]
-  campusVisits      CampusVisit[]
-  announcements     Announcement[]
-  supportTickets    SupportTicket[]
-  antiRaggingComplaints AntiRaggingComplaint[]
-  courseSwitchRequests CourseSwitchRequest[]
+  documentTemplates      DocumentTemplate[]
+  documentRequests       DocumentRequest[]
+  issuedDocuments        IssuedDocument[]
+  hostels                Hostel[]
+  commuteRoutes          CommuteRoute[]
+  newsAlerts             NewsAlert[]
+  articles               Article[]
+  referralCodes          ReferralCode[]
+  serviceChargeConfigs   ServiceChargeConfig[]
+  mediaKits              MediaKit[]
+  campusVisits           CampusVisit[]
+  announcements          Announcement[]
+  supportTickets         SupportTicket[]
+  antiRaggingComplaints  AntiRaggingComplaint[]
+  courseSwitchRequests   CourseSwitchRequest[]
+  admissionFormConfigs   AdmissionFormConfig[]
+  documentUploadConfigs  DocumentUploadConfig[]
+  hostelEnrollments      HostelEnrollment[]
+  commuteEnrollments     CommuteEnrollment[]
+  broadcastNotifications BroadcastNotification[]
 
   @@index([universityId], name: "idx_colleges_university")
   @@index([slug], name: "idx_colleges_slug")
@@ -452,22 +464,22 @@ model College {
 }
 
 model Campus {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId    String    @map("college_id") @db.Uuid
-  name         String    @db.VarChar(255)
-  address      String?   @db.Text
-  city         String?   @db.VarChar(100)
-  state        String?   @db.VarChar(100)
-  pinCode      String?   @map("pin_code") @db.VarChar(10)
-  latitude     Decimal?  @db.Decimal(10, 8)
-  longitude    Decimal?  @db.Decimal(11, 8)
-  isMainCampus Boolean   @default(false) @map("is_main_campus")
-  status       String    @default("active") @db.VarChar(20)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId    String   @map("college_id") @db.Uuid
+  name         String   @db.VarChar(255)
+  address      String?  @db.Text
+  city         String?  @db.VarChar(100)
+  state        String?  @db.VarChar(100)
+  pinCode      String?  @map("pin_code") @db.VarChar(10)
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  isMainCampus Boolean  @default(false) @map("is_main_campus")
+  status       String   @default("active") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college      College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   courses      Course[]
   applications Application[]
   enrollments  Enrollment[]
@@ -478,12 +490,12 @@ model Campus {
 }
 
 model Stream {
-  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String       @unique @db.VarChar(100)
-  slug       String       @unique @db.VarChar(50)
-  sortOrder  Int          @default(0) @map("sort_order")
-  isActive   Boolean      @default(true) @map("is_active")
-  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique @db.VarChar(100)
+  slug      String   @unique @db.VarChar(50)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   disciplines Discipline[]
@@ -538,43 +550,43 @@ model ProgramType {
 }
 
 model Course {
-  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId              String    @map("college_id") @db.Uuid
-  campusId               String?   @map("campus_id") @db.Uuid
-  disciplineId           String    @map("discipline_id") @db.Uuid
-  studyLevelId           String    @map("study_level_id") @db.Uuid
-  programTypeId          String    @map("program_type_id") @db.Uuid
-  appFeeCommissionType   String?   @map("app_fee_commission_type") @db.VarChar(10)
-  appFeeCommissionValue  Decimal?  @map("app_fee_commission_value") @db.Decimal(10, 2)
-  tuitionCommissionType  String?   @map("tuition_commission_type") @db.VarChar(10)
-  tuitionCommissionValue Decimal?  @map("tuition_commission_value") @db.Decimal(10, 2)
-  name                   String    @db.VarChar(255)
-  code                   String    @db.VarChar(30)
-  duration               String?   @db.VarChar(50)
-  eligibility            String?   @db.Text
-  intakeCapacity         Int?      @map("intake_capacity")
-  studyMode              String    @default("full_time") @map("study_mode") @db.VarChar(20)
-  status                 String    @default("active") @db.VarChar(20)
-  metadata               Json      @default("{}")
-  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId              String   @map("college_id") @db.Uuid
+  campusId               String?  @map("campus_id") @db.Uuid
+  disciplineId           String   @map("discipline_id") @db.Uuid
+  studyLevelId           String   @map("study_level_id") @db.Uuid
+  programTypeId          String   @map("program_type_id") @db.Uuid
+  appFeeCommissionType   String?  @map("app_fee_commission_type") @db.VarChar(10)
+  appFeeCommissionValue  Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
+  tuitionCommissionType  String?  @map("tuition_commission_type") @db.VarChar(10)
+  tuitionCommissionValue Decimal? @map("tuition_commission_value") @db.Decimal(10, 2)
+  name                   String   @db.VarChar(255)
+  code                   String   @db.VarChar(30)
+  duration               String?  @db.VarChar(50)
+  eligibility            String?  @db.Text
+  intakeCapacity         Int?     @map("intake_capacity")
+  studyMode              String   @default("full_time") @map("study_mode") @db.VarChar(20)
+  status                 String   @default("active") @db.VarChar(20)
+  metadata               Json     @default("{}")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college       College     @relation(fields: [collegeId], references: [id])
-  campus        Campus?     @relation(fields: [campusId], references: [id])
-  discipline    Discipline  @relation(fields: [disciplineId], references: [id])
-  studyLevel    StudyLevel  @relation(fields: [studyLevelId], references: [id])
-  programType   ProgramType @relation(fields: [programTypeId], references: [id])
-  quotas        CourseQuota[]
-  admissionCycleCourses AdmissionCycleCourse[]
-  applicationCourses    ApplicationCourse[]
+  college                College                 @relation(fields: [collegeId], references: [id])
+  campus                 Campus?                 @relation(fields: [campusId], references: [id])
+  discipline             Discipline              @relation(fields: [disciplineId], references: [id])
+  studyLevel             StudyLevel              @relation(fields: [studyLevelId], references: [id])
+  programType            ProgramType             @relation(fields: [programTypeId], references: [id])
+  quotas                 CourseQuota[]
+  admissionCycleCourses  AdmissionCycleCourse[]
+  applicationCourses     ApplicationCourse[]
   questionCourseMappings QuestionCourseMapping[]
-  feeStructures  FeeStructure[]
-  serviceChargeConfigs ServiceChargeConfig[]
-  referralCodes  ReferralCode[]
-  mediaKits      MediaKit[]
-  enrollments    Enrollment[]
-  courseSwitchRequestsTo CourseSwitchRequest[] @relation("SwitchToCourse")
+  feeStructures          FeeStructure[]
+  serviceChargeConfigs   ServiceChargeConfig[]
+  referralCodes          ReferralCode[]
+  mediaKits              MediaKit[]
+  enrollments            Enrollment[]
+  courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
@@ -587,17 +599,17 @@ model Course {
 }
 
 model CourseQuota {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId             String    @map("course_id") @db.Uuid
-  tuitionFeeOverride   Decimal?  @map("tuition_fee_override") @db.Decimal(12, 2)
-  quotaName            String    @map("quota_name") @db.VarChar(100)
-  seats                Int
-  isActive             Boolean   @default(true) @map("is_active")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId           String   @map("course_id") @db.Uuid
+  tuitionFeeOverride Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
+  quotaName          String   @map("quota_name") @db.VarChar(100)
+  seats              Int
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  course            Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   applicationCourses ApplicationCourse[]
 
   @@unique([courseId, quotaName], name: "uq_course_quota")
@@ -606,13 +618,13 @@ model CourseQuota {
 }
 
 model CollegeGallery {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId  String   @map("college_id") @db.Uuid
-  mediaType  String   @map("media_type") @db.VarChar(10)
-  url        String   @db.Text
-  caption    String?  @db.VarChar(255)
-  sortOrder  Int      @default(0) @map("sort_order")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId String   @map("college_id") @db.Uuid
+  mediaType String   @map("media_type") @db.VarChar(10)
+  url       String   @db.Text
+  caption   String?  @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -645,19 +657,19 @@ model CollegeReview {
 // ============================================================
 
 model NewsAlert {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title          String    @db.VarChar(255)
-  slug           String    @unique @db.VarChar(100)
-  summary        String?   @db.Text
-  content        String    @db.Text
-  coverImageUrl  String?   @map("cover_image_url") @db.Text
-  category       String    @default("news") @db.VarChar(30)
-  collegeId      String?   @map("college_id") @db.Uuid
-  status         String    @default("draft") @db.VarChar(20)
-  publishedAt    DateTime? @map("published_at") @db.Timestamptz
-  publishedBy    String?   @map("published_by") @db.Uuid
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(100)
+  summary       String?   @db.Text
+  content       String    @db.Text
+  coverImageUrl String?   @map("cover_image_url") @db.Text
+  category      String    @default("news") @db.VarChar(30)
+  collegeId     String?   @map("college_id") @db.Uuid
+  status        String    @default("draft") @db.VarChar(20)
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz
+  publishedBy   String?   @map("published_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college        College?       @relation(fields: [collegeId], references: [id])
@@ -700,24 +712,24 @@ model Article {
 }
 
 model Blog {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title            String    @db.VarChar(255)
-  slug             String    @unique @db.VarChar(100)
-  summary          String?   @db.Text
-  content          String    @db.Text
-  coverImageUrl    String?   @map("cover_image_url") @db.Text
-  tags             Json      @default("[]")
-  authorId         String    @map("author_id") @db.Uuid
-  authorType       String    @map("author_type") @db.VarChar(20)
-  authorName       String    @map("author_name") @db.VarChar(100)
-  status           String    @default("pending") @db.VarChar(20)
-  rejectionReason  String?   @map("rejection_reason") @db.Text
-  reviewedBy       String?   @map("reviewed_by") @db.Uuid
-  reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz
-  publishedAt      DateTime? @map("published_at") @db.Timestamptz
-  viewCount        Int       @default(0) @map("view_count")
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String    @db.VarChar(255)
+  slug            String    @unique @db.VarChar(100)
+  summary         String?   @db.Text
+  content         String    @db.Text
+  coverImageUrl   String?   @map("cover_image_url") @db.Text
+  tags            Json      @default("[]")
+  authorId        String    @map("author_id") @db.Uuid
+  authorType      String    @map("author_type") @db.VarChar(20)
+  authorName      String    @map("author_name") @db.VarChar(100)
+  status          String    @default("pending") @db.VarChar(20)
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  reviewedBy      String?   @map("reviewed_by") @db.Uuid
+  reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz
+  viewCount       Int       @default(0) @map("view_count")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   reviewer PlatformAdmin? @relation("BlogReviewer", fields: [reviewedBy], references: [id])
@@ -730,24 +742,24 @@ model Blog {
 }
 
 model EntranceExam {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String    @db.VarChar(255)
-  code               String    @unique @db.VarChar(20)
-  conductingBody     String?   @map("conducting_body") @db.VarChar(255)
-  examLevel          String    @map("exam_level") @db.VarChar(20)
-  applicableCourses  Json      @default("[]") @map("applicable_courses")
-  eligibility        String?   @db.Text
-  description        String?   @db.Text
-  registrationStart  DateTime? @map("registration_start") @db.Date
-  registrationEnd    DateTime? @map("registration_end") @db.Date
-  examDate           DateTime? @map("exam_date") @db.Date
-  resultDate         DateTime? @map("result_date") @db.Date
-  officialWebsite    String?   @map("official_website") @db.Text
-  applicationLink    String?   @map("application_link") @db.Text
-  status             String    @default("active") @db.VarChar(20)
-  createdBy          String?   @map("created_by") @db.Uuid
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String    @db.VarChar(255)
+  code              String    @unique @db.VarChar(20)
+  conductingBody    String?   @map("conducting_body") @db.VarChar(255)
+  examLevel         String    @map("exam_level") @db.VarChar(20)
+  applicableCourses Json      @default("[]") @map("applicable_courses")
+  eligibility       String?   @db.Text
+  description       String?   @db.Text
+  registrationStart DateTime? @map("registration_start") @db.Date
+  registrationEnd   DateTime? @map("registration_end") @db.Date
+  examDate          DateTime? @map("exam_date") @db.Date
+  resultDate        DateTime? @map("result_date") @db.Date
+  officialWebsite   String?   @map("official_website") @db.Text
+  applicationLink   String?   @map("application_link") @db.Text
+  status            String    @default("active") @db.VarChar(20)
+  createdBy         String?   @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   creator PlatformAdmin? @relation(fields: [createdBy], references: [id])
@@ -831,25 +843,25 @@ model EventRegistration {
 // ============================================================
 
 model AdmissionCycle {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String    @map("college_id") @db.Uuid
-  name           String    @db.VarChar(255)
-  slug           String    @db.VarChar(100)
-  programLevel   String    @map("program_level") @db.VarChar(30)
-  admissionYear  String    @map("admission_year") @db.VarChar(10)
-  startsOn       DateTime  @map("starts_on") @db.Date
-  endsOn         DateTime? @map("ends_on") @db.Date
-  status         String    @default("open") @db.VarChar(20)
-  settings       Json      @default("{}")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId     String    @map("college_id") @db.Uuid
+  name          String    @db.VarChar(255)
+  slug          String    @db.VarChar(100)
+  programLevel  String    @map("program_level") @db.VarChar(30)
+  admissionYear String    @map("admission_year") @db.VarChar(10)
+  startsOn      DateTime  @map("starts_on") @db.Date
+  endsOn        DateTime? @map("ends_on") @db.Date
+  status        String    @default("open") @db.VarChar(20)
+  settings      Json      @default("{}")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college              College                @relation(fields: [collegeId], references: [id])
+  college               College                @relation(fields: [collegeId], references: [id])
   admissionCycleCourses AdmissionCycleCourse[]
-  applications         Application[]
-  enrollments          Enrollment[]
-  admissionFormConfigs AdmissionFormConfig[]
+  applications          Application[]
+  enrollments           Enrollment[]
+  admissionFormConfigs  AdmissionFormConfig[]
   documentUploadConfigs DocumentUploadConfig[]
 
   @@unique([collegeId, slug], name: "uq_cycle_slug_college")
@@ -860,16 +872,16 @@ model AdmissionCycle {
 }
 
 model AdmissionCycleCourse {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admissionCycleId   String    @map("admission_cycle_id") @db.Uuid
-  courseId           String    @map("course_id") @db.Uuid
-  applicationFee     Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
-  interviewRequired  Boolean   @default(true) @map("interview_required")
-  assessmentRequired Boolean   @default(true) @map("assessment_required")
-  tokenPaymentStage  String?   @map("token_payment_stage") @db.VarChar(20)
-  workExperienceRequired Boolean @default(true) @map("work_experience_required")
-  isActive           Boolean   @default(true) @map("is_active")
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admissionCycleId       String   @map("admission_cycle_id") @db.Uuid
+  courseId               String   @map("course_id") @db.Uuid
+  applicationFee         Decimal  @default(0) @map("application_fee") @db.Decimal(10, 2)
+  interviewRequired      Boolean  @default(true) @map("interview_required")
+  assessmentRequired     Boolean  @default(true) @map("assessment_required")
+  tokenPaymentStage      String?  @map("token_payment_stage") @db.VarChar(20)
+  workExperienceRequired Boolean  @default(true) @map("work_experience_required")
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   admissionCycle AdmissionCycle @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
@@ -882,44 +894,44 @@ model AdmissionCycleCourse {
 }
 
 model Application {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationNumber    String    @unique @map("application_number") @db.VarChar(30)
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  campusId             String?   @map("campus_id") @db.Uuid
-  admissionCycleId     String    @map("admission_cycle_id") @db.Uuid
-  currentStep          Int       @default(1) @map("current_step") @db.SmallInt
-  formStatus           String    @default("draft") @map("form_status") @db.VarChar(20)
-  profilePhotoUrl      String?   @map("profile_photo_url") @db.Text
-  whatsappCountryCode  String?   @default("+91") @map("whatsapp_country_code") @db.VarChar(5)
-  whatsappNumber       String?   @map("whatsapp_number") @db.VarChar(15)
-  nationality          String?   @db.VarChar(100)
-  stateOfDomicile      String?   @map("state_of_domicile") @db.VarChar(100)
-  passportCountry      String?   @map("passport_country") @db.VarChar(100)
-  passportNumber       String?   @map("passport_number") @db.VarChar(50)
-  workExperienceDetails Json?    @map("work_experience_details")
-  entranceExamDetails  Json?     @map("entrance_exam_details")
-  applicationPdfUrl    String?   @map("application_pdf_url") @db.Text
-  quotaDetails         Json      @default("{}") @map("quota_details")
-  personalDetails      Json      @default("{}") @map("personal_details")
-  familyDetails        Json      @default("{}") @map("family_details")
-  addressDetails       Json      @default("{}") @map("address_details")
-  qualificationDetails Json      @default("{}") @map("qualification_details")
-  declaration          Json      @default("{}")
-  totalApplicationFee  Decimal   @default(0) @map("total_application_fee") @db.Decimal(10, 2)
-  feePaymentStatus     String    @default("pending") @map("fee_payment_status") @db.VarChar(20)
-  feeTransactionId     String?   @map("fee_transaction_id") @db.Uuid
-  referralCodeId       String?   @map("referral_code_id") @db.Uuid
-  submittedAt          DateTime? @map("submitted_at") @db.Timestamptz
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationNumber     String    @unique @map("application_number") @db.VarChar(30)
+  studentId             String    @map("student_id") @db.Uuid
+  collegeId             String    @map("college_id") @db.Uuid
+  campusId              String?   @map("campus_id") @db.Uuid
+  admissionCycleId      String    @map("admission_cycle_id") @db.Uuid
+  currentStep           Int       @default(1) @map("current_step") @db.SmallInt
+  formStatus            String    @default("draft") @map("form_status") @db.VarChar(20)
+  profilePhotoUrl       String?   @map("profile_photo_url") @db.Text
+  whatsappCountryCode   String?   @default("+91") @map("whatsapp_country_code") @db.VarChar(5)
+  whatsappNumber        String?   @map("whatsapp_number") @db.VarChar(15)
+  nationality           String?   @db.VarChar(100)
+  stateOfDomicile       String?   @map("state_of_domicile") @db.VarChar(100)
+  passportCountry       String?   @map("passport_country") @db.VarChar(100)
+  passportNumber        String?   @map("passport_number") @db.VarChar(50)
+  workExperienceDetails Json?     @map("work_experience_details")
+  entranceExamDetails   Json?     @map("entrance_exam_details")
+  applicationPdfUrl     String?   @map("application_pdf_url") @db.Text
+  quotaDetails          Json      @default("{}") @map("quota_details")
+  personalDetails       Json      @default("{}") @map("personal_details")
+  familyDetails         Json      @default("{}") @map("family_details")
+  addressDetails        Json      @default("{}") @map("address_details")
+  qualificationDetails  Json      @default("{}") @map("qualification_details")
+  declaration           Json      @default("{}")
+  totalApplicationFee   Decimal   @default(0) @map("total_application_fee") @db.Decimal(10, 2)
+  feePaymentStatus      String    @default("pending") @map("fee_payment_status") @db.VarChar(20)
+  feeTransactionId      String?   @map("fee_transaction_id") @db.Uuid
+  referralCodeId        String?   @map("referral_code_id") @db.Uuid
+  submittedAt           DateTime? @map("submitted_at") @db.Timestamptz
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student        Student        @relation(fields: [studentId], references: [id])
-  college        College        @relation(fields: [collegeId], references: [id])
-  campus         Campus?        @relation(fields: [campusId], references: [id])
-  admissionCycle AdmissionCycle @relation(fields: [admissionCycleId], references: [id])
-  referralCode   ReferralCode?  @relation(fields: [referralCodeId], references: [id])
+  student            Student               @relation(fields: [studentId], references: [id])
+  college            College               @relation(fields: [collegeId], references: [id])
+  campus             Campus?               @relation(fields: [campusId], references: [id])
+  admissionCycle     AdmissionCycle        @relation(fields: [admissionCycleId], references: [id])
+  referralCode       ReferralCode?         @relation(fields: [referralCodeId], references: [id])
   applicationCourses ApplicationCourse[]
   documents          ApplicationDocument[]
 
@@ -946,18 +958,18 @@ model ApplicationCourse {
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  course        Course       @relation(fields: [courseId], references: [id])
-  quota         CourseQuota? @relation(fields: [quotaId], references: [id])
-  statusLogs    ApplicationStatusLog[]
-  assessmentAttempts AssessmentAttempt[]
-  interviewBooking   InterviewBooking?
-  offerLetter        OfferLetter?
-  seatCancellations  SeatCancellation[]
-  enrollment         Enrollment?
-  referral           Referral?
+  application             Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  course                  Course                   @relation(fields: [courseId], references: [id])
+  quota                   CourseQuota?             @relation(fields: [quotaId], references: [id])
+  statusLogs              ApplicationStatusLog[]
+  assessmentAttempts      AssessmentAttempt[]
+  interviewBooking        InterviewBooking?
+  offerLetter             OfferLetter?
+  seatCancellations       SeatCancellation[]
+  enrollment              Enrollment?
+  referral                Referral?
   scholarshipApplications ScholarshipApplication[]
-  studentFeeLedger   StudentFeeLedger[]
+  studentFeeLedger        StudentFeeLedger[]
 
   @@unique([applicationId, courseId], name: "uq_application_course")
   @@index([applicationId], name: "idx_app_courses_application")
@@ -982,8 +994,8 @@ model ApplicationDocument {
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  application  Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  verifier     StaffMember? @relation("VerifiedByStaff", fields: [verifiedBy], references: [id])
+  application Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  verifier    StaffMember? @relation("VerifiedByStaff", fields: [verifiedBy], references: [id])
   // Note: verifiedBy is polymorphic (staff or student). Prisma FK points to staff_members.
   // Resolve student verification at application layer.
 
@@ -994,14 +1006,14 @@ model ApplicationDocument {
 }
 
 model ApplicationStatusLog {
-  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId  String   @map("application_course_id") @db.Uuid
-  fromStatus           String?  @map("from_status") @db.VarChar(30)
-  toStatus             String   @map("to_status") @db.VarChar(30)
-  changedByType        String   @map("changed_by_type") @db.VarChar(20)
-  changedById          String?  @map("changed_by_id") @db.Uuid
-  remarks              String?  @db.Text
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String   @map("application_course_id") @db.Uuid
+  fromStatus          String?  @map("from_status") @db.VarChar(30)
+  toStatus            String   @map("to_status") @db.VarChar(30)
+  changedByType       String   @map("changed_by_type") @db.VarChar(20)
+  changedById         String?  @map("changed_by_id") @db.Uuid
+  remarks             String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id], onDelete: Cascade)
@@ -1012,18 +1024,18 @@ model ApplicationStatusLog {
 }
 
 model SeatCancellation {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId  String    @map("application_course_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  reason               String    @db.Text
-  supportingDocUrls    Json      @default("[]") @map("supporting_doc_urls")
-  status               String    @default("pending") @db.VarChar(20)
-  refundAmount         Decimal?  @map("refund_amount") @db.Decimal(10, 2)
-  refundStatus         String?   @map("refund_status") @db.VarChar(20)
-  processedBy          String?   @map("processed_by") @db.Uuid
-  remarks              String?   @db.Text
-  requestedAt          DateTime  @default(now()) @map("requested_at") @db.Timestamptz
-  processedAt          DateTime? @map("processed_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String    @map("application_course_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  reason              String    @db.Text
+  supportingDocUrls   Json      @default("[]") @map("supporting_doc_urls")
+  status              String    @default("pending") @db.VarChar(20)
+  refundAmount        Decimal?  @map("refund_amount") @db.Decimal(10, 2)
+  refundStatus        String?   @map("refund_status") @db.VarChar(20)
+  processedBy         String?   @map("processed_by") @db.Uuid
+  remarks             String?   @db.Text
+  requestedAt         DateTime  @default(now()) @map("requested_at") @db.Timestamptz
+  processedAt         DateTime? @map("processed_at") @db.Timestamptz
 
   // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
@@ -1037,31 +1049,31 @@ model SeatCancellation {
 }
 
 model Enrollment {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  courseId             String    @map("course_id") @db.Uuid
-  campusId             String?   @map("campus_id") @db.Uuid
-  applicationCourseId  String    @unique @map("application_course_id") @db.Uuid
-  admissionCycleId     String    @map("admission_cycle_id") @db.Uuid
-  enrollmentNumber     String    @unique @map("enrollment_number") @db.VarChar(30)
-  academicYear         String    @map("academic_year") @db.VarChar(10)
-  enrolledAt           DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz
-  status               String    @default("active") @db.VarChar(20)
-  completedAt          DateTime? @map("completed_at") @db.Timestamptz
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  courseId            String    @map("course_id") @db.Uuid
+  campusId            String?   @map("campus_id") @db.Uuid
+  applicationCourseId String    @unique @map("application_course_id") @db.Uuid
+  admissionCycleId    String    @map("admission_cycle_id") @db.Uuid
+  enrollmentNumber    String    @unique @map("enrollment_number") @db.VarChar(30)
+  academicYear        String    @map("academic_year") @db.VarChar(10)
+  enrolledAt          DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz
+  status              String    @default("active") @db.VarChar(20)
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student           Student           @relation(fields: [studentId], references: [id])
-  college           College           @relation(fields: [collegeId], references: [id])
-  course            Course            @relation(fields: [courseId], references: [id])
-  campus            Campus?           @relation(fields: [campusId], references: [id])
-  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
-  admissionCycle    AdmissionCycle    @relation(fields: [admissionCycleId], references: [id])
-  courseSwitchRequests CourseSwitchRequest[] @relation("EnrollmentSwitchRequests")
+  student                 Student               @relation(fields: [studentId], references: [id])
+  college                 College               @relation(fields: [collegeId], references: [id])
+  course                  Course                @relation(fields: [courseId], references: [id])
+  campus                  Campus?               @relation(fields: [campusId], references: [id])
+  applicationCourse       ApplicationCourse     @relation(fields: [applicationCourseId], references: [id])
+  admissionCycle          AdmissionCycle        @relation(fields: [admissionCycleId], references: [id])
+  courseSwitchRequests    CourseSwitchRequest[] @relation("EnrollmentSwitchRequests")
   newCourseSwitchRequests CourseSwitchRequest[] @relation("NewEnrollmentFromSwitch")
-  studentFeeLedger  StudentFeeLedger[]
+  studentFeeLedger        StudentFeeLedger[]
 
   @@unique([studentId, courseId, collegeId], name: "uq_enrollment_student_course")
   @@index([studentId], name: "idx_enrollments_student")
@@ -1075,20 +1087,20 @@ model Enrollment {
 }
 
 model CourseSwitchRequest {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  enrollmentId         String    @map("enrollment_id") @db.Uuid
-  toCourseId           String    @map("to_course_id") @db.Uuid
-  reason               String    @db.Text
-  supportingDocuments  Json      @default("[]") @map("supporting_documents")
-  status               String    @default("pending") @db.VarChar(20)
-  processedBy          String?   @map("processed_by") @db.Uuid
-  remarks              String?   @db.Text
-  processedAt          DateTime? @map("processed_at") @db.Timestamptz
-  newEnrollmentId      String?   @map("new_enrollment_id") @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  enrollmentId        String    @map("enrollment_id") @db.Uuid
+  toCourseId          String    @map("to_course_id") @db.Uuid
+  reason              String    @db.Text
+  supportingDocuments Json      @default("[]") @map("supporting_documents")
+  status              String    @default("pending") @db.VarChar(20)
+  processedBy         String?   @map("processed_by") @db.Uuid
+  remarks             String?   @db.Text
+  processedAt         DateTime? @map("processed_at") @db.Timestamptz
+  newEnrollmentId     String?   @map("new_enrollment_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   student       Student      @relation(fields: [studentId], references: [id])
@@ -1106,15 +1118,15 @@ model CourseSwitchRequest {
 }
 
 model AdmissionFormConfig {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId         String   @map("college_id") @db.Uuid
-  admissionCycleId  String?  @map("admission_cycle_id") @db.Uuid
-  section           String   @db.VarChar(30)
-  fieldConfig       Json     @map("field_config")
-  sortOrder         Int      @default(0) @map("sort_order")
-  isActive          Boolean  @default(true) @map("is_active")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId        String   @map("college_id") @db.Uuid
+  admissionCycleId String?  @map("admission_cycle_id") @db.Uuid
+  section          String   @db.VarChar(30)
+  fieldConfig      Json     @map("field_config")
+  sortOrder        Int      @default(0) @map("sort_order")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college        College         @relation(fields: [collegeId], references: [id])
@@ -1128,20 +1140,20 @@ model AdmissionFormConfig {
 }
 
 model DocumentUploadConfig {
-  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId               String   @map("college_id") @db.Uuid
-  admissionCycleId        String?  @map("admission_cycle_id") @db.Uuid
-  documentType            String   @map("document_type") @db.VarChar(50)
-  documentCategory        String   @map("document_category") @db.VarChar(30)
-  documentLabel           String   @map("document_label") @db.VarChar(100)
-  isRequired              Boolean  @default(true) @map("is_required")
-  appliesToQuotas         Json?    @map("applies_to_quotas")
-  appliesToNationalities  Json?    @map("applies_to_nationalities")
-  appliesToCourses        Json?    @map("applies_to_courses")
-  sortOrder               Int      @default(0) @map("sort_order")
-  isActive                Boolean  @default(true) @map("is_active")
-  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId              String   @map("college_id") @db.Uuid
+  admissionCycleId       String?  @map("admission_cycle_id") @db.Uuid
+  documentType           String   @map("document_type") @db.VarChar(50)
+  documentCategory       String   @map("document_category") @db.VarChar(30)
+  documentLabel          String   @map("document_label") @db.VarChar(100)
+  isRequired             Boolean  @default(true) @map("is_required")
+  appliesToQuotas        Json?    @map("applies_to_quotas")
+  appliesToNationalities Json?    @map("applies_to_nationalities")
+  appliesToCourses       Json?    @map("applies_to_courses")
+  sortOrder              Int      @default(0) @map("sort_order")
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college        College         @relation(fields: [collegeId], references: [id])
@@ -1159,16 +1171,16 @@ model DocumentUploadConfig {
 // ============================================================
 
 model AssessmentSection {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String    @map("college_id") @db.Uuid
-  name           String    @db.VarChar(100)
-  slug           String    @db.VarChar(50)
-  description    String?   @db.Text
-  sortOrder      Int       @default(0) @map("sort_order")
-  isCoreSection  Boolean   @default(true) @map("is_core_section")
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId     String   @map("college_id") @db.Uuid
+  name          String   @db.VarChar(100)
+  slug          String   @db.VarChar(50)
+  description   String?  @db.Text
+  sortOrder     Int      @default(0) @map("sort_order")
+  isCoreSection Boolean  @default(true) @map("is_core_section")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -1184,21 +1196,21 @@ model AssessmentSection {
 }
 
 model QuestionType {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String    @map("college_id") @db.Uuid
-  name           String    @db.VarChar(100)
-  slug           String    @db.VarChar(50)
-  category       String    @db.VarChar(30)
-  responseFormat String    @map("response_format") @db.VarChar(30)
-  hasAudio       Boolean   @default(false) @map("has_audio")
-  hasImage       Boolean   @default(false) @map("has_image")
-  hasPassage     Boolean   @default(false) @map("has_passage")
-  autoScorable   Boolean   @default(false) @map("auto_scorable")
-  isSystemType   Boolean   @default(false) @map("is_system_type")
-  isActive       Boolean   @default(true) @map("is_active")
-  sortOrder      Int       @default(0) @map("sort_order")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId      String   @map("college_id") @db.Uuid
+  name           String   @db.VarChar(100)
+  slug           String   @db.VarChar(50)
+  category       String   @db.VarChar(30)
+  responseFormat String   @map("response_format") @db.VarChar(30)
+  hasAudio       Boolean  @default(false) @map("has_audio")
+  hasImage       Boolean  @default(false) @map("has_image")
+  hasPassage     Boolean  @default(false) @map("has_passage")
+  autoScorable   Boolean  @default(false) @map("auto_scorable")
+  isSystemType   Boolean  @default(false) @map("is_system_type")
+  isActive       Boolean  @default(true) @map("is_active")
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college   College    @relation(fields: [collegeId], references: [id])
@@ -1211,29 +1223,29 @@ model QuestionType {
 }
 
 model Question {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId        String    @map("college_id") @db.Uuid
-  sectionId        String    @map("section_id") @db.Uuid
-  questionTypeId   String    @map("question_type_id") @db.Uuid
-  difficulty       String    @default("medium") @db.VarChar(10)
-  title            String?   @db.VarChar(255)
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId        String   @map("college_id") @db.Uuid
+  sectionId        String   @map("section_id") @db.Uuid
+  questionTypeId   String   @map("question_type_id") @db.Uuid
+  difficulty       String   @default("medium") @db.VarChar(10)
+  title            String?  @db.VarChar(255)
   content          Json
-  answerKey        Json?     @map("answer_key")
-  marks            Decimal   @default(1.0) @db.Decimal(5, 2)
-  negativeMarks    Decimal   @default(0) @map("negative_marks") @db.Decimal(5, 2)
-  version          Int       @default(1)
-  parentQuestionId String?   @map("parent_question_id") @db.Uuid
-  status           String    @default("active") @db.VarChar(20)
-  createdBy        String?   @map("created_by") @db.Uuid
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  answerKey        Json?    @map("answer_key")
+  marks            Decimal  @default(1.0) @db.Decimal(5, 2)
+  negativeMarks    Decimal  @default(0) @map("negative_marks") @db.Decimal(5, 2)
+  version          Int      @default(1)
+  parentQuestionId String?  @map("parent_question_id") @db.Uuid
+  status           String   @default("active") @db.VarChar(20)
+  createdBy        String?  @map("created_by") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college        College           @relation(fields: [collegeId], references: [id])
-  section        AssessmentSection @relation(fields: [sectionId], references: [id])
-  questionType   QuestionType      @relation(fields: [questionTypeId], references: [id])
-  parentQuestion Question?         @relation("QuestionVersions", fields: [parentQuestionId], references: [id])
-  childVersions  Question[]        @relation("QuestionVersions")
+  college        College                 @relation(fields: [collegeId], references: [id])
+  section        AssessmentSection       @relation(fields: [sectionId], references: [id])
+  questionType   QuestionType            @relation(fields: [questionTypeId], references: [id])
+  parentQuestion Question?               @relation("QuestionVersions", fields: [parentQuestionId], references: [id])
+  childVersions  Question[]              @relation("QuestionVersions")
   courseMappings QuestionCourseMapping[]
   paperQuestions PaperQuestion[]
   studentAnswers StudentAnswer[]
@@ -1262,18 +1274,18 @@ model QuestionCourseMapping {
 }
 
 model AssessmentTemplate {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  name                String    @db.VarChar(255)
-  templateType        String    @default("admission") @map("template_type") @db.VarChar(20)
-  totalQuestions      Int       @map("total_questions")
-  totalMarks          Decimal   @map("total_marks") @db.Decimal(7, 2)
-  totalDurationMins   Int       @map("total_duration_mins")
-  status              String    @default("draft") @db.VarChar(20)
-  settings            Json      @default("{}")
-  createdBy           String?   @map("created_by") @db.Uuid
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId         String   @map("college_id") @db.Uuid
+  name              String   @db.VarChar(255)
+  templateType      String   @default("admission") @map("template_type") @db.VarChar(20)
+  totalQuestions    Int      @map("total_questions")
+  totalMarks        Decimal  @map("total_marks") @db.Decimal(7, 2)
+  totalDurationMins Int      @map("total_duration_mins")
+  status            String   @default("draft") @db.VarChar(20)
+  settings          Json     @default("{}")
+  createdBy         String?  @map("created_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id])
@@ -1346,23 +1358,23 @@ model PaperQuestion {
 }
 
 model AssessmentSlot {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String    @map("college_id") @db.Uuid
-  templateId  String    @map("template_id") @db.Uuid
-  slotType    String    @map("slot_type") @db.VarChar(10)
-  windowStart DateTime  @map("window_start") @db.Timestamptz
-  windowEnd   DateTime  @map("window_end") @db.Timestamptz
-  maxCapacity Int?      @map("max_capacity")
-  status      String    @default("active") @db.VarChar(20)
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String   @map("college_id") @db.Uuid
+  templateId  String   @map("template_id") @db.Uuid
+  slotType    String   @map("slot_type") @db.VarChar(10)
+  windowStart DateTime @map("window_start") @db.Timestamptz
+  windowEnd   DateTime @map("window_end") @db.Timestamptz
+  maxCapacity Int?     @map("max_capacity")
+  status      String   @default("active") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college            College             @relation(fields: [collegeId], references: [id])
-  template           AssessmentTemplate  @relation(fields: [templateId], references: [id])
-  attempts           AssessmentAttempt[]
-  rescheduleFrom     AssessmentReschedule[] @relation("RescheduleFromSlot")
-  rescheduleTo       AssessmentReschedule[] @relation("RescheduleToSlot")
+  college        College                @relation(fields: [collegeId], references: [id])
+  template       AssessmentTemplate     @relation(fields: [templateId], references: [id])
+  attempts       AssessmentAttempt[]
+  rescheduleFrom AssessmentReschedule[] @relation("RescheduleFromSlot")
+  rescheduleTo   AssessmentReschedule[] @relation("RescheduleToSlot")
 
   @@index([collegeId], name: "idx_slots_college")
   @@index([templateId], name: "idx_slots_template")
@@ -1372,27 +1384,27 @@ model AssessmentSlot {
 }
 
 model AssessmentAttempt {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId  String    @map("application_course_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  paperId              String    @map("paper_id") @db.Uuid
-  slotId               String    @map("slot_id") @db.Uuid
-  status               String    @default("not_started") @db.VarChar(20)
-  startedAt            DateTime? @map("started_at") @db.Timestamptz
-  completedAt          DateTime? @map("completed_at") @db.Timestamptz
-  timeSpentSecs        Int?      @map("time_spent_secs")
-  totalScore           Decimal?  @map("total_score") @db.Decimal(7, 2)
-  maxScore             Decimal?  @map("max_score") @db.Decimal(7, 2)
-  sectionScores        Json      @default("{}") @map("section_scores")
-  antiCheatLog         Json      @default("[]") @map("anti_cheat_log")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String    @map("application_course_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  paperId             String    @map("paper_id") @db.Uuid
+  slotId              String    @map("slot_id") @db.Uuid
+  status              String    @default("not_started") @db.VarChar(20)
+  startedAt           DateTime? @map("started_at") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  timeSpentSecs       Int?      @map("time_spent_secs")
+  totalScore          Decimal?  @map("total_score") @db.Decimal(7, 2)
+  maxScore            Decimal?  @map("max_score") @db.Decimal(7, 2)
+  sectionScores       Json      @default("{}") @map("section_scores")
+  antiCheatLog        Json      @default("[]") @map("anti_cheat_log")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  applicationCourse ApplicationCourse    @relation(fields: [applicationCourseId], references: [id])
-  student           Student              @relation(fields: [studentId], references: [id])
-  paper             AssessmentPaper      @relation(fields: [paperId], references: [id])
-  slot              AssessmentSlot       @relation(fields: [slotId], references: [id])
+  applicationCourse ApplicationCourse      @relation(fields: [applicationCourseId], references: [id])
+  student           Student                @relation(fields: [studentId], references: [id])
+  paper             AssessmentPaper        @relation(fields: [paperId], references: [id])
+  slot              AssessmentSlot         @relation(fields: [slotId], references: [id])
   studentAnswers    StudentAnswer[]
   reschedules       AssessmentReschedule[]
 
@@ -1436,23 +1448,23 @@ model StudentAnswer {
 }
 
 model AssessmentReschedule {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attemptId   String    @map("attempt_id") @db.Uuid
-  studentId   String    @map("student_id") @db.Uuid
-  fromSlotId  String    @map("from_slot_id") @db.Uuid
-  toSlotId    String?   @map("to_slot_id") @db.Uuid
-  reason      String    @db.Text
-  status      String    @default("pending") @db.VarChar(20)
-  reviewedBy  String?   @map("reviewed_by") @db.Uuid
-  reviewedAt  DateTime? @map("reviewed_at") @db.Timestamptz
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId  String    @map("attempt_id") @db.Uuid
+  studentId  String    @map("student_id") @db.Uuid
+  fromSlotId String    @map("from_slot_id") @db.Uuid
+  toSlotId   String?   @map("to_slot_id") @db.Uuid
+  reason     String    @db.Text
+  status     String    @default("pending") @db.VarChar(20)
+  reviewedBy String?   @map("reviewed_by") @db.Uuid
+  reviewedAt DateTime? @map("reviewed_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  attempt    AssessmentAttempt @relation(fields: [attemptId], references: [id])
-  student    Student           @relation(fields: [studentId], references: [id])
-  fromSlot   AssessmentSlot    @relation("RescheduleFromSlot", fields: [fromSlotId], references: [id])
-  toSlot     AssessmentSlot?   @relation("RescheduleToSlot", fields: [toSlotId], references: [id])
-  reviewer   StaffMember?      @relation("ARescheduleReviewer", fields: [reviewedBy], references: [id])
+  attempt  AssessmentAttempt @relation(fields: [attemptId], references: [id])
+  student  Student           @relation(fields: [studentId], references: [id])
+  fromSlot AssessmentSlot    @relation("RescheduleFromSlot", fields: [fromSlotId], references: [id])
+  toSlot   AssessmentSlot?   @relation("RescheduleToSlot", fields: [toSlotId], references: [id])
+  reviewer StaffMember?      @relation("ARescheduleReviewer", fields: [reviewedBy], references: [id])
 
   @@index([attemptId], name: "idx_reschedules_attempt")
   @@index([studentId], name: "idx_reschedules_student")
@@ -1464,29 +1476,29 @@ model AssessmentReschedule {
 // ============================================================
 
 model InterviewSlot {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String    @map("college_id") @db.Uuid
-  mode           String    @db.VarChar(20)
-  scheduledDate  DateTime  @map("scheduled_date") @db.Date
-  startTime      DateTime  @map("start_time") @db.Time
-  endTime        DateTime  @map("end_time") @db.Time
-  durationMins   Int       @default(30) @map("duration_mins")
-  maxCapacity    Int       @default(1) @map("max_capacity")
-  bookedCount    Int       @default(0) @map("booked_count")
-  zoomMeetingUrl String?   @map("zoom_meeting_url") @db.Text
-  zoomMeetingId  String?   @map("zoom_meeting_id") @db.VarChar(50)
-  zoomPasscode   String?   @map("zoom_passcode") @db.VarChar(20)
-  phoneNumber    String?   @map("phone_number") @db.VarChar(20)
-  venue          String?   @db.VarChar(255)
-  interviewerId  String?   @map("interviewer_id") @db.Uuid
-  status         String    @default("active") @db.VarChar(20)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId      String   @map("college_id") @db.Uuid
+  mode           String   @db.VarChar(20)
+  scheduledDate  DateTime @map("scheduled_date") @db.Date
+  startTime      DateTime @map("start_time") @db.Time
+  endTime        DateTime @map("end_time") @db.Time
+  durationMins   Int      @default(30) @map("duration_mins")
+  maxCapacity    Int      @default(1) @map("max_capacity")
+  bookedCount    Int      @default(0) @map("booked_count")
+  zoomMeetingUrl String?  @map("zoom_meeting_url") @db.Text
+  zoomMeetingId  String?  @map("zoom_meeting_id") @db.VarChar(50)
+  zoomPasscode   String?  @map("zoom_passcode") @db.VarChar(20)
+  phoneNumber    String?  @map("phone_number") @db.VarChar(20)
+  venue          String?  @db.VarChar(255)
+  interviewerId  String?  @map("interviewer_id") @db.Uuid
+  status         String   @default("active") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college       College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  interviewer   StaffMember? @relation("InterviewerStaff", fields: [interviewerId], references: [id])
-  bookings      InterviewBooking[]
+  college        College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  interviewer    StaffMember?          @relation("InterviewerStaff", fields: [interviewerId], references: [id])
+  bookings       InterviewBooking[]
   rescheduleFrom InterviewReschedule[] @relation("IRescheduleFrom")
   rescheduleTo   InterviewReschedule[] @relation("IRescheduleTo")
 
@@ -1498,26 +1510,26 @@ model InterviewSlot {
 }
 
 model InterviewBooking {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId  String    @unique @map("application_course_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  slotId               String    @map("slot_id") @db.Uuid
-  status               String    @default("booked") @db.VarChar(20)
-  interviewScore       Decimal?  @map("interview_score") @db.Decimal(5, 2)
-  interviewRemarks     String?   @map("interview_remarks") @db.Text
-  interviewOutcome     String?   @map("interview_outcome") @db.VarChar(20)
-  evaluatedBy          String?   @map("evaluated_by") @db.Uuid
-  evaluatedAt          DateTime? @map("evaluated_at") @db.Timestamptz
-  bookedAt             DateTime  @default(now()) @map("booked_at") @db.Timestamptz
-  completedAt          DateTime? @map("completed_at") @db.Timestamptz
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String    @unique @map("application_course_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  slotId              String    @map("slot_id") @db.Uuid
+  status              String    @default("booked") @db.VarChar(20)
+  interviewScore      Decimal?  @map("interview_score") @db.Decimal(5, 2)
+  interviewRemarks    String?   @map("interview_remarks") @db.Text
+  interviewOutcome    String?   @map("interview_outcome") @db.VarChar(20)
+  evaluatedBy         String?   @map("evaluated_by") @db.Uuid
+  evaluatedAt         DateTime? @map("evaluated_at") @db.Timestamptz
+  bookedAt            DateTime  @default(now()) @map("booked_at") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
-  student           Student           @relation(fields: [studentId], references: [id])
-  slot              InterviewSlot     @relation(fields: [slotId], references: [id])
-  evaluator         StaffMember?      @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
+  applicationCourse ApplicationCourse     @relation(fields: [applicationCourseId], references: [id])
+  student           Student               @relation(fields: [studentId], references: [id])
+  slot              InterviewSlot         @relation(fields: [slotId], references: [id])
+  evaluator         StaffMember?          @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
   reschedules       InterviewReschedule[]
 
   @@index([applicationCourseId], name: "idx_ibookings_app_course")
@@ -1529,24 +1541,24 @@ model InterviewBooking {
 }
 
 model InterviewReschedule {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bookingId       String    @map("booking_id") @db.Uuid
-  studentId       String    @map("student_id") @db.Uuid
-  fromSlotId      String    @map("from_slot_id") @db.Uuid
-  toSlotId        String?   @map("to_slot_id") @db.Uuid
-  reason          String    @db.Text
-  status          String    @default("pending") @db.VarChar(20)
-  reviewedBy      String?   @map("reviewed_by") @db.Uuid
-  reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz
-  reviewRemarks   String?   @map("review_remarks") @db.Text
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId     String    @map("booking_id") @db.Uuid
+  studentId     String    @map("student_id") @db.Uuid
+  fromSlotId    String    @map("from_slot_id") @db.Uuid
+  toSlotId      String?   @map("to_slot_id") @db.Uuid
+  reason        String    @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  reviewedBy    String?   @map("reviewed_by") @db.Uuid
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewRemarks String?   @map("review_remarks") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  booking    InterviewBooking @relation(fields: [bookingId], references: [id])
-  student    Student          @relation(fields: [studentId], references: [id])
-  fromSlot   InterviewSlot    @relation("IRescheduleFrom", fields: [fromSlotId], references: [id])
-  toSlot     InterviewSlot?   @relation("IRescheduleTo", fields: [toSlotId], references: [id])
-  reviewer   StaffMember?     @relation("IRescheduleReviewer", fields: [reviewedBy], references: [id])
+  booking  InterviewBooking @relation(fields: [bookingId], references: [id])
+  student  Student          @relation(fields: [studentId], references: [id])
+  fromSlot InterviewSlot    @relation("IRescheduleFrom", fields: [fromSlotId], references: [id])
+  toSlot   InterviewSlot?   @relation("IRescheduleTo", fields: [toSlotId], references: [id])
+  reviewer StaffMember?     @relation("IRescheduleReviewer", fields: [reviewedBy], references: [id])
 
   @@index([bookingId], name: "idx_ireschedule_booking")
   @@index([studentId], name: "idx_ireschedule_student")
@@ -1555,21 +1567,21 @@ model InterviewReschedule {
 }
 
 model OfferLetter {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId  String    @unique @map("application_course_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  offerNumber          String    @unique @map("offer_number") @db.VarChar(30)
-  offerDate            DateTime  @default(dbgenerated("CURRENT_DATE")) @map("offer_date") @db.Date
-  validUntil           DateTime  @map("valid_until") @db.Date
-  tokenAmount          Decimal   @map("token_amount") @db.Decimal(10, 2)
-  tokenPaymentStatus   String    @default("pending") @map("token_payment_status") @db.VarChar(20)
-  tokenTransactionId   String?   @map("token_transaction_id") @db.Uuid
-  documentUrl          String?   @map("document_url") @db.Text
-  status               String    @default("issued") @db.VarChar(20)
-  issuedBy             String?   @map("issued_by") @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String   @unique @map("application_course_id") @db.Uuid
+  studentId           String   @map("student_id") @db.Uuid
+  collegeId           String   @map("college_id") @db.Uuid
+  offerNumber         String   @unique @map("offer_number") @db.VarChar(30)
+  offerDate           DateTime @default(dbgenerated("CURRENT_DATE")) @map("offer_date") @db.Date
+  validUntil          DateTime @map("valid_until") @db.Date
+  tokenAmount         Decimal  @map("token_amount") @db.Decimal(10, 2)
+  tokenPaymentStatus  String   @default("pending") @map("token_payment_status") @db.VarChar(20)
+  tokenTransactionId  String?  @map("token_transaction_id") @db.Uuid
+  documentUrl         String?  @map("document_url") @db.Text
+  status              String   @default("issued") @db.VarChar(20)
+  issuedBy            String?  @map("issued_by") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
@@ -1591,18 +1603,18 @@ model OfferLetter {
 // ============================================================
 
 model FeeStructure {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  courseId            String    @map("course_id") @db.Uuid
-  academicYear        String    @map("academic_year") @db.VarChar(10)
-  feeCategory         String    @map("fee_category") @db.VarChar(30)
-  amount              Decimal   @db.Decimal(12, 2)
-  yearOrSemester      String?   @map("year_or_semester") @db.VarChar(20)
-  instalmentAllowed   Boolean   @default(false) @map("instalment_allowed")
-  instalmentConfig    Json      @default("{}") @map("instalment_config")
-  isActive            Boolean   @default(true) @map("is_active")
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId         String   @map("college_id") @db.Uuid
+  courseId          String   @map("course_id") @db.Uuid
+  academicYear      String   @map("academic_year") @db.VarChar(10)
+  feeCategory       String   @map("fee_category") @db.VarChar(30)
+  amount            Decimal  @db.Decimal(12, 2)
+  yearOrSemester    String?  @map("year_or_semester") @db.VarChar(20)
+  instalmentAllowed Boolean  @default(false) @map("instalment_allowed")
+  instalmentConfig  Json     @default("{}") @map("instalment_config")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -1650,44 +1662,44 @@ model StudentFeeLedger {
 }
 
 model Transaction {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  transactionNumber    String    @unique @map("transaction_number") @db.VarChar(30)
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  ledgerEntryId        String?   @map("ledger_entry_id") @db.Uuid
-  amount               Decimal   @db.Decimal(12, 2)
-  currency             String    @default("INR") @db.VarChar(5)
-  paymentMethod        String    @map("payment_method") @db.VarChar(20)
-  razorpayOrderId      String?   @map("razorpay_order_id") @db.VarChar(100)
-  razorpayPaymentId    String?   @map("razorpay_payment_id") @db.VarChar(100)
-  razorpaySignature    String?   @map("razorpay_signature") @db.Text
-  gatewayResponse      Json      @default("{}") @map("gateway_response")
-  transferStatus       String    @default("not_applicable") @map("transfer_status") @db.VarChar(20)
-  razorpayTransferId   String?   @map("razorpay_transfer_id") @db.VarChar(100)
-  platformCommission   Decimal   @default(0) @map("platform_commission") @db.Decimal(10, 2)
-  vendorPayout         Decimal?  @map("vendor_payout") @db.Decimal(10, 2)
-  uploadProofUrl       String?   @map("upload_proof_url") @db.Text
-  uploadProofFileName  String?   @map("upload_proof_file_name") @db.VarChar(255)
-  ddNumber             String?   @map("dd_number") @db.VarChar(50)
-  ddBankName           String?   @map("dd_bank_name") @db.VarChar(100)
-  ddDate               DateTime? @map("dd_date") @db.Date
-  bankRefNumber        String?   @map("bank_ref_number") @db.VarChar(100)
-  verificationStatus   String    @default("not_required") @map("verification_status") @db.VarChar(20)
-  verifiedBy           String?   @map("verified_by") @db.Uuid
-  verifiedAt           DateTime? @map("verified_at") @db.Timestamptz
-  rejectionReason      String?   @map("rejection_reason") @db.Text
-  status               String    @default("pending") @db.VarChar(20)
-  paidAt               DateTime? @map("paid_at") @db.Timestamptz
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionNumber   String    @unique @map("transaction_number") @db.VarChar(30)
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  ledgerEntryId       String?   @map("ledger_entry_id") @db.Uuid
+  amount              Decimal   @db.Decimal(12, 2)
+  currency            String    @default("INR") @db.VarChar(5)
+  paymentMethod       String    @map("payment_method") @db.VarChar(20)
+  razorpayOrderId     String?   @map("razorpay_order_id") @db.VarChar(100)
+  razorpayPaymentId   String?   @map("razorpay_payment_id") @db.VarChar(100)
+  razorpaySignature   String?   @map("razorpay_signature") @db.Text
+  gatewayResponse     Json      @default("{}") @map("gateway_response")
+  transferStatus      String    @default("not_applicable") @map("transfer_status") @db.VarChar(20)
+  razorpayTransferId  String?   @map("razorpay_transfer_id") @db.VarChar(100)
+  platformCommission  Decimal   @default(0) @map("platform_commission") @db.Decimal(10, 2)
+  vendorPayout        Decimal?  @map("vendor_payout") @db.Decimal(10, 2)
+  uploadProofUrl      String?   @map("upload_proof_url") @db.Text
+  uploadProofFileName String?   @map("upload_proof_file_name") @db.VarChar(255)
+  ddNumber            String?   @map("dd_number") @db.VarChar(50)
+  ddBankName          String?   @map("dd_bank_name") @db.VarChar(100)
+  ddDate              DateTime? @map("dd_date") @db.Date
+  bankRefNumber       String?   @map("bank_ref_number") @db.VarChar(100)
+  verificationStatus  String    @default("not_required") @map("verification_status") @db.VarChar(20)
+  verifiedBy          String?   @map("verified_by") @db.Uuid
+  verifiedAt          DateTime? @map("verified_at") @db.Timestamptz
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  status              String    @default("pending") @db.VarChar(20)
+  paidAt              DateTime? @map("paid_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student      Student           @relation(fields: [studentId], references: [id])
-  college      College           @relation(fields: [collegeId], references: [id])
-  ledgerEntry  StudentFeeLedger? @relation(fields: [ledgerEntryId], references: [id])
-  verifier     StaffMember?      @relation(fields: [verifiedBy], references: [id])
-  receipt      PaymentReceipt?
-  refunds      Refund[]
+  student     Student           @relation(fields: [studentId], references: [id])
+  college     College           @relation(fields: [collegeId], references: [id])
+  ledgerEntry StudentFeeLedger? @relation(fields: [ledgerEntryId], references: [id])
+  verifier    StaffMember?      @relation(fields: [verifiedBy], references: [id])
+  receipt     PaymentReceipt?
+  refunds     Refund[]
 
   @@index([studentId], name: "idx_txn_student")
   @@index([collegeId], name: "idx_txn_college")
@@ -1704,17 +1716,17 @@ model Transaction {
 }
 
 model PaymentReceipt {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  transactionId   String   @unique @map("transaction_id") @db.Uuid
-  studentId       String   @map("student_id") @db.Uuid
-  collegeId       String   @map("college_id") @db.Uuid
-  receiptNumber   String   @unique @map("receipt_number") @db.VarChar(30)
-  receiptDate     DateTime @default(dbgenerated("CURRENT_DATE")) @map("receipt_date") @db.Date
-  feeCategory     String   @map("fee_category") @db.VarChar(30)
-  description     String?  @db.VarChar(255)
-  amount          Decimal  @db.Decimal(12, 2)
-  documentUrl     String?  @map("document_url") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId String   @unique @map("transaction_id") @db.Uuid
+  studentId     String   @map("student_id") @db.Uuid
+  collegeId     String   @map("college_id") @db.Uuid
+  receiptNumber String   @unique @map("receipt_number") @db.VarChar(30)
+  receiptDate   DateTime @default(dbgenerated("CURRENT_DATE")) @map("receipt_date") @db.Date
+  feeCategory   String   @map("fee_category") @db.VarChar(30)
+  description   String?  @db.VarChar(255)
+  amount        Decimal  @db.Decimal(12, 2)
+  documentUrl   String?  @map("document_url") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   transaction Transaction @relation(fields: [transactionId], references: [id])
@@ -1758,18 +1770,18 @@ model Refund {
 }
 
 model ScholarshipConfig {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  name                String    @db.VarChar(255)
-  scholarshipType     String    @map("scholarship_type") @db.VarChar(30)
-  eligibility         Json
-  discountType        String    @map("discount_type") @db.VarChar(20)
-  discountValue       Decimal   @map("discount_value") @db.Decimal(10, 2)
-  applicableYears     Json      @default("[\"all\"]") @map("applicable_years")
-  termsAndConditions  String?   @map("terms_and_conditions") @db.Text
-  isActive            Boolean   @default(true) @map("is_active")
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  name               String   @db.VarChar(255)
+  scholarshipType    String   @map("scholarship_type") @db.VarChar(30)
+  eligibility        Json
+  discountType       String   @map("discount_type") @db.VarChar(20)
+  discountValue      Decimal  @map("discount_value") @db.Decimal(10, 2)
+  applicableYears    Json     @default("[\"all\"]") @map("applicable_years")
+  termsAndConditions String?  @map("terms_and_conditions") @db.Text
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -1782,25 +1794,25 @@ model ScholarshipConfig {
 }
 
 model ScholarshipApplication {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scholarshipConfigId  String    @map("scholarship_config_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  applicationCourseId  String    @map("application_course_id") @db.Uuid
-  supportingDocuments  Json      @default("[]") @map("supporting_documents")
-  remarks              String?   @db.Text
-  discountAmount       Decimal?  @map("discount_amount") @db.Decimal(12, 2)
-  status               String    @default("pending") @db.VarChar(20)
-  reviewedBy           String?   @map("reviewed_by") @db.Uuid
-  reviewedAt           DateTime? @map("reviewed_at") @db.Timestamptz
-  reviewRemarks        String?   @map("review_remarks") @db.Text
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scholarshipConfigId String    @map("scholarship_config_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  applicationCourseId String    @map("application_course_id") @db.Uuid
+  supportingDocuments Json      @default("[]") @map("supporting_documents")
+  remarks             String?   @db.Text
+  discountAmount      Decimal?  @map("discount_amount") @db.Decimal(12, 2)
+  status              String    @default("pending") @db.VarChar(20)
+  reviewedBy          String?   @map("reviewed_by") @db.Uuid
+  reviewedAt          DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewRemarks       String?   @map("review_remarks") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  scholarshipConfig  ScholarshipConfig @relation(fields: [scholarshipConfigId], references: [id])
-  student            Student           @relation(fields: [studentId], references: [id])
-  applicationCourse  ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
-  reviewer           StaffMember?      @relation(fields: [reviewedBy], references: [id])
+  scholarshipConfig ScholarshipConfig @relation(fields: [scholarshipConfigId], references: [id])
+  student           Student           @relation(fields: [studentId], references: [id])
+  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
+  reviewer          StaffMember?      @relation(fields: [reviewedBy], references: [id])
 
   @@unique([scholarshipConfigId, studentId, applicationCourseId], name: "uq_scholarship_student_course")
   @@index([scholarshipConfigId], name: "idx_schapp_config")
@@ -1811,19 +1823,19 @@ model ScholarshipApplication {
 }
 
 model CollegePaymentAccount {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId              String   @unique @map("college_id") @db.Uuid
-  razorpayAccountId      String   @map("razorpay_account_id") @db.VarChar(100)
-  onboardingStatus       String   @default("pending") @map("onboarding_status") @db.VarChar(20)
-  businessName           String?  @map("business_name") @db.VarChar(255)
-  panNumber              String?  @map("pan_number") @db.VarChar(20)
-  gstNumber              String?  @map("gst_number") @db.VarChar(20)
-  bankAccountNumber      String?  @map("bank_account_number") @db.VarChar(30)
-  bankIfsc               String?  @map("bank_ifsc") @db.VarChar(15)
-  bankName               String?  @map("bank_name") @db.VarChar(100)
-  platformCommissionPct  Decimal  @default(0) @map("platform_commission_pct") @db.Decimal(5, 2)
-  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId             String   @unique @map("college_id") @db.Uuid
+  razorpayAccountId     String   @map("razorpay_account_id") @db.VarChar(100)
+  onboardingStatus      String   @default("pending") @map("onboarding_status") @db.VarChar(20)
+  businessName          String?  @map("business_name") @db.VarChar(255)
+  panNumber             String?  @map("pan_number") @db.VarChar(20)
+  gstNumber             String?  @map("gst_number") @db.VarChar(20)
+  bankAccountNumber     String?  @map("bank_account_number") @db.VarChar(30)
+  bankIfsc              String?  @map("bank_ifsc") @db.VarChar(15)
+  bankName              String?  @map("bank_name") @db.VarChar(100)
+  platformCommissionPct Decimal  @default(0) @map("platform_commission_pct") @db.Decimal(5, 2)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college College @relation(fields: [collegeId], references: [id])
@@ -1838,18 +1850,18 @@ model CollegePaymentAccount {
 // ============================================================
 
 model DocumentTemplate {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String    @map("college_id") @db.Uuid
-  name        String    @db.VarChar(100)
-  slug        String    @db.VarChar(50)
-  description String?   @db.Text
-  isStandard  Boolean   @default(true) @map("is_standard")
-  isActive    Boolean   @default(true) @map("is_active")
-  hasFee      Boolean   @default(false) @map("has_fee")
-  feeAmount   Decimal   @default(0) @map("fee_amount") @db.Decimal(10, 2)
-  sortOrder   Int       @default(0) @map("sort_order")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String   @map("college_id") @db.Uuid
+  name        String   @db.VarChar(100)
+  slug        String   @db.VarChar(50)
+  description String?  @db.Text
+  isStandard  Boolean  @default(true) @map("is_standard")
+  isActive    Boolean  @default(true) @map("is_active")
+  hasFee      Boolean  @default(false) @map("has_fee")
+  feeAmount   Decimal  @default(0) @map("fee_amount") @db.Decimal(10, 2)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -1862,27 +1874,27 @@ model DocumentTemplate {
 }
 
 model DocumentRequest {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  requestNumber        String    @unique @map("request_number") @db.VarChar(30)
-  studentId            String    @map("student_id") @db.Uuid
-  collegeId            String    @map("college_id") @db.Uuid
-  documentTemplateId   String?   @map("document_template_id") @db.Uuid
-  documentName         String    @map("document_name") @db.VarChar(255)
-  description          String?   @db.Text
-  deliveryMode         String    @map("delivery_mode") @db.VarChar(20)
-  supportingDocuments  Json      @default("[]") @map("supporting_documents")
-  status               String    @default("submitted") @db.VarChar(20)
-  rejectionReason      String?   @map("rejection_reason") @db.Text
-  resubmissionCount    Int       @default(0) @map("resubmission_count")
-  resubmissionHistory  Json      @default("[]") @map("resubmission_history")
-  assignedTo           String?   @map("assigned_to") @db.Uuid
-  processedBy          String?   @map("processed_by") @db.Uuid
-  issuedDocumentUrl    String?   @map("issued_document_url") @db.Text
-  issuedAt             DateTime? @map("issued_at") @db.Timestamptz
-  pickupDate           DateTime? @map("pickup_date") @db.Date
-  pickupConfirmed      Boolean   @default(false) @map("pickup_confirmed")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestNumber       String    @unique @map("request_number") @db.VarChar(30)
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  documentTemplateId  String?   @map("document_template_id") @db.Uuid
+  documentName        String    @map("document_name") @db.VarChar(255)
+  description         String?   @db.Text
+  deliveryMode        String    @map("delivery_mode") @db.VarChar(20)
+  supportingDocuments Json      @default("[]") @map("supporting_documents")
+  status              String    @default("submitted") @db.VarChar(20)
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  resubmissionCount   Int       @default(0) @map("resubmission_count")
+  resubmissionHistory Json      @default("[]") @map("resubmission_history")
+  assignedTo          String?   @map("assigned_to") @db.Uuid
+  processedBy         String?   @map("processed_by") @db.Uuid
+  issuedDocumentUrl   String?   @map("issued_document_url") @db.Text
+  issuedAt            DateTime? @map("issued_at") @db.Timestamptz
+  pickupDate          DateTime? @map("pickup_date") @db.Date
+  pickupConfirmed     Boolean   @default(false) @map("pickup_confirmed")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   student          Student           @relation(fields: [studentId], references: [id])
@@ -1902,17 +1914,17 @@ model DocumentRequest {
 }
 
 model IssuedDocument {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  documentRequestId  String   @map("document_request_id") @db.Uuid
-  studentId          String   @map("student_id") @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
-  documentName       String   @map("document_name") @db.VarChar(255)
-  documentUrl        String   @map("document_url") @db.Text
-  fileName           String?  @map("file_name") @db.VarChar(255)
-  fileSizeBytes      Int?     @map("file_size_bytes")
-  deliveryMode       String   @map("delivery_mode") @db.VarChar(20)
-  issuedBy           String   @map("issued_by") @db.Uuid
-  issuedAt           DateTime @default(now()) @map("issued_at") @db.Timestamptz
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentRequestId String   @map("document_request_id") @db.Uuid
+  studentId         String   @map("student_id") @db.Uuid
+  collegeId         String   @map("college_id") @db.Uuid
+  documentName      String   @map("document_name") @db.VarChar(255)
+  documentUrl       String   @map("document_url") @db.Text
+  fileName          String?  @map("file_name") @db.VarChar(255)
+  fileSizeBytes     Int?     @map("file_size_bytes")
+  deliveryMode      String   @map("delivery_mode") @db.VarChar(20)
+  issuedBy          String   @map("issued_by") @db.Uuid
+  issuedAt          DateTime @default(now()) @map("issued_at") @db.Timestamptz
 
   // Relations
   documentRequest DocumentRequest @relation(fields: [documentRequestId], references: [id])
@@ -1931,36 +1943,36 @@ model IssuedDocument {
 // ============================================================
 
 model Hostel {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  name                String    @db.VarChar(255)
-  slug                String    @db.VarChar(100)
-  hostelType          String    @map("hostel_type") @db.VarChar(20)
-  isOnCampus          Boolean   @default(true) @map("is_on_campus")
-  distanceFromCampus  String?   @map("distance_from_campus") @db.VarChar(50)
-  description         String?   @db.Text
-  tags                Json      @default("[]")
-  totalBeds           Int?      @map("total_beds")
-  coverImageUrl       String?   @map("cover_image_url") @db.Text
-  gallery             Json      @default("[]")
-  wardenInfo          Json      @default("{}") @map("warden_info")
-  amenities           Json      @default("[]")
-  rules               Json      @default("[]")
-  locationInfo        Json      @default("{}") @map("location_info")
-  avgRating           Decimal   @default(0) @map("avg_rating") @db.Decimal(2, 1)
-  reviewCount         Int       @default(0) @map("review_count")
-  status              String    @default("active") @db.VarChar(20)
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  name               String   @db.VarChar(255)
+  slug               String   @db.VarChar(100)
+  hostelType         String   @map("hostel_type") @db.VarChar(20)
+  isOnCampus         Boolean  @default(true) @map("is_on_campus")
+  distanceFromCampus String?  @map("distance_from_campus") @db.VarChar(50)
+  description        String?  @db.Text
+  tags               Json     @default("[]")
+  totalBeds          Int?     @map("total_beds")
+  coverImageUrl      String?  @map("cover_image_url") @db.Text
+  gallery            Json     @default("[]")
+  wardenInfo         Json     @default("{}") @map("warden_info")
+  amenities          Json     @default("[]")
+  rules              Json     @default("[]")
+  locationInfo       Json     @default("{}") @map("location_info")
+  avgRating          Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
+  reviewCount        Int      @default(0) @map("review_count")
+  status             String   @default("active") @db.VarChar(20)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college      College            @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  roomTypes    HostelRoomType[]
-  messPlans    HostelMessPlan[]
+  college       College              @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  roomTypes     HostelRoomType[]
+  messPlans     HostelMessPlan[]
   addonServices HostelAddonService[]
-  reviews      HostelReview[]
-  enrollments  HostelEnrollment[]
-  wishlists    HostelWishlist[]
+  reviews       HostelReview[]
+  enrollments   HostelEnrollment[]
+  wishlists     HostelWishlist[]
 
   @@unique([collegeId, slug], name: "uq_hostel_slug")
   @@index([collegeId], name: "idx_hostels_college")
@@ -1970,21 +1982,21 @@ model Hostel {
 }
 
 model HostelRoomType {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId         String    @map("hostel_id") @db.Uuid
-  name             String    @db.VarChar(100)
-  description      String?   @db.Text
-  totalBeds        Int       @map("total_beds")
-  availableBeds    Int       @map("available_beds")
-  photos           Json      @default("[]")
-  annualPlanPrice  Decimal?  @map("annual_plan_price") @db.Decimal(10, 2)
-  monthlyPlanPrice Decimal?  @map("monthly_plan_price") @db.Decimal(10, 2)
-  admissionFee     Decimal   @default(0) @map("admission_fee") @db.Decimal(10, 2)
-  securityDeposit  Decimal   @default(0) @map("security_deposit") @db.Decimal(10, 2)
-  isActive         Boolean   @default(true) @map("is_active")
-  sortOrder        Int       @default(0) @map("sort_order")
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  hostelId         String   @map("hostel_id") @db.Uuid
+  name             String   @db.VarChar(100)
+  description      String?  @db.Text
+  totalBeds        Int      @map("total_beds")
+  availableBeds    Int      @map("available_beds")
+  photos           Json     @default("[]")
+  annualPlanPrice  Decimal? @map("annual_plan_price") @db.Decimal(10, 2)
+  monthlyPlanPrice Decimal? @map("monthly_plan_price") @db.Decimal(10, 2)
+  admissionFee     Decimal  @default(0) @map("admission_fee") @db.Decimal(10, 2)
+  securityDeposit  Decimal  @default(0) @map("security_deposit") @db.Decimal(10, 2)
+  isActive         Boolean  @default(true) @map("is_active")
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
@@ -1997,19 +2009,19 @@ model HostelRoomType {
 }
 
 model HostelMessPlan {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId        String    @map("hostel_id") @db.Uuid
-  name            String    @db.VarChar(100)
-  description     String?   @db.Text
-  mealsIncluded   Json      @default("[]") @map("meals_included")
-  priceMonthly    Decimal   @map("price_monthly") @db.Decimal(10, 2)
-  duration        String    @default("1 Month") @db.VarChar(20)
-  isCompulsory    Boolean   @default(false) @map("is_compulsory")
-  dietaryOptions  Json      @default("[]") @map("dietary_options")
-  isActive        Boolean   @default(true) @map("is_active")
-  sortOrder       Int       @default(0) @map("sort_order")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  hostelId       String   @map("hostel_id") @db.Uuid
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  mealsIncluded  Json     @default("[]") @map("meals_included")
+  priceMonthly   Decimal  @map("price_monthly") @db.Decimal(10, 2)
+  duration       String   @default("1 Month") @db.VarChar(20)
+  isCompulsory   Boolean  @default(false) @map("is_compulsory")
+  dietaryOptions Json     @default("[]") @map("dietary_options")
+  isActive       Boolean  @default(true) @map("is_active")
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
@@ -2080,11 +2092,11 @@ model HostelEnrollment {
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student   Student         @relation(fields: [studentId], references: [id])
-  college   College         @relation(fields: [collegeId], references: [id])
-  hostel    Hostel          @relation(fields: [hostelId], references: [id])
-  roomType  HostelRoomType  @relation(fields: [roomTypeId], references: [id])
-  messPlan  HostelMessPlan? @relation(fields: [messId], references: [id])
+  student  Student         @relation(fields: [studentId], references: [id])
+  college  College         @relation(fields: [collegeId], references: [id])
+  hostel   Hostel          @relation(fields: [hostelId], references: [id])
+  roomType HostelRoomType  @relation(fields: [roomTypeId], references: [id])
+  messPlan HostelMessPlan? @relation(fields: [messId], references: [id])
 
   @@index([studentId], name: "idx_henroll_student")
   @@index([collegeId], name: "idx_henroll_college")
@@ -2114,16 +2126,16 @@ model HostelWishlist {
 // ============================================================
 
 model CommuteRoute {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String    @map("college_id") @db.Uuid
-  name        String    @db.VarChar(255)
-  description String?   @db.VarChar(255)
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String   @map("college_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college     College              @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  college     College             @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   stops       CommuteRouteStop[]
   buses       CommuteBus[]
   enrollments CommuteEnrollment[]
@@ -2146,7 +2158,7 @@ model CommuteRouteStop {
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  route       CommuteRoute       @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  route       CommuteRoute        @relation(fields: [routeId], references: [id], onDelete: Cascade)
   enrollments CommuteEnrollment[]
 
   @@unique([routeId, stopOrder], name: "uq_route_stop_order")
@@ -2155,25 +2167,25 @@ model CommuteRouteStop {
 }
 
 model CommuteBus {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  routeId        String    @map("route_id") @db.Uuid
-  busNumber      String    @map("bus_number") @db.VarChar(20)
-  busName        String?   @map("bus_name") @db.VarChar(100)
-  busType        String?   @map("bus_type") @db.VarChar(50)
-  totalSeats     Int       @map("total_seats")
-  availableSeats Int       @map("available_seats")
-  driverName     String?   @map("driver_name") @db.VarChar(100)
-  driverPhone    String?   @map("driver_phone") @db.VarChar(20)
-  driverStatus   String    @default("off_duty") @map("driver_status") @db.VarChar(20)
-  monthlyFee     Decimal   @map("monthly_fee") @db.Decimal(10, 2)
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  routeId        String   @map("route_id") @db.Uuid
+  busNumber      String   @map("bus_number") @db.VarChar(20)
+  busName        String?  @map("bus_name") @db.VarChar(100)
+  busType        String?  @map("bus_type") @db.VarChar(50)
+  totalSeats     Int      @map("total_seats")
+  availableSeats Int      @map("available_seats")
+  driverName     String?  @map("driver_name") @db.VarChar(100)
+  driverPhone    String?  @map("driver_phone") @db.VarChar(20)
+  driverStatus   String   @default("off_duty") @map("driver_status") @db.VarChar(20)
+  monthlyFee     Decimal  @map("monthly_fee") @db.Decimal(10, 2)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  route        CommuteRoute       @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  enrollments  CommuteEnrollment[]
-  rideHistory  CommuteRideHistory[]
+  route       CommuteRoute         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  enrollments CommuteEnrollment[]
+  rideHistory CommuteRideHistory[]
 
   @@index([routeId], name: "idx_buses_route")
   @@index([routeId, isActive], name: "idx_buses_active")
@@ -2182,25 +2194,25 @@ model CommuteBus {
 }
 
 model CommuteEnrollment {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId      String    @map("student_id") @db.Uuid
-  collegeId      String    @map("college_id") @db.Uuid
-  routeId        String    @map("route_id") @db.Uuid
-  busId          String    @map("bus_id") @db.Uuid
-  pickupStopId   String    @map("pickup_stop_id") @db.Uuid
-  status         String    @default("active") @db.VarChar(20)
-  enrolledFrom   DateTime  @map("enrolled_from") @db.Date
-  enrolledUntil  DateTime? @map("enrolled_until") @db.Date
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId     String    @map("student_id") @db.Uuid
+  collegeId     String    @map("college_id") @db.Uuid
+  routeId       String    @map("route_id") @db.Uuid
+  busId         String    @map("bus_id") @db.Uuid
+  pickupStopId  String    @map("pickup_stop_id") @db.Uuid
+  status        String    @default("active") @db.VarChar(20)
+  enrolledFrom  DateTime  @map("enrolled_from") @db.Date
+  enrolledUntil DateTime? @map("enrolled_until") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student      Student          @relation(fields: [studentId], references: [id])
-  college      College          @relation(fields: [collegeId], references: [id])
-  route        CommuteRoute     @relation(fields: [routeId], references: [id])
-  bus          CommuteBus       @relation(fields: [busId], references: [id])
-  pickupStop   CommuteRouteStop @relation(fields: [pickupStopId], references: [id])
-  rideHistory  CommuteRideHistory[]
+  student     Student              @relation(fields: [studentId], references: [id])
+  college     College              @relation(fields: [collegeId], references: [id])
+  route       CommuteRoute         @relation(fields: [routeId], references: [id])
+  bus         CommuteBus           @relation(fields: [busId], references: [id])
+  pickupStop  CommuteRouteStop     @relation(fields: [pickupStopId], references: [id])
+  rideHistory CommuteRideHistory[]
 
   @@unique([studentId, status], name: "uq_commute_student_active")
   @@index([studentId], name: "idx_cenroll_student")
@@ -2239,20 +2251,20 @@ model CommuteRideHistory {
 // ============================================================
 
 model CounsellorAvailability {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId         String    @map("counsellor_id") @db.Uuid
-  availableDate        DateTime  @map("available_date") @db.Date
-  startTime            DateTime  @map("start_time") @db.Time
-  endTime              DateTime  @map("end_time") @db.Time
-  sessionDurationMins  Int       @default(45) @map("session_duration_mins")
-  isBooked             Boolean   @default(false) @map("is_booked")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  counsellorId        String   @map("counsellor_id") @db.Uuid
+  availableDate       DateTime @map("available_date") @db.Date
+  startTime           DateTime @map("start_time") @db.Time
+  endTime             DateTime @map("end_time") @db.Time
+  sessionDurationMins Int      @default(45) @map("session_duration_mins")
+  isBooked            Boolean  @default(false) @map("is_booked")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  counsellor           Counsellor          @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
-  sessions             CounsellingSession[]
-  rescheduleTargets    SessionReschedule[]  @relation("RescheduleToSlot")
+  counsellor        Counsellor           @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
+  sessions          CounsellingSession[]
+  rescheduleTargets SessionReschedule[]  @relation("RescheduleToSlot")
 
   @@unique([counsellorId, availableDate, startTime], name: "uq_counsellor_slot")
   @@index([counsellorId], name: "idx_avail_counsellor")
@@ -2261,36 +2273,36 @@ model CounsellorAvailability {
 }
 
 model CounsellingSession {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId        String    @map("student_id") @db.Uuid
-  counsellorId     String    @map("counsellor_id") @db.Uuid
-  availabilityId   String    @map("availability_id") @db.Uuid
-  sessionMode      String    @map("session_mode") @db.VarChar(20)
-  sessionType      String    @map("session_type") @db.VarChar(20)
-  scheduledDate    DateTime  @map("scheduled_date") @db.Date
-  startTime        DateTime  @map("start_time") @db.Time
-  endTime          DateTime  @map("end_time") @db.Time
-  bookingReason    String?   @map("booking_reason") @db.Text
-  status           String    @default("booked") @db.VarChar(20)
-  meetingUrl       String?   @map("meeting_url") @db.Text
-  meetingId        String?   @map("meeting_id") @db.VarChar(50)
-  sessionFee       Decimal?  @map("session_fee") @db.Decimal(10, 2)
-  paymentStatus    String    @default("pending") @map("payment_status") @db.VarChar(20)
-  transactionId    String?   @map("transaction_id") @db.Uuid
-  cancelledBy      String?   @map("cancelled_by") @db.VarChar(20)
-  cancellationReason String? @map("cancellation_reason") @db.Text
-  cancelledAt      DateTime? @map("cancelled_at") @db.Timestamptz
-  completedAt      DateTime? @map("completed_at") @db.Timestamptz
-  sessionNotes     String?   @map("session_notes") @db.Text
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId          String    @map("student_id") @db.Uuid
+  counsellorId       String    @map("counsellor_id") @db.Uuid
+  availabilityId     String    @map("availability_id") @db.Uuid
+  sessionMode        String    @map("session_mode") @db.VarChar(20)
+  sessionType        String    @map("session_type") @db.VarChar(20)
+  scheduledDate      DateTime  @map("scheduled_date") @db.Date
+  startTime          DateTime  @map("start_time") @db.Time
+  endTime            DateTime  @map("end_time") @db.Time
+  bookingReason      String?   @map("booking_reason") @db.Text
+  status             String    @default("booked") @db.VarChar(20)
+  meetingUrl         String?   @map("meeting_url") @db.Text
+  meetingId          String?   @map("meeting_id") @db.VarChar(50)
+  sessionFee         Decimal?  @map("session_fee") @db.Decimal(10, 2)
+  paymentStatus      String    @default("pending") @map("payment_status") @db.VarChar(20)
+  transactionId      String?   @map("transaction_id") @db.Uuid
+  cancelledBy        String?   @map("cancelled_by") @db.VarChar(20)
+  cancellationReason String?   @map("cancellation_reason") @db.Text
+  cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz
+  completedAt        DateTime? @map("completed_at") @db.Timestamptz
+  sessionNotes       String?   @map("session_notes") @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student       Student                @relation(fields: [studentId], references: [id])
-  counsellor    Counsellor             @relation(fields: [counsellorId], references: [id])
-  availability  CounsellorAvailability @relation(fields: [availabilityId], references: [id])
-  reschedules   SessionReschedule[]
-  walletTxns    CounsellorWalletTransaction[]
+  student      Student                       @relation(fields: [studentId], references: [id])
+  counsellor   Counsellor                    @relation(fields: [counsellorId], references: [id])
+  availability CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
+  reschedules  SessionReschedule[]
+  walletTxns   CounsellorWalletTransaction[]
 
   @@index([studentId], name: "idx_sessions_student")
   @@index([counsellorId], name: "idx_sessions_counsellor")
@@ -2314,7 +2326,7 @@ model SessionReschedule {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  session       CounsellingSession     @relation(fields: [sessionId], references: [id])
+  session        CounsellingSession     @relation(fields: [sessionId], references: [id])
   toAvailability CounsellorAvailability @relation("RescheduleToSlot", fields: [toAvailabilityId], references: [id])
 
   @@index([sessionId], name: "idx_sreschedule_session")
@@ -2339,21 +2351,21 @@ model CounsellorWallet {
 }
 
 model CounsellorWalletTransaction {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId         String    @map("wallet_id") @db.Uuid
-  counsellorId     String    @map("counsellor_id") @db.Uuid
-  type             String    @db.VarChar(20)
-  amount           Decimal   @db.Decimal(10, 2)
-  description      String?   @db.VarChar(255)
-  sessionId        String?   @map("session_id") @db.Uuid
-  withdrawalStatus String?   @map("withdrawal_status") @db.VarChar(20)
-  bankDetails      Json      @default("{}") @map("bank_details")
-  balanceAfter     Decimal   @map("balance_after") @db.Decimal(12, 2)
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletId         String   @map("wallet_id") @db.Uuid
+  counsellorId     String   @map("counsellor_id") @db.Uuid
+  type             String   @db.VarChar(20)
+  amount           Decimal  @db.Decimal(10, 2)
+  description      String?  @db.VarChar(255)
+  sessionId        String?  @map("session_id") @db.Uuid
+  withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
+  bankDetails      Json     @default("{}") @map("bank_details")
+  balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  wallet     CounsellorWallet   @relation(fields: [walletId], references: [id])
-  counsellor Counsellor         @relation(fields: [counsellorId], references: [id])
+  wallet     CounsellorWallet    @relation(fields: [walletId], references: [id])
+  counsellor Counsellor          @relation(fields: [counsellorId], references: [id])
   session    CounsellingSession? @relation(fields: [sessionId], references: [id])
 
   @@index([walletId], name: "idx_wtxn_wallet")
@@ -2368,21 +2380,21 @@ model CounsellorWalletTransaction {
 // ============================================================
 
 model ReferralCode {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  blinkUserId         String    @map("blink_user_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  courseId            String?   @map("course_id") @db.Uuid
-  code                String    @unique @db.VarChar(30)
-  referralUrl         String?   @map("referral_url") @db.Text
-  totalClicks         Int       @default(0) @map("total_clicks")
-  totalRegistrations  Int       @default(0) @map("total_registrations")
-  isActive            Boolean   @default(true) @map("is_active")
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blinkUserId        String   @map("blink_user_id") @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  courseId           String?  @map("course_id") @db.Uuid
+  code               String   @unique @db.VarChar(30)
+  referralUrl        String?  @map("referral_url") @db.Text
+  totalClicks        Int      @default(0) @map("total_clicks")
+  totalRegistrations Int      @default(0) @map("total_registrations")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  blinkUser    BlinkUser    @relation(fields: [blinkUserId], references: [id])
-  college      College      @relation(fields: [collegeId], references: [id])
-  course       Course?      @relation(fields: [courseId], references: [id])
+  blinkUser    BlinkUser     @relation(fields: [blinkUserId], references: [id])
+  college      College       @relation(fields: [collegeId], references: [id])
+  course       Course?       @relation(fields: [courseId], references: [id])
   referrals    Referral[]
   applications Application[]
 
@@ -2393,22 +2405,22 @@ model ReferralCode {
 }
 
 model Referral {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  referralCodeId       String    @map("referral_code_id") @db.Uuid
-  blinkUserId          String    @map("blink_user_id") @db.Uuid
-  studentId            String    @map("student_id") @db.Uuid
-  applicationCourseId  String?   @unique @map("application_course_id") @db.Uuid
-  status               String    @default("registered") @db.VarChar(30)
-  statusHistory        Json      @default("[]") @map("status_history")
-  statusUpdatedAt      DateTime? @map("status_updated_at") @db.Timestamptz
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referralCodeId      String    @map("referral_code_id") @db.Uuid
+  blinkUserId         String    @map("blink_user_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  applicationCourseId String?   @unique @map("application_course_id") @db.Uuid
+  status              String    @default("registered") @db.VarChar(30)
+  statusHistory       Json      @default("[]") @map("status_history")
+  statusUpdatedAt     DateTime? @map("status_updated_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  referralCode      ReferralCode      @relation(fields: [referralCodeId], references: [id])
-  blinkUser         BlinkUser         @relation(fields: [blinkUserId], references: [id])
-  student           Student           @relation(fields: [studentId], references: [id])
-  applicationCourse ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
+  referralCode      ReferralCode               @relation(fields: [referralCodeId], references: [id])
+  blinkUser         BlinkUser                  @relation(fields: [blinkUserId], references: [id])
+  student           Student                    @relation(fields: [studentId], references: [id])
+  applicationCourse ApplicationCourse?         @relation(fields: [applicationCourseId], references: [id])
   commission        Commission?
   studentWalletTxns StudentWalletTransaction[]
 
@@ -2421,19 +2433,19 @@ model Referral {
 }
 
 model ServiceChargeConfig {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId       String    @map("college_id") @db.Uuid
-  courseId        String    @map("course_id") @db.Uuid
-  academicYear    String    @map("academic_year") @db.VarChar(10)
-  studentCategory String    @map("student_category") @db.VarChar(50)
-  grossAmount     Decimal   @map("gross_amount") @db.Decimal(10, 2)
-  gstPercentage   Decimal   @default(18.00) @map("gst_percentage") @db.Decimal(5, 2)
-  gstAmount       Decimal   @map("gst_amount") @db.Decimal(10, 2)
-  netPayout       Decimal   @map("net_payout") @db.Decimal(10, 2)
-  termsAndConditions String? @map("terms_and_conditions") @db.Text
-  isActive        Boolean   @default(true) @map("is_active")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  courseId           String   @map("course_id") @db.Uuid
+  academicYear       String   @map("academic_year") @db.VarChar(10)
+  studentCategory    String   @map("student_category") @db.VarChar(50)
+  grossAmount        Decimal  @map("gross_amount") @db.Decimal(10, 2)
+  gstPercentage      Decimal  @default(18.00) @map("gst_percentage") @db.Decimal(5, 2)
+  gstAmount          Decimal  @map("gst_amount") @db.Decimal(10, 2)
+  netPayout          Decimal  @map("net_payout") @db.Decimal(10, 2)
+  termsAndConditions String?  @map("terms_and_conditions") @db.Text
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college     College      @relation(fields: [collegeId], references: [id])
@@ -2447,24 +2459,24 @@ model ServiceChargeConfig {
 }
 
 model Commission {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  referralId       String    @unique @map("referral_id") @db.Uuid
-  blinkUserId      String    @map("blink_user_id") @db.Uuid
-  serviceChargeId  String    @map("service_charge_id") @db.Uuid
-  grossAmount      Decimal   @map("gross_amount") @db.Decimal(10, 2)
-  gstAmount        Decimal   @map("gst_amount") @db.Decimal(10, 2)
-  netPayout        Decimal   @map("net_payout") @db.Decimal(10, 2)
-  status           String    @default("pending") @db.VarChar(20)
-  payoutDueDate    DateTime? @map("payout_due_date") @db.Date
-  paidAt           DateTime? @map("paid_at") @db.Timestamptz
-  approvedBy       String?   @map("approved_by") @db.Uuid
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referralId      String    @unique @map("referral_id") @db.Uuid
+  blinkUserId     String    @map("blink_user_id") @db.Uuid
+  serviceChargeId String    @map("service_charge_id") @db.Uuid
+  grossAmount     Decimal   @map("gross_amount") @db.Decimal(10, 2)
+  gstAmount       Decimal   @map("gst_amount") @db.Decimal(10, 2)
+  netPayout       Decimal   @map("net_payout") @db.Decimal(10, 2)
+  status          String    @default("pending") @db.VarChar(20)
+  payoutDueDate   DateTime? @map("payout_due_date") @db.Date
+  paidAt          DateTime? @map("paid_at") @db.Timestamptz
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  referral      Referral            @relation(fields: [referralId], references: [id])
-  blinkUser     BlinkUser           @relation(fields: [blinkUserId], references: [id])
-  serviceCharge ServiceChargeConfig @relation(fields: [serviceChargeId], references: [id])
+  referral      Referral                 @relation(fields: [referralId], references: [id])
+  blinkUser     BlinkUser                @relation(fields: [blinkUserId], references: [id])
+  serviceCharge ServiceChargeConfig      @relation(fields: [serviceChargeId], references: [id])
   walletTxns    BlinkWalletTransaction[]
 
   @@index([blinkUserId], name: "idx_comm_user")
@@ -2492,16 +2504,16 @@ model BlinkWallet {
 }
 
 model BlinkWalletTransaction {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId         String    @map("wallet_id") @db.Uuid
-  blinkUserId      String    @map("blink_user_id") @db.Uuid
-  type             String    @db.VarChar(20)
-  amount           Decimal   @db.Decimal(10, 2)
-  description      String?   @db.VarChar(255)
-  commissionId     String?   @map("commission_id") @db.Uuid
-  withdrawalStatus String?   @map("withdrawal_status") @db.VarChar(20)
-  balanceAfter     Decimal   @map("balance_after") @db.Decimal(12, 2)
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletId         String   @map("wallet_id") @db.Uuid
+  blinkUserId      String   @map("blink_user_id") @db.Uuid
+  type             String   @db.VarChar(20)
+  amount           Decimal  @db.Decimal(10, 2)
+  description      String?  @db.VarChar(255)
+  commissionId     String?  @map("commission_id") @db.Uuid
+  withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
+  balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   wallet     BlinkWallet @relation(fields: [walletId], references: [id])
@@ -2516,27 +2528,27 @@ model BlinkWalletTransaction {
 }
 
 model CampusVisit {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId         String    @map("college_id") @db.Uuid
-  studentId         String    @map("student_id") @db.Uuid
-  ambassadorId      String    @map("ambassador_id") @db.Uuid
-  studentName       String    @map("student_name") @db.VarChar(255)
-  courseInterest    String?   @map("course_interest") @db.VarChar(255)
-  department        String?   @db.VarChar(255)
-  proposedDate      DateTime  @map("proposed_date") @db.Date
-  proposedTime      DateTime  @map("proposed_time") @db.Time
-  status            String    @default("pending") @db.VarChar(20)
-  reassignedFrom    String?   @map("reassigned_from") @db.Uuid
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  studentId          String   @map("student_id") @db.Uuid
+  ambassadorId       String   @map("ambassador_id") @db.Uuid
+  studentName        String   @map("student_name") @db.VarChar(255)
+  courseInterest     String?  @map("course_interest") @db.VarChar(255)
+  department         String?  @db.VarChar(255)
+  proposedDate       DateTime @map("proposed_date") @db.Date
+  proposedTime       DateTime @map("proposed_time") @db.Time
+  status             String   @default("pending") @db.VarChar(20)
+  reassignedFrom     String?  @map("reassigned_from") @db.Uuid
   reassignmentReason String?  @map("reassignment_reason") @db.Text
-  visitNotes        String?   @map("visit_notes") @db.Text
-  visitRating       Int?      @map("visit_rating") @db.SmallInt
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  visitNotes         String?  @map("visit_notes") @db.Text
+  visitRating        Int?     @map("visit_rating") @db.SmallInt
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college          College     @relation(fields: [collegeId], references: [id])
-  student          Student     @relation(fields: [studentId], references: [id])
-  ambassador       BlinkUser   @relation("AmbassadorVisits", fields: [ambassadorId], references: [id])
+  college            College    @relation(fields: [collegeId], references: [id])
+  student            Student    @relation(fields: [studentId], references: [id])
+  ambassador         BlinkUser  @relation("AmbassadorVisits", fields: [ambassadorId], references: [id])
   previousAmbassador BlinkUser? @relation("ReassignedFrom", fields: [reassignedFrom], references: [id])
   // staffCreator: creation tracked via audit_logs; ambassadorId FK is to blink_users
 
@@ -2565,8 +2577,8 @@ model MediaKit {
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  course  Course?  @relation(fields: [courseId], references: [id])
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  course  Course? @relation(fields: [courseId], references: [id])
 
   @@index([collegeId], name: "idx_media_college")
   @@index([courseId], name: "idx_media_course")
@@ -2636,8 +2648,8 @@ model CommunityPost {
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  community Community            @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  author    Student              @relation(fields: [authorId], references: [id])
+  community Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    Student             @relation(fields: [authorId], references: [id])
   votes     CommunityPostVote[]
   comments  CommunityComment[]
 
@@ -2665,15 +2677,15 @@ model CommunityPostVote {
 }
 
 model CommunityComment {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId          String    @map("post_id") @db.Uuid
-  authorId        String    @map("author_id") @db.Uuid
-  parentCommentId String?   @map("parent_comment_id") @db.Uuid
-  content         String    @db.Text
-  likeCount       Int       @default(0) @map("like_count")
-  status          String    @default("active") @db.VarChar(20)
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId          String   @map("post_id") @db.Uuid
+  authorId        String   @map("author_id") @db.Uuid
+  parentCommentId String?  @map("parent_comment_id") @db.Uuid
+  content         String   @db.Text
+  likeCount       Int      @default(0) @map("like_count")
+  status          String   @default("active") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   post          CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -2704,20 +2716,20 @@ model SquadSearch {
 }
 
 model BeaconuCard {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId       String   @unique @map("student_id") @db.Uuid
-  cardNumber      String   @unique @map("card_number") @db.VarChar(20)
-  cardHolderName  String   @map("card_holder_name") @db.VarChar(255)
-  validUntil      DateTime @map("valid_until") @db.Date
-  balance         Decimal  @default(0) @db.Decimal(12, 2)
-  totalEarned     Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
-  totalWithdrawn  Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
-  status          String   @default("active") @db.VarChar(20)
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId      String   @unique @map("student_id") @db.Uuid
+  cardNumber     String   @unique @map("card_number") @db.VarChar(20)
+  cardHolderName String   @map("card_holder_name") @db.VarChar(255)
+  validUntil     DateTime @map("valid_until") @db.Date
+  balance        Decimal  @default(0) @db.Decimal(12, 2)
+  totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
+  totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
+  status         String   @default("active") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student      Student                  @relation(fields: [studentId], references: [id])
+  student      Student                    @relation(fields: [studentId], references: [id])
   transactions StudentWalletTransaction[]
 
   @@index([studentId], name: "idx_card_student")
@@ -2727,39 +2739,39 @@ model BeaconuCard {
 }
 
 model StudentBankAccount {
-  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId               String   @map("student_id") @db.Uuid
-  bankName                String   @map("bank_name") @db.VarChar(100)
-  accountHolderName       String   @map("account_holder_name") @db.VarChar(255)
-  accountNumberLast4      String   @map("account_number_last4") @db.VarChar(4)
-  accountNumberEncrypted  String   @map("account_number_encrypted") @db.Text
-  ifscCode                String   @map("ifsc_code") @db.VarChar(15)
-  accountType             String   @default("savings") @map("account_type") @db.VarChar(20)
-  isVerified              Boolean  @default(false) @map("is_verified")
-  isPrimary               Boolean  @default(false) @map("is_primary")
-  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId              String   @map("student_id") @db.Uuid
+  bankName               String   @map("bank_name") @db.VarChar(100)
+  accountHolderName      String   @map("account_holder_name") @db.VarChar(255)
+  accountNumberLast4     String   @map("account_number_last4") @db.VarChar(4)
+  accountNumberEncrypted String   @map("account_number_encrypted") @db.Text
+  ifscCode               String   @map("ifsc_code") @db.VarChar(15)
+  accountType            String   @default("savings") @map("account_type") @db.VarChar(20)
+  isVerified             Boolean  @default(false) @map("is_verified")
+  isPrimary              Boolean  @default(false) @map("is_primary")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student      Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  walletTxns   StudentWalletTransaction[]
+  student    Student                    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  walletTxns StudentWalletTransaction[]
 
   @@index([studentId], name: "idx_sba_student")
   @@map("student_bank_accounts")
 }
 
 model StudentWalletTransaction {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cardId           String    @map("card_id") @db.Uuid
-  studentId        String    @map("student_id") @db.Uuid
-  type             String    @db.VarChar(20)
-  amount           Decimal   @db.Decimal(10, 2)
-  description      String?   @db.VarChar(255)
-  referralId       String?   @map("referral_id") @db.Uuid
-  bankAccountId    String?   @map("bank_account_id") @db.Uuid
-  withdrawalStatus String?   @map("withdrawal_status") @db.VarChar(20)
-  balanceAfter     Decimal   @map("balance_after") @db.Decimal(12, 2)
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cardId           String   @map("card_id") @db.Uuid
+  studentId        String   @map("student_id") @db.Uuid
+  type             String   @db.VarChar(20)
+  amount           Decimal  @db.Decimal(10, 2)
+  description      String?  @db.VarChar(255)
+  referralId       String?  @map("referral_id") @db.Uuid
+  bankAccountId    String?  @map("bank_account_id") @db.Uuid
+  withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
+  balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   card        BeaconuCard         @relation(fields: [cardId], references: [id])
@@ -2776,25 +2788,25 @@ model StudentWalletTransaction {
 }
 
 model AntiRaggingComplaint {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId        String    @map("student_id") @db.Uuid
-  collegeId        String    @map("college_id") @db.Uuid
-  complaintNumber  String    @unique @map("complaint_number") @db.VarChar(30)
-  subject          String    @db.VarChar(255)
-  description      String    @db.Text
-  isAnonymous      Boolean   @default(false) @map("is_anonymous")
-  attachments      Json      @default("[]")
-  status           String    @default("submitted") @db.VarChar(20)
-  assignedTo       String?   @map("assigned_to") @db.Uuid
-  resolution       String?   @db.Text
-  resolvedAt       DateTime? @map("resolved_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId       String    @map("student_id") @db.Uuid
+  collegeId       String    @map("college_id") @db.Uuid
+  complaintNumber String    @unique @map("complaint_number") @db.VarChar(30)
+  subject         String    @db.VarChar(255)
+  description     String    @db.Text
+  isAnonymous     Boolean   @default(false) @map("is_anonymous")
+  attachments     Json      @default("[]")
+  status          String    @default("submitted") @db.VarChar(20)
+  assignedTo      String?   @map("assigned_to") @db.Uuid
+  resolution      String?   @db.Text
+  resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student     Student      @relation(fields: [studentId], references: [id])
-  college     College      @relation(fields: [collegeId], references: [id])
-  assignee    StaffMember? @relation(fields: [assignedTo], references: [id])
+  student  Student      @relation(fields: [studentId], references: [id])
+  college  College      @relation(fields: [collegeId], references: [id])
+  assignee StaffMember? @relation(fields: [assignedTo], references: [id])
 
   @@index([studentId], name: "idx_arc_student")
   @@index([collegeId], name: "idx_arc_college")
@@ -2834,24 +2846,24 @@ model Notification {
 }
 
 model BroadcastNotification {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId        String?   @map("college_id") @db.Uuid
-  title            String    @db.VarChar(255)
-  body             String    @db.Text
-  channels         Json
-  targetFilters    Json      @map("target_filters")
-  totalRecipients  Int       @default(0) @map("total_recipients")
-  sentCount        Int       @default(0) @map("sent_count")
-  failedCount      Int       @default(0) @map("failed_count")
-  sentByType       String    @map("sent_by_type") @db.VarChar(20)
-  sentById         String    @map("sent_by_id") @db.Uuid
-  status           String    @default("draft") @db.VarChar(20)
-  scheduledAt      DateTime? @map("scheduled_at") @db.Timestamptz
-  sentAt           DateTime? @map("sent_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId       String?   @map("college_id") @db.Uuid
+  title           String    @db.VarChar(255)
+  body            String    @db.Text
+  channels        Json
+  targetFilters   Json      @map("target_filters")
+  totalRecipients Int       @default(0) @map("total_recipients")
+  sentCount       Int       @default(0) @map("sent_count")
+  failedCount     Int       @default(0) @map("failed_count")
+  sentByType      String    @map("sent_by_type") @db.VarChar(20)
+  sentById        String    @map("sent_by_id") @db.Uuid
+  status          String    @default("draft") @db.VarChar(20)
+  scheduledAt     DateTime? @map("scheduled_at") @db.Timestamptz
+  sentAt          DateTime? @map("sent_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  college       College?       @relation(fields: [collegeId], references: [id])
+  college College? @relation(fields: [collegeId], references: [id])
   // sentById is polymorphic (platform_admin or staff_member). Resolve at app layer.
 
   @@index([collegeId], name: "idx_broadcast_college")
@@ -2874,8 +2886,8 @@ model Announcement {
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college   College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  creator   StaffMember @relation(fields: [createdBy], references: [id])
+  college College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  creator StaffMember @relation(fields: [createdBy], references: [id])
 
   @@index([collegeId, status], name: "idx_announce_college")
   @@index([publishedAt(sort: Desc)], name: "idx_announce_published")
@@ -2899,10 +2911,10 @@ model SupportTicket {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student    Student      @relation(fields: [studentId], references: [id])
-  college    College      @relation(fields: [collegeId], references: [id])
-  assignee   StaffMember? @relation(fields: [assignedTo], references: [id])
-  messages   TicketMessage[]
+  student  Student         @relation(fields: [studentId], references: [id])
+  college  College         @relation(fields: [collegeId], references: [id])
+  assignee StaffMember?    @relation(fields: [assignedTo], references: [id])
+  messages TicketMessage[]
 
   @@index([studentId], name: "idx_tickets_student")
   @@index([collegeId], name: "idx_tickets_college")
@@ -2924,7 +2936,7 @@ model TicketMessage {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   // senderId is polymorphic (student, staff_member, or system). Resolve at app layer via senderType.
 
   @@index([ticketId, createdAt], name: "idx_tmsg_ticket")
@@ -2933,18 +2945,18 @@ model TicketMessage {
 }
 
 model ChatConversation {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  participant1Type     String    @map("participant_1_type") @db.VarChar(20)
-  participant1Id       String    @map("participant_1_id") @db.Uuid
-  participant2Type     String    @map("participant_2_type") @db.VarChar(20)
-  participant2Id       String    @map("participant_2_id") @db.Uuid
-  lastMessageText      String?   @map("last_message_text") @db.Text
-  lastMessageAt        DateTime? @map("last_message_at") @db.Timestamptz
-  participant1Unread   Int       @default(0) @map("participant_1_unread")
-  participant2Unread   Int       @default(0) @map("participant_2_unread")
-  status               String    @default("active") @db.VarChar(20)
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant1Type   String    @map("participant_1_type") @db.VarChar(20)
+  participant1Id     String    @map("participant_1_id") @db.Uuid
+  participant2Type   String    @map("participant_2_type") @db.VarChar(20)
+  participant2Id     String    @map("participant_2_id") @db.Uuid
+  lastMessageText    String?   @map("last_message_text") @db.Text
+  lastMessageAt      DateTime? @map("last_message_at") @db.Timestamptz
+  participant1Unread Int       @default(0) @map("participant_1_unread")
+  participant2Unread Int       @default(0) @map("participant_2_unread")
+  status             String    @default("active") @db.VarChar(20)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // participant1Id and participant2Id are polymorphic (student, blink_user, or staff_member).
   // Resolved at application layer via participant1Type / participant2Type discriminators.
@@ -2959,18 +2971,18 @@ model ChatConversation {
 }
 
 model ChatMessage {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  conversationId String   @map("conversation_id") @db.Uuid
-  senderType     String   @map("sender_type") @db.VarChar(20)
-  senderId       String   @map("sender_id") @db.Uuid
-  message        String?  @db.Text
-  attachments    Json     @default("[]")
-  isRead         Boolean  @default(false) @map("is_read")
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  senderType     String    @map("sender_type") @db.VarChar(20)
+  senderId       String    @map("sender_id") @db.Uuid
+  message        String?   @db.Text
+  attachments    Json      @default("[]")
+  isRead         Boolean   @default(false) @map("is_read")
   readAt         DateTime? @map("read_at") @db.Timestamptz
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  conversation  ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   // senderId is polymorphic (student, blink_user, or staff_member). Resolve at app layer via senderType.
 
   @@index([conversationId, createdAt], name: "idx_cmsg_conversation")
