@@ -1,7 +1,8 @@
-import { AppError } from './app-error'
+import { AppError } from './app-error';
+import { ErrorCode } from '../responses/error-codes';
 
 export class BadRequestError extends AppError {
-  constructor(message = 'Bad request') {
-    super(message, 400, 'BAD_REQUEST')
+  constructor(message: string = 'Bad request') {
+    super(message, 400, ErrorCode.INVALID_INPUT);
   }
 }

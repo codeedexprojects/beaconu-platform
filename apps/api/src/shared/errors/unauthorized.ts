@@ -1,7 +1,8 @@
-import { AppError } from './app-error'
+import { AppError } from './app-error';
+import { ErrorCode } from '../responses/error-codes';
 
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Authentication required') {
-    super(message, 401, 'UNAUTHORIZED')
+  constructor(message: string = 'Unauthorized access') {
+    super(message, 401, ErrorCode.UNAUTHORIZED);
   }
 }

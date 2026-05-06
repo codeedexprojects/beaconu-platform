@@ -1,9 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { env } from '@/shared/config/env'
-import { JwtPayload, UserType } from '@beaconu/types'
-
-const ACCESS_TOKEN_EXPIRY = '15m'
-const REFRESH_TOKEN_EXPIRY = '90d'
+import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '@/shared/constants'
+import { JwtPayload } from './auth.types'
 
 export class JwtUtils {
   static generateAccessToken(payload: JwtPayload): string {
