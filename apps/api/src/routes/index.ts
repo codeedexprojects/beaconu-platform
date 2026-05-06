@@ -1,13 +1,11 @@
 import { Router } from 'express';
 import blinkRoutes from './blink';
+import platformAdminRoutes from './platform-admin';
 
 const router: Router = Router();
 
 router.use('/blink', blinkRoutes);
-
-// Placeholder for other modules as they get refactored
-// router.use('/student', studentRoutes);
-// router.use('/platform-admin', platformAdminRoutes);
+router.use('/platform-admin', platformAdminRoutes);
 // router.use('/college-admin', collegeAdminRoutes);
 // router.use('/counsellor', counsellorRoutes);
 // router.use('/public', publicRoutes);
