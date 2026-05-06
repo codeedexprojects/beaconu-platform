@@ -21,6 +21,7 @@
     "db:seed": "dotenv -e .env -- pnpm --filter @beaconu/db seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @beaconu/db studio",
     "db:push": "dotenv -e .env -- pnpm --filter @beaconu/db push",
+    "db:admin": "dotenv -e .env -- pnpm --filter @beaconu/api exec tsx ../../scripts/create-super-admin.ts",
     "prepare": "husky"
   },
   "devDependencies": {
