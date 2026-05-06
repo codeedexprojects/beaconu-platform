@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Building2,
@@ -22,9 +22,22 @@ import {
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAuthStore } from '@/store'
-import { useRouter } from 'next/navigation'
+import { useRbac } from '@/hooks/use-rbac'
+import type { Permission } from '@/lib/rbac'
 
-const navSections = [
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ElementType
+  permission?: Permission
+}
+
+interface NavSection {
+  label: string
+  items: NavItem[]
+}
+
+const navSections: NavSection[] = [
   {
     label: 'Overview',
     items: [
@@ -34,33 +47,33 @@ const navSections = [
   {
     label: 'Institutions',
     items: [
-      { href: '/colleges', label: 'Colleges', icon: Building2 },
-      { href: '/universities', label: 'Universities', icon: GraduationCap },
+      { href: '/colleges', label: 'Colleges', icon: Building2, permission: 'colleges.view' },
+      { href: '/universities', label: 'Universities', icon: GraduationCap, permission: 'universities.view' },
     ],
   },
   {
     label: 'People',
     items: [
-      { href: '/students', label: 'Students', icon: Users },
-      { href: '/leads', label: 'Student Leads', icon: Target },
-      { href: '/counsellors', label: 'Counsellors', icon: HeartHandshake },
+      { href: '/students', label: 'Students', icon: Users, permission: 'students.view' },
+      { href: '/leads', label: 'Student Leads', icon: Target, permission: 'leads.view' },
+      { href: '/counsellors', label: 'Counsellors', icon: HeartHandshake, permission: 'counsellors.view' },
     ],
   },
   {
     label: 'Content',
     items: [
-      { href: '/blogs', label: 'Blogs', icon: FileText },
-      { href: '/articles', label: 'Articles', icon: BookOpen },
-      { href: '/news', label: 'News & Alerts', icon: Newspaper },
-      { href: '/exams', label: 'Entrance Exams', icon: PenLine },
-      { href: '/events', label: 'Events', icon: Calendar },
+      { href: '/blogs', label: 'Blogs', icon: FileText, permission: 'content.view' },
+      { href: '/articles', label: 'Articles', icon: BookOpen, permission: 'content.view' },
+      { href: '/news', label: 'News & Alerts', icon: Newspaper, permission: 'content.view' },
+      { href: '/exams', label: 'Entrance Exams', icon: PenLine, permission: 'exams.view' },
+      { href: '/events', label: 'Events', icon: Calendar, permission: 'events.view' },
     ],
   },
   {
     label: 'Platform',
     items: [
-      { href: '/admins', label: 'Admins', icon: ShieldCheck },
-      { href: '/settings', label: 'Settings', icon: Settings },
+      { href: '/admins', label: 'Admins', icon: ShieldCheck, permission: 'admins.view' },
+      { href: '/settings', label: 'Settings', icon: Settings, permission: 'settings.view' },
     ],
   },
 ]
@@ -69,6 +82,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { admin, clearAuth } = useAuthStore()
+  const { can, role } = useRbac()
 
   function handleLogout() {
     clearAuth()
@@ -93,43 +107,52 @@ export function Sidebar() {
       {/* Nav */}
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-3">
-          {navSections.map((section) => (
-            <div key={section.label}>
-              <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-                {section.label}
-              </p>
-              <ul className="space-y-0.5">
-                {section.items.map((item) => {
-                  const isActive =
-                    item.href === '/'
-                      ? pathname === '/'
-                      : pathname === item.href || pathname.startsWith(item.href + '/')
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          'group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150',
-                          isActive
-                            ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white',
-                        )}
-                      >
-                        <item.icon
+          {navSections.map((section) => {
+            const visibleItems = section.items.filter(
+              (item) => !item.permission || can(item.permission),
+            )
+            if (visibleItems.length === 0) return null
+
+            return (
+              <div key={section.label}>
+                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
+                  {section.label}
+                </p>
+                <ul className="space-y-0.5">
+                  {visibleItems.map((item) => {
+                    const isActive =
+                      item.href === '/'
+                        ? pathname === '/'
+                        : pathname === item.href || pathname.startsWith(item.href + '/')
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
                           className={cn(
-                            'h-4 w-4 shrink-0 transition-colors',
-                            isActive ? 'text-white' : 'text-sidebar-foreground/60 group-hover:text-white',
+                            'group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150',
+                            isActive
+                              ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                              : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white',
                           )}
-                        />
-                        <span className="truncate">{item.label}</span>
-                        {isActive && <ChevronRight className="ml-auto h-3 w-3 opacity-60" />}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
+                        >
+                          <item.icon
+                            className={cn(
+                              'h-4 w-4 shrink-0 transition-colors',
+                              isActive
+                                ? 'text-white'
+                                : 'text-sidebar-foreground/60 group-hover:text-white',
+                            )}
+                          />
+                          <span className="truncate">{item.label}</span>
+                          {isActive && <ChevronRight className="ml-auto h-3 w-3 opacity-60" />}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )
+          })}
         </nav>
       </ScrollArea>
 
@@ -141,7 +164,9 @@ export function Sidebar() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{admin?.fullName ?? 'Admin'}</p>
-            <p className="truncate text-[11px] text-sidebar-foreground/50">{admin?.email}</p>
+            <p className="truncate text-[11px] text-sidebar-foreground/50 capitalize">
+              {role?.replace('_', ' ')}
+            </p>
           </div>
           <button
             onClick={handleLogout}
