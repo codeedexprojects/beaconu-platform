@@ -1,12 +1,12 @@
 import { prisma } from '@beaconu/db';
 import { CryptoUtils } from '@/shared/utils';
 import { UnauthorizedError, ForbiddenError } from '@/shared/errors';
-import { SessionManager } from '../auth/auth.session';
-import { JwtUtils } from '../auth/auth.jwt';
-import { PlatformAdminLoginData } from './platform-admin.schema';
+import { SessionManager } from '../../auth/auth.session';
+import { JwtUtils } from '../../auth/auth.jwt';
+import { PlatformAdminLoginData } from './platform-auth.schema';
 import { USER_TYPES, ACCOUNT_STATUS } from '@/shared/constants';
 
-export class PlatformAdminService {
+export class PlatformAuthService {
   static async login(data: PlatformAdminLoginData) {
     const admin = await prisma.platformAdmin.findUnique({
       where: { email: data.email },
@@ -54,36 +54,6 @@ export class PlatformAdminService {
         accessToken,
         refreshToken: session.refreshToken,
       },
-    };
-  }
-
-  static async getAllProfiles() {
-    const students = await prisma.student.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        phoneNumber: true,
-        status: true,
-        createdAt: true,
-      },
-    });
-
-    const blinkUsers = await prisma.blinkUser.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        phoneNumber: true,
-        status: true,
-        agencyName: true,
-        createdAt: true,
-      },
-    });
-
-    return {
-      students,
-      blinkUsers,
     };
   }
 }

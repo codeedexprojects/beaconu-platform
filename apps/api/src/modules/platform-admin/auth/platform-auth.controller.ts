@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { PlatformAdminService } from './platform-admin.service';
-import { platformAdminSchemas } from './platform-admin.schema';
+import { PlatformAuthService } from './platform-auth.service';
+import { platformAuthSchemas } from './platform-auth.schema';
 import { ApiResponse } from '@/shared/responses/api-response';
 
-export class PlatformAdminController {
+export class PlatformAuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = platformAdminSchemas.login.parse(req.body);
-      const result = await PlatformAdminService.login(data);
+      const data = platformAuthSchemas.login.parse(req.body);
+      const result = await PlatformAuthService.login(data);
 
       res.cookie('refreshToken', result.tokens.refreshToken, {
         httpOnly: true,
@@ -21,17 +21,6 @@ export class PlatformAdminController {
           user: result.user,
           accessToken: result.tokens.accessToken,
         })
-      );
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async getAllProfiles(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await PlatformAdminService.getAllProfiles();
-      return res.status(200).json(
-        ApiResponse.success('All profiles fetched successfully', result)
       );
     } catch (error) {
       next(error);
