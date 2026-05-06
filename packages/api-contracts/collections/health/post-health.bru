@@ -1,0 +1,29 @@
+meta {
+  name: Post Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Health check endpoint.
+
+  Used for:
+  - uptime monitoring
+  - load balancer checks
+  - debugging
+
+  Expected Response:
+  {
+    success: true,
+    message: "Service is healthy",
+    timestamp: string
+  }
+}
