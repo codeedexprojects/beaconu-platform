@@ -3,10 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store'
+import { loginAdmin } from '@/lib/services/auth.service'
+
+const loginSchema = z.object({
+  email: z.string().email('Enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+type FieldErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>
 
 export default function LoginPage(): React.JSX.Element {
   const router = useRouter()
@@ -16,52 +25,40 @@ export default function LoginPage(): React.JSX.Element {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [serverError, setServerError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
+    setServerError('')
+
+    const parsed = loginSchema.safeParse({ email, password })
+    if (!parsed.success) {
+      const errors: FieldErrors = {}
+      parsed.error.issues.forEach((issue) => {
+        const key = issue.path[0] as keyof FieldErrors
+        errors[key] = issue.message
+      })
+      setFieldErrors(errors)
+      return
+    }
+    setFieldErrors({})
     setLoading(true)
 
     try {
-      const res = await fetch('/api/v1/auth/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message ?? 'Invalid credentials')
-        return
-      }
-
-      setAuth(data.data.admin, data.data.token)
+      const { admin, token } = await loginAdmin({ email, password })
+      setAuth(admin, token)
       router.replace('/')
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setLoading(false)
     }
   }
 
-  function handleDevBypass() {
-    setAuth(
-      {
-        id: 'dev-admin-001',
-        fullName: 'Super Admin',
-        email: 'admin@beaconu.com',
-        role: 'super_admin',
-      },
-      'dev-token',
-    )
-    router.replace('/')
-  }
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070B14] flex items-center justify-center p-4">
-      {/* Ambient glow — matches mobile hero aesthetic */}
+      {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
@@ -91,7 +88,8 @@ export default function LoginPage(): React.JSX.Element {
           <h2 className="mb-1 text-lg font-semibold text-white">Welcome back</h2>
           <p className="mb-6 text-sm text-white/50">Sign in to your admin account</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-white/70">
                 Email
@@ -102,12 +100,19 @@ export default function LoginPage(): React.JSX.Element {
                 autoComplete="email"
                 placeholder="admin@beaconu.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-white/10 bg-white/5 text-white placeholder:text-white/25 focus-visible:ring-primary"
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }))
+                }}
+                aria-invalid={!!fieldErrors.email}
+                className="border-white/10 bg-white/5 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
               />
+              {fieldErrors.email && (
+                <p className="text-xs text-destructive">{fieldErrors.email}</p>
+              )}
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-white/70">
                 Password
@@ -119,23 +124,31 @@ export default function LoginPage(): React.JSX.Element {
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-white/10 bg-white/5 pr-10 text-white placeholder:text-white/25 focus-visible:ring-primary"
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setFieldErrors((prev) => ({ ...prev, password: undefined }))
+                  }}
+                  aria-invalid={!!fieldErrors.password}
+                  className="border-white/10 bg-white/5 pr-10 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="text-xs text-destructive">{fieldErrors.password}</p>
+              )}
             </div>
 
-            {error && (
+            {/* Server error */}
+            {serverError && (
               <p className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                {error}
+                {serverError}
               </p>
             )}
 
@@ -144,27 +157,17 @@ export default function LoginPage(): React.JSX.Element {
               className="mt-2 w-full h-10 bg-primary hover:bg-primary/90 font-semibold shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
               disabled={loading}
             >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
         </div>
-
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="mb-3 text-center text-xs font-medium text-white/40 uppercase tracking-widest">
-              Dev bypass
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-9 border-white/15 bg-transparent text-white/60 hover:bg-white/5 hover:text-white text-sm"
-              onClick={handleDevBypass}
-            >
-              Enter as Super Admin
-            </Button>
-          </div>
-        )}
 
         <p className="mt-6 text-center text-xs text-white/25">
           © {new Date().getFullYear()} BeaconU. All rights reserved.
