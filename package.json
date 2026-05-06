@@ -8,6 +8,7 @@
     "dev:web": "turbo dev --filter=@beaconu/web",
     "dev:college-web": "turbo dev --filter=@beaconu/college-web",
     "dev:college-admin": "turbo dev --filter=@beaconu/college-admin",
+    "dev:super-admin": "turbo dev --filter=@beaconu/super-admin",
     "build": "turbo build",
     "build:api": "turbo build --filter=@beaconu/api",
     "lint": "turbo lint",
