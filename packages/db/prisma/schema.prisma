@@ -1,3 +1,10 @@
+// ============================================================
+// PRISMA SCHEMA — Full Platform DB Design
+// Covers Modules 1–14 (Authorization, Institutional, Content,
+// Admissions, Assessment, Interview, Fees, Documents, Hostel,
+// Commute, Counselling, Blink, Engagement, Communication)
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/client"
@@ -6,6 +13,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ============================================================
+// MODULE 1 — AUTHORIZATION
+// ============================================================
 
 model Student {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -67,10 +78,10 @@ model Student {
   refunds                 Refund[]
 
   @@unique([phoneCountryCode, phoneNumber], name: "uq_students_phone")
-  @@index([email], map: "idx_students_email")
-  @@index([phoneNumber], map: "idx_students_phone")
-  @@index([googleId], map: "idx_students_google")
-  @@index([status], map: "idx_students_status")
+  @@index([email], name: "idx_students_email")
+  @@index([phoneNumber], name: "idx_students_phone")
+  @@index([googleId], name: "idx_students_google")
+  @@index([status], name: "idx_students_status")
   @@map("students")
 }
 
@@ -111,20 +122,22 @@ model CollegeRole {
   staffMembers StaffMember[]
 
   @@unique([collegeId, slug], name: "uq_college_role_slug")
-  @@index([collegeId], map: "idx_college_roles_college")
+  @@index([collegeId], name: "idx_college_roles_college")
   @@map("college_roles")
 }
 
 model CollegeRolePermission {
-  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeRoleId  String      @map("college_role_id") @db.Uuid
-  permissionCode String      @map("permission_code") @db.VarChar(100)
-  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  collegeRole    CollegeRole @relation(fields: [collegeRoleId], references: [id], onDelete: Cascade)
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeRoleId  String   @map("college_role_id") @db.Uuid
+  permissionCode String   @map("permission_code") @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  collegeRole CollegeRole @relation(fields: [collegeRoleId], references: [id], onDelete: Cascade)
 
   @@unique([collegeRoleId, permissionCode], name: "uq_role_permission")
-  @@index([collegeRoleId], map: "idx_role_perms_role")
-  @@index([permissionCode], map: "idx_role_perms_code")
+  @@index([collegeRoleId], name: "idx_role_perms_role")
+  @@index([permissionCode], name: "idx_role_perms_code")
   @@map("college_role_permissions")
 }
 
@@ -170,10 +183,10 @@ model StaffMember {
   blinkUsersCreated           BlinkUser[]              @relation("CreatedByStaff")
 
   @@unique([email, collegeId], name: "uq_staff_email_college")
-  @@index([collegeId], map: "idx_staff_college")
-  @@index([collegeRoleId], map: "idx_staff_role")
-  @@index([email], map: "idx_staff_email")
-  @@index([collegeId, status], map: "idx_staff_status")
+  @@index([collegeId], name: "idx_staff_college")
+  @@index([collegeRoleId], name: "idx_staff_role")
+  @@index([email], name: "idx_staff_email")
+  @@index([collegeId, status], name: "idx_staff_status")
   @@map("staff_members")
 }
 
@@ -232,12 +245,12 @@ model BlinkUser {
   campusVisitsManaged    CampusVisit[]            @relation("AmbassadorVisits")
   campusVisitsReassigned CampusVisit[]            @relation("ReassignedFrom")
 
-  @@index([blinkRoleId], map: "idx_blink_role")
-  @@index([collegeId], map: "idx_blink_college")
-  @@index([associateParentId], map: "idx_blink_parent")
-  @@index([linkedStudentId], map: "idx_blink_student")
-  @@index([status], map: "idx_blink_status")
-  @@index([email], map: "idx_blink_email")
+  @@index([blinkRoleId], name: "idx_blink_role")
+  @@index([collegeId], name: "idx_blink_college")
+  @@index([associateParentId], name: "idx_blink_parent")
+  @@index([linkedStudentId], name: "idx_blink_student")
+  @@index([status], name: "idx_blink_status")
+  @@index([email], name: "idx_blink_email")
   @@map("blink_users")
 }
 
@@ -261,8 +274,8 @@ model Counsellor {
   wallet                       CounsellorWallet?
   counsellorWalletTransactions CounsellorWalletTransaction[]
 
-  @@index([counsellorType], map: "idx_counsellors_type")
-  @@index([status], map: "idx_counsellors_status")
+  @@index([counsellorType], name: "idx_counsellors_type")
+  @@index([status], name: "idx_counsellors_status")
   @@map("counsellors")
 }
 
@@ -281,9 +294,9 @@ model UserSession {
   // Polymorphic: userId resolved at application layer based on userType.
   // No Prisma FK relations here — Prisma cannot model a single field referencing multiple tables.
 
-  @@index([userType, userId], map: "idx_sessions_user")
-  @@index([refreshToken], map: "idx_sessions_token")
-  @@index([expiresAt], map: "idx_sessions_expiry")
+  @@index([userType, userId], name: "idx_sessions_user")
+  @@index([refreshToken], name: "idx_sessions_token")
+  @@index([expiresAt], name: "idx_sessions_expiry")
   @@map("user_sessions")
 }
 
@@ -296,12 +309,12 @@ model AuditLog {
   entityId   String?  @map("entity_id") @db.Uuid
   changes    Json?
   ipAddress  String?  @map("ip_address") @db.Inet
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@index([actorType, actorId], map: "idx_audit_actor")
-  @@index([entityType, entityId], map: "idx_audit_entity")
-  @@index([action], map: "idx_audit_action")
-  @@index([createdAt], map: "idx_audit_created")
+  @@index([actorType, actorId], name: "idx_audit_actor")
+  @@index([entityType, entityId], name: "idx_audit_entity")
+  @@index([action], name: "idx_audit_action")
+  @@index([createdAt], name: "idx_audit_created")
   @@map("audit_logs")
 }
 
@@ -325,11 +338,15 @@ model StudentLead {
   student       Student        @relation(fields: [studentId], references: [id])
   assignedAdmin PlatformAdmin? @relation("AssignedAdmin", fields: [assignedTo], references: [id])
 
-  @@index([status], map: "idx_leads_status")
-  @@index([assignedTo], map: "idx_leads_assigned")
-  @@index([studentId], map: "idx_leads_student")
+  @@index([status], name: "idx_leads_status")
+  @@index([assignedTo], name: "idx_leads_assigned")
+  @@index([studentId], name: "idx_leads_student")
   @@map("student_leads")
 }
+
+// ============================================================
+// MODULE 2 — INSTITUTIONAL HIERARCHY
+// ============================================================
 
 model UniversityType {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -364,10 +381,10 @@ model University {
   universityType UniversityType @relation(fields: [universityTypeId], references: [id])
   colleges       College[]
 
-  @@index([universityTypeId], map: "idx_universities_type")
-  @@index([state], map: "idx_universities_state")
-  @@index([status], map: "idx_universities_status")
-  @@index([slug], map: "idx_universities_slug")
+  @@index([universityTypeId], name: "idx_universities_type")
+  @@index([state], name: "idx_universities_state")
+  @@index([status], name: "idx_universities_status")
+  @@index([slug], name: "idx_universities_slug")
   @@map("universities")
 }
 
@@ -438,11 +455,11 @@ model College {
   commuteEnrollments     CommuteEnrollment[]
   broadcastNotifications BroadcastNotification[]
 
-  @@index([universityId], map: "idx_colleges_university")
-  @@index([slug], map: "idx_colleges_slug")
-  @@index([domain], map: "idx_colleges_domain")
-  @@index([state], map: "idx_colleges_state")
-  @@index([status], map: "idx_colleges_status")
+  @@index([universityId], name: "idx_colleges_university")
+  @@index([slug], name: "idx_colleges_slug")
+  @@index([domain], name: "idx_colleges_domain")
+  @@index([state], name: "idx_colleges_state")
+  @@index([status], name: "idx_colleges_status")
   @@map("colleges")
 }
 
@@ -465,12 +482,10 @@ model Campus {
   college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   courses      Course[]
   applications Application[]
-  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  courses      Course[]
   enrollments  Enrollment[]
 
-  @@index([collegeId], map: "idx_campuses_college")
-  @@index([collegeId, status], map: "idx_campuses_status")
+  @@index([collegeId], name: "idx_campuses_college")
+  @@index([collegeId, status], name: "idx_campuses_status")
   @@map("campuses")
 }
 
@@ -495,12 +510,14 @@ model Discipline {
   slug      String   @db.VarChar(50)
   sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  courses   Course[]
-  stream    Stream   @relation(fields: [streamId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  stream  Stream   @relation(fields: [streamId], references: [id])
+  courses Course[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
-  @@index([streamId], map: "idx_disciplines_stream")
+  @@index([streamId], name: "idx_disciplines_stream")
   @@map("disciplines")
 }
 
@@ -510,8 +527,10 @@ model StudyLevel {
   slug      String   @unique @db.VarChar(30)
   sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  courses   Course[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  courses Course[]
 
   @@map("study_levels")
 }
@@ -522,8 +541,10 @@ model ProgramType {
   slug      String   @unique @db.VarChar(30)
   sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  courses   Course[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  courses Course[]
 
   @@map("program_types")
 }
@@ -568,12 +589,12 @@ model Course {
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
 
   @@unique([collegeId, code], name: "uq_course_code_college")
-  @@index([collegeId], map: "idx_courses_college")
-  @@index([campusId], map: "idx_courses_campus")
-  @@index([disciplineId], map: "idx_courses_discipline")
-  @@index([studyLevelId], map: "idx_courses_level")
-  @@index([programTypeId], map: "idx_courses_program")
-  @@index([collegeId, status], map: "idx_courses_status")
+  @@index([collegeId], name: "idx_courses_college")
+  @@index([campusId], name: "idx_courses_campus")
+  @@index([disciplineId], name: "idx_courses_discipline")
+  @@index([studyLevelId], name: "idx_courses_level")
+  @@index([programTypeId], name: "idx_courses_program")
+  @@index([collegeId, status], name: "idx_courses_status")
   @@map("courses")
 }
 
@@ -590,10 +611,9 @@ model CourseQuota {
   // Relations
   course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   applicationCourses ApplicationCourse[]
-  course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, quotaName], name: "uq_course_quota")
-  @@index([courseId], map: "idx_quotas_course")
+  @@index([courseId], name: "idx_quotas_course")
   @@map("course_quotas")
 }
 
@@ -609,7 +629,7 @@ model CollegeGallery {
   // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
-  @@index([collegeId], map: "idx_gallery_college")
+  @@index([collegeId], name: "idx_gallery_college")
   @@map("college_gallery")
 }
 
@@ -618,17 +638,23 @@ model CollegeReview {
   collegeId  String   @map("college_id") @db.Uuid
   studentId  String   @map("student_id") @db.Uuid
   rating     Int      @db.SmallInt
-  reviewText String?  @map("review_text")
+  reviewText String?  @map("review_text") @db.Text
   status     String   @default("pending") @db.VarChar(20)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  college    College  @relation(fields: [collegeId], references: [id])
-  student    Student  @relation(fields: [studentId], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([collegeId, status], map: "idx_reviews_college")
-  @@index([studentId], map: "idx_reviews_student")
+  // Relations
+  college College @relation(fields: [collegeId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([collegeId, status], name: "idx_reviews_college")
+  @@index([studentId], name: "idx_reviews_student")
   @@map("college_reviews")
 }
+
+// ============================================================
+// MODULE 3 — CONTENT & DISCOVERY
+// ============================================================
 
 model NewsAlert {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -649,11 +675,11 @@ model NewsAlert {
   college        College?       @relation(fields: [collegeId], references: [id])
   publishedAdmin PlatformAdmin? @relation(fields: [publishedBy], references: [id])
 
-  @@index([status], map: "idx_news_status")
-  @@index([category], map: "idx_news_category")
-  @@index([collegeId], map: "idx_news_college")
-  @@index([publishedAt(sort: Desc)], map: "idx_news_published")
-  @@index([slug], map: "idx_news_slug")
+  @@index([status], name: "idx_news_status")
+  @@index([category], name: "idx_news_category")
+  @@index([collegeId], name: "idx_news_college")
+  @@index([publishedAt(sort: Desc)], name: "idx_news_published")
+  @@index([slug], name: "idx_news_slug")
   @@map("news_alerts")
 }
 
@@ -661,25 +687,27 @@ model Article {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title         String    @db.VarChar(255)
   slug          String    @unique @db.VarChar(100)
-  summary       String?
-  content       String
-  coverImageUrl String?   @map("cover_image_url")
+  summary       String?   @db.Text
+  content       String    @db.Text
+  coverImageUrl String?   @map("cover_image_url") @db.Text
   tags          Json      @default("[]")
   authorName    String?   @map("author_name") @db.VarChar(100)
   authorType    String    @map("author_type") @db.VarChar(20)
   authorId      String?   @map("author_id") @db.Uuid
   collegeId     String?   @map("college_id") @db.Uuid
   status        String    @default("draft") @db.VarChar(20)
-  publishedAt   DateTime? @map("published_at") @db.Timestamptz(6)
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz
   viewCount     Int       @default(0) @map("view_count")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  college       College?  @relation(fields: [collegeId], references: [id])
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([status], map: "idx_articles_status")
-  @@index([collegeId], map: "idx_articles_college")
-  @@index([publishedAt(sort: Desc)], map: "idx_articles_published")
-  @@index([slug], map: "idx_articles_slug")
+  // Relations
+  college College? @relation(fields: [collegeId], references: [id])
+
+  @@index([status], name: "idx_articles_status")
+  @@index([collegeId], name: "idx_articles_college")
+  @@index([publishedAt(sort: Desc)], name: "idx_articles_published")
+  @@index([slug], name: "idx_articles_slug")
   @@map("articles")
 }
 
@@ -706,10 +734,10 @@ model Blog {
   // Relations
   reviewer PlatformAdmin? @relation("BlogReviewer", fields: [reviewedBy], references: [id])
 
-  @@index([status], map: "idx_blogs_status")
-  @@index([authorType, authorId], map: "idx_blogs_author")
-  @@index([publishedAt(sort: Desc)], map: "idx_blogs_published")
-  @@index([slug], map: "idx_blogs_slug")
+  @@index([status], name: "idx_blogs_status")
+  @@index([authorType, authorId], name: "idx_blogs_author")
+  @@index([publishedAt(sort: Desc)], name: "idx_blogs_published")
+  @@index([slug], name: "idx_blogs_slug")
   @@map("blogs")
 }
 
@@ -736,54 +764,56 @@ model EntranceExam {
   // Relations
   creator PlatformAdmin? @relation(fields: [createdBy], references: [id])
 
-  @@index([examLevel], map: "idx_exams_level")
-  @@index([status], map: "idx_exams_status")
-  @@index([examDate], map: "idx_exams_dates")
-  @@index([code], map: "idx_exams_code")
+  @@index([examLevel], name: "idx_exams_level")
+  @@index([status], name: "idx_exams_status")
+  @@index([examDate], name: "idx_exams_dates")
+  @@index([code], name: "idx_exams_code")
   @@map("entrance_exams")
 }
 
 model Event {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title             String              @db.VarChar(255)
-  slug              String              @unique @db.VarChar(100)
-  description       String?
-  coverImageUrl     String?             @map("cover_image_url")
-  category          String              @db.VarChar(30)
-  speakerName       String?             @map("speaker_name") @db.VarChar(255)
-  speakerTitle      String?             @map("speaker_title") @db.VarChar(255)
-  organizer         String?             @db.VarChar(255)
-  eventDate         DateTime            @map("event_date") @db.Date
-  startTime         DateTime?           @map("start_time") @db.Time(6)
-  endTime           DateTime?           @map("end_time") @db.Time(6)
-  duration          String?             @db.VarChar(50)
-  eventMode         String              @map("event_mode") @db.VarChar(20)
-  venue             String?             @db.VarChar(255)
-  onlineLink        String?             @map("online_link")
-  isFree            Boolean             @default(true) @map("is_free")
-  ticketPrice       Decimal             @default(0) @map("ticket_price") @db.Decimal(10, 2)
-  totalSeats        Int?                @map("total_seats")
-  registeredCount   Int                 @default(0) @map("registered_count")
-  hasRecording      Boolean             @default(false) @map("has_recording")
-  recordingUrl      String?             @map("recording_url")
-  recordingDuration String?             @map("recording_duration") @db.VarChar(20)
-  recordedAt        DateTime?           @map("recorded_at") @db.Date
-  collegeId         String?             @map("college_id") @db.Uuid
-  status            String              @default("draft") @db.VarChar(20)
-  createdByType     String?             @map("created_by_type") @db.VarChar(20)
-  createdById       String?             @map("created_by_id") @db.Uuid
-  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
-  registrations     EventRegistration[]
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title             String    @db.VarChar(255)
+  slug              String    @unique @db.VarChar(100)
+  description       String?   @db.Text
+  coverImageUrl     String?   @map("cover_image_url") @db.Text
+  category          String    @db.VarChar(30)
+  speakerName       String?   @map("speaker_name") @db.VarChar(255)
+  speakerTitle      String?   @map("speaker_title") @db.VarChar(255)
+  organizer         String?   @db.VarChar(255)
+  eventDate         DateTime  @map("event_date") @db.Date
+  startTime         DateTime? @map("start_time") @db.Time
+  endTime           DateTime? @map("end_time") @db.Time
+  duration          String?   @db.VarChar(50)
+  eventMode         String    @map("event_mode") @db.VarChar(20)
+  venue             String?   @db.VarChar(255)
+  onlineLink        String?   @map("online_link") @db.Text
+  isFree            Boolean   @default(true) @map("is_free")
+  ticketPrice       Decimal   @default(0) @map("ticket_price") @db.Decimal(10, 2)
+  totalSeats        Int?      @map("total_seats")
+  registeredCount   Int       @default(0) @map("registered_count")
+  hasRecording      Boolean   @default(false) @map("has_recording")
+  recordingUrl      String?   @map("recording_url") @db.Text
+  recordingDuration String?   @map("recording_duration") @db.VarChar(20)
+  recordedAt        DateTime? @map("recorded_at") @db.Date
+  collegeId         String?   @map("college_id") @db.Uuid
+  status            String    @default("draft") @db.VarChar(20)
+  createdByType     String?   @map("created_by_type") @db.VarChar(20)
+  createdById       String?   @map("created_by_id") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([status], map: "idx_events_status")
-  @@index([eventDate], map: "idx_events_date")
-  @@index([collegeId], map: "idx_events_college")
-  @@index([category], map: "idx_events_category")
-  @@index([eventMode], map: "idx_events_mode")
-  @@index([isFree], map: "idx_events_free")
-  @@index([hasRecording], map: "idx_events_recording")
-  @@index([slug], map: "idx_events_slug")
+  // Relations
+  registrations EventRegistration[]
+
+  @@index([status], name: "idx_events_status")
+  @@index([eventDate], name: "idx_events_date")
+  @@index([collegeId], name: "idx_events_college")
+  @@index([category], name: "idx_events_category")
+  @@index([eventMode], name: "idx_events_mode")
+  @@index([isFree], name: "idx_events_free")
+  @@index([hasRecording], name: "idx_events_recording")
+  @@index([slug], name: "idx_events_slug")
   @@map("events")
 }
 
@@ -794,17 +824,23 @@ model EventRegistration {
   paymentStatus String    @default("not_applicable") @map("payment_status") @db.VarChar(20)
   transactionId String?   @map("transaction_id") @db.Uuid
   status        String    @default("registered") @db.VarChar(20)
-  registeredAt  DateTime  @default(now()) @map("registered_at") @db.Timestamptz(6)
-  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(6)
-  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  student       Student   @relation(fields: [studentId], references: [id])
+  registeredAt  DateTime  @default(now()) @map("registered_at") @db.Timestamptz
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz
+
+  // Relations
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id])
 
   @@unique([eventId, studentId], name: "uq_event_registration")
-  @@index([eventId], map: "idx_ereg_event")
-  @@index([studentId], map: "idx_ereg_student")
-  @@index([status], map: "idx_ereg_status")
+  @@index([eventId], name: "idx_ereg_event")
+  @@index([studentId], name: "idx_ereg_student")
+  @@index([status], name: "idx_ereg_status")
   @@map("event_registrations")
 }
+
+// ============================================================
+// MODULE 4 — ADMISSIONS
+// ============================================================
 
 model AdmissionCycle {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -827,12 +863,11 @@ model AdmissionCycle {
   enrollments           Enrollment[]
   admissionFormConfigs  AdmissionFormConfig[]
   documentUploadConfigs DocumentUploadConfig[]
-  enrollments           Enrollment[]
 
   @@unique([collegeId, slug], name: "uq_cycle_slug_college")
-  @@index([collegeId], map: "idx_cycles_college")
-  @@index([collegeId, status], map: "idx_cycles_status")
-  @@index([startsOn, endsOn], map: "idx_cycles_dates")
+  @@index([collegeId], name: "idx_cycles_college")
+  @@index([collegeId, status], name: "idx_cycles_status")
+  @@index([startsOn, endsOn], name: "idx_cycles_dates")
   @@map("admission_cycles")
 }
 
@@ -853,8 +888,8 @@ model AdmissionCycleCourse {
   course         Course         @relation(fields: [courseId], references: [id])
 
   @@unique([admissionCycleId, courseId], name: "uq_cycle_course")
-  @@index([admissionCycleId], map: "idx_cycle_courses_cycle")
-  @@index([courseId], map: "idx_cycle_courses_course")
+  @@index([admissionCycleId], name: "idx_cycle_courses_cycle")
+  @@index([courseId], name: "idx_cycle_courses_course")
   @@map("admission_cycle_courses")
 }
 
@@ -901,11 +936,11 @@ model Application {
   documents          ApplicationDocument[]
 
   @@unique([studentId, admissionCycleId], name: "uq_student_cycle")
-  @@index([studentId], map: "idx_applications_student")
-  @@index([collegeId], map: "idx_applications_college")
-  @@index([admissionCycleId], map: "idx_applications_cycle")
-  @@index([collegeId, formStatus], map: "idx_applications_status")
-  @@index([applicationNumber], map: "idx_applications_number")
+  @@index([studentId], name: "idx_applications_student")
+  @@index([collegeId], name: "idx_applications_college")
+  @@index([admissionCycleId], name: "idx_applications_cycle")
+  @@index([collegeId, formStatus], name: "idx_applications_status")
+  @@index([applicationNumber], name: "idx_applications_number")
   @@map("applications")
 }
 
@@ -937,9 +972,9 @@ model ApplicationCourse {
   studentFeeLedger        StudentFeeLedger[]
 
   @@unique([applicationId, courseId], name: "uq_application_course")
-  @@index([applicationId], map: "idx_app_courses_application")
-  @@index([courseId], map: "idx_app_courses_course")
-  @@index([status], map: "idx_app_courses_status")
+  @@index([applicationId], name: "idx_app_courses_application")
+  @@index([courseId], name: "idx_app_courses_course")
+  @@index([status], name: "idx_app_courses_status")
   @@map("application_courses")
 }
 
@@ -964,9 +999,9 @@ model ApplicationDocument {
   // Note: verifiedBy is polymorphic (staff or student). Prisma FK points to staff_members.
   // Resolve student verification at application layer.
 
-  @@index([applicationId], map: "idx_app_docs_application")
-  @@index([documentType], map: "idx_app_docs_type")
-  @@index([verificationStatus], map: "idx_app_docs_status")
+  @@index([applicationId], name: "idx_app_docs_application")
+  @@index([documentType], name: "idx_app_docs_type")
+  @@index([verificationStatus], name: "idx_app_docs_status")
   @@map("application_documents")
 }
 
@@ -983,8 +1018,8 @@ model ApplicationStatusLog {
   // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id], onDelete: Cascade)
 
-  @@index([applicationCourseId], map: "idx_status_logs_app_course")
-  @@index([createdAt], map: "idx_status_logs_created")
+  @@index([applicationCourseId], name: "idx_status_logs_app_course")
+  @@index([createdAt], name: "idx_status_logs_created")
   @@map("application_status_logs")
 }
 
@@ -1007,9 +1042,9 @@ model SeatCancellation {
   student           Student           @relation(fields: [studentId], references: [id])
   processor         StaffMember?      @relation(fields: [processedBy], references: [id])
 
-  @@index([applicationCourseId], map: "idx_cancellations_app_course")
-  @@index([studentId], map: "idx_cancellations_student")
-  @@index([status], map: "idx_cancellations_status")
+  @@index([applicationCourseId], name: "idx_cancellations_app_course")
+  @@index([studentId], name: "idx_cancellations_student")
+  @@index([status], name: "idx_cancellations_status")
   @@map("seat_cancellations")
 }
 
@@ -1041,13 +1076,13 @@ model Enrollment {
   studentFeeLedger        StudentFeeLedger[]
 
   @@unique([studentId, courseId, collegeId], name: "uq_enrollment_student_course")
-  @@index([studentId], map: "idx_enrollments_student")
-  @@index([collegeId], map: "idx_enrollments_college")
-  @@index([courseId], map: "idx_enrollments_course")
-  @@index([applicationCourseId], map: "idx_enrollments_app_course")
-  @@index([collegeId, status], map: "idx_enrollments_status")
-  @@index([enrollmentNumber], map: "idx_enrollments_number")
-  @@index([academicYear], map: "idx_enrollments_academic_year")
+  @@index([studentId], name: "idx_enrollments_student")
+  @@index([collegeId], name: "idx_enrollments_college")
+  @@index([courseId], name: "idx_enrollments_course")
+  @@index([applicationCourseId], name: "idx_enrollments_app_course")
+  @@index([collegeId, status], name: "idx_enrollments_status")
+  @@index([enrollmentNumber], name: "idx_enrollments_number")
+  @@index([academicYear], name: "idx_enrollments_academic_year")
   @@map("enrollments")
 }
 
@@ -1075,10 +1110,10 @@ model CourseSwitchRequest {
   processor     StaffMember? @relation("ProcessedBySwitchStaff", fields: [processedBy], references: [id])
   newEnrollment Enrollment?  @relation("NewEnrollmentFromSwitch", fields: [newEnrollmentId], references: [id])
 
-  @@index([studentId], map: "idx_csr_student")
-  @@index([collegeId], map: "idx_csr_college")
-  @@index([enrollmentId], map: "idx_csr_enrollment")
-  @@index([status], map: "idx_csr_status")
+  @@index([studentId], name: "idx_csr_student")
+  @@index([collegeId], name: "idx_csr_college")
+  @@index([enrollmentId], name: "idx_csr_enrollment")
+  @@index([status], name: "idx_csr_status")
   @@map("course_switch_requests")
 }
 
@@ -1097,10 +1132,10 @@ model AdmissionFormConfig {
   college        College         @relation(fields: [collegeId], references: [id])
   admissionCycle AdmissionCycle? @relation(fields: [admissionCycleId], references: [id])
 
-  @@index([collegeId], map: "idx_afc_college")
-  @@index([admissionCycleId], map: "idx_afc_cycle")
-  @@index([section], map: "idx_afc_section")
-  @@index([collegeId, isActive], map: "idx_afc_active")
+  @@index([collegeId], name: "idx_afc_college")
+  @@index([admissionCycleId], name: "idx_afc_cycle")
+  @@index([section], name: "idx_afc_section")
+  @@index([collegeId, isActive], name: "idx_afc_active")
   @@map("admission_form_configs")
 }
 
@@ -1124,12 +1159,16 @@ model DocumentUploadConfig {
   college        College         @relation(fields: [collegeId], references: [id])
   admissionCycle AdmissionCycle? @relation(fields: [admissionCycleId], references: [id])
 
-  @@index([collegeId], map: "idx_duc_college")
-  @@index([admissionCycleId], map: "idx_duc_cycle")
-  @@index([documentCategory], map: "idx_duc_category")
-  @@index([collegeId, isActive], map: "idx_duc_active")
+  @@index([collegeId], name: "idx_duc_college")
+  @@index([admissionCycleId], name: "idx_duc_cycle")
+  @@index([documentCategory], name: "idx_duc_category")
+  @@index([collegeId, isActive], name: "idx_duc_active")
   @@map("document_upload_configs")
 }
+
+// ============================================================
+// MODULE 5 — ASSESSMENT
+// ============================================================
 
 model AssessmentSection {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1145,14 +1184,14 @@ model AssessmentSection {
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  templateSections TemplateSection[]
   paperQuestions   PaperQuestion[]
   questions        Question[]
   studentAnswers   StudentAnswer[]
-  templateSections TemplateSection[]
 
   @@unique([collegeId, slug], name: "uq_section_slug_college")
-  @@index([collegeId], map: "idx_sections_college")
-  @@index([collegeId, isActive], map: "idx_sections_active")
+  @@index([collegeId], name: "idx_sections_college")
+  @@index([collegeId, isActive], name: "idx_sections_active")
   @@map("assessment_sections")
 }
 
@@ -1178,8 +1217,8 @@ model QuestionType {
   questions Question[]
 
   @@unique([collegeId, slug], name: "uq_qtype_slug_college")
-  @@index([collegeId], map: "idx_qtypes_college")
-  @@index([category], map: "idx_qtypes_category")
+  @@index([collegeId], name: "idx_qtypes_college")
+  @@index([category], name: "idx_qtypes_category")
   @@map("question_types")
 }
 
@@ -1211,24 +1250,26 @@ model Question {
   paperQuestions PaperQuestion[]
   studentAnswers StudentAnswer[]
 
-  @@index([questionTypeId], map: "idx_questions_type")
-  @@index([collegeId], map: "idx_questions_college")
-  @@index([sectionId], map: "idx_questions_section")
-  @@index([difficulty], map: "idx_questions_difficulty")
-  @@index([status], map: "idx_questions_status")
+  @@index([questionTypeId], name: "idx_questions_type")
+  @@index([collegeId], name: "idx_questions_college")
+  @@index([sectionId], name: "idx_questions_section")
+  @@index([difficulty], name: "idx_questions_difficulty")
+  @@index([status], name: "idx_questions_status")
   @@map("questions")
 }
 
 model QuestionCourseMapping {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionId String   @map("question_id") @db.Uuid
-  courseId   String   @map("course_id") @db.Uuid
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  courseId   String @map("course_id") @db.Uuid
+
+  // Relations
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([questionId, courseId], name: "uq_question_course")
-  @@index([questionId], map: "idx_qcm_question")
-  @@index([courseId], map: "idx_qcm_course")
+  @@index([questionId], name: "idx_qcm_question")
+  @@index([courseId], name: "idx_qcm_course")
   @@map("question_course_mappings")
 }
 
@@ -1252,61 +1293,67 @@ model AssessmentTemplate {
   assessmentPapers AssessmentPaper[]
   assessmentSlots  AssessmentSlot[]
 
-  @@index([collegeId], map: "idx_templates_college")
-  @@index([status], map: "idx_templates_status")
+  @@index([collegeId], name: "idx_templates_college")
+  @@index([status], name: "idx_templates_status")
   @@map("assessment_templates")
 }
 
 model TemplateSection {
-  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  templateId             String             @map("template_id") @db.Uuid
-  sectionId              String             @map("section_id") @db.Uuid
-  questionCount          Int                @map("question_count")
-  timeLimitMins          Int                @map("time_limit_mins")
-  sectionWeightage       Decimal?           @map("section_weightage") @db.Decimal(5, 2)
-  sortOrder              Int                @default(0) @map("sort_order")
-  difficultyDistribution Json               @default("{}") @map("difficulty_distribution")
-  section                AssessmentSection  @relation(fields: [sectionId], references: [id])
-  template               AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId             String   @map("template_id") @db.Uuid
+  sectionId              String   @map("section_id") @db.Uuid
+  questionCount          Int      @map("question_count")
+  timeLimitMins          Int      @map("time_limit_mins")
+  sectionWeightage       Decimal? @map("section_weightage") @db.Decimal(5, 2)
+  sortOrder              Int      @default(0) @map("sort_order")
+  difficultyDistribution Json     @default("{}") @map("difficulty_distribution")
+
+  // Relations
+  template AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  section  AssessmentSection  @relation(fields: [sectionId], references: [id])
 
   @@unique([templateId, sectionId], name: "uq_template_section")
-  @@index([templateId], map: "idx_tsections_template")
+  @@index([templateId], name: "idx_tsections_template")
   @@map("template_sections")
 }
 
 model AssessmentPaper {
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  templateId         String              @map("template_id") @db.Uuid
-  paperCode          String              @unique @map("paper_code") @db.VarChar(30)
-  generationType     String              @map("generation_type") @db.VarChar(10)
-  status             String              @default("draft") @db.VarChar(20)
-  generatedBy        String?             @map("generated_by") @db.Uuid
-  approvedBy         String?             @map("approved_by") @db.Uuid
-  approvedAt         DateTime?           @map("approved_at") @db.Timestamptz(6)
-  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  assessmentAttempts AssessmentAttempt[]
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId     String    @map("template_id") @db.Uuid
+  paperCode      String    @unique @map("paper_code") @db.VarChar(30)
+  generationType String    @map("generation_type") @db.VarChar(10)
+  status         String    @default("draft") @db.VarChar(20)
+  generatedBy    String?   @map("generated_by") @db.Uuid
+  approvedBy     String?   @map("approved_by") @db.Uuid
+  approvedAt     DateTime? @map("approved_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
   template           AssessmentTemplate  @relation(fields: [templateId], references: [id])
   paperQuestions     PaperQuestion[]
+  assessmentAttempts AssessmentAttempt[]
 
-  @@index([templateId], map: "idx_papers_template")
-  @@index([status], map: "idx_papers_status")
+  @@index([templateId], name: "idx_papers_template")
+  @@index([status], name: "idx_papers_status")
   @@map("assessment_papers")
 }
 
 model PaperQuestion {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  paperId       String            @map("paper_id") @db.Uuid
-  questionId    String            @map("question_id") @db.Uuid
-  sectionId     String            @map("section_id") @db.Uuid
-  questionOrder Int               @map("question_order")
-  paper         AssessmentPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
-  question      Question          @relation(fields: [questionId], references: [id])
-  section       AssessmentSection @relation(fields: [sectionId], references: [id])
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paperId       String @map("paper_id") @db.Uuid
+  questionId    String @map("question_id") @db.Uuid
+  sectionId     String @map("section_id") @db.Uuid
+  questionOrder Int    @map("question_order")
+
+  // Relations
+  paper    AssessmentPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  question Question          @relation(fields: [questionId], references: [id])
+  section  AssessmentSection @relation(fields: [sectionId], references: [id])
 
   @@unique([paperId, questionId], name: "uq_paper_question")
   @@unique([paperId, questionOrder], name: "uq_paper_order")
-  @@index([paperId], map: "idx_pq_paper")
-  @@index([sectionId], map: "idx_pq_section")
+  @@index([paperId], name: "idx_pq_paper")
+  @@index([sectionId], name: "idx_pq_section")
   @@map("paper_questions")
 }
 
@@ -1362,39 +1409,41 @@ model AssessmentAttempt {
   reschedules       AssessmentReschedule[]
 
   @@unique([applicationCourseId, studentId], name: "uq_student_attempt")
-  @@index([applicationCourseId], map: "idx_attempts_app_course")
-  @@index([studentId], map: "idx_attempts_student")
-  @@index([paperId], map: "idx_attempts_paper")
-  @@index([slotId], map: "idx_attempts_slot")
-  @@index([status], map: "idx_attempts_status")
+  @@index([applicationCourseId], name: "idx_attempts_app_course")
+  @@index([studentId], name: "idx_attempts_student")
+  @@index([paperId], name: "idx_attempts_paper")
+  @@index([slotId], name: "idx_attempts_slot")
+  @@index([status], name: "idx_attempts_status")
   @@map("assessment_attempts")
 }
 
 model StudentAnswer {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attemptId         String            @map("attempt_id") @db.Uuid
-  questionId        String            @map("question_id") @db.Uuid
-  sectionId         String            @map("section_id") @db.Uuid
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attemptId         String    @map("attempt_id") @db.Uuid
+  questionId        String    @map("question_id") @db.Uuid
+  sectionId         String    @map("section_id") @db.Uuid
   response          Json?
-  isFlagged         Boolean           @default(false) @map("is_flagged")
-  timeSpentSecs     Int               @default(0) @map("time_spent_secs")
-  autoScore         Decimal?          @map("auto_score") @db.Decimal(5, 2)
-  manualScore       Decimal?          @map("manual_score") @db.Decimal(5, 2)
-  finalScore        Decimal?          @map("final_score") @db.Decimal(5, 2)
-  evaluatedBy       String?           @map("evaluated_by") @db.Uuid
-  evaluationStatus  String            @default("pending") @map("evaluation_status") @db.VarChar(20)
-  evaluationRemarks String?           @map("evaluation_remarks")
-  answeredAt        DateTime?         @map("answered_at") @db.Timestamptz(6)
-  attempt           AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  evaluator         StaffMember?      @relation(fields: [evaluatedBy], references: [id])
-  question          Question          @relation(fields: [questionId], references: [id])
-  section           AssessmentSection @relation(fields: [sectionId], references: [id])
+  isFlagged         Boolean   @default(false) @map("is_flagged")
+  timeSpentSecs     Int       @default(0) @map("time_spent_secs")
+  autoScore         Decimal?  @map("auto_score") @db.Decimal(5, 2)
+  manualScore       Decimal?  @map("manual_score") @db.Decimal(5, 2)
+  finalScore        Decimal?  @map("final_score") @db.Decimal(5, 2)
+  evaluatedBy       String?   @map("evaluated_by") @db.Uuid
+  evaluationStatus  String    @default("pending") @map("evaluation_status") @db.VarChar(20)
+  evaluationRemarks String?   @map("evaluation_remarks") @db.Text
+  answeredAt        DateTime? @map("answered_at") @db.Timestamptz
+
+  // Relations
+  attempt   AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question  Question          @relation(fields: [questionId], references: [id])
+  section   AssessmentSection @relation(fields: [sectionId], references: [id])
+  evaluator StaffMember?      @relation(fields: [evaluatedBy], references: [id])
 
   @@unique([attemptId, questionId], name: "uq_attempt_question")
-  @@index([attemptId], map: "idx_answers_attempt")
-  @@index([questionId], map: "idx_answers_question")
-  @@index([sectionId], map: "idx_answers_section")
-  @@index([evaluationStatus], map: "idx_answers_eval")
+  @@index([attemptId], name: "idx_answers_attempt")
+  @@index([questionId], name: "idx_answers_question")
+  @@index([sectionId], name: "idx_answers_section")
+  @@index([evaluationStatus], name: "idx_answers_eval")
   @@map("student_answers")
 }
 
@@ -1417,10 +1466,14 @@ model AssessmentReschedule {
   toSlot   AssessmentSlot?   @relation("RescheduleToSlot", fields: [toSlotId], references: [id])
   reviewer StaffMember?      @relation("ARescheduleReviewer", fields: [reviewedBy], references: [id])
 
-  @@index([attemptId], map: "idx_reschedules_attempt")
-  @@index([studentId], map: "idx_reschedules_student")
+  @@index([attemptId], name: "idx_reschedules_attempt")
+  @@index([studentId], name: "idx_reschedules_student")
   @@map("assessment_reschedules")
 }
+
+// ============================================================
+// MODULE 6 — INTERVIEW & OFFER
+// ============================================================
 
 model InterviewSlot {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1448,13 +1501,11 @@ model InterviewSlot {
   bookings       InterviewBooking[]
   rescheduleFrom InterviewReschedule[] @relation("IRescheduleFrom")
   rescheduleTo   InterviewReschedule[] @relation("IRescheduleTo")
-  college        College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  interviewer    StaffMember?          @relation("InterviewerStaff", fields: [interviewerId], references: [id])
 
-  @@index([collegeId], map: "idx_islots_college")
-  @@index([collegeId, scheduledDate], map: "idx_islots_date")
-  @@index([collegeId, status], map: "idx_islots_status")
-  @@index([interviewerId], map: "idx_islots_interviewer")
+  @@index([collegeId], name: "idx_islots_college")
+  @@index([collegeId, scheduledDate], name: "idx_islots_date")
+  @@index([collegeId, status], name: "idx_islots_status")
+  @@index([interviewerId], name: "idx_islots_interviewer")
   @@map("interview_slots")
 }
 
@@ -1481,11 +1532,11 @@ model InterviewBooking {
   evaluator         StaffMember?          @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
   reschedules       InterviewReschedule[]
 
-  @@index([applicationCourseId], map: "idx_ibookings_app_course")
-  @@index([studentId], map: "idx_ibookings_student")
-  @@index([slotId], map: "idx_ibookings_slot")
-  @@index([status], map: "idx_ibookings_status")
-  @@index([interviewOutcome], map: "idx_ibookings_outcome")
+  @@index([applicationCourseId], name: "idx_ibookings_app_course")
+  @@index([studentId], name: "idx_ibookings_student")
+  @@index([slotId], name: "idx_ibookings_slot")
+  @@index([status], name: "idx_ibookings_status")
+  @@index([interviewOutcome], name: "idx_ibookings_outcome")
   @@map("interview_bookings")
 }
 
@@ -1509,9 +1560,9 @@ model InterviewReschedule {
   toSlot   InterviewSlot?   @relation("IRescheduleTo", fields: [toSlotId], references: [id])
   reviewer StaffMember?     @relation("IRescheduleReviewer", fields: [reviewedBy], references: [id])
 
-  @@index([bookingId], map: "idx_ireschedule_booking")
-  @@index([studentId], map: "idx_ireschedule_student")
-  @@index([status], map: "idx_ireschedule_status")
+  @@index([bookingId], name: "idx_ireschedule_booking")
+  @@index([studentId], name: "idx_ireschedule_student")
+  @@index([status], name: "idx_ireschedule_status")
   @@map("interview_reschedules")
 }
 
@@ -1538,14 +1589,18 @@ model OfferLetter {
   college           College           @relation(fields: [collegeId], references: [id])
   issuer            StaffMember?      @relation("IssuedByStaff", fields: [issuedBy], references: [id])
 
-  @@index([applicationCourseId], map: "idx_offers_app_course")
-  @@index([studentId], map: "idx_offers_student")
-  @@index([collegeId], map: "idx_offers_college")
-  @@index([status], map: "idx_offers_status")
-  @@index([tokenPaymentStatus], map: "idx_offers_token")
-  @@index([validUntil], map: "idx_offers_valid")
+  @@index([applicationCourseId], name: "idx_offers_app_course")
+  @@index([studentId], name: "idx_offers_student")
+  @@index([collegeId], name: "idx_offers_college")
+  @@index([status], name: "idx_offers_status")
+  @@index([tokenPaymentStatus], name: "idx_offers_token")
+  @@index([validUntil], name: "idx_offers_valid")
   @@map("offer_letters")
 }
+
+// ============================================================
+// MODULE 7 — FEES, PAYMENTS & FINANCIALS
+// ============================================================
 
 model FeeStructure {
   id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1565,42 +1620,44 @@ model FeeStructure {
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])
 
-  @@index([collegeId], map: "idx_fees_college")
-  @@index([courseId], map: "idx_fees_course")
-  @@index([feeCategory], map: "idx_fees_category")
-  @@index([academicYear], map: "idx_fees_year")
+  @@index([collegeId], name: "idx_fees_college")
+  @@index([courseId], name: "idx_fees_course")
+  @@index([feeCategory], name: "idx_fees_category")
+  @@index([academicYear], name: "idx_fees_year")
   @@map("fee_structures")
 }
 
 model StudentFeeLedger {
-  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId           String             @map("student_id") @db.Uuid
-  collegeId           String             @map("college_id") @db.Uuid
-  applicationCourseId String?            @map("application_course_id") @db.Uuid
-  enrollmentId        String?            @map("enrollment_id") @db.Uuid
-  feeCategory         String             @map("fee_category") @db.VarChar(30)
-  description         String?            @db.VarChar(255)
-  totalAmount         Decimal            @map("total_amount") @db.Decimal(12, 2)
-  scholarshipDiscount Decimal            @default(0) @map("scholarship_discount") @db.Decimal(12, 2)
-  netAmount           Decimal            @map("net_amount") @db.Decimal(12, 2)
-  paidAmount          Decimal            @default(0) @map("paid_amount") @db.Decimal(12, 2)
-  balanceAmount       Decimal            @map("balance_amount") @db.Decimal(12, 2)
-  dueDate             DateTime?          @map("due_date") @db.Date
-  status              String             @default("pending") @db.VarChar(20)
-  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
-  applicationCourse   ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
-  college             College            @relation(fields: [collegeId], references: [id])
-  enrollment          Enrollment?        @relation(fields: [enrollmentId], references: [id])
-  student             Student            @relation(fields: [studentId], references: [id])
-  transactions        Transaction[]
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  applicationCourseId String?   @map("application_course_id") @db.Uuid
+  enrollmentId        String?   @map("enrollment_id") @db.Uuid
+  feeCategory         String    @map("fee_category") @db.VarChar(30)
+  description         String?   @db.VarChar(255)
+  totalAmount         Decimal   @map("total_amount") @db.Decimal(12, 2)
+  scholarshipDiscount Decimal   @default(0) @map("scholarship_discount") @db.Decimal(12, 2)
+  netAmount           Decimal   @map("net_amount") @db.Decimal(12, 2)
+  paidAmount          Decimal   @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  balanceAmount       Decimal   @map("balance_amount") @db.Decimal(12, 2)
+  dueDate             DateTime? @map("due_date") @db.Date
+  status              String    @default("pending") @db.VarChar(20)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([studentId], map: "idx_ledger_student")
-  @@index([collegeId], map: "idx_ledger_college")
-  @@index([applicationCourseId], map: "idx_ledger_app_course")
-  @@index([feeCategory], map: "idx_ledger_category")
-  @@index([status], map: "idx_ledger_status")
-  @@index([dueDate], map: "idx_ledger_due")
+  // Relations
+  student           Student            @relation(fields: [studentId], references: [id])
+  college           College            @relation(fields: [collegeId], references: [id])
+  applicationCourse ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
+  enrollment        Enrollment?        @relation(fields: [enrollmentId], references: [id])
+  transactions      Transaction[]
+
+  @@index([studentId], name: "idx_ledger_student")
+  @@index([collegeId], name: "idx_ledger_college")
+  @@index([applicationCourseId], name: "idx_ledger_app_course")
+  @@index([feeCategory], name: "idx_ledger_category")
+  @@index([status], name: "idx_ledger_status")
+  @@index([dueDate], name: "idx_ledger_due")
   @@map("student_fee_ledger")
 }
 
@@ -1644,17 +1701,17 @@ model Transaction {
   receipt     PaymentReceipt?
   refunds     Refund[]
 
-  @@index([studentId], map: "idx_txn_student")
-  @@index([collegeId], map: "idx_txn_college")
-  @@index([ledgerEntryId], map: "idx_txn_ledger")
-  @@index([transactionNumber], map: "idx_txn_number")
-  @@index([status], map: "idx_txn_status")
-  @@index([verificationStatus], map: "idx_txn_verification")
-  @@index([paymentMethod], map: "idx_txn_method")
-  @@index([paidAt], map: "idx_txn_paid")
-  @@index([razorpayOrderId], map: "idx_txn_razorpay_order")
-  @@index([razorpayPaymentId], map: "idx_txn_razorpay_payment")
-  @@index([transferStatus], map: "idx_txn_transfer_status")
+  @@index([studentId], name: "idx_txn_student")
+  @@index([collegeId], name: "idx_txn_college")
+  @@index([ledgerEntryId], name: "idx_txn_ledger")
+  @@index([transactionNumber], name: "idx_txn_number")
+  @@index([status], name: "idx_txn_status")
+  @@index([verificationStatus], name: "idx_txn_verification")
+  @@index([paymentMethod], name: "idx_txn_method")
+  @@index([paidAt], name: "idx_txn_paid")
+  @@index([razorpayOrderId], name: "idx_txn_razorpay_order")
+  @@index([razorpayPaymentId], name: "idx_txn_razorpay_payment")
+  @@index([transferStatus], name: "idx_txn_transfer_status")
   @@map("transactions")
 }
 
@@ -1676,37 +1733,39 @@ model PaymentReceipt {
   student     Student     @relation(fields: [studentId], references: [id])
   college     College     @relation(fields: [collegeId], references: [id])
 
-  @@index([transactionId], map: "idx_receipts_txn")
-  @@index([studentId], map: "idx_receipts_student")
-  @@index([collegeId], map: "idx_receipts_college")
-  @@index([receiptNumber], map: "idx_receipts_number")
+  @@index([transactionId], name: "idx_receipts_txn")
+  @@index([studentId], name: "idx_receipts_student")
+  @@index([collegeId], name: "idx_receipts_college")
+  @@index([receiptNumber], name: "idx_receipts_number")
   @@map("payment_receipts")
 }
 
 model Refund {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  transactionId   String       @map("transaction_id") @db.Uuid
-  studentId       String       @map("student_id") @db.Uuid
-  collegeId       String       @map("college_id") @db.Uuid
-  refundAmount    Decimal      @map("refund_amount") @db.Decimal(12, 2)
-  reason          String
-  refundType      String       @map("refund_type") @db.VarChar(20)
-  status          String       @default("pending") @db.VarChar(20)
-  gatewayRefundId String?      @map("gateway_refund_id") @db.VarChar(100)
-  processedBy     String?      @map("processed_by") @db.Uuid
-  processedAt     DateTime?    @map("processed_at") @db.Timestamptz(6)
-  remarks         String?
-  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
-  college         College      @relation(fields: [collegeId], references: [id])
-  processor       StaffMember? @relation(fields: [processedBy], references: [id])
-  student         Student      @relation(fields: [studentId], references: [id])
-  transaction     Transaction  @relation(fields: [transactionId], references: [id])
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId   String    @map("transaction_id") @db.Uuid
+  studentId       String    @map("student_id") @db.Uuid
+  collegeId       String    @map("college_id") @db.Uuid
+  refundAmount    Decimal   @map("refund_amount") @db.Decimal(12, 2)
+  reason          String    @db.Text
+  refundType      String    @map("refund_type") @db.VarChar(20)
+  status          String    @default("pending") @db.VarChar(20)
+  gatewayRefundId String?   @map("gateway_refund_id") @db.VarChar(100)
+  processedBy     String?   @map("processed_by") @db.Uuid
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz
+  remarks         String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([transactionId], map: "idx_refunds_txn")
-  @@index([studentId], map: "idx_refunds_student")
-  @@index([status], map: "idx_refunds_status")
-  @@index([refundType], map: "idx_refunds_type")
+  // Relations
+  transaction Transaction  @relation(fields: [transactionId], references: [id])
+  student     Student      @relation(fields: [studentId], references: [id])
+  college     College      @relation(fields: [collegeId], references: [id])
+  processor   StaffMember? @relation(fields: [processedBy], references: [id])
+
+  @@index([transactionId], name: "idx_refunds_txn")
+  @@index([studentId], name: "idx_refunds_student")
+  @@index([status], name: "idx_refunds_status")
+  @@index([refundType], name: "idx_refunds_type")
   @@map("refunds")
 }
 
@@ -1728,9 +1787,9 @@ model ScholarshipConfig {
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   applications ScholarshipApplication[]
 
-  @@index([collegeId], map: "idx_scholarships_college")
-  @@index([scholarshipType], map: "idx_scholarships_type")
-  @@index([collegeId, isActive], map: "idx_scholarships_active")
+  @@index([collegeId], name: "idx_scholarships_college")
+  @@index([scholarshipType], name: "idx_scholarships_type")
+  @@index([collegeId, isActive], name: "idx_scholarships_active")
   @@map("scholarship_configs")
 }
 
@@ -1756,10 +1815,10 @@ model ScholarshipApplication {
   reviewer          StaffMember?      @relation(fields: [reviewedBy], references: [id])
 
   @@unique([scholarshipConfigId, studentId, applicationCourseId], name: "uq_scholarship_student_course")
-  @@index([scholarshipConfigId], map: "idx_schapp_config")
-  @@index([studentId], map: "idx_schapp_student")
-  @@index([applicationCourseId], map: "idx_schapp_app_course")
-  @@index([status], map: "idx_schapp_status")
+  @@index([scholarshipConfigId], name: "idx_schapp_config")
+  @@index([studentId], name: "idx_schapp_student")
+  @@index([applicationCourseId], name: "idx_schapp_app_course")
+  @@index([status], name: "idx_schapp_status")
   @@map("scholarship_applications")
 }
 
@@ -1781,10 +1840,14 @@ model CollegePaymentAccount {
   // Relations
   college College @relation(fields: [collegeId], references: [id])
 
-  @@index([collegeId], map: "idx_cpa_college")
-  @@index([onboardingStatus], map: "idx_cpa_status")
+  @@index([collegeId], name: "idx_cpa_college")
+  @@index([onboardingStatus], name: "idx_cpa_status")
   @@map("college_payment_accounts")
 }
+
+// ============================================================
+// MODULE 8 — DOCUMENTS
+// ============================================================
 
 model DocumentTemplate {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1803,11 +1866,10 @@ model DocumentTemplate {
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   documentRequests DocumentRequest[]
-  college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
   @@unique([collegeId, slug], name: "uq_doc_template_slug")
-  @@index([collegeId], map: "idx_doc_templates_college")
-  @@index([collegeId, isActive], map: "idx_doc_templates_active")
+  @@index([collegeId], name: "idx_doc_templates_college")
+  @@index([collegeId, isActive], name: "idx_doc_templates_active")
   @@map("document_templates")
 }
 
@@ -1842,12 +1904,12 @@ model DocumentRequest {
   processedStaff   StaffMember?      @relation("ProcessedByStaff", fields: [processedBy], references: [id])
   issuedDocuments  IssuedDocument[]
 
-  @@index([studentId], map: "idx_docreq_student")
-  @@index([collegeId], map: "idx_docreq_college")
-  @@index([documentTemplateId], map: "idx_docreq_template")
-  @@index([collegeId, status], map: "idx_docreq_status")
-  @@index([assignedTo], map: "idx_docreq_assigned")
-  @@index([requestNumber], map: "idx_docreq_number")
+  @@index([studentId], name: "idx_docreq_student")
+  @@index([collegeId], name: "idx_docreq_college")
+  @@index([documentTemplateId], name: "idx_docreq_template")
+  @@index([collegeId, status], name: "idx_docreq_status")
+  @@index([assignedTo], name: "idx_docreq_assigned")
+  @@index([requestNumber], name: "idx_docreq_number")
   @@map("document_requests")
 }
 
@@ -1870,11 +1932,15 @@ model IssuedDocument {
   college         College         @relation(fields: [collegeId], references: [id])
   issuer          StaffMember     @relation(fields: [issuedBy], references: [id])
 
-  @@index([documentRequestId], map: "idx_issued_request")
-  @@index([studentId], map: "idx_issued_student")
-  @@index([collegeId], map: "idx_issued_college")
+  @@index([documentRequestId], name: "idx_issued_request")
+  @@index([studentId], name: "idx_issued_student")
+  @@index([collegeId], name: "idx_issued_college")
   @@map("issued_documents")
 }
+
+// ============================================================
+// MODULE 9 — HOSTEL
+// ============================================================
 
 model Hostel {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1909,9 +1975,9 @@ model Hostel {
   wishlists     HostelWishlist[]
 
   @@unique([collegeId, slug], name: "uq_hostel_slug")
-  @@index([collegeId], map: "idx_hostels_college")
-  @@index([hostelType], map: "idx_hostels_type")
-  @@index([collegeId, status], map: "idx_hostels_status")
+  @@index([collegeId], name: "idx_hostels_college")
+  @@index([hostelType], name: "idx_hostels_type")
+  @@index([collegeId, status], name: "idx_hostels_status")
   @@map("hostels")
 }
 
@@ -1936,9 +2002,9 @@ model HostelRoomType {
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   enrollments HostelEnrollment[]
 
-  @@index([hostelId], map: "idx_room_types_hostel")
-  @@index([hostelId, isActive], map: "idx_room_types_active")
-  @@index([availableBeds], map: "idx_room_types_available")
+  @@index([hostelId], name: "idx_room_types_hostel")
+  @@index([hostelId, isActive], name: "idx_room_types_active")
+  @@index([availableBeds], name: "idx_room_types_available")
   @@map("hostel_room_types")
 }
 
@@ -1961,7 +2027,7 @@ model HostelMessPlan {
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   enrollments HostelEnrollment[]
 
-  @@index([hostelId], map: "idx_mess_plans_hostel")
+  @@index([hostelId], name: "idx_mess_plans_hostel")
   @@map("hostel_mess_plans")
 }
 
@@ -1970,18 +2036,20 @@ model HostelAddonService {
   hostelId    String   @map("hostel_id") @db.Uuid
   serviceType String   @map("service_type") @db.VarChar(30)
   name        String   @db.VarChar(100)
-  description String?
+  description String?  @db.Text
   isOptional  Boolean  @default(true) @map("is_optional")
   plans       Json
-  notes       String?
+  notes       String?  @db.Text
   isActive    Boolean  @default(true) @map("is_active")
   sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  hostel      Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([hostelId], map: "idx_addon_hostel")
-  @@index([serviceType], map: "idx_addon_type")
+  // Relations
+  hostel Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  @@index([hostelId], name: "idx_addon_hostel")
+  @@index([serviceType], name: "idx_addon_type")
   @@map("hostel_addon_services")
 }
 
@@ -1990,17 +2058,19 @@ model HostelReview {
   hostelId   String   @map("hostel_id") @db.Uuid
   studentId  String   @map("student_id") @db.Uuid
   rating     Int      @db.SmallInt
-  reviewText String?  @map("review_text")
+  reviewText String?  @map("review_text") @db.Text
   isVerified Boolean  @default(false) @map("is_verified")
   status     String   @default("pending") @db.VarChar(20)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  hostel     Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
-  student    Student  @relation(fields: [studentId], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  hostel  Hostel  @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id])
 
   @@unique([hostelId, studentId], name: "uq_hostel_review_student")
-  @@index([hostelId, status], map: "idx_hreviews_hostel")
-  @@index([studentId], map: "idx_hreviews_student")
+  @@index([hostelId, status], name: "idx_hreviews_hostel")
+  @@index([studentId], name: "idx_hreviews_student")
   @@map("hostel_reviews")
 }
 
@@ -2028,10 +2098,10 @@ model HostelEnrollment {
   roomType HostelRoomType  @relation(fields: [roomTypeId], references: [id])
   messPlan HostelMessPlan? @relation(fields: [messId], references: [id])
 
-  @@index([studentId], map: "idx_henroll_student")
-  @@index([collegeId], map: "idx_henroll_college")
-  @@index([hostelId], map: "idx_henroll_hostel")
-  @@index([status], map: "idx_henroll_status")
+  @@index([studentId], name: "idx_henroll_student")
+  @@index([collegeId], name: "idx_henroll_college")
+  @@index([hostelId], name: "idx_henroll_hostel")
+  @@index([status], name: "idx_henroll_status")
   @@map("hostel_enrollments")
 }
 
@@ -2039,15 +2109,21 @@ model HostelWishlist {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   studentId String   @map("student_id") @db.Uuid
   hostelId  String   @map("hostel_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  hostel    Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  hostel  Hostel  @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, hostelId], name: "uq_hostel_wishlist")
-  @@index([studentId], map: "idx_hwish_student")
-  @@index([hostelId], map: "idx_hwish_hostel")
+  @@index([studentId], name: "idx_hwish_student")
+  @@index([hostelId], name: "idx_hwish_hostel")
   @@map("hostel_wishlists")
 }
+
+// ============================================================
+// MODULE 10 — COMMUTE
+// ============================================================
 
 model CommuteRoute {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -2063,11 +2139,9 @@ model CommuteRoute {
   stops       CommuteRouteStop[]
   buses       CommuteBus[]
   enrollments CommuteEnrollment[]
-  stops       CommuteRouteStop[]
-  college     College             @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
-  @@index([collegeId], map: "idx_routes_college")
-  @@index([collegeId, isActive], map: "idx_routes_active")
+  @@index([collegeId], name: "idx_routes_college")
+  @@index([collegeId, isActive], name: "idx_routes_active")
   @@map("commute_routes")
 }
 
@@ -2088,7 +2162,7 @@ model CommuteRouteStop {
   enrollments CommuteEnrollment[]
 
   @@unique([routeId, stopOrder], name: "uq_route_stop_order")
-  @@index([routeId], map: "idx_stops_route")
+  @@index([routeId], name: "idx_stops_route")
   @@map("commute_route_stops")
 }
 
@@ -2113,9 +2187,9 @@ model CommuteBus {
   enrollments CommuteEnrollment[]
   rideHistory CommuteRideHistory[]
 
-  @@index([routeId], map: "idx_buses_route")
-  @@index([routeId, isActive], map: "idx_buses_active")
-  @@index([availableSeats], map: "idx_buses_available")
+  @@index([routeId], name: "idx_buses_route")
+  @@index([routeId, isActive], name: "idx_buses_active")
+  @@index([availableSeats], name: "idx_buses_available")
   @@map("commute_buses")
 }
 
@@ -2141,34 +2215,40 @@ model CommuteEnrollment {
   rideHistory CommuteRideHistory[]
 
   @@unique([studentId, status], name: "uq_commute_student_active")
-  @@index([studentId], map: "idx_cenroll_student")
-  @@index([collegeId], map: "idx_cenroll_college")
-  @@index([routeId], map: "idx_cenroll_route")
-  @@index([busId], map: "idx_cenroll_bus")
-  @@index([status], map: "idx_cenroll_status")
+  @@index([studentId], name: "idx_cenroll_student")
+  @@index([collegeId], name: "idx_cenroll_college")
+  @@index([routeId], name: "idx_cenroll_route")
+  @@index([busId], name: "idx_cenroll_bus")
+  @@index([status], name: "idx_cenroll_status")
   @@map("commute_enrollments")
 }
 
 model CommuteRideHistory {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  enrollmentId String            @map("enrollment_id") @db.Uuid
-  studentId    String            @map("student_id") @db.Uuid
-  busId        String            @map("bus_id") @db.Uuid
-  rideDate     DateTime          @map("ride_date") @db.Date
-  rideType     String            @map("ride_type") @db.VarChar(10)
-  boardedAt    DateTime?         @map("boarded_at") @db.Timestamptz(6)
-  droppedAt    DateTime?         @map("dropped_at") @db.Timestamptz(6)
-  status       String            @default("completed") @db.VarChar(20)
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  bus          CommuteBus        @relation(fields: [busId], references: [id])
-  enrollment   CommuteEnrollment @relation(fields: [enrollmentId], references: [id])
-  student      Student           @relation(fields: [studentId], references: [id])
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enrollmentId String    @map("enrollment_id") @db.Uuid
+  studentId    String    @map("student_id") @db.Uuid
+  busId        String    @map("bus_id") @db.Uuid
+  rideDate     DateTime  @map("ride_date") @db.Date
+  rideType     String    @map("ride_type") @db.VarChar(10)
+  boardedAt    DateTime? @map("boarded_at") @db.Timestamptz
+  droppedAt    DateTime? @map("dropped_at") @db.Timestamptz
+  status       String    @default("completed") @db.VarChar(20)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  @@index([enrollmentId], map: "idx_rides_enrollment")
-  @@index([studentId], map: "idx_rides_student")
-  @@index([rideDate], map: "idx_rides_date")
+  // Relations
+  enrollment CommuteEnrollment @relation(fields: [enrollmentId], references: [id])
+  student    Student           @relation(fields: [studentId], references: [id])
+  bus        CommuteBus        @relation(fields: [busId], references: [id])
+
+  @@index([enrollmentId], name: "idx_rides_enrollment")
+  @@index([studentId], name: "idx_rides_student")
+  @@index([rideDate], name: "idx_rides_date")
   @@map("commute_ride_history")
 }
+
+// ============================================================
+// MODULE 11 — COUNSELLING & SESSIONS
+// ============================================================
 
 model CounsellorAvailability {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -2187,8 +2267,8 @@ model CounsellorAvailability {
   rescheduleTargets SessionReschedule[]  @relation("RescheduleToSlot")
 
   @@unique([counsellorId, availableDate, startTime], name: "uq_counsellor_slot")
-  @@index([counsellorId], map: "idx_avail_counsellor")
-  @@index([availableDate, isBooked], map: "idx_avail_date")
+  @@index([counsellorId], name: "idx_avail_counsellor")
+  @@index([availableDate, isBooked], name: "idx_avail_date")
   @@map("counsellor_availability")
 }
 
@@ -2224,12 +2304,12 @@ model CounsellingSession {
   reschedules  SessionReschedule[]
   walletTxns   CounsellorWalletTransaction[]
 
-  @@index([studentId], map: "idx_sessions_student")
-  @@index([counsellorId], map: "idx_sessions_counsellor")
-  @@index([scheduledDate], map: "idx_sessions_date")
-  @@index([status], map: "idx_sessions_status")
-  @@index([sessionType], map: "idx_sessions_type")
-  @@index([paymentStatus], map: "idx_sessions_payment")
+  @@index([studentId], name: "idx_sessions_student")
+  @@index([counsellorId], name: "idx_sessions_counsellor")
+  @@index([scheduledDate], name: "idx_sessions_date")
+  @@index([status], name: "idx_sessions_status")
+  @@index([sessionType], name: "idx_sessions_type")
+  @@index([paymentStatus], name: "idx_sessions_payment")
   @@map("counselling_sessions")
 }
 
@@ -2249,22 +2329,24 @@ model SessionReschedule {
   session        CounsellingSession     @relation(fields: [sessionId], references: [id])
   toAvailability CounsellorAvailability @relation("RescheduleToSlot", fields: [toAvailabilityId], references: [id])
 
-  @@index([sessionId], map: "idx_sreschedule_session")
+  @@index([sessionId], name: "idx_sreschedule_session")
   @@map("session_reschedules")
 }
 
 model CounsellorWallet {
-  id             String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId   String                        @unique @map("counsellor_id") @db.Uuid
-  balance        Decimal                       @default(0) @db.Decimal(12, 2)
-  totalEarned    Decimal                       @default(0) @map("total_earned") @db.Decimal(12, 2)
-  totalWithdrawn Decimal                       @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
-  createdAt      DateTime                      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime                      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  transactions   CounsellorWalletTransaction[]
-  counsellor     Counsellor                    @relation(fields: [counsellorId], references: [id])
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  counsellorId   String   @unique @map("counsellor_id") @db.Uuid
+  balance        Decimal  @default(0) @db.Decimal(12, 2)
+  totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
+  totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([counsellorId], map: "idx_wallet_counsellor")
+  // Relations
+  counsellor   Counsellor                    @relation(fields: [counsellorId], references: [id])
+  transactions CounsellorWalletTransaction[]
+
+  @@index([counsellorId], name: "idx_wallet_counsellor")
   @@map("counsellor_wallets")
 }
 
@@ -2286,12 +2368,16 @@ model CounsellorWalletTransaction {
   counsellor Counsellor          @relation(fields: [counsellorId], references: [id])
   session    CounsellingSession? @relation(fields: [sessionId], references: [id])
 
-  @@index([walletId], map: "idx_wtxn_wallet")
-  @@index([counsellorId], map: "idx_wtxn_counsellor")
-  @@index([type], map: "idx_wtxn_type")
-  @@index([createdAt], map: "idx_wtxn_created")
+  @@index([walletId], name: "idx_wtxn_wallet")
+  @@index([counsellorId], name: "idx_wtxn_counsellor")
+  @@index([type], name: "idx_wtxn_type")
+  @@index([createdAt], name: "idx_wtxn_created")
   @@map("counsellor_wallet_transactions")
 }
+
+// ============================================================
+// MODULE 12 — BLINK
+// ============================================================
 
 model ReferralCode {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -2312,9 +2398,9 @@ model ReferralCode {
   referrals    Referral[]
   applications Application[]
 
-  @@index([blinkUserId], map: "idx_refcodes_user")
-  @@index([collegeId], map: "idx_refcodes_college")
-  @@index([code], map: "idx_refcodes_code")
+  @@index([blinkUserId], name: "idx_refcodes_user")
+  @@index([collegeId], name: "idx_refcodes_college")
+  @@index([code], name: "idx_refcodes_code")
   @@map("referral_codes")
 }
 
@@ -2339,10 +2425,10 @@ model Referral {
   studentWalletTxns StudentWalletTransaction[]
 
   @@unique([studentId, blinkUserId], name: "uq_referral_student")
-  @@index([blinkUserId], map: "idx_referrals_user")
-  @@index([studentId], map: "idx_referrals_student")
-  @@index([status], map: "idx_referrals_status")
-  @@index([referralCodeId], map: "idx_referrals_code")
+  @@index([blinkUserId], name: "idx_referrals_user")
+  @@index([studentId], name: "idx_referrals_student")
+  @@index([status], name: "idx_referrals_status")
+  @@index([referralCodeId], name: "idx_referrals_code")
   @@map("referrals")
 }
 
@@ -2366,9 +2452,9 @@ model ServiceChargeConfig {
   course      Course       @relation(fields: [courseId], references: [id])
   commissions Commission[]
 
-  @@index([collegeId], map: "idx_scc_college")
-  @@index([courseId], map: "idx_scc_course")
-  @@index([academicYear], map: "idx_scc_year")
+  @@index([collegeId], name: "idx_scc_college")
+  @@index([courseId], name: "idx_scc_course")
+  @@index([academicYear], name: "idx_scc_year")
   @@map("service_charge_configs")
 }
 
@@ -2393,25 +2479,27 @@ model Commission {
   serviceCharge ServiceChargeConfig      @relation(fields: [serviceChargeId], references: [id])
   walletTxns    BlinkWalletTransaction[]
 
-  @@index([blinkUserId], map: "idx_comm_user")
-  @@index([status], map: "idx_comm_status")
-  @@index([referralId], map: "idx_comm_referral")
+  @@index([blinkUserId], name: "idx_comm_user")
+  @@index([status], name: "idx_comm_status")
+  @@index([referralId], name: "idx_comm_referral")
   @@map("commissions")
 }
 
 model BlinkWallet {
-  id             String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  blinkUserId    String                   @unique @map("blink_user_id") @db.Uuid
-  balance        Decimal                  @default(0) @db.Decimal(12, 2)
-  totalEarned    Decimal                  @default(0) @map("total_earned") @db.Decimal(12, 2)
-  totalWithdrawn Decimal                  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
-  bankDetails    Json                     @default("{}") @map("bank_details")
-  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
-  transactions   BlinkWalletTransaction[]
-  blinkUser      BlinkUser                @relation(fields: [blinkUserId], references: [id])
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blinkUserId    String   @unique @map("blink_user_id") @db.Uuid
+  balance        Decimal  @default(0) @db.Decimal(12, 2)
+  totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
+  totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
+  bankDetails    Json     @default("{}") @map("bank_details")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([blinkUserId], map: "idx_bwallet_user")
+  // Relations
+  blinkUser    BlinkUser                @relation(fields: [blinkUserId], references: [id])
+  transactions BlinkWalletTransaction[]
+
+  @@index([blinkUserId], name: "idx_bwallet_user")
   @@map("blink_wallets")
 }
 
@@ -2432,10 +2520,10 @@ model BlinkWalletTransaction {
   blinkUser  BlinkUser   @relation(fields: [blinkUserId], references: [id])
   commission Commission? @relation(fields: [commissionId], references: [id])
 
-  @@index([walletId], map: "idx_bwtxn_wallet")
-  @@index([blinkUserId], map: "idx_bwtxn_user")
-  @@index([type], map: "idx_bwtxn_type")
-  @@index([createdAt], map: "idx_bwtxn_created")
+  @@index([walletId], name: "idx_bwtxn_wallet")
+  @@index([blinkUserId], name: "idx_bwtxn_user")
+  @@index([type], name: "idx_bwtxn_type")
+  @@index([createdAt], name: "idx_bwtxn_created")
   @@map("blink_wallet_transactions")
 }
 
@@ -2462,13 +2550,13 @@ model CampusVisit {
   student            Student    @relation(fields: [studentId], references: [id])
   ambassador         BlinkUser  @relation("AmbassadorVisits", fields: [ambassadorId], references: [id])
   previousAmbassador BlinkUser? @relation("ReassignedFrom", fields: [reassignedFrom], references: [id])
-  student            Student    @relation(fields: [studentId], references: [id])
+  // staffCreator: creation tracked via audit_logs; ambassadorId FK is to blink_users
 
-  @@index([collegeId], map: "idx_visits_college")
-  @@index([ambassadorId], map: "idx_visits_ambassador")
-  @@index([studentId], map: "idx_visits_student")
-  @@index([proposedDate], map: "idx_visits_date")
-  @@index([status], map: "idx_visits_status")
+  @@index([collegeId], name: "idx_visits_college")
+  @@index([ambassadorId], name: "idx_visits_ambassador")
+  @@index([studentId], name: "idx_visits_student")
+  @@index([proposedDate], name: "idx_visits_date")
+  @@index([status], name: "idx_visits_status")
   @@map("campus_visits")
 }
 
@@ -2479,10 +2567,10 @@ model MediaKit {
   title         String   @db.VarChar(255)
   assetType     String   @map("asset_type") @db.VarChar(20)
   scope         String   @db.VarChar(20)
-  fileUrl       String   @map("file_url")
+  fileUrl       String   @map("file_url") @db.Text
   fileName      String?  @map("file_name") @db.VarChar(255)
   fileSizeBytes Int?     @map("file_size_bytes")
-  thumbnailUrl  String?  @map("thumbnail_url")
+  thumbnailUrl  String?  @map("thumbnail_url") @db.Text
   sortOrder     Int      @default(0) @map("sort_order")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -2492,48 +2580,56 @@ model MediaKit {
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   course  Course? @relation(fields: [courseId], references: [id])
 
-  @@index([collegeId], map: "idx_media_college")
-  @@index([courseId], map: "idx_media_course")
-  @@index([assetType], map: "idx_media_type")
-  @@index([scope], map: "idx_media_scope")
+  @@index([collegeId], name: "idx_media_college")
+  @@index([courseId], name: "idx_media_course")
+  @@index([assetType], name: "idx_media_type")
+  @@index([scope], name: "idx_media_scope")
   @@map("media_kits")
 }
 
-model Community {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String            @db.VarChar(255)
-  slug          String            @unique @db.VarChar(100)
-  description   String?
-  coverImageUrl String?           @map("cover_image_url")
-  iconUrl       String?           @map("icon_url")
-  createdById   String            @map("created_by_id") @db.Uuid
-  createdByType String            @map("created_by_type") @db.VarChar(20)
-  memberCount   Int               @default(0) @map("member_count")
-  postCount     Int               @default(0) @map("post_count")
-  status        String            @default("active") @db.VarChar(20)
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
-  members       CommunityMember[]
-  posts         CommunityPost[]
+// ============================================================
+// MODULE 13 — ENGAGEMENT
+// ============================================================
 
-  @@index([slug], map: "idx_communities_slug")
-  @@index([status], map: "idx_communities_status")
-  @@index([memberCount(sort: Desc)], map: "idx_communities_members")
+model Community {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @db.VarChar(255)
+  slug          String   @unique @db.VarChar(100)
+  description   String?  @db.Text
+  coverImageUrl String?  @map("cover_image_url") @db.Text
+  iconUrl       String?  @map("icon_url") @db.Text
+  createdById   String   @map("created_by_id") @db.Uuid
+  createdByType String   @map("created_by_type") @db.VarChar(20)
+  memberCount   Int      @default(0) @map("member_count")
+  postCount     Int      @default(0) @map("post_count")
+  status        String   @default("active") @db.VarChar(20)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  members CommunityMember[]
+  posts   CommunityPost[]
+
+  @@index([slug], name: "idx_communities_slug")
+  @@index([status], name: "idx_communities_status")
+  @@index([memberCount(sort: Desc)], name: "idx_communities_members")
   @@map("communities")
 }
 
 model CommunityMember {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  communityId String    @map("community_id") @db.Uuid
-  studentId   String    @map("student_id") @db.Uuid
-  notifyMe    Boolean   @default(false) @map("notify_me")
-  joinedAt    DateTime  @default(now()) @map("joined_at") @db.Timestamptz(6)
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  communityId String   @map("community_id") @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  notifyMe    Boolean  @default(false) @map("notify_me")
+  joinedAt    DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  // Relations
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, studentId], name: "uq_community_member")
-  @@index([communityId], map: "idx_cmembers_community")
-  @@index([studentId], map: "idx_cmembers_student")
+  @@index([communityId], name: "idx_cmembers_community")
+  @@index([studentId], name: "idx_cmembers_student")
   @@map("community_members")
 }
 
@@ -2557,24 +2653,26 @@ model CommunityPost {
   votes     CommunityPostVote[]
   comments  CommunityComment[]
 
-  @@index([communityId, createdAt(sort: Desc)], map: "idx_cposts_community")
-  @@index([authorId], map: "idx_cposts_author")
-  @@index([status], map: "idx_cposts_status")
+  @@index([communityId, createdAt(sort: Desc)], name: "idx_cposts_community")
+  @@index([authorId], name: "idx_cposts_author")
+  @@index([status], name: "idx_cposts_status")
   @@map("community_posts")
 }
 
 model CommunityPostVote {
-  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId    String        @map("post_id") @db.Uuid
-  studentId String        @map("student_id") @db.Uuid
-  voteType  String        @map("vote_type") @db.VarChar(10)
-  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  student   Student       @relation(fields: [studentId], references: [id])
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  voteType  String   @map("vote_type") @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  post    CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  student Student       @relation(fields: [studentId], references: [id])
 
   @@unique([postId, studentId], name: "uq_post_vote")
-  @@index([postId], map: "idx_votes_post")
-  @@index([studentId], map: "idx_votes_student")
+  @@index([postId], name: "idx_votes_post")
+  @@index([studentId], name: "idx_votes_student")
   @@map("community_post_votes")
 }
 
@@ -2595,9 +2693,9 @@ model CommunityComment {
   parentComment CommunityComment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
   replies       CommunityComment[] @relation("CommentReplies")
 
-  @@index([postId, createdAt], map: "idx_comments_post")
-  @@index([authorId], map: "idx_comments_author")
-  @@index([parentCommentId], map: "idx_comments_parent")
+  @@index([postId, createdAt], name: "idx_comments_post")
+  @@index([authorId], name: "idx_comments_author")
+  @@index([parentCommentId], name: "idx_comments_parent")
   @@map("community_comments")
 }
 
@@ -2608,10 +2706,12 @@ model SquadSearch {
   preferredState String?  @map("preferred_state") @db.VarChar(100)
   friends        Json
   results        Json     @default("{}")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  student        Student  @relation(fields: [studentId], references: [id])
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@index([studentId], map: "idx_squad_student")
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([studentId], name: "idx_squad_student")
   @@map("squad_searches")
 }
 
@@ -2632,9 +2732,9 @@ model BeaconuCard {
   student      Student                    @relation(fields: [studentId], references: [id])
   transactions StudentWalletTransaction[]
 
-  @@index([studentId], map: "idx_card_student")
-  @@index([cardNumber], map: "idx_card_number")
-  @@index([status], map: "idx_card_status")
+  @@index([studentId], name: "idx_card_student")
+  @@index([cardNumber], name: "idx_card_number")
+  @@index([status], name: "idx_card_status")
   @@map("beaconu_cards")
 }
 
@@ -2656,7 +2756,7 @@ model StudentBankAccount {
   student    Student                    @relation(fields: [studentId], references: [id], onDelete: Cascade)
   walletTxns StudentWalletTransaction[]
 
-  @@index([studentId], map: "idx_sba_student")
+  @@index([studentId], name: "idx_sba_student")
   @@map("student_bank_accounts")
 }
 
@@ -2679,11 +2779,11 @@ model StudentWalletTransaction {
   referral    Referral?           @relation(fields: [referralId], references: [id])
   bankAccount StudentBankAccount? @relation(fields: [bankAccountId], references: [id])
 
-  @@index([cardId], map: "idx_swtxn_card")
-  @@index([studentId], map: "idx_swtxn_student")
-  @@index([type], map: "idx_swtxn_type")
-  @@index([createdAt(sort: Desc)], map: "idx_swtxn_created")
-  @@index([withdrawalStatus], map: "idx_swtxn_withdrawal")
+  @@index([cardId], name: "idx_swtxn_card")
+  @@index([studentId], name: "idx_swtxn_student")
+  @@index([type], name: "idx_swtxn_type")
+  @@index([createdAt(sort: Desc)], name: "idx_swtxn_created")
+  @@index([withdrawalStatus], name: "idx_swtxn_withdrawal")
   @@map("student_wallet_transactions")
 }
 
@@ -2708,33 +2808,40 @@ model AntiRaggingComplaint {
   college  College      @relation(fields: [collegeId], references: [id])
   assignee StaffMember? @relation(fields: [assignedTo], references: [id])
 
-  @@index([studentId], map: "idx_arc_student")
-  @@index([collegeId], map: "idx_arc_college")
-  @@index([status], map: "idx_arc_status")
-  @@index([complaintNumber], map: "idx_arc_number")
+  @@index([studentId], name: "idx_arc_student")
+  @@index([collegeId], name: "idx_arc_college")
+  @@index([status], name: "idx_arc_status")
+  @@index([complaintNumber], name: "idx_arc_number")
   @@map("anti_ragging_complaints")
 }
+
+// ============================================================
+// MODULE 14 — COMMUNICATION & NOTIFICATIONS
+// ============================================================
 
 model Notification {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   recipientType  String    @map("recipient_type") @db.VarChar(20)
   recipientId    String    @map("recipient_id") @db.Uuid
   title          String    @db.VarChar(255)
-  body           String
+  body           String    @db.Text
   channel        String    @db.VarChar(10)
   category       String    @default("general") @db.VarChar(30)
   entityType     String?   @map("entity_type") @db.VarChar(50)
   entityId       String?   @map("entity_id") @db.Uuid
-  actionUrl      String?   @map("action_url")
+  actionUrl      String?   @map("action_url") @db.Text
   isRead         Boolean   @default(false) @map("is_read")
-  readAt         DateTime? @map("read_at") @db.Timestamptz(6)
+  readAt         DateTime? @map("read_at") @db.Timestamptz
   deliveryStatus String    @default("pending") @map("delivery_status") @db.VarChar(20)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  @@index([recipientType, recipientId, isRead], map: "idx_notif_recipient")
-  @@index([category], map: "idx_notif_category")
-  @@index([createdAt(sort: Desc)], map: "idx_notif_created")
-  @@index([entityType, entityId], map: "idx_notif_entity")
+  // Polymorphic: recipientId resolved at application layer based on recipientType.
+  // No Prisma FK — recipientId can reference students, staff_members, blink_users, counsellors, or platform_admins.
+
+  @@index([recipientType, recipientId, isRead], name: "idx_notif_recipient")
+  @@index([category], name: "idx_notif_category")
+  @@index([createdAt(sort: Desc)], name: "idx_notif_created")
+  @@index([entityType, entityId], name: "idx_notif_entity")
   @@map("notifications")
 }
 
@@ -2759,9 +2866,9 @@ model BroadcastNotification {
   college College? @relation(fields: [collegeId], references: [id])
   // sentById is polymorphic (platform_admin or staff_member). Resolve at app layer.
 
-  @@index([collegeId], map: "idx_broadcast_college")
-  @@index([status], map: "idx_broadcast_status")
-  @@index([sentAt(sort: Desc)], map: "idx_broadcast_sent")
+  @@index([collegeId], name: "idx_broadcast_college")
+  @@index([status], name: "idx_broadcast_status")
+  @@index([sentAt(sort: Desc)], name: "idx_broadcast_sent")
   @@map("broadcast_notifications")
 }
 
@@ -2782,8 +2889,8 @@ model Announcement {
   college College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   creator StaffMember @relation(fields: [createdBy], references: [id])
 
-  @@index([collegeId, status], map: "idx_announce_college")
-  @@index([publishedAt(sort: Desc)], map: "idx_announce_published")
+  @@index([collegeId, status], name: "idx_announce_college")
+  @@index([publishedAt(sort: Desc)], name: "idx_announce_published")
   @@map("announcements")
 }
 
@@ -2809,12 +2916,12 @@ model SupportTicket {
   assignee StaffMember?    @relation(fields: [assignedTo], references: [id])
   messages TicketMessage[]
 
-  @@index([studentId], map: "idx_tickets_student")
-  @@index([collegeId], map: "idx_tickets_college")
-  @@index([collegeId, status], map: "idx_tickets_status")
-  @@index([assignedTo], map: "idx_tickets_assigned")
-  @@index([ticketNumber], map: "idx_tickets_number")
-  @@index([category], map: "idx_tickets_category")
+  @@index([studentId], name: "idx_tickets_student")
+  @@index([collegeId], name: "idx_tickets_college")
+  @@index([collegeId, status], name: "idx_tickets_status")
+  @@index([assignedTo], name: "idx_tickets_assigned")
+  @@index([ticketNumber], name: "idx_tickets_number")
+  @@index([category], name: "idx_tickets_category")
   @@map("support_tickets")
 }
 
@@ -2832,8 +2939,8 @@ model TicketMessage {
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   // senderId is polymorphic (student, staff_member, or system). Resolve at app layer via senderType.
 
-  @@index([ticketId, createdAt], map: "idx_tmsg_ticket")
-  @@index([senderType, senderId], map: "idx_tmsg_sender")
+  @@index([ticketId, createdAt], name: "idx_tmsg_ticket")
+  @@index([senderType, senderId], name: "idx_tmsg_sender")
   @@map("ticket_messages")
 }
 
@@ -2857,9 +2964,9 @@ model ChatConversation {
   messages ChatMessage[]
 
   @@unique([participant1Type, participant1Id, participant2Type, participant2Id], name: "uq_conversation_pair")
-  @@index([participant1Type, participant1Id], map: "idx_conv_p1")
-  @@index([participant2Type, participant2Id], map: "idx_conv_p2")
-  @@index([lastMessageAt(sort: Desc)], map: "idx_conv_last_msg")
+  @@index([participant1Type, participant1Id], name: "idx_conv_p1")
+  @@index([participant2Type, participant2Id], name: "idx_conv_p2")
+  @@index([lastMessageAt(sort: Desc)], name: "idx_conv_last_msg")
   @@map("chat_conversations")
 }
 
@@ -2878,8 +2985,8 @@ model ChatMessage {
   conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   // senderId is polymorphic (student, blink_user, or staff_member). Resolve at app layer via senderType.
 
-  @@index([conversationId, createdAt], map: "idx_cmsg_conversation")
-  @@index([senderType, senderId], map: "idx_cmsg_sender")
-  @@index([conversationId, isRead], map: "idx_cmsg_unread")
+  @@index([conversationId, createdAt], name: "idx_cmsg_conversation")
+  @@index([senderType, senderId], name: "idx_cmsg_sender")
+  @@index([conversationId, isRead], name: "idx_cmsg_unread")
   @@map("chat_messages")
 }
