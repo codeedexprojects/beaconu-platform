@@ -19,15 +19,22 @@
     "db:migrate:dev": "dotenv -e .env -- pnpm --filter @beaconu/db migrate:dev",
     "db:seed": "dotenv -e .env -- pnpm --filter @beaconu/db seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @beaconu/db studio",
-    "db:push": "dotenv -e .env -- pnpm --filter @beaconu/db push"
+    "db:push": "dotenv -e .env -- pnpm --filter @beaconu/db push",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
     "@types/node": "^25.6.0",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^10.3.0",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "prettier": "^3.8.3",
     "turbo": "^2.9.7",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2"
   },
   "packageManager": "pnpm@9.15.0",
   "engines": {
