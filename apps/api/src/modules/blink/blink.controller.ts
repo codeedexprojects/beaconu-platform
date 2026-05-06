@@ -1,88 +1,105 @@
-import { Request, Response, NextFunction } from 'express'
-import { BlinkService } from './blink.service'
-import { blinkRegisterSchema, blinkLoginSchema } from './blink.schema'
-import { AuthService } from '../auth/auth.service'
-import { refreshTokenSchema } from '../auth/auth.schema'
+import { Request, Response, NextFunction } from 'express';
+import { BlinkService } from './blink.service';
+import { blinkSchemas } from './blink.schema';
+import { AuthService } from '../auth/auth.service';
+import { ApiResponse } from '@/shared/responses/api-response';
 
+/**
+ * BlinkController
+ * Standardized with BeaconU API Response architecture.
+ */
 export class BlinkController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const input = blinkRegisterSchema.parse(req.body)
-      const result = await BlinkService.register(input, req.ip || undefined)
+      const data = blinkSchemas.register.parse(req.body);
+      const result = await BlinkService.register(data);
       
-      // Set refresh token in httpOnly cookie
-      res.cookie('refreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
         maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
-      })
+      });
 
-      res.status(201).json(result)
+      return res.status(201).json(
+        ApiResponse.success('Agency registered successfully', {
+          user: result.user,
+          accessToken: result.tokens.accessToken,
+        })
+      );
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const input = blinkLoginSchema.parse(req.body)
-      const result = await BlinkService.login(input, req.ip || undefined)
+      const data = blinkSchemas.login.parse(req.body);
+      const result = await BlinkService.login(data);
 
-      res.cookie('refreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 90 * 24 * 60 * 60 * 1000,
-      })
+        sameSite: 'lax',
+        maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
+      });
 
-      res.status(200).json(result)
+      return res.status(200).json(
+        ApiResponse.success('Login successful', {
+          user: result.user,
+          accessToken: result.tokens.accessToken,
+        })
+      );
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
-  static async refresh(req: Request, res: Response, next: NextFunction) {
+  static async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken = req.cookies.refreshToken || req.body.refreshToken
-      
-      if (!refreshToken) {
-        return res.status(401).json({ message: 'Refresh token missing' })
-      }
-
-      const result = await AuthService.refreshTokens(refreshToken)
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+      const result = await AuthService.refreshTokens(refreshToken);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
         maxAge: 90 * 24 * 60 * 60 * 1000,
-      })
+      });
 
-      res.status(200).json(result)
+      return res.status(200).json(
+        ApiResponse.success('Token refreshed successfully', {
+          accessToken: result.accessToken,
+        })
+      );
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
   static async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken = req.cookies.refreshToken || req.body.refreshToken
-      
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       if (refreshToken) {
-        await AuthService.logout(refreshToken)
+        await AuthService.logout(refreshToken);
       }
-
-      res.clearCookie('refreshToken')
-      res.status(200).json({ message: 'Logged out successfully' })
+      res.clearCookie('refreshToken');
+      return res.status(200).json(
+        ApiResponse.success('Logged out successfully', null)
+      );
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
-  static async getMe(req: Request, res: Response, next: NextFunction) {
+  static async getProfile(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = await BlinkService.getMe(req.userId!)
-      res.status(200).json(user)
+      const result = await BlinkService.getProfile(req.userId!);
+      return res.status(200).json(
+        ApiResponse.success('Profile fetched successfully', result)
+      );
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 }

@@ -1,7 +1,8 @@
-import { AppError } from './app-error'
+import { AppError } from './app-error';
+import { ErrorCode } from '../responses/error-codes';
 
 export class ForbiddenError extends AppError {
-  constructor(message = 'Access denied') {
-    super(message, 403, 'FORBIDDEN')
+  constructor(message: string = 'Forbidden access') {
+    super(message, 403, ErrorCode.FORBIDDEN);
   }
 }
