@@ -21,7 +21,8 @@ export function authenticate(
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload
     req.userId = payload.userId
-    req.userType = payload.userType as UserType
+    req.userType = payload.userType as any
+
     req.collegeId = payload.collegeId
     req.roleId = payload.roleId
     req.permissions = payload.permissions

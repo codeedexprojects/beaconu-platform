@@ -7,10 +7,11 @@ const router: Router = Router();
 // Public routes
 router.post('/auth/register', BlinkController.register);
 router.post('/auth/login', BlinkController.login);
-router.post('/auth/refresh-token', BlinkController.refreshToken);
+router.post('/auth/refresh-token', BlinkController.refresh);
 router.post('/auth/logout', BlinkController.logout);
 
 // Protected routes
-router.get('/profile', authenticate, BlinkController.getProfile);
+router.get('/profile', authenticate, BlinkController.getMe);
+
 
 export default router;

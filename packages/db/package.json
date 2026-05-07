@@ -2,21 +2,22 @@
   "name": "@beaconu/db",
   "version": "0.1.0",
   "private": true,
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
+
   "files": ["dist", "generated", "prisma"],
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
     "clean": "rm -rf dist generated",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src",
+    "lint": "eslint \"src/**/*.ts\"",
     "generate": "prisma generate",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",

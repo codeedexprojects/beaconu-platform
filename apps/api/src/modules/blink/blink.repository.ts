@@ -1,5 +1,5 @@
 import { prisma } from '@beaconu/db';
-import { CreateBlinkUserData } from './blink.types';
+import { BlinkRepositoryCreateData } from './blink.types';
 
 export class BlinkRepository {
   static async findByEmail(email: string) {
@@ -17,7 +17,7 @@ export class BlinkRepository {
     });
   }
 
-  static async create(data: CreateBlinkUserData) {
+  static async create(data: BlinkRepositoryCreateData) {
     return prisma.blinkUser.create({
       data: {
         fullName: data.agencyName,

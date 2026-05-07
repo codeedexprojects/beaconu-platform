@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { BlinkController } from './blink.controller'
 import { authenticate } from '../auth/auth.middleware'
 
-const router = Router()
+const router: Router = Router()
+
 
 router.post('/register', BlinkController.register)
 router.post('/login', BlinkController.login)

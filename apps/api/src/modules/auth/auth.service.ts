@@ -28,7 +28,8 @@ export class AuthService {
         userId: session.userId,
         userType: session.userType as UserType,
         ipAddress: session.ipAddress || undefined,
-        deviceInfo: session.deviceInfo,
+        deviceInfo: session.deviceInfo as any,
+
       });
 
       const accessToken = JwtUtils.generateAccessToken({

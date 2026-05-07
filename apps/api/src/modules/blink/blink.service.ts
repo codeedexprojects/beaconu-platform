@@ -6,26 +6,23 @@ import { SessionManager } from '../auth/auth.session';
 import { JwtUtils } from '../auth/auth.jwt';
 import { CreateBlinkUserData, BlinkLoginData } from './blink.types';
 import { USER_TYPES, ACCOUNT_STATUS } from '@/shared/constants';
+import { UserType } from '../auth/auth.types';
 
 export class BlinkService {
   static async register(data: CreateBlinkUserData) {
-    // 1. Check if email/reg number unique
     const existingEmail = await BlinkRepository.findByEmail(data.agency_email);
     if (existingEmail) throw new ConflictError('Email already exists');
 
     const existingReg = await BlinkRepository.findByRegNumber(data.agency_reg_number);
     if (existingReg) throw new ConflictError('Agency registration number already exists');
 
-    // 2. Hash password
     const passwordHash = await CryptoUtils.hash(data.password);
 
-    // 3. Get associate_admin role ID
     const role = await prisma.blinkRole.findUnique({
       where: { slug: 'associate_admin' },
     });
     if (!role) throw new Error('System role associate_admin not found');
 
-    // 4. Create user
     const user = await BlinkRepository.create({
       agencyName: data.agency_name,
       agencyEmail: data.agency_email,
@@ -36,16 +33,14 @@ export class BlinkService {
       roleId: role.id,
     });
 
-    // 5. Create session
     const session = await SessionManager.createSession({
       userId: user.id,
-      userType: USER_TYPES.BLINK,
+      userType: USER_TYPES.BLINK as UserType,
     });
 
-    // 6. Generate access token
     const accessToken = JwtUtils.generateAccessToken({
       userId: user.id,
-      userType: USER_TYPES.BLINK,
+      userType: USER_TYPES.BLINK as UserType,
       roleId: user.blinkRoleId,
       sessionId: session.sessionId,
     });
@@ -75,23 +70,20 @@ export class BlinkService {
     const isMatch = await CryptoUtils.compare(data.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedError('Invalid credentials');
 
-    // Reject suspended/inactive/pending
     if (user.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${user.status}`);
     }
 
-    // Update last login
     await BlinkRepository.updateLastLogin(user.id);
 
-    // Create session
     const session = await SessionManager.createSession({
       userId: user.id,
-      userType: USER_TYPES.BLINK,
+      userType: USER_TYPES.BLINK as UserType,
     });
 
     const accessToken = JwtUtils.generateAccessToken({
       userId: user.id,
-      userType: USER_TYPES.BLINK,
+      userType: USER_TYPES.BLINK as UserType,
       roleId: user.blinkRoleId,
       sessionId: session.sessionId,
     });

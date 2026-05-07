@@ -55,7 +55,8 @@ export class BlinkController {
     }
   }
 
-  static async refreshToken(req: Request, res: Response, next: NextFunction) {
+  static async refresh(req: Request, res: Response, next: NextFunction) {
+
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       const result = await AuthService.refreshTokens(refreshToken);
@@ -92,7 +93,8 @@ export class BlinkController {
     }
   }
 
-  static async getProfile(req: Request, res: Response, next: NextFunction) {
+  static async getMe(req: Request, res: Response, next: NextFunction) {
+
     try {
       const result = await BlinkService.getProfile(req.userId!);
       return res.status(200).json(

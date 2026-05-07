@@ -2,12 +2,11 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    // "rootDir": "src",
+    "rootDir": "src",
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@beaconu/db": ["../../packages/db/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
