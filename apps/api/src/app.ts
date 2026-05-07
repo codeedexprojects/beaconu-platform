@@ -1,4 +1,5 @@
-import express, { Express } from 'express'
+import express from 'express'
+
 import helmet from 'helmet'
 import cors from 'cors'
 import compression from 'compression'
@@ -10,7 +11,8 @@ import { NotFoundError } from '@/shared/errors'
 import { env } from '@/shared/config/env'
 import apiRouter from '@/routes/index'
 
-const app: Express = express()
+const app = express()
+
 
 app.use(helmet())
 app.use(
