@@ -1,4 +1,6 @@
-import { api } from '@/lib/api'
+import { ApiError } from '@/lib/api'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 interface LoginPayload {
   email: string
@@ -13,60 +15,41 @@ export interface AdminProfile {
   avatarUrl?: string
 }
 
-interface LoginResponse {
-  admin: AdminProfile
-  token: string
-  refreshToken: string
-}
-
-// ---------------------------------------------------------------------------
-// Mock data — remove when backend is ready
-// ---------------------------------------------------------------------------
-const MOCK_ADMINS = [
-  {
-    email: 'admin@beaconu.com',
-    password: 'admin123',
-    admin: {
-      id: 'mock-admin-001',
-      fullName: 'Super Admin',
-      email: 'admin@beaconu.com',
-      role: 'super_admin' as const,
-    },
-  },
-  {
-    email: 'subadmin@beaconu.com',
-    password: 'admin123',
-    admin: {
-      id: 'mock-admin-002',
-      fullName: 'Sub Admin',
-      email: 'subadmin@beaconu.com',
-      role: 'sub_admin' as const,
-    },
-  },
-]
-
-async function mockLogin(payload: LoginPayload): Promise<LoginResponse> {
-  await new Promise((r) => setTimeout(r, 800))
-
-  const match = MOCK_ADMINS.find(
-    (a) => a.email === payload.email && a.password === payload.password,
-  )
-
-  if (!match) throw new Error('Invalid email or password')
-
-  return {
-    admin: match.admin,
-    token: `mock-token-${Date.now()}`,
-    refreshToken: `mock-refresh-${Date.now()}`,
+interface LoginApiResponse {
+  success: boolean
+  message: string
+  data: {
+    user: { id: string; fullName: string; email: string }
+    accessToken: string
   }
 }
-// ---------------------------------------------------------------------------
 
-const isMock =
-  process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' ||
-  (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_API_URL)
+// Login uses a direct fetch instead of the shared api client because
+// a failed login returns 401 (wrong credentials), which the api client
+// would misinterpret as a session expiry and redirect away from the login page.
+export async function loginAdmin(
+  payload: LoginPayload,
+): Promise<{ admin: AdminProfile; token: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/platform-admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
 
-export async function loginAdmin(payload: LoginPayload): Promise<LoginResponse> {
-  if (isMock) return mockLogin(payload)
-  return api.post<LoginResponse>('/api/v1/auth/admin/login', payload)
+  const body = (await res.json()) as LoginApiResponse
+
+  if (!res.ok) {
+    throw new ApiError(res.status, body.message ?? 'Login failed')
+  }
+
+  return {
+    admin: {
+      id: body.data.user.id,
+      fullName: body.data.user.fullName,
+      email: body.data.user.email,
+      role: 'super_admin',
+    },
+    token: body.data.accessToken,
+  }
 }
