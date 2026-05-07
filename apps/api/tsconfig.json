@@ -7,7 +7,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@beaconu/db": ["../../packages/db/src/index.ts"]
+      "@beaconu/db": ["../../packages/db/dist/src/index"]
     }
   },
   "include": ["src"],
