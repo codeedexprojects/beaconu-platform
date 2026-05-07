@@ -1,0 +1,243 @@
+// ========================================
+// File: apps/api/src/modules/auth/auth.jwt.ts
+// ========================================
+import jwt from 'jsonwebtoken'
+import { env } from '@/shared/config/env'
+import { JwtPayload, UserType } from '@beaconu/types'
+
+const ACCESS_TOKEN_EXPIRY = '15m'
+const REFRESH_TOKEN_EXPIRY = '90d'
+
+export class JwtUtils {
+  static generateAccessToken(payload: JwtPayload): string {
+    return jwt.sign(payload, env.JWT_SECRET, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+    })
+  }
+
+  static generateRefreshToken(payload: JwtPayload): string {
+    return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRY,
+    })
+  }
+
+  static verifyAccessToken(token: string): JwtPayload {
+    return jwt.verify(token, env.JWT_SECRET) as JwtPayload
+  }
+
+  static verifyRefreshToken(token: string): JwtPayload {
+    return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload
+  }
+
+  static decode(token: string): JwtPayload | null {
+    return jwt.decode(token) as JwtPayload | null
+  }
+}
+
+
+
+// ========================================
+// File: apps/api/src/modules/auth/auth.middleware.ts
+// ========================================
+import { Request, Response, NextFunction } from 'express'
+import { UnauthorizedError } from '@/shared/errors'
+import { JwtUtils } from './auth.jwt'
+
+export function authenticate(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    next(new UnauthorizedError('Missing or invalid authorization header'))
+    return
+  }
+
+  const token = authHeader.slice(7)
+
+  try {
+    const payload = JwtUtils.verifyAccessToken(token)
+    req.userId = payload.userId
+    req.userType = payload.userType
+    req.collegeId = payload.collegeId
+    req.roleId = payload.roleId
+    req.permissions = payload.permissions
+    next()
+  } catch {
+    next(new UnauthorizedError('Invalid or expired access token'))
+  }
+}
+
+
+
+// ========================================
+// File: apps/api/src/modules/auth/auth.schema.ts
+// ========================================
+import { z } from 'zod'
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+})
+
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>
+
+
+
+// ========================================
+// File: apps/api/src/modules/auth/auth.service.ts
+// ========================================
+import { UnauthorizedError } from '@/shared/errors'
+import { JwtUtils } from './auth.jwt'
+import { SessionManager } from './auth.session'
+import { TokenResponse } from './auth.types'
+
+export class AuthService {
+  static async refreshTokens(refreshToken: string): Promise<TokenResponse> {
+    const session = await SessionManager.validateSession(refreshToken)
+    
+    if (!session) {
+      throw new UnauthorizedError('Invalid or expired refresh token')
+    }
+
+    // Verify token matches payload
+    try {
+      const payload = JwtUtils.verifyRefreshToken(refreshToken)
+      
+      // Rotate session
+      const newSession = await SessionManager.rotateSession(refreshToken, {
+        userId: session.userId,
+        userType: session.userType as any,
+        ipAddress: session.ipAddress || undefined,
+        deviceInfo: session.deviceInfo,
+      })
+
+      const accessToken = JwtUtils.generateAccessToken({
+        userId: session.userId,
+        userType: session.userType as any,
+        // Optional: include role/college if needed, but for refresh we might need to fetch them
+        // or just rely on what's in the session if we store it.
+        // For now, minimal payload.
+      })
+
+      return {
+        accessToken,
+        refreshToken: newSession.refreshToken,
+      }
+    } catch (error) {
+      // If verification fails, invalidate session anyway
+      await SessionManager.invalidateSession(refreshToken)
+      throw new UnauthorizedError('Invalid refresh token')
+    }
+  }
+
+  static async logout(refreshToken: string): Promise<void> {
+    await SessionManager.invalidateSession(refreshToken)
+  }
+}
+
+
+
+// ========================================
+// File: apps/api/src/modules/auth/auth.session.ts
+// ========================================
+import { prisma } from '@beaconu/db'
+import { SessionData } from './auth.types'
+import { JwtUtils } from './auth.jwt'
+import { UserType } from '@beaconu/types'
+
+export class SessionManager {
+  static async createSession(data: SessionData) {
+    const { userId, userType, deviceInfo, ipAddress } = data
+    
+    // Generate refresh token
+    const refreshToken = JwtUtils.generateRefreshToken({
+      userId,
+      userType,
+    })
+
+    // Calculate expiry (90 days)
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 90)
+
+    // Store session in DB
+    const session = await prisma.userSession.create({
+      data: {
+        userId,
+        userType,
+        refreshToken,
+        deviceInfo: deviceInfo || {},
+        ipAddress,
+        expiresAt,
+      },
+    })
+
+    return {
+      refreshToken,
+      sessionId: session.id,
+    }
+  }
+
+  static async invalidateSession(refreshToken: string) {
+    await prisma.userSession.updateMany({
+      where: { refreshToken, isActive: true },
+      data: { isActive: false },
+    })
+  }
+
+  static async rotateSession(oldRefreshToken: string, data: SessionData) {
+    // Invalidate old session
+    await this.invalidateSession(oldRefreshToken)
+
+    // Create new session
+    return this.createSession(data)
+  }
+
+  static async validateSession(refreshToken: string) {
+    const session = await prisma.userSession.findFirst({
+      where: {
+        refreshToken,
+        isActive: true,
+        expiresAt: { gt: new Date() },
+      },
+    })
+
+    return session
+  }
+}
+
+
+
+// ========================================
+// File: apps/api/src/modules/auth/auth.types.ts
+// ========================================
+import { UserType } from '@beaconu/types'
+
+export interface TokenResponse {
+  accessToken: string
+  refreshToken: string
+}
+
+export interface AuthUser {
+  id: string
+  email: string
+  fullName: string
+  userType: UserType
+  roleId: string
+  collegeId?: string
+  permissions?: string[]
+}
+
+export interface LoginResponse extends TokenResponse {
+  user: AuthUser
+}
+
+export interface SessionData {
+  userId: string
+  userType: UserType
+  deviceInfo?: any
+  ipAddress?: string
+}
+
+
