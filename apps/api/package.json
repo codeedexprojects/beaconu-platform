@@ -17,6 +17,7 @@
     "@beaconu/types": "workspace:*",
     "@beaconu/utils": "workspace:*",
     "@beaconu/validation": "workspace:*",
+    "@vercel/node": "^5.7.15",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.76.4",
     "compression": "^1.8.1",
