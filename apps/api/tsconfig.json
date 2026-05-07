@@ -6,7 +6,8 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@beaconu/db": ["../../packages/db/dist/src/index"]
     }
   },
   "include": ["src"],
