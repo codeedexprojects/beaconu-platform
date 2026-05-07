@@ -1,9 +1,18 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/sidebar'
 import { useAuthStore } from '@/store'
+import { can, type Permission } from '@/lib/rbac'
+import type { AdminRole } from '@/lib/rbac'
+
+// Routes that require a specific permission to access directly
+const ROUTE_PERMISSIONS: Record<string, Permission> = {
+  '/admins': 'admins.view',
+  '/settings': 'settings.view',
+  '/universities': 'universities.view',
+}
 
 export default function DashboardLayout({
   children,
@@ -11,13 +20,24 @@ export default function DashboardLayout({
   children: React.ReactNode
 }): React.JSX.Element {
   const router = useRouter()
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const pathname = usePathname()
+  const { isAuthenticated, admin } = useAuthStore()
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login')
+      return
     }
-  }, [isAuthenticated, router])
+
+    // Block direct URL access to routes the role cannot see
+    const requiredPermission = Object.entries(ROUTE_PERMISSIONS).find(([route]) =>
+      pathname.startsWith(route),
+    )?.[1]
+
+    if (requiredPermission && admin?.role && !can(admin.role as AdminRole, requiredPermission)) {
+      router.replace('/')
+    }
+  }, [isAuthenticated, pathname, admin?.role, router])
 
   if (!isAuthenticated) return <></>
 

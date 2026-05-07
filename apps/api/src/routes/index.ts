@@ -1,10 +1,14 @@
-import { Router } from 'express'
-import healthRouter from '@/modules/health/controllers/health.controller'
-import blinkRouter from '@/modules/blink/blink.routes'
+import { Router } from 'express';
+import blinkRoutes from './blink';
+import platformAdminRoutes from './platform-admin';
 
-const router: Router = Router()
+const router: Router = Router();
 
-router.use('/health', healthRouter)
-router.use('/blink', blinkRouter)
-// sample 
-export default router
+router.use('/blink', blinkRoutes);
+router.use('/platform-admin', platformAdminRoutes);
+// router.use('/college-admin', collegeAdminRoutes);
+// router.use('/counsellor', counsellorRoutes);
+// router.use('/public', publicRoutes);
+// router.use('/webhooks', webhookRoutes);
+
+export default router;

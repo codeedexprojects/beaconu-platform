@@ -26,6 +26,14 @@ app.use(cookieParser())
 app.use(requestId)
 app.use(morgan('combined'))
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: 'v1'
+  });
+});
+
 app.use('/api/v1', apiRouter)
 
 app.use((_req, _res, next) => {
