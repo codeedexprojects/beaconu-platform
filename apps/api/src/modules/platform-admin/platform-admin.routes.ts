@@ -9,6 +9,11 @@ const router = Router();
 router.post('/auth/login', PlatformAuthController.login);
 
 // Users domain
-router.get('/profiles', authenticate, authorize('platform_admin'), PlatformUsersController.getAllProfiles);
+router.get(
+  '/profiles',
+  authenticate,
+  authorize('platform_admin'),
+  PlatformUsersController.getAllProfiles,
+);
 
 export default router;

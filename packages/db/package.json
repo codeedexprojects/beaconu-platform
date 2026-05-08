@@ -17,12 +17,12 @@
     "clean": "rm -rf dist generated",
     "type-check": "tsc --noEmit",
     "lint": "eslint src",
-    "generate": "prisma generate",
-    "migrate": "prisma migrate deploy",
-    "migrate:dev": "prisma migrate dev",
+    "generate": "prisma generate --schema=./prisma/schema",
+    "migrate": "prisma migrate deploy --schema=./prisma/schema",
+    "migrate:dev": "prisma migrate dev --schema=./prisma/schema",
     "seed": "tsx src/seed.ts",
-    "studio": "prisma studio",
-    "push": "prisma db push"
+    "studio": "prisma studio --schema=./prisma/schema",
+    "push": "prisma db push --schema=./prisma/schema"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
