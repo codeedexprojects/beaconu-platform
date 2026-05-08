@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: beaconu-api
+    runtime: node
+    rootDir: apps/api
+    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=@beaconu/api
+    startCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
