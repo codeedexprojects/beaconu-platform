@@ -17,19 +17,32 @@ export class BlinkRepository {
     });
   }
 
+  static async findById(id: string) {
+    return prisma.blinkUser.findUnique({
+      where: { id },
+      include: {
+        blinkRole: true,
+      },
+    });
+  }
+
   static async create(data: BlinkRepositoryCreateData) {
     return prisma.blinkUser.create({
       data: {
-        fullName: data.agencyName,
-        email: data.agencyEmail,
+        fullName: data.fullName,
+        email: data.email,
         passwordHash: data.passwordHash,
-        phoneCountryCode: '+91',
-        phoneNumber: data.agencyPhoneNo,
+        phoneNumber: data.phoneNumber,
         country: data.country,
         agencyName: data.agencyName,
         agencyRegNumber: data.agencyRegNumber,
+        associateParentId: data.associateParentId,
+        collegeId: data.collegeId,
+        linkedStudentId: data.linkedStudentId,
+        ambassadorType: data.ambassadorType,
+        createdByStaffId: data.createdByStaffId,
         blinkRoleId: data.roleId,
-        status: 'active',
+        status: data.status,
       },
       include: {
         blinkRole: true,
@@ -44,9 +57,20 @@ export class BlinkRepository {
     });
   }
 
-  static async findById(id: string) {
-    return prisma.blinkUser.findUnique({
+  static async findEmployeesByParent(associateParentId: string) {
+    return prisma.blinkUser.findMany({
+      where: { associateParentId },
+      include: {
+        blinkRole: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  static async updateStatus(id: string, status: string) {
+    return prisma.blinkUser.update({
       where: { id },
+      data: { status },
       include: {
         blinkRole: true,
       },

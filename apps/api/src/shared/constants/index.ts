@@ -1,8 +1,10 @@
 export const USER_TYPES = {
   STUDENT: 'student',
   PLATFORM_ADMIN: 'platform_admin',
-  STAFF: 'staff',
-  BLINK: 'blink',
+  STAFF: 'staff_member',
+  BLINK_ASSOCIATE: 'blink_associate',
+  BLINK_EMPLOYEE: 'blink_employee',
+  BLINK_AMBASSADOR: 'blink_ambassador',
   COUNSELLOR: 'counsellor',
 } as const;
 
@@ -15,4 +17,6 @@ export const ACCOUNT_STATUS = {
   INACTIVE: 'inactive',
   SUSPENDED: 'suspended',
   PENDING: 'pending',
+  PENDING_APPROVAL: 'pending_approval',
+  REJECTED: 'rejected',
 } as const;

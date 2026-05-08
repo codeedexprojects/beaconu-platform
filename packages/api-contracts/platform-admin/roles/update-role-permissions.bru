@@ -1,0 +1,25 @@
+meta {
+  name: Update Role Permissions
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/platform-admin/roles/{{platformRoleId}}/permissions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "permissions": [
+      "platform:profiles:view",
+      "platform:support:manage"
+    ]
+  }
+}

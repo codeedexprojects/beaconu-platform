@@ -1,4 +1,4 @@
-export type UserType = 'student' | 'platform_admin' | 'staff' | 'blink' | 'counsellor';
+export type UserType = 'student' | 'platform_admin' | 'staff_member' | 'blink_associate' | 'blink_employee' | 'blink_ambassador' | 'counsellor';
 
 export interface JwtPayload {
   userId: string;

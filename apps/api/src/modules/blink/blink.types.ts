@@ -1,25 +1,53 @@
-export interface CreateBlinkUserData {
-  agency_reg_number: string;
+export interface RegisterAssociateAdminData {
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  country?: string;
   agency_name: string;
-  agency_email: string;
-  agency_phone_no: string;
-  country: string;
+  agency_reg_number: string;
   password: string;
-  confirm_password: string;
+}
+
+export interface RegisterAssociateEmployeeData {
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  associate_parent_id: string;
+  password: string;
+}
+
+export interface RegisterCampusAmbassadorData {
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  college_id: string;
+  linked_student_id?: string;
+  ambassador_type: 'student' | 'teacher';
+  password: string;
+}
+
+export interface UpdateAssociateEmployeeStatusData {
+  status: 'active' | 'inactive' | 'suspended' | 'rejected';
 }
 
 export interface BlinkLoginData {
-  agency_reg_number: string;
-  agency_email: string;
+  email: string;
   password: string;
 }
 
 export interface BlinkRepositoryCreateData {
-  agencyRegNumber: string;
-  agencyName: string;
-  agencyEmail: string;
-  agencyPhoneNo: string;
-  country: string;
+  fullName: string;
+  email: string;
   passwordHash: string;
+  phoneNumber?: string;
+  country?: string;
+  agencyName?: string;
+  agencyRegNumber?: string;
+  associateParentId?: string;
   roleId: string;
+  status: string;
+  collegeId?: string;
+  linkedStudentId?: string;
+  ambassadorType?: string;
+  createdByStaffId?: string;
 }

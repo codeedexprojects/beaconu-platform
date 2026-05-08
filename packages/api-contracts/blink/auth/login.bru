@@ -1,11 +1,11 @@
 meta {
   name: Login
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
-  url: {{baseUrl}}/api/v1/blink/auth/login
+  url: {{baseUrl}}/api/v1/blink/associate-admin/login
   body: json
   auth: none
 }
@@ -16,8 +16,7 @@ headers {
 
 body:json {
   {
-    "agency_reg_number": "REG-12345",
-    "agency_email": "agency@example.com",
+    "email": "john@agency.com",
     "password": "Password@123"
   }
 }
@@ -27,6 +26,9 @@ script:post-response {
     const data = res.getBody();
     if (data.data && data.data.accessToken) {
       bru.setEnvVar("accessToken", data.data.accessToken);
+    }
+    if (data.data && data.data.user && data.data.user.id) {
+      bru.setEnvVar("associateAdminId", data.data.user.id);
     }
   }
 }
