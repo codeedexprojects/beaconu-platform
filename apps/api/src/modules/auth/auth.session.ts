@@ -18,7 +18,8 @@ export class SessionManager {
         userId,
         userType,
         refreshToken: 'PENDING', // Will update after generating with session ID
-        deviceInfo: deviceInfo || {},
+        deviceInfo: (deviceInfo as any) || {},
+
         ipAddress,
         expiresAt,
       },

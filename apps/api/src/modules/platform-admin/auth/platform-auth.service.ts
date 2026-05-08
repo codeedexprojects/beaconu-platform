@@ -8,8 +8,18 @@ import { USER_TYPES, ACCOUNT_STATUS } from '@/shared/constants';
 
 export class PlatformAuthService {
   static async login(data: PlatformAdminLoginData) {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const normalizedRoleSlug = data.role_slug.trim().toLowerCase();
+
     const admin = await prisma.platformAdmin.findUnique({
-      where: { email: data.email },
+      where: { email: normalizedEmail },
+      include: {
+        platformRole: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
     });
 
     if (!admin) {
@@ -18,6 +28,10 @@ export class PlatformAuthService {
 
     const isMatch = await CryptoUtils.compare(data.password, admin.passwordHash);
     if (!isMatch) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    if (!admin.platformRole || admin.platformRole.slug !== normalizedRoleSlug) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
@@ -37,10 +51,16 @@ export class PlatformAuthService {
       userType: USER_TYPES.PLATFORM_ADMIN,
     });
 
+    const rolePermissions = admin.platformRole.permissions.map((permission) => permission.permissionCode);
+    const permissions = rolePermissions.includes('*')
+      ? ['*']
+      : rolePermissions;
+
     const accessToken = JwtUtils.generateAccessToken({
       userId: admin.id,
       userType: USER_TYPES.PLATFORM_ADMIN,
-      permissions: ['*'], // Full access for platform admins
+      roleId: admin.platformRoleId || undefined,
+      permissions,
       sessionId: session.sessionId,
     });
 
@@ -49,6 +69,7 @@ export class PlatformAuthService {
         id: admin.id,
         email: admin.email,
         fullName: admin.fullName,
+        roleSlug: admin.platformRole.slug,
       },
       tokens: {
         accessToken,
