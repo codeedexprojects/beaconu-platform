@@ -37,7 +37,7 @@ async function startServer(): Promise<void> {
     process.exit(1)
   }
 }
-
+// #test
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   startServer().catch((error) => {
     console.error('Unhandled server startup error:', error)

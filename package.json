@@ -11,6 +11,7 @@
     "dev:super-admin": "turbo dev --filter=@beaconu/super-admin",
     "build": "turbo build",
     "build:api": "turbo build --filter=@beaconu/api",
+    "start": "node apps/api/dist/server.js",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
