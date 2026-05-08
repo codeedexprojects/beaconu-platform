@@ -45,6 +45,11 @@ export function authorizePermissions(...requiredPermissions: string[]) {
       return next(new ForbiddenError('No permissions found for user'));
     }
 
+    if (req.permissions.includes('*')) {
+      next();
+      return;
+    }
+
     const hasPermission = requiredPermissions.every((perm) => 
       req.permissions?.includes(perm)
     );

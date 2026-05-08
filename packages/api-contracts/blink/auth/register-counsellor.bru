@@ -1,11 +1,11 @@
 meta {
-  name: Register
+  name: Register Counsellor
   type: http
-  seq: 1
+  seq: 4
 }
 
 post {
-  url: {{baseUrl}}/api/v1/blink/auth/register
+  url: {{baseUrl}}/api/v1/blink/counsellors/auth/register
   body: json
   auth: none
 }
@@ -16,13 +16,12 @@ headers {
 
 body:json {
   {
-    "agency_reg_number": "REG-12345",
-    "agency_name": "Global Education Agency",
-    "agency_email": "agency@example.com",
-    "agency_phone_no": "+919876543210",
-    "country": "India",
+    "full_name": "Dr. Meera Kapoor",
+    "email": "meera@counsellor.com",
     "password": "Password@123",
-    "confirm_password": "Password@123"
+    "confirm_password": "Password@123",
+    "phone_number": "+919990001111",
+    "counsellor_type": "academic"
   }
 }
 

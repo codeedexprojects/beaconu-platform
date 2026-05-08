@@ -4,28 +4,74 @@ import { blinkSchemas } from './blink.schema';
 import { AuthService } from '../auth/auth.service';
 import { ApiResponse } from '@/shared/responses/api-response';
 
-/**
- * BlinkController
- * Standardized with BeaconU API Response architecture.
- */
 export class BlinkController {
-  static async register(req: Request, res: Response, next: NextFunction) {
+  static async registerAssociateAdmin(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = blinkSchemas.register.parse(req.body);
-      const result = await BlinkService.register(data);
-      
+      const data = blinkSchemas.registerAssociateAdmin.parse(req.body);
+      const result = await BlinkService.registerAssociateAdmin(data);
+
       res.cookie('refreshToken', result.tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
+        maxAge: 90 * 24 * 60 * 60 * 1000,
       });
 
       return res.status(201).json(
-        ApiResponse.success('Agency registered successfully', {
+        ApiResponse.success('Associate admin registered successfully', {
           user: result.user,
           accessToken: result.tokens.accessToken,
         })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async registerAssociateEmployee(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = blinkSchemas.registerAssociateEmployee.parse(req.body);
+      const result = await BlinkService.registerAssociateEmployee(data);
+
+      return res.status(201).json(
+        ApiResponse.success(result.message, { user: result.user })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async registerCampusAmbassador(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = blinkSchemas.registerCampusAmbassador.parse(req.body);
+      const result = await BlinkService.registerCampusAmbassador(data, req.userId!);
+
+      return res.status(201).json(
+        ApiResponse.success('Campus ambassador created successfully', result)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async listAssociateEmployees(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await BlinkService.listAssociateEmployees(req.userId!);
+      return res.status(200).json(
+        ApiResponse.success('Associate employees fetched successfully', result)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateAssociateEmployeeStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = blinkSchemas.updateEmployeeStatus.parse(req.body);
+      const employeeId = String(req.params.employeeId);
+      const result = await BlinkService.updateAssociateEmployeeStatus(req.userId!, employeeId, data);
+      return res.status(200).json(
+        ApiResponse.success('Employee status updated successfully', result)
       );
     } catch (error) {
       next(error);
@@ -41,7 +87,7 @@ export class BlinkController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
+        maxAge: 90 * 24 * 60 * 60 * 1000,
       });
 
       return res.status(200).json(
@@ -55,7 +101,7 @@ export class BlinkController {
     }
   }
 
-  static async refreshToken(req: Request, res: Response, next: NextFunction) {
+  static async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       const result = await AuthService.refreshTokens(refreshToken);
@@ -92,7 +138,7 @@ export class BlinkController {
     }
   }
 
-  static async getProfile(req: Request, res: Response, next: NextFunction) {
+  static async getMe(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await BlinkService.getProfile(req.userId!);
       return res.status(200).json(

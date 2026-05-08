@@ -10,6 +10,7 @@
       "default": "./dist/src/index.js"
     }
   },
+
   "files": ["dist", "generated", "prisma"],
   "scripts": {
     "build": "tsc --build",

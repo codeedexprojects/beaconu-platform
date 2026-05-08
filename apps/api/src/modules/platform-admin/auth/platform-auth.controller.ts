@@ -17,7 +17,7 @@ export class PlatformAuthController {
       });
 
       return res.status(200).json(
-        ApiResponse.success('Super-admin login successful', {
+        ApiResponse.success('Platform admin login successful', {
           user: result.user,
           accessToken: result.tokens.accessToken,
         })

@@ -18,7 +18,7 @@
     "db:generate": "pnpm --filter @beaconu/db generate",
     "db:migrate": "pnpm --filter @beaconu/db migrate",
     "db:migrate:dev": "pnpm --filter @beaconu/db migrate:dev",
-    "db:seed": "pnpm --filter @beaconu/db seed",
+    "db:seed": "dotenv -e .env -- pnpm --filter @beaconu/db seed",
     "db:studio": "pnpm --filter @beaconu/db studio",
     "db:push": "pnpm --filter @beaconu/db push",
     "db:admin": "dotenv -e .env -- pnpm --filter @beaconu/api exec tsx ../../scripts/create-super-admin.ts",

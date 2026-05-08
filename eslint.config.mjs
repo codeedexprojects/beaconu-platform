@@ -6,7 +6,7 @@ import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/.next/**", "**/generated/**"],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/.next/**", "**/generated/**", "**/*.js", "**/*.js.map"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

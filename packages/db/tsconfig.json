@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["src", "generated"],
+  "include": ["src", "generated/client"],
   "exclude": ["node_modules", "dist", "prisma"]
 }

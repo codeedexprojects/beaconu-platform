@@ -6,10 +6,15 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@beaconu/db": ["../../packages/db/dist/src/index"]
+      "@/*": ["./src/*"]
     }
   },
+  "references": [
+    { "path": "../../packages/db" },
+    { "path": "../../packages/types" },
+    { "path": "../../packages/utils" },
+    { "path": "../../packages/validation" }
+  ],
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

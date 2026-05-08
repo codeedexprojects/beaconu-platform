@@ -1,4 +1,5 @@
 import { prisma } from '@beaconu/db';
+import type { Prisma } from '@beaconu/db';
 import { SessionData } from './auth.types';
 import { JwtUtils } from './auth.jwt';
 import { SESSION_EXPIRY_DAYS } from '@/shared/constants';
@@ -18,7 +19,8 @@ export class SessionManager {
         userId,
         userType,
         refreshToken: 'PENDING', // Will update after generating with session ID
-        deviceInfo: deviceInfo || {},
+        deviceInfo: deviceInfo ?? ({} as Prisma.JsonObject),
+
         ipAddress,
         expiresAt,
       },

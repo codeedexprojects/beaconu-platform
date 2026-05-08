@@ -1,9 +1,11 @@
 import { prisma } from '@beaconu/db';
+import type { Prisma } from '@beaconu/db';
 import { UnauthorizedError } from '@/shared/errors';
 import { JwtUtils } from './auth.jwt';
 import { SessionManager } from './auth.session';
 import { TokenResponse, UserType } from './auth.types';
 import { USER_TYPES } from '@/shared/constants';
+import { BLINK_ROLE_PERMISSIONS } from '../blink/blink.permissions';
 
 export class AuthService {
   static async refreshTokens(refreshToken: string): Promise<TokenResponse> {
@@ -28,7 +30,11 @@ export class AuthService {
         userId: session.userId,
         userType: session.userType as UserType,
         ipAddress: session.ipAddress || undefined,
-        deviceInfo: session.deviceInfo,
+        deviceInfo:
+          session.deviceInfo === null
+            ? undefined
+            : (session.deviceInfo as Prisma.InputJsonValue),
+
       });
 
       const accessToken = JwtUtils.generateAccessToken({
@@ -56,7 +62,9 @@ export class AuthService {
 
   private static async getUnifiedUser(userId: string, userType: UserType) {
     switch (userType) {
-      case USER_TYPES.BLINK: {
+      case USER_TYPES.BLINK_ASSOCIATE:
+      case USER_TYPES.BLINK_EMPLOYEE:
+      case USER_TYPES.BLINK_AMBASSADOR: {
         const blinkUser = await prisma.blinkUser.findUnique({
           where: { id: userId },
           include: { blinkRole: true },
@@ -64,7 +72,7 @@ export class AuthService {
         return blinkUser ? {
           roleId: blinkUser.blinkRoleId,
           collegeId: blinkUser.collegeId || undefined,
-          permissions: [], // Blink roles might have permissions later
+          permissions: BLINK_ROLE_PERMISSIONS[blinkUser.blinkRole.slug] || [],
         } : null;
       }
 
@@ -87,11 +95,20 @@ export class AuthService {
       case USER_TYPES.PLATFORM_ADMIN: {
         const admin = await prisma.platformAdmin.findUnique({
           where: { id: userId },
+          include: {
+            platformRole: {
+              include: { permissions: true },
+            },
+          },
         });
+
+        const rolePermissions = admin?.platformRole?.permissions.map((permission) => permission.permissionCode) || [];
+        const permissions = rolePermissions.includes('*') ? ['*'] : rolePermissions;
+
         return admin ? {
-          roleId: undefined,
+          roleId: admin.platformRoleId || undefined,
           collegeId: undefined,
-          permissions: ['*'], // Super admin
+          permissions,
         } : null;
       }
 
@@ -100,6 +117,17 @@ export class AuthService {
           where: { id: userId },
         });
         return student ? {
+          roleId: undefined,
+          collegeId: undefined,
+          permissions: [],
+        } : null;
+      }
+
+      case USER_TYPES.COUNSELLOR: {
+        const counsellor = await prisma.counsellor.findUnique({
+          where: { id: userId },
+        });
+        return counsellor ? {
           roleId: undefined,
           collegeId: undefined,
           permissions: [],

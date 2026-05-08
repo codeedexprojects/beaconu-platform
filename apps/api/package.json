@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../../.env -- tsx watch src/server.ts",
-    "build": "tsc --build && tsc-alias",
+    "build": "tsc --build && tsc-alias -p tsconfig.json",
     "start": "node dist/server.js",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",

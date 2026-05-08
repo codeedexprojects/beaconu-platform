@@ -1,4 +1,6 @@
-export type UserType = 'student' | 'platform_admin' | 'staff' | 'blink' | 'counsellor';
+import type { Prisma } from '@beaconu/db';
+
+export type UserType = 'student' | 'platform_admin' | 'staff_member' | 'blink_associate' | 'blink_employee' | 'blink_ambassador' | 'counsellor';
 
 export interface JwtPayload {
   userId: string;
@@ -31,6 +33,7 @@ export interface LoginResponse extends TokenResponse {
 export interface SessionData {
   userId: string;
   userType: UserType;
-  deviceInfo?: Record<string, unknown>;
+  deviceInfo?: Prisma.InputJsonValue;
+
   ipAddress?: string;
 }
