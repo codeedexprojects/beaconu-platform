@@ -1,4 +1,5 @@
 import { prisma } from '@beaconu/db';
+import type { Prisma } from '@beaconu/db';
 import { UnauthorizedError } from '@/shared/errors';
 import { JwtUtils } from './auth.jwt';
 import { SessionManager } from './auth.session';
@@ -30,9 +31,9 @@ export class AuthService {
         userType: session.userType as UserType,
         ipAddress: session.ipAddress || undefined,
         deviceInfo:
-          session.deviceInfo && typeof session.deviceInfo === 'object' && !Array.isArray(session.deviceInfo)
-            ? (session.deviceInfo as Record<string, unknown>)
-            : undefined,
+          session.deviceInfo === null
+            ? undefined
+            : (session.deviceInfo as Prisma.InputJsonValue),
 
       });
 
