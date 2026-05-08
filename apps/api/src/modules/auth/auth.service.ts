@@ -29,7 +29,10 @@ export class AuthService {
         userId: session.userId,
         userType: session.userType as UserType,
         ipAddress: session.ipAddress || undefined,
-        deviceInfo: session.deviceInfo as any,
+        deviceInfo:
+          session.deviceInfo && typeof session.deviceInfo === 'object' && !Array.isArray(session.deviceInfo)
+            ? (session.deviceInfo as Record<string, unknown>)
+            : undefined,
 
       });
 

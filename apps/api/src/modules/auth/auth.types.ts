@@ -31,7 +31,7 @@ export interface LoginResponse extends TokenResponse {
 export interface SessionData {
   userId: string;
   userType: UserType;
-  deviceInfo?: any;
+  deviceInfo?: Record<string, unknown>;
 
   ipAddress?: string;
 }

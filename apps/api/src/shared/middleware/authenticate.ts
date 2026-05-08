@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { env } from '@/shared/config/env'
 import { UnauthorizedError } from '@/shared/errors'
-import { JwtPayload, UserType } from '@beaconu/types'
+import { JwtPayload } from '@/modules/auth/auth.types'
 
 export function authenticate(
   req: Request,
@@ -21,7 +21,7 @@ export function authenticate(
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload
     req.userId = payload.userId
-    req.userType = payload.userType as any
+    req.userType = payload.userType
 
     req.collegeId = payload.collegeId
     req.roleId = payload.roleId
