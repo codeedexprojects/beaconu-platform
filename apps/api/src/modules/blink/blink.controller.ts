@@ -10,9 +10,17 @@ export class BlinkController {
       const data = blinkSchemas.registerAssociateAdmin.parse(req.body);
       const result = await BlinkService.registerAssociateAdmin(data);
 
+      res.cookie('refreshToken', result.tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 90 * 24 * 60 * 60 * 1000,
+      });
+
       return res.status(201).json(
         ApiResponse.success(result.message, {
           user: result.user,
+          accessToken: result.tokens.accessToken,
         })
       );
     } catch (error) {

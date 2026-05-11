@@ -24,7 +24,11 @@ export function useAdmins(search: string) {
   }, [])
 
   useEffect(() => {
-    void loadAdmins()
+    const timeoutId = setTimeout(() => {
+      void loadAdmins()
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
   }, [loadAdmins])
 
   const create = useCallback(async (data: any) => {

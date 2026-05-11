@@ -25,7 +25,11 @@ export function useAssociateAdmins(search: string) {
   }, [])
 
   useEffect(() => {
-    void load()
+    const timeoutId = setTimeout(() => {
+      void load()
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
   }, [load])
 
   const updateStatus = useCallback(async (associateAdminId: string, status: string) => {
