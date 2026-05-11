@@ -64,8 +64,8 @@ src/routes/
 `src/routes/index.ts` only imports group routers — never individual module routes directly:
 
 ```ts
-router.use('/api/v1/admin', adminRoutes);
-router.use('/api/v1/blink', blinkRoutes);
+router.use("/api/v1/admin", adminRoutes);
+router.use("/api/v1/blink", blinkRoutes);
 // ...
 ```
 
@@ -73,9 +73,9 @@ Each group index imports the module routes for that surface:
 
 ```ts
 // routes/admin/index.ts
-router.use('/auth', platformAuthRoutes);
-router.use('/roles', platformRolesRoutes);
-router.use('/counsellors', counsellingAdminRoutes);
+router.use("/auth", platformAuthRoutes);
+router.use("/roles", platformRolesRoutes);
+router.use("/counsellors", counsellingAdminRoutes);
 ```
 
 URL prefix structure:

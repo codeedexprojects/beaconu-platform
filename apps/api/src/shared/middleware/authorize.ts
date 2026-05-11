@@ -17,7 +17,7 @@ export function authorize(...requiredPermissions: string[]) {
     const userPermissions = req.permissions ?? [];
 
     // super_admin has wildcard — bypasses all permission checks
-    if (userPermissions.includes('*')) {
+    if (userPermissions.includes("*")) {
       next();
       return;
     }

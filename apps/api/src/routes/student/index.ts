@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router } from "express";
 
-import studentAuthRoutes from '@/modules/auth/routes/student-auth.routes';
+import studentAuthRoutes from "@/modules/auth/routes/student-auth.routes";
 
 const router: Router = Router();
 
-router.use('/auth', studentAuthRoutes);
+router.use("/auth", studentAuthRoutes);
 
 export default router;

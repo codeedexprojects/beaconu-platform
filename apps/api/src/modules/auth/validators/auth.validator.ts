@@ -45,4 +45,6 @@ export const registerAssociateAdminSchema = z
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PlatformLoginInput = z.infer<typeof platformLoginSchema>;
 export type RegisterCounsellorInput = z.infer<typeof registerCounsellorSchema>;
-export type RegisterAssociateAdminInput = z.infer<typeof registerAssociateAdminSchema>;
+export type RegisterAssociateAdminInput = z.infer<
+  typeof registerAssociateAdminSchema
+>;

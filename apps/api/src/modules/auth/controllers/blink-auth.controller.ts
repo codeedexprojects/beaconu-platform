@@ -45,13 +45,11 @@ export class BlinkAuthController {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       const result = await AuthService.refreshTokens(refreshToken);
       res.cookie("refreshToken", result.refreshToken, COOKIE_OPTIONS);
-      return res
-        .status(200)
-        .json(
-          ApiResponse.success("Token refreshed successfully", {
-            accessToken: result.accessToken,
-          }),
-        );
+      return res.status(200).json(
+        ApiResponse.success("Token refreshed successfully", {
+          accessToken: result.accessToken,
+        }),
+      );
     } catch (error) {
       next(error);
     }
