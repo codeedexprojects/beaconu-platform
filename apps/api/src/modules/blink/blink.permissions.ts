@@ -1,16 +1,16 @@
 export const BLINK_ROLES = {
-  ASSOCIATE_ADMIN: 'associate_admin',
-  ASSOCIATE_EMPLOYEE: 'associate_employee',
-  CAMPUS_AMBASSADOR: 'campus_ambassador',
-}
+  ASSOCIATE_ADMIN: "associate_admin",
+  ASSOCIATE_EMPLOYEE: "associate_employee",
+  CAMPUS_AMBASSADOR: "campus_ambassador",
+};
 
 export const BLINK_PERMISSIONS = {
-  DASHBOARD_VIEW: 'blink:dashboard:view',
-  REFERRALS_MANAGE: 'blink:referrals:manage',
-  COMMISSIONS_VIEW: 'blink:commissions:view',
-  TEAM_MANAGE: 'blink:team:manage',
-  PROFILE_VIEW: 'blink:profile:view',
-}
+  DASHBOARD_VIEW: "blink:dashboard:view",
+  REFERRALS_MANAGE: "blink:referrals:manage",
+  COMMISSIONS_VIEW: "blink:commissions:view",
+  TEAM_MANAGE: "blink:team:manage",
+  PROFILE_VIEW: "blink:profile:view",
+};
 
 export const BLINK_ROLE_PERMISSIONS: Record<string, string[]> = {
   [BLINK_ROLES.ASSOCIATE_ADMIN]: [
@@ -29,4 +29,4 @@ export const BLINK_ROLE_PERMISSIONS: Record<string, string[]> = {
     BLINK_PERMISSIONS.DASHBOARD_VIEW,
     BLINK_PERMISSIONS.PROFILE_VIEW,
   ],
-}
+};

@@ -24,9 +24,9 @@
     "db:push": "pnpm --filter @beaconu/db push",
     "db:admin": "dotenv -e .env -- pnpm --filter @beaconu/api exec tsx ../../scripts/create-super-admin.ts",
     "prepare": "husky",
-    "postinstall": "pnpm db:generate"
+    "postinstall": "pnpm db:generate",
+    "dump": "ts-node scripts/dump-folder.ts"
   },
-
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/node": "^25.6.0",

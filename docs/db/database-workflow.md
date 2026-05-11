@@ -306,7 +306,7 @@ Example:
 ```ts
 await prisma.user.create({
   data: {
-    email: 'test@example.com',
+    email: "test@example.com",
   },
 });
 ```

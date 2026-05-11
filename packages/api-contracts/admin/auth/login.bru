@@ -1,0 +1,42 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "superadmin@beaconu.com",
+    "password": "password@123",
+    "role_slug": "super_admin"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.accessToken) {
+      bru.setEnvVar("accessToken", data.data.accessToken);
+    }
+  }
+}
+
+docs {
+  Authenticates a platform admin (super admin).
+  No authentication required.
+
+  role_slug must match the admin's assigned platform role (e.g. "super_admin").
+  Returns an access token (15 min) and sets a refreshToken cookie (90 days).
+
+  Table: platform_admins
+}

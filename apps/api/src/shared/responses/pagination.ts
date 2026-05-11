@@ -11,7 +11,11 @@ export interface PaginationMeta {
 }
 
 export class PaginationHelper {
-  static createMeta(total: number, page: number, limit: number): PaginationMeta {
+  static createMeta(
+    total: number,
+    page: number,
+    limit: number,
+  ): PaginationMeta {
     const totalPages = Math.ceil(total / limit);
     return {
       page,

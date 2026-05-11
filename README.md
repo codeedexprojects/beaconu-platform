@@ -4,17 +4,17 @@ Multi-tenant college admission platform. One Express API serves four client appl
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Monorepo | Turborepo + pnpm workspaces |
-| Backend API | Express 5 + TypeScript |
-| Frontend | Next.js 16 (App Router) |
-| Database | PostgreSQL 16 + Prisma 7 |
-| Cache / Queue | Redis + BullMQ |
-| Validation | Zod v4 |
-| File Storage | AWS S3 (pre-signed URLs) |
-| Payments | Razorpay Marketplace |
-| Logger | Pino |
+| Layer         | Technology                  |
+| ------------- | --------------------------- |
+| Monorepo      | Turborepo + pnpm workspaces |
+| Backend API   | Express 5 + TypeScript      |
+| Frontend      | Next.js 16 (App Router)     |
+| Database      | PostgreSQL 16 + Prisma 7    |
+| Cache / Queue | Redis + BullMQ              |
+| Validation    | Zod v4                      |
+| File Storage  | AWS S3 (pre-signed URLs)    |
+| Payments      | Razorpay Marketplace        |
+| Logger        | Pino                        |
 
 ## Prerequisites
 
@@ -118,45 +118,45 @@ See [docs/backend-rules.md](docs/backend-rules.md) before adding any module.
 
 ## Environment Variables
 
-| Variable | Description | Example | Required |
-|---|---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/beaconu` | Yes |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` | Yes |
-| `JWT_SECRET` | JWT signing secret (min 32 chars) | `your-secret-here` | Yes |
-| `JWT_REFRESH_SECRET` | Refresh token secret (min 32 chars) | `your-refresh-secret` | Yes |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | `xxx.apps.googleusercontent.com` | Yes |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `GOCSPX-xxx` | Yes |
-| `RAZORPAY_KEY_ID` | Razorpay API key | `rzp_test_xxx` | Yes |
-| `RAZORPAY_KEY_SECRET` | Razorpay API secret | `xxx` | Yes |
-| `RAZORPAY_WEBHOOK_SECRET` | Razorpay webhook secret | `xxx` | Yes |
-| `AWS_ACCESS_KEY_ID` | AWS IAM access key | `AKIA...` | Yes |
-| `AWS_SECRET_ACCESS_KEY` | AWS IAM secret key | `xxx` | Yes |
-| `AWS_S3_BUCKET` | S3 bucket name | `beaconu-uploads` | Yes |
-| `AWS_REGION` | AWS region | `ap-south-1` | Yes |
-| `PORT` | API server port | `4000` | No (default: 4000) |
-| `NODE_ENV` | Runtime environment | `development` | No (default: development) |
+| Variable                  | Description                         | Example                                         | Required                  |
+| ------------------------- | ----------------------------------- | ----------------------------------------------- | ------------------------- |
+| `DATABASE_URL`            | PostgreSQL connection string        | `postgresql://user:pass@localhost:5432/beaconu` | Yes                       |
+| `REDIS_URL`               | Redis connection string             | `redis://localhost:6379`                        | Yes                       |
+| `JWT_SECRET`              | JWT signing secret (min 32 chars)   | `your-secret-here`                              | Yes                       |
+| `JWT_REFRESH_SECRET`      | Refresh token secret (min 32 chars) | `your-refresh-secret`                           | Yes                       |
+| `GOOGLE_CLIENT_ID`        | Google OAuth client ID              | `xxx.apps.googleusercontent.com`                | Yes                       |
+| `GOOGLE_CLIENT_SECRET`    | Google OAuth client secret          | `GOCSPX-xxx`                                    | Yes                       |
+| `RAZORPAY_KEY_ID`         | Razorpay API key                    | `rzp_test_xxx`                                  | Yes                       |
+| `RAZORPAY_KEY_SECRET`     | Razorpay API secret                 | `xxx`                                           | Yes                       |
+| `RAZORPAY_WEBHOOK_SECRET` | Razorpay webhook secret             | `xxx`                                           | Yes                       |
+| `AWS_ACCESS_KEY_ID`       | AWS IAM access key                  | `AKIA...`                                       | Yes                       |
+| `AWS_SECRET_ACCESS_KEY`   | AWS IAM secret key                  | `xxx`                                           | Yes                       |
+| `AWS_S3_BUCKET`           | S3 bucket name                      | `beaconu-uploads`                               | Yes                       |
+| `AWS_REGION`              | AWS region                          | `ap-south-1`                                    | Yes                       |
+| `PORT`                    | API server port                     | `4000`                                          | No (default: 4000)        |
+| `NODE_ENV`                | Runtime environment                 | `development`                                   | No (default: development) |
 
 ## Available Scripts
 
-| Script | Description |
-|---|---|
-| `pnpm dev` | Start all apps in dev mode |
-| `pnpm dev:api` | Start API only |
-| `pnpm dev:web` | Start BeaconU web only |
-| `pnpm dev:college-web` | Start College Web only |
-| `pnpm dev:college-admin` | Start College Admin only |
-| `pnpm build` | Build all apps and packages |
-| `pnpm build:api` | Build API only |
-| `pnpm lint` | Lint all packages |
-| `pnpm type-check` | TypeScript check all packages |
-| `pnpm format` | Format all files with Prettier |
-| `pnpm clean` | Remove all build artifacts and node_modules |
-| `pnpm db:generate` | Regenerate Prisma client |
-| `pnpm db:migrate:dev` | Run migrations in development |
-| `pnpm db:migrate` | Deploy migrations (production) |
-| `pnpm db:seed` | Run database seed script |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:push` | Push schema without migration |
+| Script                   | Description                                 |
+| ------------------------ | ------------------------------------------- |
+| `pnpm dev`               | Start all apps in dev mode                  |
+| `pnpm dev:api`           | Start API only                              |
+| `pnpm dev:web`           | Start BeaconU web only                      |
+| `pnpm dev:college-web`   | Start College Web only                      |
+| `pnpm dev:college-admin` | Start College Admin only                    |
+| `pnpm build`             | Build all apps and packages                 |
+| `pnpm build:api`         | Build API only                              |
+| `pnpm lint`              | Lint all packages                           |
+| `pnpm type-check`        | TypeScript check all packages               |
+| `pnpm format`            | Format all files with Prettier              |
+| `pnpm clean`             | Remove all build artifacts and node_modules |
+| `pnpm db:generate`       | Regenerate Prisma client                    |
+| `pnpm db:migrate:dev`    | Run migrations in development               |
+| `pnpm db:migrate`        | Deploy migrations (production)              |
+| `pnpm db:seed`           | Run database seed script                    |
+| `pnpm db:studio`         | Open Prisma Studio                          |
+| `pnpm db:push`           | Push schema without migration               |
 
 ## Health Check
 
@@ -165,6 +165,7 @@ curl http://localhost:4000/api/v1/health
 ```
 
 Expected response:
+
 ```json
 {
   "success": true,

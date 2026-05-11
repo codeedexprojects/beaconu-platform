@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../responses/api-error';
-import { ErrorCode } from '../responses/error-codes';
-import { logger } from '@/shared/logger';
-import { z } from 'zod';
+import { Request, Response, NextFunction } from "express";
+import { ApiError } from "../responses/api-error";
+import { ErrorCode } from "../responses/error-codes";
+import { logger } from "@/shared/logger";
+import { z } from "zod";
 
 /**
  * Global Error Handler Middleware
@@ -29,17 +29,16 @@ export function errorHandler(
 
   // Handle Zod Validation Errors
   if (error instanceof z.ZodError) {
-    const details = error.issues.map(err => ({
-
-      path: err.path.join('.'),
+    const details = error.issues.map((err) => ({
+      path: err.path.join("."),
       message: err.message,
     }));
 
     const apiError = new ApiError(
       400,
-      'Validation failed',
+      "Validation failed",
       ErrorCode.VALIDATION_ERROR,
-      details
+      details,
     );
 
     res.status(400).json(apiError.toJSON());
@@ -53,13 +52,15 @@ export function errorHandler(
       error: error.message,
       stack: error.stack,
     },
-    'Unhandled error',
+    "Unhandled error",
   );
 
   const internalError = new ApiError(
     500,
-    process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : error.message,
-    ErrorCode.INTERNAL_SERVER_ERROR
+    process.env.NODE_ENV === "production"
+      ? "An unexpected error occurred"
+      : error.message,
+    ErrorCode.INTERNAL_SERVER_ERROR,
   );
 
   res.status(500).json(internalError.toJSON());

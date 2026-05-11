@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import React from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
-  children: React.ReactNode
-  fallback?: React.ReactNode
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
+  hasError: boolean;
+  error?: Error;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('[ErrorBoundary]', error, info.componentStack)
+    console.error("[ErrorBoundary]", error, info.componentStack);
   }
 
-  reset = () => this.setState({ hasError: false, error: undefined })
+  reset = () => this.setState({ hasError: false, error: undefined });
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) return this.props.fallback
+      if (this.props.fallback) return this.props.fallback;
 
       return (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card p-10 text-center">
@@ -40,9 +40,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <AlertTriangle className="h-6 w-6 text-destructive" />
           </div>
           <div className="space-y-1">
-            <p className="font-semibold text-foreground">Something went wrong</p>
+            <p className="font-semibold text-foreground">
+              Something went wrong
+            </p>
             <p className="text-sm text-muted-foreground">
-              {this.state.error?.message ?? 'An unexpected error occurred in this section.'}
+              {this.state.error?.message ??
+                "An unexpected error occurred in this section."}
             </p>
           </div>
           <Button size="sm" variant="outline" onClick={this.reset}>
@@ -50,9 +53,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
             Try again
           </Button>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }

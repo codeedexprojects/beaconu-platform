@@ -1,0 +1,53 @@
+meta {
+  name: Register Employee
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/associate/employees/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "full_name": "Jane Doe",
+    "email": "jane@agency.com",
+    "phone_number": "+919876543211",
+    "associate_parent_id": "{{associateAdminId}}",
+    "password": "Password@123",
+    "confirm_password": "Password@123"
+  }
+}
+
+script:pre-request {
+  const associateAdminId = bru.getEnvVar("associateAdminId");
+  if (!associateAdminId) {
+    throw new Error("associateAdminId is not set. Run 'Register Associate Admin' or 'Login' first.");
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.user && data.data.user.id) {
+      bru.setEnvVar("employeeId", data.data.user.id);
+    }
+  }
+}
+
+docs {
+  Registers a new associate employee under an existing associate admin.
+  No authentication required — the associate_parent_id links the employee to their admin.
+
+  Employee account is created with status: pending_approval.
+  The associate admin must approve the employee before they can log in.
+  Saves employeeId to env for use in Update Employee Status.
+
+  Table: blink_users (role: associate_employee)
+}

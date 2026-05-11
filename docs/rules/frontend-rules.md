@@ -97,20 +97,23 @@ page.tsx (async Server Component)
 **Rule: one fetch location per page.** Do not fetch the same resource in both the RSC and a child client component. Decide which layer owns the data and commit to it.
 
 **Service functions (`lib/services/*.service.ts`):**
+
 - One file per domain. Wrap every API endpoint in a named, typed function. Components never call `api.*` directly.
 - Every service function has an explicit return type matching the DTO from `@beaconu/types`.
 
 ```ts
 // lib/services/colleges.service.ts
-import { api } from '@/lib/api'
-import type { College, PaginatedResponse } from '@beaconu/types'
+import { api } from "@/lib/api";
+import type { College, PaginatedResponse } from "@beaconu/types";
 
-export async function getColleges(page: number): Promise<PaginatedResponse<College>> {
-  return api.get(`/api/v1/admin/colleges?page=${page}`)
+export async function getColleges(
+  page: number,
+): Promise<PaginatedResponse<College>> {
+  return api.get(`/api/v1/admin/colleges?page=${page}`);
 }
 
 export async function createCollege(data: CreateCollegeDto): Promise<College> {
-  return api.post('/api/v1/admin/colleges', data)
+  return api.post("/api/v1/admin/colleges", data);
 }
 ```
 
@@ -118,12 +121,12 @@ export async function createCollege(data: CreateCollegeDto): Promise<College> {
 
 ```tsx
 // app/(dashboard)/colleges/page.tsx
-import { getColleges } from '@/lib/services/colleges.service'
-import { CollegesTable } from '@/components/colleges/CollegesTable'
+import { getColleges } from "@/lib/services/colleges.service";
+import { CollegesTable } from "@/components/colleges/CollegesTable";
 
 export default async function CollegesPage() {
-  const colleges = await getColleges(1)   // throws → caught by error.tsx
-  return <CollegesTable initialData={colleges} />
+  const colleges = await getColleges(1); // throws → caught by error.tsx
+  return <CollegesTable initialData={colleges} />;
 }
 ```
 
@@ -134,27 +137,29 @@ export default async function CollegesPage() {
 **Client fetch (reads in a Client Component):**
 
 ```tsx
-'use client'
-import { useEffect, useState } from 'react'
-import { getColleges } from '@/lib/services/colleges.service'
-import type { College, PaginatedResponse } from '@beaconu/types'
+"use client";
+import { useEffect, useState } from "react";
+import { getColleges } from "@/lib/services/colleges.service";
+import type { College, PaginatedResponse } from "@beaconu/types";
 
 export function CollegesTable() {
-  const [data, setData] = useState<PaginatedResponse<College> | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<PaginatedResponse<College> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getColleges(1)
       .then(setData)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Failed to load'))
-      .finally(() => setIsLoading(false))
-  }, [])
+      .catch((err) =>
+        setError(err instanceof ApiError ? err.message : "Failed to load"),
+      )
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  if (isLoading) return <TableSkeleton rows={5} />
-  if (error) return <InlineError message={error} />
-  if (!data) return null
-  return <Table data={data.items} />
+  if (isLoading) return <TableSkeleton rows={5} />;
+  if (error) return <InlineError message={error} />;
+  if (!data) return null;
+  return <Table data={data.items} />;
 }
 ```
 
@@ -163,10 +168,10 @@ export function CollegesTable() {
 ```tsx
 const result = await apiAction(
   () => createCollege(formData),
-  'College created successfully',
-)
-if (!result) return   // apiAction returned null → error was already toasted
-router.push('/colleges')
+  "College created successfully",
+);
+if (!result) return; // apiAction returned null → error was already toasted
+router.push("/colleges");
 ```
 
 - `apiAction()` handles the loading toast, success toast, and error toast. Never manually call `toast.loading` + `toast.success` + `toast.error` around a write — that's `apiAction`'s job.
@@ -178,9 +183,9 @@ router.push('/colleges')
 export default async function DashboardPage() {
   const [colleges, leads] = await Promise.all([
     getColleges(1),
-    getLeads({ status: 'new' }),
-  ])
-  return <Dashboard colleges={colleges} leads={leads} />
+    getLeads({ status: "new" }),
+  ]);
+  return <Dashboard colleges={colleges} leads={leads} />;
 }
 ```
 
@@ -274,20 +279,22 @@ ErrorBoundary        → wraps individual widgets/sections in Client Component t
 - Provide two escapes: **Try again** (calls `reset()`) and **Go to Dashboard** (`<Link href="/">`).
 
 ```tsx
-'use client'
-import { useEffect } from 'react'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+"use client";
+import { useEffect } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
-  useEffect(() => { console.error('[DashboardError]', error) }, [error])
+  useEffect(() => {
+    console.error("[DashboardError]", error);
+  }, [error]);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 p-12 text-center">
@@ -297,7 +304,7 @@ export default function DashboardError({
       <div className="space-y-1.5">
         <h2 className="text-lg font-semibold">Something went wrong</h2>
         <p className="text-sm text-muted-foreground max-w-sm">
-          {error.message ?? 'An unexpected error occurred.'}
+          {error.message ?? "An unexpected error occurred."}
         </p>
         {error.digest && (
           <p className="text-xs text-muted-foreground/50 font-mono pt-1">
@@ -310,11 +317,13 @@ export default function DashboardError({
           <RefreshCw className="mr-2 h-3.5 w-3.5" /> Try again
         </Button>
         <Button size="sm" asChild>
-          <Link href="/"><Home className="mr-2 h-3.5 w-3.5" /> Dashboard</Link>
+          <Link href="/">
+            <Home className="mr-2 h-3.5 w-3.5" /> Dashboard
+          </Link>
         </Button>
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -325,10 +334,18 @@ export default function DashboardError({
 - Never import from the app's own components here — the layout may be what crashed.
 
 ```tsx
-'use client'
-import { useEffect } from 'react'
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(() => { console.error('[GlobalError]', error) }, [error])
+"use client";
+import { useEffect } from "react";
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error("[GlobalError]", error);
+  }, [error]);
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#070B14] flex items-center justify-center p-4">
@@ -336,7 +353,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <button onClick={reset}>Reload</button>
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -348,48 +365,55 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 - `componentDidCatch` logs the error + component stack — never suppress this.
 
 ```tsx
-import { ErrorBoundary } from '@/components/error-boundary'
+import { ErrorBoundary } from "@/components/error-boundary";
 
 <ErrorBoundary>
   <CollegeStatsWidget />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 **Error handling in Client Component reads:**
 
 ```tsx
-const [error, setError] = useState<string | null>(null)
+const [error, setError] = useState<string | null>(null);
 
 useEffect(() => {
   getColleges(1)
     .then(setData)
     .catch((err) => {
-      setError(err instanceof ApiError ? err.message : 'Failed to load colleges')
-      console.error('[CollegesTable]', err)
+      setError(
+        err instanceof ApiError ? err.message : "Failed to load colleges",
+      );
+      console.error("[CollegesTable]", err);
     })
-    .finally(() => setIsLoading(false))
-}, [])
+    .finally(() => setIsLoading(false));
+}, []);
 
-if (error) return (
-  <div className="flex flex-col items-center gap-3 p-8 text-center">
-    <p className="text-sm text-muted-foreground">{error}</p>
-    <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-      Retry
-    </Button>
-  </div>
-)
+if (error)
+  return (
+    <div className="flex flex-col items-center gap-3 p-8 text-center">
+      <p className="text-sm text-muted-foreground">{error}</p>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => window.location.reload()}
+      >
+        Retry
+      </Button>
+    </div>
+  );
 ```
 
 **ApiError status → user-visible message:**
 
-| Status | Cause | User message |
-|--------|-------|--------------|
-| `401` | Session expired | Handled globally — auto-redirect to `/login` |
-| `403` | Missing permission | "You don't have permission to do this" |
-| `404` | Resource not found | "Not found" |
-| `409` | Conflict (duplicate) | Use `err.message` from the backend — it's specific |
-| `422` | Validation failure | Use `err.message` — backend returns field-level detail |
-| `500` | Server error | "Something went wrong. Try again in a moment." |
+| Status | Cause                | User message                                           |
+| ------ | -------------------- | ------------------------------------------------------ |
+| `401`  | Session expired      | Handled globally — auto-redirect to `/login`           |
+| `403`  | Missing permission   | "You don't have permission to do this"                 |
+| `404`  | Resource not found   | "Not found"                                            |
+| `409`  | Conflict (duplicate) | Use `err.message` from the backend — it's specific     |
+| `422`  | Validation failure   | Use `err.message` — backend returns field-level detail |
+| `500`  | Server error         | "Something went wrong. Try again in a moment."         |
 
 - Never show raw error objects or stack traces to the user.
 - Never swallow errors silently. Every `catch` block must either set visible error state or call `console.error`.
@@ -400,10 +424,10 @@ if (error) return (
 
 **Three loading contexts — each has the right tool:**
 
-| Context | Tool |
-|---------|------|
-| Route navigation (RSC page loads) | `loading.tsx` + Skeleton |
-| In-component data fetch (`useEffect`) | local `isLoading` state + Skeleton |
+| Context                               | Tool                                   |
+| ------------------------------------- | -------------------------------------- |
+| Route navigation (RSC page loads)     | `loading.tsx` + Skeleton               |
+| In-component data fetch (`useEffect`) | local `isLoading` state + Skeleton     |
 | Write operation (form submit, delete) | `apiAction()` → Sonner `toast.loading` |
 
 **`loading.tsx` (route-level Suspense fallback):**
@@ -415,8 +439,8 @@ if (error) return (
 
 ```tsx
 // app/(dashboard)/colleges/loading.tsx
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 function CollegeRowSkeleton() {
   return (
@@ -429,7 +453,7 @@ function CollegeRowSkeleton() {
       <Skeleton className="h-3.5 w-10" />
       <Skeleton className="h-5 w-16 rounded-full" />
     </div>
-  )
+  );
 }
 
 export default function CollegesLoading() {
@@ -457,7 +481,7 @@ export default function CollegesLoading() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -466,10 +490,10 @@ export default function CollegesLoading() {
 Use this when a Client Component fetches data after mount (pagination, search, tab switching) — `loading.tsx` only fires on initial navigation, not on client-side state changes.
 
 ```tsx
-'use client'
-const [isLoading, setIsLoading] = useState(true)
+"use client";
+const [isLoading, setIsLoading] = useState(true);
 
-if (isLoading) return <TableSkeleton rows={10} />
+if (isLoading) return <TableSkeleton rows={10} />;
 ```
 
 - The skeleton component must be a sibling in the same file or imported from a dedicated `*Skeleton.tsx` file — not from `loading.tsx`.
@@ -481,19 +505,19 @@ if (isLoading) return <TableSkeleton rows={10} />
 - `apiAction()` calls `toast.loading('Saving...')` automatically. The button should also show a disabled + loading state so the user cannot double-submit.
 
 ```tsx
-const [isPending, setIsPending] = useState(false)
+const [isPending, setIsPending] = useState(false);
 
 async function handleSubmit(data: CreateCollegeDto) {
-  setIsPending(true)
-  const result = await apiAction(() => createCollege(data), 'College created')
-  setIsPending(false)
-  if (result) router.push('/colleges')
+  setIsPending(true);
+  const result = await apiAction(() => createCollege(data), "College created");
+  setIsPending(false);
+  if (result) router.push("/colleges");
 }
 
 <Button disabled={isPending}>
   {isPending ? <Spinner className="mr-2 h-4 w-4" /> : null}
   Create College
-</Button>
+</Button>;
 ```
 
 **Rules:**
