@@ -38,7 +38,7 @@ script:post-response {
 
 docs {
   Creates a new platform role with the given permissions.
-  Requires: super admin with super_admin role (authorizePlatformSuperAdmin).
+  Requires: platform admin with platform.roles.manage permission (super_admin has this by default).
 
   slug must be unique and snake_case.
   permissions: array of permission codes from List Permissions.

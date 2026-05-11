@@ -3,7 +3,6 @@ import { authenticate } from "@/shared/middleware/authenticate";
 import { authorizeUserType } from "@/shared/middleware/authorize";
 import { validate } from "@/shared/middleware/validate";
 import {
-  registerAssociateAdminSchema,
   registerAssociateEmployeeSchema,
   updateEmployeeStatusSchema,
 } from "../validators/blink.validator";
@@ -11,11 +10,6 @@ import { AssociateAdminController } from "../controllers/associate-admin.control
 
 const router: Router = Router();
 
-router.post(
-  "/register",
-  validate(registerAssociateAdminSchema),
-  AssociateAdminController.register,
-);
 router.post(
   "/employees/register",
   validate(registerAssociateEmployeeSchema),

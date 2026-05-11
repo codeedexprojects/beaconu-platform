@@ -1,7 +1,7 @@
 meta {
   name: List Employees
   type: http
-  seq: 4
+  seq: 3
 }
 
 get {
@@ -13,4 +13,12 @@ get {
 headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns all employees under the authenticated associate admin.
+  Requires: associate admin access token (blink_associate userType).
+
+  Only returns employees where associateParentId = req.userId.
+  Table: blink_users (role: associate_employee)
 }

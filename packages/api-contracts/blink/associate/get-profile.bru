@@ -1,7 +1,7 @@
 meta {
   name: Get Profile
   type: http
-  seq: 3
+  seq: 1
 }
 
 get {
@@ -13,4 +13,11 @@ get {
 headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns the profile of the currently authenticated Blink user.
+  Requires: any Blink App access token (associate admin or employee).
+
+  Table: blink_users
 }

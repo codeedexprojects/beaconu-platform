@@ -42,10 +42,10 @@ script:post-response {
 docs {
   Registers a new Associate Admin agency account.
   No authentication required.
-
+  
   agency_reg_number must be unique across all blink_users.
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   Saves associateAdminId to env for use in employee registration.
-
+  
   Table: blink_users (role: associate_admin)
 }

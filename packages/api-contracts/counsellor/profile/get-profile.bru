@@ -22,3 +22,11 @@ script:post-response {
     }
   }
 }
+
+docs {
+  Returns the profile of the currently authenticated counsellor.
+  Requires: counsellor access token.
+
+  Also saves counsellorId to env for use in super-admin counselling endpoints.
+  Table: counsellors
+}

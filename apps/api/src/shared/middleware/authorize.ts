@@ -16,8 +16,8 @@ export function authorize(...requiredPermissions: string[]) {
 
     const userPermissions = req.permissions ?? [];
 
-    // '*' is a wildcard granted to super_admin
-    if (userPermissions.includes("*")) {
+    // super_admin has wildcard — bypasses all permission checks
+    if (userPermissions.includes('*')) {
       next();
       return;
     }
@@ -25,6 +25,7 @@ export function authorize(...requiredPermissions: string[]) {
     const hasAll = requiredPermissions.every((p) =>
       userPermissions.includes(p),
     );
+
     if (!hasAll) {
       next(new ForbiddenError("Insufficient permissions"));
       return;

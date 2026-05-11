@@ -1,25 +1,26 @@
-import { prisma } from "@beaconu/db";
-import type { Prisma } from "@beaconu/db";
-import { CryptoUtils } from "@/shared/utils";
+import { prisma } from '@beaconu/db';
+import type { Prisma } from '@beaconu/db';
+import { CryptoUtils } from '@/shared/utils';
 import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
-} from "@/shared/errors";
-import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
+} from '@/shared/errors';
+import { ACCOUNT_STATUS, USER_TYPES } from '@/shared/constants';
 import {
   BLINK_ROLE_PERMISSIONS,
   BLINK_ROLES,
-} from "@/modules/blink/blink.permissions";
-import { JwtUtils } from "../auth.jwt";
-import { AuthRepository } from "../repositories/auth.repository";
-import { UserType, TokenResponse } from "../auth.types";
+} from '@/modules/blink/blink.permissions';
+import { JwtUtils } from '../auth.jwt';
+import { AuthRepository } from '../repositories/auth.repository';
+import { UserType, TokenResponse } from '../auth.types';
 import {
   LoginInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
-} from "../validators/auth.validator";
+  RegisterAssociateAdminInput,
+} from '../validators/auth.validator';
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -49,7 +50,7 @@ export class AuthService {
       data.password,
       blinkUser.passwordHash,
     );
-    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${blinkUser.status}`);
     }
@@ -100,7 +101,7 @@ export class AuthService {
       data.password,
       counsellor.passwordHash,
     );
-    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
     if (counsellor.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${counsellor.status}`);
     }
@@ -138,7 +139,7 @@ export class AuthService {
     const existing = await prisma.counsellor.findUnique({
       where: { email: data.email },
     });
-    if (existing) throw new ConflictError("Email already exists");
+    if (existing) throw new ConflictError('Email already exists');
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -176,6 +177,69 @@ export class AuthService {
     };
   }
 
+  static async registerAssociateAdmin(data: RegisterAssociateAdminInput) {
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const existingEmail = await prisma.blinkUser.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (existingEmail) throw new ConflictError('Email already exists');
+
+    const existingReg = await prisma.blinkUser.findFirst({
+      where: { agencyRegNumber: data.agency_reg_number },
+    });
+    if (existingReg)
+      throw new ConflictError('Agency registration number already exists');
+
+    const role = await prisma.blinkRole.findUnique({
+      where: { slug: BLINK_ROLES.ASSOCIATE_ADMIN },
+    });
+    if (!role) throw new NotFoundError('Blink role not found');
+
+    const passwordHash = await CryptoUtils.hash(data.password);
+
+    const user = await prisma.blinkUser.create({
+      data: {
+        fullName: data.full_name,
+        email: normalizedEmail,
+        passwordHash,
+        phoneNumber: data.phone_number,
+        country: data.country,
+        agencyName: data.agency_name,
+        agencyRegNumber: data.agency_reg_number,
+        blinkRoleId: role.id,
+        status: ACCOUNT_STATUS.ACTIVE,
+      },
+      include: { blinkRole: true },
+    });
+
+    const userType = USER_TYPES.BLINK_ASSOCIATE as UserType;
+    const permissions = BLINK_ROLE_PERMISSIONS[user.blinkRole.slug] ?? [];
+    const session = await AuthRepository.createSession({
+      userId: user.id,
+      userType,
+    });
+
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: user.id,
+      userType,
+      roleId: user.blinkRoleId,
+      permissions,
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        agencyName: user.agencyName,
+        roleSlug: user.blinkRole.slug,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
   static async loginPlatformAdmin(data: PlatformLoginInput) {
     const normalizedEmail = data.email.trim().toLowerCase();
     const normalizedRoleSlug = data.role_slug.trim().toLowerCase();
@@ -191,7 +255,7 @@ export class AuthService {
       data.password,
       admin.passwordHash,
     );
-    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
 
     if (!admin.platformRole || admin.platformRole.slug !== normalizedRoleSlug) {
       throw new UnauthorizedError("Invalid credentials");
@@ -216,7 +280,7 @@ export class AuthService {
     const rolePermissions = admin.platformRole.permissions.map(
       (p) => p.permissionCode,
     );
-    const permissions = rolePermissions.includes("*") ? ["*"] : rolePermissions;
+    const permissions = rolePermissions.includes('*') ? ['*'] : rolePermissions;
 
     const accessToken = JwtUtils.generateAccessToken({
       userId: admin.id,
@@ -238,9 +302,15 @@ export class AuthService {
   }
 
   static async refreshTokens(refreshToken: string): Promise<TokenResponse> {
+    if (!refreshToken) {
+      throw new UnauthorizedError('Refresh token missing');
+    }
+
+    console.log(refreshToken)
+
     const session = await AuthRepository.findSession(refreshToken);
     if (!session)
-      throw new UnauthorizedError("Invalid or expired refresh token");
+      throw new UnauthorizedError('Invalid or expired refresh token');
 
     try {
       JwtUtils.verifyRefreshToken(refreshToken);
@@ -249,7 +319,7 @@ export class AuthService {
         session.userId,
         session.userType as UserType,
       );
-      if (!userData) throw new UnauthorizedError("User not found");
+      if (!userData) throw new UnauthorizedError('User not found');
 
       const newSession = await AuthRepository.rotateSession(refreshToken, {
         userId: session.userId,
@@ -323,8 +393,8 @@ export class AuthService {
         });
         const rolePermissions =
           admin?.platformRole?.permissions.map((p) => p.permissionCode) || [];
-        const permissions = rolePermissions.includes("*")
-          ? ["*"]
+        const permissions = rolePermissions.includes('*')
+          ? ['*']
           : rolePermissions;
         return admin
           ? {

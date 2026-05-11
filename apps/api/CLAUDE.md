@@ -45,16 +45,46 @@ routes/public.routes.ts           →  /api/v1/public/<domain>/*
 
 ## Route Mounting
 
-`src/routes/index.ts` is the **single entry point** — it imports every module's route files and mounts them. No route mounting happens anywhere else (not in `app.ts`, not inside modules).
+`src/routes/index.ts` is the **single entry point**. No route mounting happens anywhere else (not in `app.ts`, not inside modules).
+
+Routes are grouped by consumer surface in `src/routes/`:
+
+```
+src/routes/
+├── index.ts          mounts each consumer group at /api/v1/<group>
+├── admin/index.ts    /api/v1/admin/*
+├── blink/index.ts    /api/v1/blink/*
+├── counsellor/index.ts  /api/v1/counsellor/*
+├── student/index.ts  /api/v1/student/*
+├── college/index.ts  /api/v1/college/*
+├── public/index.ts   /api/v1/public/*  (no auth)
+└── webhooks/index.ts /api/v1/webhooks/*  (no auth)
+```
+
+`src/routes/index.ts` only imports group routers — never individual module routes directly:
+
+```ts
+router.use('/api/v1/admin', adminRoutes);
+router.use('/api/v1/blink', blinkRoutes);
+// ...
+```
+
+Each group index imports the module routes for that surface:
+
+```ts
+// routes/admin/index.ts
+router.use('/auth', platformAuthRoutes);
+router.use('/roles', platformRolesRoutes);
+router.use('/counsellors', counsellingAdminRoutes);
+```
 
 URL prefix structure:
 
 ```
-/api/v1/admin/*           Platform Admin
+/api/v1/admin/*           Platform Admin (platform_admins table)
 /api/v1/college/*         College Admin / Staff
 /api/v1/student/*         Students
-/api/v1/blink/associate/* Blink Associate (admin + employee)
-/api/v1/blink/ambassador/*Campus Ambassadors
+/api/v1/blink/*           Blink (associate, ambassador)
 /api/v1/counsellor/*      Counsellors
 /api/v1/public/*          No auth required
 /api/v1/webhooks/*        Third-party webhooks (no auth)
@@ -141,3 +171,4 @@ Never add domain logic to `shared/`. If something is only used by one module, it
 - Do not put shared utilities inside a module directory
 - Do not create a new top-level directory under `src/` — everything is a module or lives in `shared/`
 - Do not duplicate service logic across controllers — write it once in the service, call it from multiple controllers
+- Do not import module routes directly into `src/routes/index.ts` — always add them to the appropriate consumer group index

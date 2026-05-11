@@ -36,3 +36,14 @@ script:post-response {
     }
   }
 }
+
+docs {
+  Registers a new counsellor account.
+  No authentication required.
+
+  counsellor_type: academic | mindcare
+  Returns an access token (15 min) and sets a refreshToken cookie (90 days).
+  Saves counsellorId to env for use in super-admin counselling endpoints.
+
+  Table: counsellors (separate from blink_users)
+}

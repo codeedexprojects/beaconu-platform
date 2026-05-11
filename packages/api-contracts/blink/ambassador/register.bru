@@ -1,5 +1,5 @@
 meta {
-  name: Register Campus Ambassador
+  name: Create Campus Ambassador
   type: http
   seq: 1
 }
@@ -33,4 +33,15 @@ script:pre-request {
   if (!collegeId) {
     throw new Error("collegeId is not set in environment.");
   }
+}
+
+docs {
+  Creates a campus ambassador account. Called by college staff, not the student themselves.
+  Requires: college staff access token (staff_member userType).
+
+  ambassador_type: student | teacher
+  linked_student_id: optional — links to an existing student record in the students table.
+  college_id must match the staff member's own college (enforced server-side).
+
+  Table: blink_users (role: campus_ambassador)
 }

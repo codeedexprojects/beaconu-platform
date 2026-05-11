@@ -33,7 +33,7 @@ script:pre-request {
 
 docs {
   Replaces the permission set for an existing platform role.
-  Requires: super admin with super_admin role (authorizePlatformSuperAdmin).
+  Requires: platform admin with platform.roles.manage permission (super_admin has this by default).
 
   Replaces ALL existing permissions — send the full desired set.
   platformRoleId: set by running Create Role.

@@ -10,6 +10,21 @@ const COOKIE_OPTIONS = {
 };
 
 export class BlinkAuthController {
+  static async register(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AuthService.registerAssociateAdmin(req.body);
+      res.cookie("refreshToken", result.tokens.refreshToken, COOKIE_OPTIONS);
+      return res.status(201).json(
+        ApiResponse.success("Associate admin registered successfully", {
+          user: result.user,
+          accessToken: result.tokens.accessToken,
+        }),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await AuthService.loginBlink(req.body);
