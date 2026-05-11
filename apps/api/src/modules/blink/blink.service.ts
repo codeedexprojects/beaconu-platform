@@ -2,7 +2,7 @@ import { BlinkRepository } from './blink.repository';
 import { CryptoUtils } from '@/shared/utils';
 import { ConflictError, UnauthorizedError, ForbiddenError, NotFoundError } from '@/shared/errors';
 import { prisma } from '@beaconu/db';
-import { SessionManager } from '../auth/auth.session';
+import { AuthRepository } from '@/modules/auth/repositories/auth.repository';
 import { JwtUtils } from '../auth/auth.jwt';
 import {
   RegisterAssociateAdminData,
@@ -58,7 +58,7 @@ export class BlinkService {
     });
 
     const userType = USER_TYPES.BLINK_ASSOCIATE as UserType;
-    const session = await SessionManager.createSession({ userId: user.id, userType });
+    const session = await AuthRepository.createSession({ userId: user.id, userType });
     const permissions = BLINK_ROLE_PERMISSIONS[user.blinkRole.slug] ?? [];
 
     const accessToken = JwtUtils.generateAccessToken({
@@ -225,7 +225,7 @@ export class BlinkService {
     await BlinkRepository.updateLastLogin(user.id);
 
     const userType = getBlinkUserType(user.blinkRole.slug);
-    const session = await SessionManager.createSession({ userId: user.id, userType });
+    const session = await AuthRepository.createSession({ userId: user.id, userType });
     const permissions = BLINK_ROLE_PERMISSIONS[user.blinkRole.slug] ?? [];
 
     const accessToken = JwtUtils.generateAccessToken({

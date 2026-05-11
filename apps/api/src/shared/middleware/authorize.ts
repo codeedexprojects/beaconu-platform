@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { ForbiddenError, UnauthorizedError } from '@/shared/errors'
 import { UserType } from '@beaconu/types'
+import type { UserType as AuthUserType } from '@/modules/auth/auth.types'
 
 export function authorize(...requiredPermissions: string[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
@@ -28,6 +29,16 @@ export function authorize(...requiredPermissions: string[]) {
       return
     }
 
+    next()
+  }
+}
+
+export function authorizeUserType(...allowedUserTypes: AuthUserType[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.userType || !allowedUserTypes.includes(req.userType)) {
+      next(new ForbiddenError('You do not have permission to access this resource'))
+      return
+    }
     next()
   }
 }

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { CounsellorController } from '@/modules/blink/counsellors/counsellors.controller';
-import { authenticate, authorize } from '@/modules/auth/auth.middleware';
+import { authenticate } from '@/shared/middleware/authenticate';
+import { authorizeUserType } from '@/shared/middleware/authorize';
 import counsellorsAuthRoutes from '@/modules/blink/counsellors/auth/counsellors-auth.routes';
 
 const router: Router = Router();
@@ -9,12 +10,12 @@ const router: Router = Router();
 router.use('/auth', counsellorsAuthRoutes);
 
 // Counsellor self-service (authenticated as counsellor)
-router.get('/me', authenticate, authorize('counsellor'), CounsellorController.getMe);
-router.patch('/me', authenticate, authorize('counsellor'), CounsellorController.updateMe);
+router.get('/me', authenticate, authorizeUserType('counsellor'), CounsellorController.getMe);
+router.patch('/me', authenticate, authorizeUserType('counsellor'), CounsellorController.updateMe);
 
 // Platform admin management
-router.get('/', authenticate, authorize('platform_admin'), CounsellorController.listAll);
-router.get('/:id', authenticate, authorize('platform_admin'), CounsellorController.getById);
-router.patch('/:id/status', authenticate, authorize('platform_admin'), CounsellorController.updateStatus);
+router.get('/', authenticate, authorizeUserType('platform_admin'), CounsellorController.listAll);
+router.get('/:id', authenticate, authorizeUserType('platform_admin'), CounsellorController.getById);
+router.patch('/:id/status', authenticate, authorizeUserType('platform_admin'), CounsellorController.updateStatus);
 
 export default router;

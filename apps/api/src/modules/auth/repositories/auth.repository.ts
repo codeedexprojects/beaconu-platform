@@ -1,26 +1,23 @@
 import { prisma } from '@beaconu/db';
 import type { Prisma } from '@beaconu/db';
-import { SessionData } from './auth.types';
-import { JwtUtils } from './auth.jwt';
+import { JwtUtils } from '../auth.jwt';
+import { SessionData } from '../auth.types';
 import { SESSION_EXPIRY_DAYS } from '@/shared/constants';
 import { UnauthorizedError } from '@/shared/errors';
 
-export class SessionManager {
+export class AuthRepository {
   static async createSession(data: SessionData) {
     const { userId, userType, deviceInfo, ipAddress } = data;
 
-    // Calculate expiry
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + SESSION_EXPIRY_DAYS);
 
-    // Initial dummy refresh token to get session ID, or create session first
     const session = await prisma.userSession.create({
       data: {
         userId,
         userType,
-        refreshToken: 'PENDING', // Will update after generating with session ID
+        refreshToken: 'PENDING',
         deviceInfo: deviceInfo ?? ({} as Prisma.JsonObject),
-
         ipAddress,
         expiresAt,
       },
@@ -32,25 +29,20 @@ export class SessionManager {
       sessionId: session.id,
     });
 
-    // Update session with actual token
     await prisma.userSession.update({
       where: { id: session.id },
       data: { refreshToken },
     });
 
-    return {
-      refreshToken,
-      sessionId: session.id,
-    };
+    return { refreshToken, sessionId: session.id };
   }
 
-  static async validateSession(refreshToken: string) {
+  static async findSession(refreshToken: string) {
     const session = await prisma.userSession.findUnique({
       where: { refreshToken },
     });
 
     if (!session || !session.isActive || session.expiresAt < new Date()) {
-      // Possible reuse attack if token exists but is inactive
       if (session && !session.isActive) {
         await this.invalidateAllUserSessions(session.userId, session.userType);
       }
@@ -61,18 +53,16 @@ export class SessionManager {
   }
 
   static async rotateSession(oldRefreshToken: string, data: SessionData) {
-    const oldSession = await this.validateSession(oldRefreshToken);
+    const oldSession = await this.findSession(oldRefreshToken);
     if (!oldSession) {
       throw new UnauthorizedError('Invalid or expired session');
     }
 
-    // Invalidate old session
     await prisma.userSession.update({
       where: { id: oldSession.id },
       data: { isActive: false },
     });
 
-    // Create new session
     return this.createSession(data);
   }
 

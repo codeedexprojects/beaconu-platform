@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { BlinkService } from '../blink.service';
 import { blinkSchemas } from '../blink.schema';
-import { AuthService } from '@/modules/auth/auth.service';
+import { AuthService } from '@/modules/auth/services/auth.service';
 import { ApiResponse } from '@/shared/responses/api-response';
 
 export class AssociateAdminController {
