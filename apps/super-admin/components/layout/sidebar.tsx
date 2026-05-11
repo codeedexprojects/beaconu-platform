@@ -15,6 +15,7 @@ import {
   PenLine,
   Calendar,
   ShieldCheck,
+  UserCheck,
   Settings,
   LogOut,
   ChevronRight,
@@ -55,7 +56,7 @@ const navSections: NavSection[] = [
     label: 'People',
     items: [
       { href: '/students', label: 'Students', icon: Users, permission: 'students.view' },
-      { href: '/leads', label: 'Student Leads', icon: Target, permission: 'leads.view' },
+      { href: '/student-leads', label: 'Student Leads', icon: Target, permission: 'leads.view' },
       { href: '/counsellors', label: 'Counsellors', icon: HeartHandshake, permission: 'counsellors.view' },
     ],
   },
@@ -64,8 +65,8 @@ const navSections: NavSection[] = [
     items: [
       { href: '/blogs', label: 'Blogs', icon: FileText, permission: 'content.view' },
       { href: '/articles', label: 'Articles', icon: BookOpen, permission: 'content.view' },
-      { href: '/news', label: 'News & Alerts', icon: Newspaper, permission: 'content.view' },
-      { href: '/exams', label: 'Entrance Exams', icon: PenLine, permission: 'exams.view' },
+      { href: '/news-alerts', label: 'News & Alerts', icon: Newspaper, permission: 'content.view' },
+      { href: '/entrance-exams', label: 'Entrance Exams', icon: PenLine, permission: 'exams.view' },
       { href: '/events', label: 'Events', icon: Calendar, permission: 'events.view' },
     ],
   },
@@ -73,6 +74,7 @@ const navSections: NavSection[] = [
     label: 'Platform',
     items: [
       { href: '/admins', label: 'Admins', icon: ShieldCheck, permission: 'admins.view' },
+      { href: '/associate-admins', label: 'Associate Admins', icon: UserCheck, permission: 'admins.view' },
       { href: '/settings', label: 'Settings', icon: Settings, permission: 'settings.view' },
     ],
   },

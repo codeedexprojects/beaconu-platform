@@ -5,6 +5,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 interface LoginPayload {
   email: string
   password: string
+  role_slug?: string
 }
 
 export interface AdminProfile {
@@ -30,11 +31,16 @@ interface LoginApiResponse {
 export async function loginAdmin(
   payload: LoginPayload,
 ): Promise<{ admin: AdminProfile; token: string }> {
+  const loginPayload = {
+    ...payload,
+    role_slug: payload.role_slug ?? 'super_admin',
+  }
+
   const res = await fetch(`${API_BASE}/api/v1/platform-admin/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(loginPayload),
   })
 
   const body = (await res.json()) as LoginApiResponse

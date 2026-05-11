@@ -10,6 +10,7 @@ import type { AdminRole } from '@/lib/rbac'
 // Routes that require a specific permission to access directly
 const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/admins': 'admins.view',
+  '/associate-admins': 'admins.view',
   '/settings': 'settings.view',
   '/universities': 'universities.view',
 }

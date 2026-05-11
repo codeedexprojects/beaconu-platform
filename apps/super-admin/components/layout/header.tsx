@@ -18,15 +18,16 @@ import { useRouter } from 'next/navigation'
 interface HeaderProps {
   title: string
   description?: string
+  children?: React.ReactNode
 }
 
-export function Header({ title, description }: HeaderProps) {
+export function Header({ title, description, children }: HeaderProps) {
   const { admin, clearAuth } = useAuthStore()
   const router = useRouter()
 
   function handleLogout() {
     clearAuth()
-    router.push('/login')
+    router.push('/auth/login')
   }
 
   const initials = admin?.fullName
@@ -46,6 +47,8 @@ export function Header({ title, description }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        {children ? <div className="hidden sm:flex items-center gap-2">{children}</div> : null}
+
         {/* Search */}
         <div className="relative hidden md:block">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />

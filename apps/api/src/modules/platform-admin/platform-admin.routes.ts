@@ -10,6 +10,22 @@ const router: Router = Router();
 router.post('/auth/login', PlatformAuthController.login);
 
 // Users domain
+router.get('/admins', authenticate, authorize('platform_admin'), PlatformUsersController.getAllAdmins);
+router.post(
+	'/admins',
+	authenticate,
+	authorize('platform_admin'),
+	authorizePlatformSuperAdmin,
+	PlatformUsersController.createAdmin,
+);
+router.get('/associate-admins', authenticate, authorize('platform_admin'), PlatformUsersController.getAllAssociateAdmins);
+router.put(
+	'/associate-admins/:associateAdminId/status',
+	authenticate,
+	authorize('platform_admin'),
+	authorizePlatformSuperAdmin,
+	PlatformUsersController.updateAssociateAdminStatus,
+);
 router.get('/profiles', authenticate, authorize('platform_admin'), PlatformUsersController.getAllProfiles);
 
 // Roles domain

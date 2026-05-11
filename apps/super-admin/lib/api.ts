@@ -40,7 +40,7 @@ async function request<T>(
   // Session expired
   if (res.status === 401) {
     useAuthStore.getState().clearAuth()
-    window.location.href = '/login'
+    window.location.href = '/auth/login'
     throw new ApiError(401, 'Session expired. Please sign in again.')
   }
 

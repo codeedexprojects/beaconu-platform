@@ -54,19 +54,7 @@ export class BlinkService {
       agencyName: data.agency_name,
       agencyRegNumber: data.agency_reg_number,
       roleId: role.id,
-      status: ACCOUNT_STATUS.ACTIVE,
-    });
-
-    const userType = USER_TYPES.BLINK_ASSOCIATE as UserType;
-    const session = await SessionManager.createSession({ userId: user.id, userType });
-    const permissions = BLINK_ROLE_PERMISSIONS[user.blinkRole.slug] ?? [];
-
-    const accessToken = JwtUtils.generateAccessToken({
-      userId: user.id,
-      userType,
-      roleId: user.blinkRoleId,
-      permissions,
-      sessionId: session.sessionId,
+      status: ACCOUNT_STATUS.PENDING_APPROVAL,
     });
 
     return {
@@ -75,9 +63,10 @@ export class BlinkService {
         email: user.email,
         fullName: user.fullName,
         agencyName: user.agencyName,
+        status: user.status,
         roleSlug: user.blinkRole.slug,
       },
-      tokens: { accessToken, refreshToken: session.refreshToken },
+      message: 'Registration submitted. Your account is pending approval by super admin.',
     };
   }
 
