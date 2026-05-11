@@ -12,7 +12,6 @@ post {
 
 headers {
   Content-Type: application/json
-  Authorization: Bearer {{accessToken}}
 }
 
 script:post-response {
@@ -22,4 +21,11 @@ script:post-response {
       bru.setEnvVar("accessToken", data.data.accessToken);
     }
   }
+}
+
+docs {
+  Issues a new access token using the refreshToken cookie.
+  No Authorization header needed — reads from cookie.
+
+  Rotates the refresh token on each call (old token is invalidated).
 }

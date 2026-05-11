@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/admin/counselling/{{counsellorId}}
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}
   body: none
   auth: none
 }
@@ -17,6 +17,14 @@ headers {
 script:pre-request {
   const counsellorId = bru.getEnvVar("counsellorId");
   if (!counsellorId) {
-    throw new Error("counsellorId is not set. Run 'Get Profile' as a counsellor first.");
+    throw new Error("counsellorId is not set. Run counsellor Login or Get Profile first.");
   }
+}
+
+docs {
+  Returns full profile of a single counsellor.
+  Requires: super admin access token.
+
+  counsellorId: set automatically by counsellor Login or Get Profile.
+  Table: counsellors
 }

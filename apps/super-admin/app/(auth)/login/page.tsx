@@ -1,58 +1,60 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useAuthStore } from '@/store'
-import { loginAdmin } from '@/lib/services/auth.service'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuthStore } from "@/store";
+import { loginAdmin } from "@/lib/services/auth.service";
 
 const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-})
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
-type FieldErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>
+type FieldErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>;
 
 export default function LoginPage(): React.JSX.Element {
-  const router = useRouter()
-  const setAuth = useAuthStore((s) => s.setAuth)
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-  const [serverError, setServerError] = useState('')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [serverError, setServerError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setServerError('')
+    e.preventDefault();
+    setServerError("");
 
-    const parsed = loginSchema.safeParse({ email, password })
+    const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
-      const errors: FieldErrors = {}
+      const errors: FieldErrors = {};
       parsed.error.issues.forEach((issue) => {
-        const key = issue.path[0] as keyof FieldErrors
-        errors[key] = issue.message
-      })
-      setFieldErrors(errors)
-      return
+        const key = issue.path[0] as keyof FieldErrors;
+        errors[key] = issue.message;
+      });
+      setFieldErrors(errors);
+      return;
     }
-    setFieldErrors({})
-    setLoading(true)
+    setFieldErrors({});
+    setLoading(true);
 
     try {
-      const { admin, token } = await loginAdmin({ email, password })
-      setAuth(admin, token)
-      router.replace('/')
+      const { admin, token } = await loginAdmin({ email, password });
+      setAuth(admin, token);
+      router.replace("/");
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Something went wrong')
+      setServerError(
+        err instanceof Error ? err.message : "Something went wrong",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -68,8 +70,8 @@ export default function LoginPage(): React.JSX.Element {
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
+          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
         }}
       />
 
@@ -79,14 +81,20 @@ export default function LoginPage(): React.JSX.Element {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-xl shadow-primary/40">
             <span className="text-xl font-black text-white">B</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">BeaconU</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            BeaconU
+          </h1>
           <p className="mt-1 text-sm text-white/40">Super Admin Panel</p>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-md shadow-2xl">
-          <h2 className="mb-1 text-lg font-semibold text-white">Welcome back</h2>
-          <p className="mb-6 text-sm text-white/50">Sign in to your admin account</p>
+          <h2 className="mb-1 text-lg font-semibold text-white">
+            Welcome back
+          </h2>
+          <p className="mb-6 text-sm text-white/50">
+            Sign in to your admin account
+          </p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Email */}
@@ -101,8 +109,8 @@ export default function LoginPage(): React.JSX.Element {
                 placeholder="admin@beaconu.com"
                 value={email}
                 onChange={(e) => {
-                  setEmail(e.target.value)
-                  setFieldErrors((prev) => ({ ...prev, email: undefined }))
+                  setEmail(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
                 }}
                 aria-invalid={!!fieldErrors.email}
                 className="border-white/10 bg-white/5 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
@@ -120,13 +128,16 @@ export default function LoginPage(): React.JSX.Element {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => {
-                    setPassword(e.target.value)
-                    setFieldErrors((prev) => ({ ...prev, password: undefined }))
+                    setPassword(e.target.value);
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      password: undefined,
+                    }));
                   }}
                   aria-invalid={!!fieldErrors.password}
                   className="border-white/10 bg-white/5 pr-10 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
@@ -137,11 +148,17 @@ export default function LoginPage(): React.JSX.Element {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="text-xs text-destructive">{fieldErrors.password}</p>
+                <p className="text-xs text-destructive">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
@@ -163,7 +180,7 @@ export default function LoginPage(): React.JSX.Element {
                   Signing in…
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </Button>
           </form>
@@ -174,5 +191,5 @@ export default function LoginPage(): React.JSX.Element {
         </p>
       </div>
     </div>
-  )
+  );
 }

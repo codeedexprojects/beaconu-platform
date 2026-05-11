@@ -1,17 +1,25 @@
-import { prisma } from '@beaconu/db';
-import type { Prisma } from '@beaconu/db';
-import { CryptoUtils } from '@/shared/utils';
-import { ConflictError, ForbiddenError, NotFoundError, UnauthorizedError } from '@/shared/errors';
-import { ACCOUNT_STATUS, USER_TYPES } from '@/shared/constants';
-import { BLINK_ROLE_PERMISSIONS, BLINK_ROLES } from '@/modules/blink/blink.permissions';
-import { JwtUtils } from '../auth.jwt';
-import { AuthRepository } from '../repositories/auth.repository';
-import { UserType, TokenResponse } from '../auth.types';
+import { prisma } from "@beaconu/db";
+import type { Prisma } from "@beaconu/db";
+import { CryptoUtils } from "@/shared/utils";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/shared/errors";
+import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
+import {
+  BLINK_ROLE_PERMISSIONS,
+  BLINK_ROLES,
+} from "@/modules/blink/blink.permissions";
+import { JwtUtils } from "../auth.jwt";
+import { AuthRepository } from "../repositories/auth.repository";
+import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
-} from '../validators/auth.validator';
+} from "../validators/auth.validator";
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -35,17 +43,23 @@ export class AuthService {
       include: { blinkRole: true },
     });
 
-    if (!blinkUser) throw new UnauthorizedError('Invalid credentials');
+    if (!blinkUser) throw new UnauthorizedError("Invalid credentials");
 
-    const isMatch = await CryptoUtils.compare(data.password, blinkUser.passwordHash);
-    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
+    const isMatch = await CryptoUtils.compare(
+      data.password,
+      blinkUser.passwordHash,
+    );
+    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${blinkUser.status}`);
     }
 
     const userType = getBlinkUserType(blinkUser.blinkRole.slug);
     const permissions = BLINK_ROLE_PERMISSIONS[blinkUser.blinkRole.slug] ?? [];
-    const session = await AuthRepository.createSession({ userId: blinkUser.id, userType });
+    const session = await AuthRepository.createSession({
+      userId: blinkUser.id,
+      userType,
+    });
 
     await prisma.blinkUser.update({
       where: { id: blinkUser.id },
@@ -80,10 +94,13 @@ export class AuthService {
       where: { email: normalizedEmail },
     });
 
-    if (!counsellor) throw new UnauthorizedError('Invalid credentials');
+    if (!counsellor) throw new UnauthorizedError("Invalid credentials");
 
-    const isMatch = await CryptoUtils.compare(data.password, counsellor.passwordHash);
-    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
+    const isMatch = await CryptoUtils.compare(
+      data.password,
+      counsellor.passwordHash,
+    );
+    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
     if (counsellor.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${counsellor.status}`);
     }
@@ -118,8 +135,10 @@ export class AuthService {
   }
 
   static async registerCounsellor(data: RegisterCounsellorInput) {
-    const existing = await prisma.counsellor.findUnique({ where: { email: data.email } });
-    if (existing) throw new ConflictError('Email already exists');
+    const existing = await prisma.counsellor.findUnique({
+      where: { email: data.email },
+    });
+    if (existing) throw new ConflictError("Email already exists");
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -166,20 +185,23 @@ export class AuthService {
       include: { platformRole: { include: { permissions: true } } },
     });
 
-    if (!admin) throw new UnauthorizedError('Invalid credentials');
+    if (!admin) throw new UnauthorizedError("Invalid credentials");
 
-    const isMatch = await CryptoUtils.compare(data.password, admin.passwordHash);
-    if (!isMatch) throw new UnauthorizedError('Invalid credentials');
+    const isMatch = await CryptoUtils.compare(
+      data.password,
+      admin.passwordHash,
+    );
+    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
 
     if (!admin.platformRole || admin.platformRole.slug !== normalizedRoleSlug) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError("Invalid credentials");
     }
 
     if (admin.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${admin.status}`);
     }
 
-    if (!admin.platformRole) throw new NotFoundError('Platform role not found');
+    if (!admin.platformRole) throw new NotFoundError("Platform role not found");
 
     await prisma.platformAdmin.update({
       where: { id: admin.id },
@@ -191,8 +213,10 @@ export class AuthService {
       userType: USER_TYPES.PLATFORM_ADMIN,
     });
 
-    const rolePermissions = admin.platformRole.permissions.map((p) => p.permissionCode);
-    const permissions = rolePermissions.includes('*') ? ['*'] : rolePermissions;
+    const rolePermissions = admin.platformRole.permissions.map(
+      (p) => p.permissionCode,
+    );
+    const permissions = rolePermissions.includes("*") ? ["*"] : rolePermissions;
 
     const accessToken = JwtUtils.generateAccessToken({
       userId: admin.id,
@@ -215,13 +239,17 @@ export class AuthService {
 
   static async refreshTokens(refreshToken: string): Promise<TokenResponse> {
     const session = await AuthRepository.findSession(refreshToken);
-    if (!session) throw new UnauthorizedError('Invalid or expired refresh token');
+    if (!session)
+      throw new UnauthorizedError("Invalid or expired refresh token");
 
     try {
       JwtUtils.verifyRefreshToken(refreshToken);
 
-      const userData = await this.getUserForRefresh(session.userId, session.userType as UserType);
-      if (!userData) throw new UnauthorizedError('User not found');
+      const userData = await this.getUserForRefresh(
+        session.userId,
+        session.userType as UserType,
+      );
+      if (!userData) throw new UnauthorizedError("User not found");
 
       const newSession = await AuthRepository.rotateSession(refreshToken, {
         userId: session.userId,
@@ -245,7 +273,7 @@ export class AuthService {
       return { accessToken, refreshToken: newSession.refreshToken };
     } catch {
       await AuthRepository.invalidateSession(refreshToken);
-      throw new UnauthorizedError('Invalid refresh token');
+      throw new UnauthorizedError("Invalid refresh token");
     }
   }
 
@@ -266,7 +294,8 @@ export class AuthService {
           ? {
               roleId: blinkUser.blinkRoleId,
               collegeId: blinkUser.collegeId || undefined,
-              permissions: BLINK_ROLE_PERMISSIONS[blinkUser.blinkRole.slug] || [],
+              permissions:
+                BLINK_ROLE_PERMISSIONS[blinkUser.blinkRole.slug] || [],
             }
           : null;
       }
@@ -280,7 +309,9 @@ export class AuthService {
           ? {
               roleId: staff.collegeRoleId,
               collegeId: staff.collegeId,
-              permissions: staff.collegeRole.permissions.map((p) => p.permissionCode),
+              permissions: staff.collegeRole.permissions.map(
+                (p) => p.permissionCode,
+              ),
             }
           : null;
       }
@@ -292,18 +323,34 @@ export class AuthService {
         });
         const rolePermissions =
           admin?.platformRole?.permissions.map((p) => p.permissionCode) || [];
-        const permissions = rolePermissions.includes('*') ? ['*'] : rolePermissions;
-        return admin ? { roleId: admin.platformRoleId || undefined, collegeId: undefined, permissions } : null;
+        const permissions = rolePermissions.includes("*")
+          ? ["*"]
+          : rolePermissions;
+        return admin
+          ? {
+              roleId: admin.platformRoleId || undefined,
+              collegeId: undefined,
+              permissions,
+            }
+          : null;
       }
 
       case USER_TYPES.STUDENT: {
-        const student = await prisma.student.findUnique({ where: { id: userId } });
-        return student ? { roleId: undefined, collegeId: undefined, permissions: [] } : null;
+        const student = await prisma.student.findUnique({
+          where: { id: userId },
+        });
+        return student
+          ? { roleId: undefined, collegeId: undefined, permissions: [] }
+          : null;
       }
 
       case USER_TYPES.COUNSELLOR: {
-        const counsellor = await prisma.counsellor.findUnique({ where: { id: userId } });
-        return counsellor ? { roleId: undefined, collegeId: undefined, permissions: [] } : null;
+        const counsellor = await prisma.counsellor.findUnique({
+          where: { id: userId },
+        });
+        return counsellor
+          ? { roleId: undefined, collegeId: undefined, permissions: [] }
+          : null;
       }
 
       default:

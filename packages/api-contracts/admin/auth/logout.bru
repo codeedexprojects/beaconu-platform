@@ -14,3 +14,10 @@ headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
 }
+
+docs {
+  Invalidates the current session.
+  Clears the refreshToken cookie.
+
+  Safe to call even if the token has already expired.
+}

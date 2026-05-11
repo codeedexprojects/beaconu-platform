@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function NotFoundPage(): React.JSX.Element {
   return (
@@ -23,14 +23,18 @@ export default function NotFoundPage(): React.JSX.Element {
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-white">Page not found</h1>
           <p className="text-sm text-white/40 max-w-xs mx-auto">
-            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            The page you&apos;re looking for doesn&apos;t exist or has been
+            moved.
           </p>
         </div>
 
-        <Button asChild className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30">
+        <Button
+          asChild
+          className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
+        >
           <Link href="/">Go to Dashboard</Link>
         </Button>
       </div>
     </div>
-  )
+  );
 }

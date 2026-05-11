@@ -1,5 +1,5 @@
-import { prisma } from '@beaconu/db';
-import { BlinkUserCreateData } from '../validators/blink.validator';
+import { prisma } from "@beaconu/db";
+import { BlinkUserCreateData } from "../validators/blink.validator";
 
 export class BlinkRepository {
   static async findByEmail(email: string) {
@@ -55,7 +55,7 @@ export class BlinkRepository {
     return prisma.blinkUser.findMany({
       where: { associateParentId },
       include: { blinkRole: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 

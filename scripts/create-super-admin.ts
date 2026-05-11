@@ -1,21 +1,21 @@
-import { prisma } from '../packages/db/src/index';
-import bcrypt from 'bcryptjs';
+import { prisma } from "../packages/db/src/index";
+import bcrypt from "bcryptjs";
 
 async function main() {
-  const email = 'superadmin@beaconu.com';
-  const password = 'password@123';
-  const fullName = 'Platform Super Admin';
+  const email = "superadmin@beaconu.com";
+  const password = "password@123";
+  const fullName = "Platform Super Admin";
 
   const superAdminRole = await prisma.platformRole.upsert({
-    where: { slug: 'super_admin' },
+    where: { slug: "super_admin" },
     update: {
-      name: 'Super Admin',
+      name: "Super Admin",
       isSystemRole: true,
       isActive: true,
     },
     create: {
-      name: 'Super Admin',
-      slug: 'super_admin',
+      name: "Super Admin",
+      slug: "super_admin",
       isSystemRole: true,
       isActive: true,
     },
@@ -25,7 +25,7 @@ async function main() {
     data: [
       {
         platformRoleId: superAdminRole.id,
-        permissionCode: '*',
+        permissionCode: "*",
       },
     ],
     skipDuplicates: true,
@@ -39,18 +39,18 @@ async function main() {
       platformRoleId: superAdminRole.id,
       passwordHash,
       fullName,
-      status: 'active',
+      status: "active",
     },
     create: {
       platformRoleId: superAdminRole.id,
       email,
       passwordHash,
       fullName,
-      status: 'active',
+      status: "active",
     },
   });
 
-  console.log('Super-admin created/updated:', admin.email);
+  console.log("Super-admin created/updated:", admin.email);
 }
 
 main()

@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiResponse } from '@/shared/responses/api-response';
-import { AuthService } from '../services/auth.service';
+import { Request, Response, NextFunction } from "express";
+import { ApiResponse } from "@/shared/responses/api-response";
+import { AuthService } from "../services/auth.service";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
   maxAge: 90 * 24 * 60 * 60 * 1000,
 };
 
@@ -14,10 +14,14 @@ export class StudentAuthController {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       const result = await AuthService.refreshTokens(refreshToken);
-      res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
-      return res.status(200).json(
-        ApiResponse.success('Token refreshed successfully', { accessToken: result.accessToken })
-      );
+      res.cookie("refreshToken", result.refreshToken, COOKIE_OPTIONS);
+      return res
+        .status(200)
+        .json(
+          ApiResponse.success("Token refreshed successfully", {
+            accessToken: result.accessToken,
+          }),
+        );
     } catch (error) {
       next(error);
     }
@@ -27,8 +31,10 @@ export class StudentAuthController {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       if (refreshToken) await AuthService.logout(refreshToken);
-      res.clearCookie('refreshToken');
-      return res.status(200).json(ApiResponse.success('Logged out successfully', null));
+      res.clearCookie("refreshToken");
+      return res
+        .status(200)
+        .json(ApiResponse.success("Logged out successfully", null));
     } catch (error) {
       next(error);
     }

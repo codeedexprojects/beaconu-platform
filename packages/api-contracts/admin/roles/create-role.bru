@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/platform-admin/roles
+  url: {{baseUrl}}/api/v1/admin/roles
   body: json
   auth: none
 }
@@ -34,4 +34,15 @@ script:post-response {
       bru.setEnvVar("platformRoleId", data.data.id);
     }
   }
+}
+
+docs {
+  Creates a new platform role with the given permissions.
+  Requires: super admin with super_admin role (authorizePlatformSuperAdmin).
+
+  slug must be unique and snake_case.
+  permissions: array of permission codes from List Permissions.
+  Saves platformRoleId to env for use in Update Role Permissions.
+
+  Table: platform_roles
 }

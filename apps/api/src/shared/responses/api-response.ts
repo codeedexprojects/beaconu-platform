@@ -1,5 +1,5 @@
-import { PaginationMeta } from './pagination';
-import { ErrorCode } from './error-codes';
+import { PaginationMeta } from "./pagination";
+import { ErrorCode } from "./error-codes";
 
 /**
  * Standardized Response Structure for BeaconU API
@@ -23,7 +23,7 @@ export class ApiResponse {
   static success<T>(
     message: string,
     data: T,
-    meta?: PaginationMeta | unknown
+    meta?: PaginationMeta | unknown,
   ): StandardResponse<T> {
     return {
       success: true,
@@ -40,7 +40,7 @@ export class ApiResponse {
   static error(
     message: string,
     code: ErrorCode,
-    details: unknown[] = []
+    details: unknown[] = [],
   ): StandardResponse<null> {
     return {
       success: false,

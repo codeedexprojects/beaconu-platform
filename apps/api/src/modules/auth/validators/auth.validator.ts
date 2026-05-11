@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -18,11 +18,11 @@ export const registerCounsellorSchema = z
     password: z.string().min(6),
     confirm_password: z.string().min(6),
     phone_number: z.string().trim().optional(),
-    counsellor_type: z.enum(['academic', 'mindcare']),
+    counsellor_type: z.enum(["academic", "mindcare"]),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
-    path: ['confirm_password'],
+    path: ["confirm_password"],
   });
 
 export type LoginInput = z.infer<typeof loginSchema>;

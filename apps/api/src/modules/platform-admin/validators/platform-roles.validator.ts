@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const platformRolesSchemas = {
   createRole: z.object({
@@ -16,5 +16,9 @@ export const platformRolesSchemas = {
   }),
 };
 
-export type CreatePlatformRoleData = z.infer<typeof platformRolesSchemas.createRole>;
-export type UpdatePlatformRolePermissionsData = z.infer<typeof platformRolesSchemas.updatePermissions>;
+export type CreatePlatformRoleData = z.infer<
+  typeof platformRolesSchemas.createRole
+>;
+export type UpdatePlatformRolePermissionsData = z.infer<
+  typeof platformRolesSchemas.updatePermissions
+>;

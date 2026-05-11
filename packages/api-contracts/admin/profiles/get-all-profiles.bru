@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/platform-admin/profiles
+  url: {{baseUrl}}/api/v1/admin/users/profiles
   body: none
   auth: none
 }
@@ -13,4 +13,11 @@ get {
 headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns all platform admin profiles.
+  Requires: super admin access token.
+
+  Table: platform_admins
 }

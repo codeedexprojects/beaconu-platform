@@ -1,9 +1,9 @@
-import { prisma } from '@beaconu/db';
-import type { Prisma } from '@beaconu/db';
-import { JwtUtils } from '../auth.jwt';
-import { SessionData } from '../auth.types';
-import { SESSION_EXPIRY_DAYS } from '@/shared/constants';
-import { UnauthorizedError } from '@/shared/errors';
+import { prisma } from "@beaconu/db";
+import type { Prisma } from "@beaconu/db";
+import { JwtUtils } from "../auth.jwt";
+import { SessionData } from "../auth.types";
+import { SESSION_EXPIRY_DAYS } from "@/shared/constants";
+import { UnauthorizedError } from "@/shared/errors";
 
 export class AuthRepository {
   static async createSession(data: SessionData) {
@@ -16,7 +16,7 @@ export class AuthRepository {
       data: {
         userId,
         userType,
-        refreshToken: 'PENDING',
+        refreshToken: "PENDING",
         deviceInfo: deviceInfo ?? ({} as Prisma.JsonObject),
         ipAddress,
         expiresAt,
@@ -55,7 +55,7 @@ export class AuthRepository {
   static async rotateSession(oldRefreshToken: string, data: SessionData) {
     const oldSession = await this.findSession(oldRefreshToken);
     if (!oldSession) {
-      throw new UnauthorizedError('Invalid or expired session');
+      throw new UnauthorizedError("Invalid or expired session");
     }
 
     await prisma.userSession.update({

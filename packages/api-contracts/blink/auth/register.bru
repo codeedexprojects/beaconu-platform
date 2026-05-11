@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/blink/associate/register
+  url: {{baseUrl}}/api/v1/blink/auth/register
   body: json
   auth: none
 }
@@ -37,4 +37,15 @@ script:post-response {
       bru.setEnvVar("associateAdminId", data.data.user.id);
     }
   }
+}
+
+docs {
+  Registers a new Associate Admin agency account.
+  No authentication required.
+
+  agency_reg_number must be unique across all blink_users.
+  Returns an access token (15 min) and sets a refreshToken cookie (90 days).
+  Saves associateAdminId to env for use in employee registration.
+
+  Table: blink_users (role: associate_admin)
 }

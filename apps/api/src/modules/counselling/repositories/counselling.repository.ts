@@ -1,4 +1,4 @@
-import { prisma } from '@beaconu/db';
+import { prisma } from "@beaconu/db";
 
 const COUNSELLOR_SELECT = {
   id: true,
@@ -20,18 +20,25 @@ export class CounsellingRepository {
     });
   }
 
-  static async findAll(filters: { counsellorType?: string; status?: string } = {}) {
+  static async findAll(
+    filters: { counsellorType?: string; status?: string } = {},
+  ) {
     return prisma.counsellor.findMany({
       where: {
-        ...(filters.counsellorType ? { counsellorType: filters.counsellorType } : {}),
+        ...(filters.counsellorType
+          ? { counsellorType: filters.counsellorType }
+          : {}),
         ...(filters.status ? { status: filters.status } : {}),
       },
       select: COUNSELLOR_SELECT,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
-  static async updateById(id: string, data: { fullName?: string; phoneNumber?: string; avatarUrl?: string }) {
+  static async updateById(
+    id: string,
+    data: { fullName?: string; phoneNumber?: string; avatarUrl?: string },
+  ) {
     return prisma.counsellor.update({
       where: { id },
       data,
