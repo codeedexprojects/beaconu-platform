@@ -1,0 +1,48 @@
+meta {
+  name: Create Role
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/roles
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Admissions Auditor",
+    "slug": "admissions_auditor",
+    "permissions": [
+      "platform:profiles:view",
+      "platform:leads:view"
+    ],
+    "is_system_role": false
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("platformRoleId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new platform role with the given permissions.
+  Requires: platform admin with platform.roles.manage permission (super_admin has this by default).
+
+  slug must be unique and snake_case.
+  permissions: array of permission codes from List Permissions.
+  Saves platformRoleId to env for use in Update Role Permissions.
+
+  Table: platform_roles
+}

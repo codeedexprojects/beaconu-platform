@@ -1,0 +1,246 @@
+// ============================================================
+// MODULE 7 — FEES, PAYMENTS & FINANCIALS
+// ============================================================
+
+model FeeStructure {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId         String   @map("college_id") @db.Uuid
+  courseId          String   @map("course_id") @db.Uuid
+  academicYear      String   @map("academic_year") @db.VarChar(10)
+  feeCategory       String   @map("fee_category") @db.VarChar(30)
+  amount            Decimal  @db.Decimal(12, 2)
+  yearOrSemester    String?  @map("year_or_semester") @db.VarChar(20)
+  instalmentAllowed Boolean  @default(false) @map("instalment_allowed")
+  instalmentConfig  Json     @default("{}") @map("instalment_config")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id])
+
+  @@index([collegeId], name: "idx_fees_college")
+  @@index([courseId], name: "idx_fees_course")
+  @@index([feeCategory], name: "idx_fees_category")
+  @@index([academicYear], name: "idx_fees_year")
+  @@map("fee_structures")
+}
+
+model StudentFeeLedger {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  applicationCourseId String?   @map("application_course_id") @db.Uuid
+  enrollmentId        String?   @map("enrollment_id") @db.Uuid
+  feeCategory         String    @map("fee_category") @db.VarChar(30)
+  description         String?   @db.VarChar(255)
+  totalAmount         Decimal   @map("total_amount") @db.Decimal(12, 2)
+  scholarshipDiscount Decimal   @default(0) @map("scholarship_discount") @db.Decimal(12, 2)
+  netAmount           Decimal   @map("net_amount") @db.Decimal(12, 2)
+  paidAmount          Decimal   @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  balanceAmount       Decimal   @map("balance_amount") @db.Decimal(12, 2)
+  dueDate             DateTime? @map("due_date") @db.Date
+  status              String    @default("pending") @db.VarChar(20)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student           Student            @relation(fields: [studentId], references: [id])
+  college           College            @relation(fields: [collegeId], references: [id])
+  applicationCourse ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
+  enrollment        Enrollment?        @relation(fields: [enrollmentId], references: [id])
+  transactions      Transaction[]
+
+  @@index([studentId], name: "idx_ledger_student")
+  @@index([collegeId], name: "idx_ledger_college")
+  @@index([applicationCourseId], name: "idx_ledger_app_course")
+  @@index([feeCategory], name: "idx_ledger_category")
+  @@index([status], name: "idx_ledger_status")
+  @@index([dueDate], name: "idx_ledger_due")
+  @@map("student_fee_ledger")
+}
+
+model Transaction {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionNumber   String    @unique @map("transaction_number") @db.VarChar(30)
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  ledgerEntryId       String?   @map("ledger_entry_id") @db.Uuid
+  amount              Decimal   @db.Decimal(12, 2)
+  currency            String    @default("INR") @db.VarChar(5)
+  paymentMethod       String    @map("payment_method") @db.VarChar(20)
+  razorpayOrderId     String?   @map("razorpay_order_id") @db.VarChar(100)
+  razorpayPaymentId   String?   @map("razorpay_payment_id") @db.VarChar(100)
+  razorpaySignature   String?   @map("razorpay_signature") @db.Text
+  gatewayResponse     Json      @default("{}") @map("gateway_response")
+  transferStatus      String    @default("not_applicable") @map("transfer_status") @db.VarChar(20)
+  razorpayTransferId  String?   @map("razorpay_transfer_id") @db.VarChar(100)
+  platformCommission  Decimal   @default(0) @map("platform_commission") @db.Decimal(10, 2)
+  vendorPayout        Decimal?  @map("vendor_payout") @db.Decimal(10, 2)
+  uploadProofUrl      String?   @map("upload_proof_url") @db.Text
+  uploadProofFileName String?   @map("upload_proof_file_name") @db.VarChar(255)
+  ddNumber            String?   @map("dd_number") @db.VarChar(50)
+  ddBankName          String?   @map("dd_bank_name") @db.VarChar(100)
+  ddDate              DateTime? @map("dd_date") @db.Date
+  bankRefNumber       String?   @map("bank_ref_number") @db.VarChar(100)
+  verificationStatus  String    @default("not_required") @map("verification_status") @db.VarChar(20)
+  verifiedBy          String?   @map("verified_by") @db.Uuid
+  verifiedAt          DateTime? @map("verified_at") @db.Timestamptz
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  status              String    @default("pending") @db.VarChar(20)
+  paidAt              DateTime? @map("paid_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student     Student           @relation(fields: [studentId], references: [id])
+  college     College           @relation(fields: [collegeId], references: [id])
+  ledgerEntry StudentFeeLedger? @relation(fields: [ledgerEntryId], references: [id])
+  verifier    StaffMember?      @relation(fields: [verifiedBy], references: [id])
+  receipt     PaymentReceipt?
+  refunds     Refund[]
+
+  @@index([studentId], name: "idx_txn_student")
+  @@index([collegeId], name: "idx_txn_college")
+  @@index([ledgerEntryId], name: "idx_txn_ledger")
+  @@index([transactionNumber], name: "idx_txn_number")
+  @@index([status], name: "idx_txn_status")
+  @@index([verificationStatus], name: "idx_txn_verification")
+  @@index([paymentMethod], name: "idx_txn_method")
+  @@index([paidAt], name: "idx_txn_paid")
+  @@index([razorpayOrderId], name: "idx_txn_razorpay_order")
+  @@index([razorpayPaymentId], name: "idx_txn_razorpay_payment")
+  @@index([transferStatus], name: "idx_txn_transfer_status")
+  @@map("transactions")
+}
+
+model PaymentReceipt {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId String   @unique @map("transaction_id") @db.Uuid
+  studentId     String   @map("student_id") @db.Uuid
+  collegeId     String   @map("college_id") @db.Uuid
+  receiptNumber String   @unique @map("receipt_number") @db.VarChar(30)
+  receiptDate   DateTime @default(dbgenerated("CURRENT_DATE")) @map("receipt_date") @db.Date
+  feeCategory   String   @map("fee_category") @db.VarChar(30)
+  description   String?  @db.VarChar(255)
+  amount        Decimal  @db.Decimal(12, 2)
+  documentUrl   String?  @map("document_url") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id])
+  college     College     @relation(fields: [collegeId], references: [id])
+
+  @@index([transactionId], name: "idx_receipts_txn")
+  @@index([studentId], name: "idx_receipts_student")
+  @@index([collegeId], name: "idx_receipts_college")
+  @@index([receiptNumber], name: "idx_receipts_number")
+  @@map("payment_receipts")
+}
+
+model Refund {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId   String    @map("transaction_id") @db.Uuid
+  studentId       String    @map("student_id") @db.Uuid
+  collegeId       String    @map("college_id") @db.Uuid
+  refundAmount    Decimal   @map("refund_amount") @db.Decimal(12, 2)
+  reason          String    @db.Text
+  refundType      String    @map("refund_type") @db.VarChar(20)
+  status          String    @default("pending") @db.VarChar(20)
+  gatewayRefundId String?   @map("gateway_refund_id") @db.VarChar(100)
+  processedBy     String?   @map("processed_by") @db.Uuid
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz
+  remarks         String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  transaction Transaction  @relation(fields: [transactionId], references: [id])
+  student     Student      @relation(fields: [studentId], references: [id])
+  college     College      @relation(fields: [collegeId], references: [id])
+  processor   StaffMember? @relation(fields: [processedBy], references: [id])
+
+  @@index([transactionId], name: "idx_refunds_txn")
+  @@index([studentId], name: "idx_refunds_student")
+  @@index([status], name: "idx_refunds_status")
+  @@index([refundType], name: "idx_refunds_type")
+  @@map("refunds")
+}
+
+model ScholarshipConfig {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId          String   @map("college_id") @db.Uuid
+  name               String   @db.VarChar(255)
+  scholarshipType    String   @map("scholarship_type") @db.VarChar(30)
+  eligibility        Json
+  discountType       String   @map("discount_type") @db.VarChar(20)
+  discountValue      Decimal  @map("discount_value") @db.Decimal(10, 2)
+  applicableYears    Json     @default("[\"all\"]") @map("applicable_years")
+  termsAndConditions String?  @map("terms_and_conditions") @db.Text
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  applications ScholarshipApplication[]
+
+  @@index([collegeId], name: "idx_scholarships_college")
+  @@index([scholarshipType], name: "idx_scholarships_type")
+  @@index([collegeId, isActive], name: "idx_scholarships_active")
+  @@map("scholarship_configs")
+}
+
+model ScholarshipApplication {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scholarshipConfigId String    @map("scholarship_config_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  applicationCourseId String    @map("application_course_id") @db.Uuid
+  supportingDocuments Json      @default("[]") @map("supporting_documents")
+  remarks             String?   @db.Text
+  discountAmount      Decimal?  @map("discount_amount") @db.Decimal(12, 2)
+  status              String    @default("pending") @db.VarChar(20)
+  reviewedBy          String?   @map("reviewed_by") @db.Uuid
+  reviewedAt          DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewRemarks       String?   @map("review_remarks") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  scholarshipConfig ScholarshipConfig @relation(fields: [scholarshipConfigId], references: [id])
+  student           Student           @relation(fields: [studentId], references: [id])
+  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
+  reviewer          StaffMember?      @relation(fields: [reviewedBy], references: [id])
+
+  @@unique([scholarshipConfigId, studentId, applicationCourseId], name: "uq_scholarship_student_course")
+  @@index([scholarshipConfigId], name: "idx_schapp_config")
+  @@index([studentId], name: "idx_schapp_student")
+  @@index([applicationCourseId], name: "idx_schapp_app_course")
+  @@index([status], name: "idx_schapp_status")
+  @@map("scholarship_applications")
+}
+
+model CollegePaymentAccount {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId             String   @unique @map("college_id") @db.Uuid
+  razorpayAccountId     String   @map("razorpay_account_id") @db.VarChar(100)
+  onboardingStatus      String   @default("pending") @map("onboarding_status") @db.VarChar(20)
+  businessName          String?  @map("business_name") @db.VarChar(255)
+  panNumber             String?  @map("pan_number") @db.VarChar(20)
+  gstNumber             String?  @map("gst_number") @db.VarChar(20)
+  bankAccountNumber     String?  @map("bank_account_number") @db.VarChar(30)
+  bankIfsc              String?  @map("bank_ifsc") @db.VarChar(15)
+  bankName              String?  @map("bank_name") @db.VarChar(100)
+  platformCommissionPct Decimal  @default(0) @map("platform_commission_pct") @db.Decimal(5, 2)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college College @relation(fields: [collegeId], references: [id])
+
+  @@index([collegeId], name: "idx_cpa_college")
+  @@index([onboardingStatus], name: "idx_cpa_status")
+  @@map("college_payment_accounts")
+}

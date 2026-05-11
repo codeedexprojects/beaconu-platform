@@ -1,0 +1,92 @@
+// ============================================================
+// MODULE 8 — DOCUMENTS
+// ============================================================
+
+model DocumentTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String   @map("college_id") @db.Uuid
+  name        String   @db.VarChar(100)
+  slug        String   @db.VarChar(50)
+  description String?  @db.Text
+  isStandard  Boolean  @default(true) @map("is_standard")
+  isActive    Boolean  @default(true) @map("is_active")
+  hasFee      Boolean  @default(false) @map("has_fee")
+  feeAmount   Decimal  @default(0) @map("fee_amount") @db.Decimal(10, 2)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  documentRequests DocumentRequest[]
+
+  @@unique([collegeId, slug], name: "uq_doc_template_slug")
+  @@index([collegeId], name: "idx_doc_templates_college")
+  @@index([collegeId, isActive], name: "idx_doc_templates_active")
+  @@map("document_templates")
+}
+
+model DocumentRequest {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestNumber       String    @unique @map("request_number") @db.VarChar(30)
+  studentId           String    @map("student_id") @db.Uuid
+  collegeId           String    @map("college_id") @db.Uuid
+  documentTemplateId  String?   @map("document_template_id") @db.Uuid
+  documentName        String    @map("document_name") @db.VarChar(255)
+  description         String?   @db.Text
+  deliveryMode        String    @map("delivery_mode") @db.VarChar(20)
+  supportingDocuments Json      @default("[]") @map("supporting_documents")
+  status              String    @default("submitted") @db.VarChar(20)
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  resubmissionCount   Int       @default(0) @map("resubmission_count")
+  resubmissionHistory Json      @default("[]") @map("resubmission_history")
+  assignedTo          String?   @map("assigned_to") @db.Uuid
+  processedBy         String?   @map("processed_by") @db.Uuid
+  issuedDocumentUrl   String?   @map("issued_document_url") @db.Text
+  issuedAt            DateTime? @map("issued_at") @db.Timestamptz
+  pickupDate          DateTime? @map("pickup_date") @db.Date
+  pickupConfirmed     Boolean   @default(false) @map("pickup_confirmed")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student          Student           @relation(fields: [studentId], references: [id])
+  college          College           @relation(fields: [collegeId], references: [id])
+  documentTemplate DocumentTemplate? @relation(fields: [documentTemplateId], references: [id])
+  assignedStaff    StaffMember?      @relation("AssignedStaff", fields: [assignedTo], references: [id])
+  processedStaff   StaffMember?      @relation("ProcessedByStaff", fields: [processedBy], references: [id])
+  issuedDocuments  IssuedDocument[]
+
+  @@index([studentId], name: "idx_docreq_student")
+  @@index([collegeId], name: "idx_docreq_college")
+  @@index([documentTemplateId], name: "idx_docreq_template")
+  @@index([collegeId, status], name: "idx_docreq_status")
+  @@index([assignedTo], name: "idx_docreq_assigned")
+  @@index([requestNumber], name: "idx_docreq_number")
+  @@map("document_requests")
+}
+
+model IssuedDocument {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentRequestId String   @map("document_request_id") @db.Uuid
+  studentId         String   @map("student_id") @db.Uuid
+  collegeId         String   @map("college_id") @db.Uuid
+  documentName      String   @map("document_name") @db.VarChar(255)
+  documentUrl       String   @map("document_url") @db.Text
+  fileName          String?  @map("file_name") @db.VarChar(255)
+  fileSizeBytes     Int?     @map("file_size_bytes")
+  deliveryMode      String   @map("delivery_mode") @db.VarChar(20)
+  issuedBy          String   @map("issued_by") @db.Uuid
+  issuedAt          DateTime @default(now()) @map("issued_at") @db.Timestamptz
+
+  // Relations
+  documentRequest DocumentRequest @relation(fields: [documentRequestId], references: [id])
+  student         Student         @relation(fields: [studentId], references: [id])
+  college         College         @relation(fields: [collegeId], references: [id])
+  issuer          StaffMember     @relation(fields: [issuedBy], references: [id])
+
+  @@index([documentRequestId], name: "idx_issued_request")
+  @@index([studentId], name: "idx_issued_student")
+  @@index([collegeId], name: "idx_issued_college")
+  @@map("issued_documents")
+}

@@ -1,0 +1,47 @@
+meta {
+  name: Create Campus Ambassador
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/ambassador/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "full_name": "Priya Sharma",
+    "email": "priya.ambassador@univ.com",
+    "phone_number": "+919900112233",
+    "college_id": "{{collegeId}}",
+    "linked_student_id": "{{studentId}}",
+    "ambassador_type": "student",
+    "password": "Password@123",
+    "confirm_password": "Password@123"
+  }
+}
+
+script:pre-request {
+  const collegeId = bru.getEnvVar("collegeId");
+  if (!collegeId) {
+    throw new Error("collegeId is not set in environment.");
+  }
+}
+
+docs {
+  Creates a campus ambassador account. Called by college staff, not the student themselves.
+  Requires: college staff access token (staff_member userType).
+
+  ambassador_type: student | teacher
+  linked_student_id: optional — links to an existing student record in the students table.
+  college_id must match the staff member's own college (enforced server-side).
+
+  Table: blink_users (role: campus_ambassador)
+}

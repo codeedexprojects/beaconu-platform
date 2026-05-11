@@ -1,0 +1,126 @@
+// ============================================================
+// MODULE 6 — INTERVIEW & OFFER
+// ============================================================
+
+model InterviewSlot {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId      String   @map("college_id") @db.Uuid
+  mode           String   @db.VarChar(20)
+  scheduledDate  DateTime @map("scheduled_date") @db.Date
+  startTime      DateTime @map("start_time") @db.Time
+  endTime        DateTime @map("end_time") @db.Time
+  durationMins   Int      @default(30) @map("duration_mins")
+  maxCapacity    Int      @default(1) @map("max_capacity")
+  bookedCount    Int      @default(0) @map("booked_count")
+  zoomMeetingUrl String?  @map("zoom_meeting_url") @db.Text
+  zoomMeetingId  String?  @map("zoom_meeting_id") @db.VarChar(50)
+  zoomPasscode   String?  @map("zoom_passcode") @db.VarChar(20)
+  phoneNumber    String?  @map("phone_number") @db.VarChar(20)
+  venue          String?  @db.VarChar(255)
+  interviewerId  String?  @map("interviewer_id") @db.Uuid
+  status         String   @default("active") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college        College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  interviewer    StaffMember?          @relation("InterviewerStaff", fields: [interviewerId], references: [id])
+  bookings       InterviewBooking[]
+  rescheduleFrom InterviewReschedule[] @relation("IRescheduleFrom")
+  rescheduleTo   InterviewReschedule[] @relation("IRescheduleTo")
+
+  @@index([collegeId], name: "idx_islots_college")
+  @@index([collegeId, scheduledDate], name: "idx_islots_date")
+  @@index([collegeId, status], name: "idx_islots_status")
+  @@index([interviewerId], name: "idx_islots_interviewer")
+  @@map("interview_slots")
+}
+
+model InterviewBooking {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String    @unique @map("application_course_id") @db.Uuid
+  studentId           String    @map("student_id") @db.Uuid
+  slotId              String    @map("slot_id") @db.Uuid
+  status              String    @default("booked") @db.VarChar(20)
+  interviewScore      Decimal?  @map("interview_score") @db.Decimal(5, 2)
+  interviewRemarks    String?   @map("interview_remarks") @db.Text
+  interviewOutcome    String?   @map("interview_outcome") @db.VarChar(20)
+  evaluatedBy         String?   @map("evaluated_by") @db.Uuid
+  evaluatedAt         DateTime? @map("evaluated_at") @db.Timestamptz
+  bookedAt            DateTime  @default(now()) @map("booked_at") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  applicationCourse ApplicationCourse     @relation(fields: [applicationCourseId], references: [id])
+  student           Student               @relation(fields: [studentId], references: [id])
+  slot              InterviewSlot         @relation(fields: [slotId], references: [id])
+  evaluator         StaffMember?          @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
+  reschedules       InterviewReschedule[]
+
+  @@index([applicationCourseId], name: "idx_ibookings_app_course")
+  @@index([studentId], name: "idx_ibookings_student")
+  @@index([slotId], name: "idx_ibookings_slot")
+  @@index([status], name: "idx_ibookings_status")
+  @@index([interviewOutcome], name: "idx_ibookings_outcome")
+  @@map("interview_bookings")
+}
+
+model InterviewReschedule {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId     String    @map("booking_id") @db.Uuid
+  studentId     String    @map("student_id") @db.Uuid
+  fromSlotId    String    @map("from_slot_id") @db.Uuid
+  toSlotId      String?   @map("to_slot_id") @db.Uuid
+  reason        String    @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  reviewedBy    String?   @map("reviewed_by") @db.Uuid
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewRemarks String?   @map("review_remarks") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  booking  InterviewBooking @relation(fields: [bookingId], references: [id])
+  student  Student          @relation(fields: [studentId], references: [id])
+  fromSlot InterviewSlot    @relation("IRescheduleFrom", fields: [fromSlotId], references: [id])
+  toSlot   InterviewSlot?   @relation("IRescheduleTo", fields: [toSlotId], references: [id])
+  reviewer StaffMember?     @relation("IRescheduleReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([bookingId], name: "idx_ireschedule_booking")
+  @@index([studentId], name: "idx_ireschedule_student")
+  @@index([status], name: "idx_ireschedule_status")
+  @@map("interview_reschedules")
+}
+
+model OfferLetter {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationCourseId String   @unique @map("application_course_id") @db.Uuid
+  studentId           String   @map("student_id") @db.Uuid
+  collegeId           String   @map("college_id") @db.Uuid
+  offerNumber         String   @unique @map("offer_number") @db.VarChar(30)
+  offerDate           DateTime @default(dbgenerated("CURRENT_DATE")) @map("offer_date") @db.Date
+  validUntil          DateTime @map("valid_until") @db.Date
+  tokenAmount         Decimal  @map("token_amount") @db.Decimal(10, 2)
+  tokenPaymentStatus  String   @default("pending") @map("token_payment_status") @db.VarChar(20)
+  tokenTransactionId  String?  @map("token_transaction_id") @db.Uuid
+  documentUrl         String?  @map("document_url") @db.Text
+  status              String   @default("issued") @db.VarChar(20)
+  issuedBy            String?  @map("issued_by") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
+  student           Student           @relation(fields: [studentId], references: [id])
+  college           College           @relation(fields: [collegeId], references: [id])
+  issuer            StaffMember?      @relation("IssuedByStaff", fields: [issuedBy], references: [id])
+
+  @@index([applicationCourseId], name: "idx_offers_app_course")
+  @@index([studentId], name: "idx_offers_student")
+  @@index([collegeId], name: "idx_offers_college")
+  @@index([status], name: "idx_offers_status")
+  @@index([tokenPaymentStatus], name: "idx_offers_token")
+  @@index([validUntil], name: "idx_offers_valid")
+  @@map("offer_letters")
+}

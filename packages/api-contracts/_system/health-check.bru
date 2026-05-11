@@ -1,0 +1,25 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/health
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Checks whether the API server, database, and Redis are reachable.
+  No authentication required.
+
+  Used for uptime monitoring, load balancer health probes, and debugging.
+
+  200 — all systems healthy
+  503 — one or more dependencies are down
+}

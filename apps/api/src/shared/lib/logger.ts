@@ -1,15 +1,15 @@
-import pino from 'pino'
+import pino from "pino";
 
 export const logger = pino({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  ...(process.env.NODE_ENV !== 'production' && {
+  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  ...(process.env.NODE_ENV !== "production" && {
     transport: {
-      target: 'pino-pretty',
+      target: "pino-pretty",
       options: {
         colorize: true,
-        ignore: 'pid,hostname',
-        translateTime: 'HH:MM:ss Z',
+        ignore: "pid,hostname",
+        translateTime: "HH:MM:ss Z",
       },
     },
   }),
-})
+});

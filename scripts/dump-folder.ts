@@ -1,18 +1,18 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 const PROJECT_ROOT = process.cwd();
-const OUTPUT_FILE = path.join(PROJECT_ROOT, 'output.txt');
+const OUTPUT_FILE = path.join(PROJECT_ROOT, "output.txt");
 
 const IGNORE_DIRS = new Set([
-  'node_modules',
-  '.git',
-  'dist',
-  'build',
-  'coverage',
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  "coverage",
 ]);
 
-const ALLOWED_EXTENSIONS = new Set(['.ts', '.js', '.json', '.env', '.md']);
+const ALLOWED_EXTENSIONS = new Set([".ts", ".js", ".json", ".env", ".md"]);
 
 function walk(dir: string, fileList: string[] = []): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -58,11 +58,11 @@ function dumpFolder(targetRelativePath: string) {
     output.push(`// ========================================`);
     output.push(`// File: ${relativePath}`);
     output.push(`// ========================================`);
-    output.push(fs.readFileSync(file, 'utf8'));
-    output.push('\n');
+    output.push(fs.readFileSync(file, "utf8"));
+    output.push("\n");
   }
 
-  fs.writeFileSync(OUTPUT_FILE, output.join('\n'), 'utf8');
+  fs.writeFileSync(OUTPUT_FILE, output.join("\n"), "utf8");
 
   console.log(`Dump complete.`);
   console.log(`Output written to: ${OUTPUT_FILE}`);
@@ -71,8 +71,8 @@ function dumpFolder(targetRelativePath: string) {
 const targetFolder = process.argv[2];
 
 if (!targetFolder) {
-  console.error('Please provide a folder path.');
-  console.error('Example: npm run dump -- ./src/modules/auth');
+  console.error("Please provide a folder path.");
+  console.error("Example: npm run dump -- ./src/modules/auth");
   process.exit(1);
 }
 

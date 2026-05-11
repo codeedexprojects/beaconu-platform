@@ -1,6 +1,10 @@
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { env } from '@/shared/config/env'
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { env } from "@/shared/config/env";
 
 export const s3Client = new S3Client({
   region: env.AWS_REGION,
@@ -8,7 +12,7 @@ export const s3Client = new S3Client({
     accessKeyId: env.AWS_ACCESS_KEY_ID,
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
   },
-})
+});
 
 export async function generateUploadUrl(
   key: string,
@@ -19,8 +23,8 @@ export async function generateUploadUrl(
     Bucket: env.AWS_S3_BUCKET,
     Key: key,
     ContentType: contentType,
-  })
-  return getSignedUrl(s3Client, command, { expiresIn })
+  });
+  return getSignedUrl(s3Client, command, { expiresIn });
 }
 
 export async function generateDownloadUrl(
@@ -30,6 +34,6 @@ export async function generateDownloadUrl(
   const command = new GetObjectCommand({
     Bucket: env.AWS_S3_BUCKET,
     Key: key,
-  })
-  return getSignedUrl(s3Client, command, { expiresIn })
+  });
+  return getSignedUrl(s3Client, command, { expiresIn });
 }

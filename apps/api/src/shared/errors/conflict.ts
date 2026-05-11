@@ -1,5 +1,5 @@
-import { AppError } from './app-error';
-import { ErrorCode } from '../responses/error-codes';
+import { AppError } from "./app-error";
+import { ErrorCode } from "../responses/error-codes";
 
 export class ConflictError extends AppError {
   constructor(message: string) {

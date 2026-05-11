@@ -1,7 +1,7 @@
 meta {
   name: Logout
   type: http
-  seq: 3
+  seq: 4
 }
 
 post {
@@ -13,4 +13,12 @@ post {
 headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Invalidates the current Blink App session.
+  Clears the refreshToken cookie.
+
+  Safe to call even if the token has already expired.
+  Works for all Blink App user types.
 }
