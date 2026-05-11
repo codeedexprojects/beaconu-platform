@@ -6,6 +6,8 @@ export type Permission =
   | 'colleges.manage'
   | 'universities.view'
   | 'universities.manage'
+  | 'university-types.view'
+  | 'university-types.manage'
   | 'students.view'
   | 'leads.view'
   | 'leads.manage'
@@ -26,6 +28,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   super_admin: [
     'colleges.view', 'colleges.manage',
     'universities.view', 'universities.manage',
+    'university-types.view', 'university-types.manage',
     'students.view',
     'leads.view', 'leads.manage',
     'counsellors.view', 'counsellors.manage',
@@ -38,6 +41,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
   sub_admin: [
     'colleges.view',
     'universities.view',
+    'university-types.view',
     'students.view',
     'leads.view', 'leads.manage',
     'counsellors.view',

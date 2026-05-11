@@ -12,6 +12,8 @@ const ROUTE_PERMISSIONS: Record<string, Permission> = {
   '/admins': 'admins.view',
   '/settings': 'settings.view',
   '/universities': 'universities.view',
+  '/university-types': 'university-types.view',
+  '/colleges': 'colleges.view',
 }
 
 export default function DashboardLayout({
