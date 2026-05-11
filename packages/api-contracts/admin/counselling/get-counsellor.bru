@@ -1,0 +1,22 @@
+meta {
+  name: Get Counsellor
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counselling/{{counsellorId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:pre-request {
+  const counsellorId = bru.getEnvVar("counsellorId");
+  if (!counsellorId) {
+    throw new Error("counsellorId is not set. Run 'Get Profile' as a counsellor first.");
+  }
+}

@@ -70,6 +70,7 @@ model Student {
 
 model PlatformAdmin {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platformRoleId String?   @map("platform_role_id") @db.Uuid
   fullName     String    @map("full_name") @db.VarChar(255)
   email        String    @unique @db.VarChar(255)
   passwordHash String    @map("password_hash") @db.Text
@@ -85,8 +86,41 @@ model PlatformAdmin {
   newsAlerts           NewsAlert[]
   entranceExams        EntranceExam[]
   blogs                Blog[]         @relation("BlogReviewer")
+  platformRole         PlatformRole?  @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
 
+  @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")
+}
+
+model PlatformRole {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @unique @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  permissions    PlatformRolePermission[]
+  platformAdmins PlatformAdmin[]
+
+  @@map("platform_roles")
+}
+
+model PlatformRolePermission {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platformRoleId String   @map("platform_role_id") @db.Uuid
+  permissionCode String   @map("permission_code") @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  platformRole PlatformRole @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([platformRoleId, permissionCode], name: "uq_platform_role_permission")
+  @@index([platformRoleId], name: "idx_platform_role_perms_role")
+  @@index([permissionCode], name: "idx_platform_role_perms_code")
+  @@map("platform_role_permissions")
 }
 
 model CollegeRole {

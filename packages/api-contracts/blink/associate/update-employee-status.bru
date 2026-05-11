@@ -1,0 +1,29 @@
+meta {
+  name: Update Employee Status
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/associate/employees/{{employeeId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "active"
+  }
+}
+
+script:pre-request {
+  const employeeId = bru.getEnvVar("employeeId");
+  if (!employeeId) {
+    throw new Error("employeeId is not set. Run 'Register Associate Employee' first.");
+  }
+}

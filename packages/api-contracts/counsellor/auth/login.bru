@@ -1,11 +1,11 @@
 meta {
   name: Login
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
-  url: {{baseUrl}}/api/v1/blink/auth/login
+  url: {{baseUrl}}/api/v1/counsellor/auth/login
   body: json
   auth: none
 }
@@ -16,7 +16,7 @@ headers {
 
 body:json {
   {
-    "email": "john@agency.com",
+    "email": "meera@counsellor.com",
     "password": "Password@123"
   }
 }
@@ -28,7 +28,7 @@ script:post-response {
       bru.setEnvVar("accessToken", data.data.accessToken);
     }
     if (data.data && data.data.user && data.data.user.id) {
-      bru.setEnvVar("associateAdminId", data.data.user.id);
+      bru.setEnvVar("counsellorId", data.data.user.id);
     }
   }
 }
