@@ -2,8 +2,10 @@ import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
 import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
 import { PlatformRolesController } from "../controllers/platform-roles.controller";
+import { PlatformUsersController } from "../controllers/platform-users.controller";
 
 const router: Router = Router();
+
 
 router.get(
   "/permissions",
@@ -30,6 +32,12 @@ router.put(
   authorizeUserType("platform_admin"),
   authorize("platform.roles.manage"),
   PlatformRolesController.updateRolePermissions,
+);
+router.get(
+  "/profiles",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  PlatformUsersController.getAllProfiles,
 );
 
 export default router;

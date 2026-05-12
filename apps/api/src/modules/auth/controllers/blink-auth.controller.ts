@@ -25,6 +25,21 @@ export class BlinkAuthController {
     }
   }
 
+  static async registerEmployee(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await AuthService.registerEmployee(req.body);
+      return res
+        .status(201)
+        .json(ApiResponse.success(result.message, { user: result.user }));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await AuthService.loginBlink(req.body);

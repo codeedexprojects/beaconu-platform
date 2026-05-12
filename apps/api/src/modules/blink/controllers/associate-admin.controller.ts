@@ -40,6 +40,26 @@ export class AssociateAdminController {
     }
   }
 
+  static async listPendingEmployees(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const result = await BlinkService.listPendingEmployees(req.userId!);
+      return res
+        .status(200)
+        .json(
+          ApiResponse.success(
+            "Pending employees fetched successfully",
+            result,
+          ),
+        );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async updateEmployeeStatus(
     req: Request,
     res: Response,
@@ -56,6 +76,29 @@ export class AssociateAdminController {
         .status(200)
         .json(
           ApiResponse.success("Employee status updated successfully", result),
+        );
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async approveEmployeeStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const id = req.params.id as string;
+      const status = req.body.status;
+
+      const result = await BlinkService.updateBlinkUserStatus(id, status);
+
+      return res
+        .status(200)
+        .json(
+          ApiResponse.success(
+            "Employee status updated by Platform Admin",
+            result,
+          ),
         );
     } catch (error) {
       next(error);

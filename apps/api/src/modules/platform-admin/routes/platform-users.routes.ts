@@ -11,5 +11,18 @@ router.get(
   authorizeUserType("platform_admin"),
   PlatformUsersController.getAllProfiles,
 );
+router.get(
+  "/blink-users/pending",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  PlatformUsersController.getPendingBlinkUsers,
+);
+
+router.patch(
+  "/blink-users/:id/status",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  PlatformUsersController.updateBlinkUserStatus,
+);
 
 export default router;

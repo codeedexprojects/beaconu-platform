@@ -1,0 +1,20 @@
+meta {
+  name: List Pending Employees
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/employees/pending
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Endpoint for Associate Admins to see employees who registered themselves using the agency registration number and are waiting for approval.
+  Requires: Associate Admin access token.
+}

@@ -1,21 +1,18 @@
-"use client";
+'use client'
 
-import { useEffect } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useEffect } from 'react'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 interface GlobalErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }
 
 // global-error replaces the root layout — must include <html> and <body>
-export default function GlobalError({
-  error,
-  reset,
-}: GlobalErrorProps): React.JSX.Element {
+export default function GlobalError({ error, reset }: GlobalErrorProps): React.JSX.Element {
   useEffect(() => {
-    console.error("[GlobalError]", error);
-  }, [error]);
+    console.error('[GlobalError]', error)
+  }, [error])
 
   return (
     <html lang="en">
@@ -29,13 +26,10 @@ export default function GlobalError({
           <div className="space-y-2">
             <h1 className="text-xl font-semibold text-white">Critical error</h1>
             <p className="text-sm text-white/40 max-w-sm">
-              The application encountered a fatal error. Please refresh the
-              page.
+              The application encountered a fatal error. Please refresh the page.
             </p>
             {error.digest && (
-              <p className="text-xs text-white/20 font-mono">
-                Error ID: {error.digest}
-              </p>
+              <p className="text-xs text-white/20 font-mono">Error ID: {error.digest}</p>
             )}
           </div>
           <button
@@ -48,5 +42,5 @@ export default function GlobalError({
         </div>
       </body>
     </html>
-  );
+  )
 }

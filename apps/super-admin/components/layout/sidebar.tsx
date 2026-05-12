@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Building2,
@@ -18,133 +18,85 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuthStore } from "@/store";
-import { useRbac } from "@/hooks/use-rbac";
-import type { Permission } from "@/lib/rbac";
+  UserPlus,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useAuthStore } from '@/store'
+import { useRbac } from '@/hooks/use-rbac'
+import type { Permission } from '@/lib/rbac'
 
 interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ElementType;
-  permission?: Permission;
+  href: string
+  label: string
+  icon: React.ElementType
+  permission?: Permission
 }
 
 interface NavSection {
-  label: string;
-  items: NavItem[];
+  label: string
+  items: NavItem[]
 }
 
 const navSections: NavSection[] = [
   {
-    label: "Overview",
-    items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
-  },
-  {
-    label: "Institutions",
+    label: 'Overview',
     items: [
-      {
-        href: "/colleges",
-        label: "Colleges",
-        icon: Building2,
-        permission: "colleges.view",
-      },
-      {
-        href: "/universities",
-        label: "Universities",
-        icon: GraduationCap,
-        permission: "universities.view",
-      },
+      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     ],
   },
   {
-    label: "People",
+    label: 'Institutions',
     items: [
-      {
-        href: "/students",
-        label: "Students",
-        icon: Users,
-        permission: "students.view",
-      },
-      {
-        href: "/leads",
-        label: "Student Leads",
-        icon: Target,
-        permission: "leads.view",
-      },
-      {
-        href: "/counsellors",
-        label: "Counsellors",
-        icon: HeartHandshake,
-        permission: "counsellors.view",
-      },
+      { href: '/colleges', label: 'Colleges', icon: Building2, permission: 'colleges.view' },
+      { href: '/universities', label: 'Universities', icon: GraduationCap, permission: 'universities.view' },
+      { href: '/university-types', label: 'University Types', icon: GraduationCap, permission: 'university-types.view' },
     ],
   },
   {
-    label: "Content",
+    label: 'People',
     items: [
-      {
-        href: "/blogs",
-        label: "Blogs",
-        icon: FileText,
-        permission: "content.view",
-      },
-      {
-        href: "/articles",
-        label: "Articles",
-        icon: BookOpen,
-        permission: "content.view",
-      },
-      {
-        href: "/news",
-        label: "News & Alerts",
-        icon: Newspaper,
-        permission: "content.view",
-      },
-      {
-        href: "/exams",
-        label: "Entrance Exams",
-        icon: PenLine,
-        permission: "exams.view",
-      },
-      {
-        href: "/events",
-        label: "Events",
-        icon: Calendar,
-        permission: "events.view",
-      },
+      { href: '/students', label: 'Students', icon: Users, permission: 'students.view' },
+      { href: '/student-leads', label: 'Student Leads', icon: Target, permission: 'leads.view' },
+      { href: '/counsellors', label: 'Counsellors', icon: HeartHandshake, permission: 'counsellors.view' },
     ],
   },
   {
-    label: "Platform",
+    label: 'Content',
     items: [
-      {
-        href: "/admins",
-        label: "Admins",
-        icon: ShieldCheck,
-        permission: "admins.view",
-      },
-      {
-        href: "/settings",
-        label: "Settings",
-        icon: Settings,
-        permission: "settings.view",
-      },
+      { href: '/blogs', label: 'Blogs', icon: FileText, permission: 'content.view' },
+      { href: '/articles', label: 'Articles', icon: BookOpen, permission: 'content.view' },
+      { href: '/news-alerts', label: 'News & Alerts', icon: Newspaper, permission: 'content.view' },
+      { href: '/entrance-exams', label: 'Entrance Exams', icon: PenLine, permission: 'exams.view' },
+      { href: '/events', label: 'Events', icon: Calendar, permission: 'events.view' },
     ],
   },
-];
+  {
+    label: 'Platform',
+    items: [
+      { href: '/admins', label: 'Admins', icon: ShieldCheck, permission: 'admins.view' },
+      { href: '/roles', label: 'Roles', icon: ShieldCheck, permission: 'admins.view' },
+      { href: '/settings', label: 'Settings', icon: Settings, permission: 'settings.view' },
+    ],
+  },
+  {
+    label: 'Blink',
+    items: [
+      { href: '/blink/requests', label: 'Registration Requests', icon: UserPlus, permission: 'admins.view' },
+      { href: '/blink/users', label: 'Blink Users', icon: Users, permission: 'admins.view' },
+    ],
+  },
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { admin, clearAuth } = useAuthStore();
-  const { can, role } = useRbac();
+  const pathname = usePathname()
+  const router = useRouter()
+  const { admin, clearAuth } = useAuthStore()
+  const { can, role } = useRbac()
 
   function handleLogout() {
-    clearAuth();
-    router.push("/login");
+    clearAuth()
+    router.push('/login')
   }
 
   return (
@@ -155,9 +107,7 @@ export function Sidebar() {
           <span className="text-sm font-bold text-white">B</span>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-bold text-white tracking-wide">
-            BeaconU
-          </span>
+          <span className="text-sm font-bold text-white tracking-wide">BeaconU</span>
           <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-widest">
             Super Admin
           </span>
@@ -170,8 +120,8 @@ export function Sidebar() {
           {navSections.map((section) => {
             const visibleItems = section.items.filter(
               (item) => !item.permission || can(item.permission),
-            );
-            if (visibleItems.length === 0) return null;
+            )
+            if (visibleItems.length === 0) return null
 
             return (
               <div key={section.label}>
@@ -181,40 +131,37 @@ export function Sidebar() {
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
                     const isActive =
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname === item.href ||
-                          pathname.startsWith(item.href + "/");
+                      item.href === '/'
+                        ? pathname === '/'
+                        : pathname === item.href || pathname.startsWith(item.href + '/')
                     return (
                       <li key={item.href}>
                         <Link
                           href={item.href}
                           className={cn(
-                            "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
+                            'group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150',
                             isActive
-                              ? "bg-primary text-white shadow-sm shadow-primary/20"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white",
+                              ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                              : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-white',
                           )}
                         >
                           <item.icon
                             className={cn(
-                              "h-4 w-4 shrink-0 transition-colors",
+                              'h-4 w-4 shrink-0 transition-colors',
                               isActive
-                                ? "text-white"
-                                : "text-sidebar-foreground/60 group-hover:text-white",
+                                ? 'text-white'
+                                : 'text-sidebar-foreground/60 group-hover:text-white',
                             )}
                           />
                           <span className="truncate">{item.label}</span>
-                          {isActive && (
-                            <ChevronRight className="ml-auto h-3 w-3 opacity-60" />
-                          )}
+                          {isActive && <ChevronRight className="ml-auto h-3 w-3 opacity-60" />}
                         </Link>
                       </li>
-                    );
+                    )
                   })}
                 </ul>
               </div>
-            );
+            )
           })}
         </nav>
       </ScrollArea>
@@ -223,14 +170,12 @@ export function Sidebar() {
       <div className="shrink-0 border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-lg px-2 py-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
-            {admin?.fullName?.charAt(0) ?? "A"}
+            {admin?.fullName?.charAt(0) ?? 'A'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {admin?.fullName ?? "Admin"}
-            </p>
+            <p className="truncate text-sm font-medium text-white">{admin?.fullName ?? 'Admin'}</p>
             <p className="truncate text-[11px] text-sidebar-foreground/50 capitalize">
-              {role?.replace("_", " ")}
+              {role?.replace('_', ' ')}
             </p>
           </div>
           <button
@@ -243,5 +188,5 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
-  );
+  )
 }
