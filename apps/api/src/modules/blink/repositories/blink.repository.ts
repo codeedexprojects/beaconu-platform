@@ -51,9 +51,15 @@ export class BlinkRepository {
     });
   }
 
-  static async findEmployeesByParent(associateParentId: string) {
+  static async findEmployeesByParent(
+    associateParentId: string,
+    status?: string,
+  ) {
     return prisma.blinkUser.findMany({
-      where: { associateParentId },
+      where: {
+        associateParentId,
+        ...(status ? { status } : {}),
+      },
       include: { blinkRole: true },
       orderBy: { createdAt: "desc" },
     });

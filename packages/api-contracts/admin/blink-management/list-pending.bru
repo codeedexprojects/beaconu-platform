@@ -1,0 +1,20 @@
+meta {
+  name: List Pending Blink Users
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/users/blink-users/pending
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Platform Admin endpoint to list all Blink users (Associate Admins or Employees) waiting for approval.
+  Requires: Platform Admin access token.
+}

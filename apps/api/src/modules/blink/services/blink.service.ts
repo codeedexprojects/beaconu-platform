@@ -1,7 +1,7 @@
 import { prisma } from "@beaconu/db";
 import { CryptoUtils } from "@/shared/utils";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
-import { ACCOUNT_STATUS } from "@/shared/constants";
+import { ACCOUNT_STATUS, AccountStatus } from "@/shared/constants";
 import { BLINK_ROLES } from "../blink.permissions";
 import { BlinkRepository } from "../repositories/blink.repository";
 import {
@@ -37,7 +37,7 @@ export class BlinkService {
       phoneNumber: data.phone_number,
       associateParentId: data.associate_parent_id,
       roleId: role.id,
-      status: ACCOUNT_STATUS.PENDING_APPROVAL,
+      status: ACCOUNT_STATUS.ACTIVE,
     });
 
     return {
@@ -117,6 +117,22 @@ export class BlinkService {
     }));
   }
 
+  static async listPendingEmployees(associateAdminId: string) {
+    const employees = await BlinkRepository.findEmployeesByParent(
+      associateAdminId,
+      ACCOUNT_STATUS.PENDING_APPROVAL,
+    );
+    return employees.map((e) => ({
+      id: e.id,
+      fullName: e.fullName,
+      email: e.email,
+      phoneNumber: e.phoneNumber,
+      status: e.status,
+      roleSlug: e.blinkRole.slug,
+      createdAt: e.createdAt,
+    }));
+  }
+
   static async updateAssociateEmployeeStatus(
     associateAdminId: string,
     employeeId: string,
@@ -154,5 +170,12 @@ export class BlinkService {
       roleSlug: user.blinkRole.slug,
       status: user.status,
     };
+  }
+
+  static async updateBlinkUserStatus(id: string, status: AccountStatus) {
+    const user = await BlinkRepository.findById(id);
+    if (!user) throw new NotFoundError("User not found");
+
+    return await BlinkRepository.updateStatus(id, status);
   }
 }

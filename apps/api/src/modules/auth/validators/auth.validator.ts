@@ -4,6 +4,7 @@ import { commonSchemas } from "@/shared/validators";
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
+  agency_reg_number: z.string().trim().optional(),
 });
 
 export const platformLoginSchema = z.object({
@@ -42,9 +43,24 @@ export const registerAssociateAdminSchema = z
     path: ["confirm_password"],
   });
 
+export const registerEmployeeSchema = z
+  .object({
+    full_name: z.string().trim().min(1),
+    email: commonSchemas.email,
+    agency_reg_number: z.string().trim().min(1),
+    password: commonSchemas.password,
+    confirm_password: commonSchemas.password,
+    phone_number: z.string().trim().optional(),
+  })
+  .refine((data) => data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PlatformLoginInput = z.infer<typeof platformLoginSchema>;
 export type RegisterCounsellorInput = z.infer<typeof registerCounsellorSchema>;
 export type RegisterAssociateAdminInput = z.infer<
   typeof registerAssociateAdminSchema
 >;
+export type RegisterEmployeeInput = z.infer<typeof registerEmployeeSchema>;

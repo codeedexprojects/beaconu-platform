@@ -20,7 +20,9 @@ import {
   PlatformLoginInput,
   RegisterCounsellorInput,
   RegisterAssociateAdminInput,
+  RegisterEmployeeInput,
 } from "../validators/auth.validator";
+import { BlinkRepository } from "../../blink/repositories/blink.repository";
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -51,6 +53,16 @@ export class AuthService {
       blinkUser.passwordHash,
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+
+    if (blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_ADMIN) {
+      if (
+        !data.agency_reg_number ||
+        blinkUser.agencyRegNumber !== data.agency_reg_number
+      ) {
+        throw new UnauthorizedError("Invalid agency registration number");
+      }
+    }
+
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${blinkUser.status}`);
     }
@@ -208,7 +220,7 @@ export class AuthService {
         agencyName: data.agency_name,
         agencyRegNumber: data.agency_reg_number,
         blinkRoleId: role.id,
-        status: ACCOUNT_STATUS.ACTIVE,
+        status: ACCOUNT_STATUS.PENDING_APPROVAL,
       },
       include: { blinkRole: true },
     });
@@ -237,6 +249,60 @@ export class AuthService {
         roleSlug: user.blinkRole.slug,
       },
       tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
+  static async registerEmployee(data: RegisterEmployeeInput) {
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const existingEmail = await prisma.blinkUser.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (existingEmail) throw new ConflictError("Email already exists");
+
+    const parentUser = await prisma.blinkUser.findUnique({
+      where: { agencyRegNumber: data.agency_reg_number },
+      include: { blinkRole: true },
+    });
+
+    if (!parentUser)
+      throw new NotFoundError("Agency registration number not found");
+    if (parentUser.blinkRole.slug !== BLINK_ROLES.ASSOCIATE_ADMIN) {
+      throw new ForbiddenError(
+        "Target agency is not an associate admin account",
+      );
+    }
+
+    const role = await prisma.blinkRole.findUnique({
+      where: { slug: BLINK_ROLES.ASSOCIATE_EMPLOYEE },
+    });
+    if (!role) throw new NotFoundError("Blink role not found");
+
+    const passwordHash = await CryptoUtils.hash(data.password);
+
+    const user = await prisma.blinkUser.create({
+      data: {
+        fullName: data.full_name,
+        email: normalizedEmail,
+        passwordHash,
+        phoneNumber: data.phone_number,
+        associateParentId: parentUser.id,
+        blinkRoleId: role.id,
+        status: ACCOUNT_STATUS.PENDING_APPROVAL,
+      },
+      include: { blinkRole: true },
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        status: user.status,
+        roleSlug: user.blinkRole.slug,
+      },
+      message:
+        "Registration submitted. Your account is pending approval by your agency admin.",
     };
   }
 

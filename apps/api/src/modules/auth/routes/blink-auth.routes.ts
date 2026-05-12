@@ -3,6 +3,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   loginSchema,
   registerAssociateAdminSchema,
+  registerEmployeeSchema,
 } from "../validators/auth.validator";
 import { BlinkAuthController } from "../controllers/blink-auth.controller";
 
@@ -12,6 +13,11 @@ router.post(
   "/register",
   validate(registerAssociateAdminSchema),
   BlinkAuthController.register,
+);
+router.post(
+  "/register-employee",
+  validate(registerEmployeeSchema),
+  BlinkAuthController.registerEmployee,
 );
 router.post("/login", validate(loginSchema), BlinkAuthController.login);
 router.post("/refresh-token", BlinkAuthController.refresh);
