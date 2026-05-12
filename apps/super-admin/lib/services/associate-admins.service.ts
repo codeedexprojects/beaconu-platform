@@ -28,6 +28,6 @@ export async function updateAssociateStatus(
 export async function approveEmployee(
   id: string,
   status: string,
-): Promise<any> {
+): Promise<unknown> {
   return api.patch(`/api/v1/admin/users/blink-users/${id}/status`, { status });
 }
