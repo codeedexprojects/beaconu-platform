@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
-import { 
-  Building2, 
-  Search, 
-  Plus, 
-  Filter, 
-  MoreHorizontal, 
-  MapPin, 
+import { useState, useMemo } from "react";
+import {
+  Building2,
+  Search,
+  Plus,
+  Filter,
+  MoreHorizontal,
+  MapPin,
   GraduationCap,
-  ExternalLink
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  ExternalLink,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,82 +31,83 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { formatNumber } from '@/lib/utils'
+} from "@/components/ui/dropdown-menu";
+import { formatNumber } from "@/lib/utils";
 
 const DUMMY_COLLEGES = [
   {
-    id: '1',
-    name: 'Amity University',
-    city: 'Noida',
-    state: 'Uttar Pradesh',
-    code: 'AMITY-N',
+    id: "1",
+    name: "Amity University",
+    city: "Noida",
+    state: "Uttar Pradesh",
+    code: "AMITY-N",
     courses: 42,
     students: 1240,
-    status: 'active',
-    university: { name: 'Amity Group' }
+    status: "active",
+    university: { name: "Amity Group" },
   },
   {
-    id: '2',
-    name: 'University of Hyderabad',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    code: 'UOH-01',
+    id: "2",
+    name: "University of Hyderabad",
+    city: "Hyderabad",
+    state: "Telangana",
+    code: "UOH-01",
     courses: 38,
     students: 980,
-    status: 'active',
-    university: { name: 'Central University' }
+    status: "active",
+    university: { name: "Central University" },
   },
   {
-    id: '3',
-    name: 'IIT Bombay',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    code: 'IITB-M',
+    id: "3",
+    name: "IIT Bombay",
+    city: "Mumbai",
+    state: "Maharashtra",
+    code: "IITB-M",
     courses: 56,
     students: 2100,
-    status: 'active',
-    university: { name: 'IIT Group' }
+    status: "active",
+    university: { name: "IIT Group" },
   },
   {
-    id: '4',
-    name: 'Christ University',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    code: 'CU-B',
+    id: "4",
+    name: "Christ University",
+    city: "Bengaluru",
+    state: "Karnataka",
+    code: "CU-B",
     courses: 29,
     students: 760,
-    status: 'active',
-    university: { name: 'Christ Group' }
+    status: "active",
+    university: { name: "Christ Group" },
   },
   {
-    id: '5',
-    name: 'Manipal Academy',
-    city: 'Manipal',
-    state: 'Karnataka',
-    code: 'MAHE-M',
+    id: "5",
+    name: "Manipal Academy",
+    city: "Manipal",
+    state: "Karnataka",
+    code: "MAHE-M",
     courses: 61,
     students: 1820,
-    status: 'inactive',
-    university: { name: 'Manipal Group' }
-  }
-]
+    status: "inactive",
+    university: { name: "Manipal Group" },
+  },
+];
 
 export default function CollegesPage() {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   const filteredColleges = useMemo(() => {
-    return DUMMY_COLLEGES.filter(c => 
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.city.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
-    )
-  }, [search])
+    return DUMMY_COLLEGES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.city.toLowerCase().includes(search.toLowerCase()) ||
+        c.code.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [search]);
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header 
-        title="Colleges" 
+      <Header
+        title="Colleges"
         description="Manage and monitor all onboarded colleges"
       >
         <Button className="gap-2">
@@ -154,14 +155,19 @@ export default function CollegesPage() {
               </TableHeader>
               <TableBody>
                 {filteredColleges.map((college) => (
-                  <TableRow key={college.id} className="group hover:bg-muted/30 transition-colors">
+                  <TableRow
+                    key={college.id}
+                    className="group hover:bg-muted/30 transition-colors"
+                  >
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm leading-none mb-1">{college.name}</p>
+                          <p className="font-semibold text-sm leading-none mb-1">
+                            {college.name}
+                          </p>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                             <GraduationCap className="h-3 w-3" />
                             {college.university.name}
@@ -172,11 +178,16 @@ export default function CollegesPage() {
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{college.city}, {college.state}</span>
+                        <span>
+                          {college.city}, {college.state}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-mono">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-mono"
+                      >
                         {college.code}
                       </Badge>
                     </TableCell>
@@ -188,7 +199,9 @@ export default function CollegesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={college.status === 'active' ? 'success' : 'secondary'}
+                        variant={
+                          college.status === "active" ? "success" : "secondary"
+                        }
                         className="text-[10px] capitalize"
                       >
                         {college.status}
@@ -197,7 +210,11 @@ export default function CollegesPage() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -226,5 +243,5 @@ export default function CollegesPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

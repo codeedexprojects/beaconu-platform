@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { 
-  ShieldCheck, 
-  Search, 
-  Plus, 
+import { useState, useEffect } from "react";
+import {
+  ShieldCheck,
+  Search,
+  Plus,
   MoreVertical,
   Mail,
   UserPlus,
@@ -12,13 +12,13 @@ import {
   Key,
   RefreshCw,
   Check,
-  X
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  X,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -26,29 +26,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { getAdminProfiles, type PlatformAdmin } from '@/lib/services/admins.service'
-import { approveEmployee } from '@/lib/services/associate-admins.service'
-import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
+} from "@/components/ui/table";
+import {
+  getAdminProfiles,
+  type PlatformAdmin,
+} from "@/lib/services/admins.service";
+import { approveEmployee } from "@/lib/services/associate-admins.service";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function AdminsPage() {
-  const [admins, setAdmins] = useState<PlatformAdmin[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-
+  const [admins, setAdmins] = useState<PlatformAdmin[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetchAdmins()
-  }, [])
+    fetchAdmins();
+  }, []);
 
   async function fetchAdmins() {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      
-      const data = await getAdminProfiles()
+      const data = await getAdminProfiles();
       if (data.platformAdmins.length > 0) {
-        setAdmins(data.platformAdmins)
+        setAdmins(data.platformAdmins);
       } else {
         setAdmins(
           data.blinkUsers.map((user) => ({
@@ -61,37 +62,50 @@ export default function AdminsPage() {
             lastLoginAt: undefined,
             createdAt: user.createdAt,
           })),
-        )
+        );
       }
     } catch (error) {
-      console.error('Failed to fetch admins:', error)
+      console.error("Failed to fetch admins:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-  async function handleStatusUpdate(id: string, status: 'active' | 'rejected') {
+  async function handleStatusUpdate(id: string, status: "active" | "rejected") {
     try {
-      await approveEmployee(id, status)
-      toast.success(`User ${status === 'active' ? 'approved' : 'rejected'} successfully`)
-      fetchAdmins()
+      await approveEmployee(id, status);
+      toast.success(
+        `User ${status === "active" ? "approved" : "rejected"} successfully`,
+      );
+      fetchAdmins();
     } catch (error) {
-      console.error('Failed to update status:', error)
-      toast.error('Failed to update user status')
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update user status");
     }
   }
 
-  const filteredAdmins = admins.filter(admin => 
-    admin.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    admin.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredAdmins = admins.filter(
+    (admin) =>
+      admin.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      admin.email.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title="Platform Admins" description="Manage internal administrative accounts and access levels">
+      <Header
+        title="Platform Admins"
+        description="Manage internal administrative accounts and access levels"
+      >
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchAdmins} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchAdmins}
+            disabled={isLoading}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           <Button className="gap-2 shadow-lg shadow-primary/20">
@@ -100,7 +114,7 @@ export default function AdminsPage() {
           </Button>
         </div>
       </Header>
-      
+
       <div className="flex-1 space-y-4 p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
@@ -130,83 +144,120 @@ export default function AdminsPage() {
                 {isLoading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell><Skeleton className="h-10 w-[200px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-[60px]" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                      <TableCell>
+                        <Skeleton className="h-10 w-[200px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[100px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[80px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-[60px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-8 w-8 ml-auto" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : filteredAdmins.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground"
+                    >
                       No administrators found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredAdmins.map((admin) => (
-                    <TableRow key={admin.id} className="group hover:bg-muted/30 transition-colors">
+                    <TableRow
+                      key={admin.id}
+                      className="group hover:bg-muted/30 transition-colors"
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
                             {admin.fullName.charAt(0)}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-sm">{admin.fullName}</span>
-                            <span className="text-[10px] text-muted-foreground">{admin.email}</span>
+                            <span className="font-semibold text-sm">
+                              {admin.fullName}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {admin.email}
+                            </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Shield className="h-3.5 w-3.5" />
-                          {admin.platformRole?.name || 'Admin'}
+                          {admin.platformRole?.name || "Admin"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleDateString() : 'Never'}
+                          {admin.lastLoginAt
+                            ? new Date(admin.lastLoginAt).toLocaleDateString()
+                            : "Never"}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant={
-                            admin.status === 'active' ? 'success' : 
-                            admin.status === 'pending_approval' ? 'warning' : 
-                            admin.status === 'rejected' ? 'destructive' : 
-                            'secondary'
-                          } 
+                            admin.status === "active"
+                              ? "success"
+                              : admin.status === "pending_approval"
+                                ? "warning"
+                                : admin.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
+                          }
                           className="capitalize px-2.5"
                         >
-                          {admin.status.replace('_', ' ')}
+                          {admin.status.replace("_", " ")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {admin.status === 'pending_approval' && (
+                          {admin.status === "pending_approval" && (
                             <>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                                onClick={() => handleStatusUpdate(admin.id, 'active')}
+                                onClick={() =>
+                                  handleStatusUpdate(admin.id, "active")
+                                }
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleStatusUpdate(admin.id, 'rejected')}
+                                onClick={() =>
+                                  handleStatusUpdate(admin.id, "rejected")
+                                }
                               >
                                 <X className="h-4 w-4" />
                               </Button>
                             </>
                           )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground"
+                          >
                             <Key className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </div>
@@ -220,5 +271,5 @@ export default function AdminsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

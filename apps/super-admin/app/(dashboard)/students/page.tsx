@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
+import { useState } from "react";
+import {
+  Users,
+  Search,
+  Filter,
+  MoreHorizontal,
   GraduationCap,
   Mail,
   MapPin,
   Calendar,
-  CheckCircle2
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  CheckCircle2,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -24,23 +24,66 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 
 const DUMMY_STUDENTS = [
-  { id: '1', name: 'Arjun Verma', email: 'arjun.v@gmail.com', city: 'Delhi', course: 'Computer Science', status: 'enrolled', joined: '2024-01-15' },
-  { id: '2', name: 'Sneha Reddy', email: 'sneha.r@outlook.com', city: 'Hyderabad', course: 'Business Analytics', status: 'applied', joined: '2024-02-20' },
-  { id: '3', name: 'Karthik S', email: 'karthik.s@yahoo.com', city: 'Bangalore', course: 'Mechanical Engineering', status: 'verified', joined: '2024-03-05' },
-  { id: '4', name: 'Anjali Gupta', email: 'anjali.g@gmail.com', city: 'Mumbai', course: 'Psychology', status: 'enrolled', joined: '2024-01-22' },
-  { id: '5', name: 'Rohan Mehra', email: 'rohan.m@gmail.com', city: 'Pune', course: 'Fine Arts', status: 'dropped', joined: '2024-02-10' },
-]
+  {
+    id: "1",
+    name: "Arjun Verma",
+    email: "arjun.v@gmail.com",
+    city: "Delhi",
+    course: "Computer Science",
+    status: "enrolled",
+    joined: "2024-01-15",
+  },
+  {
+    id: "2",
+    name: "Sneha Reddy",
+    email: "sneha.r@outlook.com",
+    city: "Hyderabad",
+    course: "Business Analytics",
+    status: "applied",
+    joined: "2024-02-20",
+  },
+  {
+    id: "3",
+    name: "Karthik S",
+    email: "karthik.s@yahoo.com",
+    city: "Bangalore",
+    course: "Mechanical Engineering",
+    status: "verified",
+    joined: "2024-03-05",
+  },
+  {
+    id: "4",
+    name: "Anjali Gupta",
+    email: "anjali.g@gmail.com",
+    city: "Mumbai",
+    course: "Psychology",
+    status: "enrolled",
+    joined: "2024-01-22",
+  },
+  {
+    id: "5",
+    name: "Rohan Mehra",
+    email: "rohan.m@gmail.com",
+    city: "Pune",
+    course: "Fine Arts",
+    status: "dropped",
+    joined: "2024-02-10",
+  },
+];
 
 export default function StudentsPage() {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title="Students" description="View and manage all registered students across the platform" />
-      
+      <Header
+        title="Students"
+        description="View and manage all registered students across the platform"
+      />
+
       <div className="flex-1 space-y-4 p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
@@ -76,8 +119,12 @@ export default function StudentsPage() {
                   <TableRow key={student.id}>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-sm">{student.name}</span>
-                        <span className="text-xs text-muted-foreground">{student.email}</span>
+                        <span className="font-medium text-sm">
+                          {student.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {student.email}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -93,7 +140,15 @@ export default function StudentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={student.status === 'enrolled' ? 'success' : student.status === 'dropped' ? 'destructive' : 'secondary'}>
+                      <Badge
+                        variant={
+                          student.status === "enrolled"
+                            ? "success"
+                            : student.status === "dropped"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
                         {student.status}
                       </Badge>
                     </TableCell>
@@ -113,5 +168,5 @@ export default function StudentsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

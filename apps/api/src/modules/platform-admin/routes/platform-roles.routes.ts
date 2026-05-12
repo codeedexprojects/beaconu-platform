@@ -6,7 +6,6 @@ import { PlatformUsersController } from "../controllers/platform-users.controlle
 
 const router: Router = Router();
 
-
 router.get(
   "/permissions",
   authenticate,

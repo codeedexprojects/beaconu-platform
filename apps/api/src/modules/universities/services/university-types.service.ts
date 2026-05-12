@@ -20,15 +20,15 @@ export class UniversityTypePlatformAdminService {
   }
 
   static async create(data: CreateUniversityTypeInput) {
-    const existingByName = await UniversityTypePlatformAdminRepository.findByName(
-      data.name,
-    );
-    if (existingByName) throw new ConflictError("University type name already exists");
+    const existingByName =
+      await UniversityTypePlatformAdminRepository.findByName(data.name);
+    if (existingByName)
+      throw new ConflictError("University type name already exists");
 
-    const existingBySlug = await UniversityTypePlatformAdminRepository.findBySlug(
-      data.slug,
-    );
-    if (existingBySlug) throw new ConflictError("University type slug already exists");
+    const existingBySlug =
+      await UniversityTypePlatformAdminRepository.findBySlug(data.slug);
+    if (existingBySlug)
+      throw new ConflictError("University type slug already exists");
 
     return UniversityTypePlatformAdminRepository.create({
       name: data.name,
@@ -43,18 +43,16 @@ export class UniversityTypePlatformAdminService {
     if (!existing) throw new NotFoundError("University type not found");
 
     if (data.name && data.name !== existing.name) {
-      const existingByName = await UniversityTypePlatformAdminRepository.findByName(
-        data.name,
-      );
+      const existingByName =
+        await UniversityTypePlatformAdminRepository.findByName(data.name);
       if (existingByName) {
         throw new ConflictError("University type name already exists");
       }
     }
 
     if (data.slug && data.slug !== existing.slug) {
-      const existingBySlug = await UniversityTypePlatformAdminRepository.findBySlug(
-        data.slug,
-      );
+      const existingBySlug =
+        await UniversityTypePlatformAdminRepository.findBySlug(data.slug);
       if (existingBySlug) {
         throw new ConflictError("University type slug already exists");
       }
