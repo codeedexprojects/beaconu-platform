@@ -1,20 +1,20 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { 
-  Search, 
+import { useState, useEffect } from "react";
+import {
+  Search,
   RefreshCw,
   Check,
   X,
   UserPlus,
   Mail,
-  Shield
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  Shield,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,60 +22,74 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { getPendingBlinkUsers } from '@/lib/services/admins.service'
-import { approveEmployee } from '@/lib/services/associate-admins.service'
-import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
+} from "@/components/ui/table";
+import { getPendingBlinkUsers } from "@/lib/services/admins.service";
+import { approveEmployee } from "@/lib/services/associate-admins.service";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function RegistrationRequestsPage() {
-  const [requests, setRequests] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [requests, setRequests] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetchRequests()
-  }, [])
+    fetchRequests();
+  }, []);
 
   async function fetchRequests() {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const data = await getPendingBlinkUsers()
-      setRequests(data)
+      const data = await getPendingBlinkUsers();
+      setRequests(data);
     } catch (error) {
-      console.error('Failed to fetch requests:', error)
-      toast.error('Failed to load registration requests')
+      console.error("Failed to fetch requests:", error);
+      toast.error("Failed to load registration requests");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-  async function handleStatusUpdate(id: string, status: 'active' | 'rejected') {
+  async function handleStatusUpdate(id: string, status: "active" | "rejected") {
     try {
-      await approveEmployee(id, status)
-      toast.success(`User ${status === 'active' ? 'approved' : 'rejected'} successfully`)
-      fetchRequests()
+      await approveEmployee(id, status);
+      toast.success(
+        `User ${status === "active" ? "approved" : "rejected"} successfully`,
+      );
+      fetchRequests();
     } catch (error) {
-      console.error('Failed to update status:', error)
-      toast.error('Failed to update user status')
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update user status");
     }
   }
 
-  const filteredRequests = requests.filter(req => 
-    req.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    req.email.toLowerCase().includes(search.toLowerCase()) ||
-    (req.agencyName && req.agencyName.toLowerCase().includes(search.toLowerCase()))
-  )
+  const filteredRequests = requests.filter(
+    (req) =>
+      req.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      req.email.toLowerCase().includes(search.toLowerCase()) ||
+      (req.agencyName &&
+        req.agencyName.toLowerCase().includes(search.toLowerCase())),
+  );
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title="Registration Requests" description="Review and approve new Associate Admins and Employees">
-        <Button variant="outline" size="sm" onClick={fetchRequests} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+      <Header
+        title="Registration Requests"
+        description="Review and approve new Associate Admins and Employees"
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchRequests}
+          disabled={isLoading}
+        >
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </Header>
-      
+
       <div className="flex-1 space-y-4 p-6">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -103,29 +117,47 @@ export default function RegistrationRequestsPage() {
                 {isLoading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell><Skeleton className="h-12 w-[250px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                      <TableCell>
+                        <Skeleton className="h-12 w-[250px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[150px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[100px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[100px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-8 w-16 ml-auto" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : filteredRequests.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground"
+                    >
                       No pending registration requests found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredRequests.map((req) => (
-                    <TableRow key={req.id} className="group hover:bg-muted/30 transition-colors">
+                    <TableRow
+                      key={req.id}
+                      className="group hover:bg-muted/30 transition-colors"
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
                             {req.fullName.charAt(0)}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-sm">{req.fullName}</span>
+                            <span className="font-semibold text-sm">
+                              {req.fullName}
+                            </span>
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                               <Mail className="h-3 w-3" />
                               {req.email}
@@ -134,12 +166,14 @@ export default function RegistrationRequestsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm font-medium">{req.agencyName || 'N/A'}</span>
+                        <span className="text-sm font-medium">
+                          {req.agencyName || "N/A"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Shield className="h-3.5 w-3.5" />
-                          {req.blinkRole?.name || 'User'}
+                          {req.blinkRole?.name || "User"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -149,20 +183,22 @@ export default function RegistrationRequestsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800"
-                            onClick={() => handleStatusUpdate(req.id, 'active')}
+                            onClick={() => handleStatusUpdate(req.id, "active")}
                           >
                             <Check className="h-4 w-4 mr-1" />
                             Approve
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
-                            onClick={() => handleStatusUpdate(req.id, 'rejected')}
+                            onClick={() =>
+                              handleStatusUpdate(req.id, "rejected")
+                            }
                           >
                             <X className="h-4 w-4 mr-1" />
                             Reject
@@ -178,5 +214,5 @@ export default function RegistrationRequestsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 function StatCardSkeleton() {
   return (
@@ -15,7 +15,7 @@ function StatCardSkeleton() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
@@ -31,7 +31,10 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
       </div>
       {/* Rows */}
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b last:border-0">
+        <div
+          key={i}
+          className="flex items-center gap-4 px-4 py-3.5 border-b last:border-0"
+        >
           <div className="space-y-1.5 flex-1">
             <Skeleton className="h-3.5 w-40" />
             <Skeleton className="h-2.5 w-24" />
@@ -43,7 +46,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function DashboardLoading(): React.JSX.Element {
@@ -92,7 +95,10 @@ export default function DashboardLoading(): React.JSX.Element {
               </CardHeader>
               <CardContent className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between py-1.5">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-1.5"
+                  >
                     <div className="flex items-center gap-2.5">
                       <Skeleton className="h-7 w-7 rounded-lg" />
                       <Skeleton className="h-3 w-32" />
@@ -124,5 +130,5 @@ export default function DashboardLoading(): React.JSX.Element {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -50,10 +50,7 @@ export class AssociateAdminController {
       return res
         .status(200)
         .json(
-          ApiResponse.success(
-            "Pending employees fetched successfully",
-            result,
-          ),
+          ApiResponse.success("Pending employees fetched successfully", result),
         );
     } catch (error) {
       next(error);

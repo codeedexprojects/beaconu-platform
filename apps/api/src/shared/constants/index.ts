@@ -20,4 +20,5 @@ export const ACCOUNT_STATUS = {
   PENDING_APPROVAL: "pending_approval",
   REJECTED: "rejected",
 } as const;
-export type AccountStatus = typeof ACCOUNT_STATUS[keyof typeof ACCOUNT_STATUS];
+export type AccountStatus =
+  (typeof ACCOUNT_STATUS)[keyof typeof ACCOUNT_STATUS];

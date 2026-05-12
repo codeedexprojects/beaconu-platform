@@ -9,7 +9,9 @@ const slugSchema = z
 
 const optionalBooleanFromQuery = z
   .union([z.boolean(), z.enum(["true", "false"])])
-  .transform((value) => (typeof value === "boolean" ? value : value === "true"));
+  .transform((value) =>
+    typeof value === "boolean" ? value : value === "true",
+  );
 
 export const universityTypeSchemas = {
   idParam: z.object({
@@ -36,6 +38,12 @@ export const universityTypeSchemas = {
     }),
 };
 
-export type CreateUniversityTypeInput = z.infer<typeof universityTypeSchemas.create>;
-export type UpdateUniversityTypeInput = z.infer<typeof universityTypeSchemas.update>;
-export type ListUniversityTypesQuery = z.infer<typeof universityTypeSchemas.listQuery>;
+export type CreateUniversityTypeInput = z.infer<
+  typeof universityTypeSchemas.create
+>;
+export type UpdateUniversityTypeInput = z.infer<
+  typeof universityTypeSchemas.update
+>;
+export type ListUniversityTypesQuery = z.infer<
+  typeof universityTypeSchemas.listQuery
+>;

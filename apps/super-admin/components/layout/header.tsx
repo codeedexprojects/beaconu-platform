@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { Bell, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Bell, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,32 +10,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useAuthStore } from '@/store'
-import { useRouter } from 'next/navigation'
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthStore } from "@/store";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
-  title: string
-  description?: string
-  children?: React.ReactNode
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
 }
 
 export function Header({ title, description, children }: HeaderProps) {
-  const { admin, clearAuth } = useAuthStore()
-  const router = useRouter()
+  const { admin, clearAuth } = useAuthStore();
+  const router = useRouter();
 
   function handleLogout() {
-    clearAuth()
-    router.push('/login')
+    clearAuth();
+    router.push("/login");
   }
 
   const initials = admin?.fullName
-    .split(' ')
+    .split(" ")
     .map((n) => n[0])
     .slice(0, 2)
-    .join('')
-    .toUpperCase()
+    .join("")
+    .toUpperCase();
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
@@ -43,7 +43,9 @@ export function Header({ title, description, children }: HeaderProps) {
         <div>
           <h1 className="text-base font-semibold text-foreground">{title}</h1>
           {description && (
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {description}
+            </p>
           )}
         </div>
         {children}
@@ -79,7 +81,9 @@ export function Header({ title, description, children }: HeaderProps) {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">{admin?.fullName}</p>
-                <p className="text-xs text-muted-foreground truncate">{admin?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {admin?.email}
+                </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -96,5 +100,5 @@ export function Header({ title, description, children }: HeaderProps) {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

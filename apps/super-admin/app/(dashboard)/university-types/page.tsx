@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Tag,
   Search,
@@ -10,12 +10,16 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  Loader2,
+  X,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -23,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,35 +35,127 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-
-const DUMMY_TYPES = [
-  { id: '1', name: 'Central University', slug: 'central_university', description: 'Established by an Act of Parliament', isActive: true },
-  { id: '2', name: 'State University', slug: 'state_university', description: 'Run by state governments', isActive: true },
-  { id: '3', name: 'Deemed University', slug: 'deemed_university', description: 'High-performing institutions granted autonomy', isActive: true },
-  { id: '4', name: 'Private University', slug: 'private_university', description: 'Established through State/Central Act by a sponsoring body', isActive: true },
-  { id: '5', name: 'Institute of National Importance', slug: 'ini', description: 'Premier public higher education institutions', isActive: true },
-]
+} from "@/components/ui/dropdown-menu";
+import {
+  universityTypesService,
+  UniversityType,
+} from "@/lib/services/university-types.service";
+import { apiAction } from "@/lib/api";
 
 export default function UniversityTypesPage() {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
+  const [types, setTypes] = useState<UniversityType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Modal States
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingType, setEditingType] = useState<UniversityType | null>(null);
+  const [form, setForm] = useState({ name: "", slug: "", sort_order: 0 });
+
+  const fetchTypes = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await universityTypesService.getAll();
+      setTypes(data);
+    } catch (error) {
+      console.error("Failed to fetch university types:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTypes();
+  }, [fetchTypes]);
 
   const filteredTypes = useMemo(() => {
-    return DUMMY_TYPES.filter(t => 
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.slug.toLowerCase().includes(search.toLowerCase())
-    )
-  }, [search])
+    return types.filter(
+      (t) =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.slug.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [search, types]);
 
-  const activeCount = filteredTypes.filter(t => t.isActive).length
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this university type?")) {
+      await apiAction(
+        () => universityTypesService.remove(id),
+        "Type deleted successfully",
+      );
+      fetchTypes();
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    const action = currentStatus ? "disable" : "enable";
+    if (action === "disable") {
+      await apiAction(
+        () => universityTypesService.disable(id),
+        "Type disabled successfully",
+      );
+    } else {
+      await apiAction(
+        () => universityTypesService.update(id, { is_active: true }),
+        "Type enabled successfully",
+      );
+    }
+    fetchTypes();
+  };
+
+  const handleCreateClick = () => {
+    setForm({ name: "", slug: "", sort_order: 0 });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditClick = (type: UniversityType) => {
+    setEditingType(type);
+    setForm({
+      name: type.name,
+      slug: type.slug,
+      sort_order: type.sortOrder,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await apiAction(
+      () => universityTypesService.create(form),
+      "University type created successfully",
+    );
+
+    if (result) {
+      setIsCreateModalOpen(false);
+      fetchTypes();
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingType) return;
+
+    const result = await apiAction(
+      () => universityTypesService.update(editingType.id, form),
+      "University type updated successfully",
+    );
+
+    if (result) {
+      setIsEditModalOpen(false);
+      fetchTypes();
+    }
+  };
+
+  const activeCount = filteredTypes.filter((t) => t.isActive).length;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full relative">
       <Header
         title="University Types"
         description="Manage university classification types"
       >
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={handleCreateClick}>
           <Plus className="h-4 w-4" />
           Add Type
         </Button>
@@ -88,80 +184,271 @@ export default function UniversityTypesPage() {
 
         <Card className="border-none shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-[250px]">Name</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead className="flex-1">Description</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTypes.map((type) => (
-                  <TableRow key={type.id} className="group hover:bg-muted/30 transition-colors">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                          <Tag className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">{type.name}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-mono">
-                        {type.slug}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {type.description || '—'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center">
-                        {type.isActive ? (
-                          <Badge variant="success" className="gap-1">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="gap-1">
-                            <XCircle className="h-3 w-3" />
-                            Inactive
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="gap-2">
-                            <Edit className="h-4 w-4 text-muted-foreground" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  Loading types...
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[250px]">Name</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead className="text-center">Sort Order</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredTypes.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-10 text-muted-foreground"
+                      >
+                        No university types found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredTypes.map((type) => (
+                      <TableRow
+                        key={type.id}
+                        className="group hover:bg-muted/30 transition-colors"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <Tag className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {type.name}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] font-mono"
+                          >
+                            {type.slug}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center text-sm font-medium">
+                          {type.sortOrder}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-3">
+                            <Switch
+                              checked={type.isActive}
+                              onCheckedChange={() =>
+                                handleToggleStatus(type.id, type.isActive)
+                              }
+                            />
+                            {type.isActive ? (
+                              <Badge
+                                variant="success"
+                                className="gap-1 h-5 text-[10px] px-1.5"
+                              >
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 h-5 text-[10px] px-1.5"
+                              >
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-[160px]"
+                            >
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => handleEditClick(type)}
+                              >
+                                <Edit className="h-4 w-4 text-muted-foreground" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="gap-2 text-destructive focus:text-destructive"
+                                onClick={() => handleDelete(type.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Create Modal Overlay */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-lg">Add University Type</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleCreate}>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-name">Type Name</Label>
+                  <Input
+                    id="create-name"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder="e.g. Central University"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-slug">Slug</Label>
+                  <Input
+                    id="create-slug"
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    placeholder="e.g. central_university"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-sort">Sort Order</Label>
+                  <Input
+                    id="create-sort"
+                    type="number"
+                    value={form.sort_order}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sort_order: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+              </CardContent>
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Create Type</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Modal Overlay */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-lg">Edit University Type</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleUpdate}>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Type Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder="e.g. Central University"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-slug">Slug</Label>
+                  <Input
+                    id="edit-slug"
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    placeholder="e.g. central_university"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-sort">Sort Order</Label>
+                  <Input
+                    id="edit-sort"
+                    type="number"
+                    value={form.sort_order}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sort_order: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+              </CardContent>
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
-  )
+  );
 }
