@@ -82,11 +82,12 @@ model PlatformAdmin {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  studentLeadsAssigned StudentLead[]  @relation("AssignedAdmin")
-  newsAlerts           NewsAlert[]
-  entranceExams        EntranceExam[]
-  blogs                Blog[]         @relation("BlogReviewer")
-  platformRole         PlatformRole?  @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
+  studentLeadsAssigned      StudentLead[]              @relation("AssignedAdmin")
+  newsAlerts                NewsAlert[]
+  entranceExams             EntranceExam[]
+  blogs                     Blog[]                     @relation("BlogReviewer")
+  platformRole              PlatformRole?              @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
+  collegeOnboardingRequests CollegeOnboardingRequest[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")

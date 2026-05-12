@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/admin/university-types/{{universityTypeId}}/disable
+  url: {{baseUrl}}/api/v1/admin/universities/types/{{universityTypeId}}/disable
   body: none
   auth: none
 }
@@ -17,6 +17,6 @@ headers {
 
 docs {
   Disables a university type (sets isActive to false).
-  
+
   Requires: platform admin access token.
 }

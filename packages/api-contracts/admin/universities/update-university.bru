@@ -1,0 +1,35 @@
+meta {
+  name: Update University
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/{{universityId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "University of Delhi",
+    "city": "New Delhi",
+    "accreditation": "NAAC A++"
+  }
+}
+
+docs {
+  Updates a university.
+  Supports partial updates — only include fields to change.
+
+  Updatable fields:
+  - university_type_id, name, slug, state, city, accreditation,
+    governance_details, logo_url, metadata
+
+  Requires: platform admin access token.
+}

@@ -106,53 +106,54 @@ model College {
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  university             University              @relation(fields: [universityId], references: [id])
-  campuses               Campus[]
-  courses                Course[]
-  gallery                CollegeGallery[]
-  reviews                CollegeReview[]
-  collegeRoles           CollegeRole[]
-  staffMembers           StaffMember[]
-  blinkUsers             BlinkUser[]
-  admissionCycles        AdmissionCycle[]
-  applications           Application[]
-  enrollments            Enrollment[]
-  assessmentSections     AssessmentSection[]
-  assessmentTemplates    AssessmentTemplate[]
-  assessmentSlots        AssessmentSlot[]
-  questionTypes          QuestionType[]
-  questions              Question[]
-  interviewSlots         InterviewSlot[]
-  offerLetters           OfferLetter[]
-  feeStructures          FeeStructure[]
-  studentFeeLedger       StudentFeeLedger[]
-  transactions           Transaction[]
-  paymentReceipts        PaymentReceipt[]
-  refunds                Refund[]
-  scholarshipConfigs     ScholarshipConfig[]
-  collegePaymentAccounts CollegePaymentAccount[]
-  documentTemplates      DocumentTemplate[]
-  documentRequests       DocumentRequest[]
-  issuedDocuments        IssuedDocument[]
-  hostels                Hostel[]
-  commuteRoutes          CommuteRoute[]
-  newsAlerts             NewsAlert[]
-  articles               Article[]
-  referralCodes          ReferralCode[]
-  serviceChargeConfigs   ServiceChargeConfig[]
-  mediaKits              MediaKit[]
-  campusVisits           CampusVisit[]
-  announcements          Announcement[]
-  supportTickets         SupportTicket[]
-  antiRaggingComplaints  AntiRaggingComplaint[]
-  courseSwitchRequests   CourseSwitchRequest[]
-  admissionFormConfigs   AdmissionFormConfig[]
-  documentUploadConfigs  DocumentUploadConfig[]
-  hostelEnrollments      HostelEnrollment[]
-  commuteEnrollments     CommuteEnrollment[]
-  broadcastNotifications BroadcastNotification[]
-  institutionGroups      InstitutionGroup[]
-  institutionGroupMember InstitutionGroupMember?
+  university                University                 @relation(fields: [universityId], references: [id])
+  campuses                  Campus[]
+  courses                   Course[]
+  gallery                   CollegeGallery[]
+  reviews                   CollegeReview[]
+  collegeRoles              CollegeRole[]
+  staffMembers              StaffMember[]
+  blinkUsers                BlinkUser[]
+  admissionCycles           AdmissionCycle[]
+  applications              Application[]
+  enrollments               Enrollment[]
+  assessmentSections        AssessmentSection[]
+  assessmentTemplates       AssessmentTemplate[]
+  assessmentSlots           AssessmentSlot[]
+  questionTypes             QuestionType[]
+  questions                 Question[]
+  interviewSlots            InterviewSlot[]
+  offerLetters              OfferLetter[]
+  feeStructures             FeeStructure[]
+  studentFeeLedger          StudentFeeLedger[]
+  transactions              Transaction[]
+  paymentReceipts           PaymentReceipt[]
+  refunds                   Refund[]
+  scholarshipConfigs        ScholarshipConfig[]
+  collegePaymentAccounts    CollegePaymentAccount[]
+  documentTemplates         DocumentTemplate[]
+  documentRequests          DocumentRequest[]
+  issuedDocuments           IssuedDocument[]
+  hostels                   Hostel[]
+  commuteRoutes             CommuteRoute[]
+  newsAlerts                NewsAlert[]
+  articles                  Article[]
+  referralCodes             ReferralCode[]
+  serviceChargeConfigs      ServiceChargeConfig[]
+  mediaKits                 MediaKit[]
+  campusVisits              CampusVisit[]
+  announcements             Announcement[]
+  supportTickets            SupportTicket[]
+  antiRaggingComplaints     AntiRaggingComplaint[]
+  courseSwitchRequests      CourseSwitchRequest[]
+  admissionFormConfigs      AdmissionFormConfig[]
+  documentUploadConfigs     DocumentUploadConfig[]
+  hostelEnrollments         HostelEnrollment[]
+  commuteEnrollments        CommuteEnrollment[]
+  broadcastNotifications    BroadcastNotification[]
+  institutionGroups         InstitutionGroup[]
+  institutionGroupMember    InstitutionGroupMember?
+  collegeOnboardingRequests CollegeOnboardingRequest[]
 
   @@index([universityId], name: "idx_colleges_university")
   @@index([slug], name: "idx_colleges_slug")
@@ -160,6 +161,32 @@ model College {
   @@index([state], name: "idx_colleges_state")
   @@index([status], name: "idx_colleges_status")
   @@map("colleges")
+}
+
+model CollegeOnboardingRequest {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  collegeName       String   @map("college_name") @db.VarChar(255)
+  universityName    String?  @map("university_name") @db.VarChar(255)
+  contactPersonName String   @map("contact_person_name") @db.VarChar(255)
+  contactEmail      String   @map("contact_email") @db.VarChar(255)
+  contactPhone      String?  @map("contact_phone") @db.VarChar(20)
+  city              String?  @db.VarChar(100)
+  state             String?  @db.VarChar(100)
+  message           String?  @db.Text
+  status            String   @default("pending") @db.VarChar(20)
+  reviewedBy        String?  @map("reviewed_by") @db.Uuid
+  reviewRemarks     String?  @map("review_remarks") @db.Text
+  createdCollegeId  String?  @map("created_college_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  reviewer       PlatformAdmin? @relation(fields: [reviewedBy], references: [id])
+  createdCollege College?       @relation(fields: [createdCollegeId], references: [id])
+
+  @@index([status], name: "idx_onboard_status")
+  @@map("college_onboarding_requests")
 }
 
 model Campus {

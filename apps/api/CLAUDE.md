@@ -99,7 +99,7 @@ Every college-scoped query: `WHERE college_id = ...`. No exceptions. Staff sessi
 ## DB Rules
 
 - All changes via Prisma Migrate. Never raw ALTER TABLE.
-- Soft deletes: `status` (active/inactive/archived) or `is_active`
+- **Soft deletes only. Never `prisma.<model>.delete()`.** Use `status` (active/inactive/archived) or `isActive = false`. Repository method name: `softDeleteById`, not `deleteById`.
 - JSONB: `Json` type in Prisma. Validate structure in service with Zod before writing.
 - Transactions: `prisma.$transaction` inside services only. Pass `tx` to repos.
 - All PKs: UUID. All tables: `created_at` + `updated_at`.

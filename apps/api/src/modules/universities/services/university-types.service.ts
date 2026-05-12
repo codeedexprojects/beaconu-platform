@@ -81,16 +81,6 @@ export class UniversityTypeService {
     const existing = await UniversityTypeRepository.findById(id);
     if (!existing) throw new NotFoundError("University type not found");
 
-    try {
-      await UniversityTypeRepository.deleteById(id);
-    } catch (error: unknown) {
-      const maybePrisma = error as { code?: string };
-      if (maybePrisma.code === "P2003") {
-        throw new ConflictError(
-          "Cannot delete university type while universities are mapped to it",
-        );
-      }
-      throw error;
-    }
+    return UniversityTypeRepository.softDeleteById(id);
   }
 }
