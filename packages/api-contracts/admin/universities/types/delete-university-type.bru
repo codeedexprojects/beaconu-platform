@@ -5,7 +5,7 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/v1/admin/university-types/{{universityTypeId}}
+  url: {{baseUrl}}/api/v1/admin/universities/types/{{universityTypeId}}
   body: none
   auth: none
 }
@@ -16,7 +16,8 @@ headers {
 }
 
 docs {
-  Deletes a university type.
-  
+  Soft-deletes a university type (sets isActive to false).
+  The record is not removed from the database.
+
   Requires: platform admin access token.
 }

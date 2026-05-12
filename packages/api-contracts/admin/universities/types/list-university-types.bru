@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/admin/university-types
+  url: {{baseUrl}}/api/v1/admin/universities/types
   body: none
   auth: none
 }
@@ -21,9 +21,9 @@ headers {
 
 docs {
   Returns all university types.
-  
+
   Query Parameters:
   - is_active: Filter by active status (optional)
-  
+
   Requires: platform admin access token.
 }

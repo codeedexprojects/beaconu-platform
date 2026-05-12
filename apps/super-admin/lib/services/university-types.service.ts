@@ -26,23 +26,25 @@ export interface UpdateUniversityTypeInput {
 export const universityTypesService = {
   getAll: (isActive?: boolean) => {
     const params = isActive !== undefined ? `?is_active=${isActive}` : "";
-    return api.get<UniversityType[]>(`/api/v1/admin/university-types${params}`);
+    return api.get<UniversityType[]>(
+      `/api/v1/admin/universities/types${params}`,
+    );
   },
 
   getById: (id: string) =>
-    api.get<UniversityType>(`/api/v1/admin/university-types/${id}`),
+    api.get<UniversityType>(`/api/v1/admin/universities/types/${id}`),
 
   create: (data: CreateUniversityTypeInput) =>
-    api.post<UniversityType>("/api/v1/admin/university-types", data),
+    api.post<UniversityType>("/api/v1/admin/universities/types", data),
 
   update: (id: string, data: UpdateUniversityTypeInput) =>
-    api.patch<UniversityType>(`/api/v1/admin/university-types/${id}`, data),
+    api.patch<UniversityType>(`/api/v1/admin/universities/types/${id}`, data),
 
   disable: (id: string) =>
     api.patch<UniversityType>(
-      `/api/v1/admin/university-types/${id}/disable`,
+      `/api/v1/admin/universities/types/${id}/disable`,
       {},
     ),
 
-  remove: (id: string) => api.delete(`/api/v1/admin/university-types/${id}`),
+  remove: (id: string) => api.delete(`/api/v1/admin/universities/types/${id}`),
 };

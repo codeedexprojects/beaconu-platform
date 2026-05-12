@@ -9,7 +9,7 @@ const UNIVERSITY_TYPE_SELECT = {
   createdAt: true,
 } as const;
 
-export class UniversityTypePlatformAdminRepository {
+export class UniversityTypeRepository {
   static async listAll(filters: { isActive?: boolean } = {}) {
     return prisma.universityType.findMany({
       where: {
@@ -71,7 +71,11 @@ export class UniversityTypePlatformAdminRepository {
     });
   }
 
-  static async deleteById(id: string) {
-    return prisma.universityType.delete({ where: { id } });
+  static async softDeleteById(id: string) {
+    return prisma.universityType.update({
+      where: { id },
+      data: { isActive: false },
+      select: UNIVERSITY_TYPE_SELECT,
+    });
   }
 }

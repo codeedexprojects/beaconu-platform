@@ -1,0 +1,56 @@
+meta {
+  name: Create University
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/universities
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "university_type_id": "{{universityTypeId}}",
+    "name": "Delhi University",
+    "slug": "delhi-university",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "accreditation": "NAAC A+",
+    "governance_details": "Central university established by Parliament",
+    "logo_url": ""
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("universityId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new university.
+
+  Fields:
+  - university_type_id: UUID of an existing university type (required)
+  - name: String max 255 (required)
+  - slug: Lowercase alphanumeric with hyphens, unique (required)
+  - state: String max 100 (optional)
+  - city: String max 100 (optional)
+  - accreditation: String max 255 (optional)
+  - governance_details: Text (optional)
+  - logo_url: URL string (optional)
+  - metadata: Object (optional)
+
+  Requires: platform admin access token.
+  Saves universityId to env for use in other requests.
+}

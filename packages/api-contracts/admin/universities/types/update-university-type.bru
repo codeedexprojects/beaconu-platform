@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/admin/university-types/{{universityTypeId}}
+  url: {{baseUrl}}/api/v1/admin/universities/types/{{universityTypeId}}
   body: json
   auth: none
 }
@@ -23,8 +23,8 @@ body:json {
 }
 
 docs {
-  Updates a university type. 
-  Supports partial updates.
-  
+  Updates a university type.
+  Supports partial updates — only include fields to change.
+
   Requires: platform admin access token.
 }

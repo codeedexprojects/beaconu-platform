@@ -1,11 +1,11 @@
 meta {
-  name: Get University Type
+  name: Get University
   type: http
-  seq: 3
+  seq: 4
 }
 
 get {
-  url: {{baseUrl}}/api/v1/admin/university-types/{{universityTypeId}}
+  url: {{baseUrl}}/api/v1/admin/universities/{{universityId}}
   body: none
   auth: none
 }
@@ -16,7 +16,7 @@ headers {
 }
 
 docs {
-  Returns a specific university type by ID.
-  
+  Returns a specific university by ID, including its university type.
+
   Requires: platform admin access token.
 }

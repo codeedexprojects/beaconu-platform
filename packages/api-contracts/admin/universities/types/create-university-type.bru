@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/admin/university-types
+  url: {{baseUrl}}/api/v1/admin/universities/types
   body: json
   auth: none
 }
@@ -18,7 +18,7 @@ headers {
 body:json {
   {
     "name": "Central University",
-    "slug": "central_university",
+    "slug": "central-university",
     "sort_order": 1,
     "is_active": true
   }
@@ -35,13 +35,13 @@ script:post-response {
 
 docs {
   Creates a new university type.
-  
+
   Fields:
   - name: String (max 100)
-  - slug: String (snake_case, unique)
+  - slug: String (lowercase alphanumeric with hyphens, unique)
   - sort_order: Integer (optional, default 0)
   - is_active: Boolean (optional, default true)
-  
+
   Requires: platform admin access token.
   Saves universityTypeId to env for use in other requests.
 }
