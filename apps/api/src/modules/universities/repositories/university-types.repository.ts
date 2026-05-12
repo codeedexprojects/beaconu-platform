@@ -13,7 +13,9 @@ export class UniversityTypePlatformAdminRepository {
   static async listAll(filters: { isActive?: boolean } = {}) {
     return prisma.universityType.findMany({
       where: {
-        ...(filters.isActive !== undefined ? { isActive: filters.isActive } : {}),
+        ...(filters.isActive !== undefined
+          ? { isActive: filters.isActive }
+          : {}),
       },
       select: UNIVERSITY_TYPE_SELECT,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],

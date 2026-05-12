@@ -38,6 +38,4 @@ router.patch(
   AssociateAdminController.updateEmployeeStatus,
 );
 
-
-
 export default router;

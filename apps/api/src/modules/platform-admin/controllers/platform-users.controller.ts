@@ -48,7 +48,10 @@ export class PlatformUsersController {
       return res
         .status(200)
         .json(
-          ApiResponse.success("Pending blink users fetched successfully", result),
+          ApiResponse.success(
+            "Pending blink users fetched successfully",
+            result,
+          ),
         );
     } catch (error) {
       next(error);

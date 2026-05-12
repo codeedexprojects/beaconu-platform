@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo } from "react";
 import {
   Tag,
   Search,
@@ -10,12 +10,12 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-} from 'lucide-react'
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,27 +31,58 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 
 const DUMMY_TYPES = [
-  { id: '1', name: 'Central University', slug: 'central_university', description: 'Established by an Act of Parliament', isActive: true },
-  { id: '2', name: 'State University', slug: 'state_university', description: 'Run by state governments', isActive: true },
-  { id: '3', name: 'Deemed University', slug: 'deemed_university', description: 'High-performing institutions granted autonomy', isActive: true },
-  { id: '4', name: 'Private University', slug: 'private_university', description: 'Established through State/Central Act by a sponsoring body', isActive: true },
-  { id: '5', name: 'Institute of National Importance', slug: 'ini', description: 'Premier public higher education institutions', isActive: true },
-]
+  {
+    id: "1",
+    name: "Central University",
+    slug: "central_university",
+    description: "Established by an Act of Parliament",
+    isActive: true,
+  },
+  {
+    id: "2",
+    name: "State University",
+    slug: "state_university",
+    description: "Run by state governments",
+    isActive: true,
+  },
+  {
+    id: "3",
+    name: "Deemed University",
+    slug: "deemed_university",
+    description: "High-performing institutions granted autonomy",
+    isActive: true,
+  },
+  {
+    id: "4",
+    name: "Private University",
+    slug: "private_university",
+    description: "Established through State/Central Act by a sponsoring body",
+    isActive: true,
+  },
+  {
+    id: "5",
+    name: "Institute of National Importance",
+    slug: "ini",
+    description: "Premier public higher education institutions",
+    isActive: true,
+  },
+];
 
 export default function UniversityTypesPage() {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   const filteredTypes = useMemo(() => {
-    return DUMMY_TYPES.filter(t => 
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.slug.toLowerCase().includes(search.toLowerCase())
-    )
-  }, [search])
+    return DUMMY_TYPES.filter(
+      (t) =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.slug.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [search]);
 
-  const activeCount = filteredTypes.filter(t => t.isActive).length
+  const activeCount = filteredTypes.filter((t) => t.isActive).length;
 
   return (
     <div className="flex flex-col min-h-full">
@@ -100,7 +131,10 @@ export default function UniversityTypesPage() {
               </TableHeader>
               <TableBody>
                 {filteredTypes.map((type) => (
-                  <TableRow key={type.id} className="group hover:bg-muted/30 transition-colors">
+                  <TableRow
+                    key={type.id}
+                    className="group hover:bg-muted/30 transition-colors"
+                  >
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -112,12 +146,15 @@ export default function UniversityTypesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-mono">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-mono"
+                      >
                         {type.slug}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {type.description || '—'}
+                      {type.description || "—"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center">
@@ -137,7 +174,11 @@ export default function UniversityTypesPage() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -163,5 +204,5 @@ export default function UniversityTypesPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

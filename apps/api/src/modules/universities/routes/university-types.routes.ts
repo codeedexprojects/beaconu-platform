@@ -6,45 +6,45 @@ import { UniversityTypePlatformAdminController } from "../controllers/platformAd
 const router: Router = Router();
 
 router.get(
-	"/",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.listAll,
+  "/",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.listAll,
 );
 
 router.get(
-	"/:id",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.getById,
+  "/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.getById,
 );
 
 router.post(
-	"/",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.create,
+  "/",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.create,
 );
 
 router.patch(
-	"/:id",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.update,
+  "/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.update,
 );
 
 router.patch(
-	"/:id/disable",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.disable,
+  "/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.disable,
 );
 
 router.delete(
-	"/:id",
-	authenticate,
-	authorizeUserType("platform_admin"),
-	UniversityTypePlatformAdminController.remove,
+  "/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityTypePlatformAdminController.remove,
 );
 
 export default router;
