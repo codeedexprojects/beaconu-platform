@@ -1,0 +1,22 @@
+meta {
+  name: Delete University Type
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/university-types/{{universityTypeId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Deletes a university type.
+  
+  Requires: platform admin access token.
+}
