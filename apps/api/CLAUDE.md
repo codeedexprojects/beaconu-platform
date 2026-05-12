@@ -1,174 +1,185 @@
-# Backend Architecture Rules — BeaconU API
+# BeaconU API — CLAUDE.md
 
-## Module Structure (Domain-first, app-specific controllers)
+## Backend rules. Also read root CLAUDE.md.
 
-Every feature lives in `src/modules/<domain>/`. Each module has exactly these subdirectories:
+---
 
-```
-src/modules/<domain>/
-├── controllers/       # One file per app context (see naming below)
-├── services/          # Business logic — shared across controllers
-├── repositories/      # All DB access (Drizzle queries live here)
-├── queries/           # Reusable Drizzle query builders / fragments
-├── validators/        # Zod schemas for request validation
-└── routes/            # One route file per app context
-```
+## Module Structure
 
-### Controller naming convention
-
-Name by the **actor**, not the domain:
-
-| Actor                    | File name                          |
-| ------------------------ | ---------------------------------- |
-| Super / Platform Admin   | `platform-admin.controller.ts`     |
-| College Admin / Staff    | `college-admin.controller.ts`      |
-| Student                  | `student.controller.ts`            |
-| Blink Associate Admin    | `associate-admin.controller.ts`    |
-| Blink Associate Employee | `associate-employee.controller.ts` |
-| Campus Ambassador        | `ambassador.controller.ts`         |
-| Counsellor               | `counsellor.controller.ts`         |
-| Public (no auth)         | `public.controller.ts`             |
-| Webhook (no auth)        | `webhook.controller.ts`            |
-
-### Route file naming convention
-
-Mirrors the controller name:
+`src/modules/<domain>/` — flat, no sub-folders inside a module.
 
 ```
-routes/platform-admin.routes.ts   →  /api/v1/admin/<domain>/*
-routes/college-admin.routes.ts    →  /api/v1/college/<domain>/*
-routes/student.routes.ts          →  /api/v1/student/<domain>/*
-routes/associate.routes.ts        →  /api/v1/blink/associate/*
-routes/ambassador.routes.ts       →  /api/v1/blink/ambassador/*
-routes/public.routes.ts           →  /api/v1/public/<domain>/*
+controllers/  One file per actor
+services/     Business logic — split by entity, shared across controllers
+repositories/ Prisma writes + simple reads
+queries/      Complex reads: joins, aggregations, UI-ready DTOs
+validators/   Zod schemas only
+routes/       One file per actor
 ```
 
-## Route Mounting
+**Controller + route file naming (by actor):**
+`platform-admin` | `college-admin` | `student` | `associate-admin` | `associate-employee` | `ambassador` | `counsellor` | `public` | `webhook`
 
-`src/routes/index.ts` is the **single entry point**. No route mounting happens anywhere else (not in `app.ts`, not inside modules).
-
-Routes are grouped by consumer surface in `src/routes/`:
+**Service split: by entity, not by caller.**
 
 ```
-src/routes/
-├── index.ts          mounts each consumer group at /api/v1/<group>
-├── admin/index.ts    /api/v1/admin/*
-├── blink/index.ts    /api/v1/blink/*
-├── counsellor/index.ts  /api/v1/counsellor/*
-├── student/index.ts  /api/v1/student/*
-├── college/index.ts  /api/v1/college/*
-├── public/index.ts   /api/v1/public/*  (no auth)
-└── webhooks/index.ts /api/v1/webhooks/*  (no auth)
+universities/services/universities.service.ts       ← owns university CRUD
+universities/services/university-types.service.ts   ← owns type CRUD
+universities/controllers/platform-admin.controller.ts ← calls both services above
 ```
 
-`src/routes/index.ts` only imports group routers — never individual module routes directly:
+A controller calls multiple services from its own module. Services never split by who calls them.
+
+## Route Mounting (Two-Level)
+
+`src/routes/index.ts` → group indexes → module routes. Nothing else mounts routes.
+
+```
+src/routes/index.ts          router.use("/api/v1/admin", adminRoutes) etc.
+src/routes/admin/index.ts    router.use("/universities", adminUniversityRoutes)
+src/routes/college/index.ts  router.use("/applications", collegeAdmissionsRoutes)
+src/routes/student/index.ts  ...
+src/routes/blink/index.ts    ...
+src/routes/counsellor/index.ts
+src/routes/public/index.ts
+src/routes/webhooks/index.ts
+```
+
+## Data Access (CRITICAL)
+
+**Write:** `Controller → Service → Repository → DB`
+**Read:** `Controller → Query → DB`
+
+- Repository: writes + simple reads, no complex joins, accepts `tx` param
+- Query: joins, aggregations, UI-ready DTOs, no writes, no business logic
+
+## Layer Rules (STRICT)
+
+**Controller:** validate (Zod `.parse()`) → call ONE service OR ONE query → respond. No logic, no DB, no try/catch.
+**Service:** All business logic. Calls own repo. Calls other modules' services (never their repos). Throws `AppError`. Maps to DTOs. No Prisma directly. No `req`/`res`.
+**Repository:** Prisma only. No logic. Returns Prisma types to OWN service only.
+**Query:** Complex Prisma reads. Returns DTOs directly to controller.
+**Validator:** Zod schemas. No DB calls.
+
+## Authorization
 
 ```ts
-router.use("/api/v1/admin", adminRoutes);
-router.use("/api/v1/blink", blinkRoutes);
-// ...
+authenticate; // validates JWT → req.userId/userType/permissions/collegeId
+authorizeUserType("platform_admin"); // checks req.userType
+authorize("universities.manage"); // checks req.permissions includes code OR '*'
+
+// Standard route pattern:
+router.post(
+  "/",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("universities.manage"),
+  ctrl,
+);
 ```
 
-Each group index imports the module routes for that surface:
+- Auth middleware in route files only — never inside controllers
+- No custom per-feature auth middleware — use `authorize(code)`
+- `'*'` permission = Super Admin wildcard, bypasses all permission checks
+
+**Route auth patterns:**
+
+- `college-admin.routes.ts` → `authenticate` + `authorize(permission)`
+- `student.routes.ts` → `authenticate` only
+- `public.routes.ts` / `webhook.routes.ts` → no auth (webhooks use HMAC inside controller)
+
+## Module Interaction
+
+Modules talk via Services only. Never import another module's Repository, Query, or Prisma model. Cross-module data = plain DTOs from `packages/types`.
+
+## College Scoping
+
+Every college-scoped query: `WHERE college_id = ...`. No exceptions. Staff session carries `collegeId`. Super Admin bypasses.
+
+## DB Rules
+
+- All changes via Prisma Migrate. Never raw ALTER TABLE.
+- Soft deletes: `status` (active/inactive/archived) or `is_active`
+- JSONB: `Json` type in Prisma. Validate structure in service with Zod before writing.
+- Transactions: `prisma.$transaction` inside services only. Pass `tx` to repos.
+- All PKs: UUID. All tables: `created_at` + `updated_at`.
+
+## Error & Response
 
 ```ts
-// routes/admin/index.ts
-router.use("/auth", platformAuthRoutes);
-router.use("/roles", platformRolesRoutes);
-router.use("/counsellors", counsellingAdminRoutes);
+{ success: true, data: {...}, meta?: { total, page, limit, hasNext } }
+{ success: false, error: { code: "RESOURCE_NOT_FOUND", message: "..." } }
 ```
 
-URL prefix structure:
+Throw: `NotFoundError` `ConflictError` `ForbiddenError` `ValidationError` `UnauthorizedError`
+Central `errorHandler` formats all responses. No try/catch in controllers.
 
-```
-/api/v1/admin/*           Platform Admin (platform_admins table)
-/api/v1/college/*         College Admin / Staff
-/api/v1/student/*         Students
-/api/v1/blink/*           Blink (associate, ambassador)
-/api/v1/counsellor/*      Counsellors
-/api/v1/public/*          No auth required
-/api/v1/webhooks/*        Third-party webhooks (no auth)
-/api/v1/health            Health check
-```
+## Critical Patterns
 
-## Auth in Route Files
+**Concurrent booking:** `prisma.$transaction` + atomic decrement. Check availability inside tx.
+**Webhook idempotency:** Redis `payment-processed:{paymentId}` 24h TTL. Check before processing. Flow: verify sig → idempotency check → update txn → transfer → update ledger → receipt → notify.
+**File uploads:** S3 pre-signed URLs. Path: `/{collegeId}/{module}/{entityId}/{filename}`. 5MB (configurable).
+**Fee calc:** Lookup `application_fee_configs` (cycle + course + quota + nationality) → fallback to `admission_cycle_courses.application_fee`.
+**Referral:** localStorage + cookie 30-day. Set on registration. `applications.referral_code_id` on apply.
+**SSO (BeaconU → College Web):** Short-lived JWT (5 min) via redirect URL.
 
-- `college-admin.routes.ts` — always uses `authenticate` + `authorize(permissions)`
-- `student.routes.ts` — always uses `authenticate`
-- `public.routes.ts` — no auth middleware
-- `webhook.routes.ts` — no auth middleware (use HMAC verification inside controller)
+## Background Jobs (BullMQ)
 
-Never import auth middleware inside a controller. It belongs in the route file.
+`offer-expiry` hourly | `fee-overdue` daily midnight | `assessment-auto-submit` every min | `razorpay-transfer-retry` every 5min | `session-reminder` 1.5h before | `materialized-view-refresh` every 15min | `card-expiry` daily
 
-## Layer Responsibilities
+## Status Flows
 
-**Controller** — HTTP boundary only. Parse request, call service, return response. No DB access, no business logic.
-
-**Service** — Business logic. Calls repositories. Never imports Express types (`Request`, `Response`). Returns plain objects or throws `AppError` subclasses.
-
-**Repository** — All Drizzle queries. Never contains conditional business logic. Returns raw DB rows or throws on DB error.
-
-**Query** — Reusable Drizzle fragments (joins, where clauses, select shapes) shared across repositories. Optional — only create when two or more repositories share the same fragment.
-
-**Validator** — Zod schemas only. Export one schema per operation (e.g., `createUniversitySchema`, `updateUniversitySchema`). Used via the `validate` middleware.
+**Application:** `draft→submitted→under_review→eligibility_check→assessment_pending→assessment_completed→interview_pending→interview_completed→shortlisted→offer_issued→token_paid→enrolled|rejected|dropped_out|deferred`
+**Assessment:** `not_started→in_progress→completed|auto_submitted|terminated→under_evaluation→evaluated→result_published`
+**Transaction:** `pending→completed|failed|rejected|refunded`
+**Enrollment:** `active|on_leave|suspended|completed|withdrawn|course_switched`
+**Document:** `submitted→processing→awaiting_approval→approved|rejected→issued→collected`
+**Ticket:** `in_progress→awaiting_response→resolved→closed|reopened`
 
 ## Module Inventory
 
-| Module          | Actors                                                          |
-| --------------- | --------------------------------------------------------------- |
-| `auth`          | student, staff, blink, counsellor, platform-admin               |
-| `universities`  | platform-admin, public                                          |
-| `colleges`      | platform-admin, college-admin, public                           |
-| `admissions`    | college-admin, student                                          |
-| `assessments`   | college-admin, student                                          |
-| `interviews`    | college-admin, student                                          |
-| `payments`      | college-admin, student, webhook                                 |
-| `documents`     | college-admin, student                                          |
-| `hostel`        | college-admin, student, public                                  |
-| `commute`       | college-admin, student                                          |
-| `counselling`   | counsellor, student                                             |
-| `blink`         | associate-admin, associate-employee, ambassador, platform-admin |
-| `content`       | platform-admin, public                                          |
-| `events`        | platform-admin, college-admin, student, public                  |
-| `community`     | student                                                         |
-| `engagement`    | student                                                         |
-| `notifications` | college-admin, student                                          |
-| `support`       | college-admin, student                                          |
-| `chat`          | blink (ambassador), student                                     |
-| `staff`         | college-admin                                                   |
-| `scholarships`  | college-admin, student                                          |
-| `health`        | —                                                               |
+| Module                                                    | Controllers                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------- |
+| `auth`                                                    | student, staff, blink, counsellor, platform-admin               |
+| `universities`                                            | platform-admin, public                                          |
+| `colleges`                                                | platform-admin, college-admin, public                           |
+| `platform-admin`                                          | platform-admin (roles + user mgmt only)                         |
+| `admissions`                                              | college-admin, student                                          |
+| `assessments`                                             | college-admin, student                                          |
+| `interviews`                                              | college-admin, student                                          |
+| `payments`                                                | college-admin, student, webhook                                 |
+| `documents`                                               | college-admin, student                                          |
+| `hostel`                                                  | college-admin, student, public                                  |
+| `commute`                                                 | college-admin, student                                          |
+| `counselling`                                             | counsellor, student, platform-admin                             |
+| `blink`                                                   | associate-admin, associate-employee, ambassador, platform-admin |
+| `content`                                                 | platform-admin, public                                          |
+| `events`                                                  | platform-admin, college-admin, student, public                  |
+| `community` `engagement` `notifications` `support` `chat` | student / college-admin                                         |
+| `staff` `scholarships`                                    | college-admin                                                   |
+| `health`                                                  | —                                                               |
 
-## Shared Code (`src/shared/`)
+## Shared (`src/shared/`)
 
-```
-shared/
-├── config/       env.ts — typed env vars via zod
-├── constants/    app-wide constants
-├── errors/       AppError + subclasses (BadRequest, NotFound, Conflict, …)
-├── lib/          logger, redis, queue, s3 — infrastructure singletons
-├── middleware/   authenticate, authorize, error-handler, validate, request-id
-├── responses/    api-response, error-codes, pagination helpers
-├── types/        express.d.ts augmentation
-└── utils/        pure utility functions
-```
+`config/env.ts` | `constants/` | `errors/` (AppError subclasses) | `lib/` (logger, redis, queue, s3) | `middleware/` (authenticate, authorize, authorizeUserType, error-handler, validate, request-id) | `responses/` (api-response, pagination) | `types/express.d.ts` | `utils/`
 
-Never add domain logic to `shared/`. If something is only used by one module, it belongs in that module.
+## Code Style
 
-## Naming Rules
+- `async/await`, `const`, explicit return types on exported functions
+- Files: `kebab-case.ts` | Classes/types: `PascalCase` | Vars: `camelCase` | Constants: `UPPER_SNAKE_CASE`
+- Absolute imports: `@beaconu/db` `@beaconu/types` `@/shared/` `@/modules/`
+- No circular imports. No barrel files. No default exports (except route files).
 
-- Files: `kebab-case.ts`
-- Classes / types / interfaces: `PascalCase`
-- Functions / variables: `camelCase`
-- Zod schemas: `camelCaseSchema` (e.g., `createCollegeSchema`)
-- DB column names: `snake_case` (Drizzle convention)
+## Logging
 
-## Do Not
+Structured JSON: `timestamp, level, requestId, userId, userType, collegeId, module, action, duration`
+Log: payments, wallet changes, status transitions, auth events, errors, webhooks.
+Never log: passwords, tokens, card numbers, raw Razorpay signatures, full JSONB blobs.
 
-- Do not add business logic in controllers
-- Do not access the DB from controllers or route files
-- Do not define routes inside module files — all routes mount in `src/routes/index.ts`
-- Do not put shared utilities inside a module directory
-- Do not create a new top-level directory under `src/` — everything is a module or lives in `shared/`
-- Do not duplicate service logic across controllers — write it once in the service, call it from multiple controllers
-- Do not import module routes directly into `src/routes/index.ts` — always add them to the appropriate consumer group index
+## Anti-Patterns
+
+No: BaseRepository/Service inheritance · OOP trees · pub/sub inside monolith · CQRS · barrel files · Prisma in controllers · services split by caller · routes inside module files · module routes imported directly into routes/index.ts
+
+## Checklist
+
+1. Right module? 2. Controller thin (validate + one call + respond)? 3. Service has ALL logic? 4. Repo = writes + simple reads only? 5. Query for complex reads, no writes? 6. Cross-module via Services? 7. `$transaction` for multi-table writes? 8. Redis lock for concurrent? 9. College-scoped filter present? 10. AppError thrown? 11. State changes logged? 12. DTOs across boundaries (not raw Prisma)? 13. Zod validation on inputs? 14. OpenAPI spec updated?
