@@ -222,4 +222,29 @@ export class AuthRepository {
   static async findStudentById(id: string) {
     return prisma.student.findUnique({ where: { id } });
   }
+
+  // Blog author lookups
+  static async findBlogAuthorByEmail(email: string) {
+    return prisma.blogAuthor.findUnique({ where: { email } });
+  }
+
+  static async findBlogAuthorById(id: string) {
+    return prisma.blogAuthor.findUnique({ where: { id } });
+  }
+
+  static async updateBlogAuthorLastLogin(id: string): Promise<void> {
+    await prisma.blogAuthor.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async createBlogAuthor(data: {
+    fullName: string;
+    email: string;
+    passwordHash: string;
+    bio?: string | null;
+  }) {
+    return prisma.blogAuthor.create({ data });
+  }
 }

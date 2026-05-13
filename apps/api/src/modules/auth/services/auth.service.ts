@@ -16,10 +16,12 @@ import { AuthRepository } from "../repositories/auth.repository";
 import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
+  LoginBlogAuthorInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
   RegisterAssociateAdminInput,
   RegisterEmployeeInput,
+  RegisterBlogAuthorInput,
 } from "../validators/auth.validator";
 
 function getBlinkUserType(roleSlug: string): UserType {
@@ -376,6 +378,81 @@ export class AuthService {
     return { accessToken, refreshToken: newSession.refreshToken };
   }
 
+  static async registerBlogAuthor(data: RegisterBlogAuthorInput) {
+    const existing = await AuthRepository.findBlogAuthorByEmail(data.email);
+    if (existing) throw new ConflictError("Email already exists");
+
+    const passwordHash = await CryptoUtils.hash(data.password);
+    const author = await AuthRepository.createBlogAuthor({
+      fullName: data.full_name,
+      email: data.email,
+      passwordHash,
+      bio: data.bio ?? null,
+    });
+
+    const session = await AuthRepository.createSession({
+      userId: author.id,
+      userType: USER_TYPES.BLOG_AUTHOR,
+    });
+
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: author.id,
+      userType: USER_TYPES.BLOG_AUTHOR,
+      permissions: [],
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: author.id,
+        email: author.email,
+        fullName: author.fullName,
+        bio: author.bio,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
+  static async loginBlogAuthor(data: LoginBlogAuthorInput) {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const author = await AuthRepository.findBlogAuthorByEmail(normalizedEmail);
+    if (!author) throw new UnauthorizedError("Invalid credentials");
+
+    const isMatch = await CryptoUtils.compare(
+      data.password,
+      author.passwordHash,
+    );
+    if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+
+    if (author.status !== ACCOUNT_STATUS.ACTIVE) {
+      throw new ForbiddenError(`Account is ${author.status}`);
+    }
+
+    const session = await AuthRepository.createSession({
+      userId: author.id,
+      userType: USER_TYPES.BLOG_AUTHOR,
+    });
+
+    await AuthRepository.updateBlogAuthorLastLogin(author.id);
+
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: author.id,
+      userType: USER_TYPES.BLOG_AUTHOR,
+      permissions: [],
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: author.id,
+        email: author.email,
+        fullName: author.fullName,
+        bio: author.bio,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
   static async logout(refreshToken: string): Promise<void> {
     await AuthRepository.invalidateSession(refreshToken);
   }
@@ -435,6 +512,13 @@ export class AuthService {
       case USER_TYPES.COUNSELLOR: {
         const counsellor = await AuthRepository.findCounsellorById(userId);
         return counsellor
+          ? { roleId: undefined, collegeId: undefined, permissions: [] }
+          : null;
+      }
+
+      case USER_TYPES.BLOG_AUTHOR: {
+        const author = await AuthRepository.findBlogAuthorById(userId);
+        return author
           ? { roleId: undefined, collegeId: undefined, permissions: [] }
           : null;
       }

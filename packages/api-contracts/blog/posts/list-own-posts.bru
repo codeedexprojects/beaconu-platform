@@ -1,0 +1,36 @@
+meta {
+  name: List Own Posts
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blog/posts
+  body: none
+  auth: none
+}
+
+query {
+  ~status: pending
+  page: 1
+  limit: 10
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("blogId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  List the authenticated blog author's own posts with pagination.
+  Filter by status: pending | approved | rejected
+}
