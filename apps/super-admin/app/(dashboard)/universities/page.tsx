@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   GraduationCap,
   Search,
@@ -41,17 +42,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  universitiesService,
+import type {
   University,
   CreateUniversityInput,
   UpdateUniversityInput,
 } from "@/lib/services/universities.service";
 import {
-  universityTypesService,
-  UniversityType,
-} from "@/lib/services/university-types.service";
-import { apiAction } from "@/lib/api";
+  useUniversities,
+  useCreateUniversity,
+  useUpdateUniversity,
+  useArchiveUniversity,
+} from "@/hooks/use-universities";
+import { useUniversityTypes } from "@/hooks/use-university-types";
 
 function toSlug(value: string): string {
   return value
@@ -75,9 +77,12 @@ const EMPTY_CREATE_FORM: CreateUniversityInput = {
 
 export default function UniversitiesPage() {
   const [search, setSearch] = useState("");
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [universityTypes, setUniversityTypes] = useState<UniversityType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data: universities = [], isLoading } = useUniversities();
+  const { data: universityTypes = [] } = useUniversityTypes();
+  const createMutation = useCreateUniversity();
+  const updateMutation = useUpdateUniversity();
+  const archiveMutation = useArchiveUniversity();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -87,27 +92,6 @@ export default function UniversitiesPage() {
   const [createForm, setCreateForm] =
     useState<CreateUniversityInput>(EMPTY_CREATE_FORM);
   const [editForm, setEditForm] = useState<UpdateUniversityInput>({});
-
-  const fetchAll = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [unis, types] = await Promise.all([
-        universitiesService.getAll(),
-        universityTypesService.getAll(),
-      ]);
-      setUniversities(unis);
-      setUniversityTypes(types);
-    } catch (error) {
-      console.error("Failed to fetch universities:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchAll();
-  }, [fetchAll]);
 
   const filteredUniversities = useMemo(() => {
     const q = search.toLowerCase();
@@ -131,7 +115,7 @@ export default function UniversitiesPage() {
     }));
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     const payload: CreateUniversityInput = {
       university_type_id: createForm.university_type_id,
@@ -147,15 +131,13 @@ export default function UniversitiesPage() {
         : {}),
       ...(createForm.logo_url ? { logo_url: createForm.logo_url } : {}),
     };
-    const result = await apiAction(
-      () => universitiesService.create(payload),
-      "University created successfully",
-    );
-    if (result) {
-      setIsCreateModalOpen(false);
-      setCreateForm(EMPTY_CREATE_FORM);
-      void fetchAll();
-    }
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success("University created successfully");
+        setIsCreateModalOpen(false);
+        setCreateForm(EMPTY_CREATE_FORM);
+      },
+    });
   };
 
   const handleEditClick = (university: University) => {
@@ -173,32 +155,31 @@ export default function UniversitiesPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUniversity) return;
-    const result = await apiAction(
-      () => universitiesService.update(editingUniversity.id, editForm),
-      "University updated successfully",
+    updateMutation.mutate(
+      { id: editingUniversity.id, data: editForm },
+      {
+        onSuccess: () => {
+          toast.success("University updated successfully");
+          setIsEditModalOpen(false);
+          setEditingUniversity(null);
+        },
+      },
     );
-    if (result) {
-      setIsEditModalOpen(false);
-      setEditingUniversity(null);
-      void fetchAll();
-    }
   };
 
-  const handleArchive = async (id: string) => {
+  const handleArchive = (id: string) => {
     if (
       !confirm(
         "Archive this university? It will no longer be visible publicly.",
       )
     )
       return;
-    await apiAction(
-      () => universitiesService.archive(id),
-      "University archived",
-    );
-    void fetchAll();
+    archiveMutation.mutate(id, {
+      onSuccess: () => toast.success("University archived"),
+    });
   };
 
   return (
@@ -519,10 +500,13 @@ export default function UniversitiesPage() {
                   disabled={
                     !createForm.university_type_id ||
                     !createForm.name ||
-                    !createForm.slug
+                    !createForm.slug ||
+                    createMutation.isPending
                   }
                 >
-                  Create University
+                  {createMutation.isPending
+                    ? "Creating..."
+                    : "Create University"}
                 </Button>
               </div>
             </form>
@@ -672,7 +656,9 @@ export default function UniversitiesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </form>
           </Card>

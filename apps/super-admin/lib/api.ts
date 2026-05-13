@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import { useAuthStore } from "@/store";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -20,7 +19,31 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+// Single in-flight refresh promise so concurrent 401s all wait on the same call.
+let refreshPromise: Promise<void> | null = null;
+
+async function tryRefreshToken(): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/admin/auth/refresh-token`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    throw new ApiError(401, "Session expired. Please sign in again.");
+  }
+
+  const body = (await res.json()) as ApiResponse<{ accessToken: string }>;
+  const { admin } = useAuthStore.getState();
+  if (!admin) throw new ApiError(401, "Session expired. Please sign in again.");
+  useAuthStore.getState().setAuth(admin, body.data.accessToken);
+}
+
+async function requestWithRetry<T>(
+  path: string,
+  options: RequestInit,
+  retried: boolean,
+): Promise<T> {
   const token = useAuthStore.getState().token;
 
   const headers: Record<string, string> = {
@@ -34,11 +57,31 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
-  // Session expired
   if (res.status === 401) {
-    useAuthStore.getState().clearAuth();
-    window.location.href = "/login";
-    throw new ApiError(401, "Session expired. Please sign in again.");
+    // Second 401 after a successful refresh means the session is genuinely dead.
+    if (retried) {
+      useAuthStore.getState().clearAuth();
+      window.location.href = "/login";
+      throw new ApiError(401, "Session expired. Please sign in again.");
+    }
+
+    // First 401 — attempt a token refresh. Multiple concurrent requests share
+    // the same promise so only one refresh call hits the network.
+    if (!refreshPromise) {
+      refreshPromise = tryRefreshToken().finally(() => {
+        refreshPromise = null;
+      });
+    }
+
+    try {
+      await refreshPromise;
+    } catch {
+      useAuthStore.getState().clearAuth();
+      window.location.href = "/login";
+      throw new ApiError(401, "Session expired. Please sign in again.");
+    }
+
+    return requestWithRetry<T>(path, options, true);
   }
 
   const body = (await res.json()) as ApiResponse<T>;
@@ -48,6 +91,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   return body.data;
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  return requestWithRetry<T>(path, options, false);
 }
 
 export const api = {
@@ -79,21 +126,18 @@ export const api = {
     request<T>(path, { ...options, method: "DELETE" }),
 };
 
-// Wraps an api call with automatic toast feedback.
-// Usage: apiAction(() => api.post('/colleges', data), 'College saved')
-export async function apiAction<T>(
-  fn: () => Promise<T>,
-  successMessage: string,
-): Promise<T | null> {
-  const toastId = toast.loading("Saving...");
-  try {
-    const result = await fn();
-    toast.success(successMessage, { id: toastId });
-    return result;
-  } catch (err) {
-    const message =
-      err instanceof ApiError ? err.message : "Something went wrong";
-    toast.error(message, { id: toastId });
-    return null;
+export function getErrorMessage(error: unknown): string {
+  if (!(error instanceof ApiError))
+    return "Something went wrong. Please try again.";
+  switch (error.status) {
+    case 403:
+      return "You don't have permission to do this";
+    case 404:
+      return "Resource not found";
+    case 409:
+    case 422:
+      return error.message;
+    default:
+      return "Something went wrong. Please try again.";
   }
 }

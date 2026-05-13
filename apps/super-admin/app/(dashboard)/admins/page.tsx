@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
-  ShieldCheck,
   Search,
-  Plus,
-  MoreVertical,
-  Mail,
   UserPlus,
   Shield,
   Key,
   RefreshCw,
   Check,
   X,
+  MoreVertical,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,68 +25,49 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  getAdminProfiles,
-  type PlatformAdmin,
-} from "@/lib/services/admins.service";
-import { approveEmployee } from "@/lib/services/associate-admins.service";
+import type { PlatformAdmin } from "@/lib/services/admins.service";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { useAdminProfiles } from "@/hooks/use-admins";
+import { useApproveEmployee } from "@/hooks/use-associate-admins";
 
 export default function AdminsPage() {
-  const [admins, setAdmins] = useState<PlatformAdmin[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchAdmins();
-  }, []);
+  const { data, isLoading, refetch } = useAdminProfiles();
+  const approveMutation = useApproveEmployee();
 
-  async function fetchAdmins() {
-    setIsLoading(true);
-    try {
-      const data = await getAdminProfiles();
-      if (data.platformAdmins.length > 0) {
-        setAdmins(data.platformAdmins);
-      } else {
-        setAdmins(
-          data.blinkUsers.map((user) => ({
-            id: user.id,
-            fullName: user.fullName,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            status: user.status,
-            platformRole: user.blinkRole,
-            lastLoginAt: undefined,
-            createdAt: user.createdAt,
-          })),
-        );
-      }
-    } catch (error) {
-      console.error("Failed to fetch admins:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleStatusUpdate(id: string, status: "active" | "rejected") {
-    try {
-      await approveEmployee(id, status);
-      toast.success(
-        `User ${status === "active" ? "approved" : "rejected"} successfully`,
-      );
-      fetchAdmins();
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      toast.error("Failed to update user status");
-    }
-  }
+  const admins = useMemo<PlatformAdmin[]>(() => {
+    if (!data) return [];
+    if (data.platformAdmins.length > 0) return data.platformAdmins;
+    return data.blinkUsers.map((user) => ({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      status: user.status,
+      platformRole: user.blinkRole,
+      lastLoginAt: undefined,
+      createdAt: user.createdAt,
+    }));
+  }, [data]);
 
   const filteredAdmins = admins.filter(
     (admin) =>
       admin.fullName.toLowerCase().includes(search.toLowerCase()) ||
       admin.email.toLowerCase().includes(search.toLowerCase()),
   );
+
+  function handleStatusUpdate(id: string, status: "active" | "rejected") {
+    approveMutation.mutate(
+      { id, status },
+      {
+        onSuccess: () =>
+          toast.success(
+            `User ${status === "active" ? "approved" : "rejected"} successfully`,
+          ),
+      },
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -100,7 +79,7 @@ export default function AdminsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchAdmins}
+            onClick={() => void refetch()}
             disabled={isLoading}
           >
             <RefreshCw

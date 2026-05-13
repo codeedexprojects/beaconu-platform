@@ -15,14 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiAction } from "@/lib/api";
 import {
-  createPlatformRole,
-  getPlatformPermissions,
-  getPlatformRoles,
-  updatePlatformRolePermissions,
-  type PlatformRole,
-} from "@/lib/services/roles.service";
+  usePlatformRoles,
+  usePlatformPermissions,
+  useCreatePlatformRole,
+  useUpdateRolePermissions,
+} from "@/hooks/use-roles";
 
 type FormState = {
   name: string;
@@ -147,42 +145,25 @@ function PermissionsSelect({
 }
 
 export default function RolesPage() {
-  const [roles, setRoles] = useState<PlatformRole[]>([]);
-  const [availablePermissions, setAvailablePermissions] = useState<string[]>(
-    [],
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: roles = [], isLoading: rolesLoading } = usePlatformRoles();
+  const { data: availablePermissions = [], isLoading: permsLoading } =
+    usePlatformPermissions();
+  const isLoading = rolesLoading || permsLoading;
+
+  const createRoleMutation = useCreatePlatformRole();
+  const updatePermissionsMutation = useUpdateRolePermissions();
+
   const [createForm, setCreateForm] = useState<FormState>(initialFormState);
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
-
-  useEffect(() => {
-    void fetchData();
-  }, []);
-
-  async function fetchData() {
-    setIsLoading(true);
-    try {
-      const [rolesResponse, permissionsResponse] = await Promise.all([
-        getPlatformRoles(),
-        getPlatformPermissions(),
-      ]);
-      setRoles(rolesResponse);
-      setAvailablePermissions(permissionsResponse);
-    } catch (error) {
-      console.error("Failed to fetch roles data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   const roleCountLabel = useMemo(() => {
     if (isLoading) return "Loading...";
     return `${roles.length} roles`;
   }, [isLoading, roles.length]);
 
-  async function handleCreateRole() {
+  function handleCreateRole() {
     const name = createForm.name.trim();
     const slug = toRoleSlug(createForm.slug);
 
@@ -203,43 +184,39 @@ export default function RolesPage() {
       return;
     }
 
-    const payload = {
-      name,
-      slug,
-      permissions: createForm.permissions,
-      is_system_role: false,
-    };
-
-    const result = await apiAction(
-      () => createPlatformRole(payload),
-      "Role created successfully",
+    createRoleMutation.mutate(
+      {
+        name,
+        slug,
+        permissions: createForm.permissions,
+        is_system_role: false,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Role created successfully");
+          setCreateForm(initialFormState);
+          setIsSlugEdited(false);
+        },
+      },
     );
-
-    if (!result) return;
-
-    setCreateForm(initialFormState);
-    setIsSlugEdited(false);
-    await fetchData();
   }
 
-  function handleStartEdit(role: PlatformRole) {
+  function handleStartEdit(role: { id: string; permissions: string[] }) {
     setEditingRoleId(role.id);
     setEditingPermissions(role.permissions);
   }
 
-  async function handleSavePermissions(roleId: string) {
-    const payload = { permissions: editingPermissions };
-
-    const result = await apiAction(
-      () => updatePlatformRolePermissions(roleId, payload),
-      "Role permissions updated",
+  function handleSavePermissions(roleId: string) {
+    updatePermissionsMutation.mutate(
+      { roleId, payload: { permissions: editingPermissions } },
+      {
+        onSuccess: () => {
+          toast.success("Role permissions updated");
+          setEditingRoleId(null);
+          setEditingPermissions([]);
+        },
+      },
     );
-
-    if (!result) return;
-
-    setEditingRoleId(null);
-    setEditingPermissions([]);
-    await fetchData();
   }
 
   return (
@@ -314,8 +291,11 @@ export default function RolesPage() {
               />
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleCreateRole} disabled={isLoading}>
-                Create Role
+              <Button
+                onClick={handleCreateRole}
+                disabled={isLoading || createRoleMutation.isPending}
+              >
+                {createRoleMutation.isPending ? "Creating..." : "Create Role"}
               </Button>
             </div>
           </CardContent>
@@ -413,8 +393,11 @@ export default function RolesPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleSavePermissions(role.id)}
+                                disabled={updatePermissionsMutation.isPending}
                               >
-                                Save
+                                {updatePermissionsMutation.isPending
+                                  ? "Saving..."
+                                  : "Save"}
                               </Button>
                             </div>
                           ) : (
