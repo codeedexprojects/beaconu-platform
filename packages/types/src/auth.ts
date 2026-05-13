@@ -4,6 +4,7 @@ export enum UserType {
   StaffMember = "staff_member",
   BlinkUser = "blink_user",
   Counsellor = "counsellor",
+  BlogAuthor = "blog_author",
 }
 
 export interface JwtPayload {

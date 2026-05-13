@@ -66,6 +66,37 @@ JWT: `{ userId, userType, collegeId?, roleId?, permissions[], sessionId }`
 `main` → production | `develop` → staging | `feature/*` → work
 Branch per feature. Small PRs. Merge frequently.
 
+## Bruno API Contracts (`packages/api-contracts/`)
+
+Every API route change must be reflected in `packages/api-contracts/` in the same session.
+
+**Script rules — every `.bru` file that returns useful IDs or tokens MUST include a `script:post-response` block:**
+
+| Response data                      | Env var to set                                                          |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `data.accessToken`                 | `accessToken`                                                           |
+| `data.user.id` (on register/login) | Entity-specific ID (e.g. `blogAuthorId`, `counsellorId`)                |
+| `data.id` (created resource)       | Resource-specific ID (e.g. `blogId`, `universityId`, `collegeId`)       |
+| `data[0].id` (first item in list)  | Same resource-specific ID — lets subsequent requests use it immediately |
+
+**Pattern:**
+
+```js
+script:post-response {
+  if (res.status === 200 || res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.accessToken) {
+      bru.setEnvVar("accessToken", data.data.accessToken);
+    }
+    if (data.data && data.data.id) {
+      bru.setEnvVar("resourceId", data.data.id);
+    }
+  }
+}
+```
+
+**Environment variables** — All IDs captured by scripts must be declared in `environments/local.bru` and `environments/render.bru` (empty string is fine). Never hard-code IDs inside `.bru` files using `vars:pre-request` when the ID is meant to flow from a previous request.
+
 ## Docs
 
 - `docs/system-context.md` — business flows, decisions, locked rules

@@ -1,0 +1,38 @@
+meta {
+  name: Login Blog Author
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blog/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "riya@example.com",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.accessToken) {
+      bru.setEnvVar("accessToken", data.data.accessToken);
+    }
+    if (data.data && data.data.user && data.data.user.id) {
+      bru.setEnvVar("blogAuthorId", data.data.user.id);
+    }
+  }
+}
+
+docs {
+  Login as a blog author. Returns accessToken + sets refreshToken cookie.
+}

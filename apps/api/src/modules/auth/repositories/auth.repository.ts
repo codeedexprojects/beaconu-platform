@@ -5,6 +5,28 @@ import { SessionData } from "../auth.types";
 import { SESSION_EXPIRY_DAYS } from "@/shared/constants";
 import { UnauthorizedError } from "@/shared/errors";
 
+interface AuthBlinkUserData {
+  fullName: string;
+  email: string;
+  passwordHash: string;
+  phoneNumber?: string | null;
+  country?: string | null;
+  agencyName?: string | null;
+  agencyRegNumber?: string | null;
+  associateParentId?: string | null;
+  blinkRoleId: string;
+  status: string;
+}
+
+interface AuthCounsellorData {
+  fullName: string;
+  email: string;
+  passwordHash: string;
+  phoneNumber?: string | null;
+  counsellorType: "academic" | "mindcare";
+  status: string;
+}
+
 export class AuthRepository {
   static async createSession(data: SessionData) {
     const { userId, userType, deviceInfo, ipAddress } = data;
@@ -78,5 +100,151 @@ export class AuthRepository {
       where: { userId, userType, isActive: true },
       data: { isActive: false },
     });
+  }
+
+  // Blink user lookups
+  static async findBlinkUserByEmail(email: string) {
+    return prisma.blinkUser.findUnique({
+      where: { email },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async findBlinkUserById(id: string) {
+    return prisma.blinkUser.findUnique({
+      where: { id },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async findBlinkUserByRegNumber(regNumber: string) {
+    return prisma.blinkUser.findUnique({
+      where: { agencyRegNumber: regNumber },
+    });
+  }
+
+  static async findBlinkUserByRegNumberWithRole(regNumber: string) {
+    return prisma.blinkUser.findUnique({
+      where: { agencyRegNumber: regNumber },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async updateBlinkLastLogin(id: string): Promise<void> {
+    await prisma.blinkUser.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async findBlinkRoleBySlug(slug: string) {
+    return prisma.blinkRole.findUnique({ where: { slug } });
+  }
+
+  static async createBlinkUser(data: AuthBlinkUserData) {
+    return prisma.blinkUser.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        phoneNumber: data.phoneNumber,
+        country: data.country,
+        agencyName: data.agencyName,
+        agencyRegNumber: data.agencyRegNumber,
+        associateParentId: data.associateParentId,
+        blinkRoleId: data.blinkRoleId,
+        status: data.status,
+      },
+      include: { blinkRole: true },
+    });
+  }
+
+  // Counsellor lookups
+  static async findCounsellorByEmail(email: string) {
+    return prisma.counsellor.findUnique({ where: { email } });
+  }
+
+  static async findCounsellorById(id: string) {
+    return prisma.counsellor.findUnique({ where: { id } });
+  }
+
+  static async updateCounsellorLastLogin(id: string): Promise<void> {
+    await prisma.counsellor.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async createCounsellor(data: AuthCounsellorData) {
+    return prisma.counsellor.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        phoneNumber: data.phoneNumber,
+        counsellorType: data.counsellorType,
+        status: data.status,
+      },
+    });
+  }
+
+  // Platform admin lookups
+  static async findPlatformAdminByEmail(email: string) {
+    return prisma.platformAdmin.findUnique({
+      where: { email },
+      include: { platformRole: { include: { permissions: true } } },
+    });
+  }
+
+  static async findPlatformAdminById(id: string) {
+    return prisma.platformAdmin.findUnique({
+      where: { id },
+      include: { platformRole: { include: { permissions: true } } },
+    });
+  }
+
+  static async updatePlatformAdminLastLogin(id: string): Promise<void> {
+    await prisma.platformAdmin.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  // Staff member lookup
+  static async findStaffMemberById(id: string) {
+    return prisma.staffMember.findUnique({
+      where: { id },
+      include: { collegeRole: { include: { permissions: true } } },
+    });
+  }
+
+  // Student lookup
+  static async findStudentById(id: string) {
+    return prisma.student.findUnique({ where: { id } });
+  }
+
+  // Blog author lookups
+  static async findBlogAuthorByEmail(email: string) {
+    return prisma.blogAuthor.findUnique({ where: { email } });
+  }
+
+  static async findBlogAuthorById(id: string) {
+    return prisma.blogAuthor.findUnique({ where: { id } });
+  }
+
+  static async updateBlogAuthorLastLogin(id: string): Promise<void> {
+    await prisma.blogAuthor.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async createBlogAuthor(data: {
+    fullName: string;
+    email: string;
+    passwordHash: string;
+    bio?: string | null;
+  }) {
+    return prisma.blogAuthor.create({ data });
   }
 }

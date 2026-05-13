@@ -72,4 +72,8 @@ export class BlinkRepository {
       include: { blinkRole: true },
     });
   }
+
+  static async findRoleBySlug(slug: string) {
+    return prisma.blinkRole.findUnique({ where: { slug } });
+  }
 }

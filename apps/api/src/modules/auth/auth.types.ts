@@ -7,7 +7,8 @@ export type UserType =
   | "blink_associate"
   | "blink_employee"
   | "blink_ambassador"
-  | "counsellor";
+  | "counsellor"
+  | "blog_author";
 
 export interface JwtPayload {
   userId: string;

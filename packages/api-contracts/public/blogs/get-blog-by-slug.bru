@@ -1,0 +1,25 @@
+meta {
+  name: Get Blog By Slug
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/blogs/:slug
+  body: none
+  auth: none
+}
+
+params:path {
+  slug: my-college-experience
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Get a published blog by its slug. No authentication required.
+  Each request increments the blog's view count.
+  Returns 404 if the blog is not found or not yet approved.
+}

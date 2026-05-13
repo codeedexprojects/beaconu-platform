@@ -6,6 +6,7 @@ export const USER_TYPES = {
   BLINK_EMPLOYEE: "blink_employee",
   BLINK_AMBASSADOR: "blink_ambassador",
   COUNSELLOR: "counsellor",
+  BLOG_AUTHOR: "blog_author",
 } as const;
 
 export const SESSION_EXPIRY_DAYS = 90;
