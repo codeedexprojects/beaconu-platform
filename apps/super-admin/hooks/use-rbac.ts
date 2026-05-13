@@ -1,8 +1,9 @@
 import { useAuthStore } from "@/store";
-import { can, canAny, type Permission } from "@/lib/rbac";
+import { can, canAny, type AdminRole, type Permission } from "@/lib/rbac";
 
 export function useRbac() {
-  const role = useAuthStore((s) => s.admin?.role);
+  // AdminProfile.role is string; cast to AdminRole since the service always sets a known role.
+  const role = useAuthStore((s) => s.admin?.role) as AdminRole | undefined;
 
   return {
     role,

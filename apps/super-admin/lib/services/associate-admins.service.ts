@@ -1,16 +1,7 @@
 import { api } from "@/lib/api";
+import type { AssociateAdmin } from "@beaconu/types";
 
-export interface AssociateAdmin {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber?: string;
-  status: string;
-  agencyName: string;
-  agencyRegNumber: string;
-  country?: string;
-  createdAt: string;
-}
+export type { AssociateAdmin };
 
 export async function getAssociateAdmins(): Promise<AssociateAdmin[]> {
   return api.get("/api/v1/blink/associate");

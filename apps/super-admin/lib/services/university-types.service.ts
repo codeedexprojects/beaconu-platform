@@ -1,27 +1,15 @@
 import { api } from "../api";
+import type { UniversityType } from "@beaconu/types";
+import type {
+  CreateUniversityTypeInput,
+  UpdateUniversityTypeInput,
+} from "@beaconu/validation";
 
-export interface UniversityType {
-  id: string;
-  name: string;
-  slug: string;
-  sortOrder: number;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface CreateUniversityTypeInput {
-  name: string;
-  slug: string;
-  sort_order?: number;
-  is_active?: boolean;
-}
-
-export interface UpdateUniversityTypeInput {
-  name?: string;
-  slug?: string;
-  sort_order?: number;
-  is_active?: boolean;
-}
+export type {
+  UniversityType,
+  CreateUniversityTypeInput,
+  UpdateUniversityTypeInput,
+};
 
 export const universityTypesService = {
   getAll: (isActive?: boolean) => {

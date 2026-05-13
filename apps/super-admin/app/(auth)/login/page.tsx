@@ -2,59 +2,41 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  platformAdminLoginSchema,
+  type PlatformAdminLoginInput,
+} from "@beaconu/validation";
+import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store";
 import { loginAdmin } from "@/lib/services/auth.service";
 
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type FieldErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>;
-
 export default function LoginPage(): React.JSX.Element {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [serverError, setServerError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setServerError("");
+  const form = useForm<PlatformAdminLoginInput>({
+    resolver: zodResolver(platformAdminLoginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-    const parsed = loginSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      const errors: FieldErrors = {};
-      parsed.error.issues.forEach((issue) => {
-        const key = issue.path[0] as keyof FieldErrors;
-        errors[key] = issue.message;
-      });
-      setFieldErrors(errors);
-      return;
-    }
-    setFieldErrors({});
-    setLoading(true);
+  const { isSubmitting } = form.formState;
 
+  async function onSubmit(data: PlatformAdminLoginInput) {
     try {
-      const { admin, token } = await loginAdmin({ email, password });
+      const { admin, token } = await loginAdmin(data);
       setAuth(admin, token);
+      toast.success("Signed in successfully");
       router.replace("/");
     } catch (err) {
-      setServerError(
-        err instanceof Error ? err.message : "Something went wrong",
-      );
-    } finally {
-      setLoading(false);
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
@@ -96,7 +78,11 @@ export default function LoginPage(): React.JSX.Element {
             Sign in to your admin account
           </p>
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-4"
+          >
             {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-white/70">
@@ -107,16 +93,14 @@ export default function LoginPage(): React.JSX.Element {
                 type="email"
                 autoComplete="email"
                 placeholder="admin@beaconu.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                }}
-                aria-invalid={!!fieldErrors.email}
+                aria-invalid={!!form.formState.errors.email}
                 className="border-white/10 bg-white/5 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
+                {...form.register("email")}
               />
-              {fieldErrors.email && (
-                <p className="text-xs text-destructive">{fieldErrors.email}</p>
+              {form.formState.errors.email && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
 
@@ -131,16 +115,9 @@ export default function LoginPage(): React.JSX.Element {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setFieldErrors((prev) => ({
-                      ...prev,
-                      password: undefined,
-                    }));
-                  }}
-                  aria-invalid={!!fieldErrors.password}
+                  aria-invalid={!!form.formState.errors.password}
                   className="border-white/10 bg-white/5 pr-10 text-white placeholder:text-white/25 focus-visible:ring-primary aria-[invalid=true]:border-destructive/60"
+                  {...form.register("password")}
                 />
                 <button
                   type="button"
@@ -155,26 +132,19 @@ export default function LoginPage(): React.JSX.Element {
                   )}
                 </button>
               </div>
-              {fieldErrors.password && (
+              {form.formState.errors.password && (
                 <p className="text-xs text-destructive">
-                  {fieldErrors.password}
+                  {form.formState.errors.password.message}
                 </p>
               )}
             </div>
 
-            {/* Server error */}
-            {serverError && (
-              <p className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
-                {serverError}
-              </p>
-            )}
-
             <Button
               type="submit"
               className="mt-2 w-full h-10 bg-primary hover:bg-primary/90 font-semibold shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
-              disabled={loading}
+              disabled={isSubmitting}
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in…

@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api";
+import type { AdminProfile } from "@beaconu/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -9,14 +10,6 @@ interface LoginPayload {
 
 interface PlatformLoginPayload extends LoginPayload {
   role_slug: string;
-}
-
-export interface AdminProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  role: "super_admin" | "sub_admin";
-  avatarUrl?: string;
 }
 
 interface LoginApiResponse {

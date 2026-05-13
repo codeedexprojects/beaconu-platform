@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   Tag,
   Search,
@@ -9,8 +10,6 @@ import {
   Edit,
   Trash2,
   CheckCircle2,
-  XCircle,
-  Loader2,
   X,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -36,39 +35,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { UniversityType } from "@/lib/services/university-types.service";
 import {
-  universityTypesService,
-  UniversityType,
-} from "@/lib/services/university-types.service";
-import { apiAction } from "@/lib/api";
+  useUniversityTypes,
+  useCreateUniversityType,
+  useUpdateUniversityType,
+  useDisableUniversityType,
+  useRemoveUniversityType,
+} from "@/hooks/use-university-types";
 
 export default function UniversityTypesPage() {
   const [search, setSearch] = useState("");
-  const [types, setTypes] = useState<UniversityType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Modal States
+  const { data: types = [], isLoading } = useUniversityTypes();
+  const createMutation = useCreateUniversityType();
+  const updateMutation = useUpdateUniversityType();
+  const disableMutation = useDisableUniversityType();
+  const removeMutation = useRemoveUniversityType();
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<UniversityType | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", sort_order: 0 });
-
-  const fetchTypes = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await universityTypesService.getAll();
-      setTypes(data);
-    } catch (error) {
-      console.error("Failed to fetch university types:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchTypes();
-  }, [fetchTypes]);
 
   const filteredTypes = useMemo(() => {
     return types.filter(
@@ -78,30 +66,25 @@ export default function UniversityTypesPage() {
     );
   }, [search, types]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this university type?")) {
-      await apiAction(
-        () => universityTypesService.remove(id),
-        "Type deleted successfully",
-      );
-      fetchTypes();
+      removeMutation.mutate(id, {
+        onSuccess: () => toast.success("Type deleted successfully"),
+      });
     }
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    const action = currentStatus ? "disable" : "enable";
-    if (action === "disable") {
-      await apiAction(
-        () => universityTypesService.disable(id),
-        "Type disabled successfully",
-      );
+  const handleToggleStatus = (id: string, currentStatus: boolean) => {
+    if (currentStatus) {
+      disableMutation.mutate(id, {
+        onSuccess: () => toast.success("Type disabled successfully"),
+      });
     } else {
-      await apiAction(
-        () => universityTypesService.update(id, { is_active: true }),
-        "Type enabled successfully",
+      updateMutation.mutate(
+        { id, data: { is_active: true } },
+        { onSuccess: () => toast.success("Type enabled successfully") },
       );
     }
-    fetchTypes();
   };
 
   const handleCreateClick = () => {
@@ -119,32 +102,28 @@ export default function UniversityTypesPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await apiAction(
-      () => universityTypesService.create(form),
-      "University type created successfully",
-    );
-
-    if (result) {
-      setIsCreateModalOpen(false);
-      fetchTypes();
-    }
+    createMutation.mutate(form, {
+      onSuccess: () => {
+        toast.success("University type created successfully");
+        setIsCreateModalOpen(false);
+      },
+    });
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingType) return;
-
-    const result = await apiAction(
-      () => universityTypesService.update(editingType.id, form),
-      "University type updated successfully",
+    updateMutation.mutate(
+      { id: editingType.id, data: form },
+      {
+        onSuccess: () => {
+          toast.success("University type updated successfully");
+          setIsEditModalOpen(false);
+        },
+      },
     );
-
-    if (result) {
-      setIsEditModalOpen(false);
-      fetchTypes();
-    }
   };
 
   const activeCount = filteredTypes.filter((t) => t.isActive).length;
@@ -186,7 +165,7 @@ export default function UniversityTypesPage() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 <p className="text-sm text-muted-foreground font-medium">
                   Loading types...
                 </p>
@@ -373,7 +352,9 @@ export default function UniversityTypesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Create Type</Button>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create Type"}
+                </Button>
               </div>
             </form>
           </Card>
@@ -443,7 +424,9 @@ export default function UniversityTypesPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </form>
           </Card>

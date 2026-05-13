@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Search,
-  RefreshCw,
-  Check,
-  X,
-  UserPlus,
-  Mail,
-  Shield,
-} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Search, RefreshCw, Check, X, Mail, Shield } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -23,44 +15,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getPendingBlinkUsers } from "@/lib/services/admins.service";
-import { approveEmployee } from "@/lib/services/associate-admins.service";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { usePendingBlinkUsers } from "@/hooks/use-admins";
+import { useApproveEmployee } from "@/hooks/use-associate-admins";
 
 export default function RegistrationRequestsPage() {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  const { data: requests = [], isLoading, refetch } = usePendingBlinkUsers();
+  const approveMutation = useApproveEmployee();
 
-  async function fetchRequests() {
-    setIsLoading(true);
-    try {
-      const data = await getPendingBlinkUsers();
-      setRequests(data);
-    } catch (error) {
-      console.error("Failed to fetch requests:", error);
-      toast.error("Failed to load registration requests");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleStatusUpdate(id: string, status: "active" | "rejected") {
-    try {
-      await approveEmployee(id, status);
-      toast.success(
-        `User ${status === "active" ? "approved" : "rejected"} successfully`,
-      );
-      fetchRequests();
-    } catch (error) {
-      console.error("Failed to update status:", error);
-      toast.error("Failed to update user status");
-    }
+  function handleStatusUpdate(id: string, status: "active" | "rejected") {
+    approveMutation.mutate(
+      { id, status },
+      {
+        onSuccess: () =>
+          toast.success(
+            `User ${status === "active" ? "approved" : "rejected"} successfully`,
+          ),
+      },
+    );
   }
 
   const filteredRequests = requests.filter(
@@ -80,7 +54,7 @@ export default function RegistrationRequestsPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchRequests}
+          onClick={() => void refetch()}
           disabled={isLoading}
         >
           <RefreshCw
@@ -188,6 +162,7 @@ export default function RegistrationRequestsPage() {
                             size="sm"
                             className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800"
                             onClick={() => handleStatusUpdate(req.id, "active")}
+                            disabled={approveMutation.isPending}
                           >
                             <Check className="h-4 w-4 mr-1" />
                             Approve
@@ -199,6 +174,7 @@ export default function RegistrationRequestsPage() {
                             onClick={() =>
                               handleStatusUpdate(req.id, "rejected")
                             }
+                            disabled={approveMutation.isPending}
                           >
                             <X className="h-4 w-4 mr-1" />
                             Reject

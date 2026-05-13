@@ -1,12 +1,10 @@
 import { z } from "zod";
+import {
+  createUniversityTypeSchema,
+  updateUniversityTypeSchema,
+} from "@beaconu/validation";
 
-const slugSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .regex(/^[a-z0-9_-]+$/)
-  .max(50);
-
+// Query strings send booleans as "true"/"false" strings — transform them for this route only.
 const optionalBooleanFromQuery = z
   .union([z.boolean(), z.enum(["true", "false"])])
   .transform((value) =>
@@ -20,30 +18,20 @@ export const universityTypeSchemas = {
   listQuery: z.object({
     is_active: optionalBooleanFromQuery.optional(),
   }),
-  create: z.object({
-    name: z.string().trim().min(1).max(100),
-    slug: slugSchema,
-    sort_order: z.number().int().min(0).optional().default(0),
-    is_active: z.boolean().optional().default(true),
-  }),
-  update: z
-    .object({
-      name: z.string().trim().min(1).max(100).optional(),
-      slug: slugSchema.optional(),
-      sort_order: z.number().int().min(0).optional(),
-      is_active: z.boolean().optional(),
-    })
-    .refine((data) => Object.keys(data).length > 0, {
-      message: "At least one field is required",
-    }),
+  create: createUniversityTypeSchema,
+  update: updateUniversityTypeSchema.refine(
+    (data) => Object.keys(data).length > 0,
+    { message: "At least one field is required" },
+  ),
 };
 
-export type CreateUniversityTypeInput = z.infer<
-  typeof universityTypeSchemas.create
+// Backend services receive Zod-parsed data — defaults are already filled in, use output types.
+export type CreateUniversityTypeInput = z.output<
+  typeof createUniversityTypeSchema
 >;
-export type UpdateUniversityTypeInput = z.infer<
-  typeof universityTypeSchemas.update
+export type UpdateUniversityTypeInput = z.output<
+  typeof updateUniversityTypeSchema
 >;
-export type ListUniversityTypesQuery = z.infer<
+export type ListUniversityTypesQuery = z.output<
   typeof universityTypeSchemas.listQuery
 >;
