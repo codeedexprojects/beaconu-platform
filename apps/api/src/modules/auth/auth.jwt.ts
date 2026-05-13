@@ -24,6 +24,15 @@ export class JwtUtils {
     return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
   }
 
+  static isRefreshTokenValid(token: string): boolean {
+    try {
+      jwt.verify(token, env.JWT_REFRESH_SECRET);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   static decode(token: string): JwtPayload | null {
     return jwt.decode(token) as JwtPayload | null;
   }

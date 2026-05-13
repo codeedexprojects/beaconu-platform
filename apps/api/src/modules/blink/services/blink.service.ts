@@ -1,4 +1,3 @@
-import { prisma } from "@beaconu/db";
 import { CryptoUtils } from "@/shared/utils";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { ACCOUNT_STATUS, AccountStatus } from "@/shared/constants";
@@ -23,9 +22,9 @@ export class BlinkService {
       throw new ForbiddenError("Parent user must be an associate admin");
     }
 
-    const role = await prisma.blinkRole.findUnique({
-      where: { slug: BLINK_ROLES.ASSOCIATE_EMPLOYEE },
-    });
+    const role = await BlinkRepository.findRoleBySlug(
+      BLINK_ROLES.ASSOCIATE_EMPLOYEE,
+    );
     if (!role) throw new NotFoundError("Blink role not found");
 
     const passwordHash = await CryptoUtils.hash(data.password);
@@ -56,25 +55,22 @@ export class BlinkService {
   static async registerAmbassador(
     data: RegisterAmbassadorInput,
     createdByStaffId: string,
+    staffCollegeId: string,
   ) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     const existingEmail = await BlinkRepository.findByEmail(normalizedEmail);
     if (existingEmail) throw new ConflictError("Email already exists");
 
-    const staff = await prisma.staffMember.findUnique({
-      where: { id: createdByStaffId },
-    });
-    if (!staff) throw new NotFoundError("Staff member not found");
-    if (staff.collegeId !== data.college_id) {
+    if (staffCollegeId !== data.college_id) {
       throw new ForbiddenError(
         "Campus ambassador can only be created for your own college",
       );
     }
 
-    const role = await prisma.blinkRole.findUnique({
-      where: { slug: BLINK_ROLES.CAMPUS_AMBASSADOR },
-    });
+    const role = await BlinkRepository.findRoleBySlug(
+      BLINK_ROLES.CAMPUS_AMBASSADOR,
+    );
     if (!role) throw new NotFoundError("Blink role not found");
 
     const passwordHash = await CryptoUtils.hash(data.password);
