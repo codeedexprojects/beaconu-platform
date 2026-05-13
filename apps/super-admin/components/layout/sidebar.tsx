@@ -19,6 +19,7 @@ import {
   LogOut,
   ChevronRight,
   UserPlus,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -86,6 +87,17 @@ const navSections: NavSection[] = [
         label: "Counsellors",
         icon: HeartHandshake,
         permission: "counsellors.view",
+      },
+    ],
+  },
+  {
+    label: "Leads",
+    items: [
+      {
+        href: "/leads/college-leads",
+        label: "College Leads",
+        icon: Inbox,
+        permission: "leads.view",
       },
     ],
   },

@@ -5,6 +5,7 @@ import platformRolesRoutes from "@/modules/platform-admin/routes/platform-roles.
 import platformUsersRoutes from "@/modules/platform-admin/routes/platform-users.routes";
 import counsellingAdminRoutes from "@/modules/counselling/routes/platform-admin.routes";
 import adminUniversityRoutes from "@/modules/universities/routes/platform-admin.routes";
+import collegeLeadsAdminRoutes from "@/modules/landing-page/routes/admin.routes";
 
 const router: Router = Router();
 
@@ -13,5 +14,7 @@ router.use("/roles", platformRolesRoutes);
 router.use("/users", platformUsersRoutes);
 router.use("/counsellors", counsellingAdminRoutes);
 router.use("/universities", adminUniversityRoutes);
+
+router.use("/college-leads", collegeLeadsAdminRoutes);
 
 export default router;

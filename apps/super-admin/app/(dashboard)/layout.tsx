@@ -18,6 +18,7 @@ const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/colleges": "colleges.view",
   "/students": "students.view",
   "/student-leads": "leads.view",
+  "/leads": "leads.view",
   "/counsellors": "counsellors.view",
   "/blogs": "content.view",
   "/articles": "content.view",
