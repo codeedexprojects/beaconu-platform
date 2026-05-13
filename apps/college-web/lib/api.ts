@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import { useAuthStore } from "@/store";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -73,20 +72,3 @@ export const api = {
   delete: <T>(path: string, options?: RequestInit) =>
     request<T>(path, { ...options, method: "DELETE" }),
 };
-
-export async function apiAction<T>(
-  fn: () => Promise<T>,
-  successMessage: string,
-): Promise<T | null> {
-  const toastId = toast.loading("Saving...");
-  try {
-    const result = await fn();
-    toast.success(successMessage, { id: toastId });
-    return result;
-  } catch (err) {
-    const message =
-      err instanceof ApiError ? err.message : "Something went wrong";
-    toast.error(message, { id: toastId });
-    return null;
-  }
-}
