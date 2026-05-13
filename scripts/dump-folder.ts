@@ -10,6 +10,7 @@ const IGNORE_DIRS = new Set([
   "dist",
   "build",
   "coverage",
+  ".next",
 ]);
 
 const ALLOWED_EXTENSIONS = new Set([".ts", ".js", ".json", ".env", ".md"]);
