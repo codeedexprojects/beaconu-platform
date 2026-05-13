@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Search,
   RefreshCw,
-  Users,
   Mail,
   Shield,
   MoreVertical,
@@ -23,29 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAdminProfiles } from "@/lib/services/admins.service";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminProfiles } from "@/hooks/use-admins";
 
 export default function BlinkUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  async function fetchUsers() {
-    setIsLoading(true);
-    try {
-      const data = await getAdminProfiles();
-      setUsers(data.blinkUsers);
-    } catch (error) {
-      console.error("Failed to fetch blink users:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const { data, isLoading, refetch } = useAdminProfiles();
+  const users = data?.blinkUsers ?? [];
 
   const filteredUsers = users.filter(
     (user) =>
@@ -64,7 +48,7 @@ export default function BlinkUsersPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchUsers}
+          onClick={() => void refetch()}
           disabled={isLoading}
         >
           <RefreshCw

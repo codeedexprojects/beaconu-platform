@@ -1,20 +1,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { setAdminTokenCookie, clearAdminTokenCookie } from "@/lib/cookies";
-
-interface Admin {
-  id: string;
-  fullName: string;
-  email: string;
-  role: "super_admin" | "sub_admin";
-  avatarUrl?: string;
-}
+import type { AdminProfile } from "@beaconu/types";
 
 interface AuthState {
-  admin: Admin | null;
+  admin: AdminProfile | null;
   token: string | null;
   isAuthenticated: boolean;
-  setAuth: (admin: Admin, token: string) => void;
+  setAuth: (admin: AdminProfile, token: string) => void;
   clearAuth: () => void;
 }
 

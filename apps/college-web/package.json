@@ -15,6 +15,8 @@
     "@beaconu/utils": "workspace:*",
     "@beaconu/validation": "workspace:*",
     "@radix-ui/react-slot": "^1.1.2",
+    "@tanstack/react-query": "^5.100.10",
+    "@tanstack/react-query-devtools": "^5.100.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",

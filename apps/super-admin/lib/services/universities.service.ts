@@ -1,48 +1,11 @@
 import { api } from "../api";
+import type { University } from "@beaconu/types";
+import type {
+  CreateUniversityInput,
+  UpdateUniversityInput,
+} from "@beaconu/validation";
 
-export interface UniversityType {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-export interface University {
-  id: string;
-  name: string;
-  slug: string;
-  state: string | null;
-  city: string | null;
-  accreditation: string | null;
-  governanceDetails: string | null;
-  logoUrl: string | null;
-  status: string;
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  universityType: UniversityType;
-}
-
-export interface CreateUniversityInput {
-  university_type_id: string;
-  name: string;
-  slug: string;
-  state?: string;
-  city?: string;
-  accreditation?: string;
-  governance_details?: string;
-  logo_url?: string;
-}
-
-export interface UpdateUniversityInput {
-  university_type_id?: string;
-  name?: string;
-  slug?: string;
-  state?: string;
-  city?: string;
-  accreditation?: string;
-  governance_details?: string;
-  logo_url?: string;
-}
+export type { University, CreateUniversityInput, UpdateUniversityInput };
 
 export const universitiesService = {
   getAll: (filters?: {

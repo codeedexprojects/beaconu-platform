@@ -14,6 +14,15 @@ export interface JwtPayload {
   permissions?: string[];
 }
 
+// Super-admin session user — returned by loginAdmin() in auth.service.ts.
+export interface AdminProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  avatarUrl?: string;
+}
+
 // Auth fields added to Express Request by middleware.
 // Module augmentation lives in apps/api/src/shared/types/express.d.ts
 export interface AuthenticatedRequest {

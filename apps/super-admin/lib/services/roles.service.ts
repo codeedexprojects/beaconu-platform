@@ -1,24 +1,11 @@
 import { api } from "@/lib/api";
+import type { PlatformRole } from "@beaconu/types";
+import type {
+  CreatePlatformRoleInput,
+  UpdateRolePermissionsInput,
+} from "@beaconu/validation";
 
-export interface PlatformRole {
-  id: string;
-  name: string;
-  slug: string;
-  isSystemRole: boolean;
-  isActive: boolean;
-  permissions: string[];
-}
-
-export interface CreatePlatformRolePayload {
-  name: string;
-  slug: string;
-  permissions: string[];
-  is_system_role?: boolean;
-}
-
-export interface UpdateRolePermissionsPayload {
-  permissions: string[];
-}
+export type { CreatePlatformRoleInput, UpdateRolePermissionsInput };
 
 export async function getPlatformRoles(): Promise<PlatformRole[]> {
   return api.get("/api/v1/admin/roles");
@@ -29,14 +16,14 @@ export async function getPlatformPermissions(): Promise<string[]> {
 }
 
 export async function createPlatformRole(
-  payload: CreatePlatformRolePayload,
+  payload: CreatePlatformRoleInput,
 ): Promise<PlatformRole> {
   return api.post("/api/v1/admin/roles", payload);
 }
 
 export async function updatePlatformRolePermissions(
   roleId: string,
-  payload: UpdateRolePermissionsPayload,
+  payload: UpdateRolePermissionsInput,
 ): Promise<PlatformRole> {
   return api.put(`/api/v1/admin/roles/${roleId}/permissions`, payload);
 }
