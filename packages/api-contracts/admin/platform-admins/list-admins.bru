@@ -1,0 +1,23 @@
+meta {
+  name: List Admins
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/platform-admins
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns all platform administrators (super admins).
+  Requires: super admin access token.
+
+  Table: platform_admins
+}

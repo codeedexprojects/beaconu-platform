@@ -1,0 +1,31 @@
+meta {
+  name: Update Admin
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/admin/platform-admins/{{platformAdminId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "fullName": "Sub Admin (Updated)",
+    "email": "subadmin_updated@beaconu.com",
+    "platformRoleId": "{{platformRoleId}}"
+  }
+}
+
+docs {
+  Updates a platform administrator's profile.
+  Requires: super admin access token.
+
+  Table: platform_admins
+}
