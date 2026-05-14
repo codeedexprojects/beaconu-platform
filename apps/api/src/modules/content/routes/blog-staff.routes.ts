@@ -8,28 +8,28 @@ const router: Router = Router();
 router.post(
   "/",
   authenticate,
-  authorizeUserType("student"),
+  authorizeUserType("staff_member"),
   BlogAuthorController.submit,
 );
 
 router.get(
   "/",
   authenticate,
-  authorizeUserType("student"),
+  authorizeUserType("staff_member"),
   BlogAuthorController.listOwn,
 );
 
 router.get(
   "/:id",
   authenticate,
-  authorizeUserType("student"),
+  authorizeUserType("staff_member"),
   BlogAuthorController.getOwn,
 );
 
 router.patch(
   "/:id",
   authenticate,
-  authorizeUserType("student"),
+  authorizeUserType("staff_member"),
   BlogAuthorController.update,
 );
 

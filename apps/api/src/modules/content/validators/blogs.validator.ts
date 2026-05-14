@@ -2,28 +2,14 @@ import { z } from "zod";
 
 const submitBlogSchema = z.object({
   title: z.string().trim().min(1).max(255),
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
   summary: z.string().trim().max(500).optional(),
   content: z.string().trim().min(1),
   cover_image_url: z.string().url().optional(),
   tags: z.array(z.string().trim().min(1)).default([]),
-  author_name: z.string().trim().min(1).max(100),
 });
 
 const updateBlogSchema = z.object({
   title: z.string().trim().min(1).max(255).optional(),
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
-    .optional(),
   summary: z.string().trim().max(500).optional(),
   content: z.string().trim().min(1).optional(),
   cover_image_url: z.string().url().optional(),

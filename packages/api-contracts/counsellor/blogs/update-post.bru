@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/staff/blogs/:id
+  url: {{baseUrl}}/api/v1/counsellor/blogs/:id
   body: json
   auth: none
 }
@@ -26,11 +26,7 @@ body:json {
   }
 }
 
-vars:pre-request {
-  blogId: 7489059b-0e14-4903-969c-e39c4a6da3ae
-}
-
 docs {
   Update a pending post. Only posts with status "pending" can be edited.
-  Authors can only edit their own posts.
+  Counsellors can only edit their own posts.
 }

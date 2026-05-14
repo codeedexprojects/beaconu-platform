@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/staff/blogs/:id
+  url: {{baseUrl}}/api/v1/counsellor/blogs/:id
   body: none
   auth: none
 }
@@ -19,11 +19,7 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
-vars:pre-request {
-  blogId: 7489059b-0e14-4903-969c-e39c4a6da3ae
-}
-
 docs {
-  Get a specific post by ID. Authors can only view their own posts.
+  Get a specific post by ID. Counsellors can only view their own posts.
   Returns full content including rejection reason if rejected.
 }

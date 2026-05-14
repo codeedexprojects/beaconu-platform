@@ -7,7 +7,7 @@ import { BlogQuery } from "../queries/blogs.query";
 export class BlogAuthorController {
   static async submit(req: Request, res: Response): Promise<void> {
     const data = blogSchemas.submit.parse(req.body);
-    const blog = await BlogService.submit(data, req.userId!, "blog_author");
+    const blog = await BlogService.submit(data, req.userId!, req.userType!);
     res
       .status(201)
       .json(ApiResponse.success("Blog submitted for review", blog));

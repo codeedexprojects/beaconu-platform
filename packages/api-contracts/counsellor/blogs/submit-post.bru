@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/staff/blogs
+  url: {{baseUrl}}/api/v1/counsellor/blogs
   body: json
   auth: none
 }
@@ -36,7 +36,7 @@ script:post-response {
 
 docs {
   Submit a new blog post for super-admin review. Status is set to "pending" automatically.
-  Requires staff_member authentication. Slug and author name are resolved server-side.
+  Requires counsellor authentication. Slug and author name are resolved server-side.
 
   Fields:
   - title: Post title (required, max 255 chars)

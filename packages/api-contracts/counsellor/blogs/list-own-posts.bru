@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/staff/blogs
+  url: {{baseUrl}}/api/v1/counsellor/blogs
   body: none
   auth: none
 }
@@ -31,6 +31,6 @@ script:post-response {
 }
 
 docs {
-  List the authenticated blog author's own posts with pagination.
+  List the authenticated counsellor's own posts with pagination.
   Filter by status: pending | approved | rejected
 }
