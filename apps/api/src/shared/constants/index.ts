@@ -23,3 +23,9 @@ export const ACCOUNT_STATUS = {
 } as const;
 export type AccountStatus =
   (typeof ACCOUNT_STATUS)[keyof typeof ACCOUNT_STATUS];
+
+export const COLLEGE_ONBOARDING_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+} as const;
