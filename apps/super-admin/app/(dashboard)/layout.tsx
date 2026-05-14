@@ -34,9 +34,14 @@ export default function DashboardLayout({
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, admin } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+  const admin = useAuthStore((s) => s.admin);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
+
+  const isAuthenticated = token !== null;
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!isAuthenticated) {
       router.replace("/login");
       return;
@@ -54,9 +59,9 @@ export default function DashboardLayout({
     ) {
       router.replace("/");
     }
-  }, [isAuthenticated, pathname, admin?.role, router]);
+  }, [isAuthenticated, hasHydrated, pathname, admin?.role, router]);
 
-  if (!isAuthenticated) return <></>;
+  if (!hasHydrated || !isAuthenticated) return <></>;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
