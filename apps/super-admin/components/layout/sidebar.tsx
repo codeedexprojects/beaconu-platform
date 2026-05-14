@@ -140,6 +140,12 @@ const navSections: NavSection[] = [
     label: "Platform",
     items: [
       {
+        href: "/platform-admins",
+        label: "Platform Admins",
+        icon: ShieldCheck,
+        permission: "admins.view",
+      },
+      {
         href: "/admins",
         label: "Admins",
         icon: ShieldCheck,

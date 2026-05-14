@@ -283,7 +283,6 @@ export class AuthService {
 
   static async loginPlatformAdmin(data: PlatformLoginInput) {
     const normalizedEmail = data.email.trim().toLowerCase();
-    const normalizedRoleSlug = data.role_slug.trim().toLowerCase();
 
     const admin =
       await AuthRepository.findPlatformAdminByEmail(normalizedEmail);
@@ -295,15 +294,15 @@ export class AuthService {
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
 
-    if (!admin.platformRole || admin.platformRole.slug !== normalizedRoleSlug) {
-      throw new UnauthorizedError("Invalid credentials");
+    if (!admin.platformRole) {
+      throw new UnauthorizedError(
+        "Your account has no assigned role. Please contact support.",
+      );
     }
 
     if (admin.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${admin.status}`);
     }
-
-    if (!admin.platformRole) throw new NotFoundError("Platform role not found");
 
     await AuthRepository.updatePlatformAdminLastLogin(admin.id);
 
