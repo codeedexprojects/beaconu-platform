@@ -2,8 +2,16 @@ import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
 import { authorizeUserType } from "@/shared/middleware/authorize";
 import { BlogPlatformAdminController } from "../controllers/platform-admin.controller";
+import { BlogAuthorController } from "../controllers/blog-author.controller";
 
 const router: Router = Router();
+
+router.post(
+  "/",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  BlogAuthorController.submit,
+);
 
 router.get(
   "/",

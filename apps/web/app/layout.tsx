@@ -1,10 +1,38 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "BeaconU – Powering India's College Experience",
+  title: "BeaconU — India's Student Experience Platform",
   description:
-    "BeaconU is the all-in-one student engagement platform trusted by leading Indian colleges. Partner with us to transform how your students learn, connect, and thrive.",
+    "BeaconU connects students to colleges, resources, and opportunities across India.",
+  metadataBase: new URL("https://beaconu.com"),
+  alternates: { canonical: "https://beaconu.com" },
+  keywords: [
+    "college admissions",
+    "student platform",
+    "India colleges",
+    "BeaconU",
+  ],
+  robots: { index: true, follow: true },
+  openGraph: {
+    siteName: "BeaconU",
+    type: "website",
+    url: "https://beaconu.com",
+    title: "BeaconU — India's Student Experience Platform",
+    description:
+      "BeaconU connects students to colleges, resources, and opportunities across India.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@beaconu",
+  },
 };
 
 export default function RootLayout({
@@ -13,11 +41,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body style={{ margin: 0, padding: 0 }}>{children}</body>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

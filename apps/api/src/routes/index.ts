@@ -11,6 +11,7 @@ import healthRoutes from "@/modules/health/routes/health.routes";
 import blogStaffRoutes from "@/modules/content/routes/blog-staff.routes";
 import blogCounsellorRoutes from "@/modules/content/routes/blog-counsellor.routes";
 import blogStudentRoutes from "@/modules/content/routes/student.routes";
+import blogAuthorRoutes from "@/modules/content/routes/blog-author.routes";
 
 const router: Router = Router();
 
@@ -25,5 +26,6 @@ router.use("/api/v1/health", healthRoutes);
 router.use("/api/v1/staff/blogs", blogStaffRoutes);
 router.use("/api/v1/counsellor/blogs", blogCounsellorRoutes);
 router.use("/api/v1/student/blogs", blogStudentRoutes);
+router.use("/api/v1/blog-author/blogs", blogAuthorRoutes);
 
 export default router;

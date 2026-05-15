@@ -11,4 +11,7 @@ export const QUERY_KEYS = {
   collegeLeads: ["college-leads"] as const,
   collegeLead: (id: string) => ["college-leads", id] as const,
   collegeLeadStats: ["college-leads-stats"] as const,
+  adminBlogs: (params?: object) =>
+    params ? ["admin-blogs", params] : (["admin-blogs"] as const),
+  adminBlog: (id: string) => ["admin-blogs", id] as const,
 } as const;

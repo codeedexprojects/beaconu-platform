@@ -1,0 +1,27 @@
+meta {
+  name: Update Post (Blog Author)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blog-author/blogs/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: {{blogId}}
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "My Updated College Experience",
+    "content": "Updated content..."
+  }
+}

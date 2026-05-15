@@ -46,6 +46,14 @@ async function resolveAuthorName(
       if (!record) throw new NotFoundError("Admin not found");
       return record.fullName;
     }
+    case "blog_author": {
+      const record = await prisma.blogAuthor.findUnique({
+        where: { id: authorId },
+        select: { fullName: true },
+      });
+      if (!record) throw new NotFoundError("Blog author not found");
+      return record.fullName;
+    }
     default:
       throw new NotFoundError("Unknown author type");
   }
