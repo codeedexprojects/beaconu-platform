@@ -8,6 +8,7 @@ export const QUERY_KEYS = {
   associateAdmins: ["associate-admins"] as const,
   platformRoles: ["platform-roles"] as const,
   platformPerms: ["platform-permissions"] as const,
+  permissionRegistry: ["permission-registry"] as const,
   collegeLeads: ["college-leads"] as const,
   collegeLead: (id: string) => ["college-leads", id] as const,
   collegeLeadStats: ["college-leads-stats"] as const,

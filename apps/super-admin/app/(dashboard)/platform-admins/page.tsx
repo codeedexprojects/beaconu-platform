@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import {
   usePlatformAdminsList,
   usePlatformAdminMutations,
 } from "@/hooks/use-platform-admins-mgmt";
+import { useRbac } from "@/hooks/use-rbac";
 import { AdminFormModal } from "@/components/admins/AdminFormModal";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,6 +43,9 @@ export default function PlatformAdminsPage() {
 
   const { data: admins, isLoading } = usePlatformAdminsList();
   const { updateStatus, remove } = usePlatformAdminMutations();
+  const { can } = useRbac();
+
+  const canManage = can("platform.admins.manage");
 
   const handleEdit = (admin: any) => {
     setSelectedAdmin(admin);
@@ -52,16 +57,39 @@ export default function PlatformAdminsPage() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteAdmin = (admin: any) => {
+    if (admin.platformRole?.slug === "super_admin") {
+      toast.error("Super Admin users cannot be deleted");
+      return;
+    }
+
+    toast("Delete this administrator?", {
+      description: `Admin: ${admin.fullName}. This action will deactivate their account.`,
+      action: {
+        label: "Delete",
+        onClick: () => remove.mutate(admin.id),
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {
+          return;
+        },
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-full">
       <Header
         title="Platform Staff"
         description="Manage internal super admins and restricted access accounts"
       >
-        <Button className="gap-2" onClick={handleCreate}>
-          <UserPlus className="h-4 w-4" />
-          Invite Staff
-        </Button>
+        {canManage && (
+          <Button className="gap-2" onClick={handleCreate}>
+            <UserPlus className="h-4 w-4" />
+            Invite Staff
+          </Button>
+        )}
       </Header>
 
       <div className="p-6">
@@ -73,7 +101,9 @@ export default function PlatformAdminsPage() {
                   <TableHead>Administrator</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {canManage && (
+                    <TableHead className="text-right">Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -89,9 +119,11 @@ export default function PlatformAdminsPage() {
                         <TableCell>
                           <Skeleton className="h-5 w-[60px]" />
                         </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-8 w-8 ml-auto" />
-                        </TableCell>
+                        {canManage && (
+                          <TableCell>
+                            <Skeleton className="h-8 w-8 ml-auto" />
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   : admins?.map((admin: any) => (
@@ -123,48 +155,52 @@ export default function PlatformAdminsPage() {
                             {admin.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleEdit(admin)}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateStatus.mutate({
-                                    id: admin.id,
-                                    status:
-                                      admin.status === "active"
-                                        ? "inactive"
-                                        : "active",
-                                  })
-                                }
-                              >
-                                {admin.status === "active" ? (
-                                  <Ban className="h-4 w-4 mr-2" />
-                                ) : (
-                                  <CheckCircle className="h-4 w-4 mr-2" />
+                        {canManage && (
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleEdit(admin)}
+                                >
+                                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    updateStatus.mutate({
+                                      id: admin.id,
+                                      status:
+                                        admin.status === "active"
+                                          ? "inactive"
+                                          : "active",
+                                    })
+                                  }
+                                >
+                                  {admin.status === "active" ? (
+                                    <Ban className="h-4 w-4 mr-2" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                  )}
+                                  {admin.status === "active"
+                                    ? "Disable"
+                                    : "Enable"}
+                                </DropdownMenuItem>
+                                {admin.platformRole?.slug !== "super_admin" && (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteAdmin(admin)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                  </DropdownMenuItem>
                                 )}
-                                {admin.status === "active"
-                                  ? "Disable"
-                                  : "Enable"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => remove.mutate(admin.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
               </TableBody>

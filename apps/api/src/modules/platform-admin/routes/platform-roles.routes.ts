@@ -10,12 +10,14 @@ router.get(
   "/permissions",
   authenticate,
   authorizeUserType("platform_admin"),
+  authorize("platform.roles.view"),
   PlatformRolesController.listPermissions,
 );
 router.get(
   "/",
   authenticate,
   authorizeUserType("platform_admin"),
+  authorize("platform.roles.view"),
   PlatformRolesController.listRoles,
 );
 router.post(
@@ -31,6 +33,13 @@ router.put(
   authorizeUserType("platform_admin"),
   authorize("platform.roles.manage"),
   PlatformRolesController.updateRolePermissions,
+);
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("platform.roles.manage"),
+  PlatformRolesController.deleteRole,
 );
 router.get(
   "/profiles",

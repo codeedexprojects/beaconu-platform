@@ -1,0 +1,37 @@
+meta {
+  name: Create Permission
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/permissions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "code": "platform.test.manage",
+    "description": "Test permission for platform management"
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("platformPermissionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Registers a new permission in the platform registry.
+  Requires: platform admin with platform.roles.manage permission.
+}

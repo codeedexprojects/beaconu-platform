@@ -109,6 +109,19 @@ model PlatformRole {
   @@map("platform_roles")
 }
 
+model PlatformPermission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  rolePermissions PlatformRolePermission[]
+
+  @@map("platform_permissions")
+}
+
 model PlatformRolePermission {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   platformRoleId String   @map("platform_role_id") @db.Uuid
@@ -116,7 +129,8 @@ model PlatformRolePermission {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  platformRole PlatformRole @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
+  platformRole       PlatformRole       @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
+  platformPermission PlatformPermission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
 
   @@unique([platformRoleId, permissionCode], name: "uq_platform_role_permission")
   @@index([platformRoleId], name: "idx_platform_role_perms_role")

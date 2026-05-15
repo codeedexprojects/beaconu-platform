@@ -21,6 +21,7 @@ export interface AdminProfile {
   fullName: string;
   email: string;
   role: string;
+  permissions: string[];
   avatarUrl?: string;
 }
 
