@@ -2,15 +2,15 @@ import { prisma } from "@beaconu/db";
 
 export class PlatformRolesRepository {
   static async listPermissions() {
-    return prisma.platformRolePermission.findMany({
-      select: { permissionCode: true },
-      distinct: ["permissionCode"],
-      orderBy: { permissionCode: "asc" },
+    return prisma.platformPermission.findMany({
+      select: { code: true },
+      orderBy: { code: "asc" },
     });
   }
 
   static async listRoles() {
     return prisma.platformRole.findMany({
+      where: { isActive: true },
       include: { permissions: true },
       orderBy: { createdAt: "asc" },
     });
@@ -57,6 +57,22 @@ export class PlatformRolesRepository {
         })),
       }),
     ]);
+  }
+
+  static async countAdmins(roleId: string) {
+    return prisma.platformAdmin.count({
+      where: {
+        platformRoleId: roleId,
+        status: { not: "deleted" },
+      },
+    });
+  }
+
+  static async delete(roleId: string) {
+    return prisma.platformRole.update({
+      where: { id: roleId },
+      data: { isActive: false },
+    });
   }
 
   static async upsertSystemRole(slug: string, name: string) {

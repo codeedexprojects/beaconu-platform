@@ -16,7 +16,14 @@ interface LoginApiResponse {
   success: boolean;
   message: string;
   data: {
-    user: { id: string; fullName: string; email: string };
+    user: {
+      id: string;
+      fullName: string;
+      email: string;
+      roleSlug: string;
+      permissions: string[];
+    };
+
     accessToken: string;
   };
 }
@@ -51,7 +58,8 @@ export async function loginAdmin(
       id: body.data.user.id,
       fullName: body.data.user.fullName,
       email: body.data.user.email,
-      role: "super_admin",
+      role: body.data.user.roleSlug,
+      permissions: body.data.user.permissions,
     },
     token: body.data.accessToken,
   };

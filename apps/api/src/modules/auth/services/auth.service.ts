@@ -330,6 +330,7 @@ export class AuthService {
         email: admin.email,
         fullName: admin.fullName,
         roleSlug: admin.platformRole.slug,
+        permissions,
       },
       tokens: { accessToken, refreshToken: session.refreshToken },
     };

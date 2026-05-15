@@ -20,7 +20,15 @@ import {
   usePlatformPermissions,
   useCreatePlatformRole,
   useUpdateRolePermissions,
+  useDeletePlatformRole,
 } from "@/hooks/use-roles";
+import {
+  usePermissions,
+  useCreatePermission,
+  useUpdatePermission,
+  useDeletePermission,
+} from "@/hooks/use-permissions";
+import { Plus, Trash2, Pencil, X, Check } from "lucide-react";
 
 type FormState = {
   name: string;
@@ -152,11 +160,28 @@ export default function RolesPage() {
 
   const createRoleMutation = useCreatePlatformRole();
   const updatePermissionsMutation = useUpdateRolePermissions();
+  const deleteRoleMutation = useDeletePlatformRole();
 
   const [createForm, setCreateForm] = useState<FormState>(initialFormState);
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
+
+  // Permission CRUD state
+  const { data: permissions = [], isLoading: permissionsLoading } =
+    usePermissions();
+  const createPermissionMutation = useCreatePermission();
+  const updatePermissionMutation = useUpdatePermission();
+  const deletePermissionMutation = useDeletePermission();
+
+  const [isAddingPermission, setIsAddingPermission] = useState(false);
+  const [editingPermissionId, setEditingPermissionId] = useState<string | null>(
+    null,
+  );
+  const [permissionForm, setPermissionForm] = useState({
+    code: "",
+    description: "",
+  });
 
   const roleCountLabel = useMemo(() => {
     if (isLoading) return "Loading...";
@@ -217,6 +242,78 @@ export default function RolesPage() {
         },
       },
     );
+  }
+
+  function handleCreatePermission() {
+    if (!permissionForm.code.trim()) {
+      toast.error("Permission code is required");
+      return;
+    }
+    createPermissionMutation.mutate(permissionForm, {
+      onSuccess: () => {
+        setIsAddingPermission(false);
+        setPermissionForm({ code: "", description: "" });
+      },
+    });
+  }
+
+  function handleUpdatePermission(id: string) {
+    if (!permissionForm.code.trim()) {
+      toast.error("Permission code is required");
+      return;
+    }
+    updatePermissionMutation.mutate(
+      { id, payload: permissionForm },
+      {
+        onSuccess: () => {
+          setEditingPermissionId(null);
+          setPermissionForm({ code: "", description: "" });
+        },
+      },
+    );
+  }
+
+  function handleDeletePermission(id: string) {
+    toast("Delete this permission?", {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: () => deletePermissionMutation.mutate(id),
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {
+          return;
+        },
+      },
+    });
+  }
+
+  function handleDeleteRole(role: {
+    id: string;
+    name: string;
+    slug: string;
+    isSystemRole: boolean;
+  }) {
+    toast("Delete this role?", {
+      description: `Role: ${role.name}. This action cannot be undone.`,
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteRoleMutation.mutate(role.id, {
+            onSuccess: () => {
+              toast.success("Role deleted successfully");
+            },
+          });
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {
+          return;
+        },
+      },
+    });
   }
 
   return (
@@ -401,13 +498,24 @@ export default function RolesPage() {
                               </Button>
                             </div>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStartEdit(role)}
-                            >
-                              Edit Permissions
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStartEdit(role)}
+                              >
+                                Edit Permissions
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 text-destructive"
+                                onClick={() => handleDeleteRole(role)}
+                                disabled={deleteRoleMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
@@ -420,23 +528,185 @@ export default function RolesPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base">Available Permissions</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setIsAddingPermission(true);
+                setEditingPermissionId(null);
+                setPermissionForm({ code: "", description: "" });
+              }}
+              disabled={isAddingPermission}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Permission
+            </Button>
           </CardHeader>
-          <CardContent>
-            {isLoading ? (
+          <CardContent className="space-y-4">
+            {isAddingPermission && (
+              <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/30">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                      Permission Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. users.view"
+                      value={permissionForm.code}
+                      onChange={(e) =>
+                        setPermissionForm((prev) => ({
+                          ...prev,
+                          code: e.target.value
+                            .toLowerCase()
+                            .replace(/\s+/g, "."),
+                        }))
+                      }
+                      className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="What this permission allows"
+                      value={permissionForm.description}
+                      onChange={(e) =>
+                        setPermissionForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsAddingPermission(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleCreatePermission}
+                    disabled={createPermissionMutation.isPending}
+                  >
+                    {createPermissionMutation.isPending ? "Adding..." : "Add"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {isLoading || permissionsLoading ? (
               <Skeleton className="h-8 w-full" />
-            ) : availablePermissions.length ? (
-              <div className="flex flex-wrap gap-2">
-                {availablePermissions.map((permission) => (
-                  <Badge key={permission} variant="outline">
-                    {permission}
-                  </Badge>
-                ))}
+            ) : permissions.length ? (
+              <div className="grid gap-2">
+                {permissions.map((permission) => {
+                  const isEditing = editingPermissionId === permission.id;
+                  return (
+                    <div
+                      key={permission.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-muted/50 transition-colors"
+                    >
+                      {isEditing ? (
+                        <div className="flex flex-1 gap-2 items-center">
+                          <input
+                            type="text"
+                            value={permissionForm.code}
+                            onChange={(e) =>
+                              setPermissionForm((prev) => ({
+                                ...prev,
+                                code: e.target.value,
+                              }))
+                            }
+                            className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                          />
+                          <input
+                            type="text"
+                            value={permissionForm.description}
+                            placeholder="Description"
+                            onChange={(e) =>
+                              setPermissionForm((prev) => ({
+                                ...prev,
+                                description: e.target.value,
+                              }))
+                            }
+                            className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-green-600"
+                            onClick={() =>
+                              handleUpdatePermission(permission.id)
+                            }
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => setEditingPermissionId(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex flex-col">
+                            <code className="text-sm font-semibold text-primary">
+                              {permission.code}
+                            </code>
+                            {permission.description && (
+                              <span className="text-xs text-muted-foreground">
+                                {permission.description}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => {
+                                setEditingPermissionId(permission.id);
+                                setPermissionForm({
+                                  code: permission.code,
+                                  description: permission.description || "",
+                                });
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() =>
+                                handleDeletePermission(permission.id)
+                              }
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No permissions returned by API.
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No permissions found. Click &quot;Add Permission&quot; to create
+                one.
               </p>
             )}
           </CardContent>

@@ -83,7 +83,10 @@ export class PlatformAdminMgmtController {
   static async deleteAdmin(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id as string;
-      await prisma.platformAdmin.delete({ where: { id } });
+      await prisma.platformAdmin.update({
+        where: { id },
+        data: { status: "deleted" },
+      });
       return res
         .status(200)
         .json(ApiResponse.success("Admin deleted successfully", null));
@@ -95,6 +98,7 @@ export class PlatformAdminMgmtController {
   static async listAdmins(_req: Request, res: Response, next: NextFunction) {
     try {
       const admins = await prisma.platformAdmin.findMany({
+        where: { status: { not: "deleted" } },
         include: { platformRole: { select: { name: true, slug: true } } },
         orderBy: { createdAt: "desc" },
       });

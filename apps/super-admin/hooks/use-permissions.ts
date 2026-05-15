@@ -4,29 +4,19 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
-  getPlatformRoles,
   getPlatformPermissions,
-  createPlatformRole,
-  updatePlatformRolePermissions,
-  deletePlatformRole,
-  type CreatePlatformRoleInput,
-  type UpdateRolePermissionsInput,
-} from "@/lib/services/roles.service";
+  createPlatformPermission,
+  updatePlatformPermission,
+  deletePlatformPermission,
+} from "@/lib/services/permissions.service";
+import type {
+  CreatePlatformPermissionInput,
+  UpdatePlatformPermissionInput,
+} from "@beaconu/validation";
 
-export function usePlatformRoles() {
+export function usePermissions() {
   const query = useQuery({
-    queryKey: QUERY_KEYS.platformRoles,
-    queryFn: getPlatformRoles,
-  });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
-}
-
-export function usePlatformPermissions() {
-  const query = useQuery({
-    queryKey: QUERY_KEYS.platformPerms,
+    queryKey: QUERY_KEYS.permissionRegistry,
     queryFn: getPlatformPermissions,
   });
   useEffect(() => {
@@ -35,47 +25,50 @@ export function usePlatformPermissions() {
   return query;
 }
 
-export function useCreatePlatformRole() {
+export function useCreatePermission() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreatePlatformRoleInput) =>
-      createPlatformRole(payload),
+    mutationFn: (payload: CreatePlatformPermissionInput) =>
+      createPlatformPermission(payload),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
+      toast.success("Permission created successfully");
       void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.platformRoles,
+        queryKey: QUERY_KEYS.permissionRegistry,
       });
     },
   });
 }
 
-export function useUpdateRolePermissions() {
+export function useUpdatePermission() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      roleId,
+      id,
       payload,
     }: {
-      roleId: string;
-      payload: UpdateRolePermissionsInput;
-    }) => updatePlatformRolePermissions(roleId, payload),
+      id: string;
+      payload: UpdatePlatformPermissionInput;
+    }) => updatePlatformPermission(id, payload),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
+      toast.success("Permission updated successfully");
       void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.platformRoles,
+        queryKey: QUERY_KEYS.permissionRegistry,
       });
     },
   });
 }
 
-export function useDeletePlatformRole() {
+export function useDeletePermission() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (roleId: string) => deletePlatformRole(roleId),
+    mutationFn: (id: string) => deletePlatformPermission(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
+      toast.success("Permission deleted successfully");
       void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.platformRoles,
+        queryKey: QUERY_KEYS.permissionRegistry,
       });
     },
   });
