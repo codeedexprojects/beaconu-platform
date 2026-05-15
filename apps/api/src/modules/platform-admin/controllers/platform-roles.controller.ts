@@ -80,4 +80,16 @@ export class PlatformRolesController {
       next(error);
     }
   }
+
+  static async deleteRole(req: Request, res: Response, next: NextFunction) {
+    try {
+      const roleId = String(req.params.id);
+      await PlatformRolesService.deleteRole(roleId);
+      return res
+        .status(200)
+        .json(ApiResponse.success("Platform role deleted successfully", null));
+    } catch (error) {
+      next(error);
+    }
+  }
 }

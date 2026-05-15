@@ -27,3 +27,7 @@ export async function updatePlatformRolePermissions(
 ): Promise<PlatformRole> {
   return api.put(`/api/v1/admin/roles/${roleId}/permissions`, payload);
 }
+
+export async function deletePlatformRole(roleId: string): Promise<void> {
+  return api.delete(`/api/v1/admin/roles/${roleId}`);
+}

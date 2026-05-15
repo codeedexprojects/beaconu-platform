@@ -17,7 +17,7 @@ const SYSTEM_PLATFORM_ROLE_SLUGS = [
 export class PlatformRolesService {
   static async listPermissions() {
     const permissions = await PlatformRolesRepository.listPermissions();
-    return permissions.map((p) => p.permissionCode);
+    return permissions.map((p) => p.code);
   }
 
   static async listRoles() {
@@ -27,6 +27,7 @@ export class PlatformRolesService {
       name: role.name,
       slug: role.slug,
       isSystemRole: role.isSystemRole,
+      canDelete: true,
       isActive: role.isActive,
       permissions: role.permissions.map((p) => p.permissionCode),
     }));
@@ -100,5 +101,20 @@ export class PlatformRolesService {
       isActive: updated!.isActive,
       permissions: updated!.permissions.map((p) => p.permissionCode),
     };
+  }
+
+  static async deleteRole(roleId: string) {
+    const role = await PlatformRolesRepository.findById(roleId);
+    if (!role) throw new NotFoundError("Role not found");
+
+    const assignedAdminsCount =
+      await PlatformRolesRepository.countAdmins(roleId);
+    if (assignedAdminsCount > 0) {
+      throw new ForbiddenError(
+        "Role is assigned to one or more administrators and cannot be deleted",
+      );
+    }
+
+    await PlatformRolesRepository.delete(roleId);
   }
 }
