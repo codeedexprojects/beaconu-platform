@@ -4,7 +4,7 @@ import { COLLEGE_TOKEN_KEY } from "@/lib/constants";
 
 const PUBLIC_PATHS = ["/login"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COLLEGE_TOKEN_KEY)?.value;
 

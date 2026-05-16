@@ -74,6 +74,7 @@ export async function getPublicBlogs(params: {
     `${API_BASE}/api/v1/public/blogs?${query.toString()}`,
     { next: { revalidate: 3600 } },
   );
+
   if (!res.ok) throw new Error("Failed to fetch blogs");
   const body = await res.json();
   return { data: body.data ?? [], meta: body.meta };

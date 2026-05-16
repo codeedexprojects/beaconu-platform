@@ -8,7 +8,7 @@ const PROTECTED_PREFIXES = ["/my"];
 // Redirect logged-in users away from auth pages
 const AUTH_PATHS = ["/login", "/register"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(BLOG_TOKEN_KEY)?.value;
 
