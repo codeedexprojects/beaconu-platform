@@ -21,6 +21,13 @@ async function main() {
     },
   });
 
+  // Ensure the wildcard permission exists before assigning it
+  await prisma.platformPermission.upsert({
+    where: { code: "*" },
+    update: {},
+    create: { code: "*", description: "Wildcard — grants all permissions" },
+  });
+
   await prisma.platformRolePermission.createMany({
     data: [
       {
