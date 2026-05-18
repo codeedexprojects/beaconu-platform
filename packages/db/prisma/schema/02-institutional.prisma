@@ -224,7 +224,7 @@ model Stream {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  disciplines Discipline[]
+  disciplines   Discipline[]
 
   @@map("streams")
 }
@@ -239,8 +239,8 @@ model Discipline {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  stream  Stream   @relation(fields: [streamId], references: [id])
-  courses Course[]
+  stream        Stream        @relation(fields: [streamId], references: [id])
+  courses       Course[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")
@@ -256,7 +256,7 @@ model StudyLevel {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses Course[]
+  courses       Course[]
 
   @@map("study_levels")
 }
@@ -270,10 +270,11 @@ model ProgramType {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses Course[]
+  courses       Course[]
 
   @@map("program_types")
 }
+
 
 model Course {
   id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

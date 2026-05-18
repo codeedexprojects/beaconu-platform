@@ -5,6 +5,147 @@ import { UniversityPlatformAdminController } from "../controllers/platform-admin
 
 const router: Router = Router();
 
+// ── Academic taxonomy ──────────────────────────────────────────────────────
+router.get(
+  "/streams",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.listStreams,
+);
+
+router.post(
+  "/streams",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.createStream,
+);
+
+router.patch(
+  "/streams/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.updateStream,
+);
+
+router.patch(
+  "/streams/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.disableStream,
+);
+
+router.delete(
+  "/streams/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.deleteStream,
+);
+
+router.get(
+  "/disciplines",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.listDisciplines,
+);
+
+router.post(
+  "/disciplines",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.createDiscipline,
+);
+
+router.patch(
+  "/disciplines/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.updateDiscipline,
+);
+
+router.patch(
+  "/disciplines/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.disableDiscipline,
+);
+
+router.delete(
+  "/disciplines/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.deleteDiscipline,
+);
+
+router.get(
+  "/study-levels",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.listStudyLevels,
+);
+
+router.post(
+  "/study-levels",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.createStudyLevel,
+);
+
+router.patch(
+  "/study-levels/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.updateStudyLevel,
+);
+
+router.patch(
+  "/study-levels/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.disableStudyLevel,
+);
+
+router.delete(
+  "/study-levels/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.deleteStudyLevel,
+);
+
+router.get(
+  "/program-types",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.listProgramTypes,
+);
+
+router.post(
+  "/program-types",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.createProgramType,
+);
+
+router.patch(
+  "/program-types/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.updateProgramType,
+);
+
+router.patch(
+  "/program-types/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.disableProgramType,
+);
+
+router.delete(
+  "/program-types/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  UniversityPlatformAdminController.deleteProgramType,
+);
+
 // ── University types ────────────────────────────────────────────────────────
 router.get(
   "/types",

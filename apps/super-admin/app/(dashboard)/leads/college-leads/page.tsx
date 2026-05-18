@@ -44,7 +44,11 @@ import {
 } from "@/hooks/use-college-leads";
 import { CollegeLeadDetailModal } from "@/components/college-leads/college-lead-detail-modal";
 import { CollegeLeadStatusModal } from "@/components/college-leads/college-lead-status-modal";
-import type { CollegeLead } from "@/lib/services/college-leads.service";
+import { ProvisionSuccessModal } from "@/components/college-leads/provision-success-modal";
+import type {
+  CollegeLead,
+  UpdateStatusResponse,
+} from "@/lib/services/college-leads.service";
 
 const STATUS_CONFIG = {
   pending: { label: "Pending", variant: "warning" as const, icon: Clock },
@@ -66,6 +70,9 @@ export default function CollegeLeadsPage() {
   const [selectedLead, setSelectedLead] = useState<CollegeLead | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [provisionData, setProvisionData] = useState<
+    UpdateStatusResponse["provisionedCollege"] | null
+  >(null);
 
   // Data fetching with TanStack Query
   const { data: leadsData, isLoading: isLeadsLoading } = useCollegeLeads({
@@ -102,9 +109,12 @@ export default function CollegeLeadsPage() {
         review_remarks: data.review_remarks,
       },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
           setIsStatusOpen(false);
           setSelectedLead(null);
+          if (response.provisionedCollege) {
+            setProvisionData(response.provisionedCollege);
+          }
         },
       },
     );
@@ -364,6 +374,12 @@ export default function CollegeLeadsPage() {
         onClose={() => setIsStatusOpen(false)}
         onSubmit={handleUpdateStatus}
         isPending={isUpdating}
+      />
+
+      <ProvisionSuccessModal
+        data={provisionData}
+        isOpen={!!provisionData}
+        onClose={() => setProvisionData(null)}
       />
     </div>
   );

@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "BeaconU — College Admin",
@@ -12,7 +17,9 @@ export default function RootLayout({
 }): React.JSX.Element {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

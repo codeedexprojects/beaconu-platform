@@ -5,6 +5,7 @@ import {
   ListOnboardingRequestsData,
 } from "../validators/college-onboarding.validator";
 import { NotFoundError } from "@/shared/errors";
+import { CollegeProvisioningService } from "@/modules/colleges/services/college-provisioning.service";
 
 export class CollegeOnboardingService {
   static async submit(data: SubmitCollegeOnboardingData) {
@@ -89,11 +90,40 @@ export class CollegeOnboardingService {
       data,
       reviewedBy,
     );
+
+    // Auto-provision college when approved
+    let provisionedCollege: Awaited<
+      ReturnType<typeof CollegeProvisioningService.provisionFromLead>
+    > | null = null;
+
+    if (data.status === "approved" && !existing.createdCollegeId) {
+      provisionedCollege = await CollegeProvisioningService.provisionFromLead({
+        collegeName: existing.collegeName,
+        contactEmail: existing.contactEmail,
+        contactName: existing.contactPersonName,
+        city: existing.city ?? null,
+        state: existing.state ?? null,
+        onboardingRequestId: id,
+      });
+    }
+
     return {
       id: updated.id,
       status: updated.status,
       reviewRemarks: updated.reviewRemarks,
       updatedAt: updated.updatedAt,
+      ...(provisionedCollege
+        ? {
+            provisionedCollege: {
+              id: provisionedCollege.college.id,
+              name: provisionedCollege.college.name,
+              slug: provisionedCollege.college.slug,
+              code: provisionedCollege.college.code,
+              adminEmail: provisionedCollege.staff.email,
+              setupUrl: provisionedCollege.setupUrl,
+            },
+          }
+        : {}),
     };
   }
 
