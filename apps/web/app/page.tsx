@@ -112,9 +112,32 @@ export default function HomePage(): React.JSX.Element {
             Beacon<span>U</span>
           </span>
         </a>
-        <button className="nav-cta" onClick={scrollToForm}>
-          Partner With Us
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <a
+            href="/blogs"
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "var(--text-muted, #64748b)",
+              textDecoration: "none",
+              padding: "0.375rem 0.75rem",
+              borderRadius: "0.5rem",
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.color = "#0f172a")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.color =
+                "var(--text-muted, #64748b)")
+            }
+          >
+            Blog
+          </a>
+          <button className="nav-cta" onClick={scrollToForm}>
+            Partner With Us
+          </button>
+        </div>
       </nav>
 
       {/* Hero */}

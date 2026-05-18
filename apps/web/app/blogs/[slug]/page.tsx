@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Eye, User } from "lucide-react";
+import { Calendar, Eye } from "lucide-react";
 import {
   getPublicBlogBySlug,
   getPublicBlogs,
 } from "@/lib/services/blogs.service";
 import { formatDate } from "@/lib/utils";
+import { BlogHeader } from "@/components/blogs/BlogHeader";
 
 export const revalidate = 3600;
 
@@ -71,8 +72,11 @@ export default async function BlogDetailPage({ params }: Props) {
     notFound();
   }
 
+  const wordCount = blog.content.split(/\s+/).length;
+  const readingMins = Math.max(1, Math.ceil(wordCount / 200));
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-[#F3F4F6]">
       {/* JSON-LD */}
       <script
         type="application/ld+json"
@@ -88,7 +92,7 @@ export default async function BlogDetailPage({ params }: Props) {
             headline: blog.title,
             description: blog.summary ?? "",
             keywords: blog.tags.join(", "),
-            wordCount: blog.content.split(/\s+/).length,
+            wordCount,
             author: { "@type": "Person", name: blog.authorName },
             datePublished: blog.publishedAt,
             dateModified: blog.updatedAt,
@@ -108,80 +112,147 @@ export default async function BlogDetailPage({ params }: Props) {
         }}
       />
 
-      {/* Cover image */}
-      {blog.coverImageUrl && (
-        <div className="relative h-64 w-full sm:h-80 bg-muted">
-          <Image
-            src={blog.coverImageUrl}
-            alt={blog.title}
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-        </div>
-      )}
+      <BlogHeader backHref="/blogs" backLabel="All blogs" title="All Blogs" />
 
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="max-w-2xl mx-auto px-4 py-5">
+        {/* ── Blog card (detail view) ── */}
+        <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+          {/* Cover image */}
+          {blog.coverImageUrl ? (
+            <div className="relative h-56 w-full bg-gray-100">
+              <Image
+                src={blog.coverImageUrl}
+                alt={blog.title}
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 672px) 100vw, 672px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+            </div>
+          ) : (
+            <div className="h-40 w-full bg-gradient-to-br from-[#FEF0EB] to-[#FDE8D8] flex items-center justify-center">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#E8521A"
+                strokeWidth="1.4"
+                opacity="0.4"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+              </svg>
+            </div>
+          )}
+
+          <div className="p-5">
+            {/* Tags */}
+            {blog.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {blog.tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF0EB] text-[#C04010] border border-[#E8521A]/15 uppercase tracking-wide"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Title */}
+            <h1 className="text-[22px] font-bold text-gray-900 leading-tight tracking-tight mb-2">
+              {blog.title}
+            </h1>
+
+            {/* Summary */}
+            {blog.summary && (
+              <p className="text-[14px] text-gray-500 leading-relaxed mb-4">
+                {blog.summary}
+              </p>
+            )}
+
+            {/* Author + meta row — inset card, mirrors the course detail box */}
+            <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-5">
+              <div className="flex items-center gap-3">
+                {/* Author avatar */}
+                <div className="w-10 h-10 rounded-full bg-[#FEF0EB] border-2 border-white ring-1 ring-[#E8521A]/20 flex items-center justify-center shrink-0">
+                  <span className="text-[12px] font-bold text-[#E8521A]">
+                    {blog.authorName?.slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-gray-900 truncate">
+                    {blog.authorName}
+                  </p>
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                    {blog.publishedAt && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                        <Calendar size={11} aria-hidden />
+                        {formatDate(blog.publishedAt)}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                      <Eye size={11} aria-hidden />
+                      {blog.viewCount.toLocaleString()} views
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                      <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        aria-hidden
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12,6 12,12 16,14" />
+                      </svg>
+                      {readingMins} min read
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content body */}
+            <div className="space-y-4">
+              {blog.content.split("\n").map((paragraph: string, i: number) =>
+                paragraph.trim() ? (
+                  <p
+                    key={i}
+                    className="text-[14px] text-gray-700 leading-[1.75]"
+                  >
+                    {paragraph}
+                  </p>
+                ) : null,
+              )}
+            </div>
+          </div>
+        </article>
+
+        {/* ── Back CTA — mirrors "View Details →" button ── */}
         <Link
           href="/blogs"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="mt-5 w-full h-12 rounded-full bg-[#E8521A] hover:bg-[#D04718] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white text-[14px] font-semibold"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          All Blogs
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back to All Blogs
         </Link>
-
-        {/* Tags */}
-        {blog.tags.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {blog.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
-          {blog.title}
-        </h1>
-
-        {blog.summary && (
-          <p className="mt-3 text-lg text-muted-foreground">{blog.summary}</p>
-        )}
-
-        {/* Meta */}
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground border-b pb-4">
-          <span className="inline-flex items-center gap-1.5">
-            <User className="h-3.5 w-3.5" />
-            {blog.authorName}
-          </span>
-          {blog.publishedAt && (
-            <span className="inline-flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" />
-              {formatDate(blog.publishedAt)}
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1.5">
-            <Eye className="h-3.5 w-3.5" />
-            {blog.viewCount} views
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="mt-8 prose prose-slate max-w-none">
-          {blog.content.split("\n").map((paragraph, i) =>
-            paragraph.trim() ? (
-              <p key={i} className="mb-4 text-foreground/90 leading-relaxed">
-                {paragraph}
-              </p>
-            ) : null,
-          )}
-        </div>
       </div>
     </main>
   );
