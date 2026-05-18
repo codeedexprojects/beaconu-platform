@@ -2,31 +2,48 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COLLEGE_TOKEN_KEY } from "@/lib/constants";
 
-const PUBLIC_PATHS = ["/login"];
+// Routes that don't need authentication (landing pages)
+const PUBLIC_PATHS = ["/", "/courses", "/campuses", "/login"];
+
+// Routes that are strictly for student dashboard
+const PROTECTED_PATHS = ["/dashboard", "/profile", "/settings"];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const token = request.cookies.get(COLLEGE_TOKEN_KEY)?.value;
+  const url = request.nextUrl;
+  const hostname = request.headers.get("host") || "";
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  // Extract subdomain (e.g., amity-noida.beaconu.com -> amity-noida)
+  // Support localhost testing (e.g., amity-noida.localhost:3001)
+  let subdomain = null;
+  const isLocalhost = hostname.includes("localhost");
 
-  // Authenticated student hitting /login → send to dashboard
-  if (isPublic && token) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (isLocalhost) {
+    const parts = hostname.split(".");
+    if (parts.length > 1 && parts[0] !== "localhost") {
+      subdomain = parts[0];
+    }
+  } else {
+    // Production logic
+    const parts = hostname.split(".");
+    if (parts.length >= 3) {
+      subdomain = parts[0];
+    }
   }
 
-  // Unauthenticated student hitting a protected route → send to login
-  if (!isPublic && !token) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Handle subdomain rewriting
+  if (subdomain && subdomain !== "www") {
+    url.pathname = `/college/${subdomain}${url.pathname}`;
+    // We rewrite instead of redirecting so the URL remains clean in the browser
+    return NextResponse.rewrite(url);
   }
 
+  // If no subdomain, we might want to redirect to main beaconu site or show a generic error
+  // For now, just continue
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

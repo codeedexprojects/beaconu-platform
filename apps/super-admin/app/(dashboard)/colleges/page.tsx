@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Building2,
   Search,
-  Plus,
-  Filter,
-  MoreHorizontal,
+  ExternalLink,
   MapPin,
   GraduationCap,
-  ExternalLink,
+  Users,
+  Globe,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,221 +26,295 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { formatNumber } from "@/lib/utils";
+import { useColleges, useCollegeStats } from "@/hooks/use-colleges";
 
-const DUMMY_COLLEGES = [
+const STATUS_CONFIG: Record<
+  string,
   {
-    id: "1",
-    name: "Amity University",
-    city: "Noida",
-    state: "Uttar Pradesh",
-    code: "AMITY-N",
-    courses: 42,
-    students: 1240,
-    status: "active",
-    university: { name: "Amity Group" },
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: React.ReactNode;
+  }
+> = {
+  active: {
+    label: "Active",
+    variant: "default",
+    icon: <CheckCircle2 className="h-3 w-3 mr-1" />,
   },
-  {
-    id: "2",
-    name: "University of Hyderabad",
-    city: "Hyderabad",
-    state: "Telangana",
-    code: "UOH-01",
-    courses: 38,
-    students: 980,
-    status: "active",
-    university: { name: "Central University" },
+  pending_setup: {
+    label: "Pending Setup",
+    variant: "secondary",
+    icon: <AlertCircle className="h-3 w-3 mr-1" />,
   },
-  {
-    id: "3",
-    name: "IIT Bombay",
-    city: "Mumbai",
-    state: "Maharashtra",
-    code: "IITB-M",
-    courses: 56,
-    students: 2100,
-    status: "active",
-    university: { name: "IIT Group" },
-  },
-  {
-    id: "4",
-    name: "Christ University",
-    city: "Bengaluru",
-    state: "Karnataka",
-    code: "CU-B",
-    courses: 29,
-    students: 760,
-    status: "active",
-    university: { name: "Christ Group" },
-  },
-  {
-    id: "5",
-    name: "Manipal Academy",
-    city: "Manipal",
-    state: "Karnataka",
-    code: "MAHE-M",
-    courses: 61,
-    students: 1820,
-    status: "inactive",
-    university: { name: "Manipal Group" },
-  },
-];
+};
 
 export default function CollegesPage() {
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1);
 
-  const filteredColleges = useMemo(() => {
-    return DUMMY_COLLEGES.filter(
-      (c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.city.toLowerCase().includes(search.toLowerCase()) ||
-        c.code.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [search]);
+  const { data: stats } = useCollegeStats();
+  const {
+    data: result,
+    isLoading,
+    error,
+  } = useColleges({ search, status, page, limit: 20 });
+
+  const colleges = result?.data ?? [];
+  const meta = result?.meta;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       <Header
         title="Colleges"
-        description="Manage and monitor all onboarded colleges"
-      >
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add College
-        </Button>
-      </Header>
+        description="All registered colleges and their portal status"
+        icon={<Building2 className="h-6 w-6 text-blue-400" />}
+      />
 
-      <div className="flex-1 space-y-4 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-1 items-center gap-2 max-w-sm">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search colleges..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 bg-background"
-              />
-            </div>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="px-3 py-1">
-              Total: {filteredColleges.length}
-            </Badge>
-          </div>
+      <div className="p-6 space-y-6">
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">Total Colleges</p>
+              <p className="text-3xl font-bold mt-1">{stats?.total ?? "—"}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">Active Portals</p>
+              <p className="text-3xl font-bold mt-1 text-emerald-500">
+                {stats?.active ?? "—"}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">Pending Setup</p>
+              <p className="text-3xl font-bold mt-1 text-amber-500">
+                {stats?.pending ?? "—"}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        <Card className="border-none shadow-sm overflow-hidden">
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="colleges-search"
+                  placeholder="Search by name, code, city..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={!status ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatus(undefined)}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={status === "active" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatus("active")}
+                >
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Active
+                </Button>
+                <Button
+                  variant={status === "pending_setup" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatus("pending_setup")}
+                >
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Pending
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Table */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              {meta?.total !== undefined
+                ? `${meta.total} college${meta.total !== 1 ? "s" : ""}`
+                : "Colleges"}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-[300px]">College</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead className="text-right">Courses</TableHead>
-                  <TableHead className="text-right">Students</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredColleges.map((college) => (
-                  <TableRow
-                    key={college.id}
-                    className="group hover:bg-muted/30 transition-colors"
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          <Building2 className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm leading-none mb-1">
-                            {college.name}
-                          </p>
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <GraduationCap className="h-3 w-3" />
-                            {college.university.name}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>
-                          {college.city}, {college.state}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] font-mono"
-                      >
-                        {college.code}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {college.courses}
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-muted-foreground">
-                      {formatNumber(college.students)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          college.status === "active" ? "success" : "secondary"
-                        }
-                        className="text-[10px] capitalize"
-                      >
-                        {college.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="gap-2">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2">
-                            Edit College
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive focus:text-destructive">
-                            Delete College
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+                <AlertCircle className="h-8 w-8" />
+                <p>Failed to load colleges</p>
+              </div>
+            ) : colleges.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+                <Building2 className="h-10 w-10 opacity-30" />
+                <p className="text-sm">No colleges found</p>
+                <p className="text-xs">
+                  Colleges appear here after an onboarding lead is approved
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>College</TableHead>
+                    <TableHead>Portal Subdomain</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-center">Campuses</TableHead>
+                    <TableHead className="text-center">Courses</TableHead>
+                    <TableHead className="text-center">Staff</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {colleges.map((college) => {
+                    const statusConfig =
+                      STATUS_CONFIG[college.status] ??
+                      STATUS_CONFIG.pending_setup;
+                    return (
+                      <TableRow key={college.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {college.logoUrl ? (
+                              <img
+                                src={college.logoUrl}
+                                alt={college.name}
+                                className="h-8 w-8 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-sm leading-tight">
+                                {college.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {college.code}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm">
+                            <Globe className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-mono text-xs">
+                              {college.slug}.beaconu.com
+                            </span>
+                            {college.status === "active" && (
+                              <a
+                                href={`https://${college.slug}.beaconu.com`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="h-3 w-3 ml-1 text-blue-400 hover:text-blue-300" />
+                              </a>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {[college.city, college.state]
+                              .filter(Boolean)
+                              .join(", ") || "—"}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-center">
+                          <span className="text-sm font-medium">
+                            {college._count.campuses}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <GraduationCap className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm font-medium">
+                              {college._count.courses}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Users className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm font-medium">
+                              {college._count.staffMembers}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={statusConfig.variant}
+                            className="flex items-center w-fit text-xs"
+                          >
+                            {statusConfig.icon}
+                            {statusConfig.label}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="text-xs">
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+
+            {/* Pagination */}
+            {meta && meta.totalPages > 1 && (
+              <div className="flex items-center justify-between p-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Page {meta.page} of {meta.totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= meta.totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -20,17 +20,17 @@ import {
   ChevronRight,
   UserPlus,
   Inbox,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/store";
-import type { Permission } from "@/lib/rbac";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
-  permission?: Permission;
+  permission?: string;
 }
 
 interface NavSection {
@@ -63,6 +63,18 @@ const navSections: NavSection[] = [
         label: "University Types",
         icon: GraduationCap,
         permission: "university-types.view",
+      },
+      {
+        href: "/academic-masters",
+        label: "Academic Masters",
+        icon: Layers,
+        permission: "academic-masters.view",
+      },
+      {
+        href: "/courses",
+        label: "Courses",
+        icon: BookOpen,
+        permission: "academic-masters.view",
       },
     ],
   },

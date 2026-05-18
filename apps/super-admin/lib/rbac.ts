@@ -8,6 +8,8 @@ export type Permission =
   | "universities.manage"
   | "university-types.view"
   | "university-types.manage"
+  | "academic-masters.view"
+  | "academic-masters.manage"
   | "students.view"
   | "leads.view"
   | "leads.manage"
@@ -32,6 +34,8 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     "universities.manage",
     "university-types.view",
     "university-types.manage",
+    "academic-masters.view",
+    "academic-masters.manage",
     "students.view",
     "leads.view",
     "leads.manage",
@@ -52,6 +56,7 @@ const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     "colleges.view",
     "universities.view",
     "university-types.view",
+    "academic-masters.view",
     "students.view",
     "leads.view",
     "leads.manage",

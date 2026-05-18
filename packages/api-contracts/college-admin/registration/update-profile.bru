@@ -1,0 +1,27 @@
+meta {
+  name: Update College Profile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{collegeAdminToken}}
+}
+
+body:json {
+  {
+    "name": "Beacon University",
+    "code": "BU-101",
+    "address": "123 Tech Campus Road",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "district": "Bangalore Urban",
+    "pinCode": "560001"
+  }
+}
