@@ -17,7 +17,7 @@ export default async function EditBlogPage({ params }: Props) {
 
   if (!token) redirect("/login");
 
-  const res = await fetch(`${API_BASE}/api/v1/blog-author/blogs/${id}`, {
+  const res = await fetch(`${API_BASE}/api/v1/blog/author/blogs/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });

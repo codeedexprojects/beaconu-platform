@@ -46,7 +46,7 @@ export interface UpdateBlogInput {
 function getBlogBasePath(userType: string): string {
   switch (userType) {
     case "blog_author":
-      return "/api/v1/blog-author/blogs";
+      return "/api/v1/blog/author/blogs";
     case "staff_member":
       return "/api/v1/staff/blogs";
     case "counsellor":
@@ -54,7 +54,7 @@ function getBlogBasePath(userType: string): string {
     case "platform_admin":
       return "/api/v1/admin/blogs";
     default:
-      return "/api/v1/blog-author/blogs";
+      return "/api/v1/blog/author/blogs";
   }
 }
 
