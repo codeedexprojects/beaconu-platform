@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { ADMIN_TOKEN_KEY } from "@/lib/constants";
 const PUBLIC_PATHS = ["/login"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(ADMIN_TOKEN_KEY)?.value;
 

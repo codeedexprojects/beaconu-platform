@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store";
-import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title: string;
@@ -28,7 +27,7 @@ export function Header({ title, description, children }: HeaderProps) {
 
   function handleLogout() {
     clearAuth();
-    router.push("/login");
+    window.location.assign("/login");
   }
 
   const initials = admin?.fullName

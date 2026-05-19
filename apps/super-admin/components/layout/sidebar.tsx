@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -197,7 +197,7 @@ export function Sidebar() {
 
   function handleLogout() {
     clearAuth();
-    router.push("/login");
+    window.location.assign("/login");
   }
 
   return (

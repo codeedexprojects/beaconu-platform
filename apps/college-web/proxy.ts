@@ -8,7 +8,9 @@ const PUBLIC_PATHS = ["/", "/courses", "/campuses", "/login"];
 // Routes that are strictly for student dashboard
 const PROTECTED_PATHS = ["/dashboard", "/profile", "/settings"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get(COLLEGE_TOKEN_KEY)?.value;
   const url = request.nextUrl;
   const hostname = request.headers.get("host") || "";
 

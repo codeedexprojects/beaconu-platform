@@ -47,6 +47,8 @@ export class BlogRepository {
     authorId: string;
     authorType: string;
     authorName: string;
+    status: string;
+    publishedAt: Date | null;
   }) {
     return prisma.blog.create({
       data,

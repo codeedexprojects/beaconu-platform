@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/blog/posts
+  url: {{baseUrl}}/api/v1/staff/blogs
   body: json
   auth: none
 }
@@ -18,10 +18,8 @@ headers {
 body:json {
   {
     "title": "My Journey Through the College Admission Process",
-    "slug": "my-college-admission-journey",
     "summary": "A first-hand account of navigating college applications.",
     "content": "Full blog post content goes here...",
-    "author_name": "Riya Sharma",
     "cover_image_url": "https://example.com/cover.jpg",
     "tags": ["college", "admissions", "experience"]
   }
@@ -38,14 +36,12 @@ script:post-response {
 
 docs {
   Submit a new blog post for super-admin review. Status is set to "pending" automatically.
-  Requires blog_author authentication.
+  Requires staff_member authentication. Slug and author name are resolved server-side.
 
   Fields:
   - title: Post title (required, max 255 chars)
-  - slug: URL slug, lowercase alphanumeric with hyphens (required, max 100 chars, must be unique)
   - summary: Short description shown in listings (optional, max 500 chars)
   - content: Full post content (required)
-  - author_name: Display name for byline (required, max 100 chars)
   - cover_image_url: URL to cover image (optional)
   - tags: Array of tag strings (optional)
 }

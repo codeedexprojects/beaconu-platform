@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -16,7 +16,12 @@ const onboardingSchema = z.object({
     .string()
     .trim()
     .min(2, "Contact person name is required"),
-  contact_email: z.string().trim().email("Please enter a valid email address"),
+  contact_email: z
+    .string()
+    .trim()
+    .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+      message: "Please enter a valid email address",
+    }),
   contact_phone: z
     .string()
     .trim()
@@ -107,9 +112,32 @@ export default function HomePage(): React.JSX.Element {
             Beacon<span>U</span>
           </span>
         </a>
-        <button className="nav-cta" onClick={scrollToForm}>
-          Partner With Us
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <a
+            href="/blogs"
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "var(--text-muted, #64748b)",
+              textDecoration: "none",
+              padding: "0.375rem 0.75rem",
+              borderRadius: "0.5rem",
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.color = "#0f172a")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLAnchorElement).style.color =
+                "var(--text-muted, #64748b)")
+            }
+          >
+            Blog
+          </a>
+          <button className="nav-cta" onClick={scrollToForm}>
+            Partner With Us
+          </button>
+        </div>
       </nav>
 
       {/* Hero */}
