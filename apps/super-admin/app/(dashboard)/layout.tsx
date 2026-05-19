@@ -54,7 +54,6 @@ export default function DashboardLayout({
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { can } = useRbac();
   const token = useAuthStore((s) => s.token);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
