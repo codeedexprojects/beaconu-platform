@@ -68,7 +68,6 @@ export default function CollegesPage() {
       <Header
         title="Colleges"
         description="All registered colleges and their portal status"
-        icon={<Building2 className="h-6 w-6 text-blue-400" />}
       />
 
       <div className="p-6 space-y-6">
