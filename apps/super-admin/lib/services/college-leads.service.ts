@@ -14,6 +14,7 @@ export interface CollegeLead {
   reviewRemarks: string | null;
   reviewer: { id: string; name: string } | null;
   createdCollegeId: string | null;
+  createdCollege?: { id: string; slug: string } | null;
   createdAt: string;
   updatedAt: string;
 }

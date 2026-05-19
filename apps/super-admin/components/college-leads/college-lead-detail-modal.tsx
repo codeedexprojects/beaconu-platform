@@ -38,6 +38,24 @@ export function CollegeLeadDetailModal({
 
   const statusConfig = STATUS_CONFIG[lead.status];
 
+  const getCollegeLink = (slug: string) => {
+    if (typeof window === "undefined") return "";
+    const hostname = window.location.hostname;
+    if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+      return `http://${slug}.localhost:3002`;
+    }
+    const parts = hostname.split(".");
+    if (parts.length >= 2) {
+      const baseDomain = parts.slice(-2).join(".");
+      return `https://${slug}.${baseDomain}`;
+    }
+    return `https://${slug}.beaconu.com`;
+  };
+
+  const portalLink = lead.createdCollege
+    ? getCollegeLink(lead.createdCollege.slug)
+    : "";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
@@ -124,6 +142,28 @@ export function CollegeLeadDetailModal({
             </div>
           )}
 
+          {lead.status === "approved" && lead.createdCollege && (
+            <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-emerald-800 uppercase mb-1.5 flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-emerald-600" />{" "}
+                Provisioned College Portal
+              </p>
+              <div className="flex items-center justify-between gap-2 mt-1">
+                <span className="font-mono text-sm text-emerald-900 break-all select-all">
+                  {portalLink}
+                </span>
+                <a
+                  href={portalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
+                >
+                  Visit Portal &rarr;
+                </a>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
             <span>
               Submitted {new Date(lead.createdAt).toLocaleString("en-IN")}
@@ -136,7 +176,12 @@ export function CollegeLeadDetailModal({
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={() => onUpdateStatus(lead)}>Update Status</Button>
+          <Button
+            onClick={() => onUpdateStatus(lead)}
+            disabled={lead.status === "approved"}
+          >
+            Update Status
+          </Button>
         </div>
       </Card>
     </div>

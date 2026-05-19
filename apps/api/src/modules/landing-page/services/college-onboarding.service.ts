@@ -40,6 +40,9 @@ export class CollegeOnboardingService {
         reviewer: r.reviewer
           ? { id: r.reviewer.id, name: r.reviewer.fullName }
           : null,
+        createdCollege: r.createdCollege
+          ? { id: r.createdCollege.id, slug: r.createdCollege.slug }
+          : null,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
       })),
@@ -70,6 +73,9 @@ export class CollegeOnboardingService {
       reviewRemarks: request.reviewRemarks,
       reviewer: request.reviewer
         ? { id: request.reviewer.id, name: request.reviewer.fullName }
+        : null,
+      createdCollege: request.createdCollege
+        ? { id: request.createdCollege.id, slug: request.createdCollege.slug }
         : null,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,

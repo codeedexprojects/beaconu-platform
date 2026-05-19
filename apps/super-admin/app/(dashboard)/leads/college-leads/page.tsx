@@ -343,6 +343,7 @@ export default function CollegeLeadsPage() {
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleOpenStatusModal(lead)}
+                                disabled={lead.status === "approved"}
                               >
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                                 Update Status
