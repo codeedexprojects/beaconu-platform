@@ -33,6 +33,9 @@ export class CollegeDashboardController {
   ) {
     try {
       const { id } = req.params;
+      if (typeof id !== "string") {
+        throw new NotFoundError("College not found");
+      }
       const college = await CollegeDashboardRepository.getCollegeDetail(id);
       if (!college) throw new NotFoundError("College not found");
       return res
