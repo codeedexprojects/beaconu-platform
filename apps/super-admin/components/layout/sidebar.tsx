@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -191,7 +191,9 @@ const navSections: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { admin, clearAuth } = useAuthStore();
+  const router = useRouter();
+  const admin = useAuthStore((state) => state.admin);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   function handleLogout() {
     clearAuth();

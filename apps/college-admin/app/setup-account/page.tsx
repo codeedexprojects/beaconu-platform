@@ -20,9 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import {
-  authService,
-  type SetupTokenValidation,
-} from "@/lib/services/auth.service";
+  useSetupCollegeAccount,
+  useVerifyCollegeSetupToken,
+} from "@/hooks/use-auth";
 import { useAuthStore } from "@/store";
 import { getErrorMessage } from "@/lib/api";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
@@ -45,11 +45,8 @@ function SetupAccountPageContent() {
   const token = searchParams?.get("token");
   const setAuth = useAuthStore((state) => state.setAuth);
   const [collegeSlug, setCollegeSlug] = useState<string | null>(null);
-  const [isValidating, setIsValidating] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationData, setValidationData] =
-    useState<SetupTokenValidation | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { mutateAsync: setupCollegeAccount, isPending: isSubmitting } =
+    useSetupCollegeAccount();
 
   const {
     register,
@@ -59,6 +56,12 @@ function SetupAccountPageContent() {
     resolver: zodResolver(setupSchema as any),
   });
 
+  const {
+    data: validationData,
+    error,
+    isLoading: isValidating,
+  } = useVerifyCollegeSetupToken(token);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     setCollegeSlug(
@@ -66,44 +69,11 @@ function SetupAccountPageContent() {
     );
   }, []);
 
-  useEffect(() => {
-    if (!token) {
-      setError("Setup token is missing. Please check your email link.");
-      setIsValidating(false);
-      return;
-    }
-
-    let isActive = true;
-
-    authService
-      .verifySetupToken(token)
-      .then((data) => {
-        if (isActive) {
-          setValidationData(data);
-        }
-      })
-      .catch((err) => {
-        if (isActive) {
-          setError(getErrorMessage(err));
-        }
-      })
-      .finally(() => {
-        if (isActive) {
-          setIsValidating(false);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [token]);
-
   const onSubmit = async (data: SetupFormData) => {
     if (!token || !validationData) return;
 
-    setIsSubmitting(true);
     try {
-      const response = await authService.setupAccount({
+      const response = await setupCollegeAccount({
         token,
         password: data.password,
       });
@@ -113,8 +83,6 @@ function SetupAccountPageContent() {
       router.push(getPortalPath(validationData.collegeSlug, "/setup/profile"));
     } catch (err) {
       toast.error(getErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -131,7 +99,7 @@ function SetupAccountPageContent() {
     );
   }
 
-  if (error || !validationData) {
+  if ((token && error) || !validationData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
         <Card className="w-full max-w-md shadow-lg border-destructive/20">
@@ -141,7 +109,9 @@ function SetupAccountPageContent() {
             </div>
             <CardTitle className="text-xl">Invalid Setup Link</CardTitle>
             <CardDescription className="text-destructive mt-2">
-              {error || "This setup link is invalid or has expired."}
+              {error
+                ? getErrorMessage(error)
+                : "This setup link is invalid or has expired."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">

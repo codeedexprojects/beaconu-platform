@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2, LogOut, CheckCircle2, School } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/store";
-import { authService } from "@/lib/services/auth.service";
-import { collegesService } from "@/lib/services/colleges.service";
-import { QUERY_KEYS } from "@/lib/query-keys";
+import {
+  useCollegeCampuses,
+  useCollegeCourses,
+  useCollegeProfile,
+} from "@/hooks/use-colleges";
+import { useLogoutCollegeAdmin } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
@@ -25,7 +27,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
+  const { mutateAsync: logoutCollegeAdmin } = useLogoutCollegeAdmin();
   const [isMounted, setIsMounted] = useState(false);
   const collegeSlug =
     typeof window === "undefined"
@@ -46,8 +51,8 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
-    } catch (e) {
+      await logoutCollegeAdmin();
+    } catch {
       // ignore
     } finally {
       logout();
@@ -62,23 +67,16 @@ export default function DashboardLayout({
   const isAtRoot = appPathname === "/";
 
   // Fetch onboarding progress queries (only enabled on root path for pending setup users)
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: QUERY_KEYS.profile,
-    queryFn: () => collegesService.getProfile(),
-    enabled: isPendingSetup && isAtRoot,
-  });
+  const { data: profile, isLoading: isProfileLoading } = useCollegeProfile(
+    isPendingSetup && isAtRoot,
+  );
 
-  const { data: campuses = [], isLoading: isCampusesLoading } = useQuery({
-    queryKey: QUERY_KEYS.campuses,
-    queryFn: () => collegesService.getCampuses(),
-    enabled: isPendingSetup && isAtRoot,
-  });
+  const { data: campuses = [], isLoading: isCampusesLoading } =
+    useCollegeCampuses(isPendingSetup && isAtRoot);
 
-  const { data: courses = [], isLoading: isCoursesLoading } = useQuery({
-    queryKey: QUERY_KEYS.courses,
-    queryFn: () => collegesService.getCourses(),
-    enabled: isPendingSetup && isAtRoot,
-  });
+  const { data: courses = [], isLoading: isCoursesLoading } = useCollegeCourses(
+    isPendingSetup && isAtRoot,
+  );
 
   const isLoadingSetupData =
     isPendingSetup &&

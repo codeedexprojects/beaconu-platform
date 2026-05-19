@@ -167,7 +167,9 @@ export class CollegeProvisioningRepository {
         data: { passwordHash, fullName },
         include: {
           collegeRole: { include: { permissions: true } },
-          college: { select: { id: true, slug: true, status: true } },
+          college: {
+            select: { id: true, slug: true, name: true, status: true },
+          },
         },
       });
 

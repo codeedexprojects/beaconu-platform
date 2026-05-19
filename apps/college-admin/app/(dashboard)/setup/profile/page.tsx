@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,11 +20,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import {
-  collegesService,
-  type CollegeProfile,
-} from "@/lib/services/colleges.service";
-import { QUERY_KEYS } from "@/lib/query-keys";
-import { getErrorMessage } from "@/lib/api";
+  useCollegeProfile,
+  useUpdateCollegeProfile,
+} from "@/hooks/use-colleges";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 const profileSchema = z.object({
@@ -47,30 +44,13 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function SetupProfilePage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const collegeSlug =
     typeof window === "undefined"
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: QUERY_KEYS.profile,
-    queryFn: () => collegesService.getProfile(),
-  });
-
-  const { mutate: updateProfile, isPending } = useMutation({
-    mutationFn: (data: Partial<CollegeProfile & { logoUrl?: string }>) =>
-      collegesService.updateProfile({
-        ...data,
-        logoUrl: data.logoUrl ? data.logoUrl : null,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.profile });
-      toast.success("Profile saved successfully");
-      router.push(getPortalPath(collegeSlug, "/setup/campuses"));
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
+  const { data: profile, isLoading } = useCollegeProfile();
+  const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
 
   const {
     register,
@@ -97,7 +77,18 @@ export default function SetupProfilePage() {
   }, [profile, reset]);
 
   const onSubmit = (data: ProfileFormData) => {
-    updateProfile(data);
+    updateProfile(
+      {
+        ...data,
+        logoUrl: data.logoUrl ? data.logoUrl : null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Profile saved successfully");
+          router.push(getPortalPath(collegeSlug, "/setup/campuses"));
+        },
+      },
+    );
   };
 
   if (isLoading) {

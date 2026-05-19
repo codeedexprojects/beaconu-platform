@@ -20,13 +20,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import {
-  authService,
-  type SetupTokenValidation,
-} from "@/lib/services/auth.service";
-import {
-  publicCollegesService,
-  type PublicCollege,
-} from "@/lib/services/public-colleges.service";
+  useLoginCollegeAdmin,
+  useSetupCollegeAccount,
+  useVerifyCollegeSetupToken,
+} from "@/hooks/use-auth";
+import { usePublicCollegeBySlug } from "@/hooks/use-public-colleges";
 import { useAuthStore } from "@/store";
 import { getErrorMessage } from "@/lib/api";
 import {
@@ -74,14 +72,11 @@ function LoginPageContent() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const logout = useAuthStore((state) => state.logout);
 
-  const [isLoading, setIsLoading] = useState(false);
   const [collegeSlug, setCollegeSlug] = useState<string | null>(null);
-  const [college, setCollege] = useState<PublicCollege | null>(null);
-  const [isCollegeLoading, setIsCollegeLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(Boolean(token));
-  const [validationData, setValidationData] =
-    useState<SetupTokenValidation | null>(null);
-  const [setupError, setSetupError] = useState<string | null>(null);
+  const { mutateAsync: loginCollegeAdmin, isPending: isLoginPending } =
+    useLoginCollegeAdmin();
+  const { mutateAsync: setupCollegeAccount, isPending: isSetupPending } =
+    useSetupCollegeAccount();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema as any),
@@ -90,6 +85,14 @@ function LoginPageContent() {
   const setupForm = useForm<SetupFormData>({
     resolver: zodResolver(setupSchema as any),
   });
+
+  const { data: college, isLoading: isCollegeLoading } =
+    usePublicCollegeBySlug(collegeSlug);
+  const {
+    data: validationData,
+    error: setupError,
+    isLoading: isValidating,
+  } = useVerifyCollegeSetupToken(token);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -109,72 +112,9 @@ function LoginPageContent() {
     setCollegeSlug(slug);
   }, [router]);
 
-  useEffect(() => {
-    if (!collegeSlug) {
-      setCollege(null);
-      return;
-    }
-
-    let isActive = true;
-    setIsCollegeLoading(true);
-    publicCollegesService
-      .getBySlug(collegeSlug)
-      .then((data) => {
-        if (isActive) {
-          setCollege(data);
-        }
-      })
-      .catch(() => {
-        if (isActive) {
-          setCollege(null);
-        }
-      })
-      .finally(() => {
-        if (isActive) {
-          setIsCollegeLoading(false);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [collegeSlug]);
-
-  useEffect(() => {
-    if (!token) {
-      setIsValidating(false);
-      return;
-    }
-
-    let isActive = true;
-
-    authService
-      .verifySetupToken(token)
-      .then((data) => {
-        if (isActive) {
-          setValidationData(data);
-        }
-      })
-      .catch((error) => {
-        if (isActive) {
-          setSetupError(getErrorMessage(error));
-        }
-      })
-      .finally(() => {
-        if (isActive) {
-          setIsValidating(false);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [token]);
-
   const onLoginSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     try {
-      const response = await authService.login(data);
+      const response = await loginCollegeAdmin(data);
 
       if (collegeSlug && response.user.collegeSlug !== collegeSlug) {
         logout();
@@ -190,8 +130,6 @@ function LoginPageContent() {
       router.push(nextPath);
     } catch (error) {
       toast.error(getAuthToastMessage(error));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -203,9 +141,8 @@ function LoginPageContent() {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const response = await authService.setupAccount({
+      const response = await setupCollegeAccount({
         token,
         password: data.password,
       });
@@ -215,8 +152,6 @@ function LoginPageContent() {
       router.push(getPortalPath(validationData.collegeSlug, "/setup/profile"));
     } catch (error) {
       toast.error(getAuthToastMessage(error));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -248,7 +183,9 @@ function LoginPageContent() {
             </div>
             <CardTitle className="text-xl">Invalid Setup Link</CardTitle>
             <CardDescription className="text-destructive mt-2">
-              {setupError || "This setup link is invalid or has expired."}
+              {setupError
+                ? getErrorMessage(setupError)
+                : "This setup link is invalid or has expired."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
@@ -332,9 +269,9 @@ function LoginPageContent() {
               <Button
                 type="submit"
                 className="w-full mt-6"
-                disabled={isLoading}
+                disabled={isSetupPending}
               >
-                {isLoading ? (
+                {isSetupPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 Complete Setup
@@ -376,9 +313,9 @@ function LoginPageContent() {
               <Button
                 type="submit"
                 className="w-full mt-6"
-                disabled={isLoading || isCollegeLoading}
+                disabled={isLoginPending || isCollegeLoading}
               >
-                {isLoading ? (
+                {isLoginPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 Sign In

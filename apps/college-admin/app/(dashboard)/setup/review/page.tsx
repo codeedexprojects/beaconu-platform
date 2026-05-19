@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,10 +13,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { collegesService } from "@/lib/services/colleges.service";
-import { QUERY_KEYS } from "@/lib/query-keys";
+import {
+  useCollegeCampuses,
+  useCollegeCourses,
+  useCollegeProfile,
+  useSubmitCollegeRegistration,
+} from "@/hooks/use-colleges";
 import { useAuthStore } from "@/store";
-import { getErrorMessage } from "@/lib/api";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 export default function SetupReviewPage() {
@@ -28,32 +30,12 @@ export default function SetupReviewPage() {
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: QUERY_KEYS.profile,
-    queryFn: () => collegesService.getProfile(),
-  });
-
-  const { data: campuses = [], isLoading: isCampusesLoading } = useQuery({
-    queryKey: QUERY_KEYS.campuses,
-    queryFn: () => collegesService.getCampuses(),
-  });
-
-  const { data: courses = [], isLoading: isCoursesLoading } = useQuery({
-    queryKey: QUERY_KEYS.courses,
-    queryFn: () => collegesService.getCourses(),
-  });
-
-  const { mutate: submitSetup, isPending } = useMutation({
-    mutationFn: () => collegesService.submitRegistration(),
-    onSuccess: (data) => {
-      toast.success("College setup completed successfully!");
-      // Update local state to reflect active status
-      updateUser({ collegeStatus: data.status });
-      // Redirect to dashboard
-      router.push(getPortalPath(collegeSlug, "/"));
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
+  const { data: profile, isLoading: isProfileLoading } = useCollegeProfile();
+  const { data: campuses = [], isLoading: isCampusesLoading } =
+    useCollegeCampuses();
+  const { data: courses = [], isLoading: isCoursesLoading } =
+    useCollegeCourses();
+  const { mutate: submitSetup, isPending } = useSubmitCollegeRegistration();
 
   const isLoading = isProfileLoading || isCampusesLoading || isCoursesLoading;
 
@@ -126,7 +108,7 @@ export default function SetupReviewPage() {
               </p>
             ) : (
               <ul className="space-y-2 text-sm">
-                {campuses.map((c: any) => (
+                {campuses.map((c) => (
                   <li
                     key={c.id}
                     className="flex items-center justify-between bg-muted/20 p-2 rounded"
@@ -162,7 +144,7 @@ export default function SetupReviewPage() {
               </p>
             ) : (
               <ul className="space-y-2 text-sm max-h-40 overflow-y-auto pr-2">
-                {courses.map((c: any) => (
+                {courses.map((c) => (
                   <li key={c.id} className="bg-muted/20 p-2 rounded">
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">
@@ -186,7 +168,15 @@ export default function SetupReviewPage() {
               Back
             </Button>
             <Button
-              onClick={() => submitSetup()}
+              onClick={() =>
+                submitSetup(undefined, {
+                  onSuccess: (data) => {
+                    toast.success("College setup completed successfully!");
+                    updateUser({ collegeStatus: data.status });
+                    router.push(getPortalPath(collegeSlug, "/"));
+                  },
+                })
+              }
               disabled={!isReady || isPending}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >

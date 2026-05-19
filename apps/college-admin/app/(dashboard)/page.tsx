@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { getPublicPortalUrl } from "@/lib/portal-path";
 
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const [copied, setCopied] = useState(false);
 
   const publicPortalUrl = getPublicPortalUrl(user?.collegeSlug ?? null);

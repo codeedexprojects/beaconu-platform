@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title: string;
@@ -21,8 +22,9 @@ interface HeaderProps {
 }
 
 export function Header({ title, description, children }: HeaderProps) {
-  const admin = useAuthStore((s) => s.admin);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const admin = useAuthStore((state) => state.admin);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const router = useRouter();
 
   function handleLogout() {
     clearAuth();

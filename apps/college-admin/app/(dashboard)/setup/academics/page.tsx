@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowRight, ArrowLeft, Plus, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,10 +26,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { collegesService } from "@/lib/services/colleges.service";
-import { lookupsService } from "@/lib/services/lookups.service";
-import { QUERY_KEYS } from "@/lib/query-keys";
-import { getErrorMessage } from "@/lib/api";
+import {
+  useCollegeCampuses,
+  useCollegeCourses,
+  useCreateCollegeCourse,
+} from "@/hooks/use-colleges";
+import {
+  useProgramTypes,
+  useStreams,
+  useStudyLevels,
+} from "@/hooks/use-lookups";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 const courseSchema = z.object({
@@ -54,61 +59,24 @@ type CourseFormData = z.infer<typeof courseSchema>;
 
 export default function SetupAcademicsPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const collegeSlug =
     typeof window === "undefined"
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
   const [isAdding, setIsAdding] = useState(false);
 
-  const { data: courses = [], isLoading: isLoadingCourses } = useQuery({
-    queryKey: QUERY_KEYS.courses,
-    queryFn: () => collegesService.getCourses(),
-  });
-
-  const { data: streams = [] } = useQuery({
-    queryKey: QUERY_KEYS.lookups.streams,
-    queryFn: () => lookupsService.getStreams(),
-  });
-
-  const { data: studyLevels = [] } = useQuery({
-    queryKey: QUERY_KEYS.lookups.studyLevels,
-    queryFn: () => lookupsService.getStudyLevels(),
-  });
-
-  const { data: programTypes = [] } = useQuery({
-    queryKey: QUERY_KEYS.lookups.programTypes,
-    queryFn: () => lookupsService.getProgramTypes(),
-  });
-
-  const { data: campuses = [] } = useQuery({
-    queryKey: QUERY_KEYS.campuses,
-    queryFn: () => collegesService.getCampuses(),
-  });
-
-  const { mutate: createCourse, isPending } = useMutation({
-    mutationFn: (data: CourseFormData) =>
-      collegesService.createCourse({
-        ...data,
-        intakeCapacity: data.intakeCapacity || null,
-        duration: data.duration || null,
-        eligibility: data.eligibility || null,
-        campusId: data.campusId || null,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.courses });
-      toast.success("Course added successfully");
-      setIsAdding(false);
-      reset();
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
+  const { data: courses = [], isLoading: isLoadingCourses } =
+    useCollegeCourses();
+  const { data: streams = [] } = useStreams();
+  const { data: studyLevels = [] } = useStudyLevels();
+  const { data: programTypes = [] } = useProgramTypes();
+  const { data: campuses = [] } = useCollegeCampuses();
+  const { mutate: createCourse, isPending } = useCreateCollegeCourse();
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
     reset,
     formState: { errors },
   } = useForm<CourseFormData>({
@@ -117,14 +85,29 @@ export default function SetupAcademicsPage() {
   });
 
   const onSubmit = (data: CourseFormData) => {
-    createCourse(data);
+    createCourse(
+      {
+        ...data,
+        intakeCapacity: data.intakeCapacity || null,
+        duration: data.duration || null,
+        eligibility: data.eligibility || null,
+        campusId: data.campusId || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Course added successfully");
+          setIsAdding(false);
+          reset();
+        },
+      },
+    );
   };
 
   const hasCourses = courses.length > 0;
 
   // Flatten streams to get all disciplines
-  const disciplines = streams.flatMap((s: any) =>
-    s.disciplines.map((d: any) => ({ ...d, streamName: s.name })),
+  const disciplines = streams.flatMap((s) =>
+    s.disciplines.map((d) => ({ ...d, streamName: s.name })),
   );
 
   if (isLoadingCourses) {
@@ -155,7 +138,7 @@ export default function SetupAcademicsPage() {
         <CardContent className="pt-6">
           {hasCourses && !isAdding && (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {courses.map((course: any) => (
+              {courses.map((course) => (
                 <Card key={course.id} className="overflow-hidden">
                   <div className="p-4 bg-muted/30">
                     <h4 className="font-semibold text-sm mb-1">
@@ -240,7 +223,7 @@ export default function SetupAcademicsPage() {
                       <SelectValue placeholder="Select discipline" />
                     </SelectTrigger>
                     <SelectContent>
-                      {disciplines.map((d: any) => (
+                      {disciplines.map((d) => (
                         <SelectItem key={d.id} value={d.id}>
                           {d.name} ({d.streamName})
                         </SelectItem>
@@ -263,7 +246,7 @@ export default function SetupAcademicsPage() {
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent>
-                      {studyLevels.map((l: any) => (
+                      {studyLevels.map((l) => (
                         <SelectItem key={l.id} value={l.id}>
                           {l.name}
                         </SelectItem>
@@ -286,7 +269,7 @@ export default function SetupAcademicsPage() {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {programTypes.map((t: any) => (
+                      {programTypes.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.name}
                         </SelectItem>
@@ -307,7 +290,7 @@ export default function SetupAcademicsPage() {
                       <SelectValue placeholder="Select campus" />
                     </SelectTrigger>
                     <SelectContent>
-                      {campuses.map((c: any) => (
+                      {campuses.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name} {c.isMainCampus && "(Main)"}
                         </SelectItem>

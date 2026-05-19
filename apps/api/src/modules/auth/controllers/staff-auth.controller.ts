@@ -100,6 +100,9 @@ export class StaffAuthController {
   ) {
     try {
       const { token } = req.params;
+      if (typeof token !== "string") {
+        throw new BadRequestError("Token must be a string");
+      }
       const { CollegeProvisioningService } =
         await import("@/modules/colleges/services/college-provisioning.service");
       const result = await CollegeProvisioningService.verifySetupToken(token);
@@ -135,11 +138,11 @@ export class StaffAuthController {
       if (!result)
         throw new BadRequestError("Setup token is invalid or has expired");
 
-      const staffId = result.staff?.id;
-      const collegeId = result.college.id;
-
-      if (!staffId)
+      if (!result.staff)
         throw new BadRequestError("Staff account not found for this token");
+
+      const staffId = result.staff.id;
+      const collegeId = result.college.id;
 
       const passwordHash = await CryptoUtils.hash(password);
       const staff = await CollegeProvisioningRepository.completeSetup(
