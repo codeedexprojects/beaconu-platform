@@ -207,5 +207,5 @@ export default async function EditBlogPage({ params }: Props) {
   }
 
   /* ── Editable: delegate to form component ── */
-  return <BlogEditForm blog={blog} userType="blog_author" />;
+  return <BlogEditForm blog={blog} />;
 }

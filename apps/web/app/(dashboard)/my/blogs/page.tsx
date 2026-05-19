@@ -9,5 +9,5 @@ export default async function MyBlogsPage() {
 
   if (!token) redirect("/login");
 
-  return <MyBlogsList userType="blog_author" />;
+  return <MyBlogsList />;
 }

@@ -43,20 +43,7 @@ export interface UpdateBlogInput {
   tags?: string[];
 }
 
-function getBlogBasePath(userType: string): string {
-  switch (userType) {
-    case "blog_author":
-      return "/api/v1/blog/author/blogs";
-    case "staff_member":
-      return "/api/v1/staff/blogs";
-    case "counsellor":
-      return "/api/v1/counsellor/blogs";
-    case "platform_admin":
-      return "/api/v1/admin/blogs";
-    default:
-      return "/api/v1/blog/author/blogs";
-  }
-}
+const BLOG_AUTHOR_BASE = "/api/v1/blog/author/blogs";
 
 // ── Public (no auth, used in Server Components with fetch) ──
 
@@ -92,25 +79,18 @@ export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
 // ── Author (uses api client with Bearer token) ──
 
 export const blogAuthorService = {
-  list: (
-    userType: string,
-    params?: { status?: string; page?: number; limit?: number },
-  ) => {
+  list: (params?: { status?: string; page?: number; limit?: number }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
     if (params?.page) query.set("page", String(params.page));
     query.set("limit", String(params?.limit ?? 10));
-    return api.get<PaginatedBlogs>(
-      `${getBlogBasePath(userType)}?${query.toString()}`,
-    );
+    return api.get<PaginatedBlogs>(`${BLOG_AUTHOR_BASE}?${query.toString()}`);
   },
 
-  getById: (userType: string, id: string) =>
-    api.get<Blog>(`${getBlogBasePath(userType)}/${id}`),
+  getById: (id: string) => api.get<Blog>(`${BLOG_AUTHOR_BASE}/${id}`),
 
-  submit: (userType: string, data: SubmitBlogInput) =>
-    api.post<Blog>(getBlogBasePath(userType), data),
+  submit: (data: SubmitBlogInput) => api.post<Blog>(BLOG_AUTHOR_BASE, data),
 
-  update: (userType: string, id: string, data: UpdateBlogInput) =>
-    api.patch<Blog>(`${getBlogBasePath(userType)}/${id}`, data),
+  update: (id: string, data: UpdateBlogInput) =>
+    api.patch<Blog>(`${BLOG_AUTHOR_BASE}/${id}`, data),
 };

@@ -37,15 +37,14 @@ type FormInput = z.infer<typeof schema>;
 
 interface Props {
   blog: Blog;
-  userType: string;
 }
 
-export function BlogEditForm({ blog, userType }: Props) {
+export function BlogEditForm({ blog }: Props) {
   const router = useRouter();
   const [tags, setTags] = useState<string[]>(blog.tags ?? []);
   const [tagInput, setTagInput] = useState("");
 
-  const { mutate, isPending } = useUpdateBlog(userType, blog.id);
+  const { mutate, isPending } = useUpdateBlog(blog.id);
 
   const form = useForm<FormInput>({
     resolver: zodResolver(schema),

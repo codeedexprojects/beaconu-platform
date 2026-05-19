@@ -34,16 +34,12 @@ const schema = z.object({
 
 type FormInput = z.infer<typeof schema>;
 
-interface Props {
-  userType: string;
-}
-
-export function BlogSubmitForm({ userType }: Props) {
+export function BlogSubmitForm() {
   const router = useRouter();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
 
-  const { mutate, isPending } = useSubmitBlog(userType);
+  const { mutate, isPending } = useSubmitBlog();
 
   const form = useForm<FormInput>({
     resolver: zodResolver(schema),

@@ -61,14 +61,10 @@ const STATUS_CONFIG: Record<
   },
 };
 
-interface Props {
-  userType: string;
-}
-
-export function MyBlogsList({ userType }: Props) {
+export function MyBlogsList() {
   const [activeStatus, setActiveStatus] = useState<StatusValue>("");
 
-  const { data, isLoading, isError } = useMyBlogs(userType, {
+  const { data, isLoading, isError } = useMyBlogs({
     status: activeStatus || undefined,
   });
 

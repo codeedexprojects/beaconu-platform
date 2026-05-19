@@ -11,13 +11,10 @@ import {
   type UpdateBlogInput,
 } from "@/lib/services/blogs.service";
 
-export function useMyBlogs(
-  userType: string,
-  params?: { status?: string; page?: number },
-) {
+export function useMyBlogs(params?: { status?: string; page?: number }) {
   const query = useQuery({
     queryKey: QUERY_KEYS.myBlogs(params?.status, params?.page),
-    queryFn: () => blogAuthorService.list(userType, params),
+    queryFn: () => blogAuthorService.list(params),
   });
   useEffect(() => {
     if (query.error) toast.error(getErrorMessage(query.error));
@@ -25,10 +22,10 @@ export function useMyBlogs(
   return query;
 }
 
-export function useMyBlog(userType: string, id: string) {
+export function useMyBlog(id: string) {
   const query = useQuery({
     queryKey: QUERY_KEYS.myBlog(id),
-    queryFn: () => blogAuthorService.getById(userType, id),
+    queryFn: () => blogAuthorService.getById(id),
     enabled: !!id,
   });
   useEffect(() => {
@@ -37,11 +34,10 @@ export function useMyBlog(userType: string, id: string) {
   return query;
 }
 
-export function useSubmitBlog(userType: string) {
+export function useSubmitBlog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: SubmitBlogInput) =>
-      blogAuthorService.submit(userType, data),
+    mutationFn: (data: SubmitBlogInput) => blogAuthorService.submit(data),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myBlogs() });
@@ -49,11 +45,10 @@ export function useSubmitBlog(userType: string) {
   });
 }
 
-export function useUpdateBlog(userType: string, id: string) {
+export function useUpdateBlog(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateBlogInput) =>
-      blogAuthorService.update(userType, id, data),
+    mutationFn: (data: UpdateBlogInput) => blogAuthorService.update(id, data),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myBlogs() });

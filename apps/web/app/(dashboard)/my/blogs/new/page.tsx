@@ -9,5 +9,5 @@ export default async function NewBlogPage() {
 
   if (!token) redirect("/login");
 
-  return <BlogSubmitForm userType="blog_author" />;
+  return <BlogSubmitForm />;
 }
