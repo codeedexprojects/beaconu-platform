@@ -192,7 +192,8 @@ const navSections: NavSection[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { admin, clearAuth } = useAuthStore();
+  const admin = useAuthStore((state) => state.admin);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   function handleLogout() {
     clearAuth();

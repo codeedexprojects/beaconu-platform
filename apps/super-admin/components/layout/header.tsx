@@ -22,7 +22,8 @@ interface HeaderProps {
 }
 
 export function Header({ title, description, children }: HeaderProps) {
-  const { admin, clearAuth } = useAuthStore();
+  const admin = useAuthStore((state) => state.admin);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const router = useRouter();
 
   function handleLogout() {
