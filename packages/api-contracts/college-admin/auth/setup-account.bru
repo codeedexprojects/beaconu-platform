@@ -1,0 +1,18 @@
+meta {
+  name: Setup Account (Password)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/auth/setup-account
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "REPLACE_WITH_SETUP_TOKEN",
+    "password": "Password123!"
+  }
+}

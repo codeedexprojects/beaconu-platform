@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useAuthStore } from "@/store";
-import { can, type Permission } from "@/lib/rbac";
-import type { AdminRole } from "@/lib/rbac";
+import { useRbac } from "@/hooks/use-rbac";
+import { ShieldOff } from "lucide-react";
 
-// Routes that require a specific permission to access directly
-const ROUTE_PERMISSIONS: Record<string, Permission> = {
-  "/admins": "admins.view",
-  "/roles": "admins.view",
-  "/associate-admins": "admins.view",
-  "/settings": "settings.view",
+// Routes that require a specific permission to access
+const ROUTE_PERMISSIONS: Record<string, string> = {
+  "/platform-admins": "platform.admins.view",
+  "/roles": "platform.roles.view",
+  "/settings": "platform.settings.view",
+  "/blink/requests": "platform.admins.manage",
+  "/blink/users": "platform.admins.view",
   "/universities": "universities.view",
   "/university-types": "university-types.view",
   "/colleges": "colleges.view",
@@ -27,6 +28,25 @@ const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/events": "events.view",
 };
 
+function NoPermissionView() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <ShieldOff className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground">No Permission</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            You don&apos;t have access to this section. Contact your
+            administrator to request access.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -34,8 +54,8 @@ export default function DashboardLayout({
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
+  const { can } = useRbac();
   const token = useAuthStore((s) => s.token);
-  const admin = useAuthStore((s) => s.admin);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
 
   const isAuthenticated = token !== null;
@@ -44,22 +64,16 @@ export default function DashboardLayout({
     if (!hasHydrated) return;
     if (!isAuthenticated) {
       router.replace("/login");
-      return;
     }
+  }, [isAuthenticated, hasHydrated, router]);
 
-    // Block direct URL access to routes the role cannot see
+  const hasPermission = useMemo(() => {
     const requiredPermission = Object.entries(ROUTE_PERMISSIONS).find(
       ([route]) => pathname.startsWith(route),
     )?.[1];
-
-    if (
-      requiredPermission &&
-      admin?.role &&
-      !can(admin.role as AdminRole, requiredPermission)
-    ) {
-      router.replace("/");
-    }
-  }, [isAuthenticated, hasHydrated, pathname, admin?.role, router]);
+    if (!requiredPermission) return true;
+    return can(requiredPermission);
+  }, [pathname, can]);
 
   if (!hasHydrated || !isAuthenticated) return <></>;
 
@@ -67,7 +81,9 @@ export default function DashboardLayout({
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto">
+          {hasPermission ? children : <NoPermissionView />}
+        </main>
       </div>
     </div>
   );

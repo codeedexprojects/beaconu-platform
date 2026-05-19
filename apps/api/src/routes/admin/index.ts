@@ -9,6 +9,7 @@ import collegeLeadsAdminRoutes from "@/modules/landing-page/routes/admin.routes"
 import adminBlogRoutes from "@/modules/content/routes/platform-admin.routes";
 import platformAdminMgmtRoutes from "@/modules/platform-admin/routes/platform-admin-mgmt.routes";
 import platformPermissionsRoutes from "@/modules/platform-admin/routes/platform-permissions.routes";
+import collegeDashboardRoutes from "@/modules/colleges/routes/college-dashboard.routes";
 
 const router: Router = Router();
 
@@ -21,6 +22,7 @@ router.use("/universities", adminUniversityRoutes);
 router.use("/platform-admins", platformAdminMgmtRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
+router.use("/colleges", collegeDashboardRoutes);
 router.use("/blogs", adminBlogRoutes);
 
 export default router;

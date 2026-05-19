@@ -15,7 +15,7 @@ router.use("/api/v1/admin", adminRoutes);
 router.use("/api/v1/blink", blinkRoutes);
 router.use("/api/v1/counsellor", counsellorRoutes);
 router.use("/api/v1/student", studentRoutes);
-router.use("/api/v1/college", collegeRoutes);
+router.use("/api/v1/college-admin", collegeRoutes);
 router.use("/api/v1/public", publicRoutes);
 router.use("/api/v1/blog", blogRoutes);
 router.use("/api/v1/health", healthRoutes);

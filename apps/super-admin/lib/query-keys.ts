@@ -3,6 +3,12 @@ export const QUERY_KEYS = {
   university: (id: string) => ["universities", id] as const,
   universityTypes: ["university-types"] as const,
   universityType: (id: string) => ["university-types", id] as const,
+  academicTaxonomy: {
+    streams: ["academic-taxonomy", "streams"] as const,
+    disciplines: ["academic-taxonomy", "disciplines"] as const,
+    studyLevels: ["academic-taxonomy", "study-levels"] as const,
+    programTypes: ["academic-taxonomy", "program-types"] as const,
+  },
   adminProfiles: ["admin-profiles"] as const,
   pendingBlink: ["pending-blink-users"] as const,
   associateAdmins: ["associate-admins"] as const,
@@ -15,4 +21,7 @@ export const QUERY_KEYS = {
   adminBlogs: (params?: object) =>
     params ? ["admin-blogs", params] : (["admin-blogs"] as const),
   adminBlog: (id: string) => ["admin-blogs", id] as const,
+  colleges: ["colleges"] as const,
+  college: (id: string) => ["colleges", id] as const,
+  collegeStats: ["colleges-stats"] as const,
 } as const;

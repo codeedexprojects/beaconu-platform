@@ -20,18 +20,17 @@ import {
   ChevronRight,
   UserPlus,
   Inbox,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/store";
-import { useRbac } from "@/hooks/use-rbac";
-import type { Permission } from "@/lib/rbac";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
-  permission?: Permission;
+  permission?: string;
 }
 
 interface NavSection {
@@ -64,6 +63,18 @@ const navSections: NavSection[] = [
         label: "University Types",
         icon: GraduationCap,
         permission: "university-types.view",
+      },
+      {
+        href: "/academic-masters",
+        label: "Academic Masters",
+        icon: Layers,
+        permission: "academic-masters.view",
+      },
+      {
+        href: "/courses",
+        label: "Courses",
+        icon: BookOpen,
+        permission: "academic-masters.view",
       },
     ],
   },
@@ -181,7 +192,6 @@ const navSections: NavSection[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { admin, clearAuth } = useAuthStore();
-  const { can, role } = useRbac();
 
   function handleLogout() {
     clearAuth();
@@ -209,10 +219,7 @@ export function Sidebar() {
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-3">
           {navSections.map((section) => {
-            const visibleItems = section.items.filter(
-              (item) => !item.permission || can(item.permission),
-            );
-            if (visibleItems.length === 0) return null;
+            const visibleItems = section.items;
 
             return (
               <div key={section.label}>
@@ -271,7 +278,7 @@ export function Sidebar() {
               {admin?.fullName ?? "Admin"}
             </p>
             <p className="truncate text-[11px] text-sidebar-foreground/50 capitalize">
-              {role?.replace("_", " ")}
+              {admin?.role?.replace("_", " ")}
             </p>
           </div>
           <button

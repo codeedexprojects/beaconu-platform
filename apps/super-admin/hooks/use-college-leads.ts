@@ -79,7 +79,7 @@ export function useUpdateCollegeLeadStatus() {
       toast.error(getErrorMessage(error));
     },
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.collegeLeads],
       });

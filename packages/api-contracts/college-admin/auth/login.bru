@@ -1,0 +1,18 @@
+meta {
+  name: Staff Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@college.edu",
+    "password": "Password123!"
+  }
+}

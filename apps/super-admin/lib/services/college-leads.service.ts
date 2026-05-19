@@ -13,8 +13,24 @@ export interface CollegeLead {
   status: "pending" | "approved" | "rejected";
   reviewRemarks: string | null;
   reviewer: { id: string; name: string } | null;
+  createdCollegeId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateStatusResponse {
+  id: string;
+  status: string;
+  reviewRemarks: string | null;
+  updatedAt: string;
+  provisionedCollege?: {
+    id: string;
+    name: string;
+    slug: string;
+    code: string;
+    adminEmail: string;
+    setupUrl: string;
+  };
 }
 
 export interface CollegeLeadStats {
@@ -54,8 +70,11 @@ export const collegeLeadsService = {
     api.get<CollegeLeadStats>("/api/v1/admin/college-leads/stats"),
 
   updateStatus: (id: string, status: string, review_remarks?: string) =>
-    api.patch<CollegeLead>(`/api/v1/admin/college-leads/${id}/status`, {
-      status,
-      review_remarks,
-    }),
+    api.patch<UpdateStatusResponse>(
+      `/api/v1/admin/college-leads/${id}/status`,
+      {
+        status,
+        review_remarks,
+      },
+    ),
 };
