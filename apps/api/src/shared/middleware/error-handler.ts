@@ -3,8 +3,8 @@ import { ApiError } from "../responses/api-error";
 import { ErrorCode } from "../responses/error-codes";
 import { logger } from "@/shared/logger";
 import { z } from "zod";
-import { PrismaClientKnownRequestError } from "node_modules/@beaconu/db/generated/client/internal/prismaNamespace";
 import getPrismaErrorMessage from "../utils/getPrismaErrorMessage";
+import { Prisma } from "@beaconu/db";
 
 /**
  * Global Error Handler Middleware
@@ -17,7 +17,7 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   // Handle Prisma Errors
-  if (error instanceof PrismaClientKnownRequestError) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
     const userMessage = getPrismaErrorMessage(error.code);
     res.status(400).json({ message: userMessage });
     return;
