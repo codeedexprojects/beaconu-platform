@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { Loader2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

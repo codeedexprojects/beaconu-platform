@@ -8,6 +8,7 @@ export class BlogPlatformAdminController {
   static async listAll(req: Request, res: Response): Promise<void> {
     const filters = blogSchemas.listQuery.parse(req.query);
     const result = await BlogQuery.listAll(filters);
+    console.log("Result", result);
     res
       .status(200)
       .json(ApiResponse.success("Blogs fetched", result.data, result.meta));

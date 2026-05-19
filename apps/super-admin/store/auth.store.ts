@@ -6,9 +6,10 @@ import type { AdminProfile } from "@beaconu/types";
 interface AuthState {
   admin: AdminProfile | null;
   token: string | null;
-  isAuthenticated: boolean;
+  _hasHydrated: boolean;
   setAuth: (admin: AdminProfile, token: string) => void;
   clearAuth: () => void;
+  setHasHydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -16,26 +17,26 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       admin: null,
       token: null,
-      isAuthenticated: false,
+      _hasHydrated: false,
       setAuth: (admin, token) => {
         setAdminTokenCookie(token);
-        set({ admin, token, isAuthenticated: true });
+        set({ admin, token });
       },
       clearAuth: () => {
         clearAdminTokenCookie();
-        set({ admin: null, token: null, isAuthenticated: false });
+        set({ admin: null, token: null });
       },
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
     }),
     {
       name: "beaconu-admin-auth",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ admin: state.admin, token: state.token }),
       onRehydrateStorage: () => (state) => {
-        // Re-sync cookie on page reload in case it expired
         if (state?.token) {
           setAdminTokenCookie(state.token);
-          state.isAuthenticated = true;
         }
+        state?.setHasHydrated(true);
       },
     },
   ),

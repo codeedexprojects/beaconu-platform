@@ -54,14 +54,18 @@ export default function DashboardLayout({
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
   const { can } = useRbac();
+  const token = useAuthStore((s) => s.token);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
+
+  const isAuthenticated = token !== null;
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasHydrated, router]);
 
   const hasPermission = useMemo(() => {
     const requiredPermission = Object.entries(ROUTE_PERMISSIONS).find(
@@ -71,7 +75,7 @@ export default function DashboardLayout({
     return can(requiredPermission);
   }, [pathname, can]);
 
-  if (!isAuthenticated) return <></>;
+  if (!hasHydrated || !isAuthenticated) return <></>;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
