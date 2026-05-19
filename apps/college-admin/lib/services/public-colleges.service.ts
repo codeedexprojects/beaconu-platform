@@ -14,8 +14,8 @@ export interface PublicCollege {
   } | null;
 }
 
-export const publicCollegesService = {
-  getBySlug(slug: string) {
-    return api.get<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`);
-  },
-};
+export async function getPublicCollegeBySlug(
+  slug: string,
+): Promise<PublicCollege> {
+  return api.get<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`);
+}

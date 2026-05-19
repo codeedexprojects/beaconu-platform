@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowRight, ArrowLeft, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,9 +20,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { collegesService } from "@/lib/services/colleges.service";
-import { QUERY_KEYS } from "@/lib/query-keys";
-import { getErrorMessage } from "@/lib/api";
+import {
+  useCollegeCampuses,
+  useCreateCollegeCampus,
+} from "@/hooks/use-colleges";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 const campusSchema = z.object({
@@ -39,28 +39,14 @@ type CampusFormData = z.infer<typeof campusSchema>;
 
 export default function SetupCampusesPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const collegeSlug =
     typeof window === "undefined"
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
   const [isAdding, setIsAdding] = useState(false);
 
-  const { data: campuses = [], isLoading } = useQuery({
-    queryKey: QUERY_KEYS.campuses,
-    queryFn: () => collegesService.getCampuses(),
-  });
-
-  const { mutate: createCampus, isPending } = useMutation({
-    mutationFn: (data: CampusFormData) => collegesService.createCampus(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.campuses });
-      toast.success("Campus added successfully");
-      setIsAdding(false);
-      reset();
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
+  const { data: campuses = [], isLoading } = useCollegeCampuses();
+  const { mutate: createCampus, isPending } = useCreateCollegeCampus();
 
   const {
     register,
@@ -75,7 +61,13 @@ export default function SetupCampusesPage() {
   });
 
   const onSubmit = (data: CampusFormData) => {
-    createCampus(data);
+    createCampus(data, {
+      onSuccess: () => {
+        toast.success("Campus added successfully");
+        setIsAdding(false);
+        reset();
+      },
+    });
   };
 
   const hasCampuses = campuses.length > 0;
@@ -109,7 +101,7 @@ export default function SetupCampusesPage() {
         <CardContent className="pt-6">
           {hasCampuses && !isAdding && (
             <div className="grid gap-4 md:grid-cols-2">
-              {campuses.map((campus: any) => (
+              {campuses.map((campus) => (
                 <Card key={campus.id} className="overflow-hidden">
                   <div className="p-4 bg-muted/30">
                     <div className="flex justify-between items-start mb-2">

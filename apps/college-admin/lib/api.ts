@@ -6,6 +6,16 @@ interface RequestOptions extends RequestInit {
   data?: unknown;
 }
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 class ApiClient {
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
@@ -43,6 +53,7 @@ class ApiClient {
 
     if (response.status === 401) {
       if (typeof window !== "undefined") {
+        useAuthStore.getState().logout();
         localStorage.removeItem(COLLEGE_ADMIN_TOKEN_KEY);
         const collegeSlug =
           useAuthStore.getState().user?.collegeSlug ??
@@ -50,8 +61,14 @@ class ApiClient {
             window.location.pathname,
             window.location.host,
           );
-        window.location.href = getPortalPath(collegeSlug, "/login");
+        window.dispatchEvent(
+          new CustomEvent("auth:session-expired", {
+            detail: { redirectPath: getPortalPath(collegeSlug, "/login") },
+          }),
+        );
       }
+
+      throw new ApiError(401, "Session expired. Please sign in again.");
     }
 
     let result;
@@ -62,7 +79,10 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      throw new Error(result?.message || "Something went wrong");
+      throw new ApiError(
+        response.status,
+        result?.message || "Something went wrong. Please try again.",
+      );
     }
 
     return result.data as T;
@@ -92,6 +112,21 @@ class ApiClient {
 export const api = new ApiClient();
 
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return String(error);
+  if (!(error instanceof ApiError)) {
+    return "Something went wrong. Please try again.";
+  }
+
+  switch (error.status) {
+    case 401:
+      return "Session expired. Please sign in again.";
+    case 403:
+      return "You don't have permission to do this.";
+    case 404:
+      return "Resource not found.";
+    case 409:
+    case 422:
+      return error.message;
+    default:
+      return error.message || "Something went wrong. Please try again.";
+  }
 }
