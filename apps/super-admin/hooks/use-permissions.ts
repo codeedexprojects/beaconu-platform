@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -15,14 +14,10 @@ import type {
 } from "@beaconu/validation";
 
 export function usePermissions() {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.permissionRegistry,
     queryFn: getPlatformPermissions,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreatePermission() {
@@ -32,7 +27,6 @@ export function useCreatePermission() {
       createPlatformPermission(payload),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
-      toast.success("Permission created successfully");
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.permissionRegistry,
       });
@@ -52,7 +46,6 @@ export function useUpdatePermission() {
     }) => updatePlatformPermission(id, payload),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
-      toast.success("Permission updated successfully");
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.permissionRegistry,
       });
@@ -66,7 +59,6 @@ export function useDeletePermission() {
     mutationFn: (id: string) => deletePlatformPermission(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
-      toast.success("Permission deleted successfully");
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.permissionRegistry,
       });

@@ -53,6 +53,20 @@ export default function CollegesPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
 
+  const getCollegeLink = (slug: string) => {
+    if (typeof window === "undefined") return "";
+    const hostname = window.location.hostname;
+    if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+      return `http://${slug}.localhost:3002`;
+    }
+    const parts = hostname.split(".");
+    if (parts.length >= 2) {
+      const baseDomain = parts.slice(-2).join(".");
+      return `https://${slug}.${baseDomain}`;
+    }
+    return `https://${slug}.beaconu.com`;
+  };
+
   const { data: stats } = useCollegeStats();
   const {
     data: result,
@@ -189,6 +203,8 @@ export default function CollegesPage() {
                     const statusConfig =
                       STATUS_CONFIG[college.status] ??
                       STATUS_CONFIG.pending_setup;
+                    const link = getCollegeLink(college.slug);
+                    const cleanLinkDisplay = link.replace(/^https?:\/\//, "");
                     return (
                       <TableRow key={college.id}>
                         <TableCell>
@@ -219,11 +235,11 @@ export default function CollegesPage() {
                           <div className="flex items-center gap-1 text-sm">
                             <Globe className="h-3 w-3 text-muted-foreground" />
                             <span className="font-mono text-xs">
-                              {college.slug}.beaconu.com
+                              {cleanLinkDisplay}
                             </span>
                             {college.status === "active" && (
                               <a
-                                href={`https://${college.slug}.beaconu.com`}
+                                href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >

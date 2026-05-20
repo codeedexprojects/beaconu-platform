@@ -26,7 +26,7 @@ import {
 } from "@/hooks/use-auth";
 import { usePublicCollegeBySlug } from "@/hooks/use-public-colleges";
 import { useAuthStore } from "@/store";
-import { getErrorMessage } from "@/lib/api";
+import { getErrorMessage, ApiError } from "@/lib/api";
 import {
   getCollegeSlugFromPath,
   getPortalPath,
@@ -52,6 +52,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type SetupFormData = z.infer<typeof setupSchema>;
 
 function getAuthToastMessage(error: unknown): string {
+  if (error instanceof Error && !(error instanceof ApiError)) {
+    return error.message;
+  }
+
   const message = getErrorMessage(error).toLowerCase();
 
   if (message.includes("invalid") && message.includes("credential")) {
@@ -70,7 +74,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams?.get("token");
   const setAuth = useAuthStore((state) => state.setAuth);
-  const logout = useAuthStore((state) => state.logout);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const [collegeSlug, setCollegeSlug] = useState<string | null>(null);
   const { mutateAsync: loginCollegeAdmin, isPending: isLoginPending } =
@@ -113,11 +117,22 @@ function LoginPageContent() {
   }, [router]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
-    try {
-      const response = await loginCollegeAdmin(data);
+    if (!collegeSlug) {
+      toast.error("Invalid portal link. Please use your college login URL.");
+      return;
+    }
 
-      if (collegeSlug && response.user.collegeSlug !== collegeSlug) {
-        logout();
+    try {
+      const response = await loginCollegeAdmin({
+        ...data,
+        collegeSlug,
+      });
+
+      if (
+        collegeSlug &&
+        response.user.collegeSlug.toLowerCase() !== collegeSlug.toLowerCase()
+      ) {
+        clearAuth();
         throw new Error("Invalid credentials.");
       }
 

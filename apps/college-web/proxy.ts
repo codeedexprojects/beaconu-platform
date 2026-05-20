@@ -32,15 +32,9 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Handle subdomain rewriting
-  if (subdomain && subdomain !== "www") {
-    url.pathname = `/college/${subdomain}${url.pathname}`;
-    // We rewrite instead of redirecting so the URL remains clean in the browser
-    return NextResponse.rewrite(url);
-  }
-
-  // If no subdomain, we might want to redirect to main beaconu site or show a generic error
-  // For now, just continue
+  // Subdomain-based routing: keep the clean URL in browser
+  // Backend will use the Host header to identify the college
+  // No rewriting needed anymore - URL stays as anupam.localhost:3001/
   return NextResponse.next();
 }
 

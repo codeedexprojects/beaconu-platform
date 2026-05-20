@@ -38,6 +38,28 @@ export function CollegeLeadDetailModal({
 
   const statusConfig = STATUS_CONFIG[lead.status];
 
+  const getCollegeLink = (slug: string, port: string = "3002") => {
+    if (typeof window === "undefined") return "";
+    const hostname = window.location.hostname;
+    if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+      return `http://${slug}.localhost:${port}`;
+    }
+    const parts = hostname.split(".");
+    if (parts.length >= 2) {
+      const baseDomain = parts.slice(-2).join(".");
+      return `https://${slug}.${baseDomain}`;
+    }
+    return `https://${slug}.beaconu.com`;
+  };
+
+  const publicPortalLink = lead.createdCollege
+    ? getCollegeLink(lead.createdCollege.slug, "3001")
+    : "";
+
+  const adminPortalLink = lead.createdCollege
+    ? getCollegeLink(lead.createdCollege.slug, "3002")
+    : "";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
@@ -124,6 +146,55 @@ export function CollegeLeadDetailModal({
             </div>
           )}
 
+          {lead.status === "approved" && lead.createdCollege && (
+            <div className="space-y-3 bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-emerald-800 uppercase flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-emerald-600" />{" "}
+                Provisioned College Links
+              </p>
+
+              <div className="space-y-3 pt-1">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                    Public Landing Page
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-sm text-emerald-900 break-all select-all">
+                      {publicPortalLink}
+                    </span>
+                    <a
+                      href={publicPortalLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
+                    >
+                      Visit Public &rarr;
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-emerald-100/50">
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                    Admin Setup Console
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-sm text-emerald-900 break-all select-all">
+                      {adminPortalLink}
+                    </span>
+                    <a
+                      href={adminPortalLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
+                    >
+                      Visit Admin &rarr;
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
             <span>
               Submitted {new Date(lead.createdAt).toLocaleString("en-IN")}
@@ -136,7 +207,12 @@ export function CollegeLeadDetailModal({
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={() => onUpdateStatus(lead)}>Update Status</Button>
+          <Button
+            onClick={() => onUpdateStatus(lead)}
+            disabled={lead.status === "approved"}
+          >
+            Update Status
+          </Button>
         </div>
       </Card>
     </div>

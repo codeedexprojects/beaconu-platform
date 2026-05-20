@@ -2,7 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Loader2, LogOut, CheckCircle2, School } from "lucide-react";
+import {
+  Loader2,
+  LogOut,
+  CheckCircle2,
+  School,
+  MapPin,
+  BookOpen,
+  Shield,
+  Users,
+  Home,
+  Truck,
+  Settings,
+  LayoutDashboard,
+} from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
   useCollegeCampuses,
@@ -28,8 +41,8 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const logout = useAuthStore((state) => state.logout);
+  const isAuthenticated = useAuthStore((state) => state.token !== null);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const { mutateAsync: logoutCollegeAdmin } = useLogoutCollegeAdmin();
   const [isMounted, setIsMounted] = useState(false);
   const collegeSlug =
@@ -55,7 +68,7 @@ export default function DashboardLayout({
     } catch {
       // ignore
     } finally {
-      logout();
+      clearAuth();
       router.push(getPortalPath(collegeSlug, "/login"));
     }
   };
@@ -93,10 +106,10 @@ export default function DashboardLayout({
     if (!isMounted || !isAuthenticated || !user || !collegeSlug) return;
 
     if (user.collegeSlug !== collegeSlug) {
-      logout();
+      clearAuth();
       router.replace(getPortalPath(user.collegeSlug, "/login"));
     }
-  }, [collegeSlug, isAuthenticated, isMounted, logout, router, user]);
+  }, [collegeSlug, isAuthenticated, isMounted, clearAuth, router, user]);
 
   // If pending setup and at root, redirect to the correct setup stage based on saved progress
   useEffect(() => {
@@ -163,6 +176,68 @@ export default function DashboardLayout({
     );
   }
 
+  const hasPermission = (permission?: string) => {
+    if (!user) return false;
+    if (user.roleSlug === "college_admin") return true;
+    if (!permission) return true;
+    return user.permissions?.includes(permission) ?? false;
+  };
+
+  const getRequiredPermissionForPath = (path: string): string | null => {
+    if (path.includes("/setup/profile")) return "profile.view";
+    if (path.includes("/setup/campuses")) return "campuses.view";
+    if (path.includes("/setup/academics")) return "academics.view";
+    if (path.includes("/roles")) return "staff.view";
+    if (path.includes("/staff")) return "staff.view";
+    if (path.includes("/hostels")) return "hostel.view";
+    if (path.includes("/commute")) return "commute.view";
+    if (path.includes("/settings")) return "profile.view";
+    return null;
+  };
+
+  const requiredPermission = getRequiredPermissionForPath(appPathname);
+  const hasAccess = !requiredPermission || hasPermission(requiredPermission);
+
+  const getRoleDisplayName = (slug: string) => {
+    switch (slug) {
+      case "college_admin":
+        return "College Admin";
+      case "hostel_admin":
+        return "Hostel Admin";
+      case "commute_admin":
+        return "Commute Admin";
+      case "sub_admin":
+        return "Sub Admin";
+      default:
+        return slug
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+    }
+  };
+
+  const renderAccessDenied = () => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center bg-background rounded-2xl border border-destructive/15 shadow-xl backdrop-blur-md max-w-lg mx-auto mt-12 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-6">
+        <Shield className="h-8 w-8" />
+      </div>
+      <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">
+        Access Denied
+      </h2>
+      <p className="text-muted-foreground text-sm max-w-sm mb-6 leading-relaxed">
+        You do not have the required permission (
+        <strong>{requiredPermission}</strong>) to access this dashboard feature.
+        Please contact your college administrator to grant you access.
+      </p>
+      <Button
+        onClick={() => router.push(getPortalPath(collegeSlug, "/"))}
+        className="px-6 py-2 shadow-lg"
+      >
+        Return to Portal Home
+      </Button>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-muted/20">
       {/* Top Navbar */}
@@ -182,7 +257,9 @@ export default function DashboardLayout({
               <p className="text-sm font-medium leading-none">
                 {user.fullName}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Admin</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {getRoleDisplayName(user.roleSlug)}
+              </p>
             </div>
             <Button
               variant="ghost"
@@ -198,8 +275,101 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Wizard Sidebar (only visible if pending setup or viewing setup pages) */}
-        {isPendingSetup && (
+        {/* Sidebar (Onboarding Wizard or Active console dashboard navigation) */}
+        {!isPendingSetup ? (
+          <aside className="w-64 shrink-0 border-r bg-card hidden md:block">
+            <div className="p-6">
+              <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-6">
+                Active Console
+              </h2>
+              <nav className="space-y-1">
+                {[
+                  {
+                    name: "Dashboard",
+                    path: "/",
+                    icon: LayoutDashboard,
+                    permission: undefined,
+                  },
+                  {
+                    name: "Overview Profile",
+                    path: "/setup/profile",
+                    icon: School,
+                    permission: "profile.view",
+                  },
+                  {
+                    name: "Campuses Catalog",
+                    path: "/setup/campuses",
+                    icon: MapPin,
+                    permission: "campuses.view",
+                  },
+                  {
+                    name: "Academics Catalog",
+                    path: "/setup/academics",
+                    icon: BookOpen,
+                    permission: "academics.view",
+                  },
+                  {
+                    name: "Role Builder (RBAC)",
+                    path: "/roles",
+                    icon: Shield,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Staff Directory",
+                    path: "/staff",
+                    icon: Users,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Hostels Occupancy",
+                    path: "/hostels",
+                    icon: Home,
+                    permission: "hostel.view",
+                  },
+                  {
+                    name: "Bus Fleet & Commute",
+                    path: "/commute",
+                    icon: Truck,
+                    permission: "commute.view",
+                  },
+                  {
+                    name: "Settings",
+                    path: "/settings",
+                    icon: Settings,
+                    permission: "profile.view",
+                  },
+                ]
+                  .filter((item) => hasPermission(item.permission))
+                  .map((item) => {
+                    const Icon = item.icon;
+                    // Dashboard root "/" only active at exact root; others active when path starts with the item path
+                    const isActive =
+                      item.path === "/"
+                        ? appPathname === "/"
+                        : appPathname === item.path ||
+                          appPathname.startsWith(`${item.path}/`);
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        onClick={() =>
+                          router.push(getPortalPath(collegeSlug, item.path))
+                        }
+                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.name}
+                      </button>
+                    );
+                  })}
+              </nav>
+            </div>
+          </aside>
+        ) : (
           <aside className="w-64 shrink-0 border-r bg-card hidden md:block">
             <div className="p-6">
               <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-6">
@@ -276,7 +446,9 @@ export default function DashboardLayout({
         )}
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-4xl">{children}</div>
+          <div className="mx-auto max-w-4xl">
+            {hasAccess ? children : renderAccessDenied()}
+          </div>
         </main>
       </div>
     </div>

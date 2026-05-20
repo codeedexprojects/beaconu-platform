@@ -77,12 +77,23 @@ export function getPublicPortalUrl(
 ): string {
   const baseUrl =
     process.env.NEXT_PUBLIC_COLLEGE_WEB_URL ?? "http://localhost:3001";
-  const url = new URL(baseUrl);
 
-  if (slug) {
-    url.hostname = `${slug}.${url.hostname}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (!slug) {
+    const url = new URL(baseUrl);
+    url.pathname = normalizedPath;
+    return url.toString();
   }
 
-  url.pathname = path.startsWith("/") ? path : `/${path}`;
-  return url.toString();
+  // For localhost, format as http://slug.localhost:port/path
+  if (baseUrl.includes("localhost")) {
+    const port = baseUrl.split(":")[2] || "3001";
+    return `http://${slug}.localhost:${port}${normalizedPath === "/" ? "" : normalizedPath}`;
+  }
+
+  // For production, format as https://slug.domain/path
+  const url = new URL(baseUrl);
+  const hostname = url.hostname;
+  return `${url.protocol}//${slug}.${hostname}${normalizedPath === "/" ? "" : normalizedPath}`;
 }

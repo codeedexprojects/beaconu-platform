@@ -14,10 +14,26 @@ export class CollegeRegistrationRepository {
     return prisma.college.findUnique({
       where: { id: collegeId },
       include: {
-        university: { select: { id: true, name: true } },
+        university: {
+          select: {
+            id: true,
+            name: true,
+            universityType: { select: { name: true } },
+          },
+        },
         campuses: {
           where: { status: "active" },
           orderBy: { createdAt: "asc" },
+        },
+        blinkUsers: {
+          where: { status: "active" },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            avatarUrl: true,
+            phoneNumber: true,
+          },
         },
         _count: {
           select: { courses: true, staffMembers: true },
@@ -37,9 +53,14 @@ export class CollegeRegistrationRepository {
         ? { universityId: data.universityId }
         : {}),
       ...(data.domain !== undefined ? { domain: data.domain } : {}),
-      ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.logoUrl !== undefined
+        ? { logoUrl: data.logoUrl === "" ? null : data.logoUrl }
+        : {}),
       ...(data.coverImageUrl !== undefined
-        ? { coverImageUrl: data.coverImageUrl }
+        ? {
+            coverImageUrl:
+              data.coverImageUrl === "" ? null : data.coverImageUrl,
+          }
         : {}),
       ...(data.address !== undefined ? { address: data.address } : {}),
       ...(data.city !== undefined ? { city: data.city } : {}),

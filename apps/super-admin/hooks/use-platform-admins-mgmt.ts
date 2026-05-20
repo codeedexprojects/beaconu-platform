@@ -39,7 +39,6 @@ export function usePlatformAdminMutations() {
       status: "active" | "inactive";
     }) => service.updatePlatformAdminStatus(id, { status }),
     onSuccess: () => {
-      toast.success("Status updated");
       invalidate();
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -48,7 +47,6 @@ export function usePlatformAdminMutations() {
   const remove = useMutation({
     mutationFn: service.deletePlatformAdmin,
     onSuccess: () => {
-      toast.success("Admin deleted");
       invalidate();
     },
     onError: (err) => toast.error(getErrorMessage(err)),

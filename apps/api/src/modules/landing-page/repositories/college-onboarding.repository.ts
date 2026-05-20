@@ -30,6 +30,9 @@ export class CollegeOnboardingRepository {
         reviewer: {
           select: { id: true, fullName: true, email: true },
         },
+        createdCollege: {
+          select: { id: true, slug: true },
+        },
       },
     });
   }
@@ -74,6 +77,9 @@ export class CollegeOnboardingRepository {
         include: {
           reviewer: {
             select: { id: true, fullName: true, email: true },
+          },
+          createdCollege: {
+            select: { id: true, slug: true },
           },
         },
       }),

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -10,26 +9,18 @@ import {
 } from "@/lib/services/university-types.service";
 
 export function useUniversityTypes(isActive?: boolean) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.universityTypes, isActive],
     queryFn: () => universityTypesService.getAll(isActive),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useUniversityType(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.universityType(id),
     queryFn: () => universityTypesService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreateUniversityType() {
