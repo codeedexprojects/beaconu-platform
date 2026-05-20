@@ -44,13 +44,14 @@ const insights: InsightItem[] = [
 
 export function InsightsUpdates() {
   return (
-    <section className="px-4">
-      <h2 className="text-[17px] font-bold text-[#111827] mb-3">
+    <section className="px-4 md:px-6 lg:px-8">
+      <h2 className="text-[17px] sm:text-xl font-bold text-[#111827] mb-3 sm:mb-4">
         Insights & Updates
       </h2>
 
+      {/* Mobile: horizontal scroll | sm+: 4-column grid */}
       <div
-        className="flex gap-5 overflow-x-auto"
+        className="flex gap-5 overflow-x-auto sm:grid sm:grid-cols-4 sm:overflow-visible sm:gap-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {insights.map((item) => {
@@ -58,10 +59,10 @@ export function InsightsUpdates() {
           return (
             <button
               key={item.id}
-              className="flex-shrink-0 flex flex-col items-center gap-2"
+              className="flex-shrink-0 sm:flex-shrink flex flex-col items-center gap-2 sm:bg-white sm:rounded-2xl sm:p-4 sm:shadow-sm sm:border sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow"
             >
               <div
-                className="w-[68px] h-[68px] rounded-2xl flex items-center justify-center"
+                className="w-[68px] h-[68px] sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: item.bg }}
               >
                 <Icon
@@ -70,7 +71,7 @@ export function InsightsUpdates() {
                   strokeWidth={1.8}
                 />
               </div>
-              <p className="text-[11px] text-[#374151] text-center leading-tight max-w-[72px]">
+              <p className="text-[11px] sm:text-[12px] text-[#374151] text-center leading-tight max-w-[72px] sm:max-w-none">
                 {item.highlight ? (
                   <>
                     <span className="bg-yellow-300 text-[#1A1A1A] px-0.5 rounded-sm font-medium">
@@ -85,7 +86,7 @@ export function InsightsUpdates() {
             </button>
           );
         })}
-        <div className="w-2 flex-shrink-0" />
+        <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>
   );

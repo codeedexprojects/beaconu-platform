@@ -25,7 +25,7 @@ const services: Service[] = [
 function ServiceCard({ service }: { service: Service }) {
   const Icon = service.icon;
   return (
-    <button className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 w-full text-left">
+    <button className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 w-full text-left hover:shadow-md transition-shadow">
       <span className="text-[14px] font-semibold text-[#111827] leading-tight pr-2">
         {service.name}
       </span>
@@ -45,12 +45,13 @@ function ServiceCard({ service }: { service: Service }) {
 
 export function StudentSupportServices() {
   return (
-    <section className="px-4">
-      <h2 className="text-[17px] font-bold text-[#111827] mb-3">
+    <section className="px-4 md:px-6 lg:px-8">
+      <h2 className="text-[17px] sm:text-xl font-bold text-[#111827] mb-3">
         Student Support Services
       </h2>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* 2-col mobile | 3-col sm | 5-col lg */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {services.map((service) => (
           <ServiceCard key={service.id} service={service} />
         ))}

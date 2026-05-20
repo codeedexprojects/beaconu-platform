@@ -12,9 +12,9 @@ import { HelpAndTrust } from "@/components/home/HelpAndTrust";
 
 export default function StudentHomePage() {
   return (
-    <main className="min-h-screen max-w-lg mx-auto">
+    <main className="min-h-screen">
       <HeroSection />
-      <div className="space-y-7 pb-10 pt-1">
+      <div className="max-w-7xl mx-auto space-y-7 sm:space-y-9 pb-12 pt-2">
         <StarterGuide />
         <UniversitiesSection />
         <ShortsSection />

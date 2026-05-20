@@ -24,13 +24,13 @@ const guides = [
 
 export function StarterGuide() {
   return (
-    <section className="pt-5">
+    <section className="pt-5 sm:pt-6">
       {/* Header */}
-      <div className="flex items-center justify-center gap-2 mb-4 px-4">
+      <div className="flex items-center justify-center gap-2 mb-4 px-4 sm:px-6">
         <span className="text-yellow-400 text-base" aria-hidden>
           ★
         </span>
-        <h2 className="text-[12px] font-bold text-orange-500 tracking-[0.18em] uppercase">
+        <h2 className="text-[12px] sm:text-[13px] font-bold text-orange-500 tracking-[0.18em] uppercase">
           Your Starter Guide
         </h2>
         <span className="text-yellow-400 text-base" aria-hidden>
@@ -38,18 +38,18 @@ export function StarterGuide() {
         </span>
       </div>
 
-      {/* Horizontal scroll */}
+      {/* Mobile: horizontal scroll | sm+: 3-column grid */}
       <div
-        className="flex gap-3 px-4 overflow-x-auto"
+        className="flex gap-3 px-4 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-4 md:px-6 lg:px-8"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {guides.map((guide) => (
           <button
             key={guide.id}
-            className="flex-shrink-0 rounded-2xl overflow-hidden relative flex flex-col justify-end"
-            style={{ width: 150, height: 178, backgroundColor: guide.bg }}
+            className="flex-shrink-0 w-[150px] h-[178px] sm:w-auto sm:h-[200px] lg:h-[230px] rounded-2xl overflow-hidden relative flex flex-col justify-end"
+            style={{ backgroundColor: guide.bg }}
           >
-            {/* Decorative circle in background */}
+            {/* Decorative circles */}
             <div
               className="absolute top-4 right-4 w-16 h-16 rounded-full opacity-50"
               style={{ backgroundColor: guide.accent }}
@@ -59,9 +59,9 @@ export function StarterGuide() {
               style={{ backgroundColor: guide.accent }}
             />
 
-            {/* Play button centered */}
+            {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-11 h-11 rounded-full bg-white/90 shadow-md flex items-center justify-center">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 shadow-md flex items-center justify-center">
                 <svg
                   width="14"
                   height="14"
@@ -73,16 +73,16 @@ export function StarterGuide() {
               </div>
             </div>
 
-            {/* Title at bottom */}
-            <div className="relative p-3">
-              <p className="text-[#1A1A1A] text-[13px] font-semibold leading-tight text-left">
+            {/* Title */}
+            <div className="relative p-3 sm:p-4">
+              <p className="text-[#1A1A1A] text-[13px] sm:text-[14px] font-semibold leading-tight text-left">
                 {guide.title}
               </p>
             </div>
           </button>
         ))}
-        {/* Trailing space */}
-        <div className="w-2 flex-shrink-0" />
+        {/* Trailing spacer — only visible in scroll mode */}
+        <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>
   );

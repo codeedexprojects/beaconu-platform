@@ -24,22 +24,23 @@ const testimonials = [
 
 export function VideoTestimonials() {
   return (
-    <section className="px-4">
-      <h2 className="text-[17px] font-bold text-[#111827] mb-3">
+    <section className="px-4 md:px-6 lg:px-8">
+      <h2 className="text-[17px] sm:text-xl font-bold text-[#111827] mb-3">
         Video Testimonial&apos;s
       </h2>
 
+      {/* Mobile: horizontal scroll | sm+: 3-col grid */}
       <div
-        className="flex gap-3 overflow-x-auto"
+        className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {testimonials.map((t) => (
           <button
             key={t.id}
-            className="flex-shrink-0 rounded-2xl overflow-hidden relative"
-            style={{ width: 205, height: 178, background: t.bg }}
+            className="flex-shrink-0 w-[205px] h-[178px] sm:w-auto sm:h-[220px] lg:h-[260px] rounded-2xl overflow-hidden relative"
+            style={{ background: t.bg }}
           >
-            {/* Subtle dot pattern overlay */}
+            {/* Dot pattern overlay */}
             <div
               className="absolute inset-0 opacity-20"
               style={{
@@ -49,7 +50,7 @@ export function VideoTestimonials() {
               }}
             />
 
-            {/* Color tint dots */}
+            {/* Accent dots */}
             <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-orange-400/70" />
             <div className="absolute top-3 right-7 w-2 h-2 rounded-full bg-white/30" />
 
@@ -62,7 +63,7 @@ export function VideoTestimonials() {
               </div>
             </div>
 
-            {/* User info bottom overlay */}
+            {/* User info overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border border-white/30"
@@ -83,7 +84,7 @@ export function VideoTestimonials() {
             </div>
           </button>
         ))}
-        <div className="w-2 flex-shrink-0" />
+        <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>
   );

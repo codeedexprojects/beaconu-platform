@@ -8,10 +8,10 @@ const institutes = [
 
 export function InstitutesSection() {
   return (
-    <section className="px-4">
+    <section className="px-4 md:px-6 lg:px-8">
       {/* Header */}
       <div className="flex items-start justify-between mb-3 gap-2">
-        <h2 className="text-[17px] font-bold text-[#111827] leading-snug">
+        <h2 className="text-[17px] sm:text-xl font-bold text-[#111827] leading-snug">
           Institutes of National Importance
         </h2>
         <button className="text-[13px] font-semibold text-orange-500 underline underline-offset-2 flex-shrink-0 mt-0.5">
@@ -19,16 +19,15 @@ export function InstitutesSection() {
         </button>
       </div>
 
-      {/* Horizontal scroll */}
+      {/* Mobile: horizontal scroll | sm+: 3-col | lg+: 5-col */}
       <div
-        className="flex gap-3 overflow-x-auto"
+        className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {institutes.map((inst) => (
           <button
             key={inst.id}
-            className="flex-shrink-0 bg-white rounded-2xl flex flex-col items-center justify-center gap-1.5 p-4 shadow-sm border border-gray-100"
-            style={{ width: 108, minHeight: 120 }}
+            className="flex-shrink-0 w-[108px] sm:w-auto bg-white rounded-2xl flex flex-col items-center justify-center gap-1.5 p-4 shadow-sm border border-gray-100 min-h-[120px]"
           >
             {/* Emblem placeholder */}
             <div
@@ -50,7 +49,7 @@ export function InstitutesSection() {
             </p>
           </button>
         ))}
-        <div className="w-2 flex-shrink-0" />
+        <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>
   );

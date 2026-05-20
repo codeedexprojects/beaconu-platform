@@ -1,23 +1,23 @@
 export function OnlyAtBeaconU() {
   return (
-    <section className="px-4">
+    <section className="px-4 md:px-6 lg:px-8">
       {/* Header */}
-      <p className="text-[15px] font-semibold text-[#111827] text-center mb-3">
+      <p className="text-[15px] sm:text-[17px] font-semibold text-[#111827] text-center mb-3">
         Only @ <span className="text-blue-600 font-bold">BeaconU</span>
       </p>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {/* Psychometric assessment */}
         <button
-          className="rounded-3xl overflow-hidden relative p-4 text-left flex flex-col"
-          style={{ backgroundColor: "#1E3A8A", minHeight: 148 }}
+          className="rounded-3xl overflow-hidden relative p-4 sm:p-6 text-left flex flex-col min-h-[148px] sm:min-h-[180px] lg:min-h-[220px]"
+          style={{ backgroundColor: "#1E3A8A" }}
         >
           {/* Background decoration */}
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -top-4 -right-4 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white/10" />
           <div className="absolute top-8 right-2 w-12 h-12 rounded-full bg-white/5" />
 
-          {/* Girl with question mark icon */}
-          <div className="absolute top-3 right-3 w-16 h-16 flex items-center justify-center opacity-60">
+          {/* Icon */}
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-16 h-16 flex items-center justify-center opacity-60">
             <svg
               width="44"
               height="44"
@@ -30,22 +30,14 @@ export function OnlyAtBeaconU() {
             >
               <circle cx="12" cy="8" r="4" />
               <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-              <path
-                d="M12 3v1m4.95 1.05L16 6M21 8h-1m-1.05 4.95L18 12M12 21v-1m-4.95-1.05L9 18M3 8h1m1.05-4.95L6 4"
-                stroke="white"
-                strokeWidth="1"
-                opacity="0.5"
-              />
             </svg>
           </div>
-
-          {/* Floating "?" */}
           <div className="absolute top-1 right-1 text-white/40 text-2xl font-black">
             ?
           </div>
 
-          <div className="mt-auto pt-6">
-            <p className="text-white text-[13px] font-bold leading-tight">
+          <div className="mt-auto pt-8 sm:pt-12">
+            <p className="text-white text-[13px] sm:text-[15px] font-bold leading-tight">
               Psychometric
               <br />
               assessment
@@ -55,15 +47,15 @@ export function OnlyAtBeaconU() {
 
         {/* Group Finder */}
         <button
-          className="rounded-3xl overflow-hidden relative p-4 text-left flex flex-col"
-          style={{ backgroundColor: "#7C3AED", minHeight: 148 }}
+          className="rounded-3xl overflow-hidden relative p-4 sm:p-6 text-left flex flex-col min-h-[148px] sm:min-h-[180px] lg:min-h-[220px]"
+          style={{ backgroundColor: "#7C3AED" }}
         >
           {/* Background decoration */}
-          <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -top-4 -right-4 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white/10" />
           <div className="absolute top-8 right-2 w-12 h-12 rounded-full bg-white/5" />
 
-          {/* Group icon */}
-          <div className="absolute top-3 right-2 w-16 h-16 flex items-center justify-center opacity-70">
+          {/* Icon */}
+          <div className="absolute top-3 right-2 sm:top-4 sm:right-3 w-16 h-16 flex items-center justify-center opacity-70">
             <svg
               width="44"
               height="44"
@@ -81,8 +73,8 @@ export function OnlyAtBeaconU() {
             </svg>
           </div>
 
-          <div className="mt-auto pt-6">
-            <p className="text-white text-[13px] font-bold leading-tight">
+          <div className="mt-auto pt-8 sm:pt-12">
+            <p className="text-white text-[13px] sm:text-[15px] font-bold leading-tight">
               Group Finder
             </p>
           </div>

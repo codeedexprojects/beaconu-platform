@@ -7,22 +7,21 @@ const shorts = [
 
 export function ShortsSection() {
   return (
-    <section className="px-4">
-      <h2 className="text-[17px] font-bold text-[#111827] mb-3">Shorts</h2>
+    <section className="px-4 md:px-6 lg:px-8">
+      <h2 className="text-[17px] sm:text-xl font-bold text-[#111827] mb-3">
+        Shorts
+      </h2>
 
+      {/* Mobile: horizontal scroll | sm+: 2-col | lg+: 4-col */}
       <div
-        className="flex gap-3 overflow-x-auto"
+        className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {shorts.map((short) => (
           <button
             key={short.id}
-            className="flex-shrink-0 rounded-2xl overflow-hidden relative"
-            style={{
-              width: 158,
-              height: 112,
-              background: short.bg,
-            }}
+            className="flex-shrink-0 w-[158px] h-[112px] sm:w-auto sm:h-[160px] lg:h-[180px] rounded-2xl overflow-hidden relative"
+            style={{ background: short.bg }}
           >
             {/* Top dots */}
             <div className="absolute top-2.5 left-3 flex gap-1">
@@ -47,7 +46,7 @@ export function ShortsSection() {
             </div>
           </button>
         ))}
-        <div className="w-2 flex-shrink-0" />
+        <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>
   );

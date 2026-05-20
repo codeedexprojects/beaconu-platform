@@ -67,10 +67,10 @@ const interests = [
 
 export function ExploreInterests() {
   return (
-    <section className="px-4">
+    <section className="px-4 md:px-6 lg:px-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[17px] font-bold text-[#111827]">
+        <h2 className="text-[17px] sm:text-xl font-bold text-[#111827]">
           Explore your interest
         </h2>
         <button className="text-[13px] font-semibold text-orange-500 underline underline-offset-2">
@@ -80,13 +80,14 @@ export function ExploreInterests() {
 
       {/* Blue-border grid container */}
       <div className="border-2 border-blue-200 rounded-3xl p-3">
-        <div className="grid grid-cols-2 gap-3">
+        {/* 2-col mobile | 3-col sm | 4-col lg */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {interests.map((item) => (
             <button
               key={item.id}
-              className="bg-white rounded-2xl p-3 text-left shadow-sm border border-gray-50 flex flex-col min-h-[120px]"
+              className="bg-white rounded-2xl p-3 sm:p-4 text-left shadow-sm border border-gray-50 flex flex-col min-h-[120px] sm:min-h-[140px]"
             >
-              <p className="text-[13.5px] font-bold text-[#111827] mb-0.5 leading-tight">
+              <p className="text-[13.5px] sm:text-[14px] font-bold text-[#111827] mb-0.5 leading-tight">
                 {item.name}
               </p>
               <p
