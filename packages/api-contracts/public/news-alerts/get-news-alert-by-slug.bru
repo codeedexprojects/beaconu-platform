@@ -1,0 +1,20 @@
+meta {
+  name: Get News Alert by Slug
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/news/{{newsAlertSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Fetch a single published news alert by slug. Returns 404 for drafts or archived alerts.
+  No authentication required.
+}

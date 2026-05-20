@@ -22,11 +22,6 @@ export interface Blog {
   updatedAt: string;
 }
 
-export interface PaginatedBlogs {
-  data: Blog[];
-  meta: { total: number; page: number; limit: number; hasNext: boolean };
-}
-
 export interface SubmitBlogInput {
   title: string;
   summary?: string;
@@ -51,7 +46,7 @@ export async function getPublicBlogs(params: {
   page?: number;
   limit?: number;
   search?: string;
-}): Promise<PaginatedBlogs> {
+}): Promise<{ data: Blog[]; meta: { total: number; page: number; limit: number; hasNext: boolean } }> {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   query.set("limit", String(params.limit ?? 12));
@@ -59,7 +54,7 @@ export async function getPublicBlogs(params: {
 
   const res = await fetch(
     `${API_BASE}/api/v1/public/blogs?${query.toString()}`,
-    { next: { revalidate: 3600 } },
+    { cache: "no-store" },
   );
 
   if (!res.ok) throw new Error("Failed to fetch blogs");
@@ -69,7 +64,7 @@ export async function getPublicBlogs(params: {
 
 export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
   const res = await fetch(`${API_BASE}/api/v1/public/blogs/${slug}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 60 },
   });
   if (!res.ok) throw new Error("Blog not found");
   const body = await res.json();
@@ -84,7 +79,7 @@ export const blogAuthorService = {
     if (params?.status) query.set("status", params.status);
     if (params?.page) query.set("page", String(params.page));
     query.set("limit", String(params?.limit ?? 10));
-    return api.get<PaginatedBlogs>(`${BLOG_AUTHOR_BASE}?${query.toString()}`);
+    return api.get<Blog[]>(`${BLOG_AUTHOR_BASE}?${query.toString()}`);
   },
 
   getById: (id: string) => api.get<Blog>(`${BLOG_AUTHOR_BASE}/${id}`),

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BookOpen, FileText, DollarSign, Newspaper } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -8,6 +9,7 @@ interface InsightItem {
   color: string;
   bg: string;
   highlight?: boolean;
+  href?: string;
 }
 
 const insights: InsightItem[] = [
@@ -39,6 +41,7 @@ const insights: InsightItem[] = [
     color: "#1A1A1A",
     bg: "#FEF3C7",
     highlight: true,
+    href: "/news-alerts",
   },
 ];
 
@@ -56,11 +59,8 @@ export function InsightsUpdates() {
       >
         {insights.map((item) => {
           const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              className="flex-shrink-0 sm:flex-shrink flex flex-col items-center gap-2 sm:bg-white sm:rounded-2xl sm:p-4 sm:shadow-sm sm:border sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow"
-            >
+          const inner = (
+            <>
               <div
                 className="w-[68px] h-[68px] sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: item.bg }}
@@ -83,6 +83,17 @@ export function InsightsUpdates() {
                   item.title
                 )}
               </p>
+            </>
+          );
+          const cls =
+            "flex-shrink-0 sm:flex-shrink flex flex-col items-center gap-2 sm:bg-white sm:rounded-2xl sm:p-4 sm:shadow-sm sm:border sm:border-gray-100 sm:hover:shadow-md sm:transition-shadow";
+          return item.href ? (
+            <Link key={item.id} href={item.href} className={cls}>
+              {inner}
+            </Link>
+          ) : (
+            <button key={item.id} className={cls}>
+              {inner}
             </button>
           );
         })}

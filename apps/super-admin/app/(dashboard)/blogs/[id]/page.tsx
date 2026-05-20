@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useAdminBlog, useApproveBlog, useRejectBlog } from "@/hooks/use-blogs";
+import { useAdminBlog, useApproveBlog, useRejectBlog, useUnpublishBlog } from "@/hooks/use-blogs";
 import { cn } from "@/lib/utils";
 
 const STATUS_VARIANT: Record<string, { badge: string; label: string }> = {
@@ -56,12 +56,21 @@ export default function BlogDetailPage() {
   const { data: blog, isLoading } = useAdminBlog(id);
   const { mutate: approve, isPending: isApproving } = useApproveBlog();
   const { mutate: reject, isPending: isRejecting } = useRejectBlog();
+  const { mutate: unpublish, isPending: isUnpublishing } = useUnpublishBlog();
 
   function handleApprove() {
     approve(id, {
       onSuccess: () => {
         toast.success("Blog approved and published!");
         router.push("/blogs");
+      },
+    });
+  }
+
+  function handleUnpublish() {
+    unpublish(id, {
+      onSuccess: () => {
+        toast.success("Blog unpublished and moved back to pending review.");
       },
     });
   }
@@ -227,6 +236,26 @@ export default function BlogDetailPage() {
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Unpublish button — only for approved */}
+        {blog.status === "approved" && (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUnpublish}
+              disabled={isUnpublishing}
+              className="gap-2 text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
+              {isUnpublishing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <XCircle className="h-3.5 w-3.5" />
+              )}
+              {isUnpublishing ? "Unpublishing…" : "Unpublish"}
+            </Button>
           </div>
         )}
 

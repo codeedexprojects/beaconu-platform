@@ -1,0 +1,20 @@
+meta {
+  name: Get News Alert
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/news/{{newsAlertId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Fetch a single news alert by ID. Returns full content including draft alerts.
+}

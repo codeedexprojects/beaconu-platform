@@ -5,4 +5,7 @@ export const QUERY_KEYS = {
   myBlogs: (status?: string, page?: number) =>
     ["my-blogs", status, page] as const,
   myBlog: (id: string) => ["my-blogs", id] as const,
+  newsAlerts: (params?: object) =>
+    params ? ["news-alerts", params] : (["news-alerts"] as const),
+  newsAlert: (slug: string) => ["news-alerts", slug] as const,
 } as const;

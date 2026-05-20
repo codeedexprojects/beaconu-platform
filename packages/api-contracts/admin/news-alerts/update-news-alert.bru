@@ -1,0 +1,29 @@
+meta {
+  name: Update News Alert
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/news/{{newsAlertId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "NEET PG 2025 Exam Dates — Updated Schedule",
+    "summary": "Updated summary with the revised exam dates.",
+    "category": "exam"
+  }
+}
+
+docs {
+  Update a news alert. Only non-archived alerts can be edited.
+  All fields are optional — send only the fields to change.
+}
