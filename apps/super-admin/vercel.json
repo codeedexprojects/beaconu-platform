@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "pnpm build",
-  "outputDirectory": ".next",
-  "installCommand": "pnpm install",
   "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm --filter @beaconu/types build && pnpm --filter @beaconu/utils build && pnpm --filter @beaconu/validation build && pnpm --filter @beaconu/super-admin build",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "outputDirectory": "apps/super-admin/.next",
   "rewrites": [
     {
       "source": "/(.*)",
