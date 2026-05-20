@@ -41,7 +41,7 @@ export default function LoginPage(): React.JSX.Element {
       const { user, token } = await loginBlogAuthor(data);
       setAuth(user, token);
       toast.success("Welcome back!");
-      router.replace("/my/blogs");
+      router.replace("/home");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     }

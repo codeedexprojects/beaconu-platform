@@ -82,7 +82,7 @@ export default function RegisterPage(): React.JSX.Element {
       });
       setAuth(user, token);
       toast.success("Account created! Welcome to BeaconU.");
-      router.replace("/my/blogs");
+      router.replace("/home");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Registration failed");
     }
