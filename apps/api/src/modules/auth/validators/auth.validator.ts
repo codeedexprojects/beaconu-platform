@@ -7,6 +7,12 @@ export const loginSchema = z.object({
   agency_reg_number: z.string().trim().optional(),
 });
 
+export const staffLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6),
+  collegeSlug: z.string().trim().min(1).toLowerCase(),
+});
+
 export const platformLoginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
@@ -75,6 +81,7 @@ export const loginBlogAuthorSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type StaffLoginInput = z.infer<typeof staffLoginSchema>;
 export type PlatformLoginInput = z.infer<typeof platformLoginSchema>;
 export type RegisterCounsellorInput = z.infer<typeof registerCounsellorSchema>;
 export type RegisterAssociateAdminInput = z.infer<

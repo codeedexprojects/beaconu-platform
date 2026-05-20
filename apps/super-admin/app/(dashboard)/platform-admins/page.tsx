@@ -67,7 +67,12 @@ export default function PlatformAdminsPage() {
       description: `Admin: ${admin.fullName}. This action will deactivate their account.`,
       action: {
         label: "Delete",
-        onClick: () => remove.mutate(admin.id),
+        onClick: () =>
+          remove.mutate(admin.id, {
+            onSuccess: () => {
+              toast.success("Admin deleted");
+            },
+          }),
       },
       cancel: {
         label: "Cancel",
@@ -171,13 +176,20 @@ export default function PlatformAdminsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    updateStatus.mutate({
-                                      id: admin.id,
-                                      status:
-                                        admin.status === "active"
-                                          ? "inactive"
-                                          : "active",
-                                    })
+                                    updateStatus.mutate(
+                                      {
+                                        id: admin.id,
+                                        status:
+                                          admin.status === "active"
+                                            ? "inactive"
+                                            : "active",
+                                      },
+                                      {
+                                        onSuccess: () => {
+                                          toast.success("Status updated");
+                                        },
+                                      },
+                                    )
                                   }
                                 >
                                   {admin.status === "active" ? (

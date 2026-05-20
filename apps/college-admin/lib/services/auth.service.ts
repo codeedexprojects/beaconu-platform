@@ -11,6 +11,7 @@ export interface SetupTokenValidation {
 export interface LoginInput {
   email: string;
   password: string;
+  collegeSlug: string;
 }
 
 export interface SetupAccountInput {
@@ -29,7 +30,10 @@ export async function loginCollegeAdmin(
   const res = await api.post<{
     tokens: { accessToken: string };
     user: StaffUser;
-  }>("/api/v1/college-admin/auth/login", data);
+  }>("/api/v1/college-admin/auth/login", data, {
+    skipAuth: true,
+    suppress401Redirect: true,
+  });
 
   return {
     user: res.user,
@@ -42,6 +46,10 @@ export async function verifyCollegeSetupToken(
 ): Promise<SetupTokenValidation> {
   return api.get<SetupTokenValidation>(
     `/api/v1/college-admin/auth/verify-setup-token/${token}`,
+    {
+      skipAuth: true,
+      suppress401Redirect: true,
+    },
   );
 }
 
@@ -51,7 +59,10 @@ export async function setupCollegeAccount(
   const res = await api.post<{
     tokens: { accessToken: string };
     user: StaffUser;
-  }>("/api/v1/college-admin/auth/setup-account", data);
+  }>("/api/v1/college-admin/auth/setup-account", data, {
+    skipAuth: true,
+    suppress401Redirect: true,
+  });
 
   return {
     user: res.user,

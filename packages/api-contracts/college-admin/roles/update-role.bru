@@ -1,0 +1,30 @@
+meta {
+  name: Update Role
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/roles/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Senior Admission Officer",
+    "permissionCodes": [
+      "profile.edit",
+      "academics.manage",
+      "staff.manage"
+    ]
+  }
+}

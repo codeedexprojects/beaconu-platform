@@ -9,4 +9,9 @@ export const QUERY_KEYS = {
   setupTokenValidation: (token: string) =>
     ["auth", "setup-token", token] as const,
   publicCollegeBySlug: (slug: string) => ["public-colleges", slug] as const,
+  permissions: ["college-permissions"] as const,
+  roles: ["college-roles"] as const,
+  staff: ["college-staff"] as const,
+  hostels: ["college-hostels"] as const,
+  commutes: ["college-commutes"] as const,
 } as const;

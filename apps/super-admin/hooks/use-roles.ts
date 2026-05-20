@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -14,25 +13,17 @@ import {
 } from "@/lib/services/roles.service";
 
 export function usePlatformRoles() {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.platformRoles,
     queryFn: getPlatformRoles,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function usePlatformPermissions() {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.platformPerms,
     queryFn: getPlatformPermissions,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreatePlatformRole() {

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -16,49 +15,25 @@ export function useCollegeLeads(filters?: {
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [QUERY_KEYS.collegeLeads, filters],
     queryFn: () => collegeLeadsService.getAll(filters),
   });
-
-  useEffect(() => {
-    if (query.error) {
-      toast.error(getErrorMessage(query.error));
-    }
-  }, [query.error]);
-
-  return query;
 }
 
 export function useCollegeLeadStats() {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.collegeLeadStats,
     queryFn: () => collegeLeadsService.getStats(),
   });
-
-  useEffect(() => {
-    if (query.error) {
-      toast.error(getErrorMessage(query.error));
-    }
-  }, [query.error]);
-
-  return query;
 }
 
 export function useCollegeLeadById(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.collegeLead(id),
     queryFn: () => collegeLeadsService.getById(id),
     enabled: !!id,
   });
-
-  useEffect(() => {
-    if (query.error) {
-      toast.error(getErrorMessage(query.error));
-    }
-  }, [query.error]);
-
-  return query;
 }
 
 export function useUpdateCollegeLeadStatus() {
@@ -86,7 +61,6 @@ export function useUpdateCollegeLeadStatus() {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.collegeLeadStats,
       });
-      toast.success("College lead status updated successfully");
     },
   });
 }

@@ -15,7 +15,9 @@ import {
   Eye,
   TrendingUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Header } from "@/components/layout/header";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +114,7 @@ export default function CollegeLeadsPage() {
         onSuccess: (response) => {
           setIsStatusOpen(false);
           setSelectedLead(null);
+          toast.success("College lead status updated successfully");
           if (response.provisionedCollege) {
             setProvisionData(response.provisionedCollege);
           }

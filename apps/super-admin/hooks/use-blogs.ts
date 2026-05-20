@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -15,26 +14,18 @@ export function useAdminBlogs(params?: {
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.adminBlogs(params),
     queryFn: () => adminBlogsService.list(params),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useAdminBlog(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.adminBlog(id),
     queryFn: () => adminBlogsService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useApproveBlog() {

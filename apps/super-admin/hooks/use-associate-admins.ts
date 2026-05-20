@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -10,14 +9,10 @@ import {
 } from "@/lib/services/associate-admins.service";
 
 export function useAssociateAdmins() {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.associateAdmins,
     queryFn: getAssociateAdmins,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useUpdateAssociateStatus() {

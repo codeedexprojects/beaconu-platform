@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { COLLEGE_ADMIN_TOKEN_KEY } from "@/lib/constants";
+import { setCollegeTokenCookie, clearCollegeTokenCookie } from "@/lib/cookies";
 
 export interface StaffUser {
   id: string;
@@ -11,40 +12,54 @@ export interface StaffUser {
   collegeName: string;
   collegeStatus: "pending_setup" | "active" | string;
   roleSlug: string;
+  permissions?: string[];
 }
 
 interface AuthState {
   user: StaffUser | null;
-  isAuthenticated: boolean;
+  token: string | null;
+  _hasHydrated: boolean;
   setAuth: (user: StaffUser, token: string) => void;
   updateUser: (data: Partial<StaffUser>) => void;
-  logout: () => void;
+  clearAuth: () => void;
+  setHasHydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      isAuthenticated: false,
+      token: null,
+      _hasHydrated: false,
       setAuth: (user, token) => {
         localStorage.setItem(COLLEGE_ADMIN_TOKEN_KEY, token);
-        set({ user, isAuthenticated: true });
+        setCollegeTokenCookie(token);
+        set({ user, token });
       },
       updateUser: (data) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...data } : null,
         })),
-      logout: () => {
+      clearAuth: () => {
         localStorage.removeItem(COLLEGE_ADMIN_TOKEN_KEY);
-        set({ user: null, isAuthenticated: false });
+        clearCollegeTokenCookie();
+        set({ user: null, token: null });
       },
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
     }),
     {
       name: "college-admin-auth",
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        token: state.token,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) {
+          setCollegeTokenCookie(state.token);
+        }
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );

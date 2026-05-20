@@ -2,12 +2,34 @@ import { prisma } from "@beaconu/db";
 import { randomUUID } from "crypto";
 
 const SYSTEM_COLLEGE_ROLES = [
-  { name: "College Admin", slug: "college_admin" },
-  { name: "Evaluator", slug: "evaluator" },
-  { name: "Financial Team", slug: "financial_team" },
-  { name: "Admission Team", slug: "admission_team" },
-  { name: "Hostel Team", slug: "hostel_team" },
-  { name: "Marketing Team", slug: "marketing_team" },
+  {
+    name: "College Admin",
+    slug: "college_admin",
+    permissions: [
+      "profile.view",
+      "profile.edit",
+      "campuses.view",
+      "campuses.manage",
+      "academics.view",
+      "academics.manage",
+      "hostel.view",
+      "hostel.manage",
+      "commute.view",
+      "commute.manage",
+      "staff.view",
+      "staff.manage",
+    ],
+  },
+  {
+    name: "Hostel Admin",
+    slug: "hostel_admin",
+    permissions: ["hostel.view", "hostel.manage"],
+  },
+  {
+    name: "Commute Admin",
+    slug: "commute_admin",
+    permissions: ["commute.view", "commute.manage"],
+  },
 ];
 
 /** 48 hours in milliseconds */
@@ -50,16 +72,25 @@ export class CollegeProvisioningRepository {
 
       // 2. Create system CollegeRoles
       const roles = await Promise.all(
-        SYSTEM_COLLEGE_ROLES.map((role) =>
-          tx.collegeRole.create({
+        SYSTEM_COLLEGE_ROLES.map(async (role) => {
+          const createdRole = await tx.collegeRole.create({
             data: {
               collegeId: college.id,
               name: role.name,
               slug: role.slug,
               isSystemRole: true,
             },
-          }),
-        ),
+          });
+          if (role.permissions.length > 0) {
+            await tx.collegeRolePermission.createMany({
+              data: role.permissions.map((code) => ({
+                collegeRoleId: createdRole.id,
+                permissionCode: code,
+              })),
+            });
+          }
+          return createdRole;
+        }),
       );
 
       const adminRole = roles.find((r) => r.slug === "college_admin")!;
@@ -188,7 +219,12 @@ export class CollegeProvisioningRepository {
   /** Find staff by email with college + role info */
   static async findStaffByEmail(email: string) {
     return prisma.staffMember.findFirst({
-      where: { email: email.trim().toLowerCase() },
+      where: {
+        email: {
+          equals: email.trim(),
+          mode: "insensitive",
+        },
+      },
       include: {
         college: { select: { id: true, slug: true, name: true, status: true } },
         collegeRole: { include: { permissions: true } },

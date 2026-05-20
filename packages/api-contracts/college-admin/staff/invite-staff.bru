@@ -1,0 +1,25 @@
+meta {
+  name: Invite Staff
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/staff
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "fullName": "Jane Doe",
+    "email": "jane.doe@college.edu",
+    "phoneNumber": "+91 99999 88888",
+    "password": "SecurePassword123",
+    "collegeRoleId": "your-college-role-uuid-here"
+  }
+}

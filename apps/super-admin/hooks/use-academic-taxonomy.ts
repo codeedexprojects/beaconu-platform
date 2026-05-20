@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -12,29 +11,17 @@ import {
 } from "@/lib/services/academic-taxonomy.service";
 
 export function useStreams(isActive?: boolean) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.academicTaxonomy.streams, isActive],
     queryFn: () => academicTaxonomyService.getStreams(isActive),
   });
-
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-
-  return query;
 }
 
 export function useDisciplines(isActive?: boolean) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.academicTaxonomy.disciplines, isActive],
     queryFn: () => academicTaxonomyService.getDisciplines(isActive),
   });
-
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-
-  return query;
 }
 
 export function useCreateStream() {
@@ -67,29 +54,17 @@ export function useDisableStream() {
 }
 
 export function useStudyLevels(isActive?: boolean) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.academicTaxonomy.studyLevels, isActive],
     queryFn: () => academicTaxonomyService.getStudyLevels(isActive),
   });
-
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-
-  return query;
 }
 
 export function useProgramTypes(isActive?: boolean) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.academicTaxonomy.programTypes, isActive],
     queryFn: () => academicTaxonomyService.getProgramTypes(isActive),
   });
-
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-
-  return query;
 }
 
 export function useCreateDiscipline() {

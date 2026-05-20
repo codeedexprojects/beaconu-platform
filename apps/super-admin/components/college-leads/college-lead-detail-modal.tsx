@@ -38,11 +38,11 @@ export function CollegeLeadDetailModal({
 
   const statusConfig = STATUS_CONFIG[lead.status];
 
-  const getCollegeLink = (slug: string) => {
+  const getCollegeLink = (slug: string, port: string = "3002") => {
     if (typeof window === "undefined") return "";
     const hostname = window.location.hostname;
     if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-      return `http://${slug}.localhost:3002`;
+      return `http://${slug}.localhost:${port}`;
     }
     const parts = hostname.split(".");
     if (parts.length >= 2) {
@@ -52,8 +52,12 @@ export function CollegeLeadDetailModal({
     return `https://${slug}.beaconu.com`;
   };
 
-  const portalLink = lead.createdCollege
-    ? getCollegeLink(lead.createdCollege.slug)
+  const publicPortalLink = lead.createdCollege
+    ? getCollegeLink(lead.createdCollege.slug, "3001")
+    : "";
+
+  const adminPortalLink = lead.createdCollege
+    ? getCollegeLink(lead.createdCollege.slug, "3002")
     : "";
 
   return (
@@ -143,23 +147,50 @@ export function CollegeLeadDetailModal({
           )}
 
           {lead.status === "approved" && lead.createdCollege && (
-            <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-emerald-800 uppercase mb-1.5 flex items-center gap-1.5">
+            <div className="space-y-3 bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-emerald-800 uppercase flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5 text-emerald-600" />{" "}
-                Provisioned College Portal
+                Provisioned College Links
               </p>
-              <div className="flex items-center justify-between gap-2 mt-1">
-                <span className="font-mono text-sm text-emerald-900 break-all select-all">
-                  {portalLink}
-                </span>
-                <a
-                  href={portalLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
-                >
-                  Visit Portal &rarr;
-                </a>
+
+              <div className="space-y-3 pt-1">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                    Public Landing Page
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-sm text-emerald-900 break-all select-all">
+                      {publicPortalLink}
+                    </span>
+                    <a
+                      href={publicPortalLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
+                    >
+                      Visit Public &rarr;
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-emerald-100/50">
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                    Admin Setup Console
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-sm text-emerald-900 break-all select-all">
+                      {adminPortalLink}
+                    </span>
+                    <a
+                      href={adminPortalLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline flex items-center shrink-0"
+                    >
+                      Visit Admin &rarr;
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           )}
