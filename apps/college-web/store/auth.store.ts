@@ -14,9 +14,10 @@ interface Student {
 interface AuthState {
   student: Student | null;
   token: string | null;
-  isAuthenticated: boolean;
+  _hasHydrated: boolean;
   setAuth: (student: Student, token: string) => void;
   clearAuth: () => void;
+  setHasHydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -24,15 +25,16 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       student: null,
       token: null,
-      isAuthenticated: false,
+      _hasHydrated: false,
       setAuth: (student, token) => {
         setCollegeTokenCookie(token);
-        set({ student, token, isAuthenticated: true });
+        set({ student, token });
       },
       clearAuth: () => {
         clearCollegeTokenCookie();
-        set({ student: null, token: null, isAuthenticated: false });
+        set({ student: null, token: null });
       },
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
     }),
     {
       name: "beaconu-college-auth",
@@ -41,8 +43,8 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.token) {
           setCollegeTokenCookie(state.token);
-          state.isAuthenticated = true;
         }
+        state?.setHasHydrated(true);
       },
     },
   ),

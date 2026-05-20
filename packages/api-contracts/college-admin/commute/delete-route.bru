@@ -1,0 +1,19 @@
+meta {
+  name: Delete Transit Route
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/commute/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

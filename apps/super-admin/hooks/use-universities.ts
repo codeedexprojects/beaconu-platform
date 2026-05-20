@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -15,26 +14,18 @@ export function useUniversities(filters?: {
   state?: string;
   search?: string;
 }) {
-  const query = useQuery({
+  return useQuery({
     queryKey: [...QUERY_KEYS.universities, filters],
     queryFn: () => universitiesService.getAll(filters),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useUniversity(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.university(id),
     queryFn: () => universitiesService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreateUniversity() {

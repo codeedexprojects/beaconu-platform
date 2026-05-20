@@ -1,6 +1,6 @@
 // Server-safe fetch — no auth store, no localStorage, works in RSC.
 const SERVER_API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function publicFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${SERVER_API_BASE}${path}`, {

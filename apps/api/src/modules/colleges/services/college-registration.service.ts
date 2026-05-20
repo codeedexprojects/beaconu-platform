@@ -16,7 +16,24 @@ export class CollegeRegistrationService {
     const college =
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
-    return college;
+
+    // Dynamically compute institutional overview details from DB relation counts/values
+    const totalCourses = college._count?.courses ?? 0;
+    const instituteType = college.university?.universityType?.name ?? null;
+    const campusAmbassadors = (college.blinkUsers ?? []).map((u) => ({
+      id: u.id,
+      fullName: u.fullName,
+      email: u.email,
+      avatarUrl: u.avatarUrl,
+      phoneNumber: u.phoneNumber,
+    }));
+
+    return {
+      ...college,
+      totalCourses,
+      instituteType,
+      campusAmbassadors,
+    };
   }
 
   static async updateProfile(

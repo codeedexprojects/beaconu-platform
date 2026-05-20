@@ -1,8 +1,17 @@
 import { notFound } from "next/navigation";
-import { MapPin, BookOpen, GraduationCap, Building2 } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Building2,
+  Calendar,
+  GraduationCap,
+  Landmark,
+  MapPin,
+  Trophy,
+} from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { publicCollegeService } from "@/lib/services/public-college.service";
 
 interface CollegeLandingPageProps {
@@ -23,235 +32,359 @@ export default async function CollegeLandingPage({
 
   const mainCampus =
     college.campuses.find((c) => c.isMainCampus) || college.campuses[0];
+  const aboutText =
+    college.profileSections?.college_overview?.description ||
+    "Experience a future-ready campus designed for innovation, creativity, and academic excellence.";
+  const featuredCourses = college.courses.slice(0, 6);
+  const universityType =
+    college.university?.universityType?.name || "University";
+  const locationText = [college.city, college.state].filter(Boolean).join(", ");
 
   return (
-    <div className="min-h-screen bg-muted/20">
-      {/* Header/Hero Section */}
-      <header className="bg-background border-b relative overflow-hidden">
-        {college.coverImageUrl ? (
-          <div className="h-64 md:h-80 w-full overflow-hidden">
-            <img
-              src={college.coverImageUrl}
-              alt={`${college.name} cover`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ) : (
-          <div className="h-32 md:h-48 w-full bg-gradient-to-r from-primary/80 to-primary/60" />
-        )}
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative -mt-16 sm:-mt-24 pb-8 flex flex-col md:flex-row md:items-end gap-6">
-            <div className="h-32 w-32 sm:h-40 sm:w-40 rounded-xl bg-background border-4 border-background shadow-md overflow-hidden flex items-center justify-center shrink-0">
+    <div className="min-h-screen bg-[#fcfbf7] text-[#1b1b1b] [font-family:Poppins,ui-sans-serif,system-ui]">
+      <header className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col gap-6 rounded-[30px] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.08)] md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 overflow-hidden rounded-2xl bg-slate-100">
               {college.logoUrl ? (
                 <img
                   src={college.logoUrl}
                   alt={`${college.name} logo`}
-                  className="w-full h-full object-contain p-2"
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <Building2 className="h-16 w-16 text-muted-foreground/50" />
+                <div className="flex h-full w-full items-center justify-center">
+                  <Building2 className="h-7 w-7 text-slate-400" />
+                </div>
               )}
             </div>
 
-            <div className="flex-1 pb-2">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <div>
+              <h1 className="text-2xl font-bold leading-tight text-[#1f2937] sm:text-3xl">
                 {college.name}
               </h1>
-
-              <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-3 text-muted-foreground text-sm sm:text-base">
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="outline" className="font-mono bg-background">
-                    {college.code}
-                  </Badge>
-                </div>
-                {mainCampus && (
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 shrink-0" />
-                    <span>
-                      {mainCampus.city}, {mainCampus.state}
-                    </span>
-                  </div>
-                )}
-                {college.university && (
-                  <div className="flex items-center gap-1.5">
-                    <GraduationCap className="h-4 w-4 shrink-0" />
-                    <span>{college.university.name}</span>
-                  </div>
-                )}
+              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <span className="h-px w-10 bg-slate-300" />
+                <span>
+                  ESTD{" "}
+                  {college.profileSections?.college_overview?.instution_details
+                    ?.estd || "2023"}
+                </span>
+                <span className="h-px w-10 bg-slate-300" />
               </div>
             </div>
           </div>
+
+          <nav className="flex flex-wrap items-center gap-2 rounded-2xl bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+            {[
+              ["Courses", "#courses"],
+              ["Scholarships", "#scholarships"],
+              ["Placements", "#placements"],
+              ["Admission", "#admission"],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-slate-200">
+          {college.coverImageUrl ? (
+            <img
+              src={college.coverImageUrl}
+              alt={`${college.name} cover`}
+              className="h-[380px] w-full object-cover sm:h-[460px]"
+            />
+          ) : (
+            <div className="h-[380px] w-full bg-gradient-to-r from-[#182848] to-[#4b6cb7] sm:h-[460px]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+          <div className="absolute bottom-6 left-6 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-white/60" />
+            <span className="h-3 w-3 rounded-full bg-white" />
+            <span className="h-2 w-2 rounded-full bg-white/60" />
+            <span className="h-2 w-2 rounded-full bg-white/60" />
+          </div>
+        </div>
+
+        <div id="admission" className="mt-8 flex justify-center">
+          <Link href={`/college/${subdomain}/login`}>
+            <Button className="h-12 rounded-full bg-[#f97316] px-8 text-base font-semibold text-white hover:bg-[#ea5f05]">
+              Start Admission
+            </Button>
+          </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid gap-12 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-12">
-            {/* About Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-6">About the College</h2>
-              <div className="prose prose-sm sm:prose-base max-w-none text-muted-foreground leading-relaxed bg-background p-6 rounded-xl border shadow-sm">
-                <p>
-                  Welcome to the official portal of {college.name}. This
-                  institution is dedicated to academic excellence and holistic
-                  student development.
-                  {mainCampus &&
-                    ` Our primary campus is located in the vibrant city of ${mainCampus.city}, ${mainCampus.state}.`}
-                </p>
-                <p className="mt-4">
-                  Explore our wide range of academic programs, state-of-the-art
-                  facilities, and experienced faculty committed to shaping the
-                  leaders of tomorrow.
-                </p>
-              </div>
-            </section>
+      <main className="mx-auto max-w-7xl space-y-16 px-4 pb-20 sm:px-6 lg:px-8">
+        <section className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <Landmark className="mx-auto mb-3 h-7 w-7 text-[#f97316]" />
+            <p className="text-sm text-slate-500">University Type</p>
+            <p className="mt-1 text-base font-semibold text-slate-800">
+              {universityType}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <MapPin className="mx-auto mb-3 h-7 w-7 text-[#f97316]" />
+            <p className="text-sm text-slate-500">Location</p>
+            <p className="mt-1 text-base font-semibold text-slate-800">
+              {locationText || "Location not specified"}
+            </p>
+          </div>
+        </section>
 
-            {/* Courses Section */}
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Academic Programs</h2>
-                <Badge variant="secondary" className="px-3 py-1 text-sm">
-                  {college.courses.length} Courses
-                </Badge>
-              </div>
+        <section>
+          <h2 className="text-center text-3xl font-bold text-[#111827]">
+            About the Campus
+          </h2>
+          <p className="mx-auto mt-4 max-w-4xl text-center text-lg leading-8 text-slate-500">
+            {aboutText}
+          </p>
+          {mainCampus ? (
+            <div className="mt-6 flex justify-center">
+              <Badge className="rounded-full bg-[#111827] px-5 py-2 text-xs font-semibold text-white hover:bg-[#111827]">
+                Main Campus: {mainCampus.name}
+              </Badge>
+            </div>
+          ) : null}
+        </section>
 
-              {college.courses.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {college.courses.map((course) => (
-                    <Card
-                      key={course.id}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex justify-between items-start gap-4 mb-3">
-                          <h3 className="font-semibold leading-tight line-clamp-2">
-                            {course.name}
-                          </h3>
-                          <Badge variant="outline" className="shrink-0">
-                            {course.code}
-                          </Badge>
-                        </div>
+        <section
+          id="courses"
+          className="rounded-[34px] bg-[#fff7ef] p-6 sm:p-10"
+        >
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="text-3xl font-bold text-[#1A2B44]">
+                Explore Courses & Programs
+              </h3>
+              <p className="mt-2 text-slate-600">
+                Discover programs designed for future-ready careers.
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className="w-fit rounded-full border-orange-200 bg-white px-4 py-2 text-orange-600"
+            >
+              {featuredCourses.length} Featured Courses
+            </Badge>
+          </div>
 
-                        <div className="space-y-2 mt-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-primary" />
-                            <span className="font-medium text-foreground">
-                              {course.discipline.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <GraduationCap className="h-4 w-4 shrink-0" />
-                            <span>
-                              {course.studyLevel.name} •{" "}
-                              {course.programType.name}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center pt-2 border-t mt-3">
-                            <span className="capitalize">
-                              {course.studyMode.replace("_", " ")}
-                            </span>
-                            {course.durationMonths && (
-                              <span className="font-medium">
-                                {course.durationMonths} Months
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-background rounded-xl border border-dashed">
-                  <BookOpen className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium">No courses listed</h3>
-                  <p className="text-muted-foreground">
-                    {"This college hasn't added any public courses yet."}
+          {featuredCourses.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {featuredCourses.map((course) => (
+                <article
+                  key={course.id}
+                  className="rounded-3xl border border-[#ffd9bf] bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+                >
+                  <div className="mb-4 flex items-center justify-between text-xs">
+                    <Badge className="rounded-full bg-[#04162E0D] px-3 py-1 font-semibold text-[#1A2B44] hover:bg-[#04162E0D]">
+                      {course.studyLevel?.name || "Program"}
+                    </Badge>
+                    <span className="text-slate-500">
+                      {course.durationMonths
+                        ? `${Math.round(course.durationMonths / 12)} Years`
+                        : "Duration TBA"}
+                    </span>
+                  </div>
+
+                  <h4 className="min-h-[52px] text-base font-semibold leading-6 text-[#1A2B44]">
+                    {course.name}
+                  </h4>
+
+                  <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
+                    <span>{course.code}</span>
+                    <span>{course.discipline?.name || "Discipline"}</span>
+                  </div>
+
+                  <button className="mt-5 rounded-xl border border-slate-200 px-4 py-2 text-sm text-[#F46A12] transition hover:bg-orange-50">
+                    Learn More
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-orange-200 bg-white p-8 text-center text-slate-500">
+              Courses will be published soon.
+            </div>
+          )}
+        </section>
+
+        <section
+          id="scholarships"
+          className="rounded-[34px] bg-[#f8f9fa] p-6 sm:p-10"
+        >
+          <h3 className="text-center text-3xl font-bold text-[#191C1D]">
+            Scholarships & Financial Support
+          </h3>
+          <p className="mx-auto mt-3 max-w-3xl text-center text-slate-600">
+            Helping students achieve their dreams with quality education
+            support.
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              [
+                "Merit Scholarships",
+                "High academic performers receive exclusive tuition benefits.",
+              ],
+              [
+                "Need Assistance",
+                "Financial aid programs for diverse economic backgrounds.",
+              ],
+              [
+                "Sports Scholarships",
+                "Dedicated support for exceptional athletes.",
+              ],
+              [
+                "Innovation Grants",
+                "Funding for student research and technology projects.",
+              ],
+            ].map(([title, desc]) => (
+              <article
+                key={title}
+                className="rounded-3xl border border-[#edeeef] bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
+              >
+                <div className="mb-3 h-11 w-11 rounded-2xl bg-orange-100" />
+                <h4 className="text-lg font-semibold text-[#191C1D]">
+                  {title}
+                </h4>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section
+          id="placements"
+          className="rounded-[34px] bg-white p-6 sm:p-10"
+        >
+          <h3 className="text-center text-3xl font-bold text-[#f46a12]">
+            Placement Excellence
+          </h3>
+          <p className="mx-auto mt-3 max-w-3xl text-center text-slate-600">
+            Our graduates are in high demand across top organizations.
+          </p>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
+            <article className="rounded-3xl border border-[#edeeef] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Highest Package</p>
+                  <p className="mt-1 text-3xl font-bold text-[#0031E3]">
+                    ₹
+                    {college.profileSections?.placements?.highestPackage ||
+                      "18L"}
                   </p>
                 </div>
-              )}
-            </section>
-          </div>
+                <Trophy className="h-8 w-8 text-amber-500" />
+              </div>
+              <p className="mt-4 text-sm text-slate-600">
+                Year-on-year growth with strong recruiter trust and student
+                outcomes.
+              </p>
+            </article>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Campuses Widget */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Campuses & Locations
-                </h3>
-                <div className="space-y-4">
-                  {college.campuses.map((campus) => (
-                    <div
-                      key={campus.id}
-                      className="p-3 bg-muted/40 rounded-lg border"
-                    >
-                      <div className="flex justify-between items-center mb-1">
-                        <h4 className="font-medium text-sm">{campus.name}</h4>
-                        {campus.isMainCampus && (
-                          <Badge
-                            variant="default"
-                            className="text-[10px] px-1.5 py-0"
-                          >
-                            Main
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                        {[
-                          campus.address,
-                          campus.city,
-                          campus.state,
-                          campus.pinCode,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  ))}
+            <article className="rounded-3xl border border-[#edeeef] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Recruiting Partners</p>
+                  <p className="mt-1 text-3xl font-bold text-[#111827]">450+</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Info Widget */}
-            {college.university && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    Affiliation
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    {college.university.logoUrl ? (
-                      <img
-                        src={college.university.logoUrl}
-                        alt=""
-                        className="h-10 w-10 object-contain rounded border"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 bg-muted rounded flex items-center justify-center shrink-0">
-                        <Building2 className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-medium leading-tight">
-                        {college.university.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {college.university.universityType?.name ??
-                          "University"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                <GraduationCap className="h-8 w-8 text-[#f46a12]" />
+              </div>
+              <p className="mt-4 text-sm text-slate-600">
+                Global and national companies actively hire from the campus each
+                year.
+              </p>
+            </article>
           </div>
-        </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[36px] bg-gradient-to-b from-[#ff7a1a] to-[#9c4500] p-8 text-white sm:p-12">
+          <div className="mx-auto max-w-4xl text-center">
+            <h3 className="text-3xl font-bold sm:text-4xl">
+              Begin Your Admission Journey
+            </h3>
+            <p className="mt-4 text-lg text-white/90">
+              Your future self will thank you. Take the first step today and
+              join the next class.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link href={`/college/${subdomain}/login`}>
+                <Button className="h-12 rounded-full bg-white px-7 text-base font-semibold text-[#F46A12] hover:bg-white/90">
+                  Start Admission <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="h-12 rounded-full border-white/70 bg-transparent px-7 text-base text-white hover:bg-white/10"
+              >
+                Download Brochure
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <footer className="rounded-3xl border border-slate-200 bg-white p-8">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <h4 className="text-lg font-semibold text-slate-800">
+                {college.name}
+              </h4>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                Empowering students through innovative education, modern
+                facilities, and a community focused on future success.
+              </p>
+            </div>
+
+            <div>
+              <h5 className="text-sm font-semibold text-slate-900">
+                Quick Links
+              </h5>
+              <ul className="mt-3 space-y-2 text-sm text-slate-500">
+                <li>Contact Support</li>
+                <li>Privacy Policy</li>
+                <li>Campus Map</li>
+              </ul>
+            </div>
+
+            <div>
+              <h5 className="text-sm font-semibold text-slate-900">
+                Admissions
+              </h5>
+              <ul className="mt-3 space-y-2 text-sm text-slate-500">
+                <li>Admissions Office</li>
+                <li>Scholarships</li>
+                <li>Fees & Funding</li>
+              </ul>
+            </div>
+
+            <div>
+              <h5 className="text-sm font-semibold text-slate-900">Identity</h5>
+              <ul className="mt-3 space-y-2 text-sm text-slate-500">
+                <li className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" /> Code: {college.code}
+                </li>
+                <li className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />{" "}
+                  {locationText || "City pending"}
+                </li>
+                <li className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />{" "}
+                  {college.university?.name || "University pending"}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );

@@ -81,6 +81,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(nextUrl);
   }
 
+  const ACTIVE_CONSOLE_ROUTES = new Set([
+    "roles",
+    "staff",
+    "hostels",
+    "commute",
+    "settings",
+  ]);
+
+  if (ACTIVE_CONSOLE_ROUTES.has(segments[1])) {
+    nextUrl.pathname = `/${segments.slice(1).join("/")}`;
+    return NextResponse.rewrite(nextUrl);
+  }
+
   return NextResponse.next();
 }
 

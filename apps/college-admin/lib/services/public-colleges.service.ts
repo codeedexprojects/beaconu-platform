@@ -17,5 +17,8 @@ export interface PublicCollege {
 export async function getPublicCollegeBySlug(
   slug: string,
 ): Promise<PublicCollege> {
-  return api.get<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`);
+  return api.get<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`, {
+    skipAuth: true,
+    suppress401Redirect: true,
+  });
 }
