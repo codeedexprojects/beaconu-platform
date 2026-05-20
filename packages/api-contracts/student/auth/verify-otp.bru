@@ -41,7 +41,11 @@ script:post-response {
 
 docs {
   Verify the OTP sent to the student's phone number.
-  Run send-otp first — it auto-captures the OTP into {{studentOtp}} in dev mode.
+
+  DEV SHORTCUT: set studentOtp env var to "0000" to bypass the OTP check entirely.
+  This works in any non-production environment without needing to call send-otp first.
+
+  REAL FLOW: run send-otp first → it captures the actual devOtp into {{studentOtp}}.
 
   Response when existing student (isNewUser: false):
   - accessToken: JWT access token

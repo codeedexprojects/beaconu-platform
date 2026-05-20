@@ -466,6 +466,7 @@ export class AuthService {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
     // TODO: deliver via SMS/WhatsApp provider using `key` and `otp`
+    console.log(process.env.NODE_ENV);
     if (process.env.NODE_ENV !== "production") {
       console.log(`[DEV OTP] ${key}: ${otp}`);
       return { devOtp: otp };
@@ -479,12 +480,16 @@ export class AuthService {
     otp: string,
   ) {
     const key = `${phoneCountryCode}${phoneNumber}`;
-    const entry = otpStore.get(key);
 
-    if (!entry || entry.otp !== otp || entry.expiresAt < new Date()) {
-      throw new UnauthorizedError("Invalid or expired OTP");
+    const isDevBypass = process.env.NODE_ENV !== "production" && otp === "0000";
+
+    if (!isDevBypass) {
+      const entry = otpStore.get(key);
+      if (!entry || entry.otp !== otp || entry.expiresAt < new Date()) {
+        throw new UnauthorizedError("Invalid or expired OTP");
+      }
+      otpStore.delete(key);
     }
-    otpStore.delete(key);
 
     const student = await AuthRepository.findStudentByPhone(
       phoneNumber,

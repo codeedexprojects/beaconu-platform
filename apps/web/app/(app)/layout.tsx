@@ -3,12 +3,12 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useAuthStore } from "@/store";
+import { useStudentAuthStore } from "@/store";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
-  const hasHydrated = useAuthStore((s) => s._hasHydrated);
+  const token = useStudentAuthStore((s) => s.token);
+  const hasHydrated = useStudentAuthStore((s) => s._hasHydrated);
 
   useEffect(() => {
     if (hasHydrated && !token) {

@@ -8,6 +8,7 @@ const NEWS_ALERT_SELECT = {
   content: true,
   coverImageUrl: true,
   category: true,
+  tags: true,
   source: true,
   collegeId: true,
   status: true,
@@ -43,7 +44,7 @@ export class NewsAlertsRepository {
     content: string;
     coverImageUrl?: string | null;
     category: string;
-    // tags?: string[];
+    tags?: string[];
     source?: string | null;
     collegeId?: string | null;
     status: string;
@@ -62,7 +63,7 @@ export class NewsAlertsRepository {
       content?: string;
       coverImageUrl?: string | null;
       category?: string;
-      // tags?: string[];
+      tags?: string[];
       source?: string | null;
       status?: string;
       publishedAt?: Date | null;
