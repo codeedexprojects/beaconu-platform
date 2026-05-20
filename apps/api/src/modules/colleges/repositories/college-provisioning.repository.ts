@@ -107,16 +107,6 @@ export class CollegeProvisioningRepository {
         },
       });
 
-      // Store setup token in a separate update to keep create clean
-      await tx.staffMember.update({
-        where: { id: staff.id },
-        data: {
-          // we store the token in the metadata JSON field
-          // StaffMember doesn't have a metadata field but we can use a workaround:
-          // We'll rely on a lookup by email + token pattern via the college's settings JSON
-        },
-      });
-
       // Store the setup token in the College settings JSON (avoids schema change)
       await tx.college.update({
         where: { id: college.id },
