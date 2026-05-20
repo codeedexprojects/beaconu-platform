@@ -8,6 +8,7 @@ const NEWS_ALERT_SELECT = {
   content: true,
   coverImageUrl: true,
   category: true,
+  source: true,
   collegeId: true,
   status: true,
   publishedAt: true,
@@ -18,7 +19,7 @@ const NEWS_ALERT_SELECT = {
 
 export class NewsAlertsRepository {
   static async findAll() {
-    return prisma.newsAlert.findMany({ select: NEWS_ALERT_SELECT });
+    return prisma.newsAlert.findMany();
   }
 
   static async findById(id: string) {
@@ -42,6 +43,8 @@ export class NewsAlertsRepository {
     content: string;
     coverImageUrl?: string | null;
     category: string;
+    // tags?: string[];
+    source?: string | null;
     collegeId?: string | null;
     status: string;
     publishedAt?: Date | null;
@@ -59,6 +62,8 @@ export class NewsAlertsRepository {
       content?: string;
       coverImageUrl?: string | null;
       category?: string;
+      // tags?: string[];
+      source?: string | null;
       status?: string;
       publishedAt?: Date | null;
       publishedBy?: string | null;

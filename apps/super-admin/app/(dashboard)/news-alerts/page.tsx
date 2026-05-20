@@ -15,9 +15,12 @@ import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNewsAlerts, usePublishNewsAlert, useArchiveNewsAlert } from "@/hooks/use-news-alerts";
+import {
+  useNewsAlerts,
+  usePublishNewsAlert,
+  useArchiveNewsAlert,
+} from "@/hooks/use-news-alerts";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { NewsAlertListItem } from "@beaconu/types";
@@ -72,7 +75,9 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
             {item.category}
           </span>
         </div>
-        <p className="font-semibold text-foreground line-clamp-1">{item.title}</p>
+        <p className="font-semibold text-foreground line-clamp-1">
+          {item.title}
+        </p>
         {item.summary && (
           <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
             {item.summary}
@@ -80,7 +85,9 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
         )}
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
           <Clock className="h-3 w-3" />
-          {item.publishedAt ? `Published ${formatDate(item.publishedAt)}` : `Created ${formatDate(item.createdAt)}`}
+          {item.publishedAt
+            ? `Published ${formatDate(item.publishedAt)}`
+            : `Created ${formatDate(item.createdAt)}`}
         </span>
       </div>
 

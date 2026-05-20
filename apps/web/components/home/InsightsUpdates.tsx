@@ -26,6 +26,7 @@ const insights: InsightItem[] = [
     icon: FileText,
     color: "#6B7280",
     bg: "#F9FAFB",
+    href: "/blogs",
   },
   {
     id: 3,

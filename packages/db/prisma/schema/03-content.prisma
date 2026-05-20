@@ -26,6 +26,8 @@ model NewsAlert {
   content       String    @db.Text
   coverImageUrl String?   @map("cover_image_url") @db.Text
   category      String    @default("news") @db.VarChar(30)
+  tags          Json      @default("[]")
+  source        String?   @db.Text
   collegeId     String?   @map("college_id") @db.Uuid
   status        String    @default("draft") @db.VarChar(20)
   publishedAt   DateTime? @map("published_at") @db.Timestamptz

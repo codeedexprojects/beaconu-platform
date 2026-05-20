@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { prisma } from '@beaconu/db';
-import { ForbiddenError, UnauthorizedError } from '@/shared/errors';
-import type { UserType as AuthUserType } from '@/modules/auth/auth.types';
+import { Request, Response, NextFunction } from "express";
+import { prisma } from "@beaconu/db";
+import { ForbiddenError, UnauthorizedError } from "@/shared/errors";
+import type { UserType as AuthUserType } from "@/modules/auth/auth.types";
 
 export function authorize(...requiredPermissions: string[]) {
   return async (
@@ -26,9 +26,9 @@ export function authorize(...requiredPermissions: string[]) {
 
       // Platform admin permissions are always enforced from DB so updates
       // take effect immediately for active sessions.
-      if (req.userType === 'platform_admin') {
+      if (req.userType === "platform_admin") {
         if (!req.roleId) {
-          next(new ForbiddenError('Role context is missing for this admin'));
+          next(new ForbiddenError("Role context is missing for this admin"));
           return;
         }
 
@@ -43,7 +43,7 @@ export function authorize(...requiredPermissions: string[]) {
         });
 
         if (!role || !role.isActive) {
-          next(new ForbiddenError('Role is inactive or no longer available'));
+          next(new ForbiddenError("Role is inactive or no longer available"));
           return;
         }
 
@@ -54,7 +54,7 @@ export function authorize(...requiredPermissions: string[]) {
       }
 
       // super_admin has wildcard — bypasses all permission checks
-      if (userPermissions.includes('*')) {
+      if (userPermissions.includes("*")) {
         next();
         return;
       }
@@ -64,7 +64,7 @@ export function authorize(...requiredPermissions: string[]) {
       );
 
       if (!hasAll) {
-        next(new ForbiddenError('Insufficient permissions'));
+        next(new ForbiddenError("Insufficient permissions"));
         return;
       }
 
@@ -77,10 +77,11 @@ export function authorize(...requiredPermissions: string[]) {
 
 export function authorizeUserType(...allowedUserTypes: AuthUserType[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
+    console.log(req.userId, req.userType);
     if (!req.userType || !allowedUserTypes.includes(req.userType)) {
       next(
         new ForbiddenError(
-          'You do not have permission to access this resource',
+          "You do not have permission to access this resource",
         ),
       );
       return;

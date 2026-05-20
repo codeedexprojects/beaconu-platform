@@ -16,6 +16,8 @@ const createNewsAlertSchema = z.object({
   content: z.string().trim().min(1),
   cover_image_url: z.string().url().optional(),
   category: z.enum(NEWS_CATEGORIES).default("news"),
+  tags: z.array(z.string().trim().max(50)).max(10).default([]),
+  source: z.string().trim().max(500).optional(),
   college_id: z.string().uuid().optional(),
 });
 
@@ -25,6 +27,8 @@ const updateNewsAlertSchema = z.object({
   content: z.string().trim().min(1).optional(),
   cover_image_url: z.string().url().optional(),
   category: z.enum(NEWS_CATEGORIES).optional(),
+  tags: z.array(z.string().trim().max(50)).max(10).optional(),
+  source: z.string().trim().max(500).optional(),
 });
 
 const listNewsAlertsQuerySchema = z.object({

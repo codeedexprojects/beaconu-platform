@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { AuthService } from "../services/auth.service";
+import {
+  sendStudentOtpSchema,
+  verifyStudentOtpSchema,
+  registerStudentSchema,
+} from "../validators/auth.validator";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -10,6 +15,82 @@ const COOKIE_OPTIONS = {
 };
 
 export class StudentAuthController {
+  static async sendOtp(req: Request, res: Response) {
+    const { phone_number, phone_country_code } = sendStudentOtpSchema.parse(
+      req.body,
+    );
+    const result = await AuthService.sendStudentOtp(
+      phone_number,
+      phone_country_code,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "OTP sent successfully",
+          result.devOtp ? { devOtp: result.devOtp } : null,
+        ),
+      );
+  }
+
+  static async resendOtp(req: Request, res: Response) {
+    const { phone_number, phone_country_code } = sendStudentOtpSchema.parse(
+      req.body,
+    );
+    const result = await AuthService.sendStudentOtp(
+      phone_number,
+      phone_country_code,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "OTP resent successfully",
+          result.devOtp ? { devOtp: result.devOtp } : null,
+        ),
+      );
+  }
+
+  static async verifyOtp(req: Request, res: Response) {
+    const { phone_number, phone_country_code, otp } =
+      verifyStudentOtpSchema.parse(req.body);
+    const result = await AuthService.verifyStudentOtp(
+      phone_number,
+      phone_country_code,
+      otp,
+    );
+
+    if (!result.isNewUser) {
+      res.cookie("refreshToken", result.tokens.refreshToken, COOKIE_OPTIONS);
+      return res.status(200).json(
+        ApiResponse.success("Login successful", {
+          isNewUser: false,
+          user: result.user,
+          accessToken: result.tokens.accessToken,
+        }),
+      );
+    }
+
+    return res.status(200).json(
+      ApiResponse.success("OTP verified", {
+        isNewUser: true,
+        registrationToken: result.registrationToken,
+      }),
+    );
+  }
+
+  static async register(req: Request, res: Response) {
+    const data = registerStudentSchema.parse(req.body);
+    const result = await AuthService.registerStudent(data);
+    res.cookie("refreshToken", result.tokens.refreshToken, COOKIE_OPTIONS);
+    return res.status(201).json(
+      ApiResponse.success("Account created successfully", {
+        user: result.user,
+        accessToken: result.tokens.accessToken,
+      }),
+    );
+  }
+
   static async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     const result = await AuthService.refreshTokens(refreshToken);

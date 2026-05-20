@@ -42,6 +42,8 @@ const schema = z.object({
     .optional()
     .or(z.literal("")),
   category: z.string().default("news"),
+  tags_input: z.string().optional(),
+  source: z.string().trim().max(500).optional(),
 });
 
 type FormInput = z.infer<typeof schema>;
@@ -58,10 +60,18 @@ export default function NewNewsAlertPage() {
       content: "",
       cover_image_url: "",
       category: "news",
+      tags_input: "",
+      source: "",
     },
   });
 
   function onSubmit(data: FormInput) {
+    const tags = data.tags_input
+      ? data.tags_input
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
     mutate(
       {
         title: data.title,
@@ -69,6 +79,8 @@ export default function NewNewsAlertPage() {
         content: data.content,
         cover_image_url: data.cover_image_url || undefined,
         category: data.category,
+        tags: tags.length > 0 ? tags : undefined,
+        source: data.source || undefined,
       },
       {
         onSuccess: () => {
@@ -177,6 +189,34 @@ export default function NewNewsAlertPage() {
                     {form.formState.errors.cover_image_url.message}
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="tags_input">
+                  Tags{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (optional, comma-separated)
+                  </span>
+                </Label>
+                <Input
+                  id="tags_input"
+                  placeholder="e.g. NEET, Medical, Entrance"
+                  {...form.register("tags_input")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="source">
+                  Source{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (optional)
+                  </span>
+                </Label>
+                <Input
+                  id="source"
+                  placeholder="e.g. NTA, Ministry of Education"
+                  {...form.register("source")}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

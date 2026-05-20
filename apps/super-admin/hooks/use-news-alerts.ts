@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
-import {
-  newsAlertsService,
-  type PaginatedNewsAlerts,
-} from "@/lib/services/news-alerts.service";
-import type { CreateNewsAlertInput, UpdateNewsAlertInput } from "@beaconu/types";
+import { newsAlertsService } from "@/lib/services/news-alerts.service";
+import type { Paginated } from "@/lib/api";
+import type {
+  NewsAlertListItem,
+  CreateNewsAlertInput,
+  UpdateNewsAlertInput,
+} from "@beaconu/types";
 
 export function useNewsAlerts(params?: {
   status?: string;
@@ -16,7 +18,7 @@ export function useNewsAlerts(params?: {
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery<PaginatedNewsAlerts>({
+  const query = useQuery<Paginated<NewsAlertListItem>>({
     queryKey: QUERY_KEYS.newsAlerts(params),
     queryFn: () => newsAlertsService.list(params),
   });
@@ -57,7 +59,9 @@ export function useUpdateNewsAlert() {
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: (_, { id }) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlert(id) });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.newsAlert(id),
+      });
     },
   });
 }
@@ -69,7 +73,9 @@ export function usePublishNewsAlert() {
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: (_, id) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlert(id) });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.newsAlert(id),
+      });
     },
   });
 }
@@ -81,7 +87,9 @@ export function useArchiveNewsAlert() {
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: (_, id) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlert(id) });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.newsAlert(id),
+      });
     },
   });
 }

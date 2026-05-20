@@ -1,0 +1,52 @@
+meta {
+  name: Verify OTP
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/auth/verify-otp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "phone_number": "9876543210",
+    "phone_country_code": "+91",
+    "otp": "{{studentOtp}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data) {
+      if (data.data.accessToken) {
+        bru.setEnvVar("accessToken", data.data.accessToken);
+      }
+      if (data.data.registrationToken) {
+        bru.setEnvVar("studentRegistrationToken", data.data.registrationToken);
+      }
+      if (data.data.user && data.data.user.id) {
+        bru.setEnvVar("studentId", data.data.user.id);
+      }
+    }
+  }
+}
+
+docs {
+  Verify the OTP sent to the student's phone number.
+  Run send-otp first — it auto-captures the OTP into {{studentOtp}} in dev mode.
+
+  Response when existing student (isNewUser: false):
+  - accessToken: JWT access token
+  - user: { id, fullName, email, avatarUrl }
+
+  Response when new student (isNewUser: true):
+  - registrationToken: short-lived token (10 min), auto-captured into {{studentRegistrationToken}}
+}

@@ -6,6 +6,8 @@ export interface NewsAlert {
   content: string;
   coverImageUrl: string | null;
   category: string;
+  tags: string[];
+  source: string | null;
   collegeId: string | null;
   status: "draft" | "published" | "archived";
   publishedAt: string | null;
@@ -21,6 +23,8 @@ export interface NewsAlertListItem {
   summary: string | null;
   coverImageUrl: string | null;
   category: string;
+  tags: string[];
+  source: string | null;
   collegeId: string | null;
   status: "draft" | "published" | "archived";
   publishedAt: string | null;
@@ -34,6 +38,8 @@ export interface CreateNewsAlertInput {
   content: string;
   cover_image_url?: string;
   category?: string;
+  tags?: string[];
+  source?: string;
   college_id?: string;
 }
 
@@ -43,4 +49,6 @@ export interface UpdateNewsAlertInput {
   content?: string;
   cover_image_url?: string;
   category?: string;
+  tags?: string[];
+  source?: string;
 }

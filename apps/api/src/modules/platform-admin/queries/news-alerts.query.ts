@@ -13,6 +13,8 @@ const NEWS_ALERT_LIST_SELECT = {
   summary: true,
   coverImageUrl: true,
   category: true,
+  tags: true,
+  source: true,
   collegeId: true,
   status: true,
   publishedAt: true,

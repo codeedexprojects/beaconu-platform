@@ -1,4 +1,8 @@
-import type { NewsAlertListItem, NewsAlert, PaginationMeta } from "@beaconu/types";
+import type {
+  NewsAlertListItem,
+  NewsAlert,
+  PaginationMeta,
+} from "@beaconu/types";
 import { API_BASE } from "@/lib/constants";
 
 export interface PaginatedNewsAlerts {
@@ -20,7 +24,7 @@ export async function getPublishedNewsAlerts(params: {
 
   const res = await fetch(
     `${API_BASE}/api/v1/public/news?${query.toString()}`,
-    { next: { revalidate: 3600 } },
+    { cache: "no-store" },
   );
   if (!res.ok) throw new Error("Failed to fetch news alerts");
   const body = await res.json();
@@ -31,7 +35,7 @@ export async function getPublishedNewsAlertBySlug(
   slug: string,
 ): Promise<NewsAlert> {
   const res = await fetch(`${API_BASE}/api/v1/public/news/${slug}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 60 },
   });
   if (!res.ok) throw new Error("News alert not found");
   const body = await res.json();

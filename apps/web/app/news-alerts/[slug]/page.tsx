@@ -2,19 +2,28 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, ExternalLink } from "lucide-react";
 import {
   getPublishedNewsAlertBySlug,
   getPublishedNewsAlerts,
 } from "@/lib/services/news-alerts.service";
 import { formatDate } from "@/lib/utils";
-import { BlogHeader } from "@/components/blogs/BlogHeader";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  news: { bg: "#EFF6FF", text: "#3B82F6" },
+  alert: { bg: "#FEF2F2", text: "#EF4444" },
+  admission: { bg: "#F0FDF4", text: "#22C55E" },
+  exam: { bg: "#FFF7ED", text: "#F97316" },
+  scholarship: { bg: "#ECFDF5", text: "#10B981" },
+  event: { bg: "#FAF5FF", text: "#A855F7" },
+  result: { bg: "#FFF1F2", text: "#F43F5E" },
+};
 
 export async function generateStaticParams() {
   try {
@@ -29,10 +38,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const alert = await getPublishedNewsAlertBySlug(slug);
+    const tags = Array.isArray(alert.tags) ? alert.tags : [];
     return {
       title: `${alert.title} | BeaconU`,
       description: alert.summary ?? undefined,
+      keywords: tags.length > 0 ? tags : undefined,
       robots: { index: true, follow: true },
+      openGraph: {
+        title: alert.title,
+        description: alert.summary ?? undefined,
+        images: alert.coverImageUrl
+          ? [{ url: alert.coverImageUrl, alt: alert.title }]
+          : [],
+      },
     };
   } catch {
     return { title: "News Alert | BeaconU" };
@@ -49,58 +67,174 @@ export default async function NewsAlertDetailPage({ params }: Props) {
     notFound();
   }
 
+  const style = CATEGORY_COLORS[alert.category] ?? CATEGORY_COLORS["news"];
+  const tags = Array.isArray(alert.tags) ? alert.tags : [];
+
   return (
-    <main className="min-h-screen bg-[#F3F4F6]">
-      <BlogHeader backHref="/news-alerts" backLabel="News & Alerts" title={alert.category.charAt(0).toUpperCase() + alert.category.slice(1)} />
-
-      <article className="max-w-2xl mx-auto px-4 py-6">
-        {alert.coverImageUrl && (
-          <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-gray-100 mb-5">
-            <Image
-              src={alert.coverImageUrl}
-              alt={alert.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 672px) 100vw, 672px"
-              priority
-            />
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold capitalize bg-[#FEF0EB] text-[#E8521A] mb-3">
-            {alert.category}
-          </span>
-
-          <h1 className="text-[20px] font-bold text-gray-900 leading-snug mb-3">
-            {alert.title}
-          </h1>
-
-          <div className="flex items-center gap-1.5 text-[12px] text-gray-400 mb-5">
-            <Calendar size={12} />
-            <span>{formatDate(alert.publishedAt ?? alert.createdAt)}</span>
-          </div>
-
-          {alert.summary && (
-            <p className="text-[14px] text-gray-600 font-medium leading-relaxed mb-5 pb-5 border-b border-gray-100">
-              {alert.summary}
-            </p>
-          )}
-
-          <div className="prose prose-sm max-w-none text-gray-700 text-[14px] leading-relaxed whitespace-pre-wrap">
-            {alert.content}
-          </div>
-        </div>
-
-        <div className="mt-6 text-center">
+    <main className="min-h-screen bg-[#F8F9FA]">
+      {/* Back nav */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 h-14 flex items-center gap-3">
           <Link
             href="/news-alerts"
-            className="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border-[1.5px] border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-[#E8521A] hover:text-[#E8521A] transition-colors"
+            className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#E8521A] hover:text-[#E8521A] hover:bg-[#FEF0EB] transition-colors shrink-0"
+            aria-label="Back to news"
           >
-            ← Back to News & Alerts
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
           </Link>
+          <span className="text-[14px] font-semibold text-gray-700">
+            News & Alerts
+          </span>
         </div>
-      </article>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-5">
+        <article className="max-w-2xl mx-auto">
+          {/* Cover image with overlay */}
+          {alert.coverImageUrl ? (
+            <div className="relative h-52 md:h-72 w-full overflow-hidden rounded-2xl bg-gray-900 mb-5">
+              <Image
+                src={alert.coverImageUrl}
+                alt={alert.title}
+                fill
+                className="object-cover opacity-80"
+                sizes="(max-width: 672px) 100vw, 672px"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              {/* Overlay content */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-2"
+                  style={{ backgroundColor: style.bg, color: style.text }}
+                >
+                  {alert.category}
+                </span>
+                <h1 className="text-[18px] md:text-[22px] font-bold text-white leading-snug">
+                  {alert.title}
+                </h1>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full rounded-2xl mb-5 overflow-hidden">
+              <div
+                className="h-28 flex items-end p-4"
+                style={{
+                  background: `linear-gradient(135deg, ${style.bg} 0%, white 100%)`,
+                }}
+              >
+                <div>
+                  <span
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-2"
+                    style={{ backgroundColor: style.bg, color: style.text }}
+                  >
+                    {alert.category}
+                  </span>
+                  <h1 className="text-[20px] md:text-[24px] font-bold text-gray-900 leading-snug">
+                    {alert.title}
+                  </h1>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Meta card */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
+            {/* Title (when image shows it) */}
+            {alert.coverImageUrl && (
+              <div className="px-5 pt-5 pb-0">
+                <h1 className="text-[20px] md:text-[24px] font-bold text-gray-900 leading-tight">
+                  {alert.title}
+                </h1>
+              </div>
+            )}
+
+            <div className="px-5 py-4 flex flex-wrap items-center gap-3 border-b border-gray-50">
+              {/* Date */}
+              <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                <Calendar size={13} />
+                <span>{formatDate(alert.publishedAt ?? alert.createdAt)}</span>
+              </div>
+
+              {/* Source */}
+              {alert.source && (
+                <div className="flex items-center gap-1 text-[12px] text-gray-500">
+                  <ExternalLink size={12} />
+                  <span className="font-medium">{alert.source}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="px-5 py-3 flex flex-wrap gap-1.5 border-b border-gray-50">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[12px] text-[#E8521A] font-semibold"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Summary */}
+            {alert.summary && (
+              <div className="px-5 py-4 border-b border-gray-50">
+                <p className="text-[14px] text-gray-600 font-medium leading-relaxed">
+                  {alert.summary}
+                </p>
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="px-5 py-5 space-y-4">
+              {alert.content.split("\n").map((paragraph, i) =>
+                paragraph.trim() ? (
+                  <p
+                    key={i}
+                    className="text-[14px] text-gray-700 leading-[1.85]"
+                  >
+                    {paragraph}
+                  </p>
+                ) : null,
+              )}
+            </div>
+          </div>
+
+          {/* Back CTA */}
+          <Link
+            href="/news-alerts"
+            className="mt-5 w-full h-12 rounded-2xl bg-[#1A1A2E] hover:bg-[#2a2a4a] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white text-[14px] font-semibold"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back to News & Alerts
+          </Link>
+        </article>
+      </div>
     </main>
   );
 }
