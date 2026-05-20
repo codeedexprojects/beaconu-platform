@@ -19,5 +19,6 @@ router.use("/api/v1/college-admin", collegeRoutes);
 router.use("/api/v1/public", publicRoutes);
 router.use("/api/v1/blog", blogRoutes);
 router.use("/api/v1/health", healthRoutes);
+router.use("/health", healthRoutes); // Render health-check probe hits /health directly
 
 export default router;
