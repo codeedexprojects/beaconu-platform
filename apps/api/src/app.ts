@@ -13,10 +13,12 @@ import apiRouter from "@/routes/index";
 
 const app: Express = express();
 
+const productionCorsOrigins = ["https://beaconu-platform-ls9p.vercel.app"];
+
 app.use(helmet());
 app.use(
   cors({
-    origin: env.NODE_ENV === "development" ? true : [],
+    origin: env.NODE_ENV === "development" ? true : productionCorsOrigins,
     credentials: true,
   }),
 );
@@ -35,5 +37,3 @@ app.use((_req, _res, next) => {
 app.use(errorHandler);
 
 export default app;
-
-// test
