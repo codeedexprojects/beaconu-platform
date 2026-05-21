@@ -20,7 +20,8 @@ body:json {
     "email": "rahul.sharma@example.com",
     "phone_number": "9876543210",
     "phone_country_code": "+91",
-    "registration_token": "{{studentRegistrationToken}}"
+    "registration_token": "{{studentRegistrationToken}}",
+    "fcm_token": "{{studentFcmToken}}"
   }
 }
 
@@ -30,6 +31,9 @@ script:post-response {
     if (data.data) {
       if (data.data.accessToken) {
         bru.setEnvVar("accessToken", data.data.accessToken);
+      }
+      if (data.data.refreshToken) {
+        bru.setEnvVar("studentRefreshToken", data.data.refreshToken);
       }
       if (data.data.user && data.data.user.id) {
         bru.setEnvVar("studentId", data.data.user.id);
@@ -48,4 +52,10 @@ docs {
   - phone_number (required): Must match the phone used during OTP flow
   - phone_country_code (optional): Defaults to +91
   - registration_token (required): Token from verify-otp response (valid 10 min)
+  - fcm_token (optional): Firebase Cloud Messaging token for push notifications (mobile only)
+
+  Response:
+  - accessToken: JWT access token (15 min)
+  - refreshToken: long-lived token (90 days) — also set as httpOnly cookie
+  - user: { id, fullName, email, avatarUrl }
 }

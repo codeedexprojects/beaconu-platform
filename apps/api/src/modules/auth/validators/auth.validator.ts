@@ -100,6 +100,7 @@ export const verifyStudentOtpSchema = z.object({
   phone_number: z.string().trim().min(10).max(15),
   phone_country_code: z.string().trim().default("+91"),
   otp: z.string().length(4),
+  fcm_token: z.string().trim().optional(),
 });
 
 export const registerStudentSchema = z.object({
@@ -108,6 +109,7 @@ export const registerStudentSchema = z.object({
   phone_number: z.string().trim().min(10).max(15),
   phone_country_code: z.string().trim().default("+91"),
   registration_token: z.string().min(1),
+  fcm_token: z.string().trim().optional(),
 });
 
 export type SendStudentOtpInput = z.infer<typeof sendStudentOtpSchema>;

@@ -52,12 +52,13 @@ export class StudentAuthController {
   }
 
   static async verifyOtp(req: Request, res: Response) {
-    const { phone_number, phone_country_code, otp } =
+    const { phone_number, phone_country_code, otp, fcm_token } =
       verifyStudentOtpSchema.parse(req.body);
     const result = await AuthService.verifyStudentOtp(
       phone_number,
       phone_country_code,
       otp,
+      fcm_token,
     );
 
     if (!result.isNewUser) {
@@ -67,6 +68,7 @@ export class StudentAuthController {
           isNewUser: false,
           user: result.user,
           accessToken: result.tokens.accessToken,
+          refreshToken: result.tokens.refreshToken,
         }),
       );
     }
@@ -87,6 +89,7 @@ export class StudentAuthController {
       ApiResponse.success("Account created successfully", {
         user: result.user,
         accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken,
       }),
     );
   }
@@ -98,6 +101,7 @@ export class StudentAuthController {
     return res.status(200).json(
       ApiResponse.success("Token refreshed successfully", {
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       }),
     );
   }

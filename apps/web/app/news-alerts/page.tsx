@@ -63,7 +63,7 @@ export default async function NewsAlertsPage({ searchParams }: PageProps) {
         <div className="max-w-5xl mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 mb-4">
             <Link
-              href="/"
+              href="/home"
               className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#E8521A] hover:text-[#E8521A] hover:bg-[#FEF0EB] transition-colors shrink-0"
               aria-label="Back to home"
             >

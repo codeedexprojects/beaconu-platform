@@ -478,6 +478,7 @@ export class AuthService {
     phoneNumber: string,
     phoneCountryCode: string,
     otp: string,
+    fcmToken?: string,
   ) {
     const key = `${phoneCountryCode}${phoneNumber}`;
 
@@ -504,6 +505,7 @@ export class AuthService {
       const session = await AuthRepository.createSession({
         userId: student.id,
         userType: USER_TYPES.STUDENT,
+        deviceInfo: fcmToken ? { fcmToken } : undefined,
       });
       const accessToken = JwtUtils.generateAccessToken({
         userId: student.id,
@@ -559,6 +561,7 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: student.id,
       userType: USER_TYPES.STUDENT,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,

@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ArrowRight } from "lucide-react";
-import { useAuthStore } from "@/store";
+import { useRouter } from "next/navigation";
+import { Search, ArrowRight, LogOut } from "lucide-react";
+import { useStudentAuthStore } from "@/store";
+import { logoutStudent } from "@/lib/services/student-auth.service";
 
 export function HeroSection() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const user = useAuthStore((s) => s.user);
+  const user = useStudentAuthStore((s) => s.user);
+  const token = useStudentAuthStore((s) => s.token);
+  const clearAuth = useStudentAuthStore((s) => s.clearAuth);
 
   const initials = user?.fullName
     ? user.fullName
@@ -16,6 +21,12 @@ export function HeroSection() {
         .join("")
         .toUpperCase()
     : "S";
+
+  async function handleLogout() {
+    if (token) await logoutStudent(token);
+    clearAuth();
+    router.replace("/login");
+  }
 
   return (
     <section
@@ -29,7 +40,7 @@ export function HeroSection() {
     >
       {/* Inner content — constrained on large screens */}
       <div className="max-w-4xl mx-auto">
-        {/* Top row: user + card badge + counselor */}
+        {/* Top row: user + card badge + logout */}
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 lg:pt-20 pb-5 sm:pb-7">
           {/* Avatar + name */}
           <div className="flex items-center gap-2.5 min-w-0">
@@ -56,24 +67,14 @@ export function HeroSection() {
             </span>
           </div>
 
-          {/* Counselor icon button */}
+          {/* Logout button */}
           <button
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1C1C1E] border border-white/10 flex items-center justify-center flex-shrink-0"
-            aria-label="Talk to counselor"
+            onClick={handleLogout}
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1C1C1E] border border-white/10 hover:border-red-500/40 hover:bg-red-950/40 flex items-center justify-center flex-shrink-0 transition-colors"
+            aria-label="Sign out"
+            title="Sign out"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+            <LogOut className="w-[18px] h-[18px] text-white/70 hover:text-red-400" />
           </button>
         </div>
 
