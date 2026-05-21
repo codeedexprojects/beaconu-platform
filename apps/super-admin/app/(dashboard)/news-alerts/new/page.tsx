@@ -12,24 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateNewsAlert } from "@/hooks/use-news-alerts";
-
-const CATEGORIES = [
-  { value: "news", label: "News" },
-  { value: "alert", label: "Alert" },
-  { value: "admission", label: "Admission" },
-  { value: "exam", label: "Exam" },
-  { value: "scholarship", label: "Scholarship" },
-  { value: "event", label: "Event" },
-  { value: "result", label: "Result" },
-] as const;
 
 const schema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
@@ -41,7 +24,6 @@ const schema = z.object({
     .url("Enter a valid URL")
     .optional()
     .or(z.literal("")),
-  category: z.string().default("news"),
   tags_input: z.string().optional(),
   source: z.string().trim().max(500).optional(),
 });
@@ -59,7 +41,6 @@ export default function NewNewsAlertPage() {
       summary: "",
       content: "",
       cover_image_url: "",
-      category: "news",
       tags_input: "",
       source: "",
     },
@@ -78,7 +59,6 @@ export default function NewNewsAlertPage() {
         summary: data.summary || undefined,
         content: data.content,
         cover_image_url: data.cover_image_url || undefined,
-        category: data.category,
         tags: tags.length > 0 ? tags : undefined,
         source: data.source || undefined,
       },
@@ -116,25 +96,6 @@ export default function NewNewsAlertPage() {
                     {form.formState.errors.title.message}
                   </p>
                 )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  defaultValue="news"
-                  onValueChange={(v) => form.setValue("category", v)}
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-1.5">

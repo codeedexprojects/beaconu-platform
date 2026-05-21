@@ -15,16 +15,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  news: { bg: "#EFF6FF", text: "#3B82F6" },
-  alert: { bg: "#FEF2F2", text: "#EF4444" },
-  admission: { bg: "#F0FDF4", text: "#22C55E" },
-  exam: { bg: "#FFF7ED", text: "#F97316" },
-  scholarship: { bg: "#ECFDF5", text: "#10B981" },
-  event: { bg: "#FAF5FF", text: "#A855F7" },
-  result: { bg: "#FFF1F2", text: "#F43F5E" },
-};
-
 export async function generateStaticParams() {
   try {
     const result = await getPublishedNewsAlerts({ limit: 1000 });
@@ -67,7 +57,6 @@ export default async function NewsAlertDetailPage({ params }: Props) {
     notFound();
   }
 
-  const style = CATEGORY_COLORS[alert.category] ?? CATEGORY_COLORS["news"];
   const tags = Array.isArray(alert.tags) ? alert.tags : [];
 
   return (
@@ -101,7 +90,7 @@ export default async function NewsAlertDetailPage({ params }: Props) {
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5">
         <article className="max-w-2xl mx-auto">
-          {/* Cover image with overlay */}
+          {/* Cover image */}
           {alert.coverImageUrl ? (
             <div className="relative h-52 md:h-72 w-full overflow-hidden rounded-2xl bg-gray-900 mb-5">
               <Image
@@ -113,14 +102,7 @@ export default async function NewsAlertDetailPage({ params }: Props) {
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              {/* Overlay content */}
               <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                <span
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-2"
-                  style={{ backgroundColor: style.bg, color: style.text }}
-                >
-                  {alert.category}
-                </span>
                 <h1 className="text-[18px] md:text-[22px] font-bold text-white leading-snug">
                   {alert.title}
                 </h1>
@@ -128,30 +110,16 @@ export default async function NewsAlertDetailPage({ params }: Props) {
             </div>
           ) : (
             <div className="w-full rounded-2xl mb-5 overflow-hidden">
-              <div
-                className="h-28 flex items-end p-4"
-                style={{
-                  background: `linear-gradient(135deg, ${style.bg} 0%, white 100%)`,
-                }}
-              >
-                <div>
-                  <span
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mb-2"
-                    style={{ backgroundColor: style.bg, color: style.text }}
-                  >
-                    {alert.category}
-                  </span>
-                  <h1 className="text-[20px] md:text-[24px] font-bold text-gray-900 leading-snug">
-                    {alert.title}
-                  </h1>
-                </div>
+              <div className="h-28 flex items-end p-4 bg-[#FEF0EB]">
+                <h1 className="text-[20px] md:text-[24px] font-bold text-gray-900 leading-snug">
+                  {alert.title}
+                </h1>
               </div>
             </div>
           )}
 
           {/* Meta card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-            {/* Title (when image shows it) */}
             {alert.coverImageUrl && (
               <div className="px-5 pt-5 pb-0">
                 <h1 className="text-[20px] md:text-[24px] font-bold text-gray-900 leading-tight">
@@ -161,13 +129,10 @@ export default async function NewsAlertDetailPage({ params }: Props) {
             )}
 
             <div className="px-5 py-4 flex flex-wrap items-center gap-3 border-b border-gray-50">
-              {/* Date */}
               <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
                 <Calendar size={13} />
                 <span>{formatDate(alert.publishedAt ?? alert.createdAt)}</span>
               </div>
-
-              {/* Source */}
               {alert.source && (
                 <div className="flex items-center gap-1 text-[12px] text-gray-500">
                   <ExternalLink size={12} />
@@ -176,7 +141,6 @@ export default async function NewsAlertDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Tags */}
             {tags.length > 0 && (
               <div className="px-5 py-3 flex flex-wrap gap-1.5 border-b border-gray-50">
                 {tags.map((tag) => (
@@ -190,7 +154,6 @@ export default async function NewsAlertDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Summary */}
             {alert.summary && (
               <div className="px-5 py-4 border-b border-gray-50">
                 <p className="text-[14px] text-gray-600 font-medium leading-relaxed">
@@ -199,7 +162,6 @@ export default async function NewsAlertDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Content */}
             <div className="px-5 py-5 space-y-4">
               {alert.content.split("\n").map((paragraph, i) =>
                 paragraph.trim() ? (
@@ -214,7 +176,6 @@ export default async function NewsAlertDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Back CTA */}
           <Link
             href="/news-alerts"
             className="mt-5 w-full h-12 rounded-2xl bg-[#1A1A2E] hover:bg-[#2a2a4a] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white text-[14px] font-semibold"

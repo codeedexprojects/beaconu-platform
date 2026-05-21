@@ -13,13 +13,11 @@ export interface PaginatedNewsAlerts {
 export async function getPublishedNewsAlerts(params: {
   page?: number;
   limit?: number;
-  category?: string;
   search?: string;
 }): Promise<PaginatedNewsAlerts> {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   query.set("limit", String(params.limit ?? 12));
-  if (params.category) query.set("category", params.category);
   if (params.search) query.set("search", params.search);
 
   const res = await fetch(

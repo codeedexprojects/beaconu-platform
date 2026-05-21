@@ -36,7 +36,6 @@ export class NewsAlertsService {
       summary: data.summary ?? null,
       content: data.content,
       coverImageUrl: data.cover_image_url ?? null,
-      category: data.category ?? "news",
       tags: data.tags ?? [],
       source: data.source ?? null,
       collegeId: data.college_id ?? null,
@@ -65,7 +64,6 @@ export class NewsAlertsService {
       ...(data.cover_image_url !== undefined
         ? { coverImageUrl: data.cover_image_url }
         : {}),
-      ...(data.category !== undefined ? { category: data.category } : {}),
       ...(data.tags !== undefined ? { tags: data.tags } : {}),
       ...(data.source !== undefined ? { source: data.source } : {}),
     });

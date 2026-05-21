@@ -5,11 +5,11 @@ import Link from "next/link";
 import {
   Plus,
   Search,
-  Bell,
   Globe,
   Archive,
   FileText,
   Clock,
+  Pencil,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,11 +38,6 @@ const STATUS_BADGE: Record<string, string> = {
   archived: "bg-gray-50 text-gray-500 border-gray-200",
 };
 
-const CATEGORY_ICON: Record<string, React.ReactNode> = {
-  news: <FileText className="h-4 w-4" />,
-  alert: <Bell className="h-4 w-4" />,
-};
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -58,7 +53,7 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
   return (
     <div className="flex items-start gap-4 px-6 py-4 hover:bg-muted/30 transition-colors">
       <div className="mt-0.5 p-2 rounded-full bg-muted shrink-0">
-        {CATEGORY_ICON[item.category] ?? <FileText className="h-4 w-4" />}
+        <FileText className="h-4 w-4" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -70,9 +65,6 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
             )}
           >
             {item.status}
-          </span>
-          <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5 capitalize">
-            {item.category}
           </span>
         </div>
         <p className="font-semibold text-foreground line-clamp-1">
@@ -123,6 +115,16 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
             <Archive className="h-3 w-3" />
           </Button>
         )}
+        <Link href={`/news-alerts/${item.id}`}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 text-muted-foreground"
+            aria-label="Edit"
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+        </Link>
       </div>
     </div>
   );

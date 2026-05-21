@@ -25,7 +25,6 @@ model NewsAlert {
   summary       String?   @db.Text
   content       String    @db.Text
   coverImageUrl String?   @map("cover_image_url") @db.Text
-  category      String    @default("news") @db.VarChar(30)
   tags          Json      @default("[]")
   source        String?   @db.Text
   collegeId     String?   @map("college_id") @db.Uuid
@@ -40,7 +39,6 @@ model NewsAlert {
   publishedAdmin PlatformAdmin? @relation(fields: [publishedBy], references: [id])
 
   @@index([status], name: "idx_news_status")
-  @@index([category], name: "idx_news_category")
   @@index([collegeId], name: "idx_news_college")
   @@index([publishedAt(sort: Desc)], name: "idx_news_published")
   @@index([slug], name: "idx_news_slug")

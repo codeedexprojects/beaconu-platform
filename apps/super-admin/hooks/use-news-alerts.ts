@@ -13,7 +13,6 @@ import type {
 
 export function useNewsAlerts(params?: {
   status?: string;
-  category?: string;
   search?: string;
   page?: number;
   limit?: number;
