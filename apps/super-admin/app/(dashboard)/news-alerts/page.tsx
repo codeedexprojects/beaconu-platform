@@ -7,6 +7,7 @@ import {
   Search,
   Globe,
   Archive,
+  ArchiveRestore,
   FileText,
   Clock,
   Pencil,
@@ -20,6 +21,7 @@ import {
   useNewsAlerts,
   usePublishNewsAlert,
   useArchiveNewsAlert,
+  useUnarchiveNewsAlert,
 } from "@/hooks/use-news-alerts";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -49,6 +51,8 @@ function formatDate(iso: string) {
 function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
   const { mutate: publish, isPending: isPublishing } = usePublishNewsAlert();
   const { mutate: archive, isPending: isArchiving } = useArchiveNewsAlert();
+  const { mutate: unarchive, isPending: isUnarchiving } =
+    useUnarchiveNewsAlert();
 
   return (
     <div className="flex items-start gap-4 px-6 py-4 hover:bg-muted/30 transition-colors">
@@ -100,7 +104,21 @@ function NewsAlertRow({ item }: { item: NewsAlertListItem }) {
             Publish
           </Button>
         )}
-        {item.status !== "archived" && (
+        {item.status === "archived" ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs text-muted-foreground"
+            disabled={isUnarchiving}
+            onClick={() =>
+              unarchive(item.id, {
+                onSuccess: () => toast.success("News alert moved to draft"),
+              })
+            }
+          >
+            <ArchiveRestore className="h-3 w-3" />
+          </Button>
+        ) : (
           <Button
             size="sm"
             variant="ghost"

@@ -10,7 +10,9 @@ export class NewsAlertsController {
     const result = await NewsAlertQuery.listAll(filters);
     res
       .status(200)
-      .json(ApiResponse.success("News alerts fetched", result.data, result.meta));
+      .json(
+        ApiResponse.success("News alerts fetched", result.data, result.meta),
+      );
   }
 
   static async getById(req: Request, res: Response): Promise<void> {
@@ -35,12 +37,22 @@ export class NewsAlertsController {
   static async publish(req: Request, res: Response): Promise<void> {
     const { id } = newsAlertSchemas.idParam.parse(req.params);
     const newsAlert = await NewsAlertsService.publish(id, req.userId!);
-    res.status(200).json(ApiResponse.success("News alert published", newsAlert));
+    res
+      .status(200)
+      .json(ApiResponse.success("News alert published", newsAlert));
   }
 
   static async archive(req: Request, res: Response): Promise<void> {
     const { id } = newsAlertSchemas.idParam.parse(req.params);
     const newsAlert = await NewsAlertsService.archive(id);
     res.status(200).json(ApiResponse.success("News alert archived", newsAlert));
+  }
+
+  static async unarchive(req: Request, res: Response): Promise<void> {
+    const { id } = newsAlertSchemas.idParam.parse(req.params);
+    const newsAlert = await NewsAlertsService.unarchive(id);
+    res
+      .status(200)
+      .json(ApiResponse.success("News alert unarchived", newsAlert));
   }
 }

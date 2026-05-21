@@ -36,4 +36,7 @@ export const newsAlertsService = {
 
   archive: (id: string) =>
     api.patch<NewsAlert>(`/api/v1/admin/news/${id}/archive`, {}),
+
+  unarchive: (id: string) =>
+    api.patch<NewsAlert>(`/api/v1/admin/news/${id}/unarchive`, {}),
 };

@@ -7,7 +7,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Globe, Archive, Loader2, Clock } from "lucide-react";
+import {
+  ArrowLeft,
+  Globe,
+  Archive,
+  ArchiveRestore,
+  Loader2,
+  Clock,
+} from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +28,7 @@ import {
   useUpdateNewsAlert,
   usePublishNewsAlert,
   useArchiveNewsAlert,
+  useUnarchiveNewsAlert,
 } from "@/hooks/use-news-alerts";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -63,6 +71,8 @@ export default function NewsAlertDetailPage() {
   const { mutate: update, isPending: isSaving } = useUpdateNewsAlert();
   const { mutate: publish, isPending: isPublishing } = usePublishNewsAlert();
   const { mutate: archive, isPending: isArchiving } = useArchiveNewsAlert();
+  const { mutate: unarchive, isPending: isUnarchiving } =
+    useUnarchiveNewsAlert();
 
   const isArchived = alert?.status === "archived";
 
@@ -179,7 +189,26 @@ export default function NewsAlertDetailPage() {
               {isPublishing ? "Publishing…" : "Publish"}
             </Button>
           )}
-          {!isArchived && (
+          {isArchived ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-muted-foreground"
+              disabled={isUnarchiving}
+              onClick={() =>
+                unarchive(id, {
+                  onSuccess: () => toast.success("News alert moved to draft"),
+                })
+              }
+            >
+              {isUnarchiving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArchiveRestore className="h-4 w-4" />
+              )}
+              {isUnarchiving ? "Unarchiving…" : "Unarchive"}
+            </Button>
+          ) : (
             <Button
               size="sm"
               variant="outline"

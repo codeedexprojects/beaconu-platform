@@ -41,4 +41,10 @@ export class EntranceExamsController {
       .status(200)
       .json(ApiResponse.success("Entrance exam deactivated", exam));
   }
+
+  static async activate(req: Request, res: Response): Promise<void> {
+    const { id } = entranceExamSchemas.idParam.parse(req.params);
+    const exam = await EntranceExamsService.activate(id);
+    res.status(200).json(ApiResponse.success("Entrance exam activated", exam));
+  }
 }

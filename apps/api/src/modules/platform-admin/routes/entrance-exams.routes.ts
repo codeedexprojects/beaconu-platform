@@ -40,4 +40,11 @@ router.patch(
   EntranceExamsController.deactivate,
 );
 
+router.patch(
+  "/:id/activate",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  EntranceExamsController.activate,
+);
+
 export default router;

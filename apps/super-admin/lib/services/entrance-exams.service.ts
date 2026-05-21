@@ -39,4 +39,7 @@ export const entranceExamsService = {
       `/api/v1/admin/entrance-exams/${id}/deactivate`,
       {},
     ),
+
+  activate: (id: string) =>
+    api.patch<EntranceExam>(`/api/v1/admin/entrance-exams/${id}/activate`, {}),
 };

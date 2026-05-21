@@ -11,6 +11,7 @@ import {
   ChevronRight,
   GraduationCap,
   EyeOff,
+  Eye,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 import {
   useEntranceExams,
   useDeactivateEntranceExam,
+  useActivateEntranceExam,
 } from "@/hooks/use-entrance-exams";
 import { toast } from "sonner";
 import type { EntranceExamListItem } from "@beaconu/types";
@@ -46,7 +48,11 @@ function formatDate(iso: string) {
 }
 
 function ExamCard({ exam }: { exam: EntranceExamListItem }) {
-  const { mutate: deactivate, isPending } = useDeactivateEntranceExam();
+  const { mutate: deactivate, isPending: isDeactivating } =
+    useDeactivateEntranceExam();
+  const { mutate: activate, isPending: isActivating } =
+    useActivateEntranceExam();
+  const isPending = isDeactivating || isActivating;
 
   return (
     <Card className="border-none shadow-sm hover:ring-1 hover:ring-primary/20 transition-all">
@@ -123,7 +129,7 @@ function ExamCard({ exam }: { exam: EntranceExamListItem }) {
               <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          {exam.status === "active" && (
+          {exam.status === "active" ? (
             <Button
               size="sm"
               variant="ghost"
@@ -137,6 +143,21 @@ function ExamCard({ exam }: { exam: EntranceExamListItem }) {
               }
             >
               <EyeOff className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-9 w-9 p-0 text-muted-foreground shrink-0"
+              disabled={isPending}
+              title="Activate"
+              onClick={() =>
+                activate(exam.id, {
+                  onSuccess: () => toast.success("Exam activated"),
+                })
+              }
+            >
+              <Eye className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>

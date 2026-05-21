@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, EyeOff, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, EyeOff, Eye, Clock } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import {
   useEntranceExam,
   useUpdateEntranceExam,
   useDeactivateEntranceExam,
+  useActivateEntranceExam,
 } from "@/hooks/use-entrance-exams";
 
 const EXAM_LEVELS = ["national", "state", "university"] as const;
@@ -79,6 +80,8 @@ export default function EntranceExamDetailPage() {
   const { mutate: update, isPending: isSaving } = useUpdateEntranceExam();
   const { mutate: deactivate, isPending: isDeactivating } =
     useDeactivateEntranceExam();
+  const { mutate: activate, isPending: isActivating } =
+    useActivateEntranceExam();
 
   const isInactive = exam?.status === "inactive";
 
@@ -192,7 +195,7 @@ export default function EntranceExamDetailPage() {
   return (
     <div className="flex flex-col min-h-full">
       <Header title="Entrance Exam" description={exam.name}>
-        {exam.status === "active" && (
+        {exam.status === "active" ? (
           <Button
             size="sm"
             variant="outline"
@@ -206,6 +209,25 @@ export default function EntranceExamDetailPage() {
               <EyeOff className="h-4 w-4" />
             )}
             {isDeactivating ? "Deactivating…" : "Deactivate"}
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-muted-foreground"
+            disabled={isActivating || isSaving}
+            onClick={() =>
+              activate(id, {
+                onSuccess: () => toast.success("Exam activated"),
+              })
+            }
+          >
+            {isActivating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+            {isActivating ? "Activating…" : "Activate"}
           </Button>
         )}
       </Header>

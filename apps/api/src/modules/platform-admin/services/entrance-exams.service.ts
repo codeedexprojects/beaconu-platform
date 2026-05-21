@@ -1,4 +1,4 @@
-import { NotFoundError, ConflictError } from "@/shared/errors";
+import { NotFoundError, ConflictError, ForbiddenError } from "@/shared/errors";
 import { EntranceExamsRepository } from "../repositories/entrance-exams.repository";
 import {
   CreateEntranceExamInput,
@@ -89,6 +89,16 @@ export class EntranceExamsService {
   static async deactivate(id: string) {
     const existing = await EntranceExamsRepository.findById(id);
     if (!existing) throw new NotFoundError("Entrance exam not found");
+    if (existing.status === "inactive")
+      throw new ForbiddenError("Entrance exam is already inactive");
     return EntranceExamsRepository.softDeleteById(id);
+  }
+
+  static async activate(id: string) {
+    const existing = await EntranceExamsRepository.findById(id);
+    if (!existing) throw new NotFoundError("Entrance exam not found");
+    if (existing.status === "active")
+      throw new ForbiddenError("Entrance exam is already active");
+    return EntranceExamsRepository.updateById(id, { status: "active" });
   }
 }

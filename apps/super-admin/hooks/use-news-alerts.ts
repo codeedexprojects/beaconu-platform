@@ -92,3 +92,17 @@ export function useArchiveNewsAlert() {
     },
   });
 }
+
+export function useUnarchiveNewsAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => newsAlertsService.unarchive(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.newsAlert(id),
+      });
+    },
+  });
+}

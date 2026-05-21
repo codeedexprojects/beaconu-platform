@@ -87,7 +87,18 @@ export class NewsAlertsService {
   static async archive(id: string) {
     const existing = await NewsAlertsRepository.findById(id);
     if (!existing) throw new NotFoundError("News alert not found");
+    if (existing.status === "archived")
+      throw new ForbiddenError("News alert is already archived");
 
     return NewsAlertsRepository.softDeleteById(id);
+  }
+
+  static async unarchive(id: string) {
+    const existing = await NewsAlertsRepository.findById(id);
+    if (!existing) throw new NotFoundError("News alert not found");
+    if (existing.status !== "archived")
+      throw new ForbiddenError("Only archived news alerts can be unarchived");
+
+    return NewsAlertsRepository.updateById(id, { status: "draft" });
   }
 }

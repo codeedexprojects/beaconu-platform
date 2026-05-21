@@ -47,4 +47,11 @@ router.patch(
   NewsAlertsController.archive,
 );
 
+router.patch(
+  "/:id/unarchive",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  NewsAlertsController.unarchive,
+);
+
 export default router;

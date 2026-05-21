@@ -86,3 +86,19 @@ export function useDeactivateEntranceExam() {
     },
   });
 }
+
+export function useActivateEntranceExam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => entranceExamsService.activate(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.entranceExams(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.entranceExam(id),
+      });
+    },
+  });
+}
