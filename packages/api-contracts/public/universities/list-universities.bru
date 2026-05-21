@@ -1,0 +1,27 @@
+meta {
+  name: List Universities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/universities
+  body: none
+  auth: none
+}
+
+query {
+  ~page: 1
+  ~limit: 20
+  ~type_id:
+}
+
+docs {
+  Returns paginated list of active universities.
+  No authentication required.
+
+  Query Parameters:
+  - page: Page number (optional)
+  - limit: Items per page (optional)
+  - type_id: Filter by university type UUID (optional)
+}

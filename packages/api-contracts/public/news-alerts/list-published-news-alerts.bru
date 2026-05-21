@@ -1,39 +1,10 @@
 meta {
-  name: List Published News Alerts
+  name: List News Alerts (MOVED)
   type: http
   seq: 1
 }
 
-get {
-  url: {{baseUrl}}/api/v1/public/news
-  body: none
-  auth: none
-}
-
-query {
-  page: 1
-  limit: 12
-  ~search:
-}
-
-headers {
-  Content-Type: application/json
-}
-
-script:post-response {
-  if (res.status === 200) {
-    const data = res.getBody();
-    if (data.data && data.data.length > 0 && data.data[0].slug) {
-      bru.setEnvVar("newsAlertSlug", data.data[0].slug);
-    }
-  }
-}
-
 docs {
-  Returns published news alerts with pagination. No authentication required.
-
-  Query Parameters:
-  - search: Search in title (optional)
-  - page: Page number (default: 1)
-  - limit: Items per page (default: 12, max: 50)
+  MOVED to student/news-alerts/list-news-alerts.bru
+  Route is now /api/v1/student/news and requires student authentication.
 }

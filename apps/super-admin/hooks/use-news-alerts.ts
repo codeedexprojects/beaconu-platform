@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -17,26 +16,18 @@ export function useNewsAlerts(params?: {
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery<Paginated<NewsAlertListItem>>({
+  return useQuery<Paginated<NewsAlertListItem>>({
     queryKey: QUERY_KEYS.newsAlerts(params),
     queryFn: () => newsAlertsService.list(params),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useNewsAlert(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.newsAlert(id),
     queryFn: () => newsAlertsService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreateNewsAlert() {

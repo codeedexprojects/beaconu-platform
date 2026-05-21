@@ -1,0 +1,27 @@
+meta {
+  name: Get College Courses by Slug
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses
+  body: none
+  auth: none
+}
+
+query {
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Returns courses offered by a college identified by its subdomain slug.
+  No authentication required.
+
+  Query Parameters:
+  - page: Page number (optional)
+  - limit: Items per page (optional)
+
+  Note: collegeSlug env var must be set (e.g. via get-by-slug.bru).
+}

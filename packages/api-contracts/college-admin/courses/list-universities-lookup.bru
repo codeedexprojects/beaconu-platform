@@ -1,0 +1,22 @@
+meta {
+  name: Lookup Universities
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/universities
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns universities available for course affiliation lookup.
+  Used to populate university dropdown during course setup.
+
+  Requires: staff access token.
+}

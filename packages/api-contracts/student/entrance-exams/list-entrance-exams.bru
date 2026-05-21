@@ -1,0 +1,46 @@
+meta {
+  name: List Active Entrance Exams
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/entrance-exams
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 12
+  ~exam_level: national
+  ~search:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("entranceExamId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns active entrance exams. Requires student authentication.
+  Results ordered by exam_date ascending, then created_at descending.
+
+  Query Parameters:
+  - exam_level: Filter by level (national | state | university)
+  - search: Search in exam name
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 12, max: 50)
+}

@@ -1,13 +1,20 @@
+import { cookies } from "next/headers";
 import type {
   EntranceExam,
   EntranceExamListItem,
   PaginationMeta,
 } from "@beaconu/types";
-import { API_BASE } from "@/lib/constants";
+import { API_BASE, STUDENT_TOKEN_KEY } from "@/lib/constants";
 
 interface Paginated<T> {
   data: T[];
   meta: PaginationMeta;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(STUDENT_TOKEN_KEY)?.value;
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function getActiveEntranceExams(params?: {
@@ -23,8 +30,8 @@ export async function getActiveEntranceExams(params?: {
   query.set("limit", String(params?.limit ?? 12));
 
   const res = await fetch(
-    `${API_BASE}/api/v1/public/entrance-exams?${query.toString()}`,
-    { cache: "no-store" },
+    `${API_BASE}/api/v1/student/entrance-exams?${query.toString()}`,
+    { cache: "no-store", headers: await getAuthHeaders() },
   );
   if (!res.ok) throw new Error("Failed to fetch entrance exams");
   const body = await res.json();
@@ -32,8 +39,9 @@ export async function getActiveEntranceExams(params?: {
 }
 
 export async function getEntranceExamById(id: string): Promise<EntranceExam> {
-  const res = await fetch(`${API_BASE}/api/v1/public/entrance-exams/${id}`, {
+  const res = await fetch(`${API_BASE}/api/v1/student/entrance-exams/${id}`, {
     cache: "no-store",
+    headers: await getAuthHeaders(),
   });
   if (!res.ok) throw new Error("Entrance exam not found");
   const body = await res.json();

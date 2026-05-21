@@ -1,0 +1,30 @@
+meta {
+  name: Update Stream
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/streams/{{streamId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Updated Stream Name",
+    "sort_order": 2
+  }
+}
+
+docs {
+  Updates a stream.
+  Supports partial updates — only include fields to change.
+
+  Requires: platform admin access token.
+}

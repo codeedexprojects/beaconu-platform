@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -18,26 +17,18 @@ export function useEntranceExams(params?: {
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery<Paginated<EntranceExamListItem>>({
+  return useQuery<Paginated<EntranceExamListItem>>({
     queryKey: QUERY_KEYS.entranceExams(params),
     queryFn: () => entranceExamsService.list(params),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useEntranceExam(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.entranceExam(id),
     queryFn: () => entranceExamsService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreateEntranceExam() {

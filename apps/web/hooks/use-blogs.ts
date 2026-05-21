@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -12,26 +11,18 @@ import {
 } from "@/lib/services/blogs.service";
 
 export function useMyBlogs(params?: { status?: string; page?: number }) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.myBlogs(params?.status, params?.page),
     queryFn: () => blogAuthorService.list(params),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useMyBlog(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.myBlog(id),
     queryFn: () => blogAuthorService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useSubmitBlog() {

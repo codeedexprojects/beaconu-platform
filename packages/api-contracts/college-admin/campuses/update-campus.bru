@@ -1,0 +1,29 @@
+meta {
+  name: Update Campus
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/campuses/{{campusId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Updated Campus Name",
+    "city": "Mumbai"
+  }
+}
+
+docs {
+  Updates a campus.
+  Supports partial updates — only include fields to change.
+
+  Requires: staff access token.
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Check Subdomain Availability
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/check-subdomain/my-college-slug
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Checks whether a subdomain slug is available for use.
+  Replace 'my-college-slug' in the URL with the slug to check.
+
+  Requires: staff access token.
+}

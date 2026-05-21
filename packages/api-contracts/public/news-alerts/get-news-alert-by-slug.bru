@@ -1,20 +1,10 @@
 meta {
-  name: Get News Alert by Slug
+  name: Get News Alert by Slug (MOVED)
   type: http
   seq: 2
 }
 
-get {
-  url: {{baseUrl}}/api/v1/public/news/{{newsAlertSlug}}
-  body: none
-  auth: none
-}
-
-headers {
-  Content-Type: application/json
-}
-
 docs {
-  Fetch a single published news alert by slug. Returns 404 for drafts or archived alerts.
-  No authentication required.
+  MOVED to student/news-alerts/get-news-alert-by-slug.bru
+  Route is now /api/v1/student/news/:slug and requires student authentication.
 }

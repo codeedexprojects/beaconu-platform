@@ -1,0 +1,23 @@
+meta {
+  name: Delete Study Level
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/universities/study-levels/{{studyLevelId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes a study level.
+  The record is not removed from the database.
+
+  Requires: platform admin access token.
+}
