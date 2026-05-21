@@ -18,7 +18,8 @@ body:json {
   {
     "phone_number": "9876543210",
     "phone_country_code": "+91",
-    "otp": "{{studentOtp}}"
+    "otp": "{{studentOtp}}",
+    "fcm_token": "{{studentFcmToken}}"
   }
 }
 
@@ -28,6 +29,9 @@ script:post-response {
     if (data.data) {
       if (data.data.accessToken) {
         bru.setEnvVar("accessToken", data.data.accessToken);
+      }
+      if (data.data.refreshToken) {
+        bru.setEnvVar("studentRefreshToken", data.data.refreshToken);
       }
       if (data.data.registrationToken) {
         bru.setEnvVar("studentRegistrationToken", data.data.registrationToken);
@@ -47,8 +51,12 @@ docs {
 
   REAL FLOW: run send-otp first → it captures the actual devOtp into {{studentOtp}}.
 
+  Optional: pass fcm_token for push notification targeting (mobile only).
+  Leave {{studentFcmToken}} empty to omit it.
+
   Response when existing student (isNewUser: false):
-  - accessToken: JWT access token
+  - accessToken: JWT access token (15 min)
+  - refreshToken: long-lived token (90 days) — also set as httpOnly cookie
   - user: { id, fullName, email, avatarUrl }
 
   Response when new student (isNewUser: true):

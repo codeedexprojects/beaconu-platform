@@ -21,9 +21,7 @@ const registerSchema = z.object({
       message: "Enter a valid email",
     })
     .optional(),
-  agreed: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to continue" }),
-  }),
+  agreed: z.literal(true, "You must agree to continue"),
 });
 
 type RegisterInput = z.infer<typeof registerSchema>;

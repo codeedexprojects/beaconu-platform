@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useStudentAuthStore } from "@/store";
 
 const onboardingSchema = z.object({
   college_name: z
@@ -43,6 +44,8 @@ export default function HomePage(): React.JSX.Element {
     "idle" | "submitting" | "success" | "error"
   >("idle");
   const formRef = useRef<HTMLDivElement>(null);
+  const studentToken = useStudentAuthStore((s) => s.token);
+  const isStudentAuth = studentToken !== null;
 
   const {
     register,
@@ -133,6 +136,31 @@ export default function HomePage(): React.JSX.Element {
             }
           >
             Blog
+          </a>
+          <a
+            href={isStudentAuth ? "/home" : "/login"}
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              color: "#e2e8f0",
+              textDecoration: "none",
+              padding: "0.375rem 0.875rem",
+              borderRadius: "0.5rem",
+              border: "1px solid rgba(255,255,255,0.15)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                "rgba(255,255,255,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "#e2e8f0";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                "rgba(255,255,255,0.15)";
+            }}
+          >
+            {isStudentAuth ? "Go to Home" : "Student Login"}
           </a>
           <button className="nav-cta" onClick={scrollToForm}>
             Partner With Us

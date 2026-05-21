@@ -81,3 +81,16 @@ export async function registerStudent(payload: {
   }
   return { user: body.data.user, accessToken: body.data.accessToken };
 }
+
+export async function logoutStudent(accessToken: string): Promise<void> {
+  await fetch(`${API_BASE}/api/v1/student/auth/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    credentials: "include",
+  }).catch(() => {
+    // best-effort
+  });
+}

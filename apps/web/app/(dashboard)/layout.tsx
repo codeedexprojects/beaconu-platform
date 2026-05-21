@@ -23,7 +23,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!hasHydrated) return;
-    if (!isAuthenticated) router.replace("/login");
+    if (!isAuthenticated) router.replace("/blog-login");
   }, [isAuthenticated, hasHydrated, router]);
 
   /* ── Loading / unauthenticated splash ── */
@@ -53,7 +53,7 @@ export default function DashboardLayout({
       }
     }
     clearAuth();
-    window.location.assign("/login");
+    window.location.assign("/blog-login");
   }
 
   /* Derive author initials for avatar */
