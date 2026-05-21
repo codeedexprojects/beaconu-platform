@@ -5,3 +5,4 @@ export * from "./universities";
 export * from "./platform-admin";
 export * from "./colleges";
 export * from "./news-alerts";
+export * from "./entrance-exams";

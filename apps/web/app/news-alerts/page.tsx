@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Bell } from "lucide-react";
 import { getPublishedNewsAlerts } from "@/lib/services/news-alerts.service";
 import { formatDate } from "@/lib/utils";
+import { BlogHeader } from "@/components/blogs/BlogHeader";
 import type { NewsAlertListItem } from "@beaconu/types";
 
 export const dynamic = "force-dynamic";
@@ -35,42 +36,7 @@ export default async function NewsAlertsPage({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#F8F9FA]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/home"
-              className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#E8521A] hover:text-[#E8521A] hover:bg-[#FEF0EB] transition-colors shrink-0"
-              aria-label="Back to home"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <div>
-              <h1 className="text-[20px] font-bold text-gray-900 leading-tight">
-                <span className="bg-[#FEF0EB] text-[#E8521A] px-1.5 rounded">
-                  News
-                </span>
-                {" & Alerts"}
-              </h1>
-              <p className="text-[12px] text-gray-400 mt-0.5">
-                Latest updates on admissions, exams & more
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BlogHeader backHref="/home" backLabel="Home" title="News & Alerts" />
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-5">
         {alerts.length === 0 ? (

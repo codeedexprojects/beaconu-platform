@@ -19,6 +19,7 @@ const insights: InsightItem[] = [
     icon: BookOpen,
     color: "#3B82F6",
     bg: "#EFF6FF",
+    href: "/entrance-exams",
   },
   {
     id: 2,

@@ -11,6 +11,7 @@ import platformAdminMgmtRoutes from "@/modules/platform-admin/routes/platform-ad
 import platformPermissionsRoutes from "@/modules/platform-admin/routes/platform-permissions.routes";
 import collegeDashboardRoutes from "@/modules/colleges/routes/college-dashboard.routes";
 import newsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts.routes";
+import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.routes";
 
 const router: Router = Router();
 
@@ -22,6 +23,7 @@ router.use("/counsellors", counsellingAdminRoutes);
 router.use("/universities", adminUniversityRoutes);
 router.use("/platform-admins", platformAdminMgmtRoutes);
 router.use("/news", newsAlertsRoutes);
+router.use("/entrance-exams", entranceExamsRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);

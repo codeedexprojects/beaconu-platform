@@ -27,4 +27,7 @@ export const QUERY_KEYS = {
   newsAlerts: (params?: object) =>
     params ? ["news-alerts", params] : (["news-alerts"] as const),
   newsAlert: (id: string) => ["news-alerts", id] as const,
+  entranceExams: (params?: object) =>
+    params ? ["entrance-exams", params] : (["entrance-exams"] as const),
+  entranceExam: (id: string) => ["entrance-exams", id] as const,
 } as const;

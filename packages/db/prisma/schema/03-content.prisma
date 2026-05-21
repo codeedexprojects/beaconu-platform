@@ -117,7 +117,6 @@ model EntranceExam {
   examDate          DateTime? @map("exam_date") @db.Date
   resultDate        DateTime? @map("result_date") @db.Date
   officialWebsite   String?   @map("official_website") @db.Text
-  applicationLink   String?   @map("application_link") @db.Text
   status            String    @default("active") @db.VarChar(20)
   createdBy         String?   @map("created_by") @db.Uuid
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
