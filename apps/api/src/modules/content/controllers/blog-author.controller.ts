@@ -15,7 +15,6 @@ export class BlogAuthorController {
 
   static async listOwn(req: Request, res: Response): Promise<void> {
     const filters = blogSchemas.listQuery.parse(req.query);
-    console.log(req.userId);
     const result = await BlogQuery.listByAuthor(req.userId!, filters);
     res
       .status(200)

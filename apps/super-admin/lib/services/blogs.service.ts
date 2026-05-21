@@ -1,4 +1,4 @@
-import { api } from "../api";
+import { api, type Paginated } from "../api";
 
 export interface Blog {
   id: string;
@@ -21,11 +21,6 @@ export interface Blog {
   updatedAt: string;
 }
 
-export interface PaginatedBlogs {
-  data: Blog[];
-  meta: { total: number; page: number; limit: number; hasNext: boolean };
-}
-
 export interface SubmitBlogInput {
   title: string;
   summary?: string;
@@ -44,13 +39,13 @@ export const adminBlogsService = {
     search?: string;
     page?: number;
     limit?: number;
-  }) => {
+  }): Promise<Paginated<Blog>> => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
     if (params?.search) query.set("search", params.search);
     if (params?.page) query.set("page", String(params.page));
     query.set("limit", String(params?.limit ?? 10));
-    return api.get<PaginatedBlogs>(`/api/v1/admin/blogs?${query.toString()}`);
+    return api.getPaginated<Blog>(`/api/v1/admin/blogs?${query.toString()}`);
   },
 
   getById: (id: string) => api.get<Blog>(`/api/v1/admin/blogs/${id}`),
@@ -63,4 +58,7 @@ export const adminBlogsService = {
 
   submit: (data: SubmitBlogInput) =>
     api.post<Blog>("/api/v1/admin/blogs", data),
+
+  unpublish: (id: string) =>
+    api.patch<Blog>(`/api/v1/admin/blogs/${id}/unpublish`, {}),
 };

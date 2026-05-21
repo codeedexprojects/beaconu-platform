@@ -156,6 +156,18 @@ export class BlogService {
     });
   }
 
+  static async unpublish(id: string) {
+    const existing = await BlogRepository.findById(id);
+    if (!existing) throw new NotFoundError("Blog not found");
+    if (existing.status !== "approved")
+      throw new ForbiddenError("Only approved blogs can be unpublished");
+
+    return BlogRepository.updateById(id, {
+      status: "pending",
+      publishedAt: null,
+    });
+  }
+
   static async getPublishedBySlug(slug: string) {
     const blog = await BlogRepository.findBySlug(slug);
     if (!blog || blog.status !== "approved")

@@ -57,6 +57,20 @@ export function useRejectBlog() {
   });
 }
 
+export function useUnpublishBlog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminBlogsService.unpublish(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminBlogs() });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.adminBlog(id),
+      });
+    },
+  });
+}
+
 export function useCreateAdminBlog() {
   const queryClient = useQueryClient();
   return useMutation({

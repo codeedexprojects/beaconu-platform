@@ -41,4 +41,11 @@ router.patch(
   BlogPlatformAdminController.reject,
 );
 
+router.patch(
+  "/:id/unpublish",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  BlogPlatformAdminController.unpublish,
+);
+
 export default router;

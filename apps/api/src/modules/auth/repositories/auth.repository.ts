@@ -223,6 +223,42 @@ export class AuthRepository {
     return prisma.student.findUnique({ where: { id } });
   }
 
+  // Student lookups + writes
+  static async findStudentByPhone(
+    phoneNumber: string,
+    phoneCountryCode: string,
+  ) {
+    return prisma.student.findFirst({
+      where: { phoneNumber, phoneCountryCode },
+    });
+  }
+
+  static async createStudent(data: {
+    fullName: string;
+    email?: string | null;
+    phoneNumber: string;
+    phoneCountryCode: string;
+    isPhoneVerified: boolean;
+  }) {
+    return prisma.student.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email ?? null,
+        phoneNumber: data.phoneNumber,
+        phoneCountryCode: data.phoneCountryCode,
+        isPhoneVerified: data.isPhoneVerified,
+        status: "active",
+      },
+    });
+  }
+
+  static async updateStudentLastLogin(id: string): Promise<void> {
+    await prisma.student.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
   // Blog author lookups
   static async findBlogAuthorByEmail(email: string) {
     return prisma.blogAuthor.findUnique({ where: { email } });

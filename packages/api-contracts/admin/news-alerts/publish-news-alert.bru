@@ -1,0 +1,21 @@
+meta {
+  name: Publish News Alert
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/news/{{newsAlertId}}/publish
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Publish a draft news alert. Sets status to "published", records publishedAt and publishedBy.
+  Only draft alerts can be published.
+}

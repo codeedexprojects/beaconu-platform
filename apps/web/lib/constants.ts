@@ -1,3 +1,4 @@
 export const BLOG_TOKEN_KEY = "ba_blog_token";
+export const STUDENT_TOKEN_KEY = "ba_student_token";
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";

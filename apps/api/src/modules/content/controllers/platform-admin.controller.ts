@@ -8,7 +8,6 @@ export class BlogPlatformAdminController {
   static async listAll(req: Request, res: Response): Promise<void> {
     const filters = blogSchemas.listQuery.parse(req.query);
     const result = await BlogQuery.listAll(filters);
-    console.log("Result", result);
     res
       .status(200)
       .json(ApiResponse.success("Blogs fetched", result.data, result.meta));
@@ -33,5 +32,11 @@ export class BlogPlatformAdminController {
     const { rejection_reason } = blogSchemas.reject.parse(req.body);
     const blog = await BlogService.reject(id, req.userId!, rejection_reason);
     res.status(200).json(ApiResponse.success("Blog rejected", blog));
+  }
+
+  static async unpublish(req: Request, res: Response): Promise<void> {
+    const { id } = blogSchemas.idParam.parse(req.params);
+    const blog = await BlogService.unpublish(id);
+    res.status(200).json(ApiResponse.success("Blog unpublished", blog));
   }
 }

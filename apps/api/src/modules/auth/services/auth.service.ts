@@ -22,7 +22,12 @@ import {
   RegisterAssociateAdminInput,
   RegisterEmployeeInput,
   RegisterBlogAuthorInput,
+  RegisterStudentInput,
 } from "../validators/auth.validator";
+
+const OTP_TTL_MS = 5 * 60 * 1000;
+// Swap this Map with Redis (setex/get/del) when moving to production.
+const otpStore = new Map<string, { otp: string; expiresAt: Date }>();
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -448,6 +453,126 @@ export class AuthService {
         email: author.email,
         fullName: author.fullName,
         bio: author.bio,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
+  static async sendStudentOtp(
+    phoneNumber: string,
+    phoneCountryCode: string,
+  ): Promise<{ devOtp?: string }> {
+    const key = `${phoneCountryCode}${phoneNumber}`;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
+    // TODO: deliver via SMS/WhatsApp provider using `key` and `otp`
+    console.log(process.env.NODE_ENV);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[DEV OTP] ${key}: ${otp}`);
+      return { devOtp: otp };
+    }
+    return {};
+  }
+
+  static async verifyStudentOtp(
+    phoneNumber: string,
+    phoneCountryCode: string,
+    otp: string,
+  ) {
+    const key = `${phoneCountryCode}${phoneNumber}`;
+
+    const isDevBypass = process.env.NODE_ENV !== "production" && otp === "0000";
+
+    if (!isDevBypass) {
+      const entry = otpStore.get(key);
+      if (!entry || entry.otp !== otp || entry.expiresAt < new Date()) {
+        throw new UnauthorizedError("Invalid or expired OTP");
+      }
+      otpStore.delete(key);
+    }
+
+    const student = await AuthRepository.findStudentByPhone(
+      phoneNumber,
+      phoneCountryCode,
+    );
+
+    if (student) {
+      if (student.status !== ACCOUNT_STATUS.ACTIVE) {
+        throw new ForbiddenError(`Account is ${student.status}`);
+      }
+      await AuthRepository.updateStudentLastLogin(student.id);
+      const session = await AuthRepository.createSession({
+        userId: student.id,
+        userType: USER_TYPES.STUDENT,
+      });
+      const accessToken = JwtUtils.generateAccessToken({
+        userId: student.id,
+        userType: USER_TYPES.STUDENT,
+        permissions: [],
+        sessionId: session.sessionId,
+      });
+      return {
+        isNewUser: false as const,
+        user: {
+          id: student.id,
+          fullName: student.fullName,
+          email: student.email,
+          avatarUrl: student.avatarUrl,
+        },
+        tokens: { accessToken, refreshToken: session.refreshToken },
+      };
+    }
+
+    const registrationToken = JwtUtils.generateRegistrationToken({
+      phoneNumber,
+      phoneCountryCode,
+    });
+    return { isNewUser: true as const, registrationToken };
+  }
+
+  static async registerStudent(data: RegisterStudentInput) {
+    const tokenPayload = JwtUtils.verifyRegistrationToken(
+      data.registration_token,
+    );
+    if (
+      !tokenPayload ||
+      tokenPayload.phoneNumber !== data.phone_number ||
+      tokenPayload.phoneCountryCode !== data.phone_country_code
+    ) {
+      throw new UnauthorizedError("Invalid or expired registration token");
+    }
+
+    const existing = await AuthRepository.findStudentByPhone(
+      data.phone_number,
+      data.phone_country_code,
+    );
+    if (existing) throw new ConflictError("Phone number already registered");
+
+    const student = await AuthRepository.createStudent({
+      fullName: data.full_name,
+      email: data.email ?? null,
+      phoneNumber: data.phone_number,
+      phoneCountryCode: data.phone_country_code,
+      isPhoneVerified: true,
+    });
+
+    const session = await AuthRepository.createSession({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+    });
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+      permissions: [],
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: student.id,
+        fullName: student.fullName,
+        email: student.email,
+        avatarUrl: student.avatarUrl,
       },
       tokens: { accessToken, refreshToken: session.refreshToken },
     };

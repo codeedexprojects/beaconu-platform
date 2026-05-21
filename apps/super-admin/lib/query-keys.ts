@@ -24,4 +24,7 @@ export const QUERY_KEYS = {
   colleges: ["colleges"] as const,
   college: (id: string) => ["colleges", id] as const,
   collegeStats: ["colleges-stats"] as const,
+  newsAlerts: (params?: object) =>
+    params ? ["news-alerts", params] : (["news-alerts"] as const),
+  newsAlert: (id: string) => ["news-alerts", id] as const,
 } as const;

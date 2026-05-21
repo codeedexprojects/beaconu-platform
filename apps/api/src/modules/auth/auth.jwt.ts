@@ -36,4 +36,25 @@ export class JwtUtils {
   static decode(token: string): JwtPayload | null {
     return jwt.decode(token) as JwtPayload | null;
   }
+
+  static generateRegistrationToken(payload: {
+    phoneNumber: string;
+    phoneCountryCode: string;
+  }): string {
+    return jwt.sign(payload, env.JWT_SECRET, { expiresIn: "10m" });
+  }
+
+  static verifyRegistrationToken(token: string): {
+    phoneNumber: string;
+    phoneCountryCode: string;
+  } | null {
+    try {
+      return jwt.verify(token, env.JWT_SECRET) as {
+        phoneNumber: string;
+        phoneCountryCode: string;
+      };
+    } catch {
+      return null;
+    }
+  }
 }
