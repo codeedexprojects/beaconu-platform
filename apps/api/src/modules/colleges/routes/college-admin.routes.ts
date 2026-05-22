@@ -5,12 +5,14 @@ import campusesRoutes from "./campuses.routes";
 import coursesRoutes from "./courses.routes";
 import staffRoutes from "./staff.routes";
 import facilitiesRoutes from "./facilities.routes";
+import lookupsRoutes from "./lookups.routes";
 
 const router: Router = Router();
 
 router.use("/", profileRoutes);
 router.use("/campuses", campusesRoutes);
 router.use("/courses", coursesRoutes);
+router.use("/lookups", lookupsRoutes);
 router.use("/", staffRoutes);
 router.use("/", facilitiesRoutes);
 
