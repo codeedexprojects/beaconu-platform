@@ -53,7 +53,7 @@ export default function DashboardLayout({
       }
     }
     clearAuth();
-    window.location.assign("/blog-login");
+    router.push("/blog-login");
   }
 
   /* Derive author initials for avatar */

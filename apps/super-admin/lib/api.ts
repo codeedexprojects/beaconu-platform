@@ -61,7 +61,9 @@ async function handleUnauthorized(): Promise<void> {
     await refreshPromise;
   } catch {
     useAuthStore.getState().clearAuth();
-    window.location.href = "/login";
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
     throw new ApiError(401, "Session expired. Please sign in again.");
   }
 }
@@ -99,7 +101,9 @@ async function requestWithRetry<T>(
     if (err instanceof ApiError && err.status === 401) {
       if (retried) {
         useAuthStore.getState().clearAuth();
-        window.location.href = "/login";
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("auth:session-expired"));
+        }
         throw err;
       }
       await handleUnauthorized();
@@ -124,7 +128,9 @@ async function requestPaginatedWithRetry<T>(
     if (err instanceof ApiError && err.status === 401) {
       if (retried) {
         useAuthStore.getState().clearAuth();
-        window.location.href = "/login";
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("auth:session-expired"));
+        }
         throw err;
       }
       await handleUnauthorized();
