@@ -42,26 +42,4 @@ router.delete(
   CollegeRegistrationController.deleteCourse,
 );
 
-// ── Lookups (auth-gated reference data, not sensitive) ────────────────────────
-router.get(
-  "/lookups/streams",
-  ...staffAuth,
-  CollegeRegistrationController.getStreams,
-);
-router.get(
-  "/lookups/study-levels",
-  ...staffAuth,
-  CollegeRegistrationController.getStudyLevels,
-);
-router.get(
-  "/lookups/program-types",
-  ...staffAuth,
-  CollegeRegistrationController.getProgramTypes,
-);
-router.get(
-  "/lookups/universities",
-  ...staffAuth,
-  CollegeRegistrationController.getUniversities,
-);
-
 export default router;
