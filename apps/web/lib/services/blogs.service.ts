@@ -1,5 +1,6 @@
+import { cookies } from "next/headers";
 import { api } from "@/lib/api";
-import { API_BASE } from "@/lib/constants";
+import { API_BASE, STUDENT_TOKEN_KEY } from "@/lib/constants";
 
 export interface Blog {
   id: string;
@@ -40,21 +41,30 @@ export interface UpdateBlogInput {
 
 const BLOG_AUTHOR_BASE = "/api/v1/blog/author/blogs";
 
-// ── Public (no auth, used in Server Components with fetch) ──
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(STUDENT_TOKEN_KEY)?.value;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// ── Student (auth required, used in Server Components with fetch) ──
 
 export async function getPublicBlogs(params: {
   page?: number;
   limit?: number;
   search?: string;
-}): Promise<{ data: Blog[]; meta: { total: number; page: number; limit: number; hasNext: boolean } }> {
+}): Promise<{
+  data: Blog[];
+  meta: { total: number; page: number; limit: number; hasNext: boolean };
+}> {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   query.set("limit", String(params.limit ?? 12));
   if (params.search) query.set("search", params.search);
 
   const res = await fetch(
-    `${API_BASE}/api/v1/public/blogs?${query.toString()}`,
-    { cache: "no-store" },
+    `${API_BASE}/api/v1/student/blogs?${query.toString()}`,
+    { cache: "no-store", headers: await getAuthHeaders() },
   );
 
   if (!res.ok) throw new Error("Failed to fetch blogs");
@@ -63,8 +73,9 @@ export async function getPublicBlogs(params: {
 }
 
 export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
-  const res = await fetch(`${API_BASE}/api/v1/public/blogs/${slug}`, {
+  const res = await fetch(`${API_BASE}/api/v1/student/blogs/${slug}`, {
     next: { revalidate: 60 },
+    headers: await getAuthHeaders(),
   });
   if (!res.ok) throw new Error("Blog not found");
   const body = await res.json();

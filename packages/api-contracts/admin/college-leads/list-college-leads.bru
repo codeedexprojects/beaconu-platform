@@ -1,0 +1,43 @@
+meta {
+  name: List College Leads
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/college-leads
+  body: none
+  auth: none
+}
+
+query {
+  ~page: 1
+  ~limit: 20
+  ~status: pending
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("collegeLeadId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns paginated list of college onboarding leads.
+
+  Query Parameters:
+  - page: Page number (optional, default 1)
+  - limit: Items per page (optional, default 20)
+  - status: Filter by status (optional)
+
+  Requires: platform admin access token.
+  Saves collegeLeadId from first result to env.
+}

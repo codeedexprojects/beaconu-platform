@@ -92,7 +92,7 @@ export default async function BlogsPage({ searchParams }: PageProps) {
       />
 
       <BlogHeader
-        backHref="/"
+        backHref="/home"
         backLabel="Home"
         title="Student Blogs"
         rightAction={

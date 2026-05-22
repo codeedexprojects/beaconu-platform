@@ -1,30 +1,10 @@
 meta {
-  name: List Published Blogs
+  name: List Blogs (MOVED)
   type: http
   seq: 1
 }
 
-get {
-  url: {{baseUrl}}/api/v1/public/blogs
-  body: none
-  auth: none
-}
-
-query {
-  ~search:
-  page: 1
-  limit: 10
-}
-
-headers {
-  Content-Type: application/json
-}
-
 docs {
-  List all published (approved) blogs. No authentication required.
-
-  Query Parameters:
-  - search: Search in title or author name (optional)
-  - page: Page number (default: 1)
-  - limit: Items per page (default: 10, max: 50)
+  MOVED to student/blogs/list-blogs.bru
+  Route is now /api/v1/student/blogs and requires student authentication.
 }

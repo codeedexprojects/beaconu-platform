@@ -1,0 +1,17 @@
+meta {
+  name: List University Types
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/universities/types
+  body: none
+  auth: none
+}
+
+docs {
+  Returns all active university types.
+  No authentication required.
+  Used for filtering and display in public university listings.
+}

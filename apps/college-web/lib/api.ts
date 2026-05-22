@@ -35,7 +35,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (res.status === 401) {
     useAuthStore.getState().clearAuth();
-    window.location.href = "/login";
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
     throw new ApiError(401, "Session expired. Please sign in again.");
   }
 

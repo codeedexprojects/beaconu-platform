@@ -36,7 +36,6 @@ export class NewsAlertsService {
       summary: data.summary ?? null,
       content: data.content,
       coverImageUrl: data.cover_image_url ?? null,
-      category: data.category ?? "news",
       tags: data.tags ?? [],
       source: data.source ?? null,
       collegeId: data.college_id ?? null,
@@ -65,7 +64,6 @@ export class NewsAlertsService {
       ...(data.cover_image_url !== undefined
         ? { coverImageUrl: data.cover_image_url }
         : {}),
-      ...(data.category !== undefined ? { category: data.category } : {}),
       ...(data.tags !== undefined ? { tags: data.tags } : {}),
       ...(data.source !== undefined ? { source: data.source } : {}),
     });
@@ -89,7 +87,18 @@ export class NewsAlertsService {
   static async archive(id: string) {
     const existing = await NewsAlertsRepository.findById(id);
     if (!existing) throw new NotFoundError("News alert not found");
+    if (existing.status === "archived")
+      throw new ForbiddenError("News alert is already archived");
 
     return NewsAlertsRepository.softDeleteById(id);
+  }
+
+  static async unarchive(id: string) {
+    const existing = await NewsAlertsRepository.findById(id);
+    if (!existing) throw new NotFoundError("News alert not found");
+    if (existing.status !== "archived")
+      throw new ForbiddenError("Only archived news alerts can be unarchived");
+
+    return NewsAlertsRepository.updateById(id, { status: "draft" });
   }
 }

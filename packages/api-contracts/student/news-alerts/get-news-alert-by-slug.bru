@@ -1,0 +1,24 @@
+meta {
+  name: Get News Alert by Slug
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/news/{{newsAlertSlug}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Fetch a single published news alert by slug. Requires student authentication.
+  Returns 404 for drafts or archived alerts.
+}

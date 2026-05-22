@@ -1,0 +1,23 @@
+meta {
+  name: Delete Discipline
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/universities/disciplines/{{disciplineId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes a discipline.
+  The record is not removed from the database.
+
+  Requires: platform admin access token.
+}

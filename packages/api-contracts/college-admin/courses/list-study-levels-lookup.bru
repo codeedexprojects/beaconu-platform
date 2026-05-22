@@ -1,0 +1,22 @@
+meta {
+  name: Lookup Study Levels
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/study-levels
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns study levels available for course creation.
+  Used to populate study level dropdown during course setup.
+
+  Requires: staff access token.
+}

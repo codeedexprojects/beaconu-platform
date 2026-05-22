@@ -19,10 +19,6 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
-vars:pre-request {
-  blogId: 7489059b-0e14-4903-969c-e39c4a6da3ae
-}
-
 docs {
   Approve a pending blog. Sets status to "approved", records reviewedBy, reviewedAt, and publishedAt.
   Only pending blogs can be approved.

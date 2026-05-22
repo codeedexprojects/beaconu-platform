@@ -14,7 +14,6 @@ query {
   page: 1
   limit: 10
   ~status: draft
-  ~category: news
   ~search:
 }
 
@@ -34,11 +33,10 @@ script:post-response {
 }
 
 docs {
-  Returns all news alerts with pagination. Platform admin can filter by status, category, and search.
+  Returns all news alerts with pagination. Platform admin can filter by status and search.
 
   Query Parameters:
   - status: Filter by status — draft | published | archived (optional)
-  - category: Filter by category — news | alert | admission | exam | scholarship | event | result (optional)
   - search: Search in title (optional)
   - page: Page number (default: 1)
   - limit: Items per page (default: 10, max: 50)

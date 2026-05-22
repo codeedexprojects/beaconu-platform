@@ -12,7 +12,6 @@ const NEWS_ALERT_LIST_SELECT = {
   slug: true,
   summary: true,
   coverImageUrl: true,
-  category: true,
   tags: true,
   source: true,
   collegeId: true,
@@ -30,12 +29,11 @@ const NEWS_ALERT_DETAIL_SELECT = {
 
 export class NewsAlertQuery {
   static async listAll(filters: ListNewsAlertsQuery) {
-    const { page, limit, status, category, search } = filters;
+    const { page, limit, status, search } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       ...(status ? { status } : {}),
-      ...(category ? { category } : {}),
       ...(search
         ? { title: { contains: search, mode: "insensitive" as const } }
         : {}),
@@ -65,12 +63,11 @@ export class NewsAlertQuery {
   }
 
   static async listPublished(filters: PublicListNewsAlertsQuery) {
-    const { page, limit, category, search } = filters;
+    const { page, limit, search } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       status: "published",
-      ...(category ? { category } : {}),
       ...(search
         ? { title: { contains: search, mode: "insensitive" as const } }
         : {}),

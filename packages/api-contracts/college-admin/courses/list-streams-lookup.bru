@@ -1,0 +1,22 @@
+meta {
+  name: Lookup Streams
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/streams
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns streams available for course creation.
+  Used to populate stream dropdown during course setup.
+
+  Requires: staff access token.
+}

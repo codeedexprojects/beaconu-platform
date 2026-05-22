@@ -1,0 +1,30 @@
+meta {
+  name: Update Subdomain
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/subdomain
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "slug": "my-college"
+  }
+}
+
+docs {
+  Updates the college's subdomain slug.
+
+  Fields:
+  - slug: Desired subdomain slug (required, unique)
+
+  Requires: staff access token.
+}

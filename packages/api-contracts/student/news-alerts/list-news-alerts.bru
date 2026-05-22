@@ -1,0 +1,43 @@
+meta {
+  name: List Published News Alerts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/news
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 12
+  ~search:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].slug) {
+      bru.setEnvVar("newsAlertSlug", data.data[0].slug);
+    }
+  }
+}
+
+docs {
+  Returns published news alerts with pagination. Requires student authentication.
+
+  Query Parameters:
+  - search: Search in title (optional)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 12, max: 50)
+}

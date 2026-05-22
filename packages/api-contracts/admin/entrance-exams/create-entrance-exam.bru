@@ -1,0 +1,50 @@
+meta {
+  name: Create Entrance Exam
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/entrance-exams
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "JEE Main",
+    "code": "JEE-MAIN",
+    "conducting_body": "NTA",
+    "exam_level": "national",
+    "applicable_courses": ["B.Tech", "BE", "B.Arch"],
+    "eligibility": "10+2 with Physics, Chemistry and Mathematics",
+    "description": "Joint Entrance Examination Main is a national level entrance exam for admission to undergraduate engineering programs.",
+    "registration_start": "2024-11-01",
+    "registration_end": "2024-12-15",
+    "exam_date": "2025-01-22",
+    "result_date": "2025-02-12",
+    "official_website": "https://jeemain.nta.nic.in"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("entranceExamId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new entrance exam. Requires platform_admin auth.
+  Code must be unique (e.g. JEE-MAIN, NEET-UG). Automatically uppercased.
+}

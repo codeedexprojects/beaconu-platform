@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store";
+import { getErrorMessage } from "@/lib/api";
 import { loginBlogAuthor } from "@/lib/services/auth.service";
 
 const loginSchema = z.object({
@@ -34,17 +36,19 @@ export default function BlogLoginPage(): React.JSX.Element {
     defaultValues: { email: "", password: "" },
   });
 
-  const { isSubmitting } = form.formState;
+  const { mutate: login, isPending } = useMutation({
+    mutationFn: loginBlogAuthor,
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
 
-  async function onSubmit(data: LoginInput) {
-    try {
-      const { user, token } = await loginBlogAuthor(data);
-      setAuth(user, token);
-      toast.success("Welcome back!");
-      router.replace("/my/blogs");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
-    }
+  function onSubmit(data: LoginInput) {
+    login(data, {
+      onSuccess: ({ user, token }) => {
+        setAuth(user, token);
+        toast.success("Welcome back!");
+        router.replace("/my/blogs");
+      },
+    });
   }
 
   return (
@@ -130,10 +134,10 @@ export default function BlogLoginPage(): React.JSX.Element {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
           >
-            {isSubmitting ? (
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Signing in…

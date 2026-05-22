@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
@@ -13,31 +12,22 @@ import type {
 
 export function useNewsAlerts(params?: {
   status?: string;
-  category?: string;
   search?: string;
   page?: number;
   limit?: number;
 }) {
-  const query = useQuery<Paginated<NewsAlertListItem>>({
+  return useQuery<Paginated<NewsAlertListItem>>({
     queryKey: QUERY_KEYS.newsAlerts(params),
     queryFn: () => newsAlertsService.list(params),
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useNewsAlert(id: string) {
-  const query = useQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.newsAlert(id),
     queryFn: () => newsAlertsService.getById(id),
     enabled: !!id,
   });
-  useEffect(() => {
-    if (query.error) toast.error(getErrorMessage(query.error));
-  }, [query.error]);
-  return query;
 }
 
 export function useCreateNewsAlert() {
@@ -84,6 +74,20 @@ export function useArchiveNewsAlert() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => newsAlertsService.archive(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.newsAlert(id),
+      });
+    },
+  });
+}
+
+export function useUnarchiveNewsAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => newsAlertsService.unarchive(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: (_, id) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.newsAlerts() });

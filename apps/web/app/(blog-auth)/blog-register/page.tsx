@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store";
+import { getErrorMessage } from "@/lib/api";
 import { registerBlogAuthor } from "@/lib/services/auth.service";
 
 const registerSchema = z
@@ -65,23 +67,28 @@ export default function BlogRegisterPage(): React.JSX.Element {
     },
   });
 
-  const { isSubmitting } = form.formState;
+  const { mutate: register, isPending } = useMutation({
+    mutationFn: registerBlogAuthor,
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
 
-  async function onSubmit(data: RegisterInput) {
-    try {
-      const { user, token } = await registerBlogAuthor({
+  function onSubmit(data: RegisterInput) {
+    register(
+      {
         full_name: data.full_name,
         email: data.email,
         password: data.password,
         confirm_password: data.confirm_password,
         bio: data.bio || undefined,
-      });
-      setAuth(user, token);
-      toast.success("Account created! Welcome to BeaconU.");
-      router.replace("/my/blogs");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Registration failed");
-    }
+      },
+      {
+        onSuccess: ({ user, token }) => {
+          setAuth(user, token);
+          toast.success("Account created! Welcome to BeaconU.");
+          router.replace("/my/blogs");
+        },
+      },
+    );
   }
 
   return (
@@ -234,10 +241,10 @@ export default function BlogRegisterPage(): React.JSX.Element {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
           >
-            {isSubmitting ? (
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Creating account…
