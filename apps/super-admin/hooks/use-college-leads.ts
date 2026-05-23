@@ -44,11 +44,19 @@ export function useUpdateCollegeLeadStatus() {
       id,
       status,
       review_remarks,
+      enableInstitutionGroup,
     }: {
       id: string;
       status: string;
       review_remarks?: string;
-    }) => collegeLeadsService.updateStatus(id, status, review_remarks),
+      enableInstitutionGroup?: boolean;
+    }) =>
+      collegeLeadsService.updateStatus(
+        id,
+        status,
+        review_remarks,
+        enableInstitutionGroup,
+      ),
 
     onError: (error) => {
       toast.error(getErrorMessage(error));

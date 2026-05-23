@@ -64,6 +64,7 @@ const profileFormSchema = z.object({
     .url("Enter a valid cover image URL")
     .optional()
     .or(z.literal("")),
+  requestedGroupCode: z.string().optional(),
 
   // profileSections fields
   profileSections: z.object({
@@ -186,6 +187,7 @@ export default function SetupProfilePage() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
+      requestedGroupCode: "",
       profileSections: {
         college_overview: {
           description: "",
@@ -223,6 +225,7 @@ export default function SetupProfilePage() {
         pinCode: profile.pinCode || "",
         logoUrl: profile.logoUrl || "",
         coverImageUrl: profile.coverImageUrl || "",
+        requestedGroupCode: profile.requestedGroupCode || "",
         profileSections: {
           college_overview: {
             description:
@@ -432,6 +435,7 @@ export default function SetupProfilePage() {
         pinCode: data.pinCode,
         logoUrl: data.logoUrl ? data.logoUrl : null,
         coverImageUrl: data.coverImageUrl ? data.coverImageUrl : null,
+        requestedGroupCode: data.requestedGroupCode,
         profileSections: profileSectionsPayload,
       },
       {
@@ -592,6 +596,31 @@ export default function SetupProfilePage() {
                   {errors.coverImageUrl && (
                     <p className="text-xs text-destructive">
                       {errors.coverImageUrl.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2 md:col-span-2 pt-4 border-t border-border/40">
+                  <Label
+                    htmlFor="requestedGroupCode"
+                    className="flex items-center gap-2"
+                  >
+                    <Building className="h-4 w-4 text-primary" />
+                    Institution Group Join Code (Optional)
+                  </Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    If you are joining an existing group of colleges, enter the
+                    Group Code here. You will automatically be added once you
+                    Submit and Go Live!
+                  </p>
+                  <Input
+                    id="requestedGroupCode"
+                    placeholder="e.g. IGC-ABCD-1234"
+                    {...register("requestedGroupCode")}
+                  />
+                  {errors.requestedGroupCode && (
+                    <p className="text-xs text-destructive">
+                      {errors.requestedGroupCode.message}
                     </p>
                   )}
                 </div>

@@ -8,6 +8,7 @@ import {
   Landmark,
   MapPin,
   Trophy,
+  Network,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,25 @@ export default async function CollegeLandingPage({
   const universityType =
     college.university?.universityType?.name || "University";
   const locationText = [college.city, college.state].filter(Boolean).join(", ");
+
+  let affiliatedColleges: {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+    city: string | null;
+    state: string | null;
+  }[] = [];
+
+  if (college.institutionGroups && college.institutionGroups.length > 0) {
+    affiliatedColleges = college.institutionGroups[0].members
+      .filter((m) => m.college.id !== college.id)
+      .map((m) => m.college);
+  } else if (college.institutionGroupMember?.group) {
+    affiliatedColleges = college.institutionGroupMember.group.members
+      .filter((m) => m.college.id !== college.id)
+      .map((m) => m.college);
+  }
 
   return (
     <div className="min-h-screen bg-[#fcfbf7] text-[#1b1b1b] [font-family:Poppins,ui-sans-serif,system-ui]">
@@ -77,6 +97,7 @@ export default async function CollegeLandingPage({
 
           <nav className="flex flex-wrap items-center gap-2 rounded-2xl bg-white p-2 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
             {[
+              ["Institutions", "#campuses"],
               ["Courses", "#courses"],
               ["Scholarships", "#scholarships"],
               ["Placements", "#placements"],
@@ -154,6 +175,57 @@ export default async function CollegeLandingPage({
             </div>
           ) : null}
         </section>
+
+        {affiliatedColleges.length > 0 && (
+          <section
+            id="campuses"
+            className="rounded-[34px] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm"
+          >
+            <div className="mb-8 text-center">
+              <h3 className="text-3xl font-bold text-[#1A2B44] flex items-center justify-center gap-2">
+                <Network className="h-7 w-7 text-[#f97316]" />
+                Group of Institutions
+              </h3>
+              <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
+                We are part of a larger network of excellence. Explore our
+                sister institutions.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {affiliatedColleges.map((affiliate) => (
+                <Link
+                  key={affiliate.id}
+                  href={`/college/${affiliate.slug}`}
+                  className="group flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:shadow-md"
+                >
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm border border-slate-100">
+                    {affiliate.logoUrl ? (
+                      <img
+                        src={affiliate.logoUrl}
+                        alt={`${affiliate.name} logo`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100">
+                        <Building2 className="h-5 w-5 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-semibold text-slate-900 group-hover:text-[#f97316] transition-colors">
+                      {affiliate.name}
+                    </h4>
+                    <p className="truncate text-xs text-slate-500">
+                      {[affiliate.city, affiliate.state]
+                        .filter(Boolean)
+                        .join(", ") || "Location TBA"}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section
           id="courses"

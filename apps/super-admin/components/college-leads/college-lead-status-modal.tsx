@@ -12,6 +12,7 @@ import type { CollegeLead } from "@/lib/services/college-leads.service";
 const updateStatusSchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
   review_remarks: z.string().optional(),
+  enableInstitutionGroup: z.boolean().optional(),
 });
 
 type UpdateStatusFormData = z.infer<typeof updateStatusSchema>;
@@ -36,6 +37,7 @@ export function CollegeLeadStatusModal({
     defaultValues: {
       status: lead?.status || "pending",
       review_remarks: lead?.reviewRemarks || "",
+      enableInstitutionGroup: false,
     },
   });
 
@@ -108,6 +110,31 @@ export function CollegeLeadStatusModal({
                 </p>
               )}
             </div>
+
+            {form.watch("status") === "approved" && !lead.createdCollegeId && (
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label
+                    htmlFor="enable-institution-group"
+                    className="text-sm font-semibold"
+                  >
+                    Enable Institution Group
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically create a group for this college and generate a
+                    join code.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="enable-institution-group"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    {...form.register("enableInstitutionGroup")}
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
 
           <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">

@@ -6,6 +6,7 @@ import {
 } from "../validators/college-onboarding.validator";
 import { NotFoundError } from "@/shared/errors";
 import { CollegeProvisioningService } from "@/modules/colleges/services/college-provisioning.service";
+import { InstitutionGroupService } from "@/modules/colleges/services/institution-group.service";
 
 export class CollegeOnboardingService {
   static async submit(data: SubmitCollegeOnboardingData) {
@@ -41,7 +42,12 @@ export class CollegeOnboardingService {
           ? { id: r.reviewer.id, name: r.reviewer.fullName }
           : null,
         createdCollege: r.createdCollege
-          ? { id: r.createdCollege.id, slug: r.createdCollege.slug }
+          ? {
+              id: r.createdCollege.id,
+              slug: r.createdCollege.slug,
+              ownedGroupCode:
+                r.createdCollege.institutionGroups?.[0]?.groupCode || null,
+            }
           : null,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
@@ -75,7 +81,12 @@ export class CollegeOnboardingService {
         ? { id: request.reviewer.id, name: request.reviewer.fullName }
         : null,
       createdCollege: request.createdCollege
-        ? { id: request.createdCollege.id, slug: request.createdCollege.slug }
+        ? {
+            id: request.createdCollege.id,
+            slug: request.createdCollege.slug,
+            ownedGroupCode:
+              request.createdCollege.institutionGroups?.[0]?.groupCode || null,
+          }
         : null,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,
@@ -101,6 +112,7 @@ export class CollegeOnboardingService {
     let provisionedCollege: Awaited<
       ReturnType<typeof CollegeProvisioningService.provisionFromLead>
     > | null = null;
+    let generatedGroupCode: string | null = null;
 
     if (data.status === "approved" && !existing.createdCollegeId) {
       provisionedCollege = await CollegeProvisioningService.provisionFromLead({
@@ -111,6 +123,17 @@ export class CollegeOnboardingService {
         state: existing.state ?? null,
         onboardingRequestId: id,
       });
+
+      if (data.enableInstitutionGroup && provisionedCollege) {
+        const group = await InstitutionGroupService.enableForCollege(
+          provisionedCollege.college.id,
+          {
+            name: `${existing.collegeName} Group`,
+            description: "Automatically generated group during onboarding.",
+          },
+        );
+        generatedGroupCode = group?.groupCode || null;
+      }
     }
 
     return {
@@ -127,6 +150,7 @@ export class CollegeOnboardingService {
               code: provisionedCollege.college.code,
               adminEmail: provisionedCollege.staff.email,
               setupUrl: provisionedCollege.setupUrl,
+              groupCode: generatedGroupCode,
             },
           }
         : {}),

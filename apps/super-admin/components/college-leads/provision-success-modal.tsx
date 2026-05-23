@@ -63,6 +63,33 @@ export function ProvisionSuccessModal({
 
             <div className="text-muted-foreground">Admin Email:</div>
             <div className="col-span-2">{data.adminEmail}</div>
+
+            {data.groupCode && (
+              <>
+                <div className="text-primary font-semibold mt-2 pt-2 border-t">
+                  Institution Group:
+                </div>
+                <div className="col-span-2 mt-2 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded">
+                      {data.groupCode}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => {
+                        navigator.clipboard.writeText(data.groupCode!);
+                        toast.success("Group code copied to clipboard");
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

@@ -8,6 +8,59 @@ import {
 } from "../validators/college-registration.validator";
 
 export class CollegeRegistrationRepository {
+  private static readonly COURSE_RELATIONS_INCLUDE = {
+    discipline: {
+      select: {
+        id: true,
+        name: true,
+        stream: { select: { id: true, name: true } },
+      },
+    },
+    studyLevel: { select: { id: true, name: true } },
+    programType: { select: { id: true, name: true } },
+    campus: { select: { id: true, name: true } },
+  };
+
+  private static readonly COURSE_RELATIONS_INCLUDE_NO_CAMPUS = {
+    discipline: {
+      select: {
+        id: true,
+        name: true,
+        stream: { select: { id: true, name: true } },
+      },
+    },
+    studyLevel: { select: { id: true, name: true } },
+    programType: { select: { id: true, name: true } },
+  };
+
+  private static async existsCampusInCollege(
+    campusId: string,
+    collegeId: string,
+  ) {
+    return prisma.campus.findFirst({ where: { id: campusId, collegeId } });
+  }
+
+  private static async existsCourseInCollege(
+    courseId: string,
+    collegeId: string,
+  ) {
+    return prisma.course.findFirst({ where: { id: courseId, collegeId } });
+  }
+
+  private static async softDeleteCampus(campusId: string) {
+    return prisma.campus.update({
+      where: { id: campusId },
+      data: { status: "inactive" },
+    });
+  }
+
+  private static async softDeleteCourse(courseId: string) {
+    return prisma.course.update({
+      where: { id: courseId },
+      data: { status: "inactive" },
+    });
+  }
+
   // ── College Profile ────────────────────────────────────────────────────────
 
   static async findCollegeById(collegeId: string) {
@@ -67,6 +120,12 @@ export class CollegeRegistrationRepository {
       ...(data.district !== undefined ? { district: data.district } : {}),
       ...(data.state !== undefined ? { state: data.state } : {}),
       ...(data.pinCode !== undefined ? { pinCode: data.pinCode } : {}),
+      ...(data.requestedGroupCode !== undefined
+        ? {
+            requestedGroupCode:
+              data.requestedGroupCode === "" ? null : data.requestedGroupCode,
+          }
+        : {}),
       ...(data.profileSections !== undefined
         ? { profileSections: data.profileSections }
         : {}),
@@ -140,9 +199,7 @@ export class CollegeRegistrationRepository {
     data: UpdateCampusData,
   ) {
     // Verify campus belongs to this college
-    const existing = await prisma.campus.findFirst({
-      where: { id: campusId, collegeId },
-    });
+    const existing = await this.existsCampusInCollege(campusId, collegeId);
     if (!existing) return null;
 
     if (data.isMainCampus) {
@@ -168,15 +225,10 @@ export class CollegeRegistrationRepository {
   }
 
   static async deleteCampus(campusId: string, collegeId: string) {
-    const existing = await prisma.campus.findFirst({
-      where: { id: campusId, collegeId },
-    });
+    const existing = await this.existsCampusInCollege(campusId, collegeId);
     if (!existing) return null;
 
-    return prisma.campus.update({
-      where: { id: campusId },
-      data: { status: "inactive" },
-    });
+    return this.softDeleteCampus(campusId);
   }
 
   // ── Courses ────────────────────────────────────────────────────────────────
@@ -184,18 +236,7 @@ export class CollegeRegistrationRepository {
   static async getCourses(collegeId: string) {
     return prisma.course.findMany({
       where: { collegeId, status: "active" },
-      include: {
-        discipline: {
-          select: {
-            id: true,
-            name: true,
-            stream: { select: { id: true, name: true } },
-          },
-        },
-        studyLevel: { select: { id: true, name: true } },
-        programType: { select: { id: true, name: true } },
-        campus: { select: { id: true, name: true } },
-      },
+      include: this.COURSE_RELATIONS_INCLUDE,
       orderBy: { createdAt: "asc" },
     });
   }
@@ -216,17 +257,7 @@ export class CollegeRegistrationRepository {
         studyMode: data.studyMode,
         status: "active",
       },
-      include: {
-        discipline: {
-          select: {
-            id: true,
-            name: true,
-            stream: { select: { id: true, name: true } },
-          },
-        },
-        studyLevel: { select: { id: true, name: true } },
-        programType: { select: { id: true, name: true } },
-      },
+      include: this.COURSE_RELATIONS_INCLUDE_NO_CAMPUS,
     });
   }
 
@@ -235,9 +266,7 @@ export class CollegeRegistrationRepository {
     collegeId: string,
     data: UpdateCourseData,
   ) {
-    const existing = await prisma.course.findFirst({
-      where: { id: courseId, collegeId },
-    });
+    const existing = await this.existsCourseInCollege(courseId, collegeId);
     if (!existing) return null;
 
     return prisma.course.update({
@@ -258,15 +287,10 @@ export class CollegeRegistrationRepository {
   }
 
   static async deleteCourse(courseId: string, collegeId: string) {
-    const existing = await prisma.course.findFirst({
-      where: { id: courseId, collegeId },
-    });
+    const existing = await this.existsCourseInCollege(courseId, collegeId);
     if (!existing) return null;
 
-    return prisma.course.update({
-      where: { id: courseId },
-      data: { status: "inactive" },
-    });
+    return this.softDeleteCourse(courseId);
   }
 
   // ── Lookups ────────────────────────────────────────────────────────────────

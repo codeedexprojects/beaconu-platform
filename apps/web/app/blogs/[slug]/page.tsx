@@ -6,7 +6,7 @@ import { Calendar, Eye } from "lucide-react";
 import {
   getPublicBlogBySlug,
   getPublicBlogs,
-} from "@/lib/services/blogs.service";
+} from "@/lib/services/blogs.server";
 import { formatDate } from "@/lib/utils";
 import { BlogHeader } from "@/components/blogs/BlogHeader";
 
@@ -131,7 +131,15 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           ) : (
             <div className="h-48 w-full bg-gradient-to-br from-[#FEF0EB] to-[#FDE8D8] flex items-center justify-center">
-              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#E8521A" strokeWidth="1.4" opacity="0.35">
+              <svg
+                width="52"
+                height="52"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#E8521A"
+                strokeWidth="1.4"
+                opacity="0.35"
+              >
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14,2 14,8 20,8" />
               </svg>
@@ -143,7 +151,10 @@ export default async function BlogDetailPage({ params }: Props) {
             {blog.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {blog.tags.map((tag: string) => (
-                  <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF0EB] text-[#C04010] border border-[#E8521A]/15 uppercase tracking-wide">
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF0EB] text-[#C04010] border border-[#E8521A]/15 uppercase tracking-wide"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -170,7 +181,9 @@ export default async function BlogDetailPage({ params }: Props) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-gray-900 truncate">{blog.authorName}</p>
+                <p className="text-[13px] font-bold text-gray-900 truncate">
+                  {blog.authorName}
+                </p>
                 <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
                   {blog.publishedAt && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
@@ -183,7 +196,15 @@ export default async function BlogDetailPage({ params }: Props) {
                     {blog.viewCount.toLocaleString()} views
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12,6 12,12 16,14" />
                     </svg>
@@ -200,7 +221,10 @@ export default async function BlogDetailPage({ params }: Props) {
             <div className="space-y-5">
               {blog.content.split("\n").map((paragraph: string, i: number) =>
                 paragraph.trim() ? (
-                  <p key={i} className="text-[15px] text-gray-700 leading-[1.8]">
+                  <p
+                    key={i}
+                    className="text-[15px] text-gray-700 leading-[1.8]"
+                  >
                     {paragraph}
                   </p>
                 ) : null,
@@ -214,7 +238,16 @@ export default async function BlogDetailPage({ params }: Props) {
           href="/blogs"
           className="max-w-2xl mx-auto mt-5 w-full h-12 rounded-2xl bg-[#E8521A] hover:bg-[#D04718] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white text-[14px] font-semibold"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Back to All Blogs

@@ -45,6 +45,57 @@ export class PublicCollegeController {
             programType: true,
           },
         },
+        institutionGroupMember: {
+          include: {
+            group: {
+              include: {
+                members: {
+                  include: {
+                    college: {
+                      select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        logoUrl: true,
+                        city: true,
+                        state: true,
+                      },
+                    },
+                  },
+                },
+                createdByCollege: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    logoUrl: true,
+                    city: true,
+                    state: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        institutionGroups: {
+          where: { status: "active" },
+          include: {
+            members: {
+              include: {
+                college: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    logoUrl: true,
+                    city: true,
+                    state: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

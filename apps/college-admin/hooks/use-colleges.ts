@@ -11,6 +11,8 @@ import {
   getCollegeProfile,
   submitCollegeRegistration,
   updateCollegeProfile,
+  getMyInstitutionGroup,
+  joinInstitutionGroup,
   type CreateCampusInput,
   type CreateCourseInput,
   type UpdateCollegeProfileInput,
@@ -85,6 +87,27 @@ export function useCreateCollegeCourse() {
 export function useSubmitCollegeRegistration() {
   return useMutation({
     mutationFn: submitCollegeRegistration,
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useMyInstitutionGroup() {
+  return useQuery({
+    queryKey: QUERY_KEYS.institutionGroup,
+    queryFn: getMyInstitutionGroup,
+  });
+}
+
+export function useJoinInstitutionGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (group_code: string) => joinInstitutionGroup(group_code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.institutionGroup });
+      toast.success("Joined institution group successfully!");
+    },
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },

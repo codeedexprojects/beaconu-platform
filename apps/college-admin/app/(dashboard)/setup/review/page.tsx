@@ -86,6 +86,17 @@ export default function SetupReviewPage() {
                   .filter(Boolean)
                   .join(", ") || "—"}
               </span>
+
+              {profile?.requestedGroupCode && (
+                <>
+                  <span className="text-muted-foreground text-primary">
+                    Joining Group:
+                  </span>
+                  <span className="font-mono text-primary font-medium tracking-wide">
+                    {profile.requestedGroupCode}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

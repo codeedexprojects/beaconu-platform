@@ -14,7 +14,12 @@ export interface CollegeLead {
   reviewRemarks: string | null;
   reviewer: { id: string; name: string } | null;
   createdCollegeId: string | null;
-  createdCollege?: { id: string; slug: string } | null;
+  createdCollege?: {
+    id: string;
+    slug: string;
+    ownedGroupCode?: string | null;
+  } | null;
+  groupCode?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +36,7 @@ export interface UpdateStatusResponse {
     code: string;
     adminEmail: string;
     setupUrl: string;
+    groupCode?: string | null;
   };
 }
 
@@ -70,12 +76,18 @@ export const collegeLeadsService = {
   getStats: () =>
     api.get<CollegeLeadStats>("/api/v1/admin/college-leads/stats"),
 
-  updateStatus: (id: string, status: string, review_remarks?: string) =>
+  updateStatus: (
+    id: string,
+    status: string,
+    review_remarks?: string,
+    enableInstitutionGroup?: boolean,
+  ) =>
     api.patch<UpdateStatusResponse>(
       `/api/v1/admin/college-leads/${id}/status`,
       {
         status,
         review_remarks,
+        enableInstitutionGroup,
       },
     ),
 };

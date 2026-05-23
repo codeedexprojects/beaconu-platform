@@ -12,7 +12,8 @@ post {
 
 body:json {
   {
-    "email": "admin@college.edu",
+    "collegeSlug": "{{collegeSlug}}",
+    "email": "rajesh@example-college.edu",
     "password": "Password123!"
   }
 }
@@ -28,4 +29,3 @@ script:post-response {
     }
   }
 }
-

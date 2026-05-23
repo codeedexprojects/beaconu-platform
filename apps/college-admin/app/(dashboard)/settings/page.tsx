@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,6 +10,9 @@ import {
   Image as ImageIcon,
   Save,
   CheckCircle,
+  Network,
+  Copy,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,11 +26,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store";
 
 import {
   useCollegeProfile,
   useUpdateCollegeProfile,
+  useMyInstitutionGroup,
+  useJoinInstitutionGroup,
 } from "@/hooks/use-colleges";
 
 const settingsFormSchema = z.object({
@@ -370,6 +376,8 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <InstitutionGroupCard />
           </div>
         </div>
 
@@ -390,5 +398,245 @@ export default function SettingsPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+function InstitutionGroupCard() {
+  const { data: groupData, isLoading } = useMyInstitutionGroup();
+  const joinMutation = useJoinInstitutionGroup();
+  const [code, setCode] = useState("");
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    joinMutation.mutate(code.trim(), {
+      onSuccess: () => {
+        setCode("");
+      },
+    });
+  };
+
+  const copyCode = (val: string) => {
+    navigator.clipboard.writeText(val);
+    toast.success("Group code copied!");
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
+        <CardContent className="flex items-center justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 1. Owner of a group
+  if (groupData?.type === "owner" && groupData.group) {
+    const group = groupData.group;
+    return (
+      <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Network className="h-5 w-5 text-primary" /> Institution Group
+            </CardTitle>
+            <CardDescription>
+              You are the administrator of this college group.
+            </CardDescription>
+          </div>
+          <Badge
+            variant="default"
+            className="bg-primary/10 text-primary border-primary/20"
+          >
+            Group Creator
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border bg-primary/5 p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-primary">
+                Group Join Code
+              </Label>
+              <Badge
+                variant="outline"
+                className="text-[10px] border-emerald-500/30 text-emerald-500 bg-emerald-500/5"
+              >
+                Active
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-lg font-bold font-mono tracking-widest text-primary">
+                {group.groupCode}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 shrink-0"
+                onClick={() => copyCode(group.groupCode)}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copy
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Share this code with affiliated colleges so they can join this
+              group.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">{group.name}</p>
+            {group.description && (
+              <p className="text-xs text-muted-foreground">
+                {group.description}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2.5 pt-2 border-t">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Member Colleges ({group.members?.length ?? 0})
+            </Label>
+            {group.members && group.members.length > 0 ? (
+              <div className="space-y-2">
+                {group.members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between rounded-lg border bg-background/40 px-3 py-2 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      {member.college.logoUrl ? (
+                        <img
+                          src={member.college.logoUrl}
+                          alt={member.college.name}
+                          className="h-6 w-6 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
+                          <Building2 className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium leading-none">
+                          {member.college.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {member.college.code} ·{" "}
+                          {[member.college.city, member.college.state]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={
+                        member.role === "admin" ? "default" : "secondary"
+                      }
+                      className="text-[10px] capitalize"
+                    >
+                      {member.role}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-4 border rounded-lg border-dashed">
+                No colleges have joined yet. Share the code above to map
+                affiliated colleges.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 2. Member of a group
+  if (groupData?.type === "member" && groupData.membership) {
+    const group = groupData.membership.group;
+    return (
+      <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Network className="h-5 w-5 text-primary" /> Institution Group
+            </CardTitle>
+            <CardDescription>
+              Your college is mapped under a parent institution group.
+            </CardDescription>
+          </div>
+          <Badge variant="secondary" className="text-[10px]">
+            Group Member
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Parent Group
+            </p>
+            <p className="text-sm font-bold text-primary">{group.name}</p>
+            {group.description && (
+              <p className="text-xs text-muted-foreground">
+                {group.description}
+              </p>
+            )}
+          </div>
+          <div className="flex justify-between items-center text-xs text-muted-foreground pt-1">
+            <span>Joined via Code</span>
+            <span>
+              {new Date(groupData.membership.joinedAt).toLocaleDateString()}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 3. Not in any group
+  return (
+    <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
+      <CardHeader>
+        <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <Network className="h-5 w-5 text-primary" /> Mapped Institution Group
+        </CardTitle>
+        <CardDescription>
+          Join a group to link your college with a parent university or group of
+          colleges.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleJoin} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="join-group-code">Group Code</Label>
+            <div className="flex gap-2">
+              <Input
+                id="join-group-code"
+                placeholder="e.g. IGC-ABCD-1234"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="font-mono tracking-widest text-center"
+              />
+              <Button
+                type="submit"
+                disabled={joinMutation.isPending || !code.trim()}
+                className="shrink-0"
+              >
+                {joinMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Join Group"
+                )}
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Ask your parent institution group administrator for the active
+              group join code.
+            </p>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

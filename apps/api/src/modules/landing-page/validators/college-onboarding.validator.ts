@@ -15,6 +15,7 @@ export const collegeOnboardingSchemas = {
   updateStatus: z.object({
     status: z.enum(["pending", "approved", "rejected"]),
     review_remarks: z.string().trim().optional(),
+    enableInstitutionGroup: z.boolean().optional(),
   }),
 
   list: z.object({

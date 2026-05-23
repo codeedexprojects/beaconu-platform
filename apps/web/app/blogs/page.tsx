@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, LogIn, LayoutDashboard, Eye, ArrowRight } from "lucide-react";
 import { cookies } from "next/headers";
-import { getPublicBlogs } from "@/lib/services/blogs.service";
+import { getPublicBlogs } from "@/lib/services/blogs.server";
 import { formatDate } from "@/lib/utils";
 import { BLOG_TOKEN_KEY } from "@/lib/constants";
 import { BlogHeader } from "@/components/blogs/BlogHeader";

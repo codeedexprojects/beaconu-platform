@@ -64,6 +64,32 @@ export interface PublicCollege {
   } | null;
   campuses: PublicCampus[];
   courses: PublicCourse[];
+  institutionGroups?: {
+    members: {
+      college: {
+        id: string;
+        name: string;
+        slug: string;
+        logoUrl: string | null;
+        city: string | null;
+        state: string | null;
+      };
+    }[];
+  }[];
+  institutionGroupMember?: {
+    group: {
+      members: {
+        college: {
+          id: string;
+          name: string;
+          slug: string;
+          logoUrl: string | null;
+          city: string | null;
+          state: string | null;
+        };
+      }[];
+    };
+  } | null;
 }
 
 export const publicCollegeService = {
