@@ -72,14 +72,15 @@ export function getPublicPortalUrl(
     return url.toString();
   }
 
-  // For localhost, format as http://slug.localhost:port/path
+  // For localhost, format as http://slug.localhost:port/college/slug
   if (baseUrl.includes("localhost")) {
     const port = baseUrl.split(":")[2] || "3001";
-    return `http://${slug}.localhost:${port}${normalizedPath === "/" ? "" : normalizedPath}`;
+    return `http://${slug}.localhost:${port}/college/${slug}${normalizedPath === "/" ? "" : normalizedPath}`;
   }
 
-  // For production, format as https://slug.domain/path
+  // For production, format as https://slug.domain/college/slug/path
   const url = new URL(baseUrl);
   const hostname = url.hostname;
-  return `${url.protocol}//${slug}.${hostname}${normalizedPath === "/" ? "" : normalizedPath}`;
+  const collegePath = `/college/${slug}${normalizedPath === "/" ? "" : normalizedPath}`;
+  return `${url.protocol}//${slug}.${hostname}${collegePath}`;
 }
