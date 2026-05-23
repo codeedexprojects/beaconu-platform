@@ -56,7 +56,9 @@ export function ProvisionSuccessModal({
             <div className="col-span-2 font-medium">{data.name}</div>
 
             <div className="text-muted-foreground">Subdomain:</div>
-            <div className="col-span-2 font-mono">{data.slug}.beaconu.com</div>
+            <div className="col-span-2 font-mono">
+              {data.slug}.beaconuedx.com
+            </div>
 
             <div className="text-muted-foreground">Admin Code:</div>
             <div className="col-span-2">{data.code}</div>
