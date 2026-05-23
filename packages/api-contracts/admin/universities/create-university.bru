@@ -23,8 +23,48 @@ body:json {
     "state": "Delhi",
     "city": "New Delhi",
     "accreditation": "NAAC A+",
-    "governance_details": "Central university established by Parliament",
-    "logo_url": ""
+    "cover_url": "",
+    "logo_url": "https://example.com/university-logo.png",
+    "metadata": {
+      "overview": {
+        "description": "Overview description",
+        "accolades": "Accolades",
+        "accolades_image_url": "https://example.com/accolades.png",
+        "accolades_description": "Accolades description",
+        "accolades_subdescription": "Accolades subdescription",
+        "established_date": "1922-02-01",
+        "nature_of_university": "Public",
+        "type_of_university": "Central University",
+        "district": "Central Delhi",
+        "state": "Delhi",
+        "pincode": "110007",
+        "discipline": {},
+        "videos": {}
+      }
+    },
+    "governance": {
+      "academic_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Chairperson",
+          "description": "Academic council description"
+        }
+      ],
+      "management_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Member",
+          "description": "Management council description"
+        }
+      ],
+      "organizational_organogram": {
+        "title": "Organizational Organogram",
+        "imageUrl": "",
+        "description": ""
+      }
+    }
   }
 }
 
@@ -47,9 +87,11 @@ docs {
   - state: String max 100 (optional)
   - city: String max 100 (optional)
   - accreditation: String max 255 (optional)
+  - cover_url: URL string or empty string placeholder (optional)
+  - logo_url: URL string or empty string placeholder (optional)
   - governance_details: Text (optional)
-  - logo_url: URL string (optional)
   - metadata: Object (optional)
+  - governance: Object with academic_council, management_council, organizational_organogram (optional)
 
   Requires: platform admin access token.
   Saves universityId to env for use in other requests.

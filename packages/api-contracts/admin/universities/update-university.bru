@@ -19,7 +19,31 @@ body:json {
   {
     "name": "University of Delhi",
     "city": "New Delhi",
-    "accreditation": "NAAC A++"
+    "accreditation": "NAAC A++",
+    "cover_url": "",
+    "governance": {
+      "academic_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Chairperson",
+          "description": "Updated academic council description"
+        }
+      ],
+      "management_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Member",
+          "description": "Updated management council description"
+        }
+      ],
+      "organizational_organogram": {
+        "title": "Organizational Organogram",
+        "imageUrl": "",
+        "description": ""
+      }
+    }
   }
 }
 
@@ -29,7 +53,7 @@ docs {
 
   Updatable fields:
   - university_type_id, name, slug, state, city, accreditation,
-    governance_details, logo_url, metadata
+    governance_details, cover_url, logo_url, metadata, governance
 
   Requires: platform admin access token.
 }

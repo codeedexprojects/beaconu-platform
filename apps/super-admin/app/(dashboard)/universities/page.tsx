@@ -66,9 +66,26 @@ function toSlug(value: string): string {
     .replace(/-+/g, "-");
 }
 
-type CouncilForm = {
+type GovernanceMemberForm = {
+  userPhotoUrl: string;
+  name: string;
+  designation: string;
   description: string;
-  members: string[];
+};
+
+type GovernanceCouncilForm = {
+  description: string;
+  members: GovernanceMemberForm[];
+};
+
+type UniversityGovernanceForm = {
+  academic_council: GovernanceCouncilForm;
+  management_council: GovernanceCouncilForm;
+  organizational_organogram: {
+    title: string;
+    imageUrl: string;
+    description: string;
+  };
 };
 
 type UniversityMetadataForm = {
@@ -90,12 +107,77 @@ type UniversityMetadataForm = {
     disciplineJson: string;
     videosJson: string;
   };
-  governance: {
-    academic_council: CouncilForm;
-    management_council: CouncilForm;
-    organizationalOrgaonagramJson: string;
-  };
 };
+
+function createEmptyGovernanceMember(): GovernanceMemberForm {
+  return {
+    userPhotoUrl: "",
+    name: "",
+    designation: "",
+    description: "",
+  };
+}
+
+function normalizeGovernanceMember(value: unknown): GovernanceMemberForm {
+  if (typeof value === "string") {
+    return {
+      ...createEmptyGovernanceMember(),
+      name: value,
+    };
+  }
+
+  if (!isRecord(value)) {
+    return createEmptyGovernanceMember();
+  }
+
+  return {
+    userPhotoUrl: asString(value.userPhotoUrl),
+    name: asString(value.name),
+    designation: asString(value.designation),
+    description: asString(value.description),
+  };
+}
+
+function normalizeGovernanceCouncil(value: unknown): GovernanceCouncilForm {
+  if (Array.isArray(value)) {
+    const members = value.map(normalizeGovernanceMember);
+    return {
+      description: "",
+      members: members.length ? members : [createEmptyGovernanceMember()],
+    };
+  }
+
+  if (!isRecord(value)) {
+    return {
+      description: "",
+      members: [createEmptyGovernanceMember()],
+    };
+  }
+
+  const membersValue = Array.isArray(value.members) ? value.members : [];
+  const members = membersValue.map(normalizeGovernanceMember);
+
+  return {
+    description: asString(value.description),
+    members: members.length ? members : [createEmptyGovernanceMember()],
+  };
+}
+
+function normalizeOrganogram(value: unknown) {
+  if (!isRecord(value)) {
+    return {
+      title: "",
+      imageUrl: "",
+      description: "",
+    };
+  }
+
+  return {
+    title: asString(value.title),
+    imageUrl: asString(value.imageUrl) || asString(value.image),
+    description: asString(value.description),
+  };
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -103,11 +185,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
-}
-
-function asMembers(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((v): v is string => typeof v === "string");
 }
 
 const EMPTY_METADATA_FORM: UniversityMetadataForm = {
@@ -129,16 +206,21 @@ const EMPTY_METADATA_FORM: UniversityMetadataForm = {
     disciplineJson: "{}",
     videosJson: "{}",
   },
-  governance: {
-    academic_council: {
-      description: "",
-      members: [""],
-    },
-    management_council: {
-      description: "",
-      members: [""],
-    },
-    organizationalOrgaonagramJson: "{}",
+};
+
+const EMPTY_GOVERNANCE_FORM: UniversityGovernanceForm = {
+  academic_council: {
+    description: "",
+    members: [createEmptyGovernanceMember()],
+  },
+  management_council: {
+    description: "",
+    members: [createEmptyGovernanceMember()],
+  },
+  organizational_organogram: {
+    title: "",
+    imageUrl: "",
+    description: "",
   },
 };
 
@@ -151,13 +233,6 @@ function toMetadataForm(
   const accolades = isRecord(overview.accolades) ? overview.accolades : {};
   const details = isRecord(overview.university_details)
     ? overview.university_details
-    : {};
-  const governance = isRecord(metadata.governance) ? metadata.governance : {};
-  const academicCouncil = isRecord(governance.academic_council)
-    ? governance.academic_council
-    : {};
-  const managementCouncil = isRecord(governance.management_council)
-    ? governance.management_council
     : {};
 
   return {
@@ -187,27 +262,31 @@ function toMetadataForm(
         2,
       ),
     },
-    governance: {
-      academic_council: {
-        description: asString(academicCouncil.description),
-        members: asMembers(academicCouncil.members).length
-          ? asMembers(academicCouncil.members)
-          : [""],
-      },
-      management_council: {
-        description: asString(managementCouncil.description),
-        members: asMembers(managementCouncil.members).length
-          ? asMembers(managementCouncil.members)
-          : [""],
-      },
-      organizationalOrgaonagramJson: JSON.stringify(
-        isRecord(governance.organizationalOrgaonagram)
-          ? governance.organizationalOrgaonagram
-          : {},
-        null,
-        2,
-      ),
-    },
+  };
+}
+
+function toGovernanceForm(
+  metadata?: Record<string, unknown>,
+): UniversityGovernanceForm {
+  if (!metadata) return EMPTY_GOVERNANCE_FORM;
+
+  const governance = isRecord(metadata.governance) ? metadata.governance : {};
+  const academicCouncil = normalizeGovernanceCouncil(
+    governance.academic_council,
+  );
+  const managementCouncil = normalizeGovernanceCouncil(
+    governance.management_council,
+  );
+  const organogramSource = isRecord(governance.organizational_organogram)
+    ? governance.organizational_organogram
+    : isRecord(governance.organizationalOrgaonagram)
+      ? governance.organizationalOrgaonagram
+      : {};
+
+  return {
+    academic_council: academicCouncil,
+    management_council: managementCouncil,
+    organizational_organogram: normalizeOrganogram(organogramSource),
   };
 }
 
@@ -253,23 +332,31 @@ function buildStructuredMetadata(
       ),
       videos: parseJsonObject(form.overview.videosJson, "Videos"),
     },
-    governance: {
-      academic_council: {
-        description: form.governance.academic_council.description,
-        members: form.governance.academic_council.members.filter((m) =>
-          m.trim(),
-        ),
-      },
-      management_council: {
-        description: form.governance.management_council.description,
-        members: form.governance.management_council.members.filter((m) =>
-          m.trim(),
-        ),
-      },
-      organizationalOrgaonagram: parseJsonObject(
-        form.governance.organizationalOrgaonagramJson,
-        "Organizational organogram",
-      ),
+  };
+}
+
+function buildStructuredGovernance(
+  form: UniversityGovernanceForm,
+): NonNullable<CreateUniversityInput["governance"]> {
+  return {
+    academic_council: form.academic_council.members.filter(
+      (member) =>
+        member.userPhotoUrl.trim() ||
+        member.name.trim() ||
+        member.designation.trim() ||
+        member.description.trim(),
+    ),
+    management_council: form.management_council.members.filter(
+      (member) =>
+        member.userPhotoUrl.trim() ||
+        member.name.trim() ||
+        member.designation.trim() ||
+        member.description.trim(),
+    ),
+    organizational_organogram: {
+      title: form.organizational_organogram.title,
+      imageUrl: form.organizational_organogram.imageUrl,
+      description: form.organizational_organogram.description,
     },
   };
 }
@@ -281,6 +368,7 @@ const EMPTY_CREATE_FORM: CreateUniversityInput = {
   state: "",
   city: "",
   accreditation: "",
+  cover_url: "",
   governance_details: "",
   logo_url: "",
   metadata: {},
@@ -305,8 +393,18 @@ export default function UniversitiesPage() {
   const [editForm, setEditForm] = useState<UpdateUniversityInput>({});
   const [createMetadataForm, setCreateMetadataForm] =
     useState<UniversityMetadataForm>(EMPTY_METADATA_FORM);
+  const [createGovernanceForm, setCreateGovernanceForm] =
+    useState<UniversityGovernanceForm>(EMPTY_GOVERNANCE_FORM);
   const [editMetadataForm, setEditMetadataForm] =
     useState<UniversityMetadataForm>(EMPTY_METADATA_FORM);
+  const [editGovernanceForm, setEditGovernanceForm] =
+    useState<UniversityGovernanceForm>(EMPTY_GOVERNANCE_FORM);
+  const [createMetadataTab, setCreateMetadataTab] = useState<
+    "overview" | "governance"
+  >("overview");
+  const [editMetadataTab, setEditMetadataTab] = useState<
+    "overview" | "governance"
+  >("overview");
 
   const filteredUniversities = useMemo(() => {
     const q = search.toLowerCase();
@@ -348,11 +446,13 @@ export default function UniversitiesPage() {
       ...(createForm.accreditation
         ? { accreditation: createForm.accreditation }
         : {}),
+      ...(createForm.cover_url ? { cover_url: createForm.cover_url } : {}),
       ...(createForm.governance_details
         ? { governance_details: createForm.governance_details }
         : {}),
       ...(createForm.logo_url ? { logo_url: createForm.logo_url } : {}),
       metadata,
+      governance: buildStructuredGovernance(createGovernanceForm),
     };
     createMutation.mutate(payload, {
       onSuccess: () => {
@@ -360,11 +460,13 @@ export default function UniversitiesPage() {
         setIsCreateModalOpen(false);
         setCreateForm(EMPTY_CREATE_FORM);
         setCreateMetadataForm(EMPTY_METADATA_FORM);
+        setCreateGovernanceForm(EMPTY_GOVERNANCE_FORM);
       },
     });
   };
 
   const handleEditClick = (university: University) => {
+    const metadata = university.metadata;
     setEditingUniversity(university);
     setEditForm({
       university_type_id: university.universityType.id,
@@ -373,10 +475,13 @@ export default function UniversitiesPage() {
       state: university.state ?? "",
       city: university.city ?? "",
       accreditation: university.accreditation ?? "",
+      cover_url: asString(metadata?.cover_url),
       governance_details: university.governanceDetails ?? "",
       logo_url: university.logoUrl ?? "",
     });
-    setEditMetadataForm(toMetadataForm(university.metadata));
+    setEditMetadataForm(toMetadataForm(metadata));
+    setEditGovernanceForm(toGovernanceForm(metadata));
+    setEditMetadataTab("overview");
     setIsEditModalOpen(true);
   };
 
@@ -393,6 +498,7 @@ export default function UniversitiesPage() {
     const payload: UpdateUniversityInput = {
       ...editForm,
       metadata,
+      governance: buildStructuredGovernance(editGovernanceForm),
     };
     updateMutation.mutate(
       { id: editingUniversity.id, data: payload },
@@ -402,6 +508,7 @@ export default function UniversitiesPage() {
           setIsEditModalOpen(false);
           setEditingUniversity(null);
           setEditMetadataForm(EMPTY_METADATA_FORM);
+          setEditGovernanceForm(EMPTY_GOVERNANCE_FORM);
         },
       },
     );
@@ -410,14 +517,11 @@ export default function UniversitiesPage() {
   const addCreateCouncilMember = (
     council: "academic_council" | "management_council",
   ) => {
-    setCreateMetadataForm((prev) => ({
+    setCreateGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: [...prev.governance[council].members, ""],
-        },
+      [council]: {
+        ...prev[council],
+        members: [...prev[council].members, createEmptyGovernanceMember()],
       },
     }));
   };
@@ -425,18 +529,16 @@ export default function UniversitiesPage() {
   const updateCreateCouncilMember = (
     council: "academic_council" | "management_council",
     index: number,
+    field: keyof GovernanceMemberForm,
     value: string,
   ) => {
-    setCreateMetadataForm((prev) => ({
+    setCreateGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: prev.governance[council].members.map((member, i) =>
-            i === index ? value : member,
-          ),
-        },
+      [council]: {
+        ...prev[council],
+        members: prev[council].members.map((member, i) =>
+          i === index ? { ...member, [field]: value } : member,
+        ),
       },
     }));
   };
@@ -445,16 +547,11 @@ export default function UniversitiesPage() {
     council: "academic_council" | "management_council",
     index: number,
   ) => {
-    setCreateMetadataForm((prev) => ({
+    setCreateGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: prev.governance[council].members.filter(
-            (_, i) => i !== index,
-          ),
-        },
+      [council]: {
+        ...prev[council],
+        members: prev[council].members.filter((_, i) => i !== index),
       },
     }));
   };
@@ -462,14 +559,11 @@ export default function UniversitiesPage() {
   const addEditCouncilMember = (
     council: "academic_council" | "management_council",
   ) => {
-    setEditMetadataForm((prev) => ({
+    setEditGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: [...prev.governance[council].members, ""],
-        },
+      [council]: {
+        ...prev[council],
+        members: [...prev[council].members, createEmptyGovernanceMember()],
       },
     }));
   };
@@ -477,18 +571,16 @@ export default function UniversitiesPage() {
   const updateEditCouncilMember = (
     council: "academic_council" | "management_council",
     index: number,
+    field: keyof GovernanceMemberForm,
     value: string,
   ) => {
-    setEditMetadataForm((prev) => ({
+    setEditGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: prev.governance[council].members.map((member, i) =>
-            i === index ? value : member,
-          ),
-        },
+      [council]: {
+        ...prev[council],
+        members: prev[council].members.map((member, i) =>
+          i === index ? { ...member, [field]: value } : member,
+        ),
       },
     }));
   };
@@ -497,16 +589,11 @@ export default function UniversitiesPage() {
     council: "academic_council" | "management_council",
     index: number,
   ) => {
-    setEditMetadataForm((prev) => ({
+    setEditGovernanceForm((prev) => ({
       ...prev,
-      governance: {
-        ...prev.governance,
-        [council]: {
-          ...prev.governance[council],
-          members: prev.governance[council].members.filter(
-            (_, i) => i !== index,
-          ),
-        },
+      [council]: {
+        ...prev[council],
+        members: prev[council].members.filter((_, i) => i !== index),
       },
     }));
   };
@@ -529,7 +616,13 @@ export default function UniversitiesPage() {
         title="Universities"
         description="Manage university groups and their affiliated colleges"
       >
-        <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+        <Button
+          className="gap-2"
+          onClick={() => {
+            setCreateMetadataTab("overview");
+            setIsCreateModalOpen(true);
+          }}
+        >
           <Plus className="h-4 w-4" />
           Add University
         </Button>
@@ -811,6 +904,23 @@ export default function UniversitiesPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="create-cover">
+                    Cover URL{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="create-cover"
+                    value={createForm.cover_url ?? ""}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({
+                        ...prev,
+                        cover_url: e.target.value,
+                      }))
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="create-logo">
                     Logo URL{" "}
                     <span className="text-muted-foreground">(optional)</span>
@@ -828,10 +938,37 @@ export default function UniversitiesPage() {
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold">
-                    Metadata: Overview
-                  </Label>
+                <div className="flex gap-2 rounded-lg bg-muted/60 p-1">
+                  <Button
+                    type="button"
+                    variant={
+                      createMetadataTab === "overview" ? "default" : "ghost"
+                    }
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setCreateMetadataTab("overview")}
+                  >
+                    Overview
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      createMetadataTab === "governance" ? "default" : "ghost"
+                    }
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setCreateMetadataTab("governance")}
+                  >
+                    Governance
+                  </Button>
+                </div>
+
+                <div
+                  className={
+                    createMetadataTab === "overview" ? "space-y-3" : "hidden"
+                  }
+                >
+                  <Label className="text-base font-semibold">Overview</Label>
                   <div className="space-y-2">
                     <Label htmlFor="create-overview-description">
                       Description
@@ -1067,10 +1204,14 @@ export default function UniversitiesPage() {
                       }
                     />
                   </div>
+                </div>
 
-                  <Label className="text-base font-semibold">
-                    Metadata: Governance
-                  </Label>
+                <div
+                  className={
+                    createMetadataTab === "governance" ? "space-y-3" : "hidden"
+                  }
+                >
+                  <Label className="text-base font-semibold">Governance</Label>
 
                   <div className="rounded-md border p-4 space-y-3">
                     <div className="flex items-center justify-between">
@@ -1090,49 +1231,81 @@ export default function UniversitiesPage() {
                       </Button>
                     </div>
                     <Input
-                      value={
-                        createMetadataForm.governance.academic_council
-                          .description
-                      }
+                      value={createGovernanceForm.academic_council.description}
                       onChange={(e) =>
-                        setCreateMetadataForm((prev) => ({
+                        setCreateGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            academic_council: {
-                              ...prev.governance.academic_council,
-                              description: e.target.value,
-                            },
+                          academic_council: {
+                            ...prev.academic_council,
+                            description: e.target.value,
                           },
                         }))
                       }
                       placeholder="Academic council description"
                     />
                     <div className="space-y-2">
-                      {createMetadataForm.governance.academic_council.members.map(
+                      {createGovernanceForm.academic_council.members.map(
                         (member, index) => (
                           <div
                             key={`create-academic-${index}`}
-                            className="flex gap-2"
+                            className="grid gap-2 md:grid-cols-2 xl:grid-cols-5"
                           >
                             <Input
-                              value={member}
+                              value={member.userPhotoUrl}
                               onChange={(e) =>
                                 updateCreateCouncilMember(
                                   "academic_council",
                                   index,
+                                  "userPhotoUrl",
                                   e.target.value,
                                 )
                               }
-                              placeholder={`Member ${index + 1}`}
+                              placeholder="User photo URL"
+                            />
+                            <Input
+                              value={member.name}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={`Member ${index + 1} name`}
+                            />
+                            <Input
+                              value={member.designation}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "designation",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Designation"
+                            />
+                            <Input
+                              value={member.description}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Description"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
+                              className="justify-self-start"
                               disabled={
-                                createMetadataForm.governance.academic_council
-                                  .members.length === 1
+                                createGovernanceForm.academic_council.members
+                                  .length === 1
                               }
                               onClick={() =>
                                 removeCreateCouncilMember(
@@ -1168,48 +1341,82 @@ export default function UniversitiesPage() {
                     </div>
                     <Input
                       value={
-                        createMetadataForm.governance.management_council
-                          .description
+                        createGovernanceForm.management_council.description
                       }
                       onChange={(e) =>
-                        setCreateMetadataForm((prev) => ({
+                        setCreateGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            management_council: {
-                              ...prev.governance.management_council,
-                              description: e.target.value,
-                            },
+                          management_council: {
+                            ...prev.management_council,
+                            description: e.target.value,
                           },
                         }))
                       }
                       placeholder="Management council description"
                     />
                     <div className="space-y-2">
-                      {createMetadataForm.governance.management_council.members.map(
+                      {createGovernanceForm.management_council.members.map(
                         (member, index) => (
                           <div
                             key={`create-management-${index}`}
-                            className="flex gap-2"
+                            className="grid gap-2 md:grid-cols-2 xl:grid-cols-5"
                           >
                             <Input
-                              value={member}
+                              value={member.userPhotoUrl}
                               onChange={(e) =>
                                 updateCreateCouncilMember(
                                   "management_council",
                                   index,
+                                  "userPhotoUrl",
                                   e.target.value,
                                 )
                               }
-                              placeholder={`Member ${index + 1}`}
+                              placeholder="User photo URL"
+                            />
+                            <Input
+                              value={member.name}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={`Member ${index + 1} name`}
+                            />
+                            <Input
+                              value={member.designation}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "designation",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Designation"
+                            />
+                            <Input
+                              value={member.description}
+                              onChange={(e) =>
+                                updateCreateCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Description"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
+                              className="justify-self-start"
                               disabled={
-                                createMetadataForm.governance.management_council
-                                  .members.length === 1
+                                createGovernanceForm.management_council.members
+                                  .length === 1
                               }
                               onClick={() =>
                                 removeCreateCouncilMember(
@@ -1226,26 +1433,55 @@ export default function UniversitiesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="create-organogram-json">
-                      Organizational Organogram JSON
+                  <div className="rounded-md border p-4 space-y-3">
+                    <Label className="text-sm font-medium">
+                      Organizational Organogram
                     </Label>
-                    <textarea
-                      id="create-organogram-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    <Input
                       value={
-                        createMetadataForm.governance
-                          .organizationalOrgaonagramJson
+                        createGovernanceForm.organizational_organogram.title
                       }
                       onChange={(e) =>
-                        setCreateMetadataForm((prev) => ({
+                        setCreateGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            organizationalOrgaonagramJson: e.target.value,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            title: e.target.value,
                           },
                         }))
                       }
+                      placeholder="Title"
+                    />
+                    <Input
+                      value={
+                        createGovernanceForm.organizational_organogram.imageUrl
+                      }
+                      onChange={(e) =>
+                        setCreateGovernanceForm((prev) => ({
+                          ...prev,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            imageUrl: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="Image URL"
+                    />
+                    <Input
+                      value={
+                        createGovernanceForm.organizational_organogram
+                          .description
+                      }
+                      onChange={(e) =>
+                        setCreateGovernanceForm((prev) => ({
+                          ...prev,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            description: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="Description"
                     />
                   </div>
                 </div>
@@ -1394,6 +1630,23 @@ export default function UniversitiesPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="edit-cover">
+                    Cover URL{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="edit-cover"
+                    value={editForm.cover_url ?? ""}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        cover_url: e.target.value,
+                      }))
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="edit-logo">
                     Logo URL{" "}
                     <span className="text-muted-foreground">(optional)</span>
@@ -1411,10 +1664,37 @@ export default function UniversitiesPage() {
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold">
-                    Metadata: Overview
-                  </Label>
+                <div className="flex gap-2 rounded-lg bg-muted/60 p-1">
+                  <Button
+                    type="button"
+                    variant={
+                      editMetadataTab === "overview" ? "default" : "ghost"
+                    }
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEditMetadataTab("overview")}
+                  >
+                    Overview
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      editMetadataTab === "governance" ? "default" : "ghost"
+                    }
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEditMetadataTab("governance")}
+                  >
+                    Governance
+                  </Button>
+                </div>
+
+                <div
+                  className={
+                    editMetadataTab === "overview" ? "space-y-3" : "hidden"
+                  }
+                >
+                  <Label className="text-base font-semibold">Overview</Label>
                   <div className="space-y-2">
                     <Label htmlFor="edit-overview-description">
                       Description
@@ -1646,10 +1926,14 @@ export default function UniversitiesPage() {
                       }
                     />
                   </div>
+                </div>
 
-                  <Label className="text-base font-semibold">
-                    Metadata: Governance
-                  </Label>
+                <div
+                  className={
+                    editMetadataTab === "governance" ? "space-y-3" : "hidden"
+                  }
+                >
+                  <Label className="text-base font-semibold">Governance</Label>
 
                   <div className="rounded-md border p-4 space-y-3">
                     <div className="flex items-center justify-between">
@@ -1667,48 +1951,81 @@ export default function UniversitiesPage() {
                       </Button>
                     </div>
                     <Input
-                      value={
-                        editMetadataForm.governance.academic_council.description
-                      }
+                      value={editGovernanceForm.academic_council.description}
                       onChange={(e) =>
-                        setEditMetadataForm((prev) => ({
+                        setEditGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            academic_council: {
-                              ...prev.governance.academic_council,
-                              description: e.target.value,
-                            },
+                          academic_council: {
+                            ...prev.academic_council,
+                            description: e.target.value,
                           },
                         }))
                       }
                       placeholder="Academic council description"
                     />
                     <div className="space-y-2">
-                      {editMetadataForm.governance.academic_council.members.map(
+                      {editGovernanceForm.academic_council.members.map(
                         (member, index) => (
                           <div
                             key={`edit-academic-${index}`}
-                            className="flex gap-2"
+                            className="grid gap-2 md:grid-cols-2 xl:grid-cols-5"
                           >
                             <Input
-                              value={member}
+                              value={member.userPhotoUrl}
                               onChange={(e) =>
                                 updateEditCouncilMember(
                                   "academic_council",
                                   index,
+                                  "userPhotoUrl",
                                   e.target.value,
                                 )
                               }
-                              placeholder={`Member ${index + 1}`}
+                              placeholder="User photo URL"
+                            />
+                            <Input
+                              value={member.name}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={`Member ${index + 1} name`}
+                            />
+                            <Input
+                              value={member.designation}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "designation",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Designation"
+                            />
+                            <Input
+                              value={member.description}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "academic_council",
+                                  index,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Description"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
+                              className="justify-self-start"
                               disabled={
-                                editMetadataForm.governance.academic_council
-                                  .members.length === 1
+                                editGovernanceForm.academic_council.members
+                                  .length === 1
                               }
                               onClick={() =>
                                 removeEditCouncilMember(
@@ -1743,49 +2060,81 @@ export default function UniversitiesPage() {
                       </Button>
                     </div>
                     <Input
-                      value={
-                        editMetadataForm.governance.management_council
-                          .description
-                      }
+                      value={editGovernanceForm.management_council.description}
                       onChange={(e) =>
-                        setEditMetadataForm((prev) => ({
+                        setEditGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            management_council: {
-                              ...prev.governance.management_council,
-                              description: e.target.value,
-                            },
+                          management_council: {
+                            ...prev.management_council,
+                            description: e.target.value,
                           },
                         }))
                       }
                       placeholder="Management council description"
                     />
                     <div className="space-y-2">
-                      {editMetadataForm.governance.management_council.members.map(
+                      {editGovernanceForm.management_council.members.map(
                         (member, index) => (
                           <div
                             key={`edit-management-${index}`}
-                            className="flex gap-2"
+                            className="grid gap-2 md:grid-cols-2 xl:grid-cols-5"
                           >
                             <Input
-                              value={member}
+                              value={member.userPhotoUrl}
                               onChange={(e) =>
                                 updateEditCouncilMember(
                                   "management_council",
                                   index,
+                                  "userPhotoUrl",
                                   e.target.value,
                                 )
                               }
-                              placeholder={`Member ${index + 1}`}
+                              placeholder="User photo URL"
+                            />
+                            <Input
+                              value={member.name}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder={`Member ${index + 1} name`}
+                            />
+                            <Input
+                              value={member.designation}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "designation",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Designation"
+                            />
+                            <Input
+                              value={member.description}
+                              onChange={(e) =>
+                                updateEditCouncilMember(
+                                  "management_council",
+                                  index,
+                                  "description",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Description"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
+                              className="justify-self-start"
                               disabled={
-                                editMetadataForm.governance.management_council
-                                  .members.length === 1
+                                editGovernanceForm.management_council.members
+                                  .length === 1
                               }
                               onClick={() =>
                                 removeEditCouncilMember(
@@ -1802,26 +2151,52 @@ export default function UniversitiesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-organogram-json">
-                      Organizational Organogram JSON
+                  <div className="rounded-md border p-4 space-y-3">
+                    <Label className="text-sm font-medium">
+                      Organizational Organogram
                     </Label>
-                    <textarea
-                      id="edit-organogram-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={
-                        editMetadataForm.governance
-                          .organizationalOrgaonagramJson
-                      }
+                    <Input
+                      value={editGovernanceForm.organizational_organogram.title}
                       onChange={(e) =>
-                        setEditMetadataForm((prev) => ({
+                        setEditGovernanceForm((prev) => ({
                           ...prev,
-                          governance: {
-                            ...prev.governance,
-                            organizationalOrgaonagramJson: e.target.value,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            title: e.target.value,
                           },
                         }))
                       }
+                      placeholder="Title"
+                    />
+                    <Input
+                      value={
+                        editGovernanceForm.organizational_organogram.imageUrl
+                      }
+                      onChange={(e) =>
+                        setEditGovernanceForm((prev) => ({
+                          ...prev,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            imageUrl: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="Image URL"
+                    />
+                    <Input
+                      value={
+                        editGovernanceForm.organizational_organogram.description
+                      }
+                      onChange={(e) =>
+                        setEditGovernanceForm((prev) => ({
+                          ...prev,
+                          organizational_organogram: {
+                            ...prev.organizational_organogram,
+                            description: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="Description"
                     />
                   </div>
                 </div>
