@@ -122,6 +122,16 @@ export function CollegeLeadDetailModal({
                 </p>
               </div>
             )}
+            {lead.groupCode && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase mb-1">
+                  Requested Group
+                </p>
+                <p className="font-mono text-sm tracking-wide text-primary">
+                  {lead.groupCode}
+                </p>
+              </div>
+            )}
           </div>
 
           {lead.message && (
@@ -191,6 +201,19 @@ export function CollegeLeadDetailModal({
                     </a>
                   </div>
                 </div>
+
+                {lead.createdCollege?.ownedGroupCode && (
+                  <div className="pt-2 border-t border-emerald-100/50">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                      Institution Group Code
+                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-sm text-emerald-900 break-all select-all font-medium bg-emerald-100/50 px-2 py-0.5 rounded">
+                        {lead.createdCollege.ownedGroupCode}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -13,6 +13,7 @@ export const updateCollegeProfileSchema = z.object({
   district: z.string().trim().max(100).optional().nullable(),
   state: z.string().trim().max(100).optional().nullable(),
   pinCode: z.string().trim().max(10).optional().nullable(),
+  requestedGroupCode: z.string().trim().max(30).optional().nullable(),
   profileSections: z.record(z.string(), z.unknown()).optional(),
   settings: z.record(z.string(), z.unknown()).optional(),
 });

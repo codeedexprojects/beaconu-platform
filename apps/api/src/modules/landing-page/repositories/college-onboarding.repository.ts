@@ -31,7 +31,13 @@ export class CollegeOnboardingRepository {
           select: { id: true, fullName: true, email: true },
         },
         createdCollege: {
-          select: { id: true, slug: true },
+          select: {
+            id: true,
+            slug: true,
+            institutionGroups: {
+              select: { groupCode: true },
+            },
+          },
         },
       },
     });
@@ -79,7 +85,13 @@ export class CollegeOnboardingRepository {
             select: { id: true, fullName: true, email: true },
           },
           createdCollege: {
-            select: { id: true, slug: true },
+            select: {
+              id: true,
+              slug: true,
+              institutionGroups: {
+                select: { groupCode: true },
+              },
+            },
           },
         },
       }),

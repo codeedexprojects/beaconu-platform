@@ -63,6 +63,43 @@ export interface CollegeStats {
   active: number;
 }
 
+export interface InstitutionGroupMember {
+  id: string;
+  role: string;
+  joinedVia: string;
+  joinedAt: string;
+  college: {
+    id: string;
+    name: string;
+    slug: string;
+    code: string;
+    city: string | null;
+    state: string | null;
+    status: string;
+    logoUrl: string | null;
+  };
+}
+
+export interface InstitutionGroup {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  groupCode: string;
+  createdByCollegeId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByCollege: {
+    id: string;
+    name: string;
+    slug: string;
+    code: string;
+  };
+  members: InstitutionGroupMember[];
+}
+
 export const collegesService = {
   getAll: (filters?: {
     search?: string;
@@ -85,4 +122,25 @@ export const collegesService = {
     api.get<CollegeDetail>(`/api/v1/admin/colleges/${id}`),
 
   getStats: () => api.get<CollegeStats>("/api/v1/admin/colleges/stats"),
+
+  // ── Institution Group ─────────────────────────────────────────────────
+  getGroup: (collegeId: string) =>
+    api.get<InstitutionGroup | null>(
+      `/api/v1/admin/colleges/${collegeId}/group`,
+    ),
+
+  enableGroup: (
+    collegeId: string,
+    data: { name: string; description?: string },
+  ) =>
+    api.post<InstitutionGroup>(
+      `/api/v1/admin/colleges/${collegeId}/group/enable`,
+      data,
+    ),
+
+  disableGroup: (collegeId: string) =>
+    api.post<InstitutionGroup>(
+      `/api/v1/admin/colleges/${collegeId}/group/disable`,
+      {},
+    ),
 };

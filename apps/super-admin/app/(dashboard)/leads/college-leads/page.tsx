@@ -102,6 +102,7 @@ export default function CollegeLeadsPage() {
   const handleUpdateStatus = (data: {
     status: string;
     review_remarks?: string;
+    enableInstitutionGroup?: boolean;
   }) => {
     if (!selectedLead) return;
     updateStatus(
@@ -109,6 +110,7 @@ export default function CollegeLeadsPage() {
         id: selectedLead.id,
         status: data.status,
         review_remarks: data.review_remarks,
+        enableInstitutionGroup: data.enableInstitutionGroup,
       },
       {
         onSuccess: (response) => {

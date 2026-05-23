@@ -8,6 +8,7 @@ import {
   CreateCourseData,
   UpdateCourseData,
 } from "../validators/college-registration.validator";
+import { InstitutionGroupService } from "./institution-group.service";
 
 export class CollegeRegistrationService {
   // ── College Profile ────────────────────────────────────────────────────────
@@ -75,7 +76,17 @@ export class CollegeRegistrationService {
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
 
-    return CollegeRegistrationRepository.finalizeCollege(collegeId);
+    const finalizedCollege =
+      await CollegeRegistrationRepository.finalizeCollege(collegeId);
+
+    if (college.requestedGroupCode) {
+      await InstitutionGroupService.joinGroupByCode(
+        collegeId,
+        college.requestedGroupCode,
+      );
+    }
+
+    return finalizedCollege;
   }
 
   // ── Campuses ───────────────────────────────────────────────────────────────

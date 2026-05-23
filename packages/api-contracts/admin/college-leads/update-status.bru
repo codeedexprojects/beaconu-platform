@@ -17,7 +17,8 @@ headers {
 
 body:json {
   {
-    "status": "contacted"
+    "status": "approved",
+    "review_remarks": "Verified details and approved for provisioning."
   }
 }
 
@@ -25,7 +26,8 @@ docs {
   Updates the status of a college onboarding lead.
 
   Fields:
-  - status: New status string (required)
+  - status: New status (required: pending, approved, rejected)
+  - review_remarks: Reviewer note (optional)
 
   Requires: platform admin access token.
 }

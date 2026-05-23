@@ -20,6 +20,7 @@ export interface CollegeProfile {
   pinCode: string | null;
   logoUrl: string | null;
   coverImageUrl: string | null;
+  requestedGroupCode: string | null;
   profileSections: Record<string, any>;
   settings: Record<string, unknown>;
   totalCourses?: number;
@@ -58,6 +59,7 @@ export interface UpdateCollegeProfileInput {
   pinCode?: string;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
+  requestedGroupCode?: string | null;
   profileSections?: Record<string, any>;
 }
 
@@ -266,4 +268,74 @@ export async function createCollegeCommuteRoute(
 
 export async function deleteCollegeCommuteRoute(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/commute/${id}`);
+}
+
+export interface MyGroupMembershipResponse {
+  type: "owner" | "member";
+  group?: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    logoUrl: string | null;
+    groupCode: string;
+    createdByCollegeId: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    createdByCollege: {
+      id: string;
+      name: string;
+      slug: string;
+      code: string;
+    };
+    members: Array<{
+      id: string;
+      role: string;
+      joinedVia: string;
+      joinedAt: string;
+      college: {
+        id: string;
+        name: string;
+        slug: string;
+        code: string;
+        city: string | null;
+        state: string | null;
+        status: string;
+        logoUrl: string | null;
+      };
+    }>;
+  };
+  membership?: {
+    id: string;
+    groupId: string;
+    collegeId: string;
+    role: string;
+    joinedVia: string;
+    joinedAt: string;
+    group: {
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      logoUrl: string | null;
+      groupCode: string;
+      createdByCollegeId: string;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+  };
+}
+
+export async function getMyInstitutionGroup(): Promise<MyGroupMembershipResponse | null> {
+  return api.get<MyGroupMembershipResponse | null>(
+    "/api/v1/college-admin/institution-group",
+  );
+}
+
+export async function joinInstitutionGroup(group_code: string): Promise<any> {
+  return api.post<any>("/api/v1/college-admin/institution-group/join", {
+    group_code,
+  });
 }

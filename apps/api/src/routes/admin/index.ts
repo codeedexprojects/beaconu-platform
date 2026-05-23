@@ -10,6 +10,7 @@ import adminBlogRoutes from "@/modules/content/routes/platform-admin.routes";
 import platformAdminMgmtRoutes from "@/modules/platform-admin/routes/platform-admin-mgmt.routes";
 import platformPermissionsRoutes from "@/modules/platform-admin/routes/platform-permissions.routes";
 import collegeDashboardRoutes from "@/modules/colleges/routes/college-dashboard.routes";
+import { adminInstitutionGroupRouter } from "@/modules/colleges/routes/institution-group.routes";
 import newsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts.routes";
 import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.routes";
 
@@ -27,6 +28,7 @@ router.use("/entrance-exams", entranceExamsRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);
+router.use("/colleges/:id", adminInstitutionGroupRouter);
 router.use("/blogs", adminBlogRoutes);
 
 export default router;

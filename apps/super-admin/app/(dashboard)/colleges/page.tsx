@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Building2,
   Search,
@@ -12,12 +13,18 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  X,
+  Copy,
+  Network,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -27,6 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useColleges, useCollegeStats } from "@/hooks/use-colleges";
+import {
+  useInstitutionGroup,
+  useEnableInstitutionGroup,
+  useDisableInstitutionGroup,
+} from "@/hooks/use-institution-groups";
+import type { CollegeSummary } from "@/lib/services/colleges.service";
 
 const STATUS_CONFIG: Record<
   string,
@@ -48,10 +61,307 @@ const STATUS_CONFIG: Record<
   },
 };
 
+// ── Institution Group Modal ─────────────────────────────────────────────
+
+function InstitutionGroupModal({
+  college,
+  onClose,
+}: {
+  college: CollegeSummary;
+  onClose: () => void;
+}) {
+  const [groupName, setGroupName] = useState(college.name + " Group");
+  const [groupDescription, setGroupDescription] = useState("");
+
+  const { data: group, isLoading, refetch } = useInstitutionGroup(college.id);
+
+  const enableMutation = useEnableInstitutionGroup();
+  const disableMutation = useDisableInstitutionGroup();
+
+  const hasGroup = !!group && group.status === "active";
+  const hasInactiveGroup = !!group && group.status === "inactive";
+
+  const handleEnable = () => {
+    if (!groupName.trim()) {
+      toast.error("Group name is required");
+      return;
+    }
+    enableMutation.mutate(
+      {
+        collegeId: college.id,
+        data: {
+          name: groupName.trim(),
+          description: groupDescription.trim() || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Institution group enabled!");
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(
+            error instanceof Error ? error.message : "Failed to enable group",
+          );
+        },
+      },
+    );
+  };
+
+  const handleDisable = () => {
+    if (
+      !confirm(
+        "Disable this institution group? New colleges will no longer be able to join using the code.",
+      )
+    )
+      return;
+    disableMutation.mutate(college.id, {
+      onSuccess: () => {
+        toast.success("Institution group disabled");
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to disable group",
+        );
+      },
+    });
+  };
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("Group code copied!");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <Card className="w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+              <Network className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg leading-none">
+                Institution Group
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {college.name}
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Content */}
+        <CardContent className="p-6 space-y-6 overflow-y-auto flex-1">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : hasGroup ? (
+            /* ── Group is ACTIVE ──────────────────────────── */
+            <>
+              {/* Group Code */}
+              <div className="rounded-lg border bg-emerald-50 dark:bg-emerald-950/20 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                    Group Code
+                  </Label>
+                  <Badge variant="default" className="bg-emerald-600 text-xs">
+                    Active
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xl font-bold font-mono tracking-widest text-emerald-800 dark:text-emerald-300">
+                    {group.groupCode}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 shrink-0"
+                    onClick={() => copyCode(group.groupCode)}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Share this code with affiliated colleges so they can join this
+                  group.
+                </p>
+              </div>
+
+              {/* Group Info */}
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium">{group.name}</p>
+                {group.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {group.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Member List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Member Colleges ({group.members?.length ?? 0})
+                  </Label>
+                </div>
+                {group.members && group.members.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {group.members.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between rounded-lg border px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          {member.college.logoUrl ? (
+                            <img
+                              src={member.college.logoUrl}
+                              alt={member.college.name}
+                              className="h-6 w-6 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
+                              <Building2 className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-medium leading-none">
+                              {member.college.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {member.college.code} ·{" "}
+                              {[member.college.city, member.college.state]
+                                .filter(Boolean)
+                                .join(", ") || "—"}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            member.role === "admin" ? "default" : "secondary"
+                          }
+                          className="text-[10px] capitalize"
+                        >
+                          {member.role}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
+                    No colleges have joined yet. Share the group code above.
+                  </p>
+                )}
+              </div>
+
+              {/* Disable Button */}
+              <div className="pt-2 border-t">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDisable}
+                  disabled={disableMutation.isPending}
+                  className="w-full"
+                >
+                  {disableMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Disable Institution Group
+                </Button>
+              </div>
+            </>
+          ) : (
+            /* ── Group NOT active (create or reactivate) ──── */
+            <div className="space-y-4">
+              {hasInactiveGroup && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3">
+                  <p className="text-sm text-amber-800 dark:text-amber-400">
+                    This college had an institution group that was disabled. You
+                    can reactivate it below.
+                  </p>
+                </div>
+              )}
+
+              <div className="rounded-lg border p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+                    <Network className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Enable Institution Group</p>
+                    <p className="text-xs text-muted-foreground">
+                      A unique code will be generated for affiliated colleges to
+                      join.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="group-name" className="text-sm">
+                      Group Name
+                    </Label>
+                    <Input
+                      id="group-name"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder="e.g. Delhi University Group"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="group-desc" className="text-sm">
+                      Description{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Textarea
+                      id="group-desc"
+                      value={groupDescription}
+                      onChange={(e) => setGroupDescription(e.target.value)}
+                      placeholder="Brief description of this institution group..."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={handleEnable}
+                  disabled={enableMutation.isPending || !groupName.trim()}
+                >
+                  {enableMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Network className="h-4 w-4 mr-2" />
+                  )}
+                  {hasInactiveGroup
+                    ? "Reactivate Group"
+                    : "Enable & Generate Code"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Main Page ───────────────────────────────────────────────────────────
+
 export default function CollegesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
+  const [selectedCollege, setSelectedCollege] = useState<CollegeSummary | null>(
+    null,
+  );
 
   const getCollegeLink = (slug: string) => {
     if (typeof window === "undefined") return "";
@@ -293,9 +603,17 @@ export default function CollegesPage() {
                         </TableCell>
 
                         <TableCell>
-                          <Button variant="ghost" size="sm" className="text-xs">
-                            View
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs gap-1"
+                              onClick={() => setSelectedCollege(college)}
+                            >
+                              <Network className="h-3 w-3" />
+                              Group
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -333,6 +651,14 @@ export default function CollegesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Institution Group Modal */}
+      {selectedCollege && (
+        <InstitutionGroupModal
+          college={selectedCollege}
+          onClose={() => setSelectedCollege(null)}
+        />
+      )}
     </div>
   );
 }
