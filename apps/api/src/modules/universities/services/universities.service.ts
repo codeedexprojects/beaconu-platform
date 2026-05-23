@@ -6,6 +6,26 @@ import {
   UpdateUniversityInput,
 } from "../validators/universities.validator";
 
+function buildUniversityMetadata(
+  data:
+    | Pick<CreateUniversityInput, "metadata" | "cover_url" | "governance">
+    | Pick<UpdateUniversityInput, "metadata" | "cover_url" | "governance">,
+) {
+  const metadata: Record<string, unknown> = {
+    ...(data.metadata ?? {}),
+  };
+
+  if (data.cover_url !== undefined) {
+    metadata.cover_url = data.cover_url;
+  }
+
+  if (data.governance !== undefined) {
+    metadata.governance = data.governance;
+  }
+
+  return Object.keys(metadata).length > 0 ? metadata : undefined;
+}
+
 export class UniversityService {
   static async create(data: CreateUniversityInput) {
     const existingType = await UniversityTypeRepository.findById(
@@ -25,7 +45,7 @@ export class UniversityService {
       accreditation: data.accreditation,
       governanceDetails: data.governance_details,
       logoUrl: data.logo_url,
-      metadata: data.metadata,
+      metadata: buildUniversityMetadata(data),
     });
   }
 
@@ -46,6 +66,8 @@ export class UniversityService {
         throw new ConflictError("University slug already exists");
     }
 
+    const metadata = buildUniversityMetadata(data);
+
     return UniversityRepository.updateById(id, {
       ...(data.university_type_id !== undefined
         ? { universityTypeId: data.university_type_id }
@@ -61,7 +83,7 @@ export class UniversityService {
         ? { governanceDetails: data.governance_details }
         : {}),
       ...(data.logo_url !== undefined ? { logoUrl: data.logo_url } : {}),
-      ...(data.metadata !== undefined ? { metadata: data.metadata } : {}),
+      ...(metadata !== undefined ? { metadata } : {}),
     });
   }
 
