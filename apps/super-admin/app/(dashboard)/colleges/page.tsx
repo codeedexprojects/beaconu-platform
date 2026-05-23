@@ -40,6 +40,7 @@ import {
   useDisableInstitutionGroup,
 } from "@/hooks/use-institution-groups";
 import type { CollegeSummary } from "@/lib/services/colleges.service";
+import { getCollegeLink } from "@/lib/college-url";
 
 const STATUS_CONFIG: Record<
   string,
@@ -363,19 +364,7 @@ export default function CollegesPage() {
     null,
   );
 
-  const getCollegeLink = (slug: string) => {
-    if (typeof window === "undefined") return "";
-    const hostname = window.location.hostname;
-    if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-      return `http://${slug}.localhost:3002`;
-    }
-    const parts = hostname.split(".");
-    if (parts.length >= 2) {
-      const baseDomain = parts.slice(-2).join(".");
-      return `https://${slug}.${baseDomain}`;
-    }
-    return `https://${slug}.beaconu.com`;
-  };
+  // getCollegeLink is imported from @/lib/college-url
 
   const { data: stats } = useCollegeStats();
   const {

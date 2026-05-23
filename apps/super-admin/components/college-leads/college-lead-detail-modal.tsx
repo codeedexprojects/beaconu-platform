@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { CollegeLead } from "@/lib/services/college-leads.service";
+import { getCollegeLink } from "@/lib/college-url";
 
 const STATUS_CONFIG = {
   pending: { label: "Pending", variant: "warning" as const },
@@ -37,20 +38,6 @@ export function CollegeLeadDetailModal({
   if (!isOpen || !lead) return null;
 
   const statusConfig = STATUS_CONFIG[lead.status];
-
-  const getCollegeLink = (slug: string, port: string = "3002") => {
-    if (typeof window === "undefined") return "";
-    const hostname = window.location.hostname;
-    if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-      return `http://${slug}.localhost:${port}`;
-    }
-    const parts = hostname.split(".");
-    if (parts.length >= 2) {
-      const baseDomain = parts.slice(-2).join(".");
-      return `https://${slug}.${baseDomain}`;
-    }
-    return `https://${slug}.beaconu.com`;
-  };
 
   const publicPortalLink = lead.createdCollege
     ? getCollegeLink(lead.createdCollege.slug, "3001")
