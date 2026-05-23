@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@beaconu/types', '@beaconu/validation', '@beaconu/utils'],
-}
+  allowedDevOrigins: ["admin.localhost", "*.admin.localhost"],
+  transpilePackages: [
+    "@beaconu/types",
+    "@beaconu/validation",
+    "@beaconu/utils",
+  ],
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

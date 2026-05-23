@@ -3,34 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { extractCollegeSlugFromHost } from "@/lib/host-routing";
 
 export default function HomePage(): React.JSX.Element {
   const router = useRouter();
 
   useEffect(() => {
-    // Extract subdomain from the current hostname
-    const hostname =
-      typeof window !== "undefined" ? window.location.hostname : "";
-    const isLocalhost = hostname.includes("localhost");
-
-    let subdomain = null;
-
-    if (isLocalhost) {
-      // localhost testing: anupam.localhost:3001
-      const parts = hostname.split(".");
-      if (parts.length > 1 && parts[0] !== "localhost") {
-        subdomain = parts[0];
-      }
-    } else {
-      // Production: anupam.beaconu.com
-      const parts = hostname.split(".");
-      if (parts.length >= 3) {
-        subdomain = parts[0];
-      }
-    }
+    const host = typeof window !== "undefined" ? window.location.host : "";
+    const subdomain = extractCollegeSlugFromHost(host);
 
     // If subdomain detected, redirect to college landing page
-    if (subdomain && subdomain !== "www") {
+    if (subdomain) {
       router.push(`/college/${subdomain}`);
     }
   }, [router]);
