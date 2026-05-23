@@ -61,26 +61,43 @@ export function getPublicPortalUrl(
   slug: string | null,
   path: string = "/",
 ): string {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_COLLEGE_WEB_URL ?? "http://localhost:3001";
-
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const pathSuffix = normalizedPath === "/" ? "" : normalizedPath;
 
   if (!slug) {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_COLLEGE_WEB_URL ?? "http://localhost:3001";
     const url = new URL(baseUrl);
     url.pathname = normalizedPath;
     return url.toString();
   }
 
-  // For localhost, format as http://slug.localhost:port/college/slug
-  if (baseUrl.includes("localhost")) {
-    const port = baseUrl.split(":")[2] || "3001";
-    return `http://${slug}.localhost:${port}/college/${slug}${normalizedPath === "/" ? "" : normalizedPath}`;
+  // If NEXT_PUBLIC_COLLEGE_WEB_URL is explicitly set, use it
+  const envUrl = process.env.NEXT_PUBLIC_COLLEGE_WEB_URL;
+  if (envUrl) {
+    if (envUrl.includes("localhost")) {
+      const port = envUrl.split(":")[2] || "3001";
+      return `http://${slug}.localhost:${port}/college/${slug}${pathSuffix}`;
+    }
+    const url = new URL(envUrl);
+    return `${url.protocol}//${slug}.${url.hostname}/college/${slug}${pathSuffix}`;
   }
 
-  // For production, format as https://slug.domain/college/slug/path
-  const url = new URL(baseUrl);
-  const hostname = url.hostname;
-  const collegePath = `/college/${slug}${normalizedPath === "/" ? "" : normalizedPath}`;
-  return `${url.protocol}//${slug}.${hostname}${collegePath}`;
+  // Fallback: detect from current window location
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    const isLocal =
+      hostname.includes("localhost") || hostname.includes("127.0.0.1");
+    if (isLocal) {
+      return `http://${slug}.localhost:3001/college/${slug}${pathSuffix}`;
+    }
+    // Production: derive base domain (e.g. admin.beaconuedx.com → beaconuedx.com)
+    const parts = hostname.split(".");
+    const baseDomain =
+      parts.length >= 2 ? parts.slice(-2).join(".") : "beaconuedx.com";
+    return `https://${slug}.${baseDomain}/college/${slug}${pathSuffix}`;
+  }
+
+  // SSR fallback
+  return `http://${slug}.localhost:3001/college/${slug}${pathSuffix}`;
 }

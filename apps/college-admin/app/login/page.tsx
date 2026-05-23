@@ -90,13 +90,15 @@ function LoginPageContent() {
     resolver: zodResolver(setupSchema as any),
   });
 
-  const { data: college, isLoading: isCollegeLoading } =
-    usePublicCollegeBySlug(collegeSlug);
   const {
     data: validationData,
     error: setupError,
     isLoading: isValidating,
   } = useVerifyCollegeSetupToken(token);
+
+  const effectiveSlug = validationData?.collegeSlug ?? collegeSlug;
+  const { data: college, isLoading: isCollegeLoading } =
+    usePublicCollegeBySlug(effectiveSlug);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
