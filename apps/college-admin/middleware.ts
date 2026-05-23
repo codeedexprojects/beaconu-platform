@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractCollegeSlugFromHost } from "@/lib/host-routing";
 
 const RESERVED_ROOT_ROUTES = new Set([
   "login",
@@ -9,29 +10,9 @@ const RESERVED_ROOT_ROUTES = new Set([
   "_next",
 ]);
 
-function getCollegeSlugFromHost(host?: string | null): string | null {
-  if (!host) return null;
-
-  const hostname = host.split(":")[0];
-  const parts = hostname.split(".").filter(Boolean);
-
-  if (parts.length === 0) return null;
-  if (parts[0] === "localhost") return null;
-
-  if (hostname.includes("localhost")) {
-    return parts[0] ?? null;
-  }
-
-  if (parts.length >= 3) {
-    return parts[0] ?? null;
-  }
-
-  return null;
-}
-
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const hostSlug = getCollegeSlugFromHost(request.headers.get("host"));
+  const hostSlug = extractCollegeSlugFromHost(request.headers.get("host"));
 
   if (
     path.startsWith("/_next") ||

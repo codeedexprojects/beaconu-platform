@@ -1,3 +1,5 @@
+import { extractCollegeSlugFromHost } from "./host-routing";
+
 const RESERVED_ROOT_ROUTES = new Set([
   "login",
   "setup-account",
@@ -7,23 +9,7 @@ const RESERVED_ROOT_ROUTES = new Set([
 ]);
 
 function getCollegeSlugFromHost(host?: string): string | null {
-  if (!host) return null;
-
-  const hostname = host.split(":")[0];
-  const hostSegments = hostname.split(".").filter(Boolean);
-
-  if (hostSegments.length === 0) return null;
-  if (hostSegments[0] === "localhost") return null;
-
-  if (hostname.includes("localhost")) {
-    return hostSegments[0] ?? null;
-  }
-
-  if (hostSegments.length >= 3) {
-    return hostSegments[0] ?? null;
-  }
-
-  return null;
+  return extractCollegeSlugFromHost(host);
 }
 
 function getCollegeSlugFromPathOnly(pathname: string): string | null {

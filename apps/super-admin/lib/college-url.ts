@@ -21,21 +21,34 @@ export function getCollegeLink(slug: string, port?: string): string {
 
     // If a port override is provided, swap it into the base URL
     if (port) {
+      const isAdminPort = port === "3002";
+
       try {
         const url = new URL(envBase);
         url.port = port;
-        return `${url.protocol}//${slug}.${url.hostname}:${url.port}`;
+        const localBaseHostname = isAdminPort
+          ? "admin.localhost"
+          : url.hostname;
+        return `${url.protocol}//${slug}.${localBaseHostname}:${url.port}`;
       } catch {
-        return `http://${slug}.localhost:${port}`;
+        return isAdminPort
+          ? `http://${slug}.admin.localhost:${port}`
+          : `http://${slug}.localhost:${port}`;
       }
     }
 
     try {
       const url = new URL(envBase);
       const portPart = url.port ? `:${url.port}` : "";
-      return `${url.protocol}//${slug}.${url.hostname}${portPart}`;
+      const isDefaultAdminLocal =
+        url.hostname === "localhost" && (!url.port || url.port === "3002");
+      const localBaseHostname = isDefaultAdminLocal
+        ? "admin.localhost"
+        : url.hostname;
+
+      return `${url.protocol}//${slug}.${localBaseHostname}${portPart}`;
     } catch {
-      return `http://${slug}.localhost:3002`;
+      return `http://${slug}.admin.localhost:3002`;
     }
   }
 
