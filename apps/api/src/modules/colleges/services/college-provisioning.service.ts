@@ -60,8 +60,17 @@ export class CollegeProvisioningService {
         onboardingRequestId: input.onboardingRequestId,
       });
 
-    const collegeAdminBaseUrl =
+    let collegeAdminBaseUrl =
       process.env.COLLEGE_ADMIN_URL ?? "http://localhost:3002";
+
+    // Auto-prepend protocol if missing (e.g. "admin.beaconuedx.com" → "https://admin.beaconuedx.com")
+    if (
+      !collegeAdminBaseUrl.startsWith("http://") &&
+      !collegeAdminBaseUrl.startsWith("https://")
+    ) {
+      collegeAdminBaseUrl = `https://${collegeAdminBaseUrl}`;
+    }
+
     const setupUrlBase = new URL(collegeAdminBaseUrl);
     const baseHostname = setupUrlBase.hostname;
     const isLocal =

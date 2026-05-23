@@ -102,12 +102,6 @@ export class CollegeOnboardingService {
     if (!existing)
       throw new NotFoundError("College onboarding request not found");
 
-    const updated = await CollegeOnboardingRepository.updateStatus(
-      id,
-      data,
-      reviewedBy,
-    );
-
     // Auto-provision college when approved
     let provisionedCollege: Awaited<
       ReturnType<typeof CollegeProvisioningService.provisionFromLead>
@@ -115,6 +109,7 @@ export class CollegeOnboardingService {
     let generatedGroupCode: string | null = null;
 
     if (data.status === "approved" && !existing.createdCollegeId) {
+      // Provision FIRST — if this fails, the lead stays "pending"
       provisionedCollege = await CollegeProvisioningService.provisionFromLead({
         collegeName: existing.collegeName,
         contactEmail: existing.contactEmail,
@@ -135,6 +130,13 @@ export class CollegeOnboardingService {
         generatedGroupCode = group?.groupCode || null;
       }
     }
+
+    // Only update status AFTER provisioning succeeds
+    const updated = await CollegeOnboardingRepository.updateStatus(
+      id,
+      data,
+      reviewedBy,
+    );
 
     return {
       id: updated.id,
