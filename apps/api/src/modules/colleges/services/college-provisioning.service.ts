@@ -63,16 +63,19 @@ export class CollegeProvisioningService {
     const collegeAdminBaseUrl =
       process.env.COLLEGE_ADMIN_URL ?? "http://localhost:3002";
     const setupUrlBase = new URL(collegeAdminBaseUrl);
-
-    // Local tenant admin domains should resolve as slug.admin.localhost.
     const baseHostname = setupUrlBase.hostname;
-    const isLocalhostBase = baseHostname === "localhost";
-    const localTenantBaseHostname = isLocalhostBase
-      ? "admin.localhost"
-      : baseHostname;
+    const isLocal =
+      baseHostname === "localhost" || baseHostname === "127.0.0.1";
 
-    setupUrlBase.hostname = `${slug}.${localTenantBaseHostname}`;
-    setupUrlBase.pathname = "/login";
+    if (isLocal) {
+      // Local: http://{slug}.admin.localhost:3002/{slug}/login?token=...
+      setupUrlBase.hostname = `${slug}.admin.localhost`;
+    } else {
+      // Production: e.g. https://admin.beaconuedx.com → https://{slug}.admin.beaconuedx.com
+      setupUrlBase.hostname = `${slug}.${baseHostname}`;
+    }
+
+    setupUrlBase.pathname = `/${slug}/login`;
     setupUrlBase.searchParams.set("token", setupToken);
     const setupUrl = setupUrlBase.toString();
 
