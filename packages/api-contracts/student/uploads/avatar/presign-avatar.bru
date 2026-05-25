@@ -1,0 +1,53 @@
+meta {
+  name: Presign Avatar Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/avatar/presign
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "mimeType": "image/jpeg",
+    "fileSizeBytes": 204800
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.key) {
+      bru.setEnvVar("uploadKey", data.data.key);
+      bru.setEnvVar("uploadUrl", data.data.uploadUrl);
+    }
+  }
+}
+
+docs {
+  Step 1 of 2 — Request a pre-signed PUT URL to upload a student avatar directly to S3.
+
+  After receiving the response:
+  1. PUT the file binary to `uploadUrl` with the matching Content-Type header
+  2. Call verify-avatar with the returned `key`
+
+  Body:
+  - mimeType (required): image/jpeg | image/png | image/webp | application/pdf
+  - fileSizeBytes (required): file size in bytes, max 10 MB (10485760)
+
+  Response:
+  - uploadUrl: pre-signed S3 PUT URL, valid for 5 minutes
+  - key: S3 object key — pass this to the verify endpoint
+  - expiresIn: 300 (seconds)
+}
