@@ -1,0 +1,22 @@
+meta {
+  name: Get College Lead
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/college-leads/{{collegeLeadId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns details for a single college onboarding lead.
+  
+  Requires: platform admin access token.
+}

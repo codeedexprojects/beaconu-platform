@@ -1,0 +1,22 @@
+meta {
+  name: Delete Campus
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/campuses/{{campusId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Soft-deletes a campus.
+  The record is not removed from the database.
+
+  Requires: staff access token.
+}

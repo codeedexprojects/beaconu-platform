@@ -1,0 +1,124 @@
+// ============================================================
+// MODULE 10 — COMMUTE
+// ============================================================
+
+model CommuteRoute {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String   @map("college_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college     College             @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  stops       CommuteRouteStop[]
+  buses       CommuteBus[]
+  enrollments CommuteEnrollment[]
+
+  @@index([collegeId], name: "idx_routes_college")
+  @@index([collegeId, isActive], name: "idx_routes_active")
+  @@map("commute_routes")
+}
+
+model CommuteRouteStop {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  routeId       String    @map("route_id") @db.Uuid
+  stopName      String    @map("stop_name") @db.VarChar(255)
+  landmark      String?   @db.VarChar(255)
+  morningTime   DateTime? @map("morning_time") @db.Time
+  eveningTime   DateTime? @map("evening_time") @db.Time
+  isPickupPoint Boolean   @default(true) @map("is_pickup_point")
+  stopOrder     Int       @map("stop_order")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  route       CommuteRoute        @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  enrollments CommuteEnrollment[]
+
+  @@unique([routeId, stopOrder], name: "uq_route_stop_order")
+  @@index([routeId], name: "idx_stops_route")
+  @@map("commute_route_stops")
+}
+
+model CommuteBus {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  routeId        String   @map("route_id") @db.Uuid
+  busNumber      String   @map("bus_number") @db.VarChar(20)
+  busName        String?  @map("bus_name") @db.VarChar(100)
+  busType        String?  @map("bus_type") @db.VarChar(50)
+  totalSeats     Int      @map("total_seats")
+  availableSeats Int      @map("available_seats")
+  driverName     String?  @map("driver_name") @db.VarChar(100)
+  driverPhone    String?  @map("driver_phone") @db.VarChar(20)
+  driverStatus   String   @default("off_duty") @map("driver_status") @db.VarChar(20)
+  monthlyFee     Decimal  @map("monthly_fee") @db.Decimal(10, 2)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  route       CommuteRoute         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  enrollments CommuteEnrollment[]
+  rideHistory CommuteRideHistory[]
+
+  @@index([routeId], name: "idx_buses_route")
+  @@index([routeId, isActive], name: "idx_buses_active")
+  @@index([availableSeats], name: "idx_buses_available")
+  @@map("commute_buses")
+}
+
+model CommuteEnrollment {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId     String    @map("student_id") @db.Uuid
+  collegeId     String    @map("college_id") @db.Uuid
+  routeId       String    @map("route_id") @db.Uuid
+  busId         String    @map("bus_id") @db.Uuid
+  pickupStopId  String    @map("pickup_stop_id") @db.Uuid
+  status        String    @default("active") @db.VarChar(20)
+  enrolledFrom  DateTime  @map("enrolled_from") @db.Date
+  enrolledUntil DateTime? @map("enrolled_until") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student     Student              @relation(fields: [studentId], references: [id])
+  college     College              @relation(fields: [collegeId], references: [id])
+  route       CommuteRoute         @relation(fields: [routeId], references: [id])
+  bus         CommuteBus           @relation(fields: [busId], references: [id])
+  pickupStop  CommuteRouteStop     @relation(fields: [pickupStopId], references: [id])
+  rideHistory CommuteRideHistory[]
+
+  @@unique([studentId, status], name: "uq_commute_student_active")
+  @@index([studentId], name: "idx_cenroll_student")
+  @@index([collegeId], name: "idx_cenroll_college")
+  @@index([routeId], name: "idx_cenroll_route")
+  @@index([busId], name: "idx_cenroll_bus")
+  @@index([status], name: "idx_cenroll_status")
+  @@map("commute_enrollments")
+}
+
+model CommuteRideHistory {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enrollmentId String    @map("enrollment_id") @db.Uuid
+  studentId    String    @map("student_id") @db.Uuid
+  busId        String    @map("bus_id") @db.Uuid
+  rideDate     DateTime  @map("ride_date") @db.Date
+  rideType     String    @map("ride_type") @db.VarChar(10)
+  boardedAt    DateTime? @map("boarded_at") @db.Timestamptz
+  droppedAt    DateTime? @map("dropped_at") @db.Timestamptz
+  status       String    @default("completed") @db.VarChar(20)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  enrollment CommuteEnrollment @relation(fields: [enrollmentId], references: [id])
+  student    Student           @relation(fields: [studentId], references: [id])
+  bus        CommuteBus        @relation(fields: [busId], references: [id])
+
+  @@index([enrollmentId], name: "idx_rides_enrollment")
+  @@index([studentId], name: "idx_rides_student")
+  @@index([rideDate], name: "idx_rides_date")
+  @@map("commute_ride_history")
+}

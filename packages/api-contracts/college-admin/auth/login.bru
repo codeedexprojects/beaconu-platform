@@ -1,0 +1,31 @@
+meta {
+  name: Staff Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "collegeSlug": "{{collegeSlug}}",
+    "email": "rajesh@example-college.edu",
+    "password": "Password123!"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.tokens && data.data.tokens.accessToken) {
+      bru.setEnvVar("staffToken", data.data.tokens.accessToken);
+    }
+    if (data.data && data.data.user && data.data.user.collegeId) {
+      bru.setEnvVar("collegeId", data.data.user.collegeId);
+    }
+  }
+}

@@ -1,0 +1,50 @@
+meta {
+  name: Create News Alert
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/news
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "NEET PG 2025 Exam Dates Announced",
+    "summary": "The National Board of Examinations has officially released the NEET PG 2025 exam schedule.",
+    "content": "The National Board of Examinations in Medical Sciences (NBEMS) has released the official schedule for NEET PG 2025. The exam is scheduled to be held on June 15, 2025...",
+    "cover_image_url": "https://example.com/neet-pg-2025.jpg",
+    "tags": ["NEET", "Medical", "Entrance", "2025"],
+    "source": "National Board of Examinations"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("newsAlertId", data.data.id);
+      bru.setEnvVar("newsAlertSlug", data.data.slug);
+    }
+  }
+}
+
+docs {
+  Create a news alert as a platform admin. Saved as draft — publish separately.
+
+  Body:
+  - title (required): Alert title, max 255 chars
+  - content (required): Full content text
+  - summary (optional): Short summary, max 500 chars
+  - cover_image_url (optional): URL of the cover image
+  - tags (optional): Array of tag strings, max 10 tags
+  - source (optional): Source attribution, max 500 chars
+  - college_id (optional): Scope to a specific college
+}

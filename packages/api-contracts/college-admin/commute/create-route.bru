@@ -1,0 +1,44 @@
+meta {
+  name: Create Transit Route
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/commute
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Route 42 - South Delhi Express",
+    "description": "Daily student transport transit route connecting Saket and main campus.",
+    "stops": [
+      {
+        "stopName": "Saket Metro Station Pick-up Gate 2",
+        "landmark": "Near Select Citywalk Mall",
+        "stopOrder": 1
+      },
+      {
+        "stopName": "Noida Sector 15 Crossroad",
+        "landmark": "Under Noida Flyover",
+        "stopOrder": 2
+      }
+    ],
+    "buses": [
+      {
+        "busNumber": "DL-1P-9876",
+        "busName": "Express Bus A",
+        "totalSeats": 50,
+        "driverName": "Ramesh Singh",
+        "driverPhone": "+91 98111 22222",
+        "monthlyFee": 2500
+      }
+    ]
+  }
+}

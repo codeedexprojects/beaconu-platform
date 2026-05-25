@@ -1,0 +1,23 @@
+meta {
+  name: Delete Program Type
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/universities/program-types/{{programTypeId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes a program type.
+  The record is not removed from the database.
+
+  Requires: platform admin access token.
+}

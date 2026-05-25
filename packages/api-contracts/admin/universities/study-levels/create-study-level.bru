@@ -1,0 +1,49 @@
+meta {
+  name: Create Study Level
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/universities/study-levels
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Undergraduate",
+    "slug": "undergraduate",
+    "logo_url": "https://example.com/logo.svg",
+    "sort_order": 1,
+    "is_active": true
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("studyLevelId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new study level.
+
+  Fields:
+  - name: String (required)
+  - slug: Lowercase alphanumeric with hyphens, unique (required)
+  - logo_url: URL to 1:1 SVG image (optional)
+  - sort_order: Integer (optional, default 0)
+  - is_active: Boolean (optional, default true)
+
+  Requires: platform admin access token.
+  Saves studyLevelId to env for use in other requests.
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Disable University Type
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/types/{{universityTypeId}}/disable
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Disables a university type (sets isActive to false).
+
+  Requires: platform admin access token.
+}

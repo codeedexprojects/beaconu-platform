@@ -1,0 +1,30 @@
+meta {
+  name: Logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/auth/logout
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refreshToken": "{{studentRefreshToken}}"
+  }
+}
+
+docs {
+  Invalidate the student's current session.
+
+  Web: refresh token is read from the httpOnly cookie automatically.
+  Mobile: pass refreshToken in the request body.
+
+  Clears the httpOnly cookie and marks the session as inactive in the database.
+}

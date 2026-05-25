@@ -1,0 +1,23 @@
+meta {
+  name: Delete Stream
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/universities/streams/{{streamId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes a stream.
+  The record is not removed from the database.
+
+  Requires: platform admin access token.
+}

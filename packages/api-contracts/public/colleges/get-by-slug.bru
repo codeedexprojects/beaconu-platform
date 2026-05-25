@@ -1,0 +1,11 @@
+meta {
+  name: Get College By Slug
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/:slug
+  body: none
+  auth: none
+}
