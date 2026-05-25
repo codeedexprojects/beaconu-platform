@@ -83,7 +83,7 @@ type UniversityGovernanceForm = {
   management_council: GovernanceCouncilForm;
   organizational_organogram: {
     title: string;
-    imageUrl: string;
+    fileUrl: string;
     description: string;
   };
 };
@@ -167,14 +167,17 @@ function normalizeOrganogram(value: unknown) {
   if (!isRecord(value)) {
     return {
       title: "",
-      imageUrl: "",
+      fileUrl: "",
       description: "",
     };
   }
 
   return {
     title: asString(value.title),
-    imageUrl: asString(value.imageUrl) || asString(value.image),
+    fileUrl:
+      asString(value.fileUrl) ||
+      asString(value.imageUrl) ||
+      asString(value.image),
     description: asString(value.description),
   };
 }
@@ -204,7 +207,7 @@ const EMPTY_METADATA_FORM: UniversityMetadataForm = {
       pincode: "",
     },
     disciplineJson: "{}",
-    videosJson: "{}",
+    videosJson: "[]",
   },
 };
 
@@ -219,7 +222,7 @@ const EMPTY_GOVERNANCE_FORM: UniversityGovernanceForm = {
   },
   organizational_organogram: {
     title: "",
-    imageUrl: "",
+    fileUrl: "",
     description: "",
   },
 };
@@ -257,7 +260,7 @@ function toMetadataForm(
         2,
       ),
       videosJson: JSON.stringify(
-        isRecord(overview.videos) ? overview.videos : {},
+        isRecord(overview.videos) ? overview.videos : [],
         null,
         2,
       ),
@@ -355,7 +358,7 @@ function buildStructuredGovernance(
     ),
     organizational_organogram: {
       title: form.organizational_organogram.title,
-      imageUrl: form.organizational_organogram.imageUrl,
+      fileUrl: form.organizational_organogram.fileUrl,
       description: form.organizational_organogram.description,
     },
   };
@@ -1467,20 +1470,21 @@ export default function UniversitiesPage() {
                       }
                       placeholder="Title"
                     />
+
                     <Input
                       value={
-                        createGovernanceForm.organizational_organogram.imageUrl
+                        createGovernanceForm.organizational_organogram.fileUrl
                       }
                       onChange={(e) =>
                         setCreateGovernanceForm((prev) => ({
                           ...prev,
                           organizational_organogram: {
                             ...prev.organizational_organogram,
-                            imageUrl: e.target.value,
+                            fileUrl: e.target.value,
                           },
                         }))
                       }
-                      placeholder="Image URL"
+                      placeholder="File URL (PDF)"
                     />
                     <Input
                       value={
@@ -2204,20 +2208,21 @@ export default function UniversitiesPage() {
                       }
                       placeholder="Title"
                     />
+
                     <Input
                       value={
-                        editGovernanceForm.organizational_organogram.imageUrl
+                        editGovernanceForm.organizational_organogram.fileUrl
                       }
                       onChange={(e) =>
                         setEditGovernanceForm((prev) => ({
                           ...prev,
                           organizational_organogram: {
                             ...prev.organizational_organogram,
-                            imageUrl: e.target.value,
+                            fileUrl: e.target.value,
                           },
                         }))
                       }
-                      placeholder="Image URL"
+                      placeholder="File URL (PDF)"
                     />
                     <Input
                       value={

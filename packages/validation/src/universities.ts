@@ -18,7 +18,7 @@ const universityGovernanceSchema = z.object({
   organizational_organogram: z
     .object({
       title: z.string().max(255).optional(),
-      imageUrl: optionalUrlSchema,
+      fileUrl: optionalUrlSchema,
       description: z.string().optional(),
     })
     .optional(),
