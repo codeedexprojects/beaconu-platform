@@ -28,7 +28,12 @@ export const academicTaxonomySchemas = {
 
   publicListQuery: z.object({
     search: z.string().optional(),
-    university_id: z.string().uuid().optional(),
+    university_id: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v === "" ? undefined : v))
+      .pipe(z.string().uuid().optional()),
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   }),
@@ -36,6 +41,11 @@ export const academicTaxonomySchemas = {
   createStream: z.object({
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -44,6 +54,11 @@ export const academicTaxonomySchemas = {
     .object({
       name: z.string().trim().min(1).max(100).optional(),
       slug: slugSchema.max(50).optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })
@@ -55,6 +70,11 @@ export const academicTaxonomySchemas = {
     stream_id: z.string().uuid(),
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -64,6 +84,11 @@ export const academicTaxonomySchemas = {
       stream_id: z.string().uuid().optional(),
       name: z.string().trim().min(1).max(100).optional(),
       slug: slugSchema.max(50).optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })
@@ -74,6 +99,11 @@ export const academicTaxonomySchemas = {
   createStudyLevel: z.object({
     name: z.string().trim().min(1).max(50),
     slug: slugSchema.max(30),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -82,6 +112,11 @@ export const academicTaxonomySchemas = {
     .object({
       name: z.string().trim().min(1).max(50).optional(),
       slug: slugSchema.max(30).optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })
@@ -92,6 +127,11 @@ export const academicTaxonomySchemas = {
   createProgramType: z.object({
     name: z.string().trim().min(1).max(50),
     slug: slugSchema.max(30),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -100,6 +140,11 @@ export const academicTaxonomySchemas = {
     .object({
       name: z.string().trim().min(1).max(50).optional(),
       slug: slugSchema.max(30).optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })

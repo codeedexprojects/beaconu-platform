@@ -17,8 +17,10 @@ headers {
 
 body:json {
   {
+    "stream_id": "{{streamId}}",
     "name": "Computer Science",
     "slug": "computer-science",
+    "logo_url": "https://example.com/logo.svg",
     "sort_order": 1,
     "is_active": true
   }
@@ -37,8 +39,10 @@ docs {
   Creates a new discipline.
 
   Fields:
+  - stream_id: UUID of an existing stream (required)
   - name: String (required)
   - slug: Lowercase alphanumeric with hyphens, unique (required)
+  - logo_url: URL to 1:1 SVG image (optional)
   - sort_order: Integer (optional, default 0)
   - is_active: Boolean (optional, default true)
 
