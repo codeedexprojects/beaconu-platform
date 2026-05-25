@@ -28,10 +28,20 @@ body:json {
     "metadata": {
       "overview": {
         "description": "Overview description",
-        "accolades": "Accolades",
-        "accolades_image_url": "https://example.com/accolades.png",
-        "accolades_description": "Accolades description",
-        "accolades_subdescription": "Accolades subdescription",
+        "accolades": [
+          {
+            "title": "Accolade 1",
+            "image_url": "https://example.com/accolades-1.png",
+            "description": "Accolade 1 description",
+            "subdescription": "Accolade 1 subdescription"
+          },
+          {
+            "title": "Accolade 2",
+            "image_url": "https://example.com/accolades-2.png",
+            "description": "Accolade 2 description",
+            "subdescription": "Accolade 2 subdescription"
+          }
+        ],
         "established_date": "1922-02-01",
         "nature_of_university": "Public",
         "type_of_university": "Central University",
@@ -91,6 +101,8 @@ docs {
   - logo_url: URL string or empty string placeholder (optional)
   - governance_details: Text (optional)
   - metadata: Object (optional)
+  - metadata.overview.accolades: Array of accolade objects
+    with title, image_url, description, subdescription
   - governance: Object with academic_council, management_council, organizational_organogram (optional)
 
   Requires: platform admin access token.

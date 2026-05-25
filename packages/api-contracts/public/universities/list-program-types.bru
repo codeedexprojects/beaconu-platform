@@ -1,0 +1,23 @@
+meta {
+  name: List Program Types
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/universities/program-types?page=1&limit=10&search=&university_id=
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~search: Regular
+  ~university_id: 12345678-1234-1234-1234-123456789012
+}
+
+docs {
+  Returns paginated list of program types.
+  Supports search and filtering by university_id.
+}

@@ -794,16 +794,31 @@ export default function UniversitiesPage() {
       {/* Create Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold text-lg">Add University</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCreateModalOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 border-0 overflow-hidden">
+            <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/20">
+                    <GraduationCap className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg leading-tight">
+                      Add University
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Fill in the details to create a new university
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <form onSubmit={handleCreate}>
               <CardContent className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -1486,16 +1501,17 @@ export default function UniversitiesPage() {
                   </div>
                 </div>
               </CardContent>
-              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/30">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setIsCreateModalOpen(false)}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  className="min-w-[140px]"
                   disabled={
                     !createForm.university_type_id ||
                     !createForm.name ||
@@ -1503,9 +1519,14 @@ export default function UniversitiesPage() {
                     createMutation.isPending
                   }
                 >
-                  {createMutation.isPending
-                    ? "Creating..."
-                    : "Create University"}
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create University"
+                  )}
                 </Button>
               </div>
             </form>
@@ -1516,16 +1537,31 @@ export default function UniversitiesPage() {
       {/* Edit Modal */}
       {isEditModalOpen && editingUniversity && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold text-lg">Edit University</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 border-0 overflow-hidden">
+            <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/20">
+                    <Edit className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg leading-tight">
+                      Edit University
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Update university information and metadata
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <form onSubmit={handleUpdate}>
               <CardContent className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -2201,16 +2237,27 @@ export default function UniversitiesPage() {
                   </div>
                 </div>
               </CardContent>
-              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/30">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setIsEditModalOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                <Button
+                  type="submit"
+                  className="min-w-[130px]"
+                  disabled={updateMutation.isPending}
+                >
+                  {updateMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </div>
             </form>

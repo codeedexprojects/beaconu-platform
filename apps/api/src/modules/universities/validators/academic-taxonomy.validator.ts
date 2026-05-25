@@ -26,6 +26,13 @@ export const academicTaxonomySchemas = {
     is_active: optionalBooleanFromQuery.optional(),
   }),
 
+  publicListQuery: z.object({
+    search: z.string().optional(),
+    university_id: z.string().uuid().optional(),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+  }),
+
   createStream: z.object({
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
@@ -106,6 +113,9 @@ export type ListDisciplinesQuery = z.output<
 >;
 export type ListSimpleQuery = z.output<
   typeof academicTaxonomySchemas.listSimpleQuery
+>;
+export type PublicListQuery = z.output<
+  typeof academicTaxonomySchemas.publicListQuery
 >;
 export type CreateStreamInput = z.output<
   typeof academicTaxonomySchemas.createStream
