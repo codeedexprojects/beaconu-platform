@@ -7,3 +7,4 @@ export * from "./colleges";
 export * from "./news-alerts";
 export * from "./entrance-exams";
 export * from "./students";
+export * from "./financial-aid";

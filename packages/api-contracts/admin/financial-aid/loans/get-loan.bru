@@ -1,0 +1,23 @@
+meta {
+  name: Get Education Loan
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans/{{loanId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Returns full details of a single education loan by ID. Requires platform_admin auth.
+}

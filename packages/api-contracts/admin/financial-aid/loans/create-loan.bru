@@ -1,0 +1,64 @@
+meta {
+  name: Create Education Loan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "bank_name": "State Bank of India",
+    "bank_logo_url": "https://example.com/sbi-logo.png",
+    "product_name": "Student Scholar Loan",
+    "tag": "Low Interest",
+    "interest_rate": "8.15% p.a.",
+    "interest_rate_min": 8.15,
+    "max_amount": "₹ 40 Lakhs",
+    "moratorium": "Course + 1 Year",
+    "processing_fee": "Nil",
+    "loan_type": "both",
+    "sort_order": 1,
+    "processing_time": "Upto 14 days",
+    "margin": "15-20%",
+    "collateral_amount": "Upto ₹15 crore",
+    "non_collateral_amount": "Upto ₹75 lakhs",
+    "repayment_tenure": "Upto 15 years",
+    "requires_cosigner": false,
+    "description": "SBI Student Scholar Loan offers education financing for meritorious students pursuing higher education in India and abroad.",
+    "expenses_covered": ["Tuition fee", "Hostel charges", "Examination fees", "Books and stationery", "Travel expenses"],
+    "eligibility": ["Indian national", "Secured admission in a recognized institution", "Co-applicant required"],
+    "eligible_courses": "Engineering, Medical, MBA, Law, and other professional courses",
+    "documents_applicant": ["Admission letter", "Mark sheets", "Identity proof", "Address proof"],
+    "documents_co_applicant": ["Identity proof", "Address proof", "Income proof", "Bank statements"],
+    "helpful_videos": [
+      { "title": "How to Apply for SBI Education Loan", "url": "https://youtube.com/watch?v=example1" }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("loanId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new education loan product. Requires platform_admin auth.
+  loan_type: "domestic" | "abroad" | "both"
+}

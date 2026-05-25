@@ -1,0 +1,47 @@
+meta {
+  name: List Education Loans
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 12
+  ~status: active
+  ~loan_type: both
+  ~search:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("loanId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns education loans with pagination. Requires platform_admin auth.
+
+  Query Parameters:
+  - status: Filter by status (active | inactive)
+  - loan_type: Filter by type (domestic | abroad | both)
+  - search: Search in bank name or product name
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 12, max: 50)
+}

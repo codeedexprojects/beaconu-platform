@@ -1,0 +1,23 @@
+meta {
+  name: Activate Education Loan
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans/{{loanId}}/activate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Sets an inactive education loan's status back to "active". Active loans are visible in the public view.
+}
