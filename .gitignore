@@ -128,17 +128,6 @@ dist
 # pnpm
 .pnpm-store
 
-# Turbo
-.turbo/
-
-# Prisma generated client
-generated/
-
-# Editor
-.idea/
-*.swp
-*.swo
-
 # yarn v3
 .pnp.*
 .yarn/*
@@ -152,6 +141,3 @@ generated/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
-
-# Output 
-output.txt
