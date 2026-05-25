@@ -32,4 +32,7 @@ export const QUERY_KEYS = {
   entranceExam: (id: string) => ["entrance-exams", id] as const,
   institutionGroup: (collegeId: string) =>
     ["institution-group", collegeId] as const,
+  educationLoans: (params?: object) =>
+    params ? ["education-loans", params] : (["education-loans"] as const),
+  educationLoan: (id: string) => ["education-loans", id] as const,
 } as const;
