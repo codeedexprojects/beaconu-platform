@@ -21,6 +21,7 @@ import {
   UserPlus,
   Inbox,
   Layers,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -138,6 +139,12 @@ const navSections: NavSection[] = [
         label: "Entrance Exams",
         icon: PenLine,
         permission: "exams.view",
+      },
+      {
+        href: "/financial-aid",
+        label: "Financial Aid",
+        icon: Landmark,
+        permission: "content.view",
       },
       {
         href: "/events",

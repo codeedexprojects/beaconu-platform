@@ -1,0 +1,33 @@
+meta {
+  name: Update Education Loan
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans/{{loanId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "interest_rate": "8.05% p.a.",
+    "interest_rate_min": 8.05,
+    "tag": "Best Rate",
+    "sort_order": 1
+  }
+}
+
+docs {
+  Partially updates an education loan. All fields optional.
+  Pass null for interest_rate_min to clear it (e.g. "interest_rate_min": null).
+}

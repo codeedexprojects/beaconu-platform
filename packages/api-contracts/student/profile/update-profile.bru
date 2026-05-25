@@ -1,0 +1,42 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/profile
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "full_name": "Jane Student",
+    "email": "jane@example.com",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "date_of_birth": "2000-06-15",
+    "gender": "female",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "nationality": "Indian",
+    "category": "general"
+  }
+}
+
+docs {
+  Updates editable fields on the authenticated student's profile.
+  All fields are optional — only provided fields are updated.
+  phoneNumber and phoneCountryCode cannot be changed (auth identity).
+  avatar_url is stored as-is; S3 upload is handled by a separate endpoint.
+
+  Editable top-level fields: full_name, email, avatar_url
+  Merged into profileMetadata JSON: date_of_birth, gender, city, state, nationality, category
+
+  Table: students
+}
