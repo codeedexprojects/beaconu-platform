@@ -34,6 +34,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.createStream({
       name: data.name,
       slug: data.slug,
+      logoUrl: data.logo_url,
       sortOrder: data.sort_order,
       isActive: data.is_active,
     });
@@ -60,6 +61,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.updateStreamById(id, {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.logo_url !== undefined ? { logoUrl: data.logo_url } : {}),
       ...(data.sort_order !== undefined ? { sortOrder: data.sort_order } : {}),
       ...(data.is_active !== undefined ? { isActive: data.is_active } : {}),
     });
@@ -111,6 +113,7 @@ export class AcademicTaxonomyService {
       streamId: data.stream_id,
       name: data.name,
       slug: data.slug,
+      logoUrl: data.logo_url,
       sortOrder: data.sort_order,
       isActive: data.is_active,
     });
@@ -148,6 +151,7 @@ export class AcademicTaxonomyService {
       ...(data.stream_id !== undefined ? { streamId: data.stream_id } : {}),
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.logo_url !== undefined ? { logoUrl: data.logo_url } : {}),
       ...(data.sort_order !== undefined ? { sortOrder: data.sort_order } : {}),
       ...(data.is_active !== undefined ? { isActive: data.is_active } : {}),
     });
@@ -193,6 +197,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.createStudyLevel({
       name: data.name,
       slug: data.slug,
+      logoUrl: data.logo_url,
       sortOrder: data.sort_order,
       isActive: data.is_active,
     });
@@ -219,6 +224,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.updateStudyLevelById(id, {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.logo_url !== undefined ? { logoUrl: data.logo_url } : {}),
       ...(data.sort_order !== undefined ? { sortOrder: data.sort_order } : {}),
       ...(data.is_active !== undefined ? { isActive: data.is_active } : {}),
     });
@@ -264,6 +270,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.createProgramType({
       name: data.name,
       slug: data.slug,
+      logoUrl: data.logo_url,
       sortOrder: data.sort_order,
       isActive: data.is_active,
     });
@@ -292,6 +299,7 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyRepository.updateProgramTypeById(id, {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.logo_url !== undefined ? { logoUrl: data.logo_url } : {}),
       ...(data.sort_order !== undefined ? { sortOrder: data.sort_order } : {}),
       ...(data.is_active !== undefined ? { isActive: data.is_active } : {}),
     });

@@ -5,6 +5,7 @@ const STREAM_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
 } as const;
 
@@ -13,20 +14,15 @@ const DISCIPLINE_SELECT = {
   streamId: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
-  stream: {
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  },
 } as const;
 
 const STUDY_LEVEL_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
 } as const;
 
@@ -34,6 +30,7 @@ const PROGRAM_TYPE_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
 } as const;
 
