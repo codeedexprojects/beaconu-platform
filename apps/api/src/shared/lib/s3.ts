@@ -2,6 +2,7 @@ import {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/shared/config/env";
@@ -36,4 +37,22 @@ export async function generateDownloadUrl(
     Key: key,
   });
   return getSignedUrl(s3Client, command, { expiresIn });
+}
+
+export async function objectExists(key: string): Promise<boolean> {
+  try {
+    await s3Client.send(
+      new HeadObjectCommand({ Bucket: env.AWS_S3_BUCKET, Key: key }),
+    );
+    return true;
+  } catch (err: unknown) {
+    const status = (err as { $metadata?: { httpStatusCode?: number } })
+      ?.$metadata?.httpStatusCode;
+    if (status === 404) return false;
+    throw err;
+  }
+}
+
+export function permanentUrl(key: string): string {
+  return `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
 }
