@@ -7,12 +7,23 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/shared/config/env";
 
-export const s3Client = new S3Client({
-  region: env.AWS_REGION,
-  credentials: {
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  },
+let _s3Client: S3Client | null = null;
+
+function getS3Client(): S3Client {
+  if (!_s3Client) {
+    _s3Client = new S3Client({
+      region: env.AWS_REGION,
+      credentials: {
+        accessKeyId: env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return _s3Client;
+}
+
+export const s3Client = new Proxy({} as S3Client, {
+  get: (_, prop) => getS3Client()[prop as keyof S3Client],
 });
 
 export async function generateUploadUrl(
@@ -25,7 +36,7 @@ export async function generateUploadUrl(
     Key: key,
     ContentType: contentType,
   });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 export async function generateDownloadUrl(
@@ -36,12 +47,12 @@ export async function generateDownloadUrl(
     Bucket: env.AWS_S3_BUCKET,
     Key: key,
   });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 export async function objectExists(key: string): Promise<boolean> {
   try {
-    await s3Client.send(
+    await getS3Client().send(
       new HeadObjectCommand({ Bucket: env.AWS_S3_BUCKET, Key: key }),
     );
     return true;

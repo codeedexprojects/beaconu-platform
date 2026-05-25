@@ -7,8 +7,8 @@ import { AuthRepository } from "../repositories/auth.repository";
 import { JwtUtils } from "../auth.jwt";
 import {
   USER_TYPES,
-  SESSION_EXPIRY_DAYS,
   ACCOUNT_STATUS,
+  REFRESH_TOKEN_COOKIE_OPTIONS,
 } from "@/shared/constants";
 import {
   BadRequestError,
@@ -16,13 +16,6 @@ import {
   ForbiddenError,
 } from "@/shared/errors";
 import { z } from "zod";
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 90 * 24 * 60 * 60 * 1000,
-};
 
 const setupAccountSchema = z.object({
   token: z.string().uuid(),
@@ -78,7 +71,11 @@ export class StaffAuthController {
       sessionId: session.sessionId,
     });
 
-    res.cookie("refreshToken", session.refreshToken, COOKIE_OPTIONS);
+    res.cookie(
+      "refreshToken",
+      session.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     return res.status(200).json(
       ApiResponse.success("Login successful", {
         user: {
@@ -165,7 +162,11 @@ export class StaffAuthController {
       sessionId: session.sessionId,
     });
 
-    res.cookie("refreshToken", session.refreshToken, COOKIE_OPTIONS);
+    res.cookie(
+      "refreshToken",
+      session.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     return res.status(200).json(
       ApiResponse.success("Account set up successfully", {
         user: {
@@ -188,7 +189,11 @@ export class StaffAuthController {
   static async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     const result = await AuthService.refreshTokens(refreshToken);
-    res.cookie("refreshToken", result.refreshToken, COOKIE_OPTIONS);
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     return res.status(200).json(
       ApiResponse.success("Token refreshed successfully", {
         accessToken: result.accessToken,

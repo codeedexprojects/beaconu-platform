@@ -1,0 +1,23 @@
+meta {
+  name: Deactivate Education Loan
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/financial-aid/loans/{{loanId}}/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Sets the education loan status to "inactive". Inactive loans are hidden from the public view.
+}
