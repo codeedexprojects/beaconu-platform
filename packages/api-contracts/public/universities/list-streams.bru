@@ -1,0 +1,23 @@
+meta {
+  name: List Streams
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/universities/streams?page=1&limit=10&search=&university_id=
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~search: Engineering
+  ~university_id: 12345678-1234-1234-1234-123456789012
+}
+
+docs {
+  Returns paginated list of streams.
+  Supports search and filtering by university_id.
+}

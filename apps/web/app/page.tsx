@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
@@ -46,6 +46,18 @@ export default function HomePage(): React.JSX.Element {
   const formRef = useRef<HTMLDivElement>(null);
   const studentToken = useStudentAuthStore((s) => s.token);
   const isStudentAuth = studentToken !== null;
+  const [universities, setUniversities] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/v1/public/universities`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) setUniversities(res.data);
+      })
+      .catch((err) => console.error("Failed to fetch universities", err));
+  }, []);
 
   const {
     register,
@@ -325,12 +337,18 @@ export default function HomePage(): React.JSX.Element {
                     <label className="form-label" htmlFor="university_name">
                       University / Affiliation
                     </label>
-                    <input
+                    <select
                       id="university_name"
                       {...register("university_name")}
                       className={`form-input ${errors.university_name ? "error" : ""}`}
-                      placeholder="e.g. Mumbai University"
-                    />
+                    >
+                      <option value="">Select University</option>
+                      {universities.map((uni) => (
+                        <option key={uni.id} value={uni.name}>
+                          {uni.name}
+                        </option>
+                      ))}
+                    </select>
                     {errors.university_name && (
                       <span className="error-text">
                         {errors.university_name.message}
