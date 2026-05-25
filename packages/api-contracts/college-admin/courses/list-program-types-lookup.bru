@@ -1,0 +1,22 @@
+meta {
+  name: Lookup Program Types
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/program-types
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns program types available for course creation.
+  Used to populate program type dropdown during course setup.
+
+  Requires: staff access token.
+}

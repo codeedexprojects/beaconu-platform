@@ -1,0 +1,25 @@
+meta {
+  name: Approve Blog
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/blogs/:id/approve
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{blogId}}
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Approve a pending blog. Sets status to "approved", records reviewedBy, reviewedAt, and publishedAt.
+  Only pending blogs can be approved.
+}

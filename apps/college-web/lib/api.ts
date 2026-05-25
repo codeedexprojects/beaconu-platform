@@ -1,0 +1,76 @@
+import { useAuthStore } from "@/store";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+    public data?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = useAuthStore.getState().token;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  if (res.status === 401) {
+    useAuthStore.getState().clearAuth();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
+    throw new ApiError(401, "Session expired. Please sign in again.");
+  }
+
+  const body = (await res.json()) as ApiResponse<T>;
+
+  if (!res.ok) {
+    throw new ApiError(res.status, body.message ?? "Request failed", body);
+  }
+
+  return body.data;
+}
+
+export const api = {
+  get: <T>(path: string, options?: RequestInit) =>
+    request<T>(path, { ...options, method: "GET" }),
+
+  post: <T>(path: string, body: unknown, options?: RequestInit) =>
+    request<T>(path, {
+      ...options,
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  patch: <T>(path: string, body: unknown, options?: RequestInit) =>
+    request<T>(path, {
+      ...options,
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  put: <T>(path: string, body: unknown, options?: RequestInit) =>
+    request<T>(path, { ...options, method: "PUT", body: JSON.stringify(body) }),
+
+  delete: <T>(path: string, options?: RequestInit) =>
+    request<T>(path, { ...options, method: "DELETE" }),
+};

@@ -1,0 +1,31 @@
+meta {
+  name: Setup Account (Password)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/auth/setup-account
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "token": "{{setupToken}}",
+    "password": "Password123!"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.tokens && data.data.tokens.accessToken) {
+      bru.setEnvVar("staffToken", data.data.tokens.accessToken);
+    }
+    if (data.data && data.data.user && data.data.user.collegeId) {
+      bru.setEnvVar("collegeId", data.data.user.collegeId);
+    }
+  }
+}
+

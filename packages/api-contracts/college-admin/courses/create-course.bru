@@ -1,0 +1,39 @@
+meta {
+  name: Create Course
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/courses
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Bachelor of Technology in Computer Science",
+    "code": "BTECH-CSE",
+    "disciplineId": "discipline_uuid_here",
+    "studyLevelId": "study_level_uuid_here",
+    "programTypeId": "program_type_uuid_here",
+    "studyMode": "FULL_TIME",
+    "intakeCapacity": 120,
+    "duration": "4 years",
+    "eligibility": "10+2 with Physics, Chemistry and Mathematics",
+    "campusId": "campus_uuid_here"
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("courseId", data.data.id);
+    }
+  }
+}

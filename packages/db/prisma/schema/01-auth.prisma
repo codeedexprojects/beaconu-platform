@@ -1,0 +1,378 @@
+// ============================================================
+// MODULE 1 — AUTHORIZATION
+// ============================================================
+
+model Student {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName         String    @map("full_name") @db.VarChar(255)
+  email            String?   @unique @db.VarChar(255)
+  phoneCountryCode String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
+  phoneNumber      String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl        String?   @map("avatar_url") @db.Text
+  passwordHash     String?   @map("password_hash") @db.Text
+  googleId         String?   @unique @map("google_id") @db.VarChar(255)
+  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
+  isPhoneVerified  Boolean   @default(false) @map("is_phone_verified")
+  source           String    @default("beaconu_app") @db.VarChar(30)
+  status           String    @default("active") @db.VarChar(20)
+  profileMetadata  Json      @default("{}") @map("profile_metadata")
+  lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  studentLead             StudentLead?
+  applications            Application[]
+  enrollments             Enrollment[]
+  seatCancellations       SeatCancellation[]
+  courseSwitchRequests    CourseSwitchRequest[]
+  assessmentAttempts      AssessmentAttempt[]
+  assessmentReschedules   AssessmentReschedule[]
+  interviewBookings       InterviewBooking[]
+  interviewReschedules    InterviewReschedule[]
+  offerLetters            OfferLetter[]
+  transactions            Transaction[]
+  scholarshipApplications ScholarshipApplication[]
+  collegeReviews          CollegeReview[]
+  eventRegistrations      EventRegistration[]
+  counsellingSessions     CounsellingSession[]
+  hostelEnrollments       HostelEnrollment[]
+  hostelWishlists         HostelWishlist[]
+  hostelReviews           HostelReview[]
+  commuteEnrollments      CommuteEnrollment[]
+  commuteRideHistory      CommuteRideHistory[]
+  blinkUsersLinked        BlinkUser[]                @relation("LinkedStudent")
+  referrals               Referral[]
+  communities             CommunityMember[]
+  communityPosts          CommunityPost[]
+  communityPostVotes      CommunityPostVote[]
+  communityComments       CommunityComment[]
+  squadSearches           SquadSearch[]
+  beaconuCard             BeaconuCard?
+  studentBankAccounts     StudentBankAccount[]
+  studentWalletTxns       StudentWalletTransaction[]
+  antiRaggingComplaints   AntiRaggingComplaint[]
+  supportTickets          SupportTicket[]
+  documentRequests        DocumentRequest[]
+  issuedDocs              IssuedDocument[]
+  campusVisits            CampusVisit[]
+  studentFeeLedgers       StudentFeeLedger[]
+  paymentReceipts         PaymentReceipt[]
+  refunds                 Refund[]
+
+  @@unique([phoneCountryCode, phoneNumber], name: "uq_students_phone")
+  @@index([email], name: "idx_students_email")
+  @@index([phoneNumber], name: "idx_students_phone")
+  @@index([googleId], name: "idx_students_google")
+  @@index([status], name: "idx_students_status")
+  @@map("students")
+}
+
+model PlatformAdmin {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platformRoleId String?   @map("platform_role_id") @db.Uuid
+  fullName       String    @map("full_name") @db.VarChar(255)
+  email          String    @unique @db.VarChar(255)
+  passwordHash   String    @map("password_hash") @db.Text
+  phoneNumber    String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl      String?   @map("avatar_url") @db.Text
+  status         String    @default("active") @db.VarChar(20)
+  lastLoginAt    DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  studentLeadsAssigned      StudentLead[]              @relation("AssignedAdmin")
+  newsAlerts                NewsAlert[]
+  entranceExams             EntranceExam[]
+  blogs                     Blog[]                     @relation("BlogReviewer")
+  platformRole              PlatformRole?              @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
+  collegeOnboardingRequests CollegeOnboardingRequest[]
+
+  @@index([platformRoleId], name: "idx_platform_admin_role")
+  @@map("platform_admins")
+}
+
+model PlatformRole {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @unique @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  permissions    PlatformRolePermission[]
+  platformAdmins PlatformAdmin[]
+
+  @@map("platform_roles")
+}
+
+model PlatformPermission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  rolePermissions PlatformRolePermission[]
+
+  @@map("platform_permissions")
+}
+
+model PlatformRolePermission {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platformRoleId String   @map("platform_role_id") @db.Uuid
+  permissionCode String   @map("permission_code") @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  platformRole       PlatformRole       @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
+  platformPermission PlatformPermission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@unique([platformRoleId, permissionCode], name: "uq_platform_role_permission")
+  @@index([platformRoleId], name: "idx_platform_role_perms_role")
+  @@index([permissionCode], name: "idx_platform_role_perms_code")
+  @@map("platform_role_permissions")
+}
+
+model CollegeRole {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId    String   @map("college_id") @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college      College                 @relation(fields: [collegeId], references: [id])
+  permissions  CollegeRolePermission[]
+  staffMembers StaffMember[]
+
+  @@unique([collegeId, slug], name: "uq_college_role_slug")
+  @@index([collegeId], name: "idx_college_roles_college")
+  @@map("college_roles")
+}
+
+model CollegeRolePermission {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeRoleId  String   @map("college_role_id") @db.Uuid
+  permissionCode String   @map("permission_code") @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  collegeRole CollegeRole @relation(fields: [collegeRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([collegeRoleId, permissionCode], name: "uq_role_permission")
+  @@index([collegeRoleId], name: "idx_role_perms_role")
+  @@index([permissionCode], name: "idx_role_perms_code")
+  @@map("college_role_permissions")
+}
+
+model StaffMember {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId     String    @map("college_id") @db.Uuid
+  collegeRoleId String    @map("college_role_id") @db.Uuid
+  fullName      String    @map("full_name") @db.VarChar(255)
+  email         String    @db.VarChar(255)
+  passwordHash  String    @map("password_hash") @db.Text
+  phoneNumber   String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl     String?   @map("avatar_url") @db.Text
+  status        String    @default("active") @db.VarChar(20)
+  invitedBy     String?   @map("invited_by") @db.Uuid
+  lastLoginAt   DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college     College       @relation(fields: [collegeId], references: [id])
+  collegeRole CollegeRole   @relation(fields: [collegeRoleId], references: [id])
+  inviter     StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
+  invitees    StaffMember[] @relation("StaffInviter")
+
+  interviewSlots              InterviewSlot[]          @relation("InterviewerStaff")
+  interviewBookingsEval       InterviewBooking[]       @relation("EvaluatedByStaff")
+  interviewRescheduleReviews  InterviewReschedule[]    @relation("IRescheduleReviewer")
+  offerLettersIssued          OfferLetter[]            @relation("IssuedByStaff")
+  assessmentRescheduleReviews AssessmentReschedule[]   @relation("ARescheduleReviewer")
+  studentAnswersEval          StudentAnswer[]
+  scholarshipAppReviews       ScholarshipApplication[]
+  seatCancellationProcs       SeatCancellation[]
+  courseSwitchProcs           CourseSwitchRequest[]    @relation("ProcessedBySwitchStaff")
+  documentVerifications       ApplicationDocument[]    @relation("VerifiedByStaff")
+  docRequestsAssigned         DocumentRequest[]        @relation("AssignedStaff")
+  docRequestsProcessed        DocumentRequest[]        @relation("ProcessedByStaff")
+  issuedDocuments             IssuedDocument[]
+  transactionsVerified        Transaction[]
+  refundsProcessed            Refund[]
+  antiRaggingAssigned         AntiRaggingComplaint[]
+  supportTicketsAssigned      SupportTicket[]
+  announcements               Announcement[]
+  blinkUsersCreated           BlinkUser[]              @relation("CreatedByStaff")
+  institutionGroups           InstitutionGroup[]
+
+  @@unique([email, collegeId], name: "uq_staff_email_college")
+  @@index([collegeId], name: "idx_staff_college")
+  @@index([collegeRoleId], name: "idx_staff_role")
+  @@index([email], name: "idx_staff_email")
+  @@index([collegeId, status], name: "idx_staff_status")
+  @@map("staff_members")
+}
+
+model BlinkRole {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @unique @db.VarChar(50)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  blinkUsers BlinkUser[]
+
+  @@map("blink_roles")
+}
+
+model BlinkUser {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blinkRoleId       String    @map("blink_role_id") @db.Uuid
+  collegeId         String?   @map("college_id") @db.Uuid
+  associateParentId String?   @map("associate_parent_id") @db.Uuid
+  linkedStudentId   String?   @map("linked_student_id") @db.Uuid
+  fullName          String    @map("full_name") @db.VarChar(255)
+  email             String    @unique @db.VarChar(255)
+  passwordHash      String    @map("password_hash") @db.Text
+  phoneCountryCode  String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
+  phoneNumber       String?   @map("phone_number") @db.VarChar(15)
+  country           String?   @db.VarChar(100)
+  avatarUrl         String?   @map("avatar_url") @db.Text
+  ambassadorType    String?   @map("ambassador_type") @db.VarChar(20)
+  agencyName        String?   @map("agency_name") @db.VarChar(255)
+  agencyRegNumber   String?   @unique @map("agency_reg_number") @db.VarChar(100)
+  status            String    @default("active") @db.VarChar(20)
+  createdByStaffId  String?   @map("created_by_staff_id") @db.Uuid
+  profileMetadata   Json      @default("{}") @map("profile_metadata")
+  lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  blinkRole       BlinkRole    @relation(fields: [blinkRoleId], references: [id])
+  college         College?     @relation(fields: [collegeId], references: [id])
+  associateParent BlinkUser?   @relation("BlinkHierarchy", fields: [associateParentId], references: [id])
+  employees       BlinkUser[]  @relation("BlinkHierarchy")
+  linkedStudent   Student?     @relation("LinkedStudent", fields: [linkedStudentId], references: [id])
+  createdByStaff  StaffMember? @relation("CreatedByStaff", fields: [createdByStaffId], references: [id])
+
+  referralCodes          ReferralCode[]
+  referrals              Referral[]
+  commissions            Commission[]
+  blinkWallet            BlinkWallet?
+  blinkWalletTxns        BlinkWalletTransaction[]
+  campusVisitsManaged    CampusVisit[]            @relation("AmbassadorVisits")
+  campusVisitsReassigned CampusVisit[]            @relation("ReassignedFrom")
+
+  @@index([blinkRoleId], name: "idx_blink_role")
+  @@index([collegeId], name: "idx_blink_college")
+  @@index([associateParentId], name: "idx_blink_parent")
+  @@index([linkedStudentId], name: "idx_blink_student")
+  @@index([status], name: "idx_blink_status")
+  @@index([email], name: "idx_blink_email")
+  @@map("blink_users")
+}
+
+model Counsellor {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName        String    @map("full_name") @db.VarChar(255)
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.Text
+  phoneNumber     String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl       String?   @map("avatar_url") @db.Text
+  counsellorType  String    @map("counsellor_type") @db.VarChar(20)
+  status          String    @default("active") @db.VarChar(20)
+  profileMetadata Json      @default("{}") @map("profile_metadata")
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  availability                 CounsellorAvailability[]
+  sessions                     CounsellingSession[]
+  wallet                       CounsellorWallet?
+  counsellorWalletTransactions CounsellorWalletTransaction[]
+
+  @@index([counsellorType], name: "idx_counsellors_type")
+  @@index([status], name: "idx_counsellors_status")
+  @@map("counsellors")
+}
+
+model UserSession {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userType     String   @map("user_type") @db.VarChar(20)
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @unique @map("refresh_token") @db.Text
+  deviceInfo   Json     @default("{}") @map("device_info")
+  ipAddress    String?  @map("ip_address") @db.Inet
+  isActive     Boolean  @default(true) @map("is_active")
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz
+  lastActiveAt DateTime @default(now()) @map("last_active_at") @db.Timestamptz
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Polymorphic: userId resolved at application layer based on userType.
+  // No Prisma FK relations here — Prisma cannot model a single field referencing multiple tables.
+
+  @@index([userType, userId], name: "idx_sessions_user")
+  @@index([refreshToken], name: "idx_sessions_token")
+  @@index([expiresAt], name: "idx_sessions_expiry")
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorType  String   @map("actor_type") @db.VarChar(20)
+  actorId    String   @map("actor_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String?  @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  changes    Json?
+  ipAddress  String?  @map("ip_address") @db.Inet
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([actorType, actorId], name: "idx_audit_actor")
+  @@index([entityType, entityId], name: "idx_audit_entity")
+  @@index([action], name: "idx_audit_action")
+  @@index([createdAt], name: "idx_audit_created")
+  @@map("audit_logs")
+}
+
+model StudentLead {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId         String    @unique @map("student_id") @db.Uuid
+  preferredStreams  Json      @default("[]") @map("preferred_streams")
+  preferredLevel    String?   @map("preferred_level") @db.VarChar(20)
+  preferredStates   Json      @default("[]") @map("preferred_states")
+  currentEducation  Json      @default("{}") @map("current_education")
+  whatsappNumber    String?   @map("whatsapp_number") @db.VarChar(15)
+  status            String    @default("new") @db.VarChar(20)
+  assignedTo        String?   @map("assigned_to") @db.Uuid
+  assignedAt        DateTime? @map("assigned_at") @db.Timestamptz
+  consultationNotes String?   @map("consultation_notes") @db.Text
+  lastContactedAt   DateTime? @map("last_contacted_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student       Student        @relation(fields: [studentId], references: [id])
+  assignedAdmin PlatformAdmin? @relation("AssignedAdmin", fields: [assignedTo], references: [id])
+
+  @@index([status], name: "idx_leads_status")
+  @@index([assignedTo], name: "idx_leads_assigned")
+  @@index([studentId], name: "idx_leads_student")
+  @@map("student_leads")
+}

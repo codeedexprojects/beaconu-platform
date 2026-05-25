@@ -1,0 +1,24 @@
+meta {
+  name: Get Entrance Exam
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/entrance-exams/{{entranceExamId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Returns full details of an active entrance exam by ID. Requires student authentication.
+  Returns 404 if the exam is inactive.
+}

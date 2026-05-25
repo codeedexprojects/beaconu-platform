@@ -1,0 +1,110 @@
+meta {
+  name: Create University
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/universities
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "university_type_id": "{{universityTypeId}}",
+    "name": "Delhi University",
+    "slug": "delhi-university",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "accreditation": "NAAC A+",
+    "cover_url": "",
+    "logo_url": "https://example.com/university-logo.png",
+    "metadata": {
+      "overview": {
+        "description": "Overview description",
+        "accolades": [
+          {
+            "title": "Accolade 1",
+            "image_url": "https://example.com/accolades-1.png",
+            "description": "Accolade 1 description",
+            "subdescription": "Accolade 1 subdescription"
+          },
+          {
+            "title": "Accolade 2",
+            "image_url": "https://example.com/accolades-2.png",
+            "description": "Accolade 2 description",
+            "subdescription": "Accolade 2 subdescription"
+          }
+        ],
+        "established_date": "1922-02-01",
+        "nature_of_university": "Public",
+        "type_of_university": "Central University",
+        "district": "Central Delhi",
+        "state": "Delhi",
+        "pincode": "110007",
+        "discipline": {},
+        "videos": {}
+      }
+    },
+    "governance": {
+      "academic_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Chairperson",
+          "description": "Academic council description"
+        }
+      ],
+      "management_council": [
+        {
+          "userPhotoUrl": "",
+          "name": "Member 1",
+          "designation": "Member",
+          "description": "Management council description"
+        }
+      ],
+      "organizational_organogram": {
+        "title": "Organizational Organogram",
+        "imageUrl": "",
+        "description": ""
+      }
+    }
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("universityId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new university.
+
+  Fields:
+  - university_type_id: UUID of an existing university type (required)
+  - name: String max 255 (required)
+  - slug: Lowercase alphanumeric with hyphens, unique (required)
+  - state: String max 100 (optional)
+  - city: String max 100 (optional)
+  - accreditation: String max 255 (optional)
+  - cover_url: URL string or empty string placeholder (optional)
+  - logo_url: URL string or empty string placeholder (optional)
+  - governance_details: Text (optional)
+  - metadata: Object (optional)
+  - metadata.overview.accolades: Array of accolade objects
+    with title, image_url, description, subdescription
+  - governance: Object with academic_council, management_council, organizational_organogram (optional)
+
+  Requires: platform admin access token.
+  Saves universityId to env for use in other requests.
+}

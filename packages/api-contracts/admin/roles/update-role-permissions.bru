@@ -1,0 +1,42 @@
+meta {
+  name: Update Role Permissions
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/admin/roles/{{platformRoleId}}/permissions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "permissions": [
+      "platform:profiles:view",
+      "platform:support:manage"
+    ]
+  }
+}
+
+script:pre-request {
+  const platformRoleId = bru.getEnvVar("platformRoleId");
+  if (!platformRoleId) {
+    throw new Error("platformRoleId is not set. Run 'Create Role' first.");
+  }
+}
+
+docs {
+  Replaces the permission set for an existing platform role.
+  Requires: platform admin with platform.roles.manage permission (super_admin has this by default).
+
+  Replaces ALL existing permissions — send the full desired set.
+  platformRoleId: set by running Create Role.
+
+  Table: platform_role_permissions
+}

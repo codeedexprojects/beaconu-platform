@@ -1,0 +1,16 @@
+meta {
+  name: Get University
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/universities/{{universityId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns details for a single university.
+  No authentication required.
+}

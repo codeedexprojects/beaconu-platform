@@ -1,0 +1,22 @@
+meta {
+  name: Finalize Profile
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile/finalize
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Marks the college profile setup as finalized.
+  Call after all profile sections are complete.
+
+  Requires: staff access token.
+}

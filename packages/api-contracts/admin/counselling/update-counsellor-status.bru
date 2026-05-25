@@ -1,0 +1,39 @@
+meta {
+  name: Update Counsellor Status
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "active"
+  }
+}
+
+script:pre-request {
+  const counsellorId = bru.getEnvVar("counsellorId");
+  if (!counsellorId) {
+    throw new Error("counsellorId is not set. Run counsellor Login or Get Profile first.");
+  }
+}
+
+docs {
+  Updates the status of a counsellor account.
+  Requires: super admin access token.
+
+  status: active | inactive | suspended
+  counsellorId: set automatically by counsellor Login or Get Profile.
+
+  Table: counsellors
+}

@@ -1,0 +1,34 @@
+meta {
+  name: Submit Post (Blog Author)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blog/author/blogs
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "My College Experience at IIT Delhi",
+    "summary": "A first-hand account of student life at IIT Delhi.",
+    "content": "Moving to Delhi was the biggest change of my life...",
+    "tags": ["iit", "college-life", "engineering"]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("blogId", data.data.id);
+    }
+  }
+}

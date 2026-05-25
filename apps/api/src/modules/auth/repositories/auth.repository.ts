@@ -1,0 +1,286 @@
+import { prisma } from "@beaconu/db";
+import type { Prisma } from "@beaconu/db";
+import { JwtUtils } from "../auth.jwt";
+import { SessionData } from "../auth.types";
+import { SESSION_EXPIRY_DAYS } from "@/shared/constants";
+import { UnauthorizedError } from "@/shared/errors";
+
+interface AuthBlinkUserData {
+  fullName: string;
+  email: string;
+  passwordHash: string;
+  phoneNumber?: string | null;
+  country?: string | null;
+  agencyName?: string | null;
+  agencyRegNumber?: string | null;
+  associateParentId?: string | null;
+  blinkRoleId: string;
+  status: string;
+}
+
+interface AuthCounsellorData {
+  fullName: string;
+  email: string;
+  passwordHash: string;
+  phoneNumber?: string | null;
+  counsellorType: "academic" | "mindcare";
+  status: string;
+}
+
+export class AuthRepository {
+  static async createSession(data: SessionData) {
+    const { userId, userType, deviceInfo, ipAddress } = data;
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + SESSION_EXPIRY_DAYS);
+
+    const session = await prisma.userSession.create({
+      data: {
+        userId,
+        userType,
+        refreshToken: "PENDING",
+        deviceInfo: deviceInfo ?? ({} as Prisma.JsonObject),
+        ipAddress,
+        expiresAt,
+      },
+    });
+
+    const refreshToken = JwtUtils.generateRefreshToken({
+      userId,
+      userType,
+      sessionId: session.id,
+    });
+
+    await prisma.userSession.update({
+      where: { id: session.id },
+      data: { refreshToken },
+    });
+
+    return { refreshToken, sessionId: session.id };
+  }
+
+  static async findSession(refreshToken: string) {
+    const session = await prisma.userSession.findUnique({
+      where: { refreshToken },
+    });
+
+    if (!session || !session.isActive || session.expiresAt < new Date()) {
+      if (session && !session.isActive) {
+        await this.invalidateAllUserSessions(session.userId, session.userType);
+      }
+      return null;
+    }
+
+    return session;
+  }
+
+  static async rotateSession(oldRefreshToken: string, data: SessionData) {
+    const oldSession = await this.findSession(oldRefreshToken);
+    if (!oldSession) {
+      throw new UnauthorizedError("Invalid or expired session");
+    }
+
+    await prisma.userSession.update({
+      where: { id: oldSession.id },
+      data: { isActive: false },
+    });
+
+    return this.createSession(data);
+  }
+
+  static async invalidateSession(refreshToken: string) {
+    await prisma.userSession.updateMany({
+      where: { refreshToken, isActive: true },
+      data: { isActive: false },
+    });
+  }
+
+  static async invalidateAllUserSessions(userId: string, userType: string) {
+    await prisma.userSession.updateMany({
+      where: { userId, userType, isActive: true },
+      data: { isActive: false },
+    });
+  }
+
+  // Blink user lookups
+  static async findBlinkUserByEmail(email: string) {
+    return prisma.blinkUser.findUnique({
+      where: { email },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async findBlinkUserById(id: string) {
+    return prisma.blinkUser.findUnique({
+      where: { id },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async findBlinkUserByRegNumber(regNumber: string) {
+    return prisma.blinkUser.findUnique({
+      where: { agencyRegNumber: regNumber },
+    });
+  }
+
+  static async findBlinkUserByRegNumberWithRole(regNumber: string) {
+    return prisma.blinkUser.findUnique({
+      where: { agencyRegNumber: regNumber },
+      include: { blinkRole: true },
+    });
+  }
+
+  static async updateBlinkLastLogin(id: string): Promise<void> {
+    await prisma.blinkUser.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async findBlinkRoleBySlug(slug: string) {
+    return prisma.blinkRole.findUnique({ where: { slug } });
+  }
+
+  static async createBlinkUser(data: AuthBlinkUserData) {
+    return prisma.blinkUser.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        phoneNumber: data.phoneNumber,
+        country: data.country,
+        agencyName: data.agencyName,
+        agencyRegNumber: data.agencyRegNumber,
+        associateParentId: data.associateParentId,
+        blinkRoleId: data.blinkRoleId,
+        status: data.status,
+      },
+      include: { blinkRole: true },
+    });
+  }
+
+  // Counsellor lookups
+  static async findCounsellorByEmail(email: string) {
+    return prisma.counsellor.findUnique({ where: { email } });
+  }
+
+  static async findCounsellorById(id: string) {
+    return prisma.counsellor.findUnique({ where: { id } });
+  }
+
+  static async updateCounsellorLastLogin(id: string): Promise<void> {
+    await prisma.counsellor.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async createCounsellor(data: AuthCounsellorData) {
+    return prisma.counsellor.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        phoneNumber: data.phoneNumber,
+        counsellorType: data.counsellorType,
+        status: data.status,
+      },
+    });
+  }
+
+  // Platform admin lookups
+  static async findPlatformAdminByEmail(email: string) {
+    return prisma.platformAdmin.findUnique({
+      where: { email },
+      include: { platformRole: { include: { permissions: true } } },
+    });
+  }
+
+  static async findPlatformAdminById(id: string) {
+    return prisma.platformAdmin.findUnique({
+      where: { id },
+      include: { platformRole: { include: { permissions: true } } },
+    });
+  }
+
+  static async updatePlatformAdminLastLogin(id: string): Promise<void> {
+    await prisma.platformAdmin.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  // Staff member lookup
+  static async findStaffMemberById(id: string) {
+    return prisma.staffMember.findUnique({
+      where: { id },
+      include: { collegeRole: { include: { permissions: true } } },
+    });
+  }
+
+  // Student lookup
+  static async findStudentById(id: string) {
+    return prisma.student.findUnique({ where: { id } });
+  }
+
+  // Student lookups + writes
+  static async findStudentByPhone(
+    phoneNumber: string,
+    phoneCountryCode: string,
+  ) {
+    return prisma.student.findFirst({
+      where: { phoneNumber, phoneCountryCode },
+    });
+  }
+
+  static async createStudent(data: {
+    fullName: string;
+    email?: string | null;
+    phoneNumber: string;
+    phoneCountryCode: string;
+    isPhoneVerified: boolean;
+  }) {
+    return prisma.student.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email ?? null,
+        phoneNumber: data.phoneNumber,
+        phoneCountryCode: data.phoneCountryCode,
+        isPhoneVerified: data.isPhoneVerified,
+        status: "active",
+      },
+    });
+  }
+
+  static async updateStudentLastLogin(id: string): Promise<void> {
+    await prisma.student.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  // Blog author lookups
+  static async findBlogAuthorByEmail(email: string) {
+    return prisma.blogAuthor.findUnique({ where: { email } });
+  }
+
+  static async findBlogAuthorById(id: string) {
+    return prisma.blogAuthor.findUnique({ where: { id } });
+  }
+
+  static async updateBlogAuthorLastLogin(id: string): Promise<void> {
+    await prisma.blogAuthor.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async createBlogAuthor(data: {
+    fullName: string;
+    email: string;
+    passwordHash: string;
+    bio?: string | null;
+  }) {
+    return prisma.blogAuthor.create({ data });
+  }
+}

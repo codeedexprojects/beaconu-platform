@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/web/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "apps/college-admin/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "apps/api/api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "apps/api/api/index.ts"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "apps/college-admin/$1"
+    },
+    {
+      "source": "/admin",
+      "destination": "apps/college-admin"
+    },
+    {
+      "source": "/",
+      "destination": "apps/web"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "apps/web/$1"
+    }
+  ]
+}

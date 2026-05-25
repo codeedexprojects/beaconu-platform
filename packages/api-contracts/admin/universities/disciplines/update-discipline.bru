@@ -1,0 +1,31 @@
+meta {
+  name: Update Discipline
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/disciplines/{{disciplineId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Updated Discipline",
+    "logo_url": "https://example.com/new-logo.svg",
+    "sort_order": 2
+  }
+}
+
+docs {
+  Updates a discipline.
+  Supports partial updates — only include fields to change.
+
+  Requires: platform admin access token.
+}

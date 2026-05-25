@@ -1,0 +1,175 @@
+// ============================================================
+// MODULE 14 — COMMUNICATION & NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientType  String    @map("recipient_type") @db.VarChar(20)
+  recipientId    String    @map("recipient_id") @db.Uuid
+  title          String    @db.VarChar(255)
+  body           String    @db.Text
+  channel        String    @db.VarChar(10)
+  category       String    @default("general") @db.VarChar(30)
+  entityType     String?   @map("entity_type") @db.VarChar(50)
+  entityId       String?   @map("entity_id") @db.Uuid
+  actionUrl      String?   @map("action_url") @db.Text
+  isRead         Boolean   @default(false) @map("is_read")
+  readAt         DateTime? @map("read_at") @db.Timestamptz
+  deliveryStatus String    @default("pending") @map("delivery_status") @db.VarChar(20)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Polymorphic: recipientId resolved at application layer based on recipientType.
+  // No Prisma FK — recipientId can reference students, staff_members, blink_users, counsellors, or platform_admins.
+
+  @@index([recipientType, recipientId, isRead], name: "idx_notif_recipient")
+  @@index([category], name: "idx_notif_category")
+  @@index([createdAt(sort: Desc)], name: "idx_notif_created")
+  @@index([entityType, entityId], name: "idx_notif_entity")
+  @@map("notifications")
+}
+
+model BroadcastNotification {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId       String?   @map("college_id") @db.Uuid
+  title           String    @db.VarChar(255)
+  body            String    @db.Text
+  channels        Json
+  targetFilters   Json      @map("target_filters")
+  totalRecipients Int       @default(0) @map("total_recipients")
+  sentCount       Int       @default(0) @map("sent_count")
+  failedCount     Int       @default(0) @map("failed_count")
+  sentByType      String    @map("sent_by_type") @db.VarChar(20)
+  sentById        String    @map("sent_by_id") @db.Uuid
+  status          String    @default("draft") @db.VarChar(20)
+  scheduledAt     DateTime? @map("scheduled_at") @db.Timestamptz
+  sentAt          DateTime? @map("sent_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  college College? @relation(fields: [collegeId], references: [id])
+  // sentById is polymorphic (platform_admin or staff_member). Resolve at app layer.
+
+  @@index([collegeId], name: "idx_broadcast_college")
+  @@index([status], name: "idx_broadcast_status")
+  @@index([sentAt(sort: Desc)], name: "idx_broadcast_sent")
+  @@map("broadcast_notifications")
+}
+
+model Announcement {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collegeId   String    @map("college_id") @db.Uuid
+  title       String    @db.VarChar(255)
+  content     String    @db.Text
+  category    String    @default("general") @db.VarChar(30)
+  isPinned    Boolean   @default(false) @map("is_pinned")
+  status      String    @default("published") @db.VarChar(20)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz
+  createdBy   String    @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  creator StaffMember @relation(fields: [createdBy], references: [id])
+
+  @@index([collegeId, status], name: "idx_announce_college")
+  @@index([publishedAt(sort: Desc)], name: "idx_announce_published")
+  @@map("announcements")
+}
+
+model SupportTicket {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketNumber String    @unique @map("ticket_number") @db.VarChar(30)
+  studentId    String    @map("student_id") @db.Uuid
+  collegeId    String    @map("college_id") @db.Uuid
+  subject      String    @db.VarChar(255)
+  description  String    @db.Text
+  category     String    @default("general") @db.VarChar(30)
+  attachments  Json      @default("[]")
+  assignedTo   String?   @map("assigned_to") @db.Uuid
+  status       String    @default("in_progress") @db.VarChar(20)
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
+  closedAt     DateTime? @map("closed_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  student  Student         @relation(fields: [studentId], references: [id])
+  college  College         @relation(fields: [collegeId], references: [id])
+  assignee StaffMember?    @relation(fields: [assignedTo], references: [id])
+  messages TicketMessage[]
+
+  @@index([studentId], name: "idx_tickets_student")
+  @@index([collegeId], name: "idx_tickets_college")
+  @@index([collegeId, status], name: "idx_tickets_status")
+  @@index([assignedTo], name: "idx_tickets_assigned")
+  @@index([ticketNumber], name: "idx_tickets_number")
+  @@index([category], name: "idx_tickets_category")
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketId    String   @map("ticket_id") @db.Uuid
+  senderType  String   @map("sender_type") @db.VarChar(20)
+  senderId    String?  @map("sender_id") @db.Uuid
+  message     String   @db.Text
+  attachments Json     @default("[]")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  // senderId is polymorphic (student, staff_member, or system). Resolve at app layer via senderType.
+
+  @@index([ticketId, createdAt], name: "idx_tmsg_ticket")
+  @@index([senderType, senderId], name: "idx_tmsg_sender")
+  @@map("ticket_messages")
+}
+
+model ChatConversation {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  participant1Type   String    @map("participant_1_type") @db.VarChar(20)
+  participant1Id     String    @map("participant_1_id") @db.Uuid
+  participant2Type   String    @map("participant_2_type") @db.VarChar(20)
+  participant2Id     String    @map("participant_2_id") @db.Uuid
+  lastMessageText    String?   @map("last_message_text") @db.Text
+  lastMessageAt      DateTime? @map("last_message_at") @db.Timestamptz
+  participant1Unread Int       @default(0) @map("participant_1_unread")
+  participant2Unread Int       @default(0) @map("participant_2_unread")
+  status             String    @default("active") @db.VarChar(20)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // participant1Id and participant2Id are polymorphic (student, blink_user, or staff_member).
+  // Resolved at application layer via participant1Type / participant2Type discriminators.
+
+  messages ChatMessage[]
+
+  @@unique([participant1Type, participant1Id, participant2Type, participant2Id], name: "uq_conversation_pair")
+  @@index([participant1Type, participant1Id], name: "idx_conv_p1")
+  @@index([participant2Type, participant2Id], name: "idx_conv_p2")
+  @@index([lastMessageAt(sort: Desc)], name: "idx_conv_last_msg")
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  senderType     String    @map("sender_type") @db.VarChar(20)
+  senderId       String    @map("sender_id") @db.Uuid
+  message        String?   @db.Text
+  attachments    Json      @default("[]")
+  isRead         Boolean   @default(false) @map("is_read")
+  readAt         DateTime? @map("read_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // senderId is polymorphic (student, blink_user, or staff_member). Resolve at app layer via senderType.
+
+  @@index([conversationId, createdAt], name: "idx_cmsg_conversation")
+  @@index([senderType, senderId], name: "idx_cmsg_sender")
+  @@index([conversationId, isRead], name: "idx_cmsg_unread")
+  @@map("chat_messages")
+}

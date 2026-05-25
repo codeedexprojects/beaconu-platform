@@ -1,0 +1,23 @@
+meta {
+  name: List Roles
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/roles
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns all platform roles (e.g. super_admin, auditor).
+  Requires: super admin access token.
+
+  Table: platform_roles
+}

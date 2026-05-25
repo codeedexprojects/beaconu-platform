@@ -1,0 +1,23 @@
+meta {
+  name: Logout
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/counsellor/auth/logout
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Invalidates the current counsellor session.
+  Clears the refreshToken cookie.
+
+  Safe to call even if the token has already expired.
+}
