@@ -4,6 +4,7 @@ const STREAM_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
   isActive: true,
   createdAt: true,
@@ -14,6 +15,7 @@ const DISCIPLINE_SELECT = {
   streamId: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
   isActive: true,
   createdAt: true,
@@ -30,6 +32,7 @@ const STUDY_LEVEL_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
   isActive: true,
   createdAt: true,
@@ -39,6 +42,7 @@ const PROGRAM_TYPE_SELECT = {
   id: true,
   name: true,
   slug: true,
+  logoUrl: true,
   sortOrder: true,
   isActive: true,
   createdAt: true,
@@ -81,6 +85,7 @@ export class AcademicTaxonomyRepository {
   static async createStream(data: {
     name: string;
     slug: string;
+    logoUrl?: string;
     sortOrder: number;
     isActive: boolean;
   }) {
@@ -95,6 +100,7 @@ export class AcademicTaxonomyRepository {
     data: {
       name?: string;
       slug?: string;
+      logoUrl?: string;
       sortOrder?: number;
       isActive?: boolean;
     },
@@ -141,6 +147,7 @@ export class AcademicTaxonomyRepository {
     streamId: string;
     name: string;
     slug: string;
+    logoUrl?: string;
     sortOrder: number;
     isActive: boolean;
   }) {
@@ -156,6 +163,7 @@ export class AcademicTaxonomyRepository {
       streamId?: string;
       name?: string;
       slug?: string;
+      logoUrl?: string;
       sortOrder?: number;
       isActive?: boolean;
     },
@@ -203,6 +211,7 @@ export class AcademicTaxonomyRepository {
   static async createStudyLevel(data: {
     name: string;
     slug: string;
+    logoUrl?: string;
     sortOrder: number;
     isActive: boolean;
   }) {
@@ -217,6 +226,7 @@ export class AcademicTaxonomyRepository {
     data: {
       name?: string;
       slug?: string;
+      logoUrl?: string;
       sortOrder?: number;
       isActive?: boolean;
     },
@@ -264,6 +274,7 @@ export class AcademicTaxonomyRepository {
   static async createProgramType(data: {
     name: string;
     slug: string;
+    logoUrl?: string;
     sortOrder: number;
     isActive: boolean;
   }) {
@@ -278,6 +289,7 @@ export class AcademicTaxonomyRepository {
     data: {
       name?: string;
       slug?: string;
+      logoUrl?: string;
       sortOrder?: number;
       isActive?: boolean;
     },
