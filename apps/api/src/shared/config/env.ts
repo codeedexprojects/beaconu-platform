@@ -22,6 +22,9 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().default(""),
   AWS_S3_BUCKET: z.string().default(""),
   AWS_REGION: z.string().default(""),
+  FIREBASE_PROJECT_ID: z.string().default(""),
+  FIREBASE_CLIENT_EMAIL: z.string().default(""),
+  FIREBASE_PRIVATE_KEY: z.string().default(""),
 });
 
 const parsed = envSchema.safeParse(process.env);
