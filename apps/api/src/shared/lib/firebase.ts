@@ -3,6 +3,7 @@ import { env } from "@/shared/config/env";
 import { logger } from "@/shared/lib/logger";
 
 let _messaging: admin.messaging.Messaging | null = null;
+let _auth: admin.auth.Auth | null = null;
 
 if (
   env.FIREBASE_PROJECT_ID &&
@@ -11,25 +12,6 @@ if (
 ) {
   try {
     const privateKey = env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
-
-    // Extract project ID embedded in the service account email for cross-checking.
-    // Format: firebase-adminsdk-xxxxx@<project-id>.iam.gserviceaccount.com
-    const emailProjectId =
-      env.FIREBASE_CLIENT_EMAIL.split("@")[1]?.split(".")[0] ?? "unknown";
-    const keyLooksValid =
-      privateKey.includes("-----BEGIN PRIVATE KEY-----") &&
-      privateKey.includes("-----END PRIVATE KEY-----");
-
-    logger.info({
-      action: "FIREBASE_CREDENTIAL_CHECK",
-      module: "firebase",
-      envProjectId: env.FIREBASE_PROJECT_ID,
-      emailProjectId,
-      projectIdsMatch: env.FIREBASE_PROJECT_ID === emailProjectId,
-      privateKeyValid: keyLooksValid,
-      clientEmail: env.FIREBASE_CLIENT_EMAIL,
-    });
-
     const app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: env.FIREBASE_PROJECT_ID,
@@ -38,6 +20,7 @@ if (
       }),
     });
     _messaging = admin.messaging(app);
+    _auth = admin.auth(app);
     logger.info({ action: "FIREBASE_INITIALIZED", module: "firebase" });
   } catch (err) {
     logger.warn({
@@ -55,4 +38,5 @@ if (
 }
 
 export const messaging = _messaging;
+export const auth = _auth;
 export const isFirebaseReady = (): boolean => _messaging !== null;
