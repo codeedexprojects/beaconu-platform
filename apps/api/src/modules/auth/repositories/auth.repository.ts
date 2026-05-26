@@ -259,6 +259,61 @@ export class AuthRepository {
     });
   }
 
+  static async findStudentByEmail(email: string) {
+    return prisma.student.findUnique({ where: { email } });
+  }
+
+  static async findStudentByGoogleId(googleId: string) {
+    return prisma.student.findUnique({ where: { googleId } });
+  }
+
+  static async upsertStudentFromGoogle(data: {
+    googleId: string;
+    email: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  }) {
+    const updateFields = {
+      fullName: data.fullName,
+      avatarUrl: data.avatarUrl ?? null,
+      isEmailVerified: true,
+      lastLoginAt: new Date(),
+    };
+
+    const byGoogle = await prisma.student.findUnique({
+      where: { googleId: data.googleId },
+    });
+    if (byGoogle) {
+      return prisma.student.update({
+        where: { id: byGoogle.id },
+        data: updateFields,
+      });
+    }
+
+    // Link existing phone-auth account that shares the same email
+    const byEmail = await prisma.student.findUnique({
+      where: { email: data.email },
+    });
+    if (byEmail) {
+      return prisma.student.update({
+        where: { id: byEmail.id },
+        data: { googleId: data.googleId, ...updateFields },
+      });
+    }
+
+    return prisma.student.create({
+      data: {
+        googleId: data.googleId,
+        email: data.email,
+        fullName: data.fullName,
+        avatarUrl: data.avatarUrl ?? null,
+        isEmailVerified: true,
+        source: "google",
+        status: "active",
+      },
+    });
+  }
+
   // Blog author lookups
   static async findBlogAuthorByEmail(email: string) {
     return prisma.blogAuthor.findUnique({ where: { email } });

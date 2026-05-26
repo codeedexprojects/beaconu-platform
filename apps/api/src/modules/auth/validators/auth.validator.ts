@@ -112,6 +112,14 @@ export const registerStudentSchema = z.object({
   fcm_token: z.string().trim().optional(),
 });
 
+export const firebaseStudentLoginSchema = z.object({
+  id_token: z.string().min(1, "Firebase ID token is required"),
+  fcm_token: z.string().trim().optional(),
+});
+
 export type SendStudentOtpInput = z.infer<typeof sendStudentOtpSchema>;
 export type VerifyStudentOtpInput = z.infer<typeof verifyStudentOtpSchema>;
 export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
+export type FirebaseStudentLoginInput = z.infer<
+  typeof firebaseStudentLoginSchema
+>;

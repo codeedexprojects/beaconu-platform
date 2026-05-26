@@ -7,6 +7,7 @@ import {
   UnauthorizedError,
 } from "@/shared/errors";
 import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
+import { auth as firebaseAuth } from "@/shared/lib/firebase";
 import {
   BLINK_ROLE_PERMISSIONS,
   BLINK_ROLES,
@@ -563,6 +564,61 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+      permissions: [],
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: student.id,
+        fullName: student.fullName,
+        email: student.email,
+        avatarUrl: student.avatarUrl,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
+  static async loginWithFirebaseGoogle(idToken: string, fcmToken?: string) {
+    if (!firebaseAuth) {
+      throw new UnauthorizedError("Google authentication is not configured");
+    }
+
+    let decoded: Awaited<ReturnType<typeof firebaseAuth.verifyIdToken>>;
+    try {
+      decoded = await firebaseAuth.verifyIdToken(idToken);
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (code === "auth/id-token-expired") {
+        throw new UnauthorizedError("Google token has expired");
+      }
+      throw new UnauthorizedError("Invalid Google token");
+    }
+
+    if (!decoded.email_verified) {
+      throw new ForbiddenError("Google account email is not verified");
+    }
+
+    const student = await AuthRepository.upsertStudentFromGoogle({
+      googleId: decoded.uid,
+      email: decoded.email!,
+      fullName: decoded.name ?? decoded.email!,
+      avatarUrl: decoded.picture ?? null,
+    });
+
+    if (student.status !== ACCOUNT_STATUS.ACTIVE) {
+      throw new ForbiddenError(`Account is ${student.status}`);
+    }
+
+    const session = await AuthRepository.createSession({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+      deviceInfo: fcmToken ? { fcmToken } : undefined,
+    });
+
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,
       userType: USER_TYPES.STUDENT,

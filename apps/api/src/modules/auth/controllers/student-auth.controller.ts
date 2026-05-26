@@ -5,6 +5,7 @@ import {
   sendStudentOtpSchema,
   verifyStudentOtpSchema,
   registerStudentSchema,
+  firebaseStudentLoginSchema,
 } from "../validators/auth.validator";
 
 import { REFRESH_TOKEN_COOKIE_OPTIONS } from "@/shared/constants";
@@ -109,6 +110,26 @@ export class StudentAuthController {
       ApiResponse.success("Token refreshed successfully", {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
+      }),
+    );
+  }
+
+  static async firebaseLogin(req: Request, res: Response) {
+    const { id_token, fcm_token } = firebaseStudentLoginSchema.parse(req.body);
+    const result = await AuthService.loginWithFirebaseGoogle(
+      id_token,
+      fcm_token,
+    );
+    res.cookie(
+      "refreshToken",
+      result.tokens.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
+    return res.status(200).json(
+      ApiResponse.success("Login successful", {
+        user: result.user,
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken,
       }),
     );
   }
