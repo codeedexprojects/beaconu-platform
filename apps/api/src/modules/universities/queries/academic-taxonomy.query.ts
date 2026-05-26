@@ -42,19 +42,27 @@ export class AcademicTaxonomyQuery {
       whereClause.name = { contains: filters.search, mode: "insensitive" };
     }
 
-    if (filters.university_id) {
-      whereClause.disciplines = {
-        some: {
-          courses: {
-            some: {
+    if (filters.university_id || filters.discipline_id) {
+      const disciplineWhere: any = {};
+
+      if (filters.discipline_id) {
+        disciplineWhere.id = filters.discipline_id;
+      }
+
+      if (filters.university_id) {
+        disciplineWhere.courses = {
+          some: {
+            status: "active",
+            college: {
+              universityId: filters.university_id,
               status: "active",
-              college: {
-                universityId: filters.university_id,
-                status: "active",
-              },
             },
           },
-        },
+        };
+      }
+
+      whereClause.disciplines = {
+        some: disciplineWhere,
       };
     }
 
