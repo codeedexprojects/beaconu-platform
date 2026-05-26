@@ -155,3 +155,6 @@ vite.config.ts.timestamp-*
 
 # Output 
 output.txt
+
+# Firebase SDK
+beaconu-firebaes-admin-sdk.json

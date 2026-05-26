@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/financial-aid/loans
+  url: {{baseUrl}}/api/v1/student/financial-aid/loans
   body: none
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
 }
 
 query {
@@ -15,10 +19,6 @@ query {
   limit: 12
   ~loan_type: both
   ~search:
-}
-
-headers {
-  Content-Type: application/json
 }
 
 script:post-response {
@@ -31,7 +31,7 @@ script:post-response {
 }
 
 docs {
-  Returns active education loans with pagination. No authentication required.
+  Returns active education loans with pagination. Requires student authentication.
 
   Query Parameters:
   - loan_type: Filter by type (domestic | abroad | both)

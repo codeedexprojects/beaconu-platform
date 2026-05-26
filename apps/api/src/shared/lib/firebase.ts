@@ -10,11 +10,31 @@ if (
   env.FIREBASE_PRIVATE_KEY
 ) {
   try {
+    const privateKey = env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
+
+    // Extract project ID embedded in the service account email for cross-checking.
+    // Format: firebase-adminsdk-xxxxx@<project-id>.iam.gserviceaccount.com
+    const emailProjectId =
+      env.FIREBASE_CLIENT_EMAIL.split("@")[1]?.split(".")[0] ?? "unknown";
+    const keyLooksValid =
+      privateKey.includes("-----BEGIN PRIVATE KEY-----") &&
+      privateKey.includes("-----END PRIVATE KEY-----");
+
+    logger.info({
+      action: "FIREBASE_CREDENTIAL_CHECK",
+      module: "firebase",
+      envProjectId: env.FIREBASE_PROJECT_ID,
+      emailProjectId,
+      projectIdsMatch: env.FIREBASE_PROJECT_ID === emailProjectId,
+      privateKeyValid: keyLooksValid,
+      clientEmail: env.FIREBASE_CLIENT_EMAIL,
+    });
+
     const app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: env.FIREBASE_PROJECT_ID,
         clientEmail: env.FIREBASE_CLIENT_EMAIL,
-        privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        privateKey,
       }),
     });
     _messaging = admin.messaging(app);

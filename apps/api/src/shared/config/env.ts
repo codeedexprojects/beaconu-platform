@@ -7,12 +7,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
-  JWT_SECRET: z
-    .string()
-    .default("beaconu-dev-jwt-secret-not-for-production-12345"),
+  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   JWT_REFRESH_SECRET: z
     .string()
-    .default("beaconu-dev-refresh-secret-not-for-production-12345"),
+    .min(32, "JWT_REFRESH_SECRET must be at least 32 characters"),
   GOOGLE_CLIENT_ID: z.string().default(""),
   GOOGLE_CLIENT_SECRET: z.string().default(""),
   RAZORPAY_KEY_ID: z.string().default(""),
@@ -28,6 +26,8 @@ const envSchema = z.object({
 });
 
 const parsed = envSchema.safeParse(process.env);
+
+console.log(parsed);
 
 if (!parsed.success) {
   const missing = parsed.error.issues.map(

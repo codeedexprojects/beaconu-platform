@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
-import { authorizeUserType } from "@/shared/middleware/authorize";
+import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
 import { validate } from "@/shared/middleware/validate";
 import { registerAmbassadorSchema } from "../validators/blink.validator";
 import { AmbassadorController } from "../controllers/ambassador.controller";
@@ -11,6 +11,7 @@ router.post(
   "/register",
   authenticate,
   authorizeUserType("staff_member"),
+  authorize("staff.manage"),
   validate(registerAmbassadorSchema),
   AmbassadorController.register,
 );
