@@ -40,6 +40,12 @@ export const academicTaxonomySchemas = {
       .optional()
       .transform((v) => (v === "" ? undefined : v))
       .pipe(z.string().uuid().optional()),
+    stream_id: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v === "" ? undefined : v))
+      .pipe(z.string().uuid().optional()),
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   }),

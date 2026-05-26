@@ -5,12 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges?streamId=&disciplineId=&studyLevelId=&programTypeId=
+  url: {{baseUrl}}/api/v1/public/colleges?universityId=&streamId=&disciplineId=&studyLevelId=&programTypeId=
   body: none
   auth: none
 }
 
 query {
+  universityId: 
   streamId: 
   disciplineId: 
   studyLevelId: 

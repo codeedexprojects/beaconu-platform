@@ -95,6 +95,10 @@ export class AcademicTaxonomyQuery {
       whereClause.name = { contains: filters.search, mode: "insensitive" };
     }
 
+    if (filters.stream_id) {
+      whereClause.streamId = filters.stream_id;
+    }
+
     if (filters.university_id) {
       whereClause.courses = {
         some: {
