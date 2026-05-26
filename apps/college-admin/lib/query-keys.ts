@@ -8,6 +8,7 @@ export const QUERY_KEYS = {
   lookupsUniversities: ["lookups", "universities"] as const,
   setupTokenValidation: (token: string) =>
     ["auth", "setup-token", token] as const,
+  publicColleges: ["public-colleges"] as const,
   publicCollegeBySlug: (slug: string) => ["public-colleges", slug] as const,
   permissions: ["college-permissions"] as const,
   roles: ["college-roles"] as const,

@@ -1,0 +1,26 @@
+meta {
+  name: Get College Summary
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}/summary?universityId=&streamId=&disciplineId=&studyLevelId=&programTypeId=
+  body: none
+  auth: none
+}
+
+query {
+  ~collegeId: 12345678-1234-1234-1234-123456789012
+  ~universityId: 12345678-1234-1234-1234-123456789011
+  ~streamId: 12345678-1234-1234-1234-123456789013
+  ~disciplineId: 12345678-1234-1234-1234-123456789014
+  ~studyLevelId: 12345678-1234-1234-1234-123456789015
+  ~programTypeId: 12345678-1234-1234-1234-123456789016
+}
+
+docs {
+  Returns a lightweight college summary with logo, cover image, location, and a single matching active course.
+  Filters by universityId and course taxonomy filters (streamId, disciplineId, studyLevelId, programTypeId) when provided.
+  tabListing contains only enabled tab ids (or section keys when id is missing), not full section data.
+}
