@@ -1,0 +1,11 @@
+meta {
+  name: Get College By Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}
+  body: none
+  auth: none
+}

@@ -32,10 +32,10 @@ script:post-response {
 
 docs {
   Send a 4-digit OTP to the student's phone number. OTP expires in 5 minutes.
-
+  
   In development (NODE_ENV != production), the response includes `devOtp` which
   is auto-captured into the `studentOtp` env var for use in verify-otp.
-
+  
   Body:
   - phone_number (required): 10-15 digit phone number
   - phone_country_code (optional): Country code, defaults to +91
