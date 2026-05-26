@@ -44,14 +44,6 @@ export class PushService {
     return PushService.sendToEntries(entries, payload);
   }
 
-  static async sendToTokens(
-    tokens: string[],
-    payload: PushPayload,
-  ): Promise<PushResult> {
-    const entries = tokens.map((token) => ({ sessionId: "", token }));
-    return PushService.sendToEntries(entries, payload);
-  }
-
   private static async sendToEntries(
     entries: { sessionId: string; token: string }[],
     payload: PushPayload,
@@ -71,63 +63,71 @@ export class PushService {
       };
     }
 
-    const tokens = entries.map((e) => e.token);
+    // send() per token gives richer error detail than sendEachForMulticast
+    const results = await Promise.allSettled(
+      entries.map((entry) =>
+        messaging!.send({
+          token: entry.token,
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
+          },
+          ...(payload.data ? { data: payload.data } : {}),
+        }),
+      ),
+    );
 
-    const response = await messaging!.sendEachForMulticast({
-      tokens,
-      notification: {
-        title: payload.title,
-        body: payload.body,
-        ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
-      },
-      ...(payload.data ? { data: payload.data } : {}),
-    });
+    let sentCount = 0;
+    let failedCount = 0;
+    const errorCounts: Record<string, number> = {};
+    const staleSessionIds: string[] = [];
 
-    if (response.failureCount > 0) {
-      // Group error codes so we can diagnose why tokens are failing
-      const errorCounts: Record<string, number> = {};
-      const staleSessionIds: string[] = [];
-
-      response.responses.forEach(
-        (r: { success: boolean; error?: { code: string } }, i: number) => {
-          if (r.success) return;
-          const code = r.error?.code ?? "unknown";
-          errorCounts[code] = (errorCounts[code] ?? 0) + 1;
-          if (STALE_TOKEN_ERRORS.has(code) && entries[i].sessionId) {
-            staleSessionIds.push(entries[i].sessionId);
-          }
-        },
-      );
+    results.forEach((result, i) => {
+      if (result.status === "fulfilled") {
+        sentCount++;
+        return;
+      }
+      failedCount++;
+      const err = result.reason as {
+        code?: string;
+        message?: string;
+        errorInfo?: { code: string; message: string };
+      };
+      const code = err?.errorInfo?.code ?? err?.code ?? "unknown";
+      const message = err?.errorInfo?.message ?? err?.message ?? "";
+      errorCounts[code] = (errorCounts[code] ?? 0) + 1;
 
       logger.warn({
-        action: "PUSH_FAILURES",
+        action: "PUSH_TOKEN_FAILED",
         module: "notifications",
-        failedCount: response.failureCount,
-        errorCounts,
+        code,
+        message,
       });
 
-      if (staleSessionIds.length > 0) {
-        await NotificationsRepository.clearFcmTokens(staleSessionIds);
-        logger.info({
-          action: "PUSH_STALE_TOKENS_CLEARED",
-          module: "notifications",
-          count: staleSessionIds.length,
-        });
+      if (STALE_TOKEN_ERRORS.has(code) && entries[i].sessionId) {
+        staleSessionIds.push(entries[i].sessionId);
       }
+    });
+
+    if (staleSessionIds.length > 0) {
+      await NotificationsRepository.clearFcmTokens(staleSessionIds);
+      logger.info({
+        action: "PUSH_STALE_TOKENS_CLEARED",
+        module: "notifications",
+        count: staleSessionIds.length,
+      });
     }
 
     logger.info({
       action: "PUSH_SENT",
       module: "notifications",
-      totalTokens: tokens.length,
-      sentCount: response.successCount,
-      failedCount: response.failureCount,
+      totalTokens: entries.length,
+      sentCount,
+      failedCount,
+      ...(failedCount > 0 ? { errorCounts } : {}),
     });
 
-    return {
-      sentCount: response.successCount,
-      failedCount: response.failureCount,
-      totalTokens: tokens.length,
-    };
+    return { sentCount, failedCount, totalTokens: entries.length };
   }
 }
