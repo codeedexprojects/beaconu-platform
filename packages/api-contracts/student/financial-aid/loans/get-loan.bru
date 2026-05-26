@@ -1,0 +1,20 @@
+meta {
+  name: Get Active Education Loan
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/financial-aid/loans/{{loanId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Returns full details of a single active education loan by ID. Requires student authentication.
+  Returns 404 if the loan does not exist or is inactive.
+}

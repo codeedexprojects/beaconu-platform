@@ -10,12 +10,12 @@ post {
   auth: bearer
 }
 
-auth:bearer {
-  token: {{accessToken}}
-}
-
 headers {
   Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 body:json {
@@ -28,17 +28,17 @@ body:json {
       "screen": "home",
       "action": "open"
     },
-    "image_url": ""
+    "image_url": "https://picsum.photos/200/300"
   }
 }
 
 docs {
   Send a push notification to a specific user via Firebase Cloud Messaging.
   Notification is delivered to all active device sessions that have an FCM token.
-
+  
   If Firebase is not configured (missing env vars), the notification is logged
   in dev mode and the response will show sentCount equal to the token count.
-
+  
   Body:
   - user_id (required): UUID of the target user
   - user_type (required): student | staff | platform_admin | blink_associate |
@@ -47,7 +47,7 @@ docs {
   - body (required): notification body text, max 1000 chars
   - data (optional): key-value string map for deep linking / in-app routing
   - image_url (optional): URL of an image to show in the notification
-
+  
   Response:
   - sentCount: number of tokens successfully delivered to
   - failedCount: number of tokens that failed

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { CryptoUtils } from "@/shared/utils";
-import { ConflictError } from "@/shared/errors";
+import { ConflictError, ForbiddenError } from "@/shared/errors";
 
 export class PlatformAdminMgmtController {
   static async createAdmin(req: Request, res: Response) {
@@ -37,6 +37,8 @@ export class PlatformAdminMgmtController {
 
   static async updateAdmin(req: Request, res: Response) {
     const id = req.params.id as string;
+    if (id === req.userId)
+      throw new ForbiddenError("You cannot modify your own account");
     const { fullName, email, password, platformRoleId } = req.body;
 
     const data: any = { fullName, email, platformRoleId };
@@ -55,6 +57,8 @@ export class PlatformAdminMgmtController {
 
   static async updateStatus(req: Request, res: Response) {
     const id = req.params.id as string;
+    if (id === req.userId)
+      throw new ForbiddenError("You cannot change your own status");
     const { status } = req.body;
 
     const admin = await prisma.platformAdmin.update({
@@ -68,6 +72,8 @@ export class PlatformAdminMgmtController {
 
   static async deleteAdmin(req: Request, res: Response) {
     const id = req.params.id as string;
+    if (id === req.userId)
+      throw new ForbiddenError("You cannot delete your own account");
     await prisma.platformAdmin.update({
       where: { id },
       data: { status: "deleted" },

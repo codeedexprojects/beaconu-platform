@@ -17,7 +17,12 @@ router.post(
   AssociateAdminController.registerEmployee,
 );
 
-router.get("/profile", authenticate, AssociateAdminController.getProfile);
+router.get(
+  "/profile",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.getProfile,
+);
 router.get(
   "/employees",
   authenticate,

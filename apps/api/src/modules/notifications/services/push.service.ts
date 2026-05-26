@@ -15,18 +15,23 @@ export interface PushResult {
   totalTokens: number;
 }
 
+const STALE_TOKEN_ERRORS = new Set([
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+]);
+
 export class PushService {
   static async sendToUser(
     userId: string,
     userType: string,
     payload: PushPayload,
   ): Promise<PushResult> {
-    const tokens = await NotificationsRepository.getActiveFcmTokens(
+    const entries = await NotificationsRepository.getActiveFcmTokens(
       userId,
       userType,
     );
 
-    if (tokens.length === 0) {
+    if (entries.length === 0) {
       logger.info({
         action: "PUSH_NO_TOKENS",
         module: "notifications",
@@ -36,27 +41,37 @@ export class PushService {
       return { sentCount: 0, failedCount: 0, totalTokens: 0 };
     }
 
-    return PushService.sendToTokens(tokens, payload);
+    return PushService.sendToEntries(entries, payload);
   }
 
   static async sendToTokens(
     tokens: string[],
     payload: PushPayload,
   ): Promise<PushResult> {
+    const entries = tokens.map((token) => ({ sessionId: "", token }));
+    return PushService.sendToEntries(entries, payload);
+  }
+
+  private static async sendToEntries(
+    entries: { sessionId: string; token: string }[],
+    payload: PushPayload,
+  ): Promise<PushResult> {
     if (!isFirebaseReady()) {
-      logger.info({
-        action: "PUSH_DEV_MODE",
+      logger.warn({
+        action: "PUSH_FIREBASE_NOT_READY",
         module: "notifications",
-        tokenCount: tokens.length,
+        tokenCount: entries.length,
         title: payload.title,
-        body: payload.body,
+        message: "Firebase not configured — notification not sent",
       });
       return {
-        sentCount: tokens.length,
-        failedCount: 0,
-        totalTokens: tokens.length,
+        sentCount: 0,
+        failedCount: entries.length,
+        totalTokens: entries.length,
       };
     }
+
+    const tokens = entries.map((e) => e.token);
 
     const response = await messaging!.sendEachForMulticast({
       tokens,
@@ -67,6 +82,39 @@ export class PushService {
       },
       ...(payload.data ? { data: payload.data } : {}),
     });
+
+    if (response.failureCount > 0) {
+      // Group error codes so we can diagnose why tokens are failing
+      const errorCounts: Record<string, number> = {};
+      const staleSessionIds: string[] = [];
+
+      response.responses.forEach(
+        (r: { success: boolean; error?: { code: string } }, i: number) => {
+          if (r.success) return;
+          const code = r.error?.code ?? "unknown";
+          errorCounts[code] = (errorCounts[code] ?? 0) + 1;
+          if (STALE_TOKEN_ERRORS.has(code) && entries[i].sessionId) {
+            staleSessionIds.push(entries[i].sessionId);
+          }
+        },
+      );
+
+      logger.warn({
+        action: "PUSH_FAILURES",
+        module: "notifications",
+        failedCount: response.failureCount,
+        errorCounts,
+      });
+
+      if (staleSessionIds.length > 0) {
+        await NotificationsRepository.clearFcmTokens(staleSessionIds);
+        logger.info({
+          action: "PUSH_STALE_TOKENS_CLEARED",
+          module: "notifications",
+          count: staleSessionIds.length,
+        });
+      }
+    }
 
     logger.info({
       action: "PUSH_SENT",
