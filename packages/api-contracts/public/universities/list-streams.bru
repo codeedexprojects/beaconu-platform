@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/universities/streams?page=1&limit=10&search=&university_id=
+  url: {{baseUrl}}/api/v1/public/universities/streams?page=1&limit=10&search=&university_id=&discipline_id=
   body: none
   auth: none
 }
@@ -14,10 +14,11 @@ query {
   page: 1
   limit: 10
   ~search: Engineering
-  ~university_id: 12345678-1234-1234-1234-123456789012
+  ~university_id: 9e74953e-5efa-403c-b190-1fcecf504930
+  ~discipline_id: 68cf8336-b1e0-49c8-892e-cdca46d8f9f5
 }
 
 docs {
   Returns paginated list of streams.
-  Supports search and filtering by university_id.
+  Supports search and filtering by university_id and discipline_id.
 }
