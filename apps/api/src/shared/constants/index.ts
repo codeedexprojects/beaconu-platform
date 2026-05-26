@@ -10,7 +10,7 @@ export const USER_TYPES = {
 } as const;
 
 export const SESSION_EXPIRY_DAYS = 90;
-export const ACCESS_TOKEN_EXPIRY = "15m";
+export const ACCESS_TOKEN_EXPIRY = "90d";
 export const REFRESH_TOKEN_EXPIRY = "90d";
 
 // sameSite "none" is required for cross-domain deployments (e.g. Vercel → Render).

@@ -3,6 +3,7 @@ import { env } from "@/shared/config/env";
 import { logger } from "@/shared/lib/logger";
 
 let _messaging: admin.messaging.Messaging | null = null;
+let _auth: admin.auth.Auth | null = null;
 
 if (
   env.FIREBASE_PROJECT_ID &&
@@ -10,14 +11,16 @@ if (
   env.FIREBASE_PRIVATE_KEY
 ) {
   try {
+    const privateKey = env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
     const app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId: env.FIREBASE_PROJECT_ID,
         clientEmail: env.FIREBASE_CLIENT_EMAIL,
-        privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        privateKey,
       }),
     });
     _messaging = admin.messaging(app);
+    _auth = admin.auth(app);
     logger.info({ action: "FIREBASE_INITIALIZED", module: "firebase" });
   } catch (err) {
     logger.warn({
@@ -35,4 +38,5 @@ if (
 }
 
 export const messaging = _messaging;
+export const auth = _auth;
 export const isFirebaseReady = (): boolean => _messaging !== null;

@@ -10,7 +10,7 @@ const RESERVED_ROOT_ROUTES = new Set([
   "_next",
 ]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const hostSlug = extractCollegeSlugFromHost(request.headers.get("host"));
 

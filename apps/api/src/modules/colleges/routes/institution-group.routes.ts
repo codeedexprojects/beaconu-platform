@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
-import { authorizeUserType } from "@/shared/middleware/authorize";
+import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
 import { InstitutionGroupController } from "../controllers/institution-group.controller";
 
 // ── Admin routes (mounted under /api/v1/admin/colleges/:id/) ──────────────
@@ -14,18 +14,21 @@ const adminAuth = [authenticate, authorizeUserType("platform_admin")];
 adminInstitutionGroupRouter.get(
   "/group",
   ...adminAuth,
+  authorize("colleges.view"),
   InstitutionGroupController.getGroupForCollege,
 );
 
 adminInstitutionGroupRouter.post(
   "/group/enable",
   ...adminAuth,
+  authorize("colleges.manage"),
   InstitutionGroupController.enableGroup,
 );
 
 adminInstitutionGroupRouter.post(
   "/group/disable",
   ...adminAuth,
+  authorize("colleges.manage"),
   InstitutionGroupController.disableGroup,
 );
 
@@ -44,5 +47,6 @@ collegeInstitutionGroupRouter.get(
 collegeInstitutionGroupRouter.post(
   "/join",
   ...staffAuth,
+  authorize("profile.edit"),
   InstitutionGroupController.joinGroup,
 );
