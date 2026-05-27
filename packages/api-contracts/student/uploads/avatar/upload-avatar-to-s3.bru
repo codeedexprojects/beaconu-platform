@@ -1,0 +1,36 @@
+meta {
+  name: Upload Avatar to S3 (PUT)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{uploadUrl}}
+  body: file
+  auth: none
+}
+
+headers {
+  Content-Type: image/jpeg
+}
+
+body:file {
+  @file:
+}
+
+docs {
+  Step 2 of 3 — PUT the image file directly to S3 using the pre-signed URL.
+
+  IMPORTANT:
+  - auth must be "none" — the presigned URL already contains AWS credentials in its query params.
+    Adding any Authorization header causes S3 to reject the request.
+  - Content-Type must exactly match what was sent to the presign endpoint (e.g. image/jpeg).
+  - Do NOT paste the URL manually — {{uploadUrl}} is captured automatically by presign-avatar.bru.
+    Pasting the URL re-encodes the %2F characters in X-Amz-Credential, which breaks the signature.
+
+  Setup:
+  1. Run presign-avatar first — it sets {{uploadUrl}} in the environment
+  2. Click the body field and select your image file
+  3. Run this request — expect HTTP 200 (no body) from S3
+  4. Run verify-avatar to confirm and get the view/permanent URLs
+}
