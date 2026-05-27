@@ -9,7 +9,21 @@ import { env } from "@/shared/config/env";
 
 let _s3Client: S3Client | null = null;
 
+export function isS3Ready(): boolean {
+  return !!(
+    env.AWS_REGION &&
+    env.AWS_ACCESS_KEY_ID &&
+    env.AWS_SECRET_ACCESS_KEY &&
+    env.AWS_S3_BUCKET
+  );
+}
+
 function getS3Client(): S3Client {
+  if (!isS3Ready()) {
+    throw new Error(
+      "S3 is not configured. Set AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET.",
+    );
+  }
   if (!_s3Client) {
     _s3Client = new S3Client({
       region: env.AWS_REGION,
@@ -17,6 +31,11 @@ function getS3Client(): S3Client {
         accessKeyId: env.AWS_ACCESS_KEY_ID,
         secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
       },
+      // SDK v3 ≥3.536 defaults to "when_supported", injecting CRC32 into
+      // presigned URLs. Clients (Flutter, Bruno) that don't send the matching
+      // header cause S3 to reject with AuthorizationQueryParametersError.
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
   }
   return _s3Client;
