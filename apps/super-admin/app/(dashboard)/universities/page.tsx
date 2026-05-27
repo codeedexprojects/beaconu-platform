@@ -9,6 +9,7 @@ import {
   MoreHorizontal,
   Edit,
   Archive,
+  Check,
   MapPin,
   Loader2,
   X,
@@ -55,6 +56,7 @@ import {
   useUpdateUniversity,
   useArchiveUniversity,
 } from "@/hooks/use-universities";
+import { useStreams } from "@/hooks/use-academic-taxonomy";
 import { useUniversityTypes } from "@/hooks/use-university-types";
 
 function toSlug(value: string): string {
@@ -104,7 +106,7 @@ type UniversityMetadataForm = {
       state: string;
       pincode: string;
     };
-    disciplineJson: string;
+    disciplineStreamIds: string[];
     videosJson: string;
   };
 };
@@ -154,7 +156,11 @@ function normalizeGovernanceCouncil(value: unknown): GovernanceCouncilForm {
     };
   }
 
-  const membersValue = Array.isArray(value.members) ? value.members : [];
+  const membersValue = Array.isArray(value.members)
+    ? value.members
+    : value.members
+      ? [value.members]
+      : [];
   const members = membersValue.map(normalizeGovernanceMember);
 
   return {
@@ -206,10 +212,46 @@ const EMPTY_METADATA_FORM: UniversityMetadataForm = {
       state: "",
       pincode: "",
     },
-    disciplineJson: "{}",
+    disciplineStreamIds: [],
     videosJson: "[]",
   },
 };
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
+function extractDisciplineStreamIds(value: unknown): string[] {
+  const ids = normalizeToArray(value)
+    .map((item) => {
+      if (typeof item === "string") {
+        return isUuid(item) ? item : null;
+      }
+
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const candidate =
+        asString(item.id) ||
+        asString(item.streamId) ||
+        asString(item.stream_id);
+
+      return isUuid(candidate) ? candidate : null;
+    })
+    .filter((id): id is string => Boolean(id));
+
+  return Array.from(new Set(ids));
+}
+
+function normalizeToArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  return [value];
+}
 
 const EMPTY_GOVERNANCE_FORM: UniversityGovernanceForm = {
   academic_council: {
@@ -254,16 +296,8 @@ function toMetadataForm(
         state: asString(details.state),
         pincode: asString(details.pincode),
       },
-      disciplineJson: JSON.stringify(
-        isRecord(overview.discipline) ? overview.discipline : {},
-        null,
-        2,
-      ),
-      videosJson: JSON.stringify(
-        isRecord(overview.videos) ? overview.videos : [],
-        null,
-        2,
-      ),
+      disciplineStreamIds: extractDisciplineStreamIds(overview.discipline),
+      videosJson: JSON.stringify(normalizeToArray(overview.videos), null, 2),
     },
   };
 }
@@ -293,25 +327,41 @@ function toGovernanceForm(
   };
 }
 
-function parseJsonObject(
-  value: string,
-  fieldName: string,
-): Record<string, unknown> {
-  if (!value.trim()) return {};
+function parseJsonArray(value: string, fieldName: string): unknown[] {
+  if (!value.trim()) return [];
   try {
     const parsed = JSON.parse(value);
-    if (!isRecord(parsed)) {
-      throw new Error(`${fieldName} must be a JSON object`);
-    }
-    return parsed;
+    return normalizeToArray(parsed);
   } catch {
-    throw new Error(`${fieldName} must be valid JSON object`);
+    throw new Error(`${fieldName} must be valid JSON array`);
   }
 }
 
 function buildStructuredMetadata(
   form: UniversityMetadataForm,
+  availableStreams: Array<{ id: string; name: string; slug: string }>,
 ): Record<string, unknown> {
+  const selectedStreamMap = new Map(
+    availableStreams.map((stream) => [stream.id, stream] as const),
+  );
+
+  const selectedStreams = form.overview.disciplineStreamIds
+    .map((streamId) => selectedStreamMap.get(streamId))
+    .filter(
+      (
+        stream,
+      ): stream is {
+        id: string;
+        name: string;
+        slug: string;
+      } => Boolean(stream),
+    )
+    .map((stream) => ({
+      id: stream.id,
+      name: stream.name,
+      slug: stream.slug,
+    }));
+
   return {
     overview: {
       description: form.overview.description,
@@ -329,11 +379,8 @@ function buildStructuredMetadata(
         state: form.overview.university_details.state,
         pincode: form.overview.university_details.pincode,
       },
-      discipline: parseJsonObject(
-        form.overview.disciplineJson,
-        "Discipline model",
-      ),
-      videos: parseJsonObject(form.overview.videosJson, "Videos"),
+      discipline: selectedStreams,
+      videos: parseJsonArray(form.overview.videosJson, "Videos"),
     },
   };
 }
@@ -382,6 +429,7 @@ export default function UniversitiesPage() {
 
   const { data: universities = [], isLoading } = useUniversities();
   const { data: universityTypes = [] } = useUniversityTypes();
+  const { data: streams = [] } = useStreams(true);
   const createMutation = useCreateUniversity();
   const updateMutation = useUpdateUniversity();
   const archiveMutation = useArchiveUniversity();
@@ -423,6 +471,15 @@ export default function UniversitiesPage() {
     (u) => u.status === "active",
   ).length;
 
+  const activeStreams = useMemo(
+    () =>
+      streams
+        .filter((stream) => stream.isActive)
+        .slice()
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [streams],
+  );
+
   const handleCreateNameChange = (value: string) => {
     setCreateForm((prev) => ({
       ...prev,
@@ -435,7 +492,7 @@ export default function UniversitiesPage() {
     e.preventDefault();
     let metadata: Record<string, unknown>;
     try {
-      metadata = buildStructuredMetadata(createMetadataForm);
+      metadata = buildStructuredMetadata(createMetadataForm, activeStreams);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invalid metadata");
       return;
@@ -493,7 +550,7 @@ export default function UniversitiesPage() {
     if (!editingUniversity) return;
     let metadata: Record<string, unknown>;
     try {
-      metadata = buildStructuredMetadata(editMetadataForm);
+      metadata = buildStructuredMetadata(editMetadataForm, activeStreams);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invalid metadata");
       return;
@@ -599,6 +656,38 @@ export default function UniversitiesPage() {
         members: prev[council].members.filter((_, i) => i !== index),
       },
     }));
+  };
+
+  const toggleCreateDisciplineStream = (streamId: string) => {
+    setCreateMetadataForm((prev) => {
+      const alreadySelected =
+        prev.overview.disciplineStreamIds.includes(streamId);
+      return {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          disciplineStreamIds: alreadySelected
+            ? prev.overview.disciplineStreamIds.filter((id) => id !== streamId)
+            : [...prev.overview.disciplineStreamIds, streamId],
+        },
+      };
+    });
+  };
+
+  const toggleEditDisciplineStream = (streamId: string) => {
+    setEditMetadataForm((prev) => {
+      const alreadySelected =
+        prev.overview.disciplineStreamIds.includes(streamId);
+      return {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          disciplineStreamIds: alreadySelected
+            ? prev.overview.disciplineStreamIds.filter((id) => id !== streamId)
+            : [...prev.overview.disciplineStreamIds, streamId],
+        },
+      };
+    });
   };
 
   const handleArchive = (id: string) => {
@@ -1186,27 +1275,57 @@ export default function UniversitiesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="create-discipline-json">
-                      Discipline JSON
-                    </Label>
-                    <textarea
-                      id="create-discipline-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={createMetadataForm.overview.disciplineJson}
-                      onChange={(e) =>
-                        setCreateMetadataForm((prev) => ({
-                          ...prev,
-                          overview: {
-                            ...prev.overview,
-                            disciplineJson: e.target.value,
-                          },
-                        }))
-                      }
-                    />
+                    <Label>Disciple (Streams)</Label>
+                    <div className="space-y-2 rounded-md border border-input bg-background p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Select one or more streams for this university.
+                      </p>
+                      {activeStreams.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No active streams found.
+                        </p>
+                      ) : (
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {activeStreams.map((stream) => {
+                            const isSelected =
+                              createMetadataForm.overview.disciplineStreamIds.includes(
+                                stream.id,
+                              );
+                            return (
+                              <button
+                                key={stream.id}
+                                type="button"
+                                onClick={() =>
+                                  toggleCreateDisciplineStream(stream.id)
+                                }
+                                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                                  isSelected
+                                    ? "border-primary bg-primary/5"
+                                    : "border-input hover:bg-muted/40"
+                                }`}
+                              >
+                                <span
+                                  className={`flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                    isSelected
+                                      ? "border-primary bg-primary text-primary-foreground"
+                                      : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="h-3 w-3" />}
+                                </span>
+                                <span>{stream.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="create-videos-json">Videos JSON</Label>
+                    <Label htmlFor="create-videos-json">
+                      Videos JSON (Array)
+                    </Label>
                     <textarea
                       id="create-videos-json"
                       className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -1220,6 +1339,7 @@ export default function UniversitiesPage() {
                           },
                         }))
                       }
+                      placeholder='[{"title":"Campus Tour","url":"https://..."}]'
                     />
                   </div>
                 </div>
@@ -1930,27 +2050,57 @@ export default function UniversitiesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="edit-discipline-json">
-                      Discipline JSON
-                    </Label>
-                    <textarea
-                      id="edit-discipline-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={editMetadataForm.overview.disciplineJson}
-                      onChange={(e) =>
-                        setEditMetadataForm((prev) => ({
-                          ...prev,
-                          overview: {
-                            ...prev.overview,
-                            disciplineJson: e.target.value,
-                          },
-                        }))
-                      }
-                    />
+                    <Label>Disciple (Streams)</Label>
+                    <div className="space-y-2 rounded-md border border-input bg-background p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Select one or more streams for this university.
+                      </p>
+                      {activeStreams.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No active streams found.
+                        </p>
+                      ) : (
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {activeStreams.map((stream) => {
+                            const isSelected =
+                              editMetadataForm.overview.disciplineStreamIds.includes(
+                                stream.id,
+                              );
+                            return (
+                              <button
+                                key={stream.id}
+                                type="button"
+                                onClick={() =>
+                                  toggleEditDisciplineStream(stream.id)
+                                }
+                                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                                  isSelected
+                                    ? "border-primary bg-primary/5"
+                                    : "border-input hover:bg-muted/40"
+                                }`}
+                              >
+                                <span
+                                  className={`flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                    isSelected
+                                      ? "border-primary bg-primary text-primary-foreground"
+                                      : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="h-3 w-3" />}
+                                </span>
+                                <span>{stream.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="edit-videos-json">Videos JSON</Label>
+                    <Label htmlFor="edit-videos-json">
+                      Videos JSON (Array)
+                    </Label>
                     <textarea
                       id="edit-videos-json"
                       className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -1964,6 +2114,7 @@ export default function UniversitiesPage() {
                           },
                         }))
                       }
+                      placeholder='[{"title":"Campus Tour","url":"https://..."}]'
                     />
                   </div>
                 </div>

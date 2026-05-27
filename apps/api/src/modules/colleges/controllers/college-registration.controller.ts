@@ -155,8 +155,9 @@ export class CollegeRegistrationController {
 
   // ── Lookups ────────────────────────────────────────────────────────────────
 
-  static async getStreams(_req: Request, res: Response) {
-    const result = await CollegeRegistrationService.getStreams();
+  static async getStreams(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const result = await CollegeRegistrationService.getStreams(collegeId);
     return res.status(200).json(ApiResponse.success("Streams fetched", result));
   }
 

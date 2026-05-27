@@ -48,7 +48,12 @@ body:json {
         "district": "Central Delhi",
         "state": "Delhi",
         "pincode": "110007",
-        "discipline": {},
+        "discipline": [
+          {
+            "name": "Engineering",
+            "description": "Core engineering programs"
+          }
+        ],
         "videos": [
           "https://res.cloudinary.com/daai1jedw/video/upload/v1778845940/Pepsi_Messi_Salah_compiten_por_la_u%CC%81ltima_Pepsi_-_Pepsi_Ecuador_1080p_h264_youtube_xcctjp.mp4"
         ]
@@ -105,6 +110,8 @@ docs {
   - metadata: Object (optional)
   - metadata.overview.accolades: Array of accolade objects
     with title, image_url, description, subdescription
+  - metadata.overview.discipline: Array (use [] for empty)
+  - metadata.overview.videos: Array (use [] for empty)
   - governance: Object with academic_council, management_council, organizational_organogram (optional)
 
   Requires: platform admin access token.
