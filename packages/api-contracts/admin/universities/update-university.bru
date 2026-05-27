@@ -21,6 +21,18 @@ body:json {
     "city": "New Delhi",
     "accreditation": "NAAC A++",
     "cover_url": "",
+    "metadata": {
+      "overview": {
+        "discipline": [
+          {
+            "name": "Engineering"
+          }
+        ],
+        "videos": [
+          "https://example.com/videos/campus-tour.mp4"
+        ]
+      }
+    },
     "governance": {
       "academic_council": [
         {
@@ -54,6 +66,8 @@ docs {
   Updatable fields:
   - university_type_id, name, slug, state, city, accreditation,
     governance_details, cover_url, logo_url, metadata, governance
+  - For metadata.overview.discipline and metadata.overview.videos,
+    send array values consistently (even for a single item)
 
   Requires: platform admin access token.
 }
