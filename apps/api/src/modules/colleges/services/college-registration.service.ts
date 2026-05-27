@@ -11,32 +11,6 @@ import {
 import { InstitutionGroupService } from "./institution-group.service";
 
 export class CollegeRegistrationService {
-  private static async ensureDisciplineAllowedForCollege(
-    collegeId: string,
-    disciplineId: string,
-  ) {
-    const discipline =
-      await CollegeRegistrationRepository.getDisciplineById(disciplineId);
-
-    if (!discipline || !discipline.isActive) {
-      throw new NotFoundError("Discipline not found");
-    }
-
-    const allowedStreamIds =
-      await CollegeRegistrationRepository.getAllowedStreamIdsForCollege(
-        collegeId,
-      );
-
-    if (
-      allowedStreamIds.length === 0 ||
-      !allowedStreamIds.includes(discipline.streamId)
-    ) {
-      throw new ConflictError(
-        "Selected discipline is not available for this university",
-      );
-    }
-  }
-
   // ── College Profile ────────────────────────────────────────────────────────
 
   static async getProfile(collegeId: string) {
@@ -155,7 +129,6 @@ export class CollegeRegistrationService {
   }
 
   static async addCourse(collegeId: string, data: CreateCourseData) {
-    await this.ensureDisciplineAllowedForCollege(collegeId, data.disciplineId);
     return CollegeRegistrationRepository.createCourse(collegeId, data);
   }
 
@@ -164,13 +137,6 @@ export class CollegeRegistrationService {
     collegeId: string,
     data: UpdateCourseData,
   ) {
-    if (data.disciplineId) {
-      await this.ensureDisciplineAllowedForCollege(
-        collegeId,
-        data.disciplineId,
-      );
-    }
-
     const course = await CollegeRegistrationRepository.updateCourse(
       courseId,
       collegeId,
@@ -191,15 +157,8 @@ export class CollegeRegistrationService {
 
   // ── Lookups ────────────────────────────────────────────────────────────────
 
-  static async getStreams(collegeId: string) {
-    const allowedStreamIds =
-      await CollegeRegistrationRepository.getAllowedStreamIdsForCollege(
-        collegeId,
-      );
-
-    return CollegeRegistrationRepository.getStreamsWithDisciplines(
-      allowedStreamIds,
-    );
+  static async getStreams() {
+    return CollegeRegistrationRepository.getStreamsWithDisciplines();
   }
 
   static async getStudyLevels() {

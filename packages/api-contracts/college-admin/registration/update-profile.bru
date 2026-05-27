@@ -16,79 +16,12 @@ auth:bearer {
 
 body:json {
   {
-    "name": "Beacon Institute of Technology",
-    "code": "BIT-101",
+    "name": "Beacon University",
+    "code": "BU-101",
     "address": "123 Tech Campus Road",
     "city": "Bangalore",
     "state": "Karnataka",
     "district": "Bangalore Urban",
-    "pinCode": "560001",
-    "profileSections": {
-      "college_overview": {
-        "id": "college_overview",
-        "enabled": true,
-        "description": "Practice-driven learning with strong outcomes.",
-        "aminities": ["Library", "Hostel Facility", "AC Classrooms"],
-        "nearby_access": {
-          "transit": [
-            {
-              "type": "Bus",
-              "name": "Main Gate Stop",
-              "distance": "0.4 km"
-            }
-          ],
-          "essentials": [
-            {
-              "type": "ATM",
-              "name": "SBI ATM",
-              "distance": "0.3 km"
-            }
-          ]
-        },
-        "campus_reels": [
-          {
-            "title": "Student Life",
-            "link": "https://example.com/reels/student-life"
-          }
-        ]
-      },
-      "course_info": {
-        "id": "course_info",
-        "enabled": true,
-        "eligibilitySummary": "Based on merit and entrance score.",
-        "course_details": {
-          "programHighlights": [
-            { "description": "Hands-on lab sessions" }
-          ],
-          "courseAccolades": [
-            {
-              "title": "Top Recruiters",
-              "description": "120+ recruiters in 2025"
-            }
-          ]
-        }
-      },
-      "review": {
-        "id": "review",
-        "enabled": true,
-        "ratingDistribution": [{ "emoji": "5", "count": 120 }],
-        "categoryRatings": [{ "category": "Campus", "rating": 4.5 }],
-        "reviews": [
-          {
-            "reviewerName": "Riya",
-            "reviewDate": "2026-03-20",
-            "reviewText": "Supportive peers and quality labs."
-          }
-        ]
-      }
-    }
+    "pinCode": "560001"
   }
-}
-
-docs {
-  Updates college profile during onboarding/registration flow.
-
-  Notes:
-  - Use `profileSections` for tab payloads.
-  - For single or multiple items, always send arrays for list fields.
 }
