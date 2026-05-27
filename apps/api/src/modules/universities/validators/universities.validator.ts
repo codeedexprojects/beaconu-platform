@@ -6,7 +6,7 @@ import {
 } from "@beaconu/validation";
 
 const idParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 export const universitySchemas = {

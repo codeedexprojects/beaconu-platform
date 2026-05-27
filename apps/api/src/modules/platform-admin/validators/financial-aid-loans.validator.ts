@@ -71,7 +71,7 @@ const listEducationLoansQuerySchema = z.object({
 });
 
 const idParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 export const educationLoanSchemas = {

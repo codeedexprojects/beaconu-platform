@@ -7,7 +7,7 @@ import {
 } from "@beaconu/validation";
 import { InstitutionGroupService } from "../services/institution-group.service";
 
-const idParam = z.object({ id: z.string().uuid() });
+const idParam = z.object({ id: z.string() });
 
 export class InstitutionGroupController {
   static async getGroupForCollege(req: Request, res: Response): Promise<void> {

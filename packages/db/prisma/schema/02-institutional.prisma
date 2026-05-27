@@ -3,7 +3,7 @@
 // ============================================================
 
 model UniversityType {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('UVT-'::text || (nextval('university_type_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
   slug      String   @unique @db.VarChar(50)
   sortOrder Int      @default(0) @map("sort_order")
@@ -17,8 +17,8 @@ model UniversityType {
 }
 
 model University {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityTypeId  String   @map("university_type_id") @db.Uuid
+  id                String   @id @default(dbgenerated("('UNV-'::text || (nextval('university_seq'::regclass))::text)"))
+  universityTypeId  String   @map("university_type_id")
   name              String   @db.VarChar(255)
   slug              String   @unique @db.VarChar(100)
   state             String?  @db.VarChar(100)
@@ -43,14 +43,14 @@ model University {
 }
 
 model InstitutionGroup {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String   @id @default(dbgenerated("('ING-'::text || (nextval('institution_group_seq'::regclass))::text)"))
   name               String   @db.VarChar(255)
   slug               String   @unique @db.VarChar(100)
   description        String?  @db.Text
   logoUrl            String?  @map("logo_url") @db.Text
   groupCode          String   @unique @map("group_code") @db.VarChar(30)
-  createdByCollegeId String   @map("created_by_college_id") @db.Uuid
-  createdByStaffId   String?  @map("created_by_staff_id") @db.Uuid
+  createdByCollegeId String   @map("created_by_college_id")
+  createdByStaffId   String?  @map("created_by_staff_id")
   status             String   @default("active") @db.VarChar(20)
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -68,9 +68,9 @@ model InstitutionGroup {
 }
 
 model InstitutionGroupMember {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  groupId   String   @map("group_id") @db.Uuid
-  collegeId String   @unique @map("college_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('IGM-'::text || (nextval('institution_group_member_seq'::regclass))::text)"))
+  groupId   String   @map("group_id")
+  collegeId String   @unique @map("college_id")
   role      String   @default("member") @db.VarChar(20)
   joinedVia String   @default("code") @map("joined_via") @db.VarChar(20)
   joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
@@ -86,8 +86,8 @@ model InstitutionGroupMember {
 }
 
 model College {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityId    String   @map("university_id") @db.Uuid
+  id              String   @id @default(dbgenerated("('CLG-'::text || (nextval('college_seq'::regclass))::text)"))
+  universityId    String   @map("university_id")
   name            String   @db.VarChar(255)
   slug            String   @unique @db.VarChar(100)
   code            String   @unique @db.VarChar(20)
@@ -165,7 +165,7 @@ model College {
 }
 
 model CollegeOnboardingRequest {
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("('COR-'::text || (nextval('college_onboarding_request_seq'::regclass))::text)"))
 
   collegeName       String   @map("college_name") @db.VarChar(255)
   universityName    String?  @map("university_name") @db.VarChar(255)
@@ -177,9 +177,9 @@ model CollegeOnboardingRequest {
   groupCode         String?  @map("group_code") @db.VarChar(20)
   message           String?  @db.Text
   status            String   @default("pending") @db.VarChar(20)
-  reviewedBy        String?  @map("reviewed_by") @db.Uuid
+  reviewedBy        String?  @map("reviewed_by")
   reviewRemarks     String?  @map("review_remarks") @db.Text
-  createdCollegeId  String?  @map("created_college_id") @db.Uuid
+  createdCollegeId  String?  @map("created_college_id")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -192,8 +192,8 @@ model CollegeOnboardingRequest {
 }
 
 model Campus {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId    String   @map("college_id") @db.Uuid
+  id           String   @id @default(dbgenerated("('CMP-'::text || (nextval('campus_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
   name         String   @db.VarChar(255)
   address      String?  @db.Text
   city         String?  @db.VarChar(100)
@@ -218,7 +218,7 @@ model Campus {
 }
 
 model Stream {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('STR-'::text || (nextval('stream_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
   slug      String   @unique @db.VarChar(50)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -233,8 +233,8 @@ model Stream {
 }
 
 model Discipline {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  streamId  String   @map("stream_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('DSC-'::text || (nextval('discipline_seq'::regclass))::text)"))
+  streamId  String   @map("stream_id")
   name      String   @db.VarChar(100)
   slug      String   @db.VarChar(50)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -252,7 +252,7 @@ model Discipline {
 }
 
 model StudyLevel {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('SVL-'::text || (nextval('study_level_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(50)
   slug      String   @unique @db.VarChar(30)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -267,7 +267,7 @@ model StudyLevel {
 }
 
 model ProgramType {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('PGT-'::text || (nextval('program_type_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(50)
   slug      String   @unique @db.VarChar(30)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -283,12 +283,12 @@ model ProgramType {
 
 
 model Course {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId              String   @map("college_id") @db.Uuid
-  campusId               String?  @map("campus_id") @db.Uuid
-  disciplineId           String   @map("discipline_id") @db.Uuid
-  studyLevelId           String   @map("study_level_id") @db.Uuid
-  programTypeId          String   @map("program_type_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
+  collegeId              String   @map("college_id")
+  campusId               String?  @map("campus_id")
+  disciplineId           String   @map("discipline_id")
+  studyLevelId           String   @map("study_level_id")
+  programTypeId          String   @map("program_type_id")
   appFeeCommissionType   String?  @map("app_fee_commission_type") @db.VarChar(10)
   appFeeCommissionValue  Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
   tuitionCommissionType  String?  @map("tuition_commission_type") @db.VarChar(10)
@@ -332,8 +332,8 @@ model Course {
 }
 
 model CourseQuota {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId           String   @map("course_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
+  courseId           String   @map("course_id")
   tuitionFeeOverride Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
   quotaName          String   @map("quota_name") @db.VarChar(100)
   seats              Int
@@ -351,8 +351,8 @@ model CourseQuota {
 }
 
 model CollegeGallery {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId String   @map("college_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('CGY-'::text || (nextval('college_gallery_seq'::regclass))::text)"))
+  collegeId String   @map("college_id")
   mediaType String   @map("media_type") @db.VarChar(10)
   url       String   @db.Text
   caption   String?  @db.VarChar(255)
@@ -367,9 +367,9 @@ model CollegeGallery {
 }
 
 model CollegeReview {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId  String   @map("college_id") @db.Uuid
-  studentId  String   @map("student_id") @db.Uuid
+  id         String   @id @default(dbgenerated("('CRV-'::text || (nextval('college_review_seq'::regclass))::text)"))
+  collegeId  String   @map("college_id")
+  studentId  String   @map("student_id")
   rating     Int      @db.SmallInt
   reviewText String?  @map("review_text") @db.Text
   status     String   @default("pending") @db.VarChar(20)

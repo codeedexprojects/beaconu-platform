@@ -3,15 +3,15 @@
 // ============================================================
 
 model Notification {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String    @id @default(dbgenerated("('NTF-'::text || (nextval('notification_seq'::regclass))::text)"))
   recipientType  String    @map("recipient_type") @db.VarChar(20)
-  recipientId    String    @map("recipient_id") @db.Uuid
+  recipientId    String    @map("recipient_id")
   title          String    @db.VarChar(255)
   body           String    @db.Text
   channel        String    @db.VarChar(10)
   category       String    @default("general") @db.VarChar(30)
   entityType     String?   @map("entity_type") @db.VarChar(50)
-  entityId       String?   @map("entity_id") @db.Uuid
+  entityId       String?   @map("entity_id")
   actionUrl      String?   @map("action_url") @db.Text
   isRead         Boolean   @default(false) @map("is_read")
   readAt         DateTime? @map("read_at") @db.Timestamptz
@@ -29,8 +29,8 @@ model Notification {
 }
 
 model BroadcastNotification {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId       String?   @map("college_id") @db.Uuid
+  id              String    @id @default(dbgenerated("('BCN-'::text || (nextval('broadcast_notification_seq'::regclass))::text)"))
+  collegeId       String?   @map("college_id")
   title           String    @db.VarChar(255)
   body            String    @db.Text
   channels        Json
@@ -39,7 +39,7 @@ model BroadcastNotification {
   sentCount       Int       @default(0) @map("sent_count")
   failedCount     Int       @default(0) @map("failed_count")
   sentByType      String    @map("sent_by_type") @db.VarChar(20)
-  sentById        String    @map("sent_by_id") @db.Uuid
+  sentById        String    @map("sent_by_id")
   status          String    @default("draft") @db.VarChar(20)
   scheduledAt     DateTime? @map("scheduled_at") @db.Timestamptz
   sentAt          DateTime? @map("sent_at") @db.Timestamptz
@@ -56,15 +56,15 @@ model BroadcastNotification {
 }
 
 model Announcement {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String    @map("college_id") @db.Uuid
+  id          String    @id @default(dbgenerated("('ANN-'::text || (nextval('announcement_seq'::regclass))::text)"))
+  collegeId   String    @map("college_id")
   title       String    @db.VarChar(255)
   content     String    @db.Text
   category    String    @default("general") @db.VarChar(30)
   isPinned    Boolean   @default(false) @map("is_pinned")
   status      String    @default("published") @db.VarChar(20)
   publishedAt DateTime? @map("published_at") @db.Timestamptz
-  createdBy   String    @map("created_by") @db.Uuid
+  createdBy   String    @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -78,15 +78,15 @@ model Announcement {
 }
 
 model SupportTicket {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String    @id @default(dbgenerated("('TKT-'::text || (nextval('support_ticket_seq'::regclass))::text)"))
   ticketNumber String    @unique @map("ticket_number") @db.VarChar(30)
-  studentId    String    @map("student_id") @db.Uuid
-  collegeId    String    @map("college_id") @db.Uuid
+  studentId    String    @map("student_id")
+  collegeId    String    @map("college_id")
   subject      String    @db.VarChar(255)
   description  String    @db.Text
   category     String    @default("general") @db.VarChar(30)
   attachments  Json      @default("[]")
-  assignedTo   String?   @map("assigned_to") @db.Uuid
+  assignedTo   String?   @map("assigned_to")
   status       String    @default("in_progress") @db.VarChar(20)
   resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
   closedAt     DateTime? @map("closed_at") @db.Timestamptz
@@ -109,10 +109,10 @@ model SupportTicket {
 }
 
 model TicketMessage {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ticketId    String   @map("ticket_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('TKM-'::text || (nextval('ticket_message_seq'::regclass))::text)"))
+  ticketId    String   @map("ticket_id")
   senderType  String   @map("sender_type") @db.VarChar(20)
-  senderId    String?  @map("sender_id") @db.Uuid
+  senderId    String?  @map("sender_id")
   message     String   @db.Text
   attachments Json     @default("[]")
   isSystem    Boolean  @default(false) @map("is_system")
@@ -128,11 +128,11 @@ model TicketMessage {
 }
 
 model ChatConversation {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String    @id @default(dbgenerated("('CCV-'::text || (nextval('chat_conversation_seq'::regclass))::text)"))
   participant1Type   String    @map("participant_1_type") @db.VarChar(20)
-  participant1Id     String    @map("participant_1_id") @db.Uuid
+  participant1Id     String    @map("participant_1_id")
   participant2Type   String    @map("participant_2_type") @db.VarChar(20)
-  participant2Id     String    @map("participant_2_id") @db.Uuid
+  participant2Id     String    @map("participant_2_id")
   lastMessageText    String?   @map("last_message_text") @db.Text
   lastMessageAt      DateTime? @map("last_message_at") @db.Timestamptz
   participant1Unread Int       @default(0) @map("participant_1_unread")
@@ -154,10 +154,10 @@ model ChatConversation {
 }
 
 model ChatMessage {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  conversationId String    @map("conversation_id") @db.Uuid
+  id             String    @id @default(dbgenerated("('CMG-'::text || (nextval('chat_message_seq'::regclass))::text)"))
+  conversationId String    @map("conversation_id")
   senderType     String    @map("sender_type") @db.VarChar(20)
-  senderId       String    @map("sender_id") @db.Uuid
+  senderId       String    @map("sender_id")
   message        String?   @db.Text
   attachments    Json      @default("[]")
   isRead         Boolean   @default(false) @map("is_read")

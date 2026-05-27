@@ -1,6 +1,125 @@
+-- CreateSequence
+CREATE SEQUENCE IF NOT EXISTS "admission_cycle_seq";
+CREATE SEQUENCE IF NOT EXISTS "admission_cycle_course_seq";
+CREATE SEQUENCE IF NOT EXISTS "admission_form_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "announcement_seq";
+CREATE SEQUENCE IF NOT EXISTS "anti_ragging_complaint_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_course_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_document_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_status_log_seq";
+CREATE SEQUENCE IF NOT EXISTS "article_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_attempt_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_paper_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_section_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_slot_seq";
+CREATE SEQUENCE IF NOT EXISTS "assessment_template_seq";
+CREATE SEQUENCE IF NOT EXISTS "audit_log_seq";
+CREATE SEQUENCE IF NOT EXISTS "beaconu_card_seq";
+CREATE SEQUENCE IF NOT EXISTS "blink_role_seq";
+CREATE SEQUENCE IF NOT EXISTS "blink_user_seq";
+CREATE SEQUENCE IF NOT EXISTS "blink_wallet_seq";
+CREATE SEQUENCE IF NOT EXISTS "blink_wallet_transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "blog_seq";
+CREATE SEQUENCE IF NOT EXISTS "blog_author_seq";
+CREATE SEQUENCE IF NOT EXISTS "broadcast_notification_seq";
+CREATE SEQUENCE IF NOT EXISTS "campus_seq";
+CREATE SEQUENCE IF NOT EXISTS "campus_visit_seq";
+CREATE SEQUENCE IF NOT EXISTS "chat_conversation_seq";
+CREATE SEQUENCE IF NOT EXISTS "chat_message_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_gallery_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_onboarding_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_payment_account_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_review_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "commission_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_comment_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_member_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_post_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_post_vote_seq";
+CREATE SEQUENCE IF NOT EXISTS "commute_bus_seq";
+CREATE SEQUENCE IF NOT EXISTS "commute_enrollment_seq";
+CREATE SEQUENCE IF NOT EXISTS "commute_ride_history_seq";
+CREATE SEQUENCE IF NOT EXISTS "commute_route_seq";
+CREATE SEQUENCE IF NOT EXISTS "commute_route_stop_seq";
+CREATE SEQUENCE IF NOT EXISTS "counselling_session_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_availability_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "course_seq";
+CREATE SEQUENCE IF NOT EXISTS "course_quota_seq";
+CREATE SEQUENCE IF NOT EXISTS "course_switch_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "discipline_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_template_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_upload_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "education_loan_seq";
+CREATE SEQUENCE IF NOT EXISTS "enrollment_seq";
+CREATE SEQUENCE IF NOT EXISTS "entrance_exam_seq";
+CREATE SEQUENCE IF NOT EXISTS "event_seq";
+CREATE SEQUENCE IF NOT EXISTS "event_registration_seq";
+CREATE SEQUENCE IF NOT EXISTS "fee_structure_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_addon_service_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_enrollment_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_mess_plan_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_review_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_room_type_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_wishlist_seq";
+CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
+CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
+CREATE SEQUENCE IF NOT EXISTS "interview_booking_seq";
+CREATE SEQUENCE IF NOT EXISTS "interview_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "interview_slot_seq";
+CREATE SEQUENCE IF NOT EXISTS "issued_document_seq";
+CREATE SEQUENCE IF NOT EXISTS "media_kit_seq";
+CREATE SEQUENCE IF NOT EXISTS "news_alert_seq";
+CREATE SEQUENCE IF NOT EXISTS "notification_seq";
+CREATE SEQUENCE IF NOT EXISTS "offer_letter_seq";
+CREATE SEQUENCE IF NOT EXISTS "paper_question_seq";
+CREATE SEQUENCE IF NOT EXISTS "payment_receipt_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_admin_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_role_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "program_type_seq";
+CREATE SEQUENCE IF NOT EXISTS "question_seq";
+CREATE SEQUENCE IF NOT EXISTS "question_course_mapping_seq";
+CREATE SEQUENCE IF NOT EXISTS "question_type_seq";
+CREATE SEQUENCE IF NOT EXISTS "referral_seq";
+CREATE SEQUENCE IF NOT EXISTS "referral_code_seq";
+CREATE SEQUENCE IF NOT EXISTS "refund_seq";
+CREATE SEQUENCE IF NOT EXISTS "scholarship_application_seq";
+CREATE SEQUENCE IF NOT EXISTS "scholarship_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_seq";
+CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "squad_search_seq";
+CREATE SEQUENCE IF NOT EXISTS "staff_member_seq";
+CREATE SEQUENCE IF NOT EXISTS "stream_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_answer_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_bank_account_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_fee_ledger_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_lead_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_wallet_transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "study_level_seq";
+CREATE SEQUENCE IF NOT EXISTS "support_ticket_seq";
+CREATE SEQUENCE IF NOT EXISTS "template_section_seq";
+CREATE SEQUENCE IF NOT EXISTS "ticket_message_seq";
+CREATE SEQUENCE IF NOT EXISTS "transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "university_seq";
+CREATE SEQUENCE IF NOT EXISTS "university_type_seq";
+CREATE SEQUENCE IF NOT EXISTS "user_session_seq";
+
 -- CreateTable
 CREATE TABLE "students" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'STU-' || nextval('student_seq')::text,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255),
     "phone_country_code" VARCHAR(5) DEFAULT '+91',
@@ -22,7 +141,8 @@ CREATE TABLE "students" (
 
 -- CreateTable
 CREATE TABLE "platform_admins" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'PAD-' || nextval('platform_admin_seq')::text,
+    "platform_role_id" TEXT,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -37,9 +157,43 @@ CREATE TABLE "platform_admins" (
 );
 
 -- CreateTable
+CREATE TABLE "platform_roles" (
+    "id" TEXT NOT NULL DEFAULT 'PLR-' || nextval('platform_role_seq')::text,
+    "name" VARCHAR(100) NOT NULL,
+    "slug" VARCHAR(50) NOT NULL,
+    "is_system_role" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "platform_roles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "platform_permissions" (
+    "id" TEXT NOT NULL DEFAULT 'PPM-' || nextval('platform_permission_seq')::text,
+    "code" VARCHAR(100) NOT NULL,
+    "description" VARCHAR(255),
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "platform_permissions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "platform_role_permissions" (
+    "id" TEXT NOT NULL DEFAULT 'PRP-' || nextval('platform_role_permission_seq')::text,
+    "platform_role_id" TEXT NOT NULL,
+    "permission_code" VARCHAR(100) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "platform_role_permissions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "college_roles" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CLR-' || nextval('college_role_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -52,8 +206,8 @@ CREATE TABLE "college_roles" (
 
 -- CreateTable
 CREATE TABLE "college_role_permissions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_role_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CRP-' || nextval('college_role_permission_seq')::text,
+    "college_role_id" TEXT NOT NULL,
     "permission_code" VARCHAR(100) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -62,16 +216,16 @@ CREATE TABLE "college_role_permissions" (
 
 -- CreateTable
 CREATE TABLE "staff_members" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "college_role_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'STF-' || nextval('staff_member_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "college_role_id" TEXT NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
     "phone_number" VARCHAR(15),
     "avatar_url" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
-    "invited_by" UUID,
+    "invited_by" TEXT,
     "last_login_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -81,7 +235,7 @@ CREATE TABLE "staff_members" (
 
 -- CreateTable
 CREATE TABLE "blink_roles" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'BLR-' || nextval('blink_role_seq')::text,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -94,11 +248,11 @@ CREATE TABLE "blink_roles" (
 
 -- CreateTable
 CREATE TABLE "blink_users" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "blink_role_id" UUID NOT NULL,
-    "college_id" UUID,
-    "associate_parent_id" UUID,
-    "linked_student_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'BLU-' || nextval('blink_user_seq')::text,
+    "blink_role_id" TEXT NOT NULL,
+    "college_id" TEXT,
+    "associate_parent_id" TEXT,
+    "linked_student_id" TEXT,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -110,7 +264,7 @@ CREATE TABLE "blink_users" (
     "agency_name" VARCHAR(255),
     "agency_reg_number" VARCHAR(100),
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
-    "created_by_staff_id" UUID,
+    "created_by_staff_id" TEXT,
     "profile_metadata" JSONB NOT NULL DEFAULT '{}',
     "last_login_at" TIMESTAMPTZ,
     "password_changed_at" TIMESTAMPTZ,
@@ -122,7 +276,7 @@ CREATE TABLE "blink_users" (
 
 -- CreateTable
 CREATE TABLE "counsellors" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'CNS-' || nextval('counsellor_seq')::text,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -140,9 +294,9 @@ CREATE TABLE "counsellors" (
 
 -- CreateTable
 CREATE TABLE "user_sessions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'USS-' || nextval('user_session_seq')::text,
     "user_type" VARCHAR(20) NOT NULL,
-    "user_id" UUID NOT NULL,
+    "user_id" TEXT NOT NULL,
     "refresh_token" TEXT NOT NULL,
     "device_info" JSONB NOT NULL DEFAULT '{}',
     "ip_address" INET,
@@ -156,12 +310,12 @@ CREATE TABLE "user_sessions" (
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'AUL-' || nextval('audit_log_seq')::text,
     "actor_type" VARCHAR(20) NOT NULL,
-    "actor_id" UUID NOT NULL,
+    "actor_id" TEXT NOT NULL,
     "action" VARCHAR(100) NOT NULL,
     "entity_type" VARCHAR(50),
-    "entity_id" UUID,
+    "entity_id" TEXT,
     "changes" JSONB,
     "ip_address" INET,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -171,15 +325,15 @@ CREATE TABLE "audit_logs" (
 
 -- CreateTable
 CREATE TABLE "student_leads" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SLD-' || nextval('student_lead_seq')::text,
+    "student_id" TEXT NOT NULL,
     "preferred_streams" JSONB NOT NULL DEFAULT '[]',
     "preferred_level" VARCHAR(20),
     "preferred_states" JSONB NOT NULL DEFAULT '[]',
     "current_education" JSONB NOT NULL DEFAULT '{}',
     "whatsapp_number" VARCHAR(15),
     "status" VARCHAR(20) NOT NULL DEFAULT 'new',
-    "assigned_to" UUID,
+    "assigned_to" TEXT,
     "assigned_at" TIMESTAMPTZ,
     "consultation_notes" TEXT,
     "last_contacted_at" TIMESTAMPTZ,
@@ -191,7 +345,7 @@ CREATE TABLE "student_leads" (
 
 -- CreateTable
 CREATE TABLE "university_types" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'UVT-' || nextval('university_type_seq')::text,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
@@ -203,8 +357,8 @@ CREATE TABLE "university_types" (
 
 -- CreateTable
 CREATE TABLE "universities" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "university_type_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'UNV-' || nextval('university_seq')::text,
+    "university_type_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "state" VARCHAR(100),
@@ -221,9 +375,38 @@ CREATE TABLE "universities" (
 );
 
 -- CreateTable
+CREATE TABLE "institution_groups" (
+    "id" TEXT NOT NULL DEFAULT 'ING-' || nextval('institution_group_seq')::text,
+    "name" VARCHAR(255) NOT NULL,
+    "slug" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "logo_url" TEXT,
+    "group_code" VARCHAR(30) NOT NULL,
+    "created_by_college_id" TEXT NOT NULL,
+    "created_by_staff_id" TEXT,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "institution_groups_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "institution_group_members" (
+    "id" TEXT NOT NULL DEFAULT 'IGM-' || nextval('institution_group_member_seq')::text,
+    "group_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "role" VARCHAR(20) NOT NULL DEFAULT 'member',
+    "joined_via" VARCHAR(20) NOT NULL DEFAULT 'code',
+    "joined_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "institution_group_members_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "colleges" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "university_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CLG-' || nextval('college_seq')::text,
+    "university_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "code" VARCHAR(20) NOT NULL,
@@ -236,6 +419,7 @@ CREATE TABLE "colleges" (
     "address" TEXT,
     "pin_code" VARCHAR(10),
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "requested_group_code" VARCHAR(30),
     "profile_sections" JSONB NOT NULL DEFAULT '{}',
     "settings" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -245,9 +429,31 @@ CREATE TABLE "colleges" (
 );
 
 -- CreateTable
+CREATE TABLE "college_onboarding_requests" (
+    "id" TEXT NOT NULL DEFAULT 'COR-' || nextval('college_onboarding_request_seq')::text,
+    "college_name" VARCHAR(255) NOT NULL,
+    "university_name" VARCHAR(255),
+    "contact_person_name" VARCHAR(255) NOT NULL,
+    "contact_email" VARCHAR(255) NOT NULL,
+    "contact_phone" VARCHAR(20),
+    "city" VARCHAR(100),
+    "state" VARCHAR(100),
+    "group_code" VARCHAR(20),
+    "message" TEXT,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+    "reviewed_by" TEXT,
+    "review_remarks" TEXT,
+    "created_college_id" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "college_onboarding_requests_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "campuses" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMP-' || nextval('campus_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "address" TEXT,
     "city" VARCHAR(100),
@@ -265,9 +471,10 @@ CREATE TABLE "campuses" (
 
 -- CreateTable
 CREATE TABLE "streams" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'STR-' || nextval('stream_seq')::text,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
+    "logo_url" TEXT,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -277,10 +484,11 @@ CREATE TABLE "streams" (
 
 -- CreateTable
 CREATE TABLE "disciplines" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "stream_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'DSC-' || nextval('discipline_seq')::text,
+    "stream_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
+    "logo_url" TEXT,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -290,9 +498,10 @@ CREATE TABLE "disciplines" (
 
 -- CreateTable
 CREATE TABLE "study_levels" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'SVL-' || nextval('study_level_seq')::text,
     "name" VARCHAR(50) NOT NULL,
     "slug" VARCHAR(30) NOT NULL,
+    "logo_url" TEXT,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -302,9 +511,10 @@ CREATE TABLE "study_levels" (
 
 -- CreateTable
 CREATE TABLE "program_types" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'PGT-' || nextval('program_type_seq')::text,
     "name" VARCHAR(50) NOT NULL,
     "slug" VARCHAR(30) NOT NULL,
+    "logo_url" TEXT,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -314,12 +524,12 @@ CREATE TABLE "program_types" (
 
 -- CreateTable
 CREATE TABLE "courses" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "campus_id" UUID,
-    "discipline_id" UUID NOT NULL,
-    "study_level_id" UUID NOT NULL,
-    "program_type_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CRS-' || nextval('course_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "campus_id" TEXT,
+    "discipline_id" TEXT NOT NULL,
+    "study_level_id" TEXT NOT NULL,
+    "program_type_id" TEXT NOT NULL,
     "app_fee_commission_type" VARCHAR(10),
     "app_fee_commission_value" DECIMAL(10,2),
     "tuition_commission_type" VARCHAR(10),
@@ -340,8 +550,8 @@ CREATE TABLE "courses" (
 
 -- CreateTable
 CREATE TABLE "course_quotas" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CRQ-' || nextval('course_quota_seq')::text,
+    "course_id" TEXT NOT NULL,
     "tuition_fee_override" DECIMAL(12,2),
     "quota_name" VARCHAR(100) NOT NULL,
     "seats" INTEGER NOT NULL,
@@ -354,8 +564,8 @@ CREATE TABLE "course_quotas" (
 
 -- CreateTable
 CREATE TABLE "college_gallery" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CGY-' || nextval('college_gallery_seq')::text,
+    "college_id" TEXT NOT NULL,
     "media_type" VARCHAR(10) NOT NULL,
     "url" TEXT NOT NULL,
     "caption" VARCHAR(255),
@@ -367,9 +577,9 @@ CREATE TABLE "college_gallery" (
 
 -- CreateTable
 CREATE TABLE "college_reviews" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CRV-' || nextval('college_review_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "review_text" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -380,18 +590,35 @@ CREATE TABLE "college_reviews" (
 );
 
 -- CreateTable
+CREATE TABLE "blog_authors" (
+    "id" TEXT NOT NULL DEFAULT 'BLA-' || nextval('blog_author_seq')::text,
+    "full_name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "password_hash" TEXT NOT NULL,
+    "bio" TEXT,
+    "avatar_url" TEXT,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "last_login_at" TIMESTAMPTZ,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "blog_authors_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "news_alerts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'NWS-' || nextval('news_alert_seq')::text,
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
     "content" TEXT NOT NULL,
     "cover_image_url" TEXT,
-    "category" VARCHAR(30) NOT NULL DEFAULT 'news',
-    "college_id" UUID,
+    "tags" JSONB NOT NULL DEFAULT '[]',
+    "source" TEXT,
+    "college_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "published_at" TIMESTAMPTZ,
-    "published_by" UUID,
+    "published_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -400,7 +627,7 @@ CREATE TABLE "news_alerts" (
 
 -- CreateTable
 CREATE TABLE "articles" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'ART-' || nextval('article_seq')::text,
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
@@ -409,8 +636,8 @@ CREATE TABLE "articles" (
     "tags" JSONB NOT NULL DEFAULT '[]',
     "author_name" VARCHAR(100),
     "author_type" VARCHAR(20) NOT NULL,
-    "author_id" UUID,
-    "college_id" UUID,
+    "author_id" TEXT,
+    "college_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "published_at" TIMESTAMPTZ,
     "view_count" INTEGER NOT NULL DEFAULT 0,
@@ -422,19 +649,19 @@ CREATE TABLE "articles" (
 
 -- CreateTable
 CREATE TABLE "blogs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'BLG-' || nextval('blog_seq')::text,
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
     "content" TEXT NOT NULL,
     "cover_image_url" TEXT,
     "tags" JSONB NOT NULL DEFAULT '[]',
-    "author_id" UUID NOT NULL,
+    "author_id" TEXT NOT NULL,
     "author_type" VARCHAR(20) NOT NULL,
     "author_name" VARCHAR(100) NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "rejection_reason" TEXT,
-    "reviewed_by" UUID,
+    "reviewed_by" TEXT,
     "reviewed_at" TIMESTAMPTZ,
     "published_at" TIMESTAMPTZ,
     "view_count" INTEGER NOT NULL DEFAULT 0,
@@ -446,7 +673,7 @@ CREATE TABLE "blogs" (
 
 -- CreateTable
 CREATE TABLE "entrance_exams" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'ENX-' || nextval('entrance_exam_seq')::text,
     "name" VARCHAR(255) NOT NULL,
     "code" VARCHAR(20) NOT NULL,
     "conducting_body" VARCHAR(255),
@@ -459,9 +686,8 @@ CREATE TABLE "entrance_exams" (
     "exam_date" DATE,
     "result_date" DATE,
     "official_website" TEXT,
-    "application_link" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
-    "created_by" UUID,
+    "created_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -470,7 +696,7 @@ CREATE TABLE "entrance_exams" (
 
 -- CreateTable
 CREATE TABLE "events" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'EVT-' || nextval('event_seq')::text,
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -494,10 +720,10 @@ CREATE TABLE "events" (
     "recording_url" TEXT,
     "recording_duration" VARCHAR(20),
     "recorded_at" DATE,
-    "college_id" UUID,
+    "college_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "created_by_type" VARCHAR(20),
-    "created_by_id" UUID,
+    "created_by_id" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -506,11 +732,11 @@ CREATE TABLE "events" (
 
 -- CreateTable
 CREATE TABLE "event_registrations" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "event_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ERG-' || nextval('event_registration_seq')::text,
+    "event_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "payment_status" VARCHAR(20) NOT NULL DEFAULT 'not_applicable',
-    "transaction_id" UUID,
+    "transaction_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'registered',
     "registered_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "cancelled_at" TIMESTAMPTZ,
@@ -519,9 +745,43 @@ CREATE TABLE "event_registrations" (
 );
 
 -- CreateTable
+CREATE TABLE "education_loans" (
+    "id" TEXT NOT NULL DEFAULT 'EDL-' || nextval('education_loan_seq')::text,
+    "bank_name" VARCHAR(255) NOT NULL,
+    "bank_logo_url" TEXT,
+    "product_name" VARCHAR(255) NOT NULL,
+    "tag" VARCHAR(100),
+    "interest_rate" VARCHAR(100) NOT NULL,
+    "interest_rate_min" DECIMAL(5,2),
+    "max_amount" VARCHAR(100) NOT NULL,
+    "moratorium" VARCHAR(100) NOT NULL,
+    "processing_fee" VARCHAR(100) NOT NULL,
+    "loan_type" VARCHAR(20) NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "sort_order" INTEGER NOT NULL DEFAULT 0,
+    "processing_time" VARCHAR(100),
+    "margin" VARCHAR(100),
+    "collateral_amount" VARCHAR(100),
+    "non_collateral_amount" VARCHAR(100),
+    "repayment_tenure" VARCHAR(100),
+    "requires_cosigner" BOOLEAN NOT NULL DEFAULT false,
+    "description" TEXT,
+    "expenses_covered" JSONB NOT NULL DEFAULT '[]',
+    "eligibility" JSONB NOT NULL DEFAULT '[]',
+    "eligible_courses" TEXT,
+    "documents_applicant" JSONB NOT NULL DEFAULT '[]',
+    "documents_co_applicant" JSONB NOT NULL DEFAULT '[]',
+    "helpful_videos" JSONB NOT NULL DEFAULT '[]',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "education_loans_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "admission_cycles" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ACV-' || nextval('admission_cycle_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "program_level" VARCHAR(30) NOT NULL,
@@ -538,9 +798,9 @@ CREATE TABLE "admission_cycles" (
 
 -- CreateTable
 CREATE TABLE "admission_cycle_courses" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "admission_cycle_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ACC-' || nextval('admission_cycle_course_seq')::text,
+    "admission_cycle_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
     "application_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "interview_required" BOOLEAN NOT NULL DEFAULT true,
     "assessment_required" BOOLEAN NOT NULL DEFAULT true,
@@ -554,12 +814,12 @@ CREATE TABLE "admission_cycle_courses" (
 
 -- CreateTable
 CREATE TABLE "applications" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'APP-' || nextval('application_seq')::text,
     "application_number" VARCHAR(30) NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "campus_id" UUID,
-    "admission_cycle_id" UUID NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "campus_id" TEXT,
+    "admission_cycle_id" TEXT NOT NULL,
     "current_step" SMALLINT NOT NULL DEFAULT 1,
     "form_status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "profile_photo_url" TEXT,
@@ -580,8 +840,8 @@ CREATE TABLE "applications" (
     "declaration" JSONB NOT NULL DEFAULT '{}',
     "total_application_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "fee_payment_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "fee_transaction_id" UUID,
-    "referral_code_id" UUID,
+    "fee_transaction_id" TEXT,
+    "referral_code_id" TEXT,
     "submitted_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -591,13 +851,13 @@ CREATE TABLE "applications" (
 
 -- CreateTable
 CREATE TABLE "application_courses" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'APC-' || nextval('application_course_seq')::text,
+    "application_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
     "application_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "status" VARCHAR(30) NOT NULL DEFAULT 'draft',
     "rejection_reason" TEXT,
-    "quota_id" UUID,
+    "quota_id" TEXT,
     "status_history" JSONB NOT NULL DEFAULT '[]',
     "status_updated_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -608,8 +868,8 @@ CREATE TABLE "application_courses" (
 
 -- CreateTable
 CREATE TABLE "application_documents" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'APD-' || nextval('application_document_seq')::text,
+    "application_id" TEXT NOT NULL,
     "document_type" VARCHAR(50) NOT NULL,
     "document_category" VARCHAR(30) NOT NULL,
     "file_url" TEXT NOT NULL,
@@ -617,7 +877,7 @@ CREATE TABLE "application_documents" (
     "file_size_bytes" INTEGER,
     "verification_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "rejection_reason" TEXT,
-    "verified_by" UUID,
+    "verified_by" TEXT,
     "verified_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -627,12 +887,12 @@ CREATE TABLE "application_documents" (
 
 -- CreateTable
 CREATE TABLE "application_status_logs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'APL-' || nextval('application_status_log_seq')::text,
+    "application_course_id" TEXT NOT NULL,
     "from_status" VARCHAR(30),
     "to_status" VARCHAR(30) NOT NULL,
     "changed_by_type" VARCHAR(20) NOT NULL,
-    "changed_by_id" UUID,
+    "changed_by_id" TEXT,
     "remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -641,15 +901,15 @@ CREATE TABLE "application_status_logs" (
 
 -- CreateTable
 CREATE TABLE "seat_cancellations" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_course_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SCN-' || nextval('seat_cancellation_seq')::text,
+    "application_course_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
     "supporting_doc_urls" JSONB NOT NULL DEFAULT '[]',
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "refund_amount" DECIMAL(10,2),
     "refund_status" VARCHAR(20),
-    "processed_by" UUID,
+    "processed_by" TEXT,
     "remarks" TEXT,
     "requested_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "processed_at" TIMESTAMPTZ,
@@ -659,13 +919,13 @@ CREATE TABLE "seat_cancellations" (
 
 -- CreateTable
 CREATE TABLE "enrollments" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
-    "campus_id" UUID,
-    "application_course_id" UUID NOT NULL,
-    "admission_cycle_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ENR-' || nextval('enrollment_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
+    "campus_id" TEXT,
+    "application_course_id" TEXT NOT NULL,
+    "admission_cycle_id" TEXT NOT NULL,
     "enrollment_number" VARCHAR(30) NOT NULL,
     "academic_year" VARCHAR(10) NOT NULL,
     "enrolled_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -679,18 +939,18 @@ CREATE TABLE "enrollments" (
 
 -- CreateTable
 CREATE TABLE "course_switch_requests" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "enrollment_id" UUID NOT NULL,
-    "to_course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CSR-' || nextval('course_switch_request_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "enrollment_id" TEXT NOT NULL,
+    "to_course_id" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
     "supporting_documents" JSONB NOT NULL DEFAULT '[]',
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "processed_by" UUID,
+    "processed_by" TEXT,
     "remarks" TEXT,
     "processed_at" TIMESTAMPTZ,
-    "new_enrollment_id" UUID,
+    "new_enrollment_id" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -699,9 +959,9 @@ CREATE TABLE "course_switch_requests" (
 
 -- CreateTable
 CREATE TABLE "admission_form_configs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "admission_cycle_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'AFC-' || nextval('admission_form_config_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "admission_cycle_id" TEXT,
     "section" VARCHAR(30) NOT NULL,
     "field_config" JSONB NOT NULL,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
@@ -714,9 +974,9 @@ CREATE TABLE "admission_form_configs" (
 
 -- CreateTable
 CREATE TABLE "document_upload_configs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "admission_cycle_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'DUC-' || nextval('document_upload_config_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "admission_cycle_id" TEXT,
     "document_type" VARCHAR(50) NOT NULL,
     "document_category" VARCHAR(30) NOT NULL,
     "document_label" VARCHAR(100) NOT NULL,
@@ -734,8 +994,8 @@ CREATE TABLE "document_upload_configs" (
 
 -- CreateTable
 CREATE TABLE "assessment_sections" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ASC-' || nextval('assessment_section_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "description" TEXT,
@@ -750,8 +1010,8 @@ CREATE TABLE "assessment_sections" (
 
 -- CreateTable
 CREATE TABLE "question_types" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'QTP-' || nextval('question_type_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "category" VARCHAR(30) NOT NULL,
@@ -771,10 +1031,10 @@ CREATE TABLE "question_types" (
 
 -- CreateTable
 CREATE TABLE "questions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "section_id" UUID NOT NULL,
-    "question_type_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'QST-' || nextval('question_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "section_id" TEXT NOT NULL,
+    "question_type_id" TEXT NOT NULL,
     "difficulty" VARCHAR(10) NOT NULL DEFAULT 'medium',
     "title" VARCHAR(255),
     "content" JSONB NOT NULL,
@@ -782,9 +1042,9 @@ CREATE TABLE "questions" (
     "marks" DECIMAL(5,2) NOT NULL DEFAULT 1.0,
     "negative_marks" DECIMAL(5,2) NOT NULL DEFAULT 0,
     "version" INTEGER NOT NULL DEFAULT 1,
-    "parent_question_id" UUID,
+    "parent_question_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
-    "created_by" UUID,
+    "created_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -793,17 +1053,17 @@ CREATE TABLE "questions" (
 
 -- CreateTable
 CREATE TABLE "question_course_mappings" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "question_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'QCM-' || nextval('question_course_mapping_seq')::text,
+    "question_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
 
     CONSTRAINT "question_course_mappings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "assessment_templates" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'AST-' || nextval('assessment_template_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "template_type" VARCHAR(20) NOT NULL DEFAULT 'admission',
     "total_questions" INTEGER NOT NULL,
@@ -811,7 +1071,7 @@ CREATE TABLE "assessment_templates" (
     "total_duration_mins" INTEGER NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "settings" JSONB NOT NULL DEFAULT '{}',
-    "created_by" UUID,
+    "created_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -820,9 +1080,9 @@ CREATE TABLE "assessment_templates" (
 
 -- CreateTable
 CREATE TABLE "template_sections" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "template_id" UUID NOT NULL,
-    "section_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'TPS-' || nextval('template_section_seq')::text,
+    "template_id" TEXT NOT NULL,
+    "section_id" TEXT NOT NULL,
     "question_count" INTEGER NOT NULL,
     "time_limit_mins" INTEGER NOT NULL,
     "section_weightage" DECIMAL(5,2),
@@ -834,13 +1094,13 @@ CREATE TABLE "template_sections" (
 
 -- CreateTable
 CREATE TABLE "assessment_papers" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "template_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ASP-' || nextval('assessment_paper_seq')::text,
+    "template_id" TEXT NOT NULL,
     "paper_code" VARCHAR(30) NOT NULL,
     "generation_type" VARCHAR(10) NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
-    "generated_by" UUID,
-    "approved_by" UUID,
+    "generated_by" TEXT,
+    "approved_by" TEXT,
     "approved_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -849,10 +1109,10 @@ CREATE TABLE "assessment_papers" (
 
 -- CreateTable
 CREATE TABLE "paper_questions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "paper_id" UUID NOT NULL,
-    "question_id" UUID NOT NULL,
-    "section_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'PQS-' || nextval('paper_question_seq')::text,
+    "paper_id" TEXT NOT NULL,
+    "question_id" TEXT NOT NULL,
+    "section_id" TEXT NOT NULL,
     "question_order" INTEGER NOT NULL,
 
     CONSTRAINT "paper_questions_pkey" PRIMARY KEY ("id")
@@ -860,9 +1120,9 @@ CREATE TABLE "paper_questions" (
 
 -- CreateTable
 CREATE TABLE "assessment_slots" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "template_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ASL-' || nextval('assessment_slot_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "template_id" TEXT NOT NULL,
     "slot_type" VARCHAR(10) NOT NULL,
     "window_start" TIMESTAMPTZ NOT NULL,
     "window_end" TIMESTAMPTZ NOT NULL,
@@ -876,11 +1136,11 @@ CREATE TABLE "assessment_slots" (
 
 -- CreateTable
 CREATE TABLE "assessment_attempts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_course_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "paper_id" UUID NOT NULL,
-    "slot_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'AAT-' || nextval('assessment_attempt_seq')::text,
+    "application_course_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "paper_id" TEXT NOT NULL,
+    "slot_id" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'not_started',
     "started_at" TIMESTAMPTZ,
     "completed_at" TIMESTAMPTZ,
@@ -897,17 +1157,17 @@ CREATE TABLE "assessment_attempts" (
 
 -- CreateTable
 CREATE TABLE "student_answers" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "attempt_id" UUID NOT NULL,
-    "question_id" UUID NOT NULL,
-    "section_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SAN-' || nextval('student_answer_seq')::text,
+    "attempt_id" TEXT NOT NULL,
+    "question_id" TEXT NOT NULL,
+    "section_id" TEXT NOT NULL,
     "response" JSONB,
     "is_flagged" BOOLEAN NOT NULL DEFAULT false,
     "time_spent_secs" INTEGER NOT NULL DEFAULT 0,
     "auto_score" DECIMAL(5,2),
     "manual_score" DECIMAL(5,2),
     "final_score" DECIMAL(5,2),
-    "evaluated_by" UUID,
+    "evaluated_by" TEXT,
     "evaluation_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "evaluation_remarks" TEXT,
     "answered_at" TIMESTAMPTZ,
@@ -917,14 +1177,14 @@ CREATE TABLE "student_answers" (
 
 -- CreateTable
 CREATE TABLE "assessment_reschedules" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "attempt_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "from_slot_id" UUID NOT NULL,
-    "to_slot_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'ARD-' || nextval('assessment_reschedule_seq')::text,
+    "attempt_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "from_slot_id" TEXT NOT NULL,
+    "to_slot_id" TEXT,
     "reason" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "reviewed_by" UUID,
+    "reviewed_by" TEXT,
     "reviewed_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -933,8 +1193,8 @@ CREATE TABLE "assessment_reschedules" (
 
 -- CreateTable
 CREATE TABLE "interview_slots" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ITS-' || nextval('interview_slot_seq')::text,
+    "college_id" TEXT NOT NULL,
     "mode" VARCHAR(20) NOT NULL,
     "scheduled_date" DATE NOT NULL,
     "start_time" TIME NOT NULL,
@@ -947,7 +1207,7 @@ CREATE TABLE "interview_slots" (
     "zoom_passcode" VARCHAR(20),
     "phone_number" VARCHAR(20),
     "venue" VARCHAR(255),
-    "interviewer_id" UUID,
+    "interviewer_id" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -957,15 +1217,15 @@ CREATE TABLE "interview_slots" (
 
 -- CreateTable
 CREATE TABLE "interview_bookings" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_course_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "slot_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'IBK-' || nextval('interview_booking_seq')::text,
+    "application_course_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "slot_id" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'booked',
     "interview_score" DECIMAL(5,2),
     "interview_remarks" TEXT,
     "interview_outcome" VARCHAR(20),
-    "evaluated_by" UUID,
+    "evaluated_by" TEXT,
     "evaluated_at" TIMESTAMPTZ,
     "booked_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completed_at" TIMESTAMPTZ,
@@ -977,14 +1237,14 @@ CREATE TABLE "interview_bookings" (
 
 -- CreateTable
 CREATE TABLE "interview_reschedules" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "booking_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "from_slot_id" UUID NOT NULL,
-    "to_slot_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'IRS-' || nextval('interview_reschedule_seq')::text,
+    "booking_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "from_slot_id" TEXT NOT NULL,
+    "to_slot_id" TEXT,
     "reason" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "reviewed_by" UUID,
+    "reviewed_by" TEXT,
     "reviewed_at" TIMESTAMPTZ,
     "review_remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -994,19 +1254,19 @@ CREATE TABLE "interview_reschedules" (
 
 -- CreateTable
 CREATE TABLE "offer_letters" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "application_course_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'OFL-' || nextval('offer_letter_seq')::text,
+    "application_course_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "offer_number" VARCHAR(30) NOT NULL,
     "offer_date" DATE NOT NULL DEFAULT CURRENT_DATE,
     "valid_until" DATE NOT NULL,
     "token_amount" DECIMAL(10,2) NOT NULL,
     "token_payment_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "token_transaction_id" UUID,
+    "token_transaction_id" TEXT,
     "document_url" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'issued',
-    "issued_by" UUID,
+    "issued_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1015,9 +1275,9 @@ CREATE TABLE "offer_letters" (
 
 -- CreateTable
 CREATE TABLE "fee_structures" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'FST-' || nextval('fee_structure_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
     "academic_year" VARCHAR(10) NOT NULL,
     "fee_category" VARCHAR(30) NOT NULL,
     "amount" DECIMAL(12,2) NOT NULL,
@@ -1033,11 +1293,11 @@ CREATE TABLE "fee_structures" (
 
 -- CreateTable
 CREATE TABLE "student_fee_ledger" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "application_course_id" UUID,
-    "enrollment_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'SFL-' || nextval('student_fee_ledger_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "application_course_id" TEXT,
+    "enrollment_id" TEXT,
     "fee_category" VARCHAR(30) NOT NULL,
     "description" VARCHAR(255),
     "total_amount" DECIMAL(12,2) NOT NULL,
@@ -1055,11 +1315,11 @@ CREATE TABLE "student_fee_ledger" (
 
 -- CreateTable
 CREATE TABLE "transactions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'TXN-' || nextval('transaction_seq')::text,
     "transaction_number" VARCHAR(30) NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "ledger_entry_id" UUID,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "ledger_entry_id" TEXT,
     "amount" DECIMAL(12,2) NOT NULL,
     "currency" VARCHAR(5) NOT NULL DEFAULT 'INR',
     "payment_method" VARCHAR(20) NOT NULL,
@@ -1078,7 +1338,7 @@ CREATE TABLE "transactions" (
     "dd_date" DATE,
     "bank_ref_number" VARCHAR(100),
     "verification_status" VARCHAR(20) NOT NULL DEFAULT 'not_required',
-    "verified_by" UUID,
+    "verified_by" TEXT,
     "verified_at" TIMESTAMPTZ,
     "rejection_reason" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -1091,10 +1351,10 @@ CREATE TABLE "transactions" (
 
 -- CreateTable
 CREATE TABLE "payment_receipts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "transaction_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'RCP-' || nextval('payment_receipt_seq')::text,
+    "transaction_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "receipt_number" VARCHAR(30) NOT NULL,
     "receipt_date" DATE NOT NULL DEFAULT CURRENT_DATE,
     "fee_category" VARCHAR(30) NOT NULL,
@@ -1108,16 +1368,16 @@ CREATE TABLE "payment_receipts" (
 
 -- CreateTable
 CREATE TABLE "refunds" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "transaction_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'RFD-' || nextval('refund_seq')::text,
+    "transaction_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "refund_amount" DECIMAL(12,2) NOT NULL,
     "reason" TEXT NOT NULL,
     "refund_type" VARCHAR(20) NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "gateway_refund_id" VARCHAR(100),
-    "processed_by" UUID,
+    "processed_by" TEXT,
     "processed_at" TIMESTAMPTZ,
     "remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1128,8 +1388,8 @@ CREATE TABLE "refunds" (
 
 -- CreateTable
 CREATE TABLE "scholarship_configs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SCG-' || nextval('scholarship_config_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "scholarship_type" VARCHAR(30) NOT NULL,
     "eligibility" JSONB NOT NULL,
@@ -1146,15 +1406,15 @@ CREATE TABLE "scholarship_configs" (
 
 -- CreateTable
 CREATE TABLE "scholarship_applications" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "scholarship_config_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "application_course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SCA-' || nextval('scholarship_application_seq')::text,
+    "scholarship_config_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "application_course_id" TEXT NOT NULL,
     "supporting_documents" JSONB NOT NULL DEFAULT '[]',
     "remarks" TEXT,
     "discount_amount" DECIMAL(12,2),
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "reviewed_by" UUID,
+    "reviewed_by" TEXT,
     "reviewed_at" TIMESTAMPTZ,
     "review_remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1165,8 +1425,8 @@ CREATE TABLE "scholarship_applications" (
 
 -- CreateTable
 CREATE TABLE "college_payment_accounts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CPA-' || nextval('college_payment_account_seq')::text,
+    "college_id" TEXT NOT NULL,
     "razorpay_account_id" VARCHAR(100) NOT NULL,
     "onboarding_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "business_name" VARCHAR(255),
@@ -1184,8 +1444,8 @@ CREATE TABLE "college_payment_accounts" (
 
 -- CreateTable
 CREATE TABLE "document_templates" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'DTM-' || nextval('document_template_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "description" TEXT,
@@ -1202,11 +1462,11 @@ CREATE TABLE "document_templates" (
 
 -- CreateTable
 CREATE TABLE "document_requests" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'DRQ-' || nextval('document_request_seq')::text,
     "request_number" VARCHAR(30) NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "document_template_id" UUID,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "document_template_id" TEXT,
     "document_name" VARCHAR(255) NOT NULL,
     "description" TEXT,
     "delivery_mode" VARCHAR(20) NOT NULL,
@@ -1215,8 +1475,8 @@ CREATE TABLE "document_requests" (
     "rejection_reason" TEXT,
     "resubmission_count" INTEGER NOT NULL DEFAULT 0,
     "resubmission_history" JSONB NOT NULL DEFAULT '[]',
-    "assigned_to" UUID,
-    "processed_by" UUID,
+    "assigned_to" TEXT,
+    "processed_by" TEXT,
     "issued_document_url" TEXT,
     "issued_at" TIMESTAMPTZ,
     "pickup_date" DATE,
@@ -1229,16 +1489,16 @@ CREATE TABLE "document_requests" (
 
 -- CreateTable
 CREATE TABLE "issued_documents" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "document_request_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ISD-' || nextval('issued_document_seq')::text,
+    "document_request_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "document_name" VARCHAR(255) NOT NULL,
     "document_url" TEXT NOT NULL,
     "file_name" VARCHAR(255),
     "file_size_bytes" INTEGER,
     "delivery_mode" VARCHAR(20) NOT NULL,
-    "issued_by" UUID NOT NULL,
+    "issued_by" TEXT NOT NULL,
     "issued_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "issued_documents_pkey" PRIMARY KEY ("id")
@@ -1246,8 +1506,8 @@ CREATE TABLE "issued_documents" (
 
 -- CreateTable
 CREATE TABLE "hostels" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HST-' || nextval('hostel_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "hostel_type" VARCHAR(20) NOT NULL,
@@ -1273,8 +1533,8 @@ CREATE TABLE "hostels" (
 
 -- CreateTable
 CREATE TABLE "hostel_room_types" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "hostel_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HRT-' || nextval('hostel_room_type_seq')::text,
+    "hostel_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT,
     "total_beds" INTEGER NOT NULL,
@@ -1294,8 +1554,8 @@ CREATE TABLE "hostel_room_types" (
 
 -- CreateTable
 CREATE TABLE "hostel_mess_plans" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "hostel_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HMP-' || nextval('hostel_mess_plan_seq')::text,
+    "hostel_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT,
     "meals_included" JSONB NOT NULL DEFAULT '[]',
@@ -1313,8 +1573,8 @@ CREATE TABLE "hostel_mess_plans" (
 
 -- CreateTable
 CREATE TABLE "hostel_addon_services" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "hostel_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HAS-' || nextval('hostel_addon_service_seq')::text,
+    "hostel_id" TEXT NOT NULL,
     "service_type" VARCHAR(30) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -1331,9 +1591,9 @@ CREATE TABLE "hostel_addon_services" (
 
 -- CreateTable
 CREATE TABLE "hostel_reviews" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "hostel_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HRV-' || nextval('hostel_review_seq')::text,
+    "hostel_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "review_text" TEXT,
     "is_verified" BOOLEAN NOT NULL DEFAULT false,
@@ -1346,13 +1606,13 @@ CREATE TABLE "hostel_reviews" (
 
 -- CreateTable
 CREATE TABLE "hostel_enrollments" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "hostel_id" UUID NOT NULL,
-    "room_type_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HEN-' || nextval('hostel_enrollment_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "hostel_id" TEXT NOT NULL,
+    "room_type_id" TEXT NOT NULL,
     "room_plan_type" VARCHAR(10) NOT NULL,
-    "mess_plan_id" UUID,
+    "mess_plan_id" TEXT,
     "dietary_preference" VARCHAR(20),
     "selected_addons" JSONB NOT NULL DEFAULT '[]',
     "fee_breakdown" JSONB NOT NULL,
@@ -1367,9 +1627,9 @@ CREATE TABLE "hostel_enrollments" (
 
 -- CreateTable
 CREATE TABLE "hostel_wishlists" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "hostel_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'HWL-' || nextval('hostel_wishlist_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "hostel_id" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "hostel_wishlists_pkey" PRIMARY KEY ("id")
@@ -1377,8 +1637,8 @@ CREATE TABLE "hostel_wishlists" (
 
 -- CreateTable
 CREATE TABLE "commute_routes" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMR-' || nextval('commute_route_seq')::text,
+    "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR(255),
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -1390,8 +1650,8 @@ CREATE TABLE "commute_routes" (
 
 -- CreateTable
 CREATE TABLE "commute_route_stops" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "route_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMS-' || nextval('commute_route_stop_seq')::text,
+    "route_id" TEXT NOT NULL,
     "stop_name" VARCHAR(255) NOT NULL,
     "landmark" VARCHAR(255),
     "morning_time" TIME,
@@ -1406,8 +1666,8 @@ CREATE TABLE "commute_route_stops" (
 
 -- CreateTable
 CREATE TABLE "commute_buses" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "route_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMB-' || nextval('commute_bus_seq')::text,
+    "route_id" TEXT NOT NULL,
     "bus_number" VARCHAR(20) NOT NULL,
     "bus_name" VARCHAR(100),
     "bus_type" VARCHAR(50),
@@ -1426,12 +1686,12 @@ CREATE TABLE "commute_buses" (
 
 -- CreateTable
 CREATE TABLE "commute_enrollments" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "route_id" UUID NOT NULL,
-    "bus_id" UUID NOT NULL,
-    "pickup_stop_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CME-' || nextval('commute_enrollment_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "route_id" TEXT NOT NULL,
+    "bus_id" TEXT NOT NULL,
+    "pickup_stop_id" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "enrolled_from" DATE NOT NULL,
     "enrolled_until" DATE,
@@ -1443,10 +1703,10 @@ CREATE TABLE "commute_enrollments" (
 
 -- CreateTable
 CREATE TABLE "commute_ride_history" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "enrollment_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "bus_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CRH-' || nextval('commute_ride_history_seq')::text,
+    "enrollment_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "bus_id" TEXT NOT NULL,
     "ride_date" DATE NOT NULL,
     "ride_type" VARCHAR(10) NOT NULL,
     "boarded_at" TIMESTAMPTZ,
@@ -1459,8 +1719,8 @@ CREATE TABLE "commute_ride_history" (
 
 -- CreateTable
 CREATE TABLE "counsellor_availability" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "counsellor_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CNA-' || nextval('counsellor_availability_seq')::text,
+    "counsellor_id" TEXT NOT NULL,
     "available_date" DATE NOT NULL,
     "start_time" TIME NOT NULL,
     "end_time" TIME NOT NULL,
@@ -1474,10 +1734,10 @@ CREATE TABLE "counsellor_availability" (
 
 -- CreateTable
 CREATE TABLE "counselling_sessions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "counsellor_id" UUID NOT NULL,
-    "availability_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CLS-' || nextval('counselling_session_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "counsellor_id" TEXT NOT NULL,
+    "availability_id" TEXT NOT NULL,
     "session_mode" VARCHAR(20) NOT NULL,
     "session_type" VARCHAR(20) NOT NULL,
     "scheduled_date" DATE NOT NULL,
@@ -1489,7 +1749,7 @@ CREATE TABLE "counselling_sessions" (
     "meeting_id" VARCHAR(50),
     "session_fee" DECIMAL(10,2),
     "payment_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "transaction_id" UUID,
+    "transaction_id" TEXT,
     "cancelled_by" VARCHAR(20),
     "cancellation_reason" TEXT,
     "cancelled_at" TIMESTAMPTZ,
@@ -1503,12 +1763,12 @@ CREATE TABLE "counselling_sessions" (
 
 -- CreateTable
 CREATE TABLE "session_reschedules" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "session_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SRS-' || nextval('session_reschedule_seq')::text,
+    "session_id" TEXT NOT NULL,
     "rescheduled_by" VARCHAR(20) NOT NULL,
     "from_date" DATE NOT NULL,
     "from_time" TIME NOT NULL,
-    "to_availability_id" UUID NOT NULL,
+    "to_availability_id" TEXT NOT NULL,
     "to_date" DATE NOT NULL,
     "to_time" TIME NOT NULL,
     "reason" TEXT,
@@ -1519,8 +1779,8 @@ CREATE TABLE "session_reschedules" (
 
 -- CreateTable
 CREATE TABLE "counsellor_wallets" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "counsellor_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CNW-' || nextval('counsellor_wallet_seq')::text,
+    "counsellor_id" TEXT NOT NULL,
     "balance" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_earned" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_withdrawn" DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -1532,13 +1792,13 @@ CREATE TABLE "counsellor_wallets" (
 
 -- CreateTable
 CREATE TABLE "counsellor_wallet_transactions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "wallet_id" UUID NOT NULL,
-    "counsellor_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CWT-' || nextval('counsellor_wallet_transaction_seq')::text,
+    "wallet_id" TEXT NOT NULL,
+    "counsellor_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "description" VARCHAR(255),
-    "session_id" UUID,
+    "session_id" TEXT,
     "withdrawal_status" VARCHAR(20),
     "bank_details" JSONB NOT NULL DEFAULT '{}',
     "balance_after" DECIMAL(12,2) NOT NULL,
@@ -1549,10 +1809,10 @@ CREATE TABLE "counsellor_wallet_transactions" (
 
 -- CreateTable
 CREATE TABLE "referral_codes" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "blink_user_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
-    "course_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'RFC-' || nextval('referral_code_seq')::text,
+    "blink_user_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "course_id" TEXT,
     "code" VARCHAR(30) NOT NULL,
     "referral_url" TEXT,
     "total_clicks" INTEGER NOT NULL DEFAULT 0,
@@ -1565,11 +1825,11 @@ CREATE TABLE "referral_codes" (
 
 -- CreateTable
 CREATE TABLE "referrals" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "referral_code_id" UUID NOT NULL,
-    "blink_user_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "application_course_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'RFL-' || nextval('referral_seq')::text,
+    "referral_code_id" TEXT NOT NULL,
+    "blink_user_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "application_course_id" TEXT,
     "status" VARCHAR(30) NOT NULL DEFAULT 'registered',
     "status_history" JSONB NOT NULL DEFAULT '[]',
     "status_updated_at" TIMESTAMPTZ,
@@ -1581,9 +1841,9 @@ CREATE TABLE "referrals" (
 
 -- CreateTable
 CREATE TABLE "service_charge_configs" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "course_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SCC-' || nextval('service_charge_config_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
     "academic_year" VARCHAR(10) NOT NULL,
     "student_category" VARCHAR(50) NOT NULL,
     "gross_amount" DECIMAL(10,2) NOT NULL,
@@ -1600,17 +1860,17 @@ CREATE TABLE "service_charge_configs" (
 
 -- CreateTable
 CREATE TABLE "commissions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "referral_id" UUID NOT NULL,
-    "blink_user_id" UUID NOT NULL,
-    "service_charge_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMN-' || nextval('commission_seq')::text,
+    "referral_id" TEXT NOT NULL,
+    "blink_user_id" TEXT NOT NULL,
+    "service_charge_id" TEXT NOT NULL,
     "gross_amount" DECIMAL(10,2) NOT NULL,
     "gst_amount" DECIMAL(10,2) NOT NULL,
     "net_payout" DECIMAL(10,2) NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "payout_due_date" DATE,
     "paid_at" TIMESTAMPTZ,
-    "approved_by" UUID,
+    "approved_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1619,8 +1879,8 @@ CREATE TABLE "commissions" (
 
 -- CreateTable
 CREATE TABLE "blink_wallets" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "blink_user_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'BLW-' || nextval('blink_wallet_seq')::text,
+    "blink_user_id" TEXT NOT NULL,
     "balance" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_earned" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_withdrawn" DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -1633,13 +1893,13 @@ CREATE TABLE "blink_wallets" (
 
 -- CreateTable
 CREATE TABLE "blink_wallet_transactions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "wallet_id" UUID NOT NULL,
-    "blink_user_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'BWT-' || nextval('blink_wallet_transaction_seq')::text,
+    "wallet_id" TEXT NOT NULL,
+    "blink_user_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "description" VARCHAR(255),
-    "commission_id" UUID,
+    "commission_id" TEXT,
     "withdrawal_status" VARCHAR(20),
     "balance_after" DECIMAL(12,2) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1649,17 +1909,17 @@ CREATE TABLE "blink_wallet_transactions" (
 
 -- CreateTable
 CREATE TABLE "campus_visits" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
-    "ambassador_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMV-' || nextval('campus_visit_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "ambassador_id" TEXT NOT NULL,
     "student_name" VARCHAR(255) NOT NULL,
     "course_interest" VARCHAR(255),
     "department" VARCHAR(255),
     "proposed_date" DATE NOT NULL,
     "proposed_time" TIME NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "reassigned_from" UUID,
+    "reassigned_from" TEXT,
     "reassignment_reason" TEXT,
     "visit_notes" TEXT,
     "visit_rating" SMALLINT,
@@ -1671,9 +1931,9 @@ CREATE TABLE "campus_visits" (
 
 -- CreateTable
 CREATE TABLE "media_kits" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
-    "course_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'MDK-' || nextval('media_kit_seq')::text,
+    "college_id" TEXT NOT NULL,
+    "course_id" TEXT,
     "title" VARCHAR(255) NOT NULL,
     "asset_type" VARCHAR(20) NOT NULL,
     "scope" VARCHAR(20) NOT NULL,
@@ -1691,13 +1951,13 @@ CREATE TABLE "media_kits" (
 
 -- CreateTable
 CREATE TABLE "communities" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'CMT-' || nextval('community_seq')::text,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "description" TEXT,
     "cover_image_url" TEXT,
     "icon_url" TEXT,
-    "created_by_id" UUID NOT NULL,
+    "created_by_id" TEXT NOT NULL,
     "created_by_type" VARCHAR(20) NOT NULL,
     "member_count" INTEGER NOT NULL DEFAULT 0,
     "post_count" INTEGER NOT NULL DEFAULT 0,
@@ -1710,9 +1970,9 @@ CREATE TABLE "communities" (
 
 -- CreateTable
 CREATE TABLE "community_members" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "community_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMM-' || nextval('community_member_seq')::text,
+    "community_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "notify_me" BOOLEAN NOT NULL DEFAULT false,
     "joined_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1721,9 +1981,9 @@ CREATE TABLE "community_members" (
 
 -- CreateTable
 CREATE TABLE "community_posts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "community_id" UUID NOT NULL,
-    "author_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CPT-' || nextval('community_post_seq')::text,
+    "community_id" TEXT NOT NULL,
+    "author_id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "upvote_count" INTEGER NOT NULL DEFAULT 0,
@@ -1739,9 +1999,9 @@ CREATE TABLE "community_posts" (
 
 -- CreateTable
 CREATE TABLE "community_post_votes" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "post_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CPV-' || nextval('community_post_vote_seq')::text,
+    "post_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "vote_type" VARCHAR(10) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1750,10 +2010,10 @@ CREATE TABLE "community_post_votes" (
 
 -- CreateTable
 CREATE TABLE "community_comments" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "post_id" UUID NOT NULL,
-    "author_id" UUID NOT NULL,
-    "parent_comment_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'CCT-' || nextval('community_comment_seq')::text,
+    "post_id" TEXT NOT NULL,
+    "author_id" TEXT NOT NULL,
+    "parent_comment_id" TEXT,
     "content" TEXT NOT NULL,
     "like_count" INTEGER NOT NULL DEFAULT 0,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
@@ -1765,8 +2025,8 @@ CREATE TABLE "community_comments" (
 
 -- CreateTable
 CREATE TABLE "squad_searches" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SQS-' || nextval('squad_search_seq')::text,
+    "student_id" TEXT NOT NULL,
     "preferred_city" VARCHAR(100),
     "preferred_state" VARCHAR(100),
     "friends" JSONB NOT NULL,
@@ -1778,8 +2038,8 @@ CREATE TABLE "squad_searches" (
 
 -- CreateTable
 CREATE TABLE "beaconu_cards" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'BCR-' || nextval('beaconu_card_seq')::text,
+    "student_id" TEXT NOT NULL,
     "card_number" VARCHAR(20) NOT NULL,
     "card_holder_name" VARCHAR(255) NOT NULL,
     "valid_until" DATE NOT NULL,
@@ -1795,8 +2055,8 @@ CREATE TABLE "beaconu_cards" (
 
 -- CreateTable
 CREATE TABLE "student_bank_accounts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SBA-' || nextval('student_bank_account_seq')::text,
+    "student_id" TEXT NOT NULL,
     "bank_name" VARCHAR(100) NOT NULL,
     "account_holder_name" VARCHAR(255) NOT NULL,
     "account_number_last4" VARCHAR(4) NOT NULL,
@@ -1813,14 +2073,14 @@ CREATE TABLE "student_bank_accounts" (
 
 -- CreateTable
 CREATE TABLE "student_wallet_transactions" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "card_id" UUID NOT NULL,
-    "student_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'SWT-' || nextval('student_wallet_transaction_seq')::text,
+    "card_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "description" VARCHAR(255),
-    "referral_id" UUID,
-    "bank_account_id" UUID,
+    "referral_id" TEXT,
+    "bank_account_id" TEXT,
     "withdrawal_status" VARCHAR(20),
     "balance_after" DECIMAL(12,2) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1830,16 +2090,16 @@ CREATE TABLE "student_wallet_transactions" (
 
 -- CreateTable
 CREATE TABLE "anti_ragging_complaints" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ARC-' || nextval('anti_ragging_complaint_seq')::text,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "complaint_number" VARCHAR(30) NOT NULL,
     "subject" VARCHAR(255) NOT NULL,
     "description" TEXT NOT NULL,
     "is_anonymous" BOOLEAN NOT NULL DEFAULT false,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "status" VARCHAR(20) NOT NULL DEFAULT 'submitted',
-    "assigned_to" UUID,
+    "assigned_to" TEXT,
     "resolution" TEXT,
     "resolved_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1850,15 +2110,15 @@ CREATE TABLE "anti_ragging_complaints" (
 
 -- CreateTable
 CREATE TABLE "notifications" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'NTF-' || nextval('notification_seq')::text,
     "recipient_type" VARCHAR(20) NOT NULL,
-    "recipient_id" UUID NOT NULL,
+    "recipient_id" TEXT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
     "body" TEXT NOT NULL,
     "channel" VARCHAR(10) NOT NULL,
     "category" VARCHAR(30) NOT NULL DEFAULT 'general',
     "entity_type" VARCHAR(50),
-    "entity_id" UUID,
+    "entity_id" TEXT,
     "action_url" TEXT,
     "is_read" BOOLEAN NOT NULL DEFAULT false,
     "read_at" TIMESTAMPTZ,
@@ -1870,8 +2130,8 @@ CREATE TABLE "notifications" (
 
 -- CreateTable
 CREATE TABLE "broadcast_notifications" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID,
+    "id" TEXT NOT NULL DEFAULT 'BCN-' || nextval('broadcast_notification_seq')::text,
+    "college_id" TEXT,
     "title" VARCHAR(255) NOT NULL,
     "body" TEXT NOT NULL,
     "channels" JSONB NOT NULL,
@@ -1880,7 +2140,7 @@ CREATE TABLE "broadcast_notifications" (
     "sent_count" INTEGER NOT NULL DEFAULT 0,
     "failed_count" INTEGER NOT NULL DEFAULT 0,
     "sent_by_type" VARCHAR(20) NOT NULL,
-    "sent_by_id" UUID NOT NULL,
+    "sent_by_id" TEXT NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
     "scheduled_at" TIMESTAMPTZ,
     "sent_at" TIMESTAMPTZ,
@@ -1891,15 +2151,15 @@ CREATE TABLE "broadcast_notifications" (
 
 -- CreateTable
 CREATE TABLE "announcements" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "college_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'ANN-' || nextval('announcement_seq')::text,
+    "college_id" TEXT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
     "content" TEXT NOT NULL,
     "category" VARCHAR(30) NOT NULL DEFAULT 'general',
     "is_pinned" BOOLEAN NOT NULL DEFAULT false,
     "status" VARCHAR(20) NOT NULL DEFAULT 'published',
     "published_at" TIMESTAMPTZ,
-    "created_by" UUID NOT NULL,
+    "created_by" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1908,15 +2168,15 @@ CREATE TABLE "announcements" (
 
 -- CreateTable
 CREATE TABLE "support_tickets" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'TKT-' || nextval('support_ticket_seq')::text,
     "ticket_number" VARCHAR(30) NOT NULL,
-    "student_id" UUID NOT NULL,
-    "college_id" UUID NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
     "subject" VARCHAR(255) NOT NULL,
     "description" TEXT NOT NULL,
     "category" VARCHAR(30) NOT NULL DEFAULT 'general',
     "attachments" JSONB NOT NULL DEFAULT '[]',
-    "assigned_to" UUID,
+    "assigned_to" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'in_progress',
     "resolved_at" TIMESTAMPTZ,
     "closed_at" TIMESTAMPTZ,
@@ -1928,10 +2188,10 @@ CREATE TABLE "support_tickets" (
 
 -- CreateTable
 CREATE TABLE "ticket_messages" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "ticket_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'TKM-' || nextval('ticket_message_seq')::text,
+    "ticket_id" TEXT NOT NULL,
     "sender_type" VARCHAR(20) NOT NULL,
-    "sender_id" UUID,
+    "sender_id" TEXT,
     "message" TEXT NOT NULL,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "is_system" BOOLEAN NOT NULL DEFAULT false,
@@ -1942,11 +2202,11 @@ CREATE TABLE "ticket_messages" (
 
 -- CreateTable
 CREATE TABLE "chat_conversations" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL DEFAULT 'CCV-' || nextval('chat_conversation_seq')::text,
     "participant_1_type" VARCHAR(20) NOT NULL,
-    "participant_1_id" UUID NOT NULL,
+    "participant_1_id" TEXT NOT NULL,
     "participant_2_type" VARCHAR(20) NOT NULL,
-    "participant_2_id" UUID NOT NULL,
+    "participant_2_id" TEXT NOT NULL,
     "last_message_text" TEXT,
     "last_message_at" TIMESTAMPTZ,
     "participant_1_unread" INTEGER NOT NULL DEFAULT 0,
@@ -1960,10 +2220,10 @@ CREATE TABLE "chat_conversations" (
 
 -- CreateTable
 CREATE TABLE "chat_messages" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "conversation_id" UUID NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'CMG-' || nextval('chat_message_seq')::text,
+    "conversation_id" TEXT NOT NULL,
     "sender_type" VARCHAR(20) NOT NULL,
-    "sender_id" UUID NOT NULL,
+    "sender_id" TEXT NOT NULL,
     "message" TEXT,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "is_read" BOOLEAN NOT NULL DEFAULT false,
@@ -1996,6 +2256,24 @@ CREATE UNIQUE INDEX "students_phone_country_code_phone_number_key" ON "students"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "platform_admins_email_key" ON "platform_admins"("email");
+
+-- CreateIndex
+CREATE INDEX "idx_platform_admin_role" ON "platform_admins"("platform_role_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "platform_roles_slug_key" ON "platform_roles"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "platform_permissions_code_key" ON "platform_permissions"("code");
+
+-- CreateIndex
+CREATE INDEX "idx_platform_role_perms_role" ON "platform_role_permissions"("platform_role_id");
+
+-- CreateIndex
+CREATE INDEX "idx_platform_role_perms_code" ON "platform_role_permissions"("permission_code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "platform_role_permissions_platform_role_id_permission_code_key" ON "platform_role_permissions"("platform_role_id", "permission_code");
 
 -- CreateIndex
 CREATE INDEX "idx_college_roles_college" ON "college_roles"("college_id");
@@ -2121,6 +2399,36 @@ CREATE INDEX "idx_universities_status" ON "universities"("status");
 CREATE INDEX "idx_universities_slug" ON "universities"("slug");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "institution_groups_slug_key" ON "institution_groups"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "institution_groups_group_code_key" ON "institution_groups"("group_code");
+
+-- CreateIndex
+CREATE INDEX "idx_ig_slug" ON "institution_groups"("slug");
+
+-- CreateIndex
+CREATE INDEX "idx_ig_group_code" ON "institution_groups"("group_code");
+
+-- CreateIndex
+CREATE INDEX "idx_ig_status" ON "institution_groups"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_ig_created_by_college" ON "institution_groups"("created_by_college_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "institution_group_members_college_id_key" ON "institution_group_members"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_igm_group" ON "institution_group_members"("group_id");
+
+-- CreateIndex
+CREATE INDEX "idx_igm_college" ON "institution_group_members"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_igm_role" ON "institution_group_members"("role");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "colleges_slug_key" ON "colleges"("slug");
 
 -- CreateIndex
@@ -2140,6 +2448,9 @@ CREATE INDEX "idx_colleges_state" ON "colleges"("state");
 
 -- CreateIndex
 CREATE INDEX "idx_colleges_status" ON "colleges"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_onboard_status" ON "college_onboarding_requests"("status");
 
 -- CreateIndex
 CREATE INDEX "idx_campuses_college" ON "campuses"("college_id");
@@ -2208,13 +2519,16 @@ CREATE INDEX "idx_reviews_college" ON "college_reviews"("college_id", "status");
 CREATE INDEX "idx_reviews_student" ON "college_reviews"("student_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "blog_authors_email_key" ON "blog_authors"("email");
+
+-- CreateIndex
+CREATE INDEX "idx_blog_authors_email" ON "blog_authors"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "news_alerts_slug_key" ON "news_alerts"("slug");
 
 -- CreateIndex
 CREATE INDEX "idx_news_status" ON "news_alerts"("status");
-
--- CreateIndex
-CREATE INDEX "idx_news_category" ON "news_alerts"("category");
 
 -- CreateIndex
 CREATE INDEX "idx_news_college" ON "news_alerts"("college_id");
@@ -2308,6 +2622,15 @@ CREATE INDEX "idx_ereg_status" ON "event_registrations"("status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "event_registrations_event_id_student_id_key" ON "event_registrations"("event_id", "student_id");
+
+-- CreateIndex
+CREATE INDEX "idx_education_loans_status" ON "education_loans"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_education_loans_loan_type" ON "education_loans"("loan_type");
+
+-- CreateIndex
+CREATE INDEX "idx_education_loans_sort_order" ON "education_loans"("sort_order");
 
 -- CreateIndex
 CREATE INDEX "idx_cycles_college" ON "admission_cycles"("college_id");
@@ -3237,6 +3560,15 @@ CREATE INDEX "idx_cmsg_sender" ON "chat_messages"("sender_type", "sender_id");
 CREATE INDEX "idx_cmsg_unread" ON "chat_messages"("conversation_id", "is_read");
 
 -- AddForeignKey
+ALTER TABLE "platform_admins" ADD CONSTRAINT "platform_admins_platform_role_id_fkey" FOREIGN KEY ("platform_role_id") REFERENCES "platform_roles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "platform_role_permissions" ADD CONSTRAINT "platform_role_permissions_platform_role_id_fkey" FOREIGN KEY ("platform_role_id") REFERENCES "platform_roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "platform_role_permissions" ADD CONSTRAINT "platform_role_permissions_permission_code_fkey" FOREIGN KEY ("permission_code") REFERENCES "platform_permissions"("code") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "college_roles" ADD CONSTRAINT "college_roles_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -3276,7 +3608,25 @@ ALTER TABLE "student_leads" ADD CONSTRAINT "student_leads_assigned_to_fkey" FORE
 ALTER TABLE "universities" ADD CONSTRAINT "universities_university_type_id_fkey" FOREIGN KEY ("university_type_id") REFERENCES "university_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "institution_groups" ADD CONSTRAINT "institution_groups_created_by_college_id_fkey" FOREIGN KEY ("created_by_college_id") REFERENCES "colleges"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "institution_groups" ADD CONSTRAINT "institution_groups_created_by_staff_id_fkey" FOREIGN KEY ("created_by_staff_id") REFERENCES "staff_members"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "institution_group_members" ADD CONSTRAINT "institution_group_members_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "institution_groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "institution_group_members" ADD CONSTRAINT "institution_group_members_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "colleges" ADD CONSTRAINT "colleges_university_id_fkey" FOREIGN KEY ("university_id") REFERENCES "universities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "college_onboarding_requests" ADD CONSTRAINT "college_onboarding_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "college_onboarding_requests" ADD CONSTRAINT "college_onboarding_requests_created_college_id_fkey" FOREIGN KEY ("created_college_id") REFERENCES "colleges"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "campuses" ADD CONSTRAINT "campuses_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;

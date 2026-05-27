@@ -74,6 +74,7 @@ export async function objectExists(key: string): Promise<boolean> {
     await getS3Client().send(
       new HeadObjectCommand({ Bucket: env.AWS_S3_BUCKET, Key: key }),
     );
+
     return true;
   } catch (err: unknown) {
     const status = (err as { $metadata?: { httpStatusCode?: number } })

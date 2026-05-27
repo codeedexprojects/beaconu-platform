@@ -3,8 +3,8 @@
 // ============================================================
 
 model CounsellorAvailability {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId        String   @map("counsellor_id") @db.Uuid
+  id                  String   @id @default(dbgenerated("('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text)"))
+  counsellorId        String   @map("counsellor_id")
   availableDate       DateTime @map("available_date") @db.Date
   startTime           DateTime @map("start_time") @db.Time
   endTime             DateTime @map("end_time") @db.Time
@@ -25,10 +25,10 @@ model CounsellorAvailability {
 }
 
 model CounsellingSession {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId          String    @map("student_id") @db.Uuid
-  counsellorId       String    @map("counsellor_id") @db.Uuid
-  availabilityId     String    @map("availability_id") @db.Uuid
+  id                 String    @id @default(dbgenerated("('CLS-'::text || (nextval('counselling_session_seq'::regclass))::text)"))
+  studentId          String    @map("student_id")
+  counsellorId       String    @map("counsellor_id")
+  availabilityId     String    @map("availability_id")
   sessionMode        String    @map("session_mode") @db.VarChar(20)
   sessionType        String    @map("session_type") @db.VarChar(20)
   scheduledDate      DateTime  @map("scheduled_date") @db.Date
@@ -40,7 +40,7 @@ model CounsellingSession {
   meetingId          String?   @map("meeting_id") @db.VarChar(50)
   sessionFee         Decimal?  @map("session_fee") @db.Decimal(10, 2)
   paymentStatus      String    @default("pending") @map("payment_status") @db.VarChar(20)
-  transactionId      String?   @map("transaction_id") @db.Uuid
+  transactionId      String?   @map("transaction_id")
   cancelledBy        String?   @map("cancelled_by") @db.VarChar(20)
   cancellationReason String?   @map("cancellation_reason") @db.Text
   cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz
@@ -66,12 +66,12 @@ model CounsellingSession {
 }
 
 model SessionReschedule {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId        String   @map("session_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('SRS-'::text || (nextval('session_reschedule_seq'::regclass))::text)"))
+  sessionId        String   @map("session_id")
   rescheduledBy    String   @map("rescheduled_by") @db.VarChar(20)
   fromDate         DateTime @map("from_date") @db.Date
   fromTime         DateTime @map("from_time") @db.Time
-  toAvailabilityId String   @map("to_availability_id") @db.Uuid
+  toAvailabilityId String   @map("to_availability_id")
   toDate           DateTime @map("to_date") @db.Date
   toTime           DateTime @map("to_time") @db.Time
   reason           String?  @db.Text
@@ -86,8 +86,8 @@ model SessionReschedule {
 }
 
 model CounsellorWallet {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId   String   @unique @map("counsellor_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('CNW-'::text || (nextval('counsellor_wallet_seq'::regclass))::text)"))
+  counsellorId   String   @unique @map("counsellor_id")
   balance        Decimal  @default(0) @db.Decimal(12, 2)
   totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
   totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
@@ -103,13 +103,13 @@ model CounsellorWallet {
 }
 
 model CounsellorWalletTransaction {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId         String   @map("wallet_id") @db.Uuid
-  counsellorId     String   @map("counsellor_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('CWT-'::text || (nextval('counsellor_wallet_transaction_seq'::regclass))::text)"))
+  walletId         String   @map("wallet_id")
+  counsellorId     String   @map("counsellor_id")
   type             String   @db.VarChar(20)
   amount           Decimal  @db.Decimal(10, 2)
   description      String?  @db.VarChar(255)
-  sessionId        String?  @map("session_id") @db.Uuid
+  sessionId        String?  @map("session_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
   bankDetails      Json     @default("{}") @map("bank_details")
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
