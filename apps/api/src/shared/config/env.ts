@@ -27,6 +27,8 @@ const envSchema = z.object({
 
 const parsed = envSchema.safeParse(process.env);
 
+console.log(parsed);
+
 if (!parsed.success) {
   const missing = parsed.error.issues.map(
     (i) => `  ${i.path.join(".")}: ${i.message}`,
