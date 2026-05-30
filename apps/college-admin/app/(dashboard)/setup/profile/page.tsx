@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 
 import {
   useCollegeProfile,
+  useMyInstitutionGroup,
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
 import { usePublicColleges } from "@/hooks/use-public-colleges";
@@ -731,6 +732,8 @@ export default function SetupProfilePage() {
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
   const { data: profile, isLoading } = useCollegeProfile();
+  const { data: institutionGroupData, isLoading: isInstitutionGroupLoading } =
+    useMyInstitutionGroup();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
 
   const [activeTab, setActiveTab] = useState<OnboardingTabId>("basic");
@@ -1263,6 +1266,11 @@ export default function SetupProfilePage() {
   });
 
   const allianceItems = watch("profileSections.alliance.items");
+  const linkedInstitutionGroup =
+    institutionGroupData?.type === "owner"
+      ? institutionGroupData.group
+      : institutionGroupData?.membership?.group;
+  const linkedInstitutionMembers = linkedInstitutionGroup?.members ?? [];
 
   useEffect(() => {
     if (profile) {
@@ -4530,6 +4538,115 @@ export default function SetupProfilePage() {
           </Card>
         )}
 
+        {activeTab === "institutions_across_world" && (
+          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle>Institutions Across World</CardTitle>
+              <CardDescription>
+                Linked colleges under your institution group code are listed
+                automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-border/40 pb-4">
+                <input
+                  type="hidden"
+                  {...register("profileSections.institutions_across_world.id")}
+                />
+                <input
+                  type="checkbox"
+                  id="institutions-across-world-enabled"
+                  className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary"
+                  {...register(
+                    "profileSections.institutions_across_world.enabled",
+                  )}
+                />
+                <Label htmlFor="institutions-across-world-enabled">
+                  Show this section on public profile
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="institutions-across-world-summary">
+                  Section Summary
+                </Label>
+                <Textarea
+                  id="institutions-across-world-summary"
+                  placeholder="Highlight your global institution network and collaborations."
+                  {...register(
+                    "profileSections.institutions_across_world.summary",
+                  )}
+                />
+              </div>
+
+              <div className="space-y-3 border-t border-border/40 pt-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">
+                    Mapped Institution Group
+                  </Label>
+                  {linkedInstitutionGroup?.groupCode ? (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {linkedInstitutionGroup.groupCode}
+                    </Badge>
+                  ) : null}
+                </div>
+
+                {isInstitutionGroupLoading ? (
+                  <div className="flex items-center justify-center rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading institution group members...
+                  </div>
+                ) : !linkedInstitutionGroup ? (
+                  <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                    No institution group is linked yet. Join a group from
+                    settings to list institutions here.
+                  </div>
+                ) : linkedInstitutionMembers.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                    No colleges are mapped in this institution group yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {linkedInstitutionMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between rounded-lg border border-border/50 bg-background/40 px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold">
+                            {member.college.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.college.code}
+                            {[member.college.city, member.college.state]
+                              .filter(Boolean)
+                              .join(", ")
+                              ? ` • ${[
+                                  member.college.city,
+                                  member.college.state,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}`
+                              : ""}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            member.role === "admin" ? "default" : "secondary"
+                          }
+                          className="capitalize"
+                        >
+                          {member.role}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {activeTab === "admission_policy" && (
           <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
             <CardHeader>
@@ -6832,9 +6949,13 @@ export default function SetupProfilePage() {
 
         {/* ==================== TAB: GENERIC SECTIONS ==================== */}
         {isGenericSectionTab(activeTab) &&
-          !["faculty", "clubs_associations", "happenings", "alliance"].includes(
-            activeTab,
-          ) && (
+          ![
+            "faculty",
+            "clubs_associations",
+            "happenings",
+            "alliance",
+            "institutions_across_world",
+          ].includes(activeTab) && (
             <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
               <CardHeader>
                 <CardTitle>

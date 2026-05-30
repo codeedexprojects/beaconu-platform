@@ -324,6 +324,28 @@ export interface MyGroupMembershipResponse {
       status: string;
       createdAt: string;
       updatedAt: string;
+      createdByCollege: {
+        id: string;
+        name: string;
+        slug: string;
+        code: string;
+      };
+      members: Array<{
+        id: string;
+        role: string;
+        joinedVia: string;
+        joinedAt: string;
+        college: {
+          id: string;
+          name: string;
+          slug: string;
+          code: string;
+          city: string | null;
+          state: string | null;
+          status: string;
+          logoUrl: string | null;
+        };
+      }>;
     };
   };
 }

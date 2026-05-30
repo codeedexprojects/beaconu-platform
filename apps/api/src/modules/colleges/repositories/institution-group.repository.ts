@@ -99,7 +99,7 @@ export class InstitutionGroupRepository {
       where: { collegeId },
       select: {
         ...MEMBER_SELECT,
-        group: { select: GROUP_SELECT },
+        group: { select: GROUP_WITH_MEMBERS_SELECT },
       },
     });
   }

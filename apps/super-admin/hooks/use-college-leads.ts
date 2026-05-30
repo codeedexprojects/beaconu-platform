@@ -5,6 +5,7 @@ import { QUERY_KEYS } from "@/lib/query-keys";
 import {
   collegeLeadsService,
   type CollegeLead,
+  type CollegeLeadUpsertInput,
   type CollegeLeadStats,
   type CollegeLeadsListResponse,
 } from "@/lib/services/college-leads.service";
@@ -65,6 +66,53 @@ export function useUpdateCollegeLeadStatus() {
     onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.collegeLeads],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.collegeLeadStats,
+      });
+    },
+  });
+}
+
+export function useCreateCollegeLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CollegeLeadUpsertInput) =>
+      collegeLeadsService.create(data),
+
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.collegeLeads],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.collegeLeadStats,
+      });
+    },
+  });
+}
+
+export function useUpdateCollegeLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CollegeLeadUpsertInput }) =>
+      collegeLeadsService.update(id, data),
+
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.collegeLeads],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.collegeLead(variables.id),
       });
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.collegeLeadStats,

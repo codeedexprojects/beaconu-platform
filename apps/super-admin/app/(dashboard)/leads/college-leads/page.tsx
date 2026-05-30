@@ -14,6 +14,8 @@ import {
   Loader2,
   Eye,
   TrendingUp,
+  Plus,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Header } from "@/components/layout/header";
@@ -42,13 +44,17 @@ import {
 import {
   useCollegeLeads,
   useCollegeLeadStats,
+  useCreateCollegeLead,
+  useUpdateCollegeLead,
   useUpdateCollegeLeadStatus,
 } from "@/hooks/use-college-leads";
 import { CollegeLeadDetailModal } from "@/components/college-leads/college-lead-detail-modal";
 import { CollegeLeadStatusModal } from "@/components/college-leads/college-lead-status-modal";
+import { CollegeLeadFormModal } from "@/components/college-leads/college-lead-form-modal";
 import { ProvisionSuccessModal } from "@/components/college-leads/provision-success-modal";
 import type {
   CollegeLead,
+  CollegeLeadUpsertInput,
   UpdateStatusResponse,
 } from "@/lib/services/college-leads.service";
 
@@ -72,6 +78,8 @@ export default function CollegeLeadsPage() {
   const [selectedLead, setSelectedLead] = useState<CollegeLead | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<CollegeLead | null>(null);
   const [provisionData, setProvisionData] = useState<
     UpdateStatusResponse["provisionedCollege"] | null
   >(null);
@@ -82,6 +90,10 @@ export default function CollegeLeadsPage() {
     search: search || undefined,
   });
   const { data: stats, isLoading: isStatsLoading } = useCollegeLeadStats();
+  const { mutate: createLead, isPending: isCreatingLead } =
+    useCreateCollegeLead();
+  const { mutate: updateLead, isPending: isUpdatingLead } =
+    useUpdateCollegeLead();
   const { mutate: updateStatus, isPending: isUpdating } =
     useUpdateCollegeLeadStatus();
 
@@ -97,6 +109,39 @@ export default function CollegeLeadsPage() {
     setSelectedLead(lead);
     setIsStatusOpen(true);
     setIsDetailOpen(false);
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingLead(null);
+    setIsLeadFormOpen(true);
+  };
+
+  const handleOpenEditModal = (lead: CollegeLead) => {
+    setEditingLead(lead);
+    setIsLeadFormOpen(true);
+  };
+
+  const handleUpsertLead = (data: CollegeLeadUpsertInput) => {
+    if (editingLead) {
+      updateLead(
+        { id: editingLead.id, data },
+        {
+          onSuccess: () => {
+            toast.success("College lead updated successfully");
+            setIsLeadFormOpen(false);
+            setEditingLead(null);
+          },
+        },
+      );
+      return;
+    }
+
+    createLead(data, {
+      onSuccess: () => {
+        toast.success("College lead created successfully");
+        setIsLeadFormOpen(false);
+      },
+    });
   };
 
   const handleUpdateStatus = (data: {
@@ -211,6 +256,10 @@ export default function CollegeLeadsPage() {
                 {s === "" ? "All" : s}
               </Button>
             ))}
+            <Button size="sm" onClick={handleOpenCreateModal}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Lead
+            </Button>
           </div>
         </div>
 
@@ -353,6 +402,13 @@ export default function CollegeLeadsPage() {
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                                 Update Status
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => handleOpenEditModal(lead)}
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                                Edit Lead
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -380,6 +436,17 @@ export default function CollegeLeadsPage() {
         onClose={() => setIsStatusOpen(false)}
         onSubmit={handleUpdateStatus}
         isPending={isUpdating}
+      />
+
+      <CollegeLeadFormModal
+        lead={editingLead}
+        isOpen={isLeadFormOpen}
+        isPending={isCreatingLead || isUpdatingLead}
+        onClose={() => {
+          setIsLeadFormOpen(false);
+          setEditingLead(null);
+        }}
+        onSubmit={handleUpsertLead}
       />
 
       <ProvisionSuccessModal

@@ -1,0 +1,46 @@
+meta {
+  name: Create College Lead
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/college-leads
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_name": "Beacon Engineering College",
+    "university_name": "Beacon State University",
+    "contact_person_name": "Aarav Sharma",
+    "contact_email": "aarav.sharma@beaconu.edu",
+    "contact_phone": "+91-9876543210",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "group_code": "BNU-GROUP-001",
+    "message": "Interested in onboarding this intake cycle."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("collegeLeadId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new college onboarding lead from super-admin.
+
+  Requires: platform admin access token with leads.manage.
+  Saves created collegeLeadId to environment.
+}

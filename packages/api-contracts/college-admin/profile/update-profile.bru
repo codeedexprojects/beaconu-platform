@@ -115,6 +115,49 @@ body:json {
           ]
         }
       },
+      "admission_policy": {
+        "id": "admission_policy",
+        "enabled": true,
+        "summary": "Entrance exam and merit based admissions.",
+        "steps": [
+          "Fill application",
+          "Upload documents",
+          "Final counseling"
+        ]
+      },
+      "placements": {
+        "id": "placements",
+        "enabled": true,
+        "summary": "Consistent placement support with internship pipeline.",
+        "highestPackageLpa": 24,
+        "averagePackageLpa": 8.5
+      },
+      "fees": {
+        "id": "fees",
+        "enabled": true,
+        "summary": "Transparent semester-wise fee structure.",
+        "annualTuition": 185000,
+        "hostelAnnual": 90000
+      },
+      "financial_aid": {
+        "id": "financial_aid",
+        "enabled": true,
+        "meritScholarship": {
+          "title": "Merit Scholarship",
+          "description": "Up to 50% tuition fee waiver for top scorers."
+        },
+        "financialConcessions": [
+          {
+            "name": "Need-based concession",
+            "description": "Concession for eligible families."
+          }
+        ]
+      },
+      "student_housing": {
+        "id": "student_housing",
+        "enabled": true,
+        "summary": "On-campus hostels with modern facilities."
+      },
       "exam_policy": {
         "id": "exam_policy",
         "enabled": true,
@@ -133,6 +176,11 @@ body:json {
             "readMoreEnabled": true
           }
         ]
+      },
+      "faculty": {
+        "id": "faculty",
+        "enabled": true,
+        "summary": "Experienced faculty with strong academic background."
       },
       "review": {
         "id": "review",
@@ -153,6 +201,11 @@ body:json {
           }
         ]
       },
+      "commute": {
+        "id": "commute",
+        "enabled": true,
+        "summary": "Good metro and bus connectivity around campus."
+      },
       "library": {
         "id": "library",
         "enabled": true,
@@ -169,6 +222,40 @@ body:json {
         ],
         "facilities": ["Digital Library", "Reading Hall"]
       },
+      "clubs_associations": {
+        "id": "clubs_associations",
+        "enabled": true,
+        "summary": "Student-driven clubs for technical and cultural growth.",
+        "items": [
+          {
+            "clubName": "Coding Club",
+            "description": "Weekly coding contests and peer learning sessions."
+          }
+        ]
+      },
+      "student_code_of_conduct": {
+        "id": "student_code_of_conduct",
+        "enabled": true,
+        "title": "Code of Conduct",
+        "description": "Students must adhere to academic and campus discipline guidelines."
+      },
+      "happenings": {
+        "id": "happenings",
+        "enabled": true,
+        "summary": "Recent events and campus activities.",
+        "items": [
+          {
+            "title": "Innovation Fest 2026",
+            "description": "Annual showcase for student projects.",
+            "date": "2026-08-21"
+          }
+        ]
+      },
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "summary": "Our institution network and collaborations worldwide."
+      },
       "alliance": {
         "id": "alliance",
         "enabled": true,
@@ -182,6 +269,16 @@ body:json {
             "allianceActivities": ["Faculty exchange"]
           }
         ]
+      },
+      "other_courses_offered": {
+        "id": "other_courses_offered",
+        "enabled": true,
+        "summary": "Short-term certifications and value-added programs."
+      },
+      "demo_graphics": {
+        "id": "demo_graphics",
+        "enabled": true,
+        "summary": "Charts, visuals, and infographic assets for preview."
       }
     }
   }
@@ -192,6 +289,12 @@ docs {
 
   Notes:
   - Send tab data under `profileSections`.
+  - Include all section keys used by the setup tabs:
+    `college_overview`, `course_info`, `admission_policy`, `placements`,
+    `fees`, `financial_aid`, `student_housing`, `exam_policy`, `faculty`,
+    `review`, `commute`, `library`, `clubs_associations`,
+    `student_code_of_conduct`, `happenings`, `institutions_across_world`,
+    `alliance`, `other_courses_offered`, `demo_graphics`.
   - Keep list-like fields as arrays even for one item.
     Examples: `aminities`, `nearby_access.transit`, `campus_reels`,
     `courseAccolades`, `grading_scale`, `ratingDistribution`,
