@@ -1,0 +1,15 @@
+meta {
+  name: Get Video
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/videos/{{sgvId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

@@ -25,6 +25,7 @@
     "migrate": "prisma migrate deploy --schema=./prisma/schema",
     "migrate:dev": "prisma migrate dev --schema=./prisma/schema",
     "seed": "tsx src/seed.ts",
+    "seed:demo": "tsx src/seed-demo.ts",
     "studio": "prisma studio --schema=./prisma/schema",
     "push": "prisma db push --schema=./prisma/schema"
   },
@@ -35,7 +36,9 @@
     "pg": "^8.20.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/pg": "^8.11.14",
+    "bcryptjs": "^3.0.3",
     "prisma": "^7.8.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"

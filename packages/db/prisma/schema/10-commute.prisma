@@ -3,8 +3,8 @@
 // ============================================================
 
 model CommuteRoute {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String   @map("college_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('CMR-'::text || (nextval('commute_route_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
   name        String   @db.VarChar(255)
   description String?  @db.VarChar(255)
   isActive    Boolean  @default(true) @map("is_active")
@@ -23,8 +23,8 @@ model CommuteRoute {
 }
 
 model CommuteRouteStop {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  routeId       String    @map("route_id") @db.Uuid
+  id            String    @id @default(dbgenerated("('CMS-'::text || (nextval('commute_route_stop_seq'::regclass))::text)"))
+  routeId       String    @map("route_id")
   stopName      String    @map("stop_name") @db.VarChar(255)
   landmark      String?   @db.VarChar(255)
   morningTime   DateTime? @map("morning_time") @db.Time
@@ -44,8 +44,8 @@ model CommuteRouteStop {
 }
 
 model CommuteBus {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  routeId        String   @map("route_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('CMB-'::text || (nextval('commute_bus_seq'::regclass))::text)"))
+  routeId        String   @map("route_id")
   busNumber      String   @map("bus_number") @db.VarChar(20)
   busName        String?  @map("bus_name") @db.VarChar(100)
   busType        String?  @map("bus_type") @db.VarChar(50)
@@ -71,12 +71,12 @@ model CommuteBus {
 }
 
 model CommuteEnrollment {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId     String    @map("student_id") @db.Uuid
-  collegeId     String    @map("college_id") @db.Uuid
-  routeId       String    @map("route_id") @db.Uuid
-  busId         String    @map("bus_id") @db.Uuid
-  pickupStopId  String    @map("pickup_stop_id") @db.Uuid
+  id            String    @id @default(dbgenerated("('CME-'::text || (nextval('commute_enrollment_seq'::regclass))::text)"))
+  studentId     String    @map("student_id")
+  collegeId     String    @map("college_id")
+  routeId       String    @map("route_id")
+  busId         String    @map("bus_id")
+  pickupStopId  String    @map("pickup_stop_id")
   status        String    @default("active") @db.VarChar(20)
   enrolledFrom  DateTime  @map("enrolled_from") @db.Date
   enrolledUntil DateTime? @map("enrolled_until") @db.Date
@@ -101,10 +101,10 @@ model CommuteEnrollment {
 }
 
 model CommuteRideHistory {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  enrollmentId String    @map("enrollment_id") @db.Uuid
-  studentId    String    @map("student_id") @db.Uuid
-  busId        String    @map("bus_id") @db.Uuid
+  id           String    @id @default(dbgenerated("('CRH-'::text || (nextval('commute_ride_history_seq'::regclass))::text)"))
+  enrollmentId String    @map("enrollment_id")
+  studentId    String    @map("student_id")
+  busId        String    @map("bus_id")
   rideDate     DateTime  @map("ride_date") @db.Date
   rideType     String    @map("ride_type") @db.VarChar(10)
   boardedAt    DateTime? @map("boarded_at") @db.Timestamptz

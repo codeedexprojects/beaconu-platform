@@ -13,7 +13,7 @@ const optionalBooleanFromQuery = z
 
 export const universityTypeSchemas = {
   idParam: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
   }),
   listQuery: z.object({
     is_active: optionalBooleanFromQuery.optional(),

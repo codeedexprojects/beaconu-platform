@@ -14,6 +14,7 @@ import { adminInstitutionGroupRouter } from "@/modules/colleges/routes/instituti
 import newsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts.routes";
 import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.routes";
 import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans.routes";
+import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-guide-videos.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
 
 const router: Router = Router();
@@ -28,6 +29,7 @@ router.use("/platform-admins", platformAdminMgmtRoutes);
 router.use("/news", newsAlertsRoutes);
 router.use("/entrance-exams", entranceExamsRoutes);
 router.use("/financial-aid/loans", financialAidLoansRoutes);
+router.use("/starter-guide/videos", starterGuideVideosRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);

@@ -4,6 +4,38 @@ import { prisma } from "./index";
 async function main(): Promise<void> {
   console.log("Seeding database...");
 
+  // Platform Permissions — must exist before PlatformRolePermission FK references them
+  const allPermissionCodes = [
+    {
+      code: "*",
+      description: "Super Admin wildcard — bypasses all permission checks",
+    },
+    {
+      code: "platform:profiles:view",
+      description: "View student and user profiles",
+    },
+    {
+      code: "platform:operations:manage",
+      description: "Manage platform operations",
+    },
+    { code: "platform:leads:manage", description: "Manage student leads" },
+    { code: "platform:finance:view", description: "View financial data" },
+    {
+      code: "platform:finance:manage",
+      description: "Manage financial operations",
+    },
+    { code: "platform:support:manage", description: "Manage support tickets" },
+    { code: "platform:content:manage", description: "Manage platform content" },
+  ];
+
+  for (const perm of allPermissionCodes) {
+    await prisma.platformPermission.upsert({
+      where: { code: perm.code },
+      update: { description: perm.description },
+      create: perm,
+    });
+  }
+
   // Platform Roles
   const platformRoles = [
     {

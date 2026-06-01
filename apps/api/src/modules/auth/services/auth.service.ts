@@ -467,7 +467,6 @@ export class AuthService {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
     // TODO: deliver via SMS/WhatsApp provider using `key` and `otp`
-    console.log(process.env.NODE_ENV);
     if (process.env.NODE_ENV !== "production") {
       console.log(`[DEV OTP] ${key}: ${otp}`);
       return { devOtp: otp };

@@ -25,7 +25,7 @@ const universityGovernanceSchema = z.object({
 });
 
 export const createUniversitySchema = z.object({
-  university_type_id: z.string().uuid(),
+  university_type_id: z.string(),
   name: z.string().min(1).max(255),
   slug: z
     .string()
@@ -46,7 +46,7 @@ export const updateUniversitySchema = createUniversitySchema.partial();
 
 export const listUniversitiesQuerySchema = z.object({
   status: z.enum(["active", "inactive", "archived"]).optional(),
-  university_type_id: z.string().uuid().optional(),
+  university_type_id: z.string().optional(),
   state: z.string().optional(),
   search: z.string().optional(),
 });

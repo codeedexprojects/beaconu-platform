@@ -3,8 +3,8 @@
 // ============================================================
 
 model Hostel {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('HST-'::text || (nextval('hostel_seq'::regclass))::text)"))
+  collegeId          String   @map("college_id")
   name               String   @db.VarChar(255)
   slug               String   @db.VarChar(100)
   hostelType         String   @map("hostel_type") @db.VarChar(20)
@@ -42,8 +42,8 @@ model Hostel {
 }
 
 model HostelRoomType {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId         String   @map("hostel_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('HRT-'::text || (nextval('hostel_room_type_seq'::regclass))::text)"))
+  hostelId         String   @map("hostel_id")
   name             String   @db.VarChar(100)
   description      String?  @db.Text
   totalBeds        Int      @map("total_beds")
@@ -69,8 +69,8 @@ model HostelRoomType {
 }
 
 model HostelMessPlan {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId       String   @map("hostel_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('HMP-'::text || (nextval('hostel_mess_plan_seq'::regclass))::text)"))
+  hostelId       String   @map("hostel_id")
   name           String   @db.VarChar(100)
   description    String?  @db.Text
   mealsIncluded  Json     @default("[]") @map("meals_included")
@@ -92,8 +92,8 @@ model HostelMessPlan {
 }
 
 model HostelAddonService {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId    String   @map("hostel_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('HAS-'::text || (nextval('hostel_addon_service_seq'::regclass))::text)"))
+  hostelId    String   @map("hostel_id")
   serviceType String   @map("service_type") @db.VarChar(30)
   name        String   @db.VarChar(100)
   description String?  @db.Text
@@ -114,9 +114,9 @@ model HostelAddonService {
 }
 
 model HostelReview {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  hostelId   String   @map("hostel_id") @db.Uuid
-  studentId  String   @map("student_id") @db.Uuid
+  id         String   @id @default(dbgenerated("('HRV-'::text || (nextval('hostel_review_seq'::regclass))::text)"))
+  hostelId   String   @map("hostel_id")
+  studentId  String   @map("student_id")
   rating     Int      @db.SmallInt
   reviewText String?  @map("review_text") @db.Text
   isVerified Boolean  @default(false) @map("is_verified")
@@ -135,13 +135,13 @@ model HostelReview {
 }
 
 model HostelEnrollment {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId         String    @map("student_id") @db.Uuid
-  collegeId         String    @map("college_id") @db.Uuid
-  hostelId          String    @map("hostel_id") @db.Uuid
-  roomTypeId        String    @map("room_type_id") @db.Uuid
+  id                String    @id @default(dbgenerated("('HEN-'::text || (nextval('hostel_enrollment_seq'::regclass))::text)"))
+  studentId         String    @map("student_id")
+  collegeId         String    @map("college_id")
+  hostelId          String    @map("hostel_id")
+  roomTypeId        String    @map("room_type_id")
   roomPlanType      String    @map("room_plan_type") @db.VarChar(10)
-  messId            String?   @map("mess_plan_id") @db.Uuid
+  messId            String?   @map("mess_plan_id")
   dietaryPreference String?   @map("dietary_preference") @db.VarChar(20)
   selectedAddons    Json      @default("[]") @map("selected_addons")
   feeBreakdown      Json      @map("fee_breakdown")
@@ -166,9 +166,9 @@ model HostelEnrollment {
 }
 
 model HostelWishlist {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId String   @map("student_id") @db.Uuid
-  hostelId  String   @map("hostel_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('HWL-'::text || (nextval('hostel_wishlist_seq'::regclass))::text)"))
+  studentId String   @map("student_id")
+  hostelId  String   @map("hostel_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations

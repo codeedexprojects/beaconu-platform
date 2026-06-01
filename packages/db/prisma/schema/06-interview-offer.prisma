@@ -3,8 +3,8 @@
 // ============================================================
 
 model InterviewSlot {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String   @map("college_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('ITS-'::text || (nextval('interview_slot_seq'::regclass))::text)"))
+  collegeId      String   @map("college_id")
   mode           String   @db.VarChar(20)
   scheduledDate  DateTime @map("scheduled_date") @db.Date
   startTime      DateTime @map("start_time") @db.Time
@@ -17,7 +17,7 @@ model InterviewSlot {
   zoomPasscode   String?  @map("zoom_passcode") @db.VarChar(20)
   phoneNumber    String?  @map("phone_number") @db.VarChar(20)
   venue          String?  @db.VarChar(255)
-  interviewerId  String?  @map("interviewer_id") @db.Uuid
+  interviewerId  String?  @map("interviewer_id")
   status         String   @default("active") @db.VarChar(20)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -37,15 +37,15 @@ model InterviewSlot {
 }
 
 model InterviewBooking {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId String    @unique @map("application_course_id") @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  slotId              String    @map("slot_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('IBK-'::text || (nextval('interview_booking_seq'::regclass))::text)"))
+  applicationCourseId String    @unique @map("application_course_id")
+  studentId           String    @map("student_id")
+  slotId              String    @map("slot_id")
   status              String    @default("booked") @db.VarChar(20)
   interviewScore      Decimal?  @map("interview_score") @db.Decimal(5, 2)
   interviewRemarks    String?   @map("interview_remarks") @db.Text
   interviewOutcome    String?   @map("interview_outcome") @db.VarChar(20)
-  evaluatedBy         String?   @map("evaluated_by") @db.Uuid
+  evaluatedBy         String?   @map("evaluated_by")
   evaluatedAt         DateTime? @map("evaluated_at") @db.Timestamptz
   bookedAt            DateTime  @default(now()) @map("booked_at") @db.Timestamptz
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
@@ -68,14 +68,14 @@ model InterviewBooking {
 }
 
 model InterviewReschedule {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bookingId     String    @map("booking_id") @db.Uuid
-  studentId     String    @map("student_id") @db.Uuid
-  fromSlotId    String    @map("from_slot_id") @db.Uuid
-  toSlotId      String?   @map("to_slot_id") @db.Uuid
+  id            String    @id @default(dbgenerated("('IRS-'::text || (nextval('interview_reschedule_seq'::regclass))::text)"))
+  bookingId     String    @map("booking_id")
+  studentId     String    @map("student_id")
+  fromSlotId    String    @map("from_slot_id")
+  toSlotId      String?   @map("to_slot_id")
   reason        String    @db.Text
   status        String    @default("pending") @db.VarChar(20)
-  reviewedBy    String?   @map("reviewed_by") @db.Uuid
+  reviewedBy    String?   @map("reviewed_by")
   reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz
   reviewRemarks String?   @map("review_remarks") @db.Text
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -94,19 +94,19 @@ model InterviewReschedule {
 }
 
 model OfferLetter {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId String   @unique @map("application_course_id") @db.Uuid
-  studentId           String   @map("student_id") @db.Uuid
-  collegeId           String   @map("college_id") @db.Uuid
+  id                  String   @id @default(dbgenerated("('OFL-'::text || (nextval('offer_letter_seq'::regclass))::text)"))
+  applicationCourseId String   @unique @map("application_course_id")
+  studentId           String   @map("student_id")
+  collegeId           String   @map("college_id")
   offerNumber         String   @unique @map("offer_number") @db.VarChar(30)
   offerDate           DateTime @default(dbgenerated("CURRENT_DATE")) @map("offer_date") @db.Date
   validUntil          DateTime @map("valid_until") @db.Date
   tokenAmount         Decimal  @map("token_amount") @db.Decimal(10, 2)
   tokenPaymentStatus  String   @default("pending") @map("token_payment_status") @db.VarChar(20)
-  tokenTransactionId  String?  @map("token_transaction_id") @db.Uuid
+  tokenTransactionId  String?  @map("token_transaction_id")
   documentUrl         String?  @map("document_url") @db.Text
   status              String   @default("issued") @db.VarChar(20)
-  issuedBy            String?  @map("issued_by") @db.Uuid
+  issuedBy            String?  @map("issued_by")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

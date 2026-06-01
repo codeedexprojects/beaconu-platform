@@ -3,8 +3,8 @@
 // ============================================================
 
 model AssessmentSection {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId     String   @map("college_id") @db.Uuid
+  id            String   @id @default(dbgenerated("('ASC-'::text || (nextval('assessment_section_seq'::regclass))::text)"))
+  collegeId     String   @map("college_id")
   name          String   @db.VarChar(100)
   slug          String   @db.VarChar(50)
   description   String?  @db.Text
@@ -28,8 +28,8 @@ model AssessmentSection {
 }
 
 model QuestionType {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId      String   @map("college_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('QTP-'::text || (nextval('question_type_seq'::regclass))::text)"))
+  collegeId      String   @map("college_id")
   name           String   @db.VarChar(100)
   slug           String   @db.VarChar(50)
   category       String   @db.VarChar(30)
@@ -55,10 +55,10 @@ model QuestionType {
 }
 
 model Question {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId        String   @map("college_id") @db.Uuid
-  sectionId        String   @map("section_id") @db.Uuid
-  questionTypeId   String   @map("question_type_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('QST-'::text || (nextval('question_seq'::regclass))::text)"))
+  collegeId        String   @map("college_id")
+  sectionId        String   @map("section_id")
+  questionTypeId   String   @map("question_type_id")
   difficulty       String   @default("medium") @db.VarChar(10)
   title            String?  @db.VarChar(255)
   content          Json
@@ -66,9 +66,9 @@ model Question {
   marks            Decimal  @default(1.0) @db.Decimal(5, 2)
   negativeMarks    Decimal  @default(0) @map("negative_marks") @db.Decimal(5, 2)
   version          Int      @default(1)
-  parentQuestionId String?  @map("parent_question_id") @db.Uuid
+  parentQuestionId String?  @map("parent_question_id")
   status           String   @default("active") @db.VarChar(20)
-  createdBy        String?  @map("created_by") @db.Uuid
+  createdBy        String?  @map("created_by")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -91,9 +91,9 @@ model Question {
 }
 
 model QuestionCourseMapping {
-  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionId String @map("question_id") @db.Uuid
-  courseId   String @map("course_id") @db.Uuid
+  id         String @id @default(dbgenerated("('QCM-'::text || (nextval('question_course_mapping_seq'::regclass))::text)"))
+  questionId String @map("question_id")
+  courseId   String @map("course_id")
 
   // Relations
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
@@ -106,8 +106,8 @@ model QuestionCourseMapping {
 }
 
 model AssessmentTemplate {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId         String   @map("college_id") @db.Uuid
+  id                String   @id @default(dbgenerated("('AST-'::text || (nextval('assessment_template_seq'::regclass))::text)"))
+  collegeId         String   @map("college_id")
   name              String   @db.VarChar(255)
   templateType      String   @default("admission") @map("template_type") @db.VarChar(20)
   totalQuestions    Int      @map("total_questions")
@@ -115,7 +115,7 @@ model AssessmentTemplate {
   totalDurationMins Int      @map("total_duration_mins")
   status            String   @default("draft") @db.VarChar(20)
   settings          Json     @default("{}")
-  createdBy         String?  @map("created_by") @db.Uuid
+  createdBy         String?  @map("created_by")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -131,9 +131,9 @@ model AssessmentTemplate {
 }
 
 model TemplateSection {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  templateId             String   @map("template_id") @db.Uuid
-  sectionId              String   @map("section_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('TPS-'::text || (nextval('template_section_seq'::regclass))::text)"))
+  templateId             String   @map("template_id")
+  sectionId              String   @map("section_id")
   questionCount          Int      @map("question_count")
   timeLimitMins          Int      @map("time_limit_mins")
   sectionWeightage       Decimal? @map("section_weightage") @db.Decimal(5, 2)
@@ -150,13 +150,13 @@ model TemplateSection {
 }
 
 model AssessmentPaper {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  templateId     String    @map("template_id") @db.Uuid
+  id             String    @id @default(dbgenerated("('ASP-'::text || (nextval('assessment_paper_seq'::regclass))::text)"))
+  templateId     String    @map("template_id")
   paperCode      String    @unique @map("paper_code") @db.VarChar(30)
   generationType String    @map("generation_type") @db.VarChar(10)
   status         String    @default("draft") @db.VarChar(20)
-  generatedBy    String?   @map("generated_by") @db.Uuid
-  approvedBy     String?   @map("approved_by") @db.Uuid
+  generatedBy    String?   @map("generated_by")
+  approvedBy     String?   @map("approved_by")
   approvedAt     DateTime? @map("approved_at") @db.Timestamptz
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
@@ -171,10 +171,10 @@ model AssessmentPaper {
 }
 
 model PaperQuestion {
-  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  paperId       String @map("paper_id") @db.Uuid
-  questionId    String @map("question_id") @db.Uuid
-  sectionId     String @map("section_id") @db.Uuid
+  id            String @id @default(dbgenerated("('PQS-'::text || (nextval('paper_question_seq'::regclass))::text)"))
+  paperId       String @map("paper_id")
+  questionId    String @map("question_id")
+  sectionId     String @map("section_id")
   questionOrder Int    @map("question_order")
 
   // Relations
@@ -190,9 +190,9 @@ model PaperQuestion {
 }
 
 model AssessmentSlot {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String   @map("college_id") @db.Uuid
-  templateId  String   @map("template_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('ASL-'::text || (nextval('assessment_slot_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
+  templateId  String   @map("template_id")
   slotType    String   @map("slot_type") @db.VarChar(10)
   windowStart DateTime @map("window_start") @db.Timestamptz
   windowEnd   DateTime @map("window_end") @db.Timestamptz
@@ -216,11 +216,11 @@ model AssessmentSlot {
 }
 
 model AssessmentAttempt {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId String    @map("application_course_id") @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  paperId             String    @map("paper_id") @db.Uuid
-  slotId              String    @map("slot_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('AAT-'::text || (nextval('assessment_attempt_seq'::regclass))::text)"))
+  applicationCourseId String    @map("application_course_id")
+  studentId           String    @map("student_id")
+  paperId             String    @map("paper_id")
+  slotId              String    @map("slot_id")
   status              String    @default("not_started") @db.VarChar(20)
   startedAt           DateTime? @map("started_at") @db.Timestamptz
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
@@ -250,17 +250,17 @@ model AssessmentAttempt {
 }
 
 model StudentAnswer {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attemptId         String    @map("attempt_id") @db.Uuid
-  questionId        String    @map("question_id") @db.Uuid
-  sectionId         String    @map("section_id") @db.Uuid
+  id                String    @id @default(dbgenerated("('SAN-'::text || (nextval('student_answer_seq'::regclass))::text)"))
+  attemptId         String    @map("attempt_id")
+  questionId        String    @map("question_id")
+  sectionId         String    @map("section_id")
   response          Json?
   isFlagged         Boolean   @default(false) @map("is_flagged")
   timeSpentSecs     Int       @default(0) @map("time_spent_secs")
   autoScore         Decimal?  @map("auto_score") @db.Decimal(5, 2)
   manualScore       Decimal?  @map("manual_score") @db.Decimal(5, 2)
   finalScore        Decimal?  @map("final_score") @db.Decimal(5, 2)
-  evaluatedBy       String?   @map("evaluated_by") @db.Uuid
+  evaluatedBy       String?   @map("evaluated_by")
   evaluationStatus  String    @default("pending") @map("evaluation_status") @db.VarChar(20)
   evaluationRemarks String?   @map("evaluation_remarks") @db.Text
   answeredAt        DateTime? @map("answered_at") @db.Timestamptz
@@ -280,14 +280,14 @@ model StudentAnswer {
 }
 
 model AssessmentReschedule {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attemptId  String    @map("attempt_id") @db.Uuid
-  studentId  String    @map("student_id") @db.Uuid
-  fromSlotId String    @map("from_slot_id") @db.Uuid
-  toSlotId   String?   @map("to_slot_id") @db.Uuid
+  id         String    @id @default(dbgenerated("('ARD-'::text || (nextval('assessment_reschedule_seq'::regclass))::text)"))
+  attemptId  String    @map("attempt_id")
+  studentId  String    @map("student_id")
+  fromSlotId String    @map("from_slot_id")
+  toSlotId   String?   @map("to_slot_id")
   reason     String    @db.Text
   status     String    @default("pending") @db.VarChar(20)
-  reviewedBy String?   @map("reviewed_by") @db.Uuid
+  reviewedBy String?   @map("reviewed_by")
   reviewedAt DateTime? @map("reviewed_at") @db.Timestamptz
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
 

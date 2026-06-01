@@ -35,4 +35,9 @@ export const QUERY_KEYS = {
   educationLoans: (params?: object) =>
     params ? ["education-loans", params] : (["education-loans"] as const),
   educationLoan: (id: string) => ["education-loans", id] as const,
+  starterGuideVideos: (params?: object) =>
+    params
+      ? ["starter-guide-videos", params]
+      : (["starter-guide-videos"] as const),
+  starterGuideVideo: (id: string) => ["starter-guide-videos", id] as const,
 } as const;

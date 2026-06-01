@@ -5,7 +5,7 @@ const optionalUuidFromQuery = z
   .trim()
   .optional()
   .transform((value) => (value === "" ? undefined : value))
-  .pipe(z.string().uuid().optional());
+  .pipe(z.string().optional());
 
 const sectionIdentifierParam = z
   .string()
@@ -14,11 +14,11 @@ const sectionIdentifierParam = z
 
 export const publicCollegeSchemas = {
   collegeIdParam: z.object({
-    collegeId: z.string().uuid(),
+    collegeId: z.string(),
   }),
 
   sectionParam: z.object({
-    collegeId: z.string().uuid(),
+    collegeId: z.string(),
     sectionName: sectionIdentifierParam,
   }),
 

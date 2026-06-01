@@ -526,9 +526,15 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
     devDependencies:
+      "@types/bcryptjs":
+        specifier: ^3.0.0
+        version: 3.0.0
       "@types/pg":
         specifier: ^8.11.14
         version: 8.20.0
+      bcryptjs:
+        specifier: ^3.0.3
+        version: 3.0.3
       prisma:
         specifier: ^7.8.0
         version: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@6.0.3)

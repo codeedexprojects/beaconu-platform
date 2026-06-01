@@ -3,8 +3,8 @@
 // ============================================================
 
 model DocumentTemplate {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId   String   @map("college_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('DTM-'::text || (nextval('document_template_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
   name        String   @db.VarChar(100)
   slug        String   @db.VarChar(50)
   description String?  @db.Text
@@ -27,11 +27,11 @@ model DocumentTemplate {
 }
 
 model DocumentRequest {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String    @id @default(dbgenerated("('DRQ-'::text || (nextval('document_request_seq'::regclass))::text)"))
   requestNumber       String    @unique @map("request_number") @db.VarChar(30)
-  studentId           String    @map("student_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  documentTemplateId  String?   @map("document_template_id") @db.Uuid
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  documentTemplateId  String?   @map("document_template_id")
   documentName        String    @map("document_name") @db.VarChar(255)
   description         String?   @db.Text
   deliveryMode        String    @map("delivery_mode") @db.VarChar(20)
@@ -40,8 +40,8 @@ model DocumentRequest {
   rejectionReason     String?   @map("rejection_reason") @db.Text
   resubmissionCount   Int       @default(0) @map("resubmission_count")
   resubmissionHistory Json      @default("[]") @map("resubmission_history")
-  assignedTo          String?   @map("assigned_to") @db.Uuid
-  processedBy         String?   @map("processed_by") @db.Uuid
+  assignedTo          String?   @map("assigned_to")
+  processedBy         String?   @map("processed_by")
   issuedDocumentUrl   String?   @map("issued_document_url") @db.Text
   issuedAt            DateTime? @map("issued_at") @db.Timestamptz
   pickupDate          DateTime? @map("pickup_date") @db.Date
@@ -67,16 +67,16 @@ model DocumentRequest {
 }
 
 model IssuedDocument {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  documentRequestId String   @map("document_request_id") @db.Uuid
-  studentId         String   @map("student_id") @db.Uuid
-  collegeId         String   @map("college_id") @db.Uuid
+  id                String   @id @default(dbgenerated("('ISD-'::text || (nextval('issued_document_seq'::regclass))::text)"))
+  documentRequestId String   @map("document_request_id")
+  studentId         String   @map("student_id")
+  collegeId         String   @map("college_id")
   documentName      String   @map("document_name") @db.VarChar(255)
   documentUrl       String   @map("document_url") @db.Text
   fileName          String?  @map("file_name") @db.VarChar(255)
   fileSizeBytes     Int?     @map("file_size_bytes")
   deliveryMode      String   @map("delivery_mode") @db.VarChar(20)
-  issuedBy          String   @map("issued_by") @db.Uuid
+  issuedBy          String   @map("issued_by")
   issuedAt          DateTime @default(now()) @map("issued_at") @db.Timestamptz
 
   // Relations

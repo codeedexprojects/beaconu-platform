@@ -3,7 +3,7 @@
 // ============================================================
 
 model Student {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id               String    @id @default(dbgenerated("('STU-'::text || (nextval('student_seq'::regclass))::text)"))
   fullName         String    @map("full_name") @db.VarChar(255)
   email            String?   @unique @db.VarChar(255)
   phoneCountryCode String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
@@ -69,8 +69,8 @@ model Student {
 }
 
 model PlatformAdmin {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  platformRoleId String?   @map("platform_role_id") @db.Uuid
+  id             String    @id @default(dbgenerated("('PAD-'::text || (nextval('platform_admin_seq'::regclass))::text)"))
+  platformRoleId String?   @map("platform_role_id")
   fullName       String    @map("full_name") @db.VarChar(255)
   email          String    @unique @db.VarChar(255)
   passwordHash   String    @map("password_hash") @db.Text
@@ -94,7 +94,7 @@ model PlatformAdmin {
 }
 
 model PlatformRole {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String   @id @default(dbgenerated("('PLR-'::text || (nextval('platform_role_seq'::regclass))::text)"))
   name         String   @db.VarChar(100)
   slug         String   @unique @db.VarChar(50)
   isSystemRole Boolean  @default(false) @map("is_system_role")
@@ -110,7 +110,7 @@ model PlatformRole {
 }
 
 model PlatformPermission {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String   @id @default(dbgenerated("('PPM-'::text || (nextval('platform_permission_seq'::regclass))::text)"))
   code        String   @unique @db.VarChar(100)
   description String?  @db.VarChar(255)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -123,8 +123,8 @@ model PlatformPermission {
 }
 
 model PlatformRolePermission {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  platformRoleId String   @map("platform_role_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('PRP-'::text || (nextval('platform_role_permission_seq'::regclass))::text)"))
+  platformRoleId String   @map("platform_role_id")
   permissionCode String   @map("permission_code") @db.VarChar(100)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -139,8 +139,8 @@ model PlatformRolePermission {
 }
 
 model CollegeRole {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId    String   @map("college_id") @db.Uuid
+  id           String   @id @default(dbgenerated("('CLR-'::text || (nextval('college_role_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
   name         String   @db.VarChar(100)
   slug         String   @db.VarChar(50)
   isSystemRole Boolean  @default(false) @map("is_system_role")
@@ -159,8 +159,8 @@ model CollegeRole {
 }
 
 model CollegeRolePermission {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeRoleId  String   @map("college_role_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('CRP-'::text || (nextval('college_role_permission_seq'::regclass))::text)"))
+  collegeRoleId  String   @map("college_role_id")
   permissionCode String   @map("permission_code") @db.VarChar(100)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -174,16 +174,16 @@ model CollegeRolePermission {
 }
 
 model StaffMember {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId     String    @map("college_id") @db.Uuid
-  collegeRoleId String    @map("college_role_id") @db.Uuid
+  id            String    @id @default(dbgenerated("('STF-'::text || (nextval('staff_member_seq'::regclass))::text)"))
+  collegeId     String    @map("college_id")
+  collegeRoleId String    @map("college_role_id")
   fullName      String    @map("full_name") @db.VarChar(255)
   email         String    @db.VarChar(255)
   passwordHash  String    @map("password_hash") @db.Text
   phoneNumber   String?   @map("phone_number") @db.VarChar(15)
   avatarUrl     String?   @map("avatar_url") @db.Text
   status        String    @default("active") @db.VarChar(20)
-  invitedBy     String?   @map("invited_by") @db.Uuid
+  invitedBy     String?   @map("invited_by")
   lastLoginAt   DateTime? @map("last_login_at") @db.Timestamptz
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -224,7 +224,7 @@ model StaffMember {
 }
 
 model BlinkRole {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String   @id @default(dbgenerated("('BLR-'::text || (nextval('blink_role_seq'::regclass))::text)"))
   name         String   @db.VarChar(100)
   slug         String   @unique @db.VarChar(50)
   isSystemRole Boolean  @default(false) @map("is_system_role")
@@ -239,11 +239,11 @@ model BlinkRole {
 }
 
 model BlinkUser {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  blinkRoleId       String    @map("blink_role_id") @db.Uuid
-  collegeId         String?   @map("college_id") @db.Uuid
-  associateParentId String?   @map("associate_parent_id") @db.Uuid
-  linkedStudentId   String?   @map("linked_student_id") @db.Uuid
+  id                String    @id @default(dbgenerated("('BLU-'::text || (nextval('blink_user_seq'::regclass))::text)"))
+  blinkRoleId       String    @map("blink_role_id")
+  collegeId         String?   @map("college_id")
+  associateParentId String?   @map("associate_parent_id")
+  linkedStudentId   String?   @map("linked_student_id")
   fullName          String    @map("full_name") @db.VarChar(255)
   email             String    @unique @db.VarChar(255)
   passwordHash      String    @map("password_hash") @db.Text
@@ -255,7 +255,7 @@ model BlinkUser {
   agencyName        String?   @map("agency_name") @db.VarChar(255)
   agencyRegNumber   String?   @unique @map("agency_reg_number") @db.VarChar(100)
   status            String    @default("active") @db.VarChar(20)
-  createdByStaffId  String?   @map("created_by_staff_id") @db.Uuid
+  createdByStaffId  String?   @map("created_by_staff_id")
   profileMetadata   Json      @default("{}") @map("profile_metadata")
   lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz
   passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
@@ -288,7 +288,7 @@ model BlinkUser {
 }
 
 model Counsellor {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String    @id @default(dbgenerated("('CNS-'::text || (nextval('counsellor_seq'::regclass))::text)"))
   fullName        String    @map("full_name") @db.VarChar(255)
   email           String    @unique @db.VarChar(255)
   passwordHash    String    @map("password_hash") @db.Text
@@ -313,9 +313,9 @@ model Counsellor {
 }
 
 model UserSession {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String   @id @default(dbgenerated("('USS-'::text || (nextval('user_session_seq'::regclass))::text)"))
   userType     String   @map("user_type") @db.VarChar(20)
-  userId       String   @map("user_id") @db.Uuid
+  userId       String   @map("user_id")
   refreshToken String   @unique @map("refresh_token") @db.Text
   deviceInfo   Json     @default("{}") @map("device_info")
   ipAddress    String?  @map("ip_address") @db.Inet
@@ -334,12 +334,12 @@ model UserSession {
 }
 
 model AuditLog {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id         String   @id @default(dbgenerated("('AUL-'::text || (nextval('audit_log_seq'::regclass))::text)"))
   actorType  String   @map("actor_type") @db.VarChar(20)
-  actorId    String   @map("actor_id") @db.Uuid
+  actorId    String   @map("actor_id")
   action     String   @db.VarChar(100)
   entityType String?  @map("entity_type") @db.VarChar(50)
-  entityId   String?  @map("entity_id") @db.Uuid
+  entityId   String?  @map("entity_id")
   changes    Json?
   ipAddress  String?  @map("ip_address") @db.Inet
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -352,15 +352,15 @@ model AuditLog {
 }
 
 model StudentLead {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId         String    @unique @map("student_id") @db.Uuid
+  id                String    @id @default(dbgenerated("('SLD-'::text || (nextval('student_lead_seq'::regclass))::text)"))
+  studentId         String    @unique @map("student_id")
   preferredStreams  Json      @default("[]") @map("preferred_streams")
   preferredLevel    String?   @map("preferred_level") @db.VarChar(20)
   preferredStates   Json      @default("[]") @map("preferred_states")
   currentEducation  Json      @default("{}") @map("current_education")
   whatsappNumber    String?   @map("whatsapp_number") @db.VarChar(15)
   status            String    @default("new") @db.VarChar(20)
-  assignedTo        String?   @map("assigned_to") @db.Uuid
+  assignedTo        String?   @map("assigned_to")
   assignedAt        DateTime? @map("assigned_at") @db.Timestamptz
   consultationNotes String?   @map("consultation_notes") @db.Text
   lastContactedAt   DateTime? @map("last_contacted_at") @db.Timestamptz

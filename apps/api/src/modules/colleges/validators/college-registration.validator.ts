@@ -4,7 +4,7 @@ import { z } from "zod";
 export const updateCollegeProfileSchema = z.object({
   name: z.string().trim().min(2).max(255).optional(),
   code: z.string().trim().min(2).max(20).optional(),
-  universityId: z.string().uuid().optional(),
+  universityId: z.string().optional(),
   domain: z.string().trim().max(255).optional().nullable(),
   logoUrl: z.string().url().or(z.literal("")).optional().nullable(),
   coverImageUrl: z.string().url().or(z.literal("")).optional().nullable(),
@@ -48,10 +48,10 @@ export const updateCampusSchema = createCampusSchema.partial();
 export const createCourseSchema = z.object({
   name: z.string().trim().min(2).max(255),
   code: z.string().trim().min(1).max(30),
-  disciplineId: z.string().uuid(),
-  studyLevelId: z.string().uuid(),
-  programTypeId: z.string().uuid(),
-  campusId: z.string().uuid().optional().nullable(),
+  disciplineId: z.string(),
+  studyLevelId: z.string(),
+  programTypeId: z.string(),
+  campusId: z.string().optional().nullable(),
   duration: z.string().trim().max(50).optional().nullable(),
   eligibility: z.string().trim().optional().nullable(),
   intakeCapacity: z.number().int().positive().optional().nullable(),
