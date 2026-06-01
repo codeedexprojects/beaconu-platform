@@ -22,6 +22,7 @@ import {
   Inbox,
   Layers,
   Landmark,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -151,6 +152,12 @@ const navSections: NavSection[] = [
         label: "Events",
         icon: Calendar,
         permission: "events.view",
+      },
+      {
+        href: "/starter-guide",
+        label: "Starter Guide",
+        icon: PlayCircle,
+        permission: "content.view",
       },
     ],
   },

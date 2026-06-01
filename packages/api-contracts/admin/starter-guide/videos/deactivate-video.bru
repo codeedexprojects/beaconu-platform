@@ -1,0 +1,15 @@
+meta {
+  name: Deactivate Video
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/videos/{{sgvId}}/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}

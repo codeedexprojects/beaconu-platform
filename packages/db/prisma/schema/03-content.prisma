@@ -234,3 +234,17 @@ model EducationLoan {
   @@index([sortOrder], name: "idx_education_loans_sort_order")
   @@map("education_loans")
 }
+
+model StarterGuideVideo {
+  id           String   @id @default(dbgenerated("('SGV-'::text || (nextval('starter_guide_video_seq'::regclass))::text)"))
+  title        String   @db.VarChar(255)
+  videoKey     String   @map("video_key") @db.Text
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([isActive], name: "idx_sgv_is_active")
+  @@index([displayOrder], name: "idx_sgv_display_order")
+  @@map("starter_guide_videos")
+}
