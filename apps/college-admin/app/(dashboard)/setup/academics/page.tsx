@@ -106,9 +106,10 @@ export default function SetupAcademicsPage() {
   const hasCourses = courses.length > 0;
 
   // Flatten streams to get all disciplines
-  const disciplines = streams.flatMap((s) =>
-    s.disciplines.map((d) => ({ ...d, streamName: s.name })),
-  );
+  const disciplines = streams.flatMap((s) => {
+    if (!Array.isArray(s.disciplines)) return [];
+    return s.disciplines.map((d) => ({ ...d, streamName: s.name }));
+  });
 
   if (isLoadingCourses) {
     return (

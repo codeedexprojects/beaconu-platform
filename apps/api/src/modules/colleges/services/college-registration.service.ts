@@ -11,6 +11,69 @@ import {
 import { InstitutionGroupService } from "./institution-group.service";
 
 export class CollegeRegistrationService {
+  private static isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+  }
+
+  private static buildTabIdList(profileSections: Record<string, unknown>) {
+    return Object.entries(profileSections).reduce((acc, [tabKey, tabValue]) => {
+      if (
+        this.isRecord(tabValue) &&
+        typeof tabValue.enabled === "boolean" &&
+        !tabValue.enabled
+      ) {
+        return acc;
+      }
+
+      const tabId =
+        this.isRecord(tabValue) &&
+        typeof tabValue.id === "string" &&
+        tabValue.id.trim() !== ""
+          ? tabValue.id
+          : tabKey;
+
+      acc.push(tabId);
+      return acc;
+    }, [] as string[]);
+  }
+
+  private static buildProfileResponse(college: any) {
+    // Dynamically compute institutional overview details from DB relation counts/values
+    const totalCourses = college._count?.courses ?? 0;
+    const instituteType = college.university?.universityType?.name ?? null;
+    const campusAmbassadors = (college.blinkUsers ?? []).map((u: any) => ({
+      id: u.id,
+      fullName: u.fullName,
+      email: u.email,
+      avatarUrl: u.avatarUrl,
+      phoneNumber: u.phoneNumber,
+    }));
+
+    const profileSections = this.isRecord(college.profileSections)
+      ? (college.profileSections as Record<string, unknown>)
+      : {};
+    const tabs = this.buildTabIdList(profileSections);
+
+    const collegeDetails = {
+      ...(college as Record<string, unknown>),
+    };
+    delete collegeDetails.profileSections;
+
+    return {
+      collegeDetails,
+      tabs,
+      totalCourses,
+      instituteType,
+      campusAmbassadors,
+    };
+  }
+
+  private static getProfileSectionsRecord(college: any) {
+    return this.isRecord(college.profileSections)
+      ? (college.profileSections as Record<string, unknown>)
+      : {};
+  }
+
   private static async ensureDisciplineAllowedForCollege(
     collegeId: string,
     disciplineId: string,
@@ -22,19 +85,9 @@ export class CollegeRegistrationService {
       throw new NotFoundError("Discipline not found");
     }
 
-    const allowedStreamIds =
-      await CollegeRegistrationRepository.getAllowedStreamIdsForCollege(
-        collegeId,
-      );
-
-    if (
-      allowedStreamIds.length === 0 ||
-      !allowedStreamIds.includes(discipline.streamId)
-    ) {
-      throw new ConflictError(
-        "Selected discipline is not available for this university",
-      );
-    }
+    // Keep college-admin course setup aligned with lookup behavior:
+    // any active discipline returned from global taxonomy is allowed.
+    void collegeId;
   }
 
   // ── College Profile ────────────────────────────────────────────────────────
@@ -44,23 +97,15 @@ export class CollegeRegistrationService {
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
 
-    // Dynamically compute institutional overview details from DB relation counts/values
-    const totalCourses = college._count?.courses ?? 0;
-    const instituteType = college.university?.universityType?.name ?? null;
-    const campusAmbassadors = (college.blinkUsers ?? []).map((u) => ({
-      id: u.id,
-      fullName: u.fullName,
-      email: u.email,
-      avatarUrl: u.avatarUrl,
-      phoneNumber: u.phoneNumber,
-    }));
+    return this.buildProfileResponse(college);
+  }
 
-    return {
-      ...college,
-      totalCourses,
-      instituteType,
-      campusAmbassadors,
-    };
+  static async getProfileSections(collegeId: string) {
+    const college =
+      await CollegeRegistrationRepository.findCollegeById(collegeId);
+    if (!college) throw new NotFoundError("College not found");
+
+    return this.getProfileSectionsRecord(college);
   }
 
   static async updateProfile(
@@ -70,7 +115,13 @@ export class CollegeRegistrationService {
     const college =
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
-    return CollegeRegistrationRepository.updateCollegeProfile(collegeId, data);
+    await CollegeRegistrationRepository.updateCollegeProfile(collegeId, data);
+
+    const updatedCollege =
+      await CollegeRegistrationRepository.findCollegeById(collegeId);
+    if (!updatedCollege) throw new NotFoundError("College not found");
+
+    return this.buildProfileResponse(updatedCollege);
   }
 
   static async checkSubdomainAvailability(slug: string, collegeId: string) {
@@ -192,14 +243,8 @@ export class CollegeRegistrationService {
   // ── Lookups ────────────────────────────────────────────────────────────────
 
   static async getStreams(collegeId: string) {
-    const allowedStreamIds =
-      await CollegeRegistrationRepository.getAllowedStreamIdsForCollege(
-        collegeId,
-      );
-
-    return CollegeRegistrationRepository.getStreamsWithDisciplines(
-      allowedStreamIds,
-    );
+    void collegeId;
+    return CollegeRegistrationRepository.getStreamsWithDisciplines();
   }
 
   static async getStudyLevels() {

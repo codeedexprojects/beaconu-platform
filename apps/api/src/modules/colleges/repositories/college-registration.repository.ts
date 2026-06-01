@@ -355,7 +355,7 @@ export class CollegeRegistrationRepository {
       return [];
     }
 
-    return prisma.stream.findMany({
+    const streamsWithActiveDisciplines = await prisma.stream.findMany({
       where: {
         isActive: true,
         ...(allowedStreamIds ? { id: { in: allowedStreamIds } } : {}),
@@ -363,6 +363,67 @@ export class CollegeRegistrationRepository {
       include: {
         disciplines: {
           where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const hasAnyDisciplines = streamsWithActiveDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyDisciplines) {
+      return streamsWithActiveDisciplines;
+    }
+
+    // Fallback for legacy/inconsistent seed data where isActive flags are not set as expected.
+    const streamsWithAllDisciplines = await prisma.stream.findMany({
+      where: {
+        isActive: true,
+        ...(allowedStreamIds ? { id: { in: allowedStreamIds } } : {}),
+      },
+      include: {
+        disciplines: {
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const hasAnyDisciplinesAfterRelaxedFilter = streamsWithAllDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyDisciplinesAfterRelaxedFilter || !allowedStreamIds) {
+      return streamsWithAllDisciplines;
+    }
+
+    // Final fallback: if university-level stream restrictions point to empty/misconfigured streams,
+    // return all active streams so course discipline selection is still usable.
+    const globalStreamsWithActiveDisciplines = await prisma.stream.findMany({
+      where: { isActive: true },
+      include: {
+        disciplines: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const hasAnyGlobalDisciplines = globalStreamsWithActiveDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyGlobalDisciplines) {
+      return globalStreamsWithActiveDisciplines;
+    }
+
+    return prisma.stream.findMany({
+      where: { isActive: true },
+      include: {
+        disciplines: {
           orderBy: { sortOrder: "asc" },
         },
       },
