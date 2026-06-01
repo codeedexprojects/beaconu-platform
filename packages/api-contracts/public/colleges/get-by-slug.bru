@@ -9,3 +9,15 @@ get {
   body: none
   auth: none
 }
+
+docs {
+  Returns full public details for a college by its subdomain slug.
+
+  Response includes: university info, active campuses, active courses
+  (with discipline/stream/studyLevel/programType), institution group
+  membership, and related sister colleges.
+
+  Note: `profileSections` raw data and `settings` are excluded from the response.
+  To get individual profile sections, use the Get College Section endpoint.
+  To get the enabled tabs list, use the Get College Summary endpoint.
+}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import { Loader2, ArrowRight, ArrowLeft, Plus, BookOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -40,7 +40,13 @@ import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 const courseSchema = z.object({
   name: z.string().min(2, "Course name is required"),
-  code: z.string().min(2, "Course code is required"),
+  code: z
+    .string()
+    .min(2, "Course code is required")
+    .regex(
+      /^[A-Z0-9-]+$/,
+      "Course code can only contain uppercase letters, numbers, and hyphens",
+    ),
   disciplineId: z.string().min(1, "Discipline is required"),
   studyLevelId: z.string().min(1, "Study level is required"),
   programTypeId: z.string().min(1, "Program type is required"),
@@ -48,10 +54,21 @@ const courseSchema = z.object({
   intakeCapacity: z.coerce
     .number()
     .min(1, "Capacity must be at least 1")
+    .max(10000, "Capacity cannot exceed 10000")
     .optional()
     .or(z.literal("")),
-  duration: z.string().optional(),
-  eligibility: z.string().optional(),
+  duration: z
+    .string()
+    .min(2, "Duration must be at least 2 characters")
+    .max(50, "Duration cannot exceed 50 characters")
+    .optional()
+    .or(z.literal("")),
+  eligibility: z
+    .string()
+    .min(2, "Eligibility must be at least 2 characters")
+    .max(200, "Eligibility cannot exceed 200 characters")
+    .optional()
+    .or(z.literal("")),
   campusId: z.string().optional().or(z.literal("")),
 });
 
@@ -77,6 +94,7 @@ export default function SetupAcademicsPage() {
     register,
     handleSubmit,
     setValue,
+    trigger,
     reset,
     formState: { errors },
   } = useForm<CourseFormData>({
@@ -178,7 +196,9 @@ export default function SetupAcademicsPage() {
 
           {isAdding && (
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit, () => {
+                toast.error("Please fix the errors before saving");
+              })}
               className="space-y-4 bg-muted/20 p-6 rounded-xl border"
             >
               <h4 className="font-medium flex items-center gap-2 mb-4">
@@ -192,6 +212,7 @@ export default function SetupAcademicsPage() {
                   <Input
                     id="name"
                     placeholder="e.g. Bachelor of Technology in Computer Science"
+                    aria-invalid={!!errors.name}
                     {...register("name")}
                   />
                   {errors.name && (
@@ -206,6 +227,7 @@ export default function SetupAcademicsPage() {
                   <Input
                     id="code"
                     placeholder="e.g. BTECH-CS"
+                    aria-invalid={!!errors.code}
                     {...register("code")}
                   />
                   {errors.code && (
@@ -218,7 +240,10 @@ export default function SetupAcademicsPage() {
                 <div className="space-y-2">
                   <Label>Discipline</Label>
                   <Select
-                    onValueChange={(val) => setValue("disciplineId", val)}
+                    onValueChange={(val) => {
+                      setValue("disciplineId", val);
+                      void trigger("disciplineId");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select discipline" />
@@ -241,7 +266,10 @@ export default function SetupAcademicsPage() {
                 <div className="space-y-2">
                   <Label>Study Level</Label>
                   <Select
-                    onValueChange={(val) => setValue("studyLevelId", val)}
+                    onValueChange={(val) => {
+                      setValue("studyLevelId", val);
+                      void trigger("studyLevelId");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select level" />
@@ -264,7 +292,10 @@ export default function SetupAcademicsPage() {
                 <div className="space-y-2">
                   <Label>Program Type</Label>
                   <Select
-                    onValueChange={(val) => setValue("programTypeId", val)}
+                    onValueChange={(val) => {
+                      setValue("programTypeId", val);
+                      void trigger("programTypeId");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -286,7 +317,12 @@ export default function SetupAcademicsPage() {
 
                 <div className="space-y-2">
                   <Label>Campus (optional)</Label>
-                  <Select onValueChange={(val) => setValue("campusId", val)}>
+                  <Select
+                    onValueChange={(val) => {
+                      setValue("campusId", val);
+                      void trigger("campusId");
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select campus" />
                     </SelectTrigger>
@@ -308,7 +344,10 @@ export default function SetupAcademicsPage() {
                 <div className="space-y-2">
                   <Label>Study Mode</Label>
                   <Select
-                    onValueChange={(val) => setValue("studyMode", val)}
+                    onValueChange={(val) => {
+                      setValue("studyMode", val);
+                      void trigger("studyMode");
+                    }}
                     defaultValue="full_time"
                   >
                     <SelectTrigger>
@@ -333,8 +372,14 @@ export default function SetupAcademicsPage() {
                   <Input
                     id="duration"
                     placeholder="e.g. 4 Years"
+                    aria-invalid={!!errors.duration}
                     {...register("duration")}
                   />
+                  {errors.duration && (
+                    <p className="text-sm text-destructive">
+                      {errors.duration.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -342,8 +387,14 @@ export default function SetupAcademicsPage() {
                   <Input
                     id="eligibility"
                     placeholder="e.g. 10+2 with PCM"
+                    aria-invalid={!!errors.eligibility}
                     {...register("eligibility")}
                   />
+                  {errors.eligibility && (
+                    <p className="text-sm text-destructive">
+                      {errors.eligibility.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -353,8 +404,14 @@ export default function SetupAcademicsPage() {
                   <Input
                     id="intakeCapacity"
                     type="number"
+                    aria-invalid={!!errors.intakeCapacity}
                     {...register("intakeCapacity")}
                   />
+                  {errors.intakeCapacity && (
+                    <p className="text-sm text-destructive">
+                      {errors.intakeCapacity.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
