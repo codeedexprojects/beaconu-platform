@@ -1,9 +1,18 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { collegeOnboardingSchemas } from "@/modules/landing-page/validators/college-onboarding.validator";
 import { CollegeOnboardingService } from "@/modules/landing-page/services/college-onboarding.service";
 
 export class CollegeLeadsController {
+  // POST /api/v1/admin/college-leads
+  static async create(req: Request, res: Response) {
+    const data = collegeOnboardingSchemas.submit.parse(req.body);
+    const result = await CollegeOnboardingService.createByAdmin(data);
+    return res
+      .status(201)
+      .json(ApiResponse.success("College lead created successfully", result));
+  }
+
   // GET /api/v1/admin/college-leads
   static async list(req: Request, res: Response) {
     const filters = collegeOnboardingSchemas.list.parse(req.query);
@@ -30,6 +39,16 @@ export class CollegeLeadsController {
           result,
         ),
       );
+  }
+
+  // PATCH /api/v1/admin/college-leads/:id
+  static async update(req: Request, res: Response) {
+    const id = String(req.params.id);
+    const data = collegeOnboardingSchemas.submit.parse(req.body);
+    const result = await CollegeOnboardingService.updateLead(id, data);
+    return res
+      .status(200)
+      .json(ApiResponse.success("College lead updated successfully", result));
   }
 
   // PATCH /api/v1/admin/college-leads/:id/status

@@ -5,10 +5,16 @@ export const collegeOnboardingSchemas = {
     college_name: z.string().trim().min(1).max(255),
     university_name: z.string().trim().max(255).optional(),
     contact_person_name: z.string().trim().min(1).max(255),
-    contact_email: z.string().trim().email().max(255),
+    contact_email: z
+      .string()
+      .trim()
+      .email()
+      .max(255)
+      .transform((v) => v.toLowerCase()),
     contact_phone: z.string().trim().max(20).optional(),
     city: z.string().trim().max(100).optional(),
     state: z.string().trim().max(100).optional(),
+    group_code: z.string().trim().max(20).optional(),
     message: z.string().trim().optional(),
   }),
 

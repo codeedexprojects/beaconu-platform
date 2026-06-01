@@ -4,12 +4,22 @@ import {
   UpdateOnboardingStatusData,
   ListOnboardingRequestsData,
 } from "../validators/college-onboarding.validator";
-import { NotFoundError } from "@/shared/errors";
+import { ConflictError, NotFoundError } from "@/shared/errors";
 import { CollegeProvisioningService } from "@/modules/colleges/services/college-provisioning.service";
 import { InstitutionGroupService } from "@/modules/colleges/services/institution-group.service";
 
 export class CollegeOnboardingService {
   static async submit(data: SubmitCollegeOnboardingData) {
+    const existing = await CollegeOnboardingRepository.findByContactEmail(
+      data.contact_email,
+    );
+
+    if (existing) {
+      throw new ConflictError(
+        "A lead with this email has already been submitted.",
+      );
+    }
+
     const request = await CollegeOnboardingRepository.create(data);
     return {
       id: request.id,
@@ -18,6 +28,46 @@ export class CollegeOnboardingService {
       contactEmail: request.contactEmail,
       status: request.status,
       createdAt: request.createdAt,
+    };
+  }
+
+  static async createByAdmin(data: SubmitCollegeOnboardingData) {
+    return this.submit(data);
+  }
+
+  static async updateLead(id: string, data: SubmitCollegeOnboardingData) {
+    const existing = await CollegeOnboardingRepository.findById(id);
+    if (!existing)
+      throw new NotFoundError("College onboarding request not found");
+
+    const emailTaken = await CollegeOnboardingRepository.findByContactEmail(
+      data.contact_email,
+      id,
+    );
+
+    if (emailTaken) {
+      throw new ConflictError(
+        "A lead with this email already exists. Please use a different email.",
+      );
+    }
+
+    const updated = await CollegeOnboardingRepository.updateLead(id, data);
+
+    return {
+      id: updated.id,
+      collegeName: updated.collegeName,
+      universityName: updated.universityName,
+      contactPersonName: updated.contactPersonName,
+      contactEmail: updated.contactEmail,
+      contactPhone: updated.contactPhone,
+      city: updated.city,
+      state: updated.state,
+      groupCode: updated.groupCode,
+      message: updated.message,
+      status: updated.status,
+      reviewRemarks: updated.reviewRemarks,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
     };
   }
 
@@ -35,6 +85,7 @@ export class CollegeOnboardingService {
         contactPhone: r.contactPhone,
         city: r.city,
         state: r.state,
+        groupCode: r.groupCode,
         message: r.message,
         status: r.status,
         reviewRemarks: r.reviewRemarks,
@@ -74,6 +125,7 @@ export class CollegeOnboardingService {
       contactPhone: request.contactPhone,
       city: request.city,
       state: request.state,
+      groupCode: request.groupCode,
       message: request.message,
       status: request.status,
       reviewRemarks: request.reviewRemarks,

@@ -1,0 +1,36 @@
+meta {
+  name: Edit College Lead
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/college-leads/{{collegeLeadId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_name": "Beacon Engineering College",
+    "university_name": "Beacon State University",
+    "contact_person_name": "Aarav Sharma",
+    "contact_email": "aarav.sharma@beaconu.edu",
+    "contact_phone": "+91-9988776655",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "group_code": "BNU-GROUP-001",
+    "message": "Updated details after verification."
+  }
+}
+
+docs {
+  Updates lead details for an existing college onboarding lead.
+
+  Requires: platform admin access token with leads.manage.
+}
