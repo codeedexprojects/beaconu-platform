@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
@@ -306,128 +306,142 @@ const allianceSectionSchema = metaSectionSchema.extend({
 });
 
 const otherCoursesOfferedSectionSchema = metaSectionSchema.extend({
-  courseHeader: z.object({
-    courseName: z.string().default(""),
-    admissionCycle: z.array(z.string()).default([]),
-    admissionStatus: z.string().default(""),
-    seatAvailabilityPercent: z.number().default(0),
-    seatAvailabilityMessage: z.string().default(""),
-    duration: z.string().default(""),
-    studyMode: z.string().default(""),
-    academicCycle: z.string().default(""),
-    credits: z.number().default(0),
-    genderAccepted: z.string().default(""),
-    courseCategory: z.string().default(""),
+  course_name: z.string().default(""),
+  admissions: z
+    .array(
+      z.object({
+        year: z.string().default(""),
+        status: z.string().nullable().default(null),
+        placement_rate: z.string().nullable().default(null),
+        seats_note: z.string().nullable().default(null),
+        basic_details: z.object({
+          duration: z.string().default(""),
+          study_mode: z.string().default(""),
+          academic_cycle: z.string().default(""),
+          total_credits: z.number().default(0),
+          gender_accepted: z.string().default(""),
+          course_category: z.string().default(""),
+        }),
+      }),
+    )
+    .default([]),
+  program_highlights: z.array(z.string()).default([]),
+  course_accolades: z
+    .array(
+      z.object({
+        body: z.string().default(""),
+        rank: z.string().default(""),
+        image: z.string().default(""),
+      }),
+    )
+    .default([]),
+  key_dates: z.object({
+    application_start: z.string().default(""),
+    application_close: z.object({
+      date: z.string().default(""),
+      urgency: z.string().default(""),
+    }),
+    class_commencement: z.object({
+      date: z.string().default(""),
+      note: z.string().default(""),
+    }),
   }),
-  programHighlights: z
-    .array(
-      z.object({
-        description: z.string().default(""),
-      }),
-    )
-    .default([]),
-  courseAccolades: z
-    .array(
-      z.object({
-        title: z.string().default(""),
-        description: z.string().default(""),
-      }),
-    )
-    .default([]),
-  importantDates: z
-    .array(
-      z.object({
-        event: z.string().default(""),
-        date: z.string().default(""),
-        tag: z.string().default(""),
-      }),
-    )
-    .default([]),
   curriculum: z.object({
-    brochureUrl: z.string().default(""),
+    brochure_upload: z.string().default(""),
+    brochure_available: z.boolean().default(false),
     semesters: z
       .array(
         z.object({
           semester: z.number().default(0),
-          subjects: z.array(z.string()).default([]),
-          specializations: z.array(z.string()).default([]),
+          core_subjects: z.array(z.string()).default([]),
+          specialization_1: z.object({
+            name: z.string().default(""),
+            electives: z.array(z.string()).default([]),
+          }),
+          specialization_2: z.object({
+            name: z.string().default(""),
+            note: z.string().default(""),
+          }),
         }),
       )
       .default([]),
+    course_structure: z.object({
+      total_credits: z.number().default(0),
+      breakdown: z
+        .array(
+          z.object({
+            track: z.string().default(""),
+            credits: z.number().default(0),
+          }),
+        )
+        .default([]),
+    }),
   }),
-  courseStructure: z
-    .array(
-      z.object({
-        component: z.string().default(""),
-        credits: z.number().default(0),
-      }),
-    )
-    .default([]),
-  valueAddedCourses: z
-    .array(
-      z.object({
-        courseName: z.string().default(""),
-        credits: z.string().default(""),
-        deliveryMode: z.string().default(""),
-      }),
-    )
-    .default([]),
-  careerOpportunities: z
+  value_added_course: z.object({
+    name: z.string().default(""),
+    delivery_mode: z.string().default(""),
+    credits: z.number().default(0),
+  }),
+  career_opportunities: z
     .array(
       z.object({
         role: z.string().default(""),
-        salaryRange: z.string().default(""),
+        salary_range: z.string().default(""),
       }),
     )
     .default([]),
-  higherEducation: z.object({
-    globalCertifications: z.array(z.string()).default([]),
-    higherStudies: z.array(z.string()).default([]),
+  higher_education_and_certifications: z.object({
+    global_certifications: z.array(z.string()).default([]),
+    postgraduation: z.array(z.string()).default([]),
   }),
-  exitOptions: z
+  flexible_exit_options: z
     .array(
       z.object({
-        after: z.string().default(""),
+        after_years: z.number().default(0),
         credential: z.string().default(""),
       }),
     )
     .default([]),
-  classTimings: z
-    .array(
-      z.object({
-        day: z.string().default(""),
-        timing: z.string().default(""),
-      }),
-    )
-    .default([]),
-  industryTools: z.array(z.string()).default([]),
-  labFacilities: z.array(z.string()).default([]),
-  classroomFacilities: z.array(z.string()).default([]),
-  bonusCertification: z.object({
-    title: z.string().default(""),
-    description: z.string().default(""),
-    certificateUrl: z.string().default(""),
+  class_timings: z.object({
+    mode: z.string().default(""),
+    schedule: z
+      .array(
+        z.object({
+          day: z.string().default(""),
+          timing: z.string().nullable().default(null),
+          status: z.string().default(""),
+        }),
+      )
+      .default([]),
   }),
-  featuredAlumni: z
+  industry_tools: z.array(z.string()).default([]),
+  lab_facilities: z.array(z.string()).default([]),
+  classroom_facilities: z.array(z.string()).default([]),
+  bonus_certification: z.object({
+    name: z.string().default(""),
+    note: z.string().default(""),
+    certificate_details_available: z.boolean().default(false),
+  }),
+  featured_alumni: z
     .array(
       z.object({
         name: z.string().default(""),
         designation: z.string().default(""),
-        journeyTimeline: z.array(z.string()).default([]),
+        career_progression: z
+          .array(
+            z.object({
+              year: z.number().default(0),
+              milestone: z.string().default(""),
+            }),
+          )
+          .default([]),
       }),
     )
     .default([]),
-  faqs: z
-    .array(
-      z.object({
-        question: z.string().default(""),
-        answer: z.string().default(""),
-      }),
-    )
-    .default([]),
-  studentForum: z.object({
+  faqs: z.array(z.string()).default([]),
+  student_forum: z.object({
     description: z.string().default(""),
-    ctaLabel: z.string().default(""),
+    cta: z.string().default(""),
   }),
 });
 
@@ -474,6 +488,329 @@ function parsePipeRows(value: string) {
     .map((line) => line.split("|").map((part) => part.trim()));
 }
 
+const DEFAULT_PLACEMENTS_ADVANCED = {
+  report: {
+    label: "Download Full Placement Report 2024",
+    action: "download_placement_report_2024",
+  },
+  summary_stats: [
+    {
+      id: "average_package",
+      label: "Average Package",
+      value: 4.2,
+      unit: "LPA",
+    },
+    {
+      id: "highest_package",
+      label: "Highest Package",
+      value: 14.2,
+      unit: "LPA",
+    },
+    { id: "placement_rate", label: "Placement Rate", value: 94, unit: "%" },
+    { id: "lowest_package", label: "Lowest Package", value: 3.5, unit: "LPA" },
+    {
+      id: "companies_visited",
+      label: "Companies Visited",
+      value: "120+",
+      unit: null,
+    },
+    {
+      id: "students_placed",
+      label: "Students Placed",
+      value: "450+",
+      unit: null,
+    },
+  ],
+  placement_trends: {
+    label: "Placement Trends",
+    period: "Last 5 Years",
+    years: [2020, 2021, 2022, 2023],
+    avg_package_growth_yoy: "+12.5%",
+  },
+  industry_salary_report: {
+    label: "Industry & Salary Report",
+    columns: ["Industry", "Placed", "Avg Pkg"],
+    industries: [
+      {
+        id: "bfsi",
+        name: "BFSI",
+        sub_label: "Banking & Finance",
+        students_placed: 155,
+        avg_package: "₹8.2 L",
+        max_package: "12 LPA",
+      },
+      {
+        id: "fmcg",
+        name: "FMCG",
+        sub_label: "Retail & Goods",
+        students_placed: 98,
+        avg_package: "₹7.5 L",
+        max_package: "10 LPA",
+      },
+      {
+        id: "consulting",
+        name: "Consulting",
+        sub_label: "Mgmt Consulting",
+        students_placed: 81,
+        avg_package: "₹9.1 L",
+        max_package: "14.5 LPA",
+      },
+    ],
+    cta: {
+      label: "View All Industries",
+      action: "view_all_industries",
+    },
+  },
+  notable_offers: {
+    label: "Notable Offers",
+    cta: {
+      label: "View All",
+      action: "view_all_notable_offers",
+    },
+    featured: [
+      {
+        company: "Deloitte",
+        tag: "Highest",
+        industry: "Consulting",
+        offers: [
+          {
+            role: "Senior Analyst Role",
+            package: 14.5,
+            unit: "LPA",
+            type: "Package Offered",
+          },
+          {
+            role: "Manager Role",
+            package: 12,
+            unit: "LPA",
+            type: "Package Offered",
+          },
+        ],
+      },
+    ],
+  },
+  all_company_statistics: {
+    label: "All Company Statistics",
+    columns: ["Company Name", "Avg Pkg", "Max Pkg"],
+    companies: [
+      {
+        id: "deloitte",
+        name: "Deloitte",
+        students: 145,
+        avg_package: "₹9.2 L",
+        max_package: "₹14.5 L",
+      },
+      {
+        id: "accenture",
+        name: "Accenture",
+        students: 210,
+        avg_package: "₹7.8 L",
+        max_package: "₹11.2 L",
+      },
+      {
+        id: "tcs",
+        name: "TCS",
+        students: 340,
+        avg_package: "₹6.5 L",
+        max_package: "₹9.0 L",
+      },
+    ],
+  },
+  student_success: [
+    {
+      name: "Rohan Mehta",
+      placed_at: "Deloitte",
+      quote:
+        "The placement support helped me secure a role at a top firm. Best decision ever!",
+    },
+    {
+      name: "Priya S.",
+      placed_at: "HDFC",
+      quote:
+        "I never thought I'd get such a high package. The mock interviews were key.",
+    },
+  ],
+};
+
+const defaultPlacementsSummaryStatsRows =
+  DEFAULT_PLACEMENTS_ADVANCED.summary_stats.map((item) => ({
+    id: item.id,
+    label: item.label,
+    value: String(item.value),
+    unit: item.unit || "",
+  }));
+
+const defaultPlacementsTrendYearsText =
+  DEFAULT_PLACEMENTS_ADVANCED.placement_trends.years.join(", ");
+
+const defaultIndustrySalaryRows =
+  DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.industries.map((item) => ({
+    id: item.id,
+    name: item.name,
+    sub_label: item.sub_label,
+    students_placed: String(item.students_placed),
+    avg_package: item.avg_package,
+    max_package: item.max_package,
+  }));
+
+const defaultNotableFeaturedRows =
+  DEFAULT_PLACEMENTS_ADVANCED.notable_offers.featured.map((item) => ({
+    company: item.company,
+    tag: item.tag,
+    industry: item.industry,
+    offersText: item.offers
+      .map(
+        (offer) => `${offer.role}|${offer.package}|${offer.unit}|${offer.type}`,
+      )
+      .join("\n"),
+  }));
+
+const defaultAllCompanyRows =
+  DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.companies.map((item) => ({
+    id: item.id,
+    name: item.name,
+    students: String(item.students),
+    avg_package: item.avg_package,
+    max_package: item.max_package,
+  }));
+
+const defaultStudentSuccessRows =
+  DEFAULT_PLACEMENTS_ADVANCED.student_success.map((item) => ({
+    name: item.name,
+    placed_at: item.placed_at,
+    quote: item.quote,
+  }));
+
+const defaultPlacementStats = DEFAULT_PLACEMENTS_ADVANCED.summary_stats.map(
+  (item) => ({
+    title: item.label,
+    value: item.unit ? `${item.value} ${item.unit}` : String(item.value),
+  }),
+);
+
+const defaultPlacementTrends =
+  DEFAULT_PLACEMENTS_ADVANCED.placement_trends.years.map((year) => ({
+    year: String(year),
+    averagePackage: "",
+    highestPackage: "",
+  }));
+
+const defaultNotableOffers =
+  DEFAULT_PLACEMENTS_ADVANCED.notable_offers.featured.flatMap((featuredOffer) =>
+    featuredOffer.offers.map((offer) => ({
+      studentName: offer.role,
+      company: featuredOffer.company,
+      package: `${offer.package} ${offer.unit}`,
+    })),
+  );
+
+const DEFAULT_FEES_ADVANCED = {
+  tuition_fees: {
+    download: {
+      label: "Download Fee Structure",
+      file_label: "Detailed breakdown PDF",
+      file_size: "2.4 MB",
+      file_type: "PDF",
+      action: "download_fee_structure",
+    },
+    filters: {
+      quota_category: {
+        label: "Quota Category",
+        default: "Merit Quota",
+        options: [
+          "Merit Quota",
+          "Government Quota",
+          "Management Quota",
+          "NRI Quota",
+          "Scholarship",
+          "Sports",
+        ],
+      },
+      gender: {
+        label: "Gender",
+        default: "Boys",
+        options: ["Boys", "Girls"],
+      },
+    },
+    fee_matrix: [
+      {
+        quota_category: "Merit Quota",
+        gender: "Boys",
+        year_wise_fees: [
+          { year: "1st Year", amount: 125276 },
+          { year: "2nd Year", amount: 125276 },
+          { year: "3rd Year", amount: 125276 },
+          { year: "4th Year", amount: 125276 },
+        ],
+      },
+      {
+        quota_category: "Merit Quota",
+        gender: "Girls",
+        year_wise_fees: [
+          { year: "1st Year", amount: 125276 },
+          { year: "2nd Year", amount: 125276 },
+          { year: "3rd Year", amount: 125276 },
+          { year: "4th Year", amount: 125276 },
+        ],
+      },
+    ],
+  },
+  one_time_payable_fees: [
+    { id: "application_fees", label: "Application Fees", amount: 1500 },
+    { id: "admission_fees", label: "Admission Fees", amount: 15000 },
+  ],
+  additional_fees: [
+    { id: "examination_fees", label: "Examination Fees", amount: 3500 },
+    { id: "library_fees", label: "Library Fees", amount: 1200 },
+    { id: "lab_fees", label: "Lab Fees", amount: 2800 },
+    { id: "sports_fees", label: "Sports Fees", amount: 1500 },
+  ],
+  inclusions: {
+    whats_included: [
+      "Tuition Fees",
+      "Library Access",
+      "Lab Materials",
+      "Basic Medical Aid",
+    ],
+    whats_excluded: [
+      "Uniform Dress",
+      "University Exam Fees",
+      "Transportation",
+      "Convocation Fee",
+    ],
+  },
+  deadlines_and_installments: [
+    {
+      id: "installment_1",
+      label: "1st Installment (Booking)",
+      deadline: "Within 10 Days",
+      amount: 25000,
+    },
+    {
+      id: "installment_2",
+      label: "2nd Installment",
+      deadline: "Before Classes Start",
+      amount: 54638,
+    },
+    {
+      id: "installment_3",
+      label: "Final Installment",
+      deadline: "After 60 Days",
+      amount: 54638,
+    },
+  ],
+  fees_summary: {
+    full_course_fee: 148750,
+    booking_amount: 6198,
+    currency: "INR",
+  },
+  refund_policy: [
+    "Booking amount refundable within limited time",
+    "Processing charges may apply",
+    "Refund processed within 7-10 working days",
+  ],
+};
+
 // Define a unified form schema supporting Basic info & complex profileSections
 const profileFormSchema = z.object({
   name: z.string().min(2, "College name is required"),
@@ -483,16 +820,8 @@ const profileFormSchema = z.object({
   state: z.string().min(2, "State is required"),
   district: z.string().min(2, "District is required"),
   pinCode: z.string().min(6, "Valid PIN code is required"),
-  logoUrl: z
-    .string()
-    .url("Enter a valid logo URL")
-    .optional()
-    .or(z.literal("")),
-  coverImageUrl: z
-    .string()
-    .url("Enter a valid cover image URL")
-    .optional()
-    .or(z.literal("")),
+  logoUrl: z.string().optional().or(z.literal("")),
+  coverImageUrl: z.string().optional().or(z.literal("")),
   requestedGroupCode: z.string().optional(),
 
   // profileSections fields
@@ -529,16 +858,50 @@ const profileFormSchema = z.object({
     course_info: z.object({
       id: z.string().min(1).default(PROFILE_SECTION_IDS.course_info),
       enabled: z.boolean().default(true),
-      eligibilitySummary: z.string().default(""),
-      course_details: otherCoursesOfferedSectionSchema.omit({
+      ...otherCoursesOfferedSectionSchema.omit({
         id: true,
         enabled: true,
-      }),
+      }).shape,
     }),
     admission_policy: z.object({
       id: z.string().min(1).default(PROFILE_SECTION_IDS.admission_policy),
       enabled: z.boolean().default(true),
       policySummary: z.string().default(""),
+      eligibility_criteria: z
+        .object({
+          applicant_type_tabs: z
+            .array(
+              z.object({
+                id: z.string().default(""),
+                label: z.string().default(""),
+                quota_categories: z
+                  .array(
+                    z.object({
+                      id: z.string().default(""),
+                      label: z.string().default(""),
+                      criteria: z
+                        .array(
+                          z.object({
+                            id: z.string().default(""),
+                            label: z.string().default(""),
+                            description: z.string().default(""),
+                          }),
+                        )
+                        .default([]),
+                    }),
+                  )
+                  .default([]),
+              }),
+            )
+            .default([]),
+          default_applicant_type: z.string().default("indian"),
+          default_quota: z.string().default("government_quota"),
+          cta: z.object({
+            label: z.string().default("Check Eligibility"),
+            action: z.string().default("check_eligibility"),
+          }),
+        })
+        .optional(),
     }),
     placements: z.object({
       id: z.string().min(1).default(PROFILE_SECTION_IDS.placements),
@@ -724,6 +1087,78 @@ const PREDEFINED_AMENITIES = [
   "Auditorium",
 ];
 
+type EligibilityCriterion = {
+  id: string;
+  label: string;
+  description: string;
+};
+
+type EligibilityQuotaCategory = {
+  id: string;
+  label: string;
+  criteria: EligibilityCriterion[];
+};
+
+type EligibilityApplicantTypeTab = {
+  id: string;
+  label: string;
+  quota_categories: EligibilityQuotaCategory[];
+};
+
+type EligibilityCriteriaModel = {
+  applicant_type_tabs: EligibilityApplicantTypeTab[];
+  default_applicant_type: string;
+  default_quota: string;
+  cta: {
+    label: string;
+    action: string;
+  };
+};
+
+const ELIGIBILITY_DEFAULT_QUOTAS: EligibilityQuotaCategory[] = [
+  { id: "government_quota", label: "Government Quota", criteria: [] },
+  { id: "management_quota", label: "Management Quota", criteria: [] },
+  { id: "nri_quota", label: "NRI Quota", criteria: [] },
+  { id: "scholarship", label: "Scholarship", criteria: [] },
+  { id: "sports", label: "Sports", criteria: [] },
+];
+
+const createDefaultEligibilityCriteria = (): EligibilityCriteriaModel => ({
+  applicant_type_tabs: [
+    {
+      id: "indian",
+      label: "Indian Students",
+      quota_categories: ELIGIBILITY_DEFAULT_QUOTAS.map((quota) => ({
+        ...quota,
+        criteria: [],
+      })),
+    },
+    {
+      id: "foreign",
+      label: "Foreign Students",
+      quota_categories: ELIGIBILITY_DEFAULT_QUOTAS.map((quota) => ({
+        ...quota,
+        criteria: [],
+      })),
+    },
+  ],
+  default_applicant_type: "indian",
+  default_quota: "government_quota",
+  cta: {
+    label: "Check Eligibility",
+    action: "check_eligibility",
+  },
+});
+
+const createEligibilityId = (value: string, fallbackPrefix: string) => {
+  const normalized = value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return normalized || `${fallbackPrefix}_${Date.now()}`;
+};
+
 export default function SetupProfilePage() {
   const router = useRouter();
   const collegeSlug =
@@ -755,6 +1190,18 @@ export default function SetupProfilePage() {
   const [essentialsAccess, setEssentialsAccess] = useState<
     { type: string; name: string; distance: string }[]
   >([]);
+  const [utilitiesAccess, setUtilitiesAccess] = useState<
+    { type: string; name: string; distance: string }[]
+  >([]);
+  const [overviewRankings, setOverviewRankings] = useState<
+    { body: string; rank: string; logo: string; recognitions: string }[]
+  >([]);
+  const [insideCampusFacilities, setInsideCampusFacilities] = useState<
+    { name: string; description: string; image: string }[]
+  >([]);
+  const [connectLinks, setConnectLinks] = useState<
+    { platform: string; url: string }[]
+  >([]);
   const [campusReels, setCampusReels] = useState<
     { title: string; link: string }[]
   >([]);
@@ -762,12 +1209,11 @@ export default function SetupProfilePage() {
   const [seatMatrix, setSeatMatrix] = useState<
     { quota: string; total: string; open: string }[]
   >([]);
-  const [eligibilityCriteria, setEligibilityCriteria] = useState<
-    { studentType: string; criteria: string }[]
-  >([]);
-  const [admissionRequirements, setAdmissionRequirements] = useState<
-    { title: string; description: string }[]
-  >([]);
+  const [eligibilityCriteriaModel, setEligibilityCriteriaModel] =
+    useState<EligibilityCriteriaModel>(createDefaultEligibilityCriteria());
+  const [selectedApplicantTypeId, setSelectedApplicantTypeId] =
+    useState("indian");
+  const [selectedQuotaId, setSelectedQuotaId] = useState("government_quota");
   const [nationalExams, setNationalExams] = useState<
     {
       shortName: string;
@@ -881,6 +1327,8 @@ export default function SetupProfilePage() {
   const [conductRulesText, setConductRulesText] = useState("");
 
   const [otherCourseName, setOtherCourseName] = useState("");
+  const [admissionsMatrixText, setAdmissionsMatrixText] = useState("");
+  const [activeAdmissionIndex, setActiveAdmissionIndex] = useState(0);
   const [otherAdmissionCyclesText, setOtherAdmissionCyclesText] = useState("");
   const [otherAdmissionStatus, setOtherAdmissionStatus] = useState("");
   const [otherSeatAvailabilityPercent, setOtherSeatAvailabilityPercent] =
@@ -896,9 +1344,17 @@ export default function SetupProfilePage() {
 
   const [programHighlightsText, setProgramHighlightsText] = useState("");
   const [courseAccoladesText, setCourseAccoladesText] = useState("");
-  const [importantDatesText, setImportantDatesText] = useState("");
+  const [applicationStartDate, setApplicationStartDate] = useState("");
+  const [applicationCloseDate, setApplicationCloseDate] = useState("");
+  const [applicationCloseUrgency, setApplicationCloseUrgency] = useState("");
+  const [classCommencementDate, setClassCommencementDate] = useState("");
+  const [classCommencementNote, setClassCommencementNote] = useState("");
   const [curriculumBrochureUrl, setCurriculumBrochureUrl] = useState("");
+  const [curriculumBrochureAvailable, setCurriculumBrochureAvailable] =
+    useState(false);
   const [curriculumSemestersText, setCurriculumSemestersText] = useState("");
+  const [courseStructureTotalCredits, setCourseStructureTotalCredits] =
+    useState("0");
   const [courseStructureText, setCourseStructureText] = useState("");
   const [valueAddedCoursesText, setValueAddedCoursesText] = useState("");
   const [careerOpportunitiesText, setCareerOpportunitiesText] = useState("");
@@ -906,6 +1362,7 @@ export default function SetupProfilePage() {
   const [higherEducationStudiesText, setHigherEducationStudiesText] =
     useState("");
   const [exitOptionsText, setExitOptionsText] = useState("");
+  const [classTimingsMode, setClassTimingsMode] = useState("");
   const [classTimingsText, setClassTimingsText] = useState("");
   const [industryToolsText, setIndustryToolsText] = useState("");
   const [labFacilitiesText, setLabFacilitiesText] = useState("");
@@ -913,7 +1370,10 @@ export default function SetupProfilePage() {
   const [bonusCertificationTitle, setBonusCertificationTitle] = useState("");
   const [bonusCertificationDescription, setBonusCertificationDescription] =
     useState("");
-  const [bonusCertificationUrl, setBonusCertificationUrl] = useState("");
+  const [
+    bonusCertificationDetailsAvailable,
+    setBonusCertificationDetailsAvailable,
+  ] = useState(false);
   const [featuredAlumniText, setFeaturedAlumniText] = useState("");
   const [faqsText, setFaqsText] = useState("");
   const [studentForumDescription, setStudentForumDescription] = useState("");
@@ -921,20 +1381,180 @@ export default function SetupProfilePage() {
 
   const [placementStats, setPlacementStats] = useState<
     { title: string; value: string }[]
-  >([]);
+  >(defaultPlacementStats);
   const [placementTrends, setPlacementTrends] = useState<
     { year: string; averagePackage: string; highestPackage: string }[]
-  >([]);
-  const [notableOffers, setNotableOffers] = useState<
-    { studentName: string; company: string; package: string }[]
-  >([]);
+  >(defaultPlacementTrends);
+  const [notableOffers, setNotableOffers] =
+    useState<{ studentName: string; company: string; package: string }[]>(
+      defaultNotableOffers,
+    );
+  const [placementsReportLabel, setPlacementsReportLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.report.label,
+  );
+  const [placementsReportAction, setPlacementsReportAction] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.report.action,
+  );
+  const [placementsSummaryStatsRows, setPlacementsSummaryStatsRows] = useState<
+    { id: string; label: string; value: string; unit: string }[]
+  >(defaultPlacementsSummaryStatsRows);
+  const [placementsTrendsLabel, setPlacementsTrendsLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.placement_trends.label,
+  );
+  const [placementsTrendsPeriod, setPlacementsTrendsPeriod] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.placement_trends.period,
+  );
+  const [placementsTrendsYearsText, setPlacementsTrendsYearsText] = useState(
+    defaultPlacementsTrendYearsText,
+  );
+  const [placementsTrendsGrowthYoy, setPlacementsTrendsGrowthYoy] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.placement_trends.avg_package_growth_yoy,
+  );
+  const [industrySalaryReportLabel, setIndustrySalaryReportLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.label,
+  );
+  const [industrySalaryReportColumnsText, setIndustrySalaryReportColumnsText] =
+    useState(
+      DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.columns.join(", "),
+    );
+  const [industrySalaryRows, setIndustrySalaryRows] = useState<
+    {
+      id: string;
+      name: string;
+      sub_label: string;
+      students_placed: string;
+      avg_package: string;
+      max_package: string;
+    }[]
+  >(defaultIndustrySalaryRows);
+  const [industryCtaLabel, setIndustryCtaLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.cta.label,
+  );
+  const [industryCtaAction, setIndustryCtaAction] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.cta.action,
+  );
+  const [notableOffersLabel, setNotableOffersLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.notable_offers.label,
+  );
+  const [notableOffersCtaLabel, setNotableOffersCtaLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.notable_offers.cta.label,
+  );
+  const [notableOffersCtaAction, setNotableOffersCtaAction] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.notable_offers.cta.action,
+  );
+  const [notableFeaturedRows, setNotableFeaturedRows] = useState<
+    { company: string; tag: string; industry: string; offersText: string }[]
+  >(defaultNotableFeaturedRows);
+  const [allCompanyStatisticsLabel, setAllCompanyStatisticsLabel] = useState(
+    DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.label,
+  );
+  const [allCompanyStatisticsColumnsText, setAllCompanyStatisticsColumnsText] =
+    useState(
+      DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.columns.join(", "),
+    );
+  const [allCompanyRows, setAllCompanyRows] = useState<
+    {
+      id: string;
+      name: string;
+      students: string;
+      avg_package: string;
+      max_package: string;
+    }[]
+  >(defaultAllCompanyRows);
+  const [studentSuccessRows, setStudentSuccessRows] = useState<
+    { name: string; placed_at: string; quote: string }[]
+  >(defaultStudentSuccessRows);
 
+  const [feesDownload, setFeesDownload] = useState({
+    ...DEFAULT_FEES_ADVANCED.tuition_fees.download,
+  });
+  const [feesQuotaFilterLabel, setFeesQuotaFilterLabel] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.label,
+  );
+  const [feesQuotaDefault, setFeesQuotaDefault] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.default,
+  );
+  const [feesQuotaOptionsText, setFeesQuotaOptionsText] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.options.join(
+      "\n",
+    ),
+  );
+  const [feesGenderFilterLabel, setFeesGenderFilterLabel] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.label,
+  );
+  const [feesGenderDefault, setFeesGenderDefault] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.default,
+  );
+  const [feesGenderOptionsText, setFeesGenderOptionsText] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.options.join("\n"),
+  );
+  const [selectedFeesQuotaFilter, setSelectedFeesQuotaFilter] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.default,
+  );
+  const [selectedFeesGenderTab, setSelectedFeesGenderTab] = useState(
+    DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.default,
+  );
+  const [feesMatrixRows, setFeesMatrixRows] = useState<
+    {
+      quota_category: string;
+      gender: string;
+      year1: string;
+      year2: string;
+      year3: string;
+      year4: string;
+    }[]
+  >(
+    DEFAULT_FEES_ADVANCED.tuition_fees.fee_matrix.map((item) => ({
+      quota_category: item.quota_category,
+      gender: item.gender,
+      year1: String(item.year_wise_fees[0]?.amount ?? ""),
+      year2: String(item.year_wise_fees[1]?.amount ?? ""),
+      year3: String(item.year_wise_fees[2]?.amount ?? ""),
+      year4: String(item.year_wise_fees[3]?.amount ?? ""),
+    })),
+  );
+  const [oneTimePayableFees, setOneTimePayableFees] = useState<
+    { id: string; label: string; amount: string }[]
+  >(
+    DEFAULT_FEES_ADVANCED.one_time_payable_fees.map((item) => ({
+      ...item,
+      amount: String(item.amount),
+    })),
+  );
   const [additionalFees, setAdditionalFees] = useState<
-    { name: string; amount: string; frequency: string }[]
-  >([]);
+    { id: string; label: string; amount: string }[]
+  >(
+    DEFAULT_FEES_ADVANCED.additional_fees.map((item) => ({
+      ...item,
+      amount: String(item.amount),
+    })),
+  );
+  const [inclusionIncludedText, setInclusionIncludedText] = useState(
+    DEFAULT_FEES_ADVANCED.inclusions.whats_included.join("\n"),
+  );
+  const [inclusionExcludedText, setInclusionExcludedText] = useState(
+    DEFAULT_FEES_ADVANCED.inclusions.whats_excluded.join("\n"),
+  );
   const [installmentSchedule, setInstallmentSchedule] = useState<
-    { installmentNo: string; dueDate: string; percentage: string }[]
-  >([]);
+    { id: string; label: string; deadline: string; amount: string }[]
+  >(
+    DEFAULT_FEES_ADVANCED.deadlines_and_installments.map((item) => ({
+      ...item,
+      amount: String(item.amount),
+    })),
+  );
+  const [feesSummaryFullCourseFee, setFeesSummaryFullCourseFee] = useState(
+    String(DEFAULT_FEES_ADVANCED.fees_summary.full_course_fee),
+  );
+  const [feesSummaryBookingAmount, setFeesSummaryBookingAmount] = useState(
+    String(DEFAULT_FEES_ADVANCED.fees_summary.booking_amount),
+  );
+  const [feesSummaryCurrency, setFeesSummaryCurrency] = useState(
+    DEFAULT_FEES_ADVANCED.fees_summary.currency,
+  );
+  const [refundPolicyText, setRefundPolicyText] = useState(
+    DEFAULT_FEES_ADVANCED.refund_policy.join("\n"),
+  );
   const [calculatorPortOfEntry, setCalculatorPortOfEntry] = useState<string[]>(
     [],
   );
@@ -993,57 +1613,65 @@ export default function SetupProfilePage() {
         course_info: {
           id: PROFILE_SECTION_IDS.course_info,
           enabled: true,
-          eligibilitySummary: "",
-          course_details: {
-            courseHeader: {
-              courseName: "",
-              admissionCycle: [],
-              admissionStatus: "",
-              seatAvailabilityPercent: 0,
-              seatAvailabilityMessage: "",
-              duration: "",
-              studyMode: "",
-              academicCycle: "",
-              credits: 0,
-              genderAccepted: "",
-              courseCategory: "",
+          course_name: "",
+          admissions: [],
+          program_highlights: [],
+          course_accolades: [],
+          key_dates: {
+            application_start: "",
+            application_close: {
+              date: "",
+              urgency: "",
             },
-            programHighlights: [],
-            courseAccolades: [],
-            importantDates: [],
-            curriculum: {
-              brochureUrl: "",
-              semesters: [],
+            class_commencement: {
+              date: "",
+              note: "",
             },
-            courseStructure: [],
-            valueAddedCourses: [],
-            careerOpportunities: [],
-            higherEducation: {
-              globalCertifications: [],
-              higherStudies: [],
+          },
+          curriculum: {
+            brochure_upload: "",
+            brochure_available: false,
+            semesters: [],
+            course_structure: {
+              total_credits: 0,
+              breakdown: [],
             },
-            exitOptions: [],
-            classTimings: [],
-            industryTools: [],
-            labFacilities: [],
-            classroomFacilities: [],
-            bonusCertification: {
-              title: "",
-              description: "",
-              certificateUrl: "",
-            },
-            featuredAlumni: [],
-            faqs: [],
-            studentForum: {
-              description: "",
-              ctaLabel: "",
-            },
+          },
+          value_added_course: {
+            name: "",
+            delivery_mode: "",
+            credits: 0,
+          },
+          career_opportunities: [],
+          higher_education_and_certifications: {
+            global_certifications: [],
+            postgraduation: [],
+          },
+          flexible_exit_options: [],
+          class_timings: {
+            mode: "",
+            schedule: [],
+          },
+          industry_tools: [],
+          lab_facilities: [],
+          classroom_facilities: [],
+          bonus_certification: {
+            name: "",
+            note: "",
+            certificate_details_available: false,
+          },
+          featured_alumni: [],
+          faqs: [],
+          student_forum: {
+            description: "",
+            cta: "",
           },
         },
         admission_policy: {
           id: PROFILE_SECTION_IDS.admission_policy,
           enabled: true,
           policySummary: "",
+          eligibility_criteria: createDefaultEligibilityCriteria(),
         },
         placements: {
           id: PROFILE_SECTION_IDS.placements,
@@ -1351,55 +1979,105 @@ export default function SetupProfilePage() {
               profile.profileSections?.course_info?.id ||
               PROFILE_SECTION_IDS.course_info,
             enabled: profile.profileSections?.course_info?.enabled ?? true,
-            eligibilitySummary:
-              profile.profileSections?.course_info?.eligibilitySummary || "",
-            course_details: profile.profileSections?.course_info
-              ?.course_details ||
-              profile.profileSections?.other_courses_offered || {
-                courseHeader: {
-                  courseName: "",
-                  admissionCycle: [],
-                  admissionStatus: "",
-                  seatAvailabilityPercent: 0,
-                  seatAvailabilityMessage: "",
-                  duration: "",
-                  studyMode: "",
-                  academicCycle: "",
-                  credits: 0,
-                  genderAccepted: "",
-                  courseCategory: "",
-                },
-                programHighlights: [],
-                courseAccolades: [],
-                importantDates: [],
-                curriculum: {
-                  brochureUrl: "",
-                  semesters: [],
-                },
-                courseStructure: [],
-                valueAddedCourses: [],
-                careerOpportunities: [],
-                higherEducation: {
-                  globalCertifications: [],
-                  higherStudies: [],
-                },
-                exitOptions: [],
-                classTimings: [],
-                industryTools: [],
-                labFacilities: [],
-                classroomFacilities: [],
-                bonusCertification: {
-                  title: "",
-                  description: "",
-                  certificateUrl: "",
-                },
-                featuredAlumni: [],
-                faqs: [],
-                studentForum: {
-                  description: "",
-                  ctaLabel: "",
-                },
-              },
+            course_name:
+              (profile.profileSections?.course_info as any)?.course_name || "",
+            admissions: Array.isArray(
+              (profile.profileSections?.course_info as any)?.admissions,
+            )
+              ? (profile.profileSections?.course_info as any).admissions
+              : [],
+            program_highlights: Array.isArray(
+              (profile.profileSections?.course_info as any)?.program_highlights,
+            )
+              ? (profile.profileSections?.course_info as any).program_highlights
+              : [],
+            course_accolades: Array.isArray(
+              (profile.profileSections?.course_info as any)?.course_accolades,
+            )
+              ? (profile.profileSections?.course_info as any).course_accolades
+              : [],
+            key_dates: (profile.profileSections?.course_info as any)
+              ?.key_dates || {
+              application_start: "",
+              application_close: { date: "", urgency: "" },
+              class_commencement: { date: "", note: "" },
+            },
+            curriculum: (profile.profileSections?.course_info as any)
+              ?.curriculum || {
+              brochure_upload: "",
+              brochure_available: false,
+              semesters: [],
+              course_structure: { total_credits: 0, breakdown: [] },
+            },
+            value_added_course: (profile.profileSections?.course_info as any)
+              ?.value_added_course || {
+              name: "",
+              delivery_mode: "",
+              credits: 0,
+            },
+            career_opportunities: Array.isArray(
+              (profile.profileSections?.course_info as any)
+                ?.career_opportunities,
+            )
+              ? (profile.profileSections?.course_info as any)
+                  .career_opportunities
+              : [],
+            higher_education_and_certifications: (
+              profile.profileSections?.course_info as any
+            )?.higher_education_and_certifications || {
+              global_certifications: [],
+              postgraduation: [],
+            },
+            flexible_exit_options: Array.isArray(
+              (profile.profileSections?.course_info as any)
+                ?.flexible_exit_options,
+            )
+              ? (profile.profileSections?.course_info as any)
+                  .flexible_exit_options
+              : [],
+            class_timings: (profile.profileSections?.course_info as any)
+              ?.class_timings || {
+              mode: "",
+              schedule: [],
+            },
+            industry_tools: Array.isArray(
+              (profile.profileSections?.course_info as any)?.industry_tools,
+            )
+              ? (profile.profileSections?.course_info as any).industry_tools
+              : [],
+            lab_facilities: Array.isArray(
+              (profile.profileSections?.course_info as any)?.lab_facilities,
+            )
+              ? (profile.profileSections?.course_info as any).lab_facilities
+              : [],
+            classroom_facilities: Array.isArray(
+              (profile.profileSections?.course_info as any)
+                ?.classroom_facilities,
+            )
+              ? (profile.profileSections?.course_info as any)
+                  .classroom_facilities
+              : [],
+            bonus_certification: (profile.profileSections?.course_info as any)
+              ?.bonus_certification || {
+              name: "",
+              note: "",
+              certificate_details_available: false,
+            },
+            featured_alumni: Array.isArray(
+              (profile.profileSections?.course_info as any)?.featured_alumni,
+            )
+              ? (profile.profileSections?.course_info as any).featured_alumni
+              : [],
+            faqs: Array.isArray(
+              (profile.profileSections?.course_info as any)?.faqs,
+            )
+              ? (profile.profileSections?.course_info as any).faqs
+              : [],
+            student_forum: (profile.profileSections?.course_info as any)
+              ?.student_forum || {
+              description: "",
+              cta: "",
+            },
           },
           admission_policy: {
             id:
@@ -1805,6 +2483,44 @@ export default function SetupProfilePage() {
         );
       }
       if (
+        Array.isArray(
+          profile.profileSections?.college_overview?.nearby_access?.utilities,
+        )
+      ) {
+        setUtilitiesAccess(
+          profile.profileSections.college_overview.nearby_access.utilities,
+        );
+      }
+      if (
+        Array.isArray(
+          profile.profileSections?.college_overview
+            ?.accreditation_and_affiliation?.rankings,
+        )
+      ) {
+        setOverviewRankings(
+          profile.profileSections.college_overview.accreditation_and_affiliation
+            .rankings,
+        );
+      }
+      if (
+        Array.isArray(
+          profile.profileSections?.college_overview?.inside_campus_facilities,
+        )
+      ) {
+        setInsideCampusFacilities(
+          profile.profileSections.college_overview.inside_campus_facilities,
+        );
+      }
+      if (
+        Array.isArray(
+          profile.profileSections?.college_overview?.connectwithus?.links,
+        )
+      ) {
+        setConnectLinks(
+          profile.profileSections.college_overview.connectwithus.links,
+        );
+      }
+      if (
         Array.isArray(profile.profileSections?.college_overview?.campus_reels)
       ) {
         setCampusReels(profile.profileSections.college_overview.campus_reels);
@@ -1833,34 +2549,129 @@ export default function SetupProfilePage() {
           })),
         );
       }
+      const admissionPolicySection = profile.profileSections
+        ?.admission_policy as any;
+      const eligibilityCriteria = admissionPolicySection?.eligibility_criteria;
+
       if (
-        profile.profileSections?.admission_policy?.eligibilityCriteria &&
-        typeof profile.profileSections.admission_policy.eligibilityCriteria ===
-          "object"
+        eligibilityCriteria &&
+        Array.isArray(eligibilityCriteria.applicant_type_tabs)
       ) {
-        const criteria = profile.profileSections.admission_policy
-          .eligibilityCriteria as any;
-        setEligibilityCriteria(
-          Array.isArray(criteria.requirements)
-            ? criteria.requirements.map((item: any) => ({
-                studentType: item.title || "Indian",
-                criteria: item.description || "",
-              }))
-            : [],
-        );
-      } else if (
-        Array.isArray(profile.profileSections?.course_info?.eligibilityCriteria)
-      ) {
-        setEligibilityCriteria(
-          profile.profileSections.course_info.eligibilityCriteria,
-        );
-      }
-      if (
-        Array.isArray(profile.profileSections?.admission_policy?.requirements)
-      ) {
-        setAdmissionRequirements(
-          profile.profileSections.admission_policy.requirements,
-        );
+        const nextModel: EligibilityCriteriaModel = {
+          applicant_type_tabs: eligibilityCriteria.applicant_type_tabs.map(
+            (tab: any, tabIndex: number) => ({
+              id:
+                (typeof tab?.id === "string" && tab.id) ||
+                createEligibilityId(
+                  typeof tab?.label === "string" ? tab.label : "",
+                  `applicant_${tabIndex + 1}`,
+                ),
+              label:
+                (typeof tab?.label === "string" && tab.label) ||
+                `Applicant Type ${tabIndex + 1}`,
+              quota_categories: Array.isArray(tab?.quota_categories)
+                ? tab.quota_categories.map(
+                    (quota: any, quotaIndex: number) => ({
+                      id:
+                        (typeof quota?.id === "string" && quota.id) ||
+                        createEligibilityId(
+                          typeof quota?.label === "string" ? quota.label : "",
+                          `quota_${quotaIndex + 1}`,
+                        ),
+                      label:
+                        (typeof quota?.label === "string" && quota.label) ||
+                        `Quota ${quotaIndex + 1}`,
+                      criteria: Array.isArray(quota?.criteria)
+                        ? quota.criteria.map(
+                            (criterion: any, criterionIndex: number) => ({
+                              id:
+                                (typeof criterion?.id === "string" &&
+                                  criterion.id) ||
+                                createEligibilityId(
+                                  typeof criterion?.label === "string"
+                                    ? criterion.label
+                                    : "",
+                                  `criteria_${criterionIndex + 1}`,
+                                ),
+                              label:
+                                (typeof criterion?.label === "string" &&
+                                  criterion.label) ||
+                                `Criteria ${criterionIndex + 1}`,
+                              description:
+                                (typeof criterion?.description === "string" &&
+                                  criterion.description) ||
+                                "",
+                            }),
+                          )
+                        : [],
+                    }),
+                  )
+                : ELIGIBILITY_DEFAULT_QUOTAS.map((quota) => ({
+                    ...quota,
+                    criteria: [],
+                  })),
+            }),
+          ),
+          default_applicant_type:
+            typeof eligibilityCriteria?.default_applicant_type === "string" &&
+            eligibilityCriteria.default_applicant_type
+              ? eligibilityCriteria.default_applicant_type
+              : "indian",
+          default_quota:
+            typeof eligibilityCriteria?.default_quota === "string" &&
+            eligibilityCriteria.default_quota
+              ? eligibilityCriteria.default_quota
+              : "government_quota",
+          cta: {
+            label:
+              typeof eligibilityCriteria?.cta?.label === "string" &&
+              eligibilityCriteria.cta.label
+                ? eligibilityCriteria.cta.label
+                : "Check Eligibility",
+            action:
+              typeof eligibilityCriteria?.cta?.action === "string" &&
+              eligibilityCriteria.cta.action
+                ? eligibilityCriteria.cta.action
+                : "check_eligibility",
+          },
+        };
+
+        setEligibilityCriteriaModel(nextModel);
+        setSelectedApplicantTypeId(nextModel.default_applicant_type);
+        setSelectedQuotaId(nextModel.default_quota);
+      } else {
+        const legacyCriteria =
+          admissionPolicySection?.eligibilityCriteria as any;
+        const legacyRequirements = Array.isArray(
+          admissionPolicySection?.requirements,
+        )
+          ? admissionPolicySection.requirements
+          : [];
+
+        const mergedCriteria = [
+          ...(Array.isArray(legacyCriteria?.requirements)
+            ? legacyCriteria.requirements
+            : []),
+          ...legacyRequirements,
+        ]
+          .filter(
+            (item: any) =>
+              (item?.title || "").trim() || (item?.description || "").trim(),
+          )
+          .map((item: any, index: number) => ({
+            id:
+              createEligibilityId(item?.title || "", "criteria") +
+              `_${index + 1}`,
+            label: item?.title || `Criteria ${index + 1}`,
+            description: item?.description || "",
+          }));
+
+        const fallbackModel = createDefaultEligibilityCriteria();
+        fallbackModel.applicant_type_tabs[0].quota_categories[0].criteria =
+          mergedCriteria;
+        setEligibilityCriteriaModel(fallbackModel);
+        setSelectedApplicantTypeId(fallbackModel.default_applicant_type);
+        setSelectedQuotaId(fallbackModel.default_quota);
       }
       if (
         Array.isArray(
@@ -1902,24 +2713,443 @@ export default function SetupProfilePage() {
       if (Array.isArray(profile.profileSections?.placements?.notableOffers)) {
         setNotableOffers(profile.profileSections.placements.notableOffers);
       }
+      const placementSection = profile.profileSections?.placements as
+        | Record<string, unknown>
+        | undefined;
+      if (placementSection) {
+        const report =
+          (placementSection.report as Record<string, unknown>) ||
+          DEFAULT_PLACEMENTS_ADVANCED.report;
+        setPlacementsReportLabel(
+          typeof report.label === "string"
+            ? report.label
+            : DEFAULT_PLACEMENTS_ADVANCED.report.label,
+        );
+        setPlacementsReportAction(
+          typeof report.action === "string"
+            ? report.action
+            : DEFAULT_PLACEMENTS_ADVANCED.report.action,
+        );
 
-      if (Array.isArray(profile.profileSections?.fees?.additionalFees)) {
-        setAdditionalFees(profile.profileSections.fees.additionalFees);
-      } else if (
-        Array.isArray(profile.profileSections?.tuition_and_aid?.additionalFees)
-      ) {
-        setAdditionalFees(
-          profile.profileSections.tuition_and_aid.additionalFees,
+        const summaryStats = Array.isArray(placementSection.summary_stats)
+          ? placementSection.summary_stats
+          : DEFAULT_PLACEMENTS_ADVANCED.summary_stats;
+        setPlacementsSummaryStatsRows(
+          summaryStats.map((item, index) => {
+            const stat = item as Record<string, unknown>;
+            return {
+              id:
+                typeof stat.id === "string"
+                  ? stat.id
+                  : `summary_stat_${index + 1}`,
+              label: typeof stat.label === "string" ? stat.label : "",
+              value:
+                typeof stat.value === "number"
+                  ? String(stat.value)
+                  : typeof stat.value === "string"
+                    ? stat.value
+                    : "",
+              unit: typeof stat.unit === "string" ? stat.unit : "",
+            };
+          }),
+        );
+
+        const placementTrends =
+          (placementSection.placement_trends as Record<string, unknown>) ||
+          DEFAULT_PLACEMENTS_ADVANCED.placement_trends;
+        setPlacementsTrendsLabel(
+          typeof placementTrends.label === "string"
+            ? placementTrends.label
+            : DEFAULT_PLACEMENTS_ADVANCED.placement_trends.label,
+        );
+        setPlacementsTrendsPeriod(
+          typeof placementTrends.period === "string"
+            ? placementTrends.period
+            : DEFAULT_PLACEMENTS_ADVANCED.placement_trends.period,
+        );
+        const years = Array.isArray(placementTrends.years)
+          ? placementTrends.years
+          : DEFAULT_PLACEMENTS_ADVANCED.placement_trends.years;
+        setPlacementsTrendsYearsText(
+          years.map((year) => String(year)).join(", "),
+        );
+        setPlacementsTrendsGrowthYoy(
+          typeof placementTrends.avg_package_growth_yoy === "string"
+            ? placementTrends.avg_package_growth_yoy
+            : DEFAULT_PLACEMENTS_ADVANCED.placement_trends
+                .avg_package_growth_yoy,
+        );
+
+        const industrySalaryReport =
+          (placementSection.industry_salary_report as Record<
+            string,
+            unknown
+          >) || DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report;
+        setIndustrySalaryReportLabel(
+          typeof industrySalaryReport.label === "string"
+            ? industrySalaryReport.label
+            : DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.label,
+        );
+        setIndustrySalaryReportColumnsText(
+          Array.isArray(industrySalaryReport.columns)
+            ? industrySalaryReport.columns
+                .map((item) => String(item))
+                .join(", ")
+            : DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.columns.join(
+                ", ",
+              ),
+        );
+        const industryRows = Array.isArray(industrySalaryReport.industries)
+          ? industrySalaryReport.industries
+          : DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.industries;
+        setIndustrySalaryRows(
+          industryRows.map((item, index) => {
+            const row = item as Record<string, unknown>;
+            return {
+              id: typeof row.id === "string" ? row.id : `industry_${index + 1}`,
+              name: typeof row.name === "string" ? row.name : "",
+              sub_label: typeof row.sub_label === "string" ? row.sub_label : "",
+              students_placed:
+                typeof row.students_placed === "number"
+                  ? String(row.students_placed)
+                  : typeof row.students_placed === "string"
+                    ? row.students_placed
+                    : "",
+              avg_package:
+                typeof row.avg_package === "string" ? row.avg_package : "",
+              max_package:
+                typeof row.max_package === "string" ? row.max_package : "",
+            };
+          }),
+        );
+        const industryCta =
+          (industrySalaryReport.cta as Record<string, unknown>) ||
+          DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.cta;
+        setIndustryCtaLabel(
+          typeof industryCta.label === "string"
+            ? industryCta.label
+            : DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.cta.label,
+        );
+        setIndustryCtaAction(
+          typeof industryCta.action === "string"
+            ? industryCta.action
+            : DEFAULT_PLACEMENTS_ADVANCED.industry_salary_report.cta.action,
+        );
+
+        const notableOffersSection =
+          (placementSection.notable_offers as Record<string, unknown>) ||
+          DEFAULT_PLACEMENTS_ADVANCED.notable_offers;
+        setNotableOffersLabel(
+          typeof notableOffersSection.label === "string"
+            ? notableOffersSection.label
+            : DEFAULT_PLACEMENTS_ADVANCED.notable_offers.label,
+        );
+        const notableCta =
+          (notableOffersSection.cta as Record<string, unknown>) ||
+          DEFAULT_PLACEMENTS_ADVANCED.notable_offers.cta;
+        setNotableOffersCtaLabel(
+          typeof notableCta.label === "string"
+            ? notableCta.label
+            : DEFAULT_PLACEMENTS_ADVANCED.notable_offers.cta.label,
+        );
+        setNotableOffersCtaAction(
+          typeof notableCta.action === "string"
+            ? notableCta.action
+            : DEFAULT_PLACEMENTS_ADVANCED.notable_offers.cta.action,
+        );
+        const featuredRows = Array.isArray(notableOffersSection.featured)
+          ? notableOffersSection.featured
+          : DEFAULT_PLACEMENTS_ADVANCED.notable_offers.featured;
+        setNotableFeaturedRows(
+          featuredRows.map((item) => {
+            const featured = item as Record<string, unknown>;
+            const offers = Array.isArray(featured.offers)
+              ? featured.offers
+              : [];
+            return {
+              company:
+                typeof featured.company === "string" ? featured.company : "",
+              tag: typeof featured.tag === "string" ? featured.tag : "",
+              industry:
+                typeof featured.industry === "string" ? featured.industry : "",
+              offersText: offers
+                .map((offer) => {
+                  const offerRow = offer as Record<string, unknown>;
+                  return [
+                    typeof offerRow.role === "string" ? offerRow.role : "",
+                    typeof offerRow.package === "number"
+                      ? String(offerRow.package)
+                      : typeof offerRow.package === "string"
+                        ? offerRow.package
+                        : "",
+                    typeof offerRow.unit === "string" ? offerRow.unit : "",
+                    typeof offerRow.type === "string" ? offerRow.type : "",
+                  ].join("|");
+                })
+                .join("\n"),
+            };
+          }),
+        );
+
+        const allCompanyStatistics =
+          (placementSection.all_company_statistics as Record<
+            string,
+            unknown
+          >) || DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics;
+        setAllCompanyStatisticsLabel(
+          typeof allCompanyStatistics.label === "string"
+            ? allCompanyStatistics.label
+            : DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.label,
+        );
+        setAllCompanyStatisticsColumnsText(
+          Array.isArray(allCompanyStatistics.columns)
+            ? allCompanyStatistics.columns
+                .map((item) => String(item))
+                .join(", ")
+            : DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.columns.join(
+                ", ",
+              ),
+        );
+        const companyRows = Array.isArray(allCompanyStatistics.companies)
+          ? allCompanyStatistics.companies
+          : DEFAULT_PLACEMENTS_ADVANCED.all_company_statistics.companies;
+        setAllCompanyRows(
+          companyRows.map((item, index) => {
+            const row = item as Record<string, unknown>;
+            return {
+              id: typeof row.id === "string" ? row.id : `company_${index + 1}`,
+              name: typeof row.name === "string" ? row.name : "",
+              students:
+                typeof row.students === "number"
+                  ? String(row.students)
+                  : typeof row.students === "string"
+                    ? row.students
+                    : "",
+              avg_package:
+                typeof row.avg_package === "string" ? row.avg_package : "",
+              max_package:
+                typeof row.max_package === "string" ? row.max_package : "",
+            };
+          }),
+        );
+
+        const studentSuccess = Array.isArray(placementSection.student_success)
+          ? placementSection.student_success
+          : DEFAULT_PLACEMENTS_ADVANCED.student_success;
+        setStudentSuccessRows(
+          studentSuccess.map((item) => {
+            const row = item as Record<string, unknown>;
+            return {
+              name: typeof row.name === "string" ? row.name : "",
+              placed_at: typeof row.placed_at === "string" ? row.placed_at : "",
+              quote: typeof row.quote === "string" ? row.quote : "",
+            };
+          }),
         );
       }
-      if (Array.isArray(profile.profileSections?.fees?.installments)) {
-        setInstallmentSchedule(profile.profileSections.fees.installments);
-      } else if (
-        Array.isArray(profile.profileSections?.tuition_and_aid?.installments)
-      ) {
-        setInstallmentSchedule(
-          profile.profileSections.tuition_and_aid.installments,
+
+      const feesSection = (profile.profileSections?.fees || {}) as Record<
+        string,
+        unknown
+      >;
+      const tuitionFees = (feesSection.tuition_fees || {}) as Record<
+        string,
+        unknown
+      >;
+      const tuitionDownload = (tuitionFees.download || {}) as Record<
+        string,
+        unknown
+      >;
+      setFeesDownload((prev) => ({
+        label:
+          typeof tuitionDownload.label === "string"
+            ? tuitionDownload.label
+            : prev.label,
+        file_label:
+          typeof tuitionDownload.file_label === "string"
+            ? tuitionDownload.file_label
+            : prev.file_label,
+        file_size:
+          typeof tuitionDownload.file_size === "string"
+            ? tuitionDownload.file_size
+            : prev.file_size,
+        file_type:
+          typeof tuitionDownload.file_type === "string"
+            ? tuitionDownload.file_type
+            : prev.file_type,
+        action:
+          typeof tuitionDownload.action === "string"
+            ? tuitionDownload.action
+            : prev.action,
+      }));
+
+      const tuitionFilters = (tuitionFees.filters || {}) as Record<
+        string,
+        unknown
+      >;
+      const quotaCategory = (tuitionFilters.quota_category || {}) as Record<
+        string,
+        unknown
+      >;
+      setFeesQuotaFilterLabel(
+        typeof quotaCategory.label === "string"
+          ? quotaCategory.label
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.label,
+      );
+      setFeesQuotaDefault(
+        typeof quotaCategory.default === "string"
+          ? quotaCategory.default
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.default,
+      );
+      setSelectedFeesQuotaFilter(
+        typeof quotaCategory.default === "string"
+          ? quotaCategory.default
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.default,
+      );
+      setFeesQuotaOptionsText(
+        Array.isArray(quotaCategory.options)
+          ? quotaCategory.options.map((item) => String(item)).join("\n")
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category.options.join(
+              "\n",
+            ),
+      );
+
+      const genderFilter = (tuitionFilters.gender || {}) as Record<
+        string,
+        unknown
+      >;
+      setFeesGenderFilterLabel(
+        typeof genderFilter.label === "string"
+          ? genderFilter.label
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.label,
+      );
+      setFeesGenderDefault(
+        typeof genderFilter.default === "string"
+          ? genderFilter.default
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.default,
+      );
+      setSelectedFeesGenderTab(
+        typeof genderFilter.default === "string"
+          ? genderFilter.default
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.default,
+      );
+      setFeesGenderOptionsText(
+        Array.isArray(genderFilter.options)
+          ? genderFilter.options.map((item) => String(item)).join("\n")
+          : DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.options.join(
+              "\n",
+            ),
+      );
+
+      if (Array.isArray(tuitionFees.fee_matrix)) {
+        setFeesMatrixRows(
+          tuitionFees.fee_matrix.map((entry: any) => ({
+            quota_category: entry?.quota_category || "",
+            gender: entry?.gender || "",
+            year1:
+              entry?.year_wise_fees?.[0]?.amount == null
+                ? ""
+                : String(entry.year_wise_fees[0].amount),
+            year2:
+              entry?.year_wise_fees?.[1]?.amount == null
+                ? ""
+                : String(entry.year_wise_fees[1].amount),
+            year3:
+              entry?.year_wise_fees?.[2]?.amount == null
+                ? ""
+                : String(entry.year_wise_fees[2].amount),
+            year4:
+              entry?.year_wise_fees?.[3]?.amount == null
+                ? ""
+                : String(entry.year_wise_fees[3].amount),
+          })),
         );
+      }
+
+      if (Array.isArray(feesSection.one_time_payable_fees)) {
+        setOneTimePayableFees(
+          feesSection.one_time_payable_fees.map((row: any, index: number) => ({
+            id: row?.id || `one_time_${index + 1}`,
+            label: row?.label || "",
+            amount: row?.amount == null ? "" : String(row.amount),
+          })),
+        );
+      }
+
+      if (Array.isArray(feesSection.additional_fees)) {
+        setAdditionalFees(
+          feesSection.additional_fees.map((row: any, index: number) => ({
+            id: row?.id || `additional_${index + 1}`,
+            label: row?.label || "",
+            amount: row?.amount == null ? "" : String(row.amount),
+          })),
+        );
+      } else if (Array.isArray(feesSection.additionalFees)) {
+        setAdditionalFees(
+          feesSection.additionalFees.map((row: any, index: number) => ({
+            id: row?.id || `additional_${index + 1}`,
+            label: row?.label || row?.name || "",
+            amount: row?.amount == null ? "" : String(row.amount),
+          })),
+        );
+      }
+
+      const inclusions = (feesSection.inclusions || {}) as Record<
+        string,
+        unknown
+      >;
+      if (Array.isArray(inclusions.whats_included)) {
+        setInclusionIncludedText(inclusions.whats_included.join("\n"));
+      }
+      if (Array.isArray(inclusions.whats_excluded)) {
+        setInclusionExcludedText(inclusions.whats_excluded.join("\n"));
+      }
+
+      if (Array.isArray(feesSection.deadlines_and_installments)) {
+        setInstallmentSchedule(
+          feesSection.deadlines_and_installments.map(
+            (row: any, index: number) => ({
+              id: row?.id || `installment_${index + 1}`,
+              label: row?.label || row?.installmentNo || "",
+              deadline: row?.deadline || row?.dueDate || "",
+              amount: row?.amount == null ? "" : String(row.amount),
+            }),
+          ),
+        );
+      } else if (Array.isArray(feesSection.installments)) {
+        setInstallmentSchedule(
+          feesSection.installments.map((row: any, index: number) => ({
+            id: row?.id || `installment_${index + 1}`,
+            label:
+              row?.label || row?.installmentNo || `Installment ${index + 1}`,
+            deadline: row?.deadline || row?.dueDate || "",
+            amount: row?.amount == null ? "" : String(row.amount),
+          })),
+        );
+      }
+
+      const feesSummary = (feesSection.fees_summary || {}) as Record<
+        string,
+        unknown
+      >;
+      setFeesSummaryFullCourseFee(
+        feesSummary.full_course_fee == null
+          ? ""
+          : String(feesSummary.full_course_fee),
+      );
+      setFeesSummaryBookingAmount(
+        feesSummary.booking_amount == null
+          ? ""
+          : String(feesSummary.booking_amount),
+      );
+      setFeesSummaryCurrency(
+        typeof feesSummary.currency === "string"
+          ? feesSummary.currency
+          : DEFAULT_FEES_ADVANCED.fees_summary.currency,
+      );
+
+      if (Array.isArray(feesSection.refund_policy)) {
+        setRefundPolicyText(feesSection.refund_policy.join("\n"));
       }
       if (
         Array.isArray(
@@ -2314,291 +3544,360 @@ export default function SetupProfilePage() {
           : "",
       );
 
-      const otherCoursesSection =
-        ((profile.profileSections?.course_info as any)?.course_details as
-          | {
-              courseHeader?: {
-                courseName?: string;
-                admissionCycle?: string[];
-                admissionStatus?: string;
-                seatAvailabilityPercent?: number;
-                seatAvailabilityMessage?: string;
-                duration?: string;
-                studyMode?: string;
-                academicCycle?: string;
-                credits?: number;
-                genderAccepted?: string;
-                courseCategory?: string;
-              };
-              programHighlights?: { description?: string }[];
-              courseAccolades?: { title?: string; description?: string }[];
-              importantDates?: {
-                event?: string;
-                date?: string;
-                tag?: string;
-              }[];
-              curriculum?: {
-                brochureUrl?: string;
-                semesters?: {
-                  semester?: number;
-                  subjects?: string[];
-                  specializations?: string[];
-                }[];
-              };
-              courseStructure?: { component?: string; credits?: number }[];
-              valueAddedCourses?: {
-                courseName?: string;
-                credits?: string;
-                deliveryMode?: string;
-              }[];
-              careerOpportunities?: { role?: string; salaryRange?: string }[];
-              higherEducation?: {
-                globalCertifications?: string[];
-                higherStudies?: string[];
-              };
-              exitOptions?: { after?: string; credential?: string }[];
-              classTimings?: { day?: string; timing?: string }[];
-              industryTools?: string[];
-              labFacilities?: string[];
-              classroomFacilities?: string[];
-              bonusCertification?: {
-                title?: string;
-                description?: string;
-                certificateUrl?: string;
-              };
-              featuredAlumni?: {
-                name?: string;
-                designation?: string;
-                journeyTimeline?: string[];
-              }[];
-              faqs?: { question?: string; answer?: string }[];
-              studentForum?: { description?: string; ctaLabel?: string };
-            }
-          | undefined) ??
-        (profile.profileSections?.other_courses_offered as
-          | {
-              courseHeader?: {
-                courseName?: string;
-                admissionCycle?: string[];
-                admissionStatus?: string;
-                seatAvailabilityPercent?: number;
-                seatAvailabilityMessage?: string;
-                duration?: string;
-                studyMode?: string;
-                academicCycle?: string;
-                credits?: number;
-                genderAccepted?: string;
-                courseCategory?: string;
-              };
-              programHighlights?: { description?: string }[];
-              courseAccolades?: { title?: string; description?: string }[];
-              importantDates?: {
-                event?: string;
-                date?: string;
-                tag?: string;
-              }[];
-              curriculum?: {
-                brochureUrl?: string;
-                semesters?: {
-                  semester?: number;
-                  subjects?: string[];
-                  specializations?: string[];
-                }[];
-              };
-              courseStructure?: { component?: string; credits?: number }[];
-              valueAddedCourses?: {
-                courseName?: string;
-                credits?: string;
-                deliveryMode?: string;
-              }[];
-              careerOpportunities?: { role?: string; salaryRange?: string }[];
-              higherEducation?: {
-                globalCertifications?: string[];
-                higherStudies?: string[];
-              };
-              exitOptions?: { after?: string; credential?: string }[];
-              classTimings?: { day?: string; timing?: string }[];
-              industryTools?: string[];
-              labFacilities?: string[];
-              classroomFacilities?: string[];
-              bonusCertification?: {
-                title?: string;
-                description?: string;
-                certificateUrl?: string;
-              };
-              featuredAlumni?: {
-                name?: string;
-                designation?: string;
-                journeyTimeline?: string[];
-              }[];
-              faqs?: { question?: string; answer?: string }[];
-              studentForum?: { description?: string; ctaLabel?: string };
-            }
-          | undefined);
+      const currentCourseInfo = (profile.profileSections?.course_info ||
+        {}) as any;
+      const legacyCourseInfo =
+        currentCourseInfo.course_details ||
+        (profile.profileSections?.other_courses_offered as any) ||
+        {};
 
-      setOtherCourseName(otherCoursesSection?.courseHeader?.courseName || "");
+      const admissions = Array.isArray(currentCourseInfo.admissions)
+        ? currentCourseInfo.admissions
+        : Array.isArray(legacyCourseInfo?.courseHeader?.admissionCycle)
+          ? legacyCourseInfo.courseHeader.admissionCycle.map(
+              (year: string) => ({
+                year,
+                status: legacyCourseInfo?.courseHeader?.admissionStatus || null,
+                placement_rate: String(
+                  legacyCourseInfo?.courseHeader?.seatAvailabilityPercent || "",
+                ),
+                seats_note:
+                  legacyCourseInfo?.courseHeader?.seatAvailabilityMessage ||
+                  null,
+                basic_details: {
+                  duration: legacyCourseInfo?.courseHeader?.duration || "",
+                  study_mode: legacyCourseInfo?.courseHeader?.studyMode || "",
+                  academic_cycle:
+                    legacyCourseInfo?.courseHeader?.academicCycle || "",
+                  total_credits: legacyCourseInfo?.courseHeader?.credits || 0,
+                  gender_accepted:
+                    legacyCourseInfo?.courseHeader?.genderAccepted || "",
+                  course_category:
+                    legacyCourseInfo?.courseHeader?.courseCategory || "",
+                },
+              }),
+            )
+          : [];
+
+      const firstAdmission = admissions[0] || {};
+      const firstAdmissionBasic = firstAdmission.basic_details || {};
+
+      setAdmissionsMatrixText(
+        admissions
+          .map((item: any) => {
+            const basicDetails = item?.basic_details || {};
+            return [
+              item?.year || "",
+              item?.status || "",
+              item?.placement_rate || "",
+              item?.seats_note || "",
+              basicDetails?.duration || "",
+              basicDetails?.study_mode || "",
+              basicDetails?.academic_cycle || "",
+              String(basicDetails?.total_credits ?? 0),
+              basicDetails?.gender_accepted || "",
+              basicDetails?.course_category || "",
+            ].join("|");
+          })
+          .join("\n"),
+      );
+
+      setOtherCourseName(
+        currentCourseInfo.course_name ||
+          legacyCourseInfo?.courseHeader?.courseName ||
+          "",
+      );
       setOtherAdmissionCyclesText(
-        Array.isArray(otherCoursesSection?.courseHeader?.admissionCycle)
-          ? otherCoursesSection.courseHeader.admissionCycle.join("\n")
-          : "",
+        admissions
+          .map((item: any) => item?.year || "")
+          .filter(Boolean)
+          .join("\n"),
       );
-      setOtherAdmissionStatus(
-        otherCoursesSection?.courseHeader?.admissionStatus || "",
-      );
-      setOtherSeatAvailabilityPercent(
-        String(otherCoursesSection?.courseHeader?.seatAvailabilityPercent ?? 0),
-      );
-      setOtherSeatAvailabilityMessage(
-        otherCoursesSection?.courseHeader?.seatAvailabilityMessage || "",
-      );
-      setOtherDuration(otherCoursesSection?.courseHeader?.duration || "");
-      setOtherStudyMode(otherCoursesSection?.courseHeader?.studyMode || "");
-      setOtherAcademicCycle(
-        otherCoursesSection?.courseHeader?.academicCycle || "",
-      );
-      setOtherCredits(String(otherCoursesSection?.courseHeader?.credits ?? 0));
-      setOtherGenderAccepted(
-        otherCoursesSection?.courseHeader?.genderAccepted || "",
-      );
-      setOtherCourseCategory(
-        otherCoursesSection?.courseHeader?.courseCategory || "",
-      );
+      setOtherAdmissionStatus(firstAdmission?.status || "");
+      setOtherSeatAvailabilityPercent(firstAdmission?.placement_rate || "");
+      setOtherSeatAvailabilityMessage(firstAdmission?.seats_note || "");
+      setOtherDuration(firstAdmissionBasic?.duration || "");
+      setOtherStudyMode(firstAdmissionBasic?.study_mode || "");
+      setOtherAcademicCycle(firstAdmissionBasic?.academic_cycle || "");
+      setOtherCredits(String(firstAdmissionBasic?.total_credits ?? 0));
+      setOtherGenderAccepted(firstAdmissionBasic?.gender_accepted || "");
+      setOtherCourseCategory(firstAdmissionBasic?.course_category || "");
+
       setProgramHighlightsText(
-        Array.isArray(otherCoursesSection?.programHighlights)
-          ? otherCoursesSection.programHighlights
-              .map((item) => item.description || "")
-              .join("\n")
-          : "",
+        Array.isArray(currentCourseInfo?.program_highlights)
+          ? currentCourseInfo.program_highlights.join("\n")
+          : Array.isArray(legacyCourseInfo?.programHighlights)
+            ? legacyCourseInfo.programHighlights
+                .map((item: any) => item.description || "")
+                .join("\n")
+            : "",
       );
       setCourseAccoladesText(
-        Array.isArray(otherCoursesSection?.courseAccolades)
-          ? otherCoursesSection.courseAccolades
-              .map((item) => `${item.title || ""}|${item.description || ""}`)
-              .join("\n")
-          : "",
-      );
-      setImportantDatesText(
-        Array.isArray(otherCoursesSection?.importantDates)
-          ? otherCoursesSection.importantDates
+        Array.isArray(currentCourseInfo?.course_accolades)
+          ? currentCourseInfo.course_accolades
               .map(
-                (item) =>
-                  `${item.event || ""}|${item.date || ""}|${item.tag || ""}`,
+                (item: any) =>
+                  `${item.body || ""}|${item.rank || ""}|${item.image || ""}`,
               )
               .join("\n")
-          : "",
+          : Array.isArray(legacyCourseInfo?.courseAccolades)
+            ? legacyCourseInfo.courseAccolades
+                .map(
+                  (item: any) =>
+                    `${item.title || ""}|${item.description || ""}|`,
+                )
+                .join("\n")
+            : "",
       );
+
+      setApplicationStartDate(
+        currentCourseInfo?.key_dates?.application_start || "",
+      );
+      setApplicationCloseDate(
+        currentCourseInfo?.key_dates?.application_close?.date || "",
+      );
+      setApplicationCloseUrgency(
+        currentCourseInfo?.key_dates?.application_close?.urgency || "",
+      );
+      setClassCommencementDate(
+        currentCourseInfo?.key_dates?.class_commencement?.date || "",
+      );
+      setClassCommencementNote(
+        currentCourseInfo?.key_dates?.class_commencement?.note || "",
+      );
+
       setCurriculumBrochureUrl(
-        otherCoursesSection?.curriculum?.brochureUrl || "",
+        currentCourseInfo?.curriculum?.brochure_upload ||
+          legacyCourseInfo?.curriculum?.brochureUrl ||
+          "",
+      );
+      setCurriculumBrochureAvailable(
+        Boolean(currentCourseInfo?.curriculum?.brochure_available),
       );
       setCurriculumSemestersText(
-        Array.isArray(otherCoursesSection?.curriculum?.semesters)
-          ? otherCoursesSection.curriculum.semesters
+        Array.isArray(currentCourseInfo?.curriculum?.semesters)
+          ? currentCourseInfo.curriculum.semesters
               .map(
-                (item) =>
-                  `${item.semester ?? 0}|${(item.subjects || []).join(", ")}|${(item.specializations || []).join(", ")}`,
+                (item: any) =>
+                  `${item.semester ?? 0}|${(item.core_subjects || []).join(", ")}|${item.specialization_1?.name || ""}|${(item.specialization_1?.electives || []).join(", ")}|${item.specialization_2?.name || ""}|${item.specialization_2?.note || ""}`,
               )
               .join("\n")
-          : "",
+          : Array.isArray(legacyCourseInfo?.curriculum?.semesters)
+            ? legacyCourseInfo.curriculum.semesters
+                .map(
+                  (item: any) =>
+                    `${item.semester ?? 0}|${(item.subjects || []).join(", ")}|Specialization 1|${(item.specializations || []).join(", ")}|Select Elective|`,
+                )
+                .join("\n")
+            : "",
+      );
+      setCourseStructureTotalCredits(
+        String(
+          currentCourseInfo?.curriculum?.course_structure?.total_credits ?? 0,
+        ),
       );
       setCourseStructureText(
-        Array.isArray(otherCoursesSection?.courseStructure)
-          ? otherCoursesSection.courseStructure
-              .map((item) => `${item.component || ""}|${item.credits ?? 0}`)
+        Array.isArray(
+          currentCourseInfo?.curriculum?.course_structure?.breakdown,
+        )
+          ? currentCourseInfo.curriculum.course_structure.breakdown
+              .map((item: any) => `${item.track || ""}|${item.credits ?? 0}`)
               .join("\n")
-          : "",
+          : Array.isArray(legacyCourseInfo?.courseStructure)
+            ? legacyCourseInfo.courseStructure
+                .map(
+                  (item: any) => `${item.component || ""}|${item.credits ?? 0}`,
+                )
+                .join("\n")
+            : "",
       );
-      setValueAddedCoursesText(
-        Array.isArray(otherCoursesSection?.valueAddedCourses)
-          ? otherCoursesSection.valueAddedCourses
+
+      if (currentCourseInfo?.value_added_course) {
+        setValueAddedCoursesText(
+          `${currentCourseInfo.value_added_course.name || ""}|${currentCourseInfo.value_added_course.credits ?? ""}|${currentCourseInfo.value_added_course.delivery_mode || ""}`,
+        );
+      } else {
+        setValueAddedCoursesText(
+          Array.isArray(legacyCourseInfo?.valueAddedCourses)
+            ? legacyCourseInfo.valueAddedCourses
+                .map(
+                  (item: any) =>
+                    `${item.courseName || ""}|${item.credits || ""}|${item.deliveryMode || ""}`,
+                )
+                .join("\n")
+            : "",
+        );
+      }
+
+      setCareerOpportunitiesText(
+        Array.isArray(currentCourseInfo?.career_opportunities)
+          ? currentCourseInfo.career_opportunities
               .map(
-                (item) =>
-                  `${item.courseName || ""}|${item.credits || ""}|${item.deliveryMode || ""}`,
+                (item: any) => `${item.role || ""}|${item.salary_range || ""}`,
               )
               .join("\n")
-          : "",
+          : Array.isArray(legacyCourseInfo?.careerOpportunities)
+            ? legacyCourseInfo.careerOpportunities
+                .map(
+                  (item: any) => `${item.role || ""}|${item.salaryRange || ""}`,
+                )
+                .join("\n")
+            : "",
       );
-      setCareerOpportunitiesText(
-        Array.isArray(otherCoursesSection?.careerOpportunities)
-          ? otherCoursesSection.careerOpportunities
-              .map((item) => `${item.role || ""}|${item.salaryRange || ""}`)
-              .join("\n")
-          : "",
-      );
+
       setHigherEducationCertsText(
         Array.isArray(
-          otherCoursesSection?.higherEducation?.globalCertifications,
+          currentCourseInfo?.higher_education_and_certifications
+            ?.global_certifications,
         )
-          ? otherCoursesSection.higherEducation.globalCertifications.join("\n")
-          : "",
+          ? currentCourseInfo.higher_education_and_certifications.global_certifications.join(
+              "\n",
+            )
+          : Array.isArray(
+                legacyCourseInfo?.higherEducation?.globalCertifications,
+              )
+            ? legacyCourseInfo.higherEducation.globalCertifications.join("\n")
+            : "",
       );
       setHigherEducationStudiesText(
-        Array.isArray(otherCoursesSection?.higherEducation?.higherStudies)
-          ? otherCoursesSection.higherEducation.higherStudies.join("\n")
-          : "",
+        Array.isArray(
+          currentCourseInfo?.higher_education_and_certifications
+            ?.postgraduation,
+        )
+          ? currentCourseInfo.higher_education_and_certifications.postgraduation.join(
+              "\n",
+            )
+          : Array.isArray(legacyCourseInfo?.higherEducation?.higherStudies)
+            ? legacyCourseInfo.higherEducation.higherStudies.join("\n")
+            : "",
       );
       setExitOptionsText(
-        Array.isArray(otherCoursesSection?.exitOptions)
-          ? otherCoursesSection.exitOptions
-              .map((item) => `${item.after || ""}|${item.credential || ""}`)
-              .join("\n")
-          : "",
-      );
-      setClassTimingsText(
-        Array.isArray(otherCoursesSection?.classTimings)
-          ? otherCoursesSection.classTimings
-              .map((item) => `${item.day || ""}|${item.timing || ""}`)
-              .join("\n")
-          : "",
-      );
-      setIndustryToolsText(
-        Array.isArray(otherCoursesSection?.industryTools)
-          ? otherCoursesSection.industryTools.join("\n")
-          : "",
-      );
-      setLabFacilitiesText(
-        Array.isArray(otherCoursesSection?.labFacilities)
-          ? otherCoursesSection.labFacilities.join("\n")
-          : "",
-      );
-      setClassroomFacilitiesText(
-        Array.isArray(otherCoursesSection?.classroomFacilities)
-          ? otherCoursesSection.classroomFacilities.join("\n")
-          : "",
-      );
-      setBonusCertificationTitle(
-        otherCoursesSection?.bonusCertification?.title || "",
-      );
-      setBonusCertificationDescription(
-        otherCoursesSection?.bonusCertification?.description || "",
-      );
-      setBonusCertificationUrl(
-        otherCoursesSection?.bonusCertification?.certificateUrl || "",
-      );
-      setFeaturedAlumniText(
-        Array.isArray(otherCoursesSection?.featuredAlumni)
-          ? otherCoursesSection.featuredAlumni
+        Array.isArray(currentCourseInfo?.flexible_exit_options)
+          ? currentCourseInfo.flexible_exit_options
               .map(
-                (item) =>
-                  `${item.name || ""}|${item.designation || ""}|${(item.journeyTimeline || []).join(";")}`,
+                (item: any) =>
+                  `${item.after_years ?? 0}|${item.credential || ""}`,
               )
               .join("\n")
-          : "",
+          : Array.isArray(legacyCourseInfo?.exitOptions)
+            ? legacyCourseInfo.exitOptions
+                .map(
+                  (item: any) => `${item.after || ""}|${item.credential || ""}`,
+                )
+                .join("\n")
+            : "",
+      );
+      setClassTimingsMode(currentCourseInfo?.class_timings?.mode || "");
+      setClassTimingsText(
+        Array.isArray(currentCourseInfo?.class_timings?.schedule)
+          ? currentCourseInfo.class_timings.schedule
+              .map(
+                (item: any) =>
+                  `${item.day || ""}|${item.timing || ""}|${item.status || ""}`,
+              )
+              .join("\n")
+          : Array.isArray(legacyCourseInfo?.classTimings)
+            ? legacyCourseInfo.classTimings
+                .map((item: any) => `${item.day || ""}|${item.timing || ""}|`)
+                .join("\n")
+            : "",
+      );
+      setIndustryToolsText(
+        Array.isArray(currentCourseInfo?.industry_tools)
+          ? currentCourseInfo.industry_tools.join("\n")
+          : Array.isArray(legacyCourseInfo?.industryTools)
+            ? legacyCourseInfo.industryTools.join("\n")
+            : "",
+      );
+      setLabFacilitiesText(
+        Array.isArray(currentCourseInfo?.lab_facilities)
+          ? currentCourseInfo.lab_facilities.join("\n")
+          : Array.isArray(legacyCourseInfo?.labFacilities)
+            ? legacyCourseInfo.labFacilities.join("\n")
+            : "",
+      );
+      setClassroomFacilitiesText(
+        Array.isArray(currentCourseInfo?.classroom_facilities)
+          ? currentCourseInfo.classroom_facilities.join("\n")
+          : Array.isArray(legacyCourseInfo?.classroomFacilities)
+            ? legacyCourseInfo.classroomFacilities.join("\n")
+            : "",
+      );
+      setBonusCertificationTitle(
+        currentCourseInfo?.bonus_certification?.name ||
+          legacyCourseInfo?.bonusCertification?.title ||
+          "",
+      );
+      setBonusCertificationDescription(
+        currentCourseInfo?.bonus_certification?.note ||
+          legacyCourseInfo?.bonusCertification?.description ||
+          "",
+      );
+      setBonusCertificationDetailsAvailable(
+        Boolean(
+          currentCourseInfo?.bonus_certification?.certificate_details_available,
+        ),
+      );
+      setFeaturedAlumniText(
+        Array.isArray(currentCourseInfo?.featured_alumni)
+          ? currentCourseInfo.featured_alumni
+              .map(
+                (item: any) =>
+                  `${item.name || ""}|${item.designation || ""}|${(
+                    item.career_progression || []
+                  )
+                    .map(
+                      (progression: any) =>
+                        `${progression.year || ""}:${progression.milestone || ""}`,
+                    )
+                    .join(";")}`,
+              )
+              .join("\n")
+          : Array.isArray(legacyCourseInfo?.featuredAlumni)
+            ? legacyCourseInfo.featuredAlumni
+                .map(
+                  (item: any) =>
+                    `${item.name || ""}|${item.designation || ""}|${(item.journeyTimeline || []).join(";")}`,
+                )
+                .join("\n")
+            : "",
       );
       setFaqsText(
-        Array.isArray(otherCoursesSection?.faqs)
-          ? otherCoursesSection.faqs
-              .map((item) => `${item.question || ""}|${item.answer || ""}`)
-              .join("\n")
-          : "",
+        Array.isArray(currentCourseInfo?.faqs)
+          ? currentCourseInfo.faqs.join("\n")
+          : Array.isArray(legacyCourseInfo?.faqs)
+            ? legacyCourseInfo.faqs
+                .map((item: any) => item.question || "")
+                .join("\n")
+            : "",
       );
       setStudentForumDescription(
-        otherCoursesSection?.studentForum?.description || "",
+        currentCourseInfo?.student_forum?.description ||
+          legacyCourseInfo?.studentForum?.description ||
+          "",
       );
       setStudentForumCtaLabel(
-        otherCoursesSection?.studentForum?.ctaLabel || "",
+        currentCourseInfo?.student_forum?.cta ||
+          legacyCourseInfo?.studentForum?.ctaLabel ||
+          "",
       );
     }
   }, [profile, reset]);
+
+  useEffect(() => {
+    const totalAdmissions = parsePipeRows(admissionsMatrixText).length;
+
+    if (totalAdmissions === 0) {
+      if (activeAdmissionIndex !== 0) {
+        setActiveAdmissionIndex(0);
+      }
+      return;
+    }
+
+    if (activeAdmissionIndex >= totalAdmissions) {
+      setActiveAdmissionIndex(totalAdmissions - 1);
+    }
+  }, [admissionsMatrixText, activeAdmissionIndex]);
 
   useEffect(() => {
     if (!allianceItems || allianceItems.length === 0) {
@@ -2685,6 +3984,139 @@ export default function SetupProfilePage() {
     data: ProfileFormData,
     options?: { redirectToCampuses?: boolean },
   ) => {
+    const parsePlacementValue = (value: string): number | string => {
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      const parsed = Number(trimmed);
+      return Number.isFinite(parsed) && /^[-+]?\d*\.?\d+$/.test(trimmed)
+        ? parsed
+        : trimmed;
+    };
+
+    const parsedPlacementsAdvanced: Record<string, unknown> = {
+      report: {
+        label: placementsReportLabel,
+        action: placementsReportAction,
+      },
+      summary_stats: placementsSummaryStatsRows
+        .filter(
+          (row) =>
+            row.id.trim() ||
+            row.label.trim() ||
+            row.value.trim() ||
+            row.unit.trim(),
+        )
+        .map((row, index) => ({
+          id: row.id.trim() || `summary_stat_${index + 1}`,
+          label: row.label,
+          value: parsePlacementValue(row.value),
+          unit: row.unit.trim() || null,
+        })),
+      placement_trends: {
+        label: placementsTrendsLabel,
+        period: placementsTrendsPeriod,
+        years: placementsTrendsYearsText
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item) => Number(item))
+          .filter(Number.isFinite),
+        avg_package_growth_yoy: placementsTrendsGrowthYoy,
+      },
+      industry_salary_report: {
+        label: industrySalaryReportLabel,
+        columns: industrySalaryReportColumnsText
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        industries: industrySalaryRows
+          .filter(
+            (row) =>
+              row.id.trim() ||
+              row.name.trim() ||
+              row.sub_label.trim() ||
+              row.students_placed.trim() ||
+              row.avg_package.trim() ||
+              row.max_package.trim(),
+          )
+          .map((row, index) => ({
+            id: row.id.trim() || `industry_${index + 1}`,
+            name: row.name,
+            sub_label: row.sub_label,
+            students_placed: safeNumber(row.students_placed || "0"),
+            avg_package: row.avg_package,
+            max_package: row.max_package,
+          })),
+        cta: {
+          label: industryCtaLabel,
+          action: industryCtaAction,
+        },
+      },
+      notable_offers: {
+        label: notableOffersLabel,
+        cta: {
+          label: notableOffersCtaLabel,
+          action: notableOffersCtaAction,
+        },
+        featured: notableFeaturedRows
+          .filter(
+            (row) =>
+              row.company.trim() ||
+              row.tag.trim() ||
+              row.industry.trim() ||
+              row.offersText.trim(),
+          )
+          .map((row) => ({
+            company: row.company,
+            tag: row.tag,
+            industry: row.industry,
+            offers: parsePipeRows(row.offersText)
+              .filter(
+                (offerRow) =>
+                  offerRow[0] || offerRow[1] || offerRow[2] || offerRow[3],
+              )
+              .map(([role, pkg, unit, type]) => ({
+                role: role || "",
+                package: safeNumber(pkg || "0"),
+                unit: unit || "",
+                type: type || "",
+              })),
+          })),
+      },
+      all_company_statistics: {
+        label: allCompanyStatisticsLabel,
+        columns: allCompanyStatisticsColumnsText
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        companies: allCompanyRows
+          .filter(
+            (row) =>
+              row.id.trim() ||
+              row.name.trim() ||
+              row.students.trim() ||
+              row.avg_package.trim() ||
+              row.max_package.trim(),
+          )
+          .map((row, index) => ({
+            id: row.id.trim() || `company_${index + 1}`,
+            name: row.name,
+            students: safeNumber(row.students || "0"),
+            avg_package: row.avg_package,
+            max_package: row.max_package,
+          })),
+      },
+      student_success: studentSuccessRows
+        .filter(
+          (row) => row.name.trim() || row.placed_at.trim() || row.quote.trim(),
+        )
+        .map((row) => ({
+          name: row.name,
+          placed_at: row.placed_at,
+          quote: row.quote,
+        })),
+    };
+
     // Construct final JSON payload cleanly preserving both standard and complex attributes
     const normalizedAdmissionPolicy = normalizeSectionMeta(
       "admission_policy",
@@ -2778,131 +4210,222 @@ export default function SetupProfilePage() {
       }));
 
     const curriculumSemesterRows = parsePipeRows(curriculumSemestersText)
+      .filter((row) => row[0] || row[1] || row[2] || row[3] || row[4] || row[5])
+      .map(
+        ([
+          semester,
+          coreSubjects,
+          specializationOneName,
+          specializationOneElectives,
+          specializationTwoName,
+          specializationTwoNote,
+        ]) => ({
+          semester: safeNumber(semester || "0"),
+          core_subjects: (coreSubjects || "")
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          specialization_1: {
+            name: specializationOneName || "",
+            electives: (specializationOneElectives || "")
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+          },
+          specialization_2: {
+            name: specializationTwoName || "",
+            note: specializationTwoNote || "",
+          },
+        }),
+      );
+
+    const courseStructureRows = parsePipeRows(courseStructureText)
+      .filter((row) => row[0] || row[1])
+      .map(([track, credits]) => ({
+        track: track || "",
+        credits: safeNumber(credits || "0"),
+      }));
+
+    const admissionsRows = parsePipeRows(admissionsMatrixText)
+      .filter((row) => row.some((cell) => cell && cell.trim().length > 0))
+      .map(
+        ([
+          year,
+          status,
+          placementRate,
+          seatsNote,
+          duration,
+          studyMode,
+          academicCycle,
+          totalCredits,
+          genderAccepted,
+          courseCategory,
+        ]) => ({
+          year: year || "",
+          status: status?.trim() ? status : null,
+          placement_rate: placementRate?.trim() ? placementRate : null,
+          seats_note: seatsNote?.trim() ? seatsNote : null,
+          basic_details: {
+            duration: duration || "",
+            study_mode: studyMode || "",
+            academic_cycle: academicCycle || "",
+            total_credits: safeNumber(totalCredits || "0"),
+            gender_accepted: genderAccepted || "",
+            course_category: courseCategory || "",
+          },
+        }),
+      );
+
+    const classTimingsRows = parsePipeRows(classTimingsText)
       .filter((row) => row[0] || row[1] || row[2])
-      .map(([semester, subjects, specializations]) => ({
-        semester: safeNumber(semester || "0"),
-        subjects: (subjects || "")
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-        specializations: (specializations || "")
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
+      .map(([day, timing, status]) => ({
+        day: day || "",
+        timing: timing || null,
+        status: status || (timing ? "open" : "closed"),
       }));
 
     const featuredAlumniRows = parsePipeRows(featuredAlumniText)
       .filter((row) => row[0] || row[1] || row[2])
-      .map(([name, designation, journeyTimeline]) => ({
+      .map(([name, designation, careerProgression]) => ({
         name: name || "",
         designation: designation || "",
-        journeyTimeline: (journeyTimeline || "")
+        career_progression: (careerProgression || "")
           .split(";")
           .map((item) => item.trim())
-          .filter(Boolean),
+          .filter(Boolean)
+          .map((item) => {
+            const [year, ...milestoneParts] = item.split(":");
+            return {
+              year: safeNumber(year || "0"),
+              milestone: milestoneParts.join(":").trim(),
+            };
+          }),
       }));
 
     const profileSectionsPayload = {
       ...data.profileSections,
       college_overview: {
-        ...normalizedOverview,
+        ...(() => {
+          const {
+            accreditation_and_affilation: _legacyAccreditation,
+            ...rest
+          } = normalizedOverview as Record<string, unknown>;
+          return rest;
+        })(),
+        accreditation_and_affiliation: {
+          rankings: overviewRankings,
+        },
+        institution_details: {
+          established_year:
+            data.profileSections.college_overview.instution_details.estd,
+          total_courses: profile?.totalCourses ?? 0,
+          institute_type: profile?.instituteType || "",
+          gender_accepted:
+            data.profileSections.college_overview.instution_details.gender,
+          average_student_count:
+            data.profileSections.college_overview.instution_details
+              .average_student_count,
+          campus_size:
+            data.profileSections.college_overview.instution_details.campus_size,
+          students_from_outside_state:
+            data.profileSections.college_overview.instution_details
+              .Student_from_outside,
+          pincode: data.pinCode,
+        },
+        amenities,
         aminities: amenities,
+        inside_campus_facilities: insideCampusFacilities,
         nearby_access: {
           transit: transitAccess,
           essentials: essentialsAccess,
+          utilities: utilitiesAccess,
+        },
+        campusambassidors: profile?.campusAmbassadors ?? [],
+        connectwithus: {
+          links: connectLinks,
         },
         campus_reels: campusReels,
+        campus: campusReels.map((reel) => ({
+          title: reel.title,
+          link: reel.link,
+          link_type: reel.link.includes("youtube.com") ? "youtube" : "normal",
+        })),
       },
       course_info: {
-        ...normalizedCourseInfo,
-        course_details: {
-          courseHeader: {
-            courseName: otherCourseName,
-            admissionCycle: fromLineText(otherAdmissionCyclesText),
-            admissionStatus: otherAdmissionStatus,
-            seatAvailabilityPercent: safeNumber(otherSeatAvailabilityPercent),
-            seatAvailabilityMessage: otherSeatAvailabilityMessage,
-            duration: otherDuration,
-            studyMode: otherStudyMode,
-            academicCycle: otherAcademicCycle,
-            credits: safeNumber(otherCredits),
-            genderAccepted: otherGenderAccepted,
-            courseCategory: otherCourseCategory,
+        id: (normalizedCourseInfo as Record<string, unknown>).id,
+        enabled: (normalizedCourseInfo as Record<string, unknown>).enabled,
+        course_name: otherCourseName || "",
+        admissions: admissionsRows,
+        program_highlights: fromLineText(programHighlightsText),
+        course_accolades: parsePipeRows(courseAccoladesText)
+          .filter((row) => row[0] || row[1] || row[2])
+          .map(([body, rank, image]) => ({
+            body: body || "",
+            rank: rank || "",
+            image: image || "",
+          })),
+        key_dates: {
+          application_start: applicationStartDate,
+          application_close: {
+            date: applicationCloseDate,
+            urgency: applicationCloseUrgency,
           },
-          programHighlights: fromLineText(programHighlightsText).map(
-            (description) => ({ description }),
-          ),
-          courseAccolades: parsePipeRows(courseAccoladesText)
-            .filter((row) => row[0] || row[1])
-            .map(([title, description]) => ({
-              title: title || "",
-              description: description || "",
-            })),
-          importantDates: parsePipeRows(importantDatesText)
-            .filter((row) => row[0] || row[1] || row[2])
-            .map(([event, date, tag]) => ({
-              event: event || "",
-              date: date || "",
-              tag: tag || "",
-            })),
-          curriculum: {
-            brochureUrl: curriculumBrochureUrl,
-            semesters: curriculumSemesterRows,
+          class_commencement: {
+            date: classCommencementDate,
+            note: classCommencementNote,
           },
-          courseStructure: parsePipeRows(courseStructureText)
-            .filter((row) => row[0] || row[1])
-            .map(([component, credits]) => ({
-              component: component || "",
-              credits: safeNumber(credits || "0"),
-            })),
-          valueAddedCourses: parsePipeRows(valueAddedCoursesText)
-            .filter((row) => row[0] || row[1] || row[2])
-            .map(([courseName, credits, deliveryMode]) => ({
-              courseName: courseName || "",
-              credits: credits || "",
-              deliveryMode: deliveryMode || "",
-            })),
-          careerOpportunities: parsePipeRows(careerOpportunitiesText)
-            .filter((row) => row[0] || row[1])
-            .map(([role, salaryRange]) => ({
-              role: role || "",
-              salaryRange: salaryRange || "",
-            })),
-          higherEducation: {
-            globalCertifications: fromLineText(higherEducationCertsText),
-            higherStudies: fromLineText(higherEducationStudiesText),
+        },
+        curriculum: {
+          brochure_upload: curriculumBrochureUrl,
+          brochure_available: curriculumBrochureAvailable,
+          semesters: curriculumSemesterRows,
+          course_structure: {
+            total_credits: safeNumber(courseStructureTotalCredits),
+            breakdown: courseStructureRows,
           },
-          exitOptions: parsePipeRows(exitOptionsText)
-            .filter((row) => row[0] || row[1])
-            .map(([after, credential]) => ({
-              after: after || "",
-              credential: credential || "",
-            })),
-          classTimings: parsePipeRows(classTimingsText)
-            .filter((row) => row[0] || row[1])
-            .map(([day, timing]) => ({
-              day: day || "",
-              timing: timing || "",
-            })),
-          industryTools: fromLineText(industryToolsText),
-          labFacilities: fromLineText(labFacilitiesText),
-          classroomFacilities: fromLineText(classroomFacilitiesText),
-          bonusCertification: {
-            title: bonusCertificationTitle,
-            description: bonusCertificationDescription,
-            certificateUrl: bonusCertificationUrl,
-          },
-          featuredAlumni: featuredAlumniRows,
-          faqs: parsePipeRows(faqsText)
-            .filter((row) => row[0] || row[1])
-            .map(([question, answer]) => ({
-              question: question || "",
-              answer: answer || "",
-            })),
-          studentForum: {
-            description: studentForumDescription,
-            ctaLabel: studentForumCtaLabel,
-          },
+        },
+        value_added_course: (() => {
+          const [name = "", credits = "0", delivery_mode = ""] =
+            parsePipeRows(valueAddedCoursesText)[0] || [];
+          return {
+            name,
+            delivery_mode,
+            credits: safeNumber(credits),
+          };
+        })(),
+        career_opportunities: parsePipeRows(careerOpportunitiesText)
+          .filter((row) => row[0] || row[1])
+          .map(([role, salary_range]) => ({
+            role: role || "",
+            salary_range: salary_range || "",
+          })),
+        higher_education_and_certifications: {
+          global_certifications: fromLineText(higherEducationCertsText),
+          postgraduation: fromLineText(higherEducationStudiesText),
+        },
+        flexible_exit_options: parsePipeRows(exitOptionsText)
+          .filter((row) => row[0] || row[1])
+          .map(([after_years, credential]) => ({
+            after_years: safeNumber(after_years || "0"),
+            credential: credential || "",
+          })),
+        class_timings: {
+          mode: classTimingsMode,
+          schedule: classTimingsRows,
+        },
+        industry_tools: fromLineText(industryToolsText),
+        lab_facilities: fromLineText(labFacilitiesText),
+        classroom_facilities: fromLineText(classroomFacilitiesText),
+        bonus_certification: {
+          name: bonusCertificationTitle,
+          note: bonusCertificationDescription,
+          certificate_details_available: bonusCertificationDetailsAvailable,
+        },
+        featured_alumni: featuredAlumniRows,
+        faqs: fromLineText(faqsText),
+        student_forum: {
+          description: studentForumDescription,
+          cta: studentForumCtaLabel,
         },
       },
       admission_policy: {
@@ -2912,19 +4435,36 @@ export default function SetupProfilePage() {
           total: row.total,
           open: row.open,
         })),
-        eligibilityCriteria: {
-          studentTypes: Array.from(
-            new Set(eligibilityCriteria.map((item) => item.studentType)),
+        eligibility_criteria: {
+          applicant_type_tabs: eligibilityCriteriaModel.applicant_type_tabs.map(
+            (tab) => ({
+              id: tab.id,
+              label: tab.label,
+              quota_categories: tab.quota_categories.map((quota) => ({
+                id: quota.id,
+                label: quota.label,
+                criteria: quota.criteria
+                  .filter(
+                    (criterion) =>
+                      criterion.label.trim().length > 0 ||
+                      criterion.description.trim().length > 0,
+                  )
+                  .map((criterion) => ({
+                    id: criterion.id,
+                    label: criterion.label,
+                    description: criterion.description,
+                  })),
+              })),
+            }),
           ),
-          quotaCategories: [],
-          requirements: eligibilityCriteria
-            .filter((item) => item.criteria.trim().length > 0)
-            .map((item) => ({
-              title: item.studentType,
-              description: item.criteria,
-            })),
+          default_applicant_type:
+            eligibilityCriteriaModel.default_applicant_type,
+          default_quota: eligibilityCriteriaModel.default_quota,
+          cta: {
+            label: eligibilityCriteriaModel.cta.label,
+            action: eligibilityCriteriaModel.cta.action,
+          },
         },
-        requirements: admissionRequirements,
         entranceExams: {
           nationalLevel: nationalExams,
           stateLevel: stateExams,
@@ -2932,10 +4472,9 @@ export default function SetupProfilePage() {
         },
       },
       placements: {
-        ...normalizedPlacements,
-        placementStats: placementStats,
-        placementTrends: placementTrends,
-        notableOffers: notableOffers,
+        id: normalizedPlacements.id,
+        enabled: normalizedPlacements.enabled,
+        ...parsedPlacementsAdvanced,
       },
       exam_policy: {
         ...normalizedExamPolicy,
@@ -2999,8 +4538,75 @@ export default function SetupProfilePage() {
       },
       fees: {
         ...normalizedFees,
-        additionalFees: additionalFees,
-        installments: installmentSchedule,
+        tuition_fees: {
+          download: {
+            label: feesDownload.label,
+            file_label: feesDownload.file_label,
+            file_size: feesDownload.file_size,
+            file_type: feesDownload.file_type,
+            action: feesDownload.action,
+          },
+          filters: {
+            quota_category: {
+              label: feesQuotaFilterLabel,
+              default: feesQuotaDefault,
+              options: fromLineText(feesQuotaOptionsText),
+            },
+            gender: {
+              label: feesGenderFilterLabel,
+              default: feesGenderDefault,
+              options: fromLineText(feesGenderOptionsText),
+            },
+          },
+          fee_matrix: feesMatrixRows.map((row) => ({
+            quota_category: row.quota_category,
+            gender: row.gender,
+            year_wise_fees: [
+              {
+                year: "1st Year",
+                amount: row.year1.trim() ? safeNumber(row.year1) : null,
+              },
+              {
+                year: "2nd Year",
+                amount: row.year2.trim() ? safeNumber(row.year2) : null,
+              },
+              {
+                year: "3rd Year",
+                amount: row.year3.trim() ? safeNumber(row.year3) : null,
+              },
+              {
+                year: "4th Year",
+                amount: row.year4.trim() ? safeNumber(row.year4) : null,
+              },
+            ],
+          })),
+        },
+        one_time_payable_fees: oneTimePayableFees.map((row) => ({
+          id: row.id,
+          label: row.label,
+          amount: safeNumber(row.amount || "0"),
+        })),
+        additional_fees: additionalFees.map((row) => ({
+          id: row.id,
+          label: row.label,
+          amount: safeNumber(row.amount || "0"),
+        })),
+        inclusions: {
+          whats_included: fromLineText(inclusionIncludedText),
+          whats_excluded: fromLineText(inclusionExcludedText),
+        },
+        deadlines_and_installments: installmentSchedule.map((row) => ({
+          id: row.id,
+          label: row.label,
+          deadline: row.deadline,
+          amount: safeNumber(row.amount || "0"),
+        })),
+        fees_summary: {
+          full_course_fee: safeNumber(feesSummaryFullCourseFee || "0"),
+          booking_amount: safeNumber(feesSummaryBookingAmount || "0"),
+          currency: feesSummaryCurrency,
+        },
+        refund_policy: fromLineText(refundPolicyText),
       },
       financial_aid: {
         ...normalizedFinancialAid,
@@ -3100,8 +4706,154 @@ export default function SetupProfilePage() {
     submitProfile(data, { redirectToCampuses: true });
   };
 
-  const onInvalidSubmit = () => {
+  const onInvalidSubmit = (formErrors: FieldErrors<ProfileFormData>) => {
+    const findFirstErrorPath = (
+      value: unknown,
+      trail: string[] = [],
+    ): string[] | null => {
+      if (!value || typeof value !== "object") {
+        return null;
+      }
+
+      const asRecord = value as Record<string, unknown>;
+      if (typeof asRecord.message === "string" && asRecord.message.length > 0) {
+        return trail;
+      }
+
+      for (const key of Object.keys(asRecord)) {
+        const nextPath = findFirstErrorPath(asRecord[key], [...trail, key]);
+        if (nextPath) {
+          return nextPath;
+        }
+      }
+
+      return null;
+    };
+
+    const firstErrorPath = findFirstErrorPath(formErrors);
+    const sectionTabId =
+      firstErrorPath?.[0] === "profileSections" ? firstErrorPath[1] : "basic";
+
+    if (
+      sectionTabId &&
+      ONBOARDING_TABS.some((tab) => tab.id === sectionTabId)
+    ) {
+      setActiveTab(sectionTabId as (typeof ONBOARDING_TABS)[number]["id"]);
+    }
+
+    if (firstErrorPath?.length) {
+      toast.error(`Please fix: ${firstErrorPath.join(".")}`);
+      return;
+    }
+
     toast.error("Please fix the errors before saving");
+  };
+
+  const parsePipeRowsWithColumns = (value: string, columns: number) =>
+    parsePipeRows(value).map((row) =>
+      Array.from({ length: columns }, (_, index) => row[index] || ""),
+    );
+
+  const serializePipeRows = (
+    rows: string[][],
+    options?: { keepEmptyRows?: boolean },
+  ) => {
+    const normalizedRows = rows.map((row) => row.map((cell) => cell.trim()));
+    const filteredRows = options?.keepEmptyRows
+      ? normalizedRows
+      : normalizedRows.filter((row) => row.some((cell) => cell.length > 0));
+    return filteredRows.map((row) => row.join("|")).join("\n");
+  };
+
+  const updatePipeCell = (
+    value: string,
+    setValueFn: (next: string) => void,
+    columns: number,
+    rowIndex: number,
+    columnIndex: number,
+    nextValue: string,
+  ) => {
+    const rows = parsePipeRowsWithColumns(value, columns);
+    while (rows.length <= rowIndex) {
+      rows.push(Array.from({ length: columns }, () => ""));
+    }
+    rows[rowIndex][columnIndex] = nextValue;
+    setValueFn(serializePipeRows(rows, { keepEmptyRows: true }));
+  };
+
+  const addPipeRow = (
+    value: string,
+    setValueFn: (next: string) => void,
+    columns: number,
+  ) => {
+    const rows = parsePipeRowsWithColumns(value, columns);
+    rows.push(Array.from({ length: columns }, () => ""));
+    setValueFn(serializePipeRows(rows, { keepEmptyRows: true }));
+  };
+
+  const removePipeRow = (
+    value: string,
+    setValueFn: (next: string) => void,
+    columns: number,
+    rowIndex: number,
+  ) => {
+    const rows = parsePipeRowsWithColumns(value, columns).filter(
+      (_, index) => index !== rowIndex,
+    );
+    setValueFn(serializePipeRows(rows));
+  };
+
+  const parseEditableFaqRows = (value: string) => value.split("\n");
+
+  const addFaqRow = () => {
+    const rows = parseEditableFaqRows(faqsText);
+    rows.push("");
+    setFaqsText(rows.join("\n"));
+  };
+
+  const updateFaqRow = (rowIndex: number, nextValue: string) => {
+    const rows = parseEditableFaqRows(faqsText);
+    while (rows.length <= rowIndex) {
+      rows.push("");
+    }
+    rows[rowIndex] = nextValue;
+    setFaqsText(rows.join("\n"));
+  };
+
+  const removeFaqRow = (rowIndex: number) => {
+    const rows = parseEditableFaqRows(faqsText).filter(
+      (_, index) => index !== rowIndex,
+    );
+    setFaqsText(rows.length > 0 ? rows.join("\n") : "");
+  };
+
+  const addLineRow = (value: string, setValueFn: (next: string) => void) => {
+    const rows = fromLineText(value);
+    rows.push("");
+    setValueFn(rows.join("\n"));
+  };
+
+  const updateLineRow = (
+    value: string,
+    setValueFn: (next: string) => void,
+    rowIndex: number,
+    nextValue: string,
+  ) => {
+    const rows = fromLineText(value);
+    while (rows.length <= rowIndex) {
+      rows.push("");
+    }
+    rows[rowIndex] = nextValue;
+    setValueFn(rows.join("\n"));
+  };
+
+  const removeLineRow = (
+    value: string,
+    setValueFn: (next: string) => void,
+    rowIndex: number,
+  ) => {
+    const rows = fromLineText(value).filter((_, index) => index !== rowIndex);
+    setValueFn(rows.join("\n"));
   };
 
   if (isLoading) {
@@ -3402,7 +5154,7 @@ export default function SetupProfilePage() {
 
             <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
               <CardHeader>
-                <CardTitle>College Experience & Vibes</CardTitle>
+                <CardTitle>College Overview</CardTitle>
                 <CardDescription>
                   Tell students about campus life, amenities, and location
                   guides.
@@ -3439,60 +5191,91 @@ export default function SetupProfilePage() {
                   />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Award className="h-4 w-4 text-primary" /> Accreditation &
-                      Affiliations
-                    </h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="accred-img">Badge Image URL</Label>
-                      <Input
-                        id="accred-img"
-                        placeholder="https://example.com/naac.png"
-                        {...register(
-                          "profileSections.college_overview.accreditation_and_affilation.img",
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="accred-desc">Accreditation Summary</Label>
-                      <Textarea
-                        id="accred-desc"
-                        placeholder="NAAC A++ Grade, AICTE Approved..."
-                        {...register(
-                          "profileSections.college_overview.accreditation_and_affilation.description",
-                        )}
-                      />
-                    </div>
-                  </div>
+                <div className="border-t pt-6 border-border/40 space-y-4">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Award className="h-4 w-4 text-primary" /> Accreditation &
+                    Affiliations
+                  </h3>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Compass className="h-4 w-4 text-primary" /> Inside Campus
-                      Highlights
-                    </h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="campus-img">Highlight Cover URL</Label>
-                      <Input
-                        id="campus-img"
-                        placeholder="https://example.com/campus-life.jpg"
-                        {...register(
-                          "profileSections.college_overview.inside_campus.img",
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="campus-desc">Inside Campus Vibe</Label>
-                      <Textarea
-                        id="campus-desc"
-                        placeholder="Modern high-tech corridors, interactive smart boards, greenery..."
-                        {...register(
-                          "profileSections.college_overview.inside_campus.description",
-                        )}
-                      />
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <Label className="flex items-center gap-2">
+                      <Award className="h-4 w-4 text-amber-500" /> Rankings
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setOverviewRankings([
+                          ...overviewRankings,
+                          {
+                            body: "",
+                            rank: "",
+                            logo: "",
+                            recognitions: "",
+                          },
+                        ])
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Ranking
+                    </Button>
                   </div>
+                  {overviewRankings.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="grid gap-2 md:grid-cols-4 items-center"
+                    >
+                      <Input
+                        placeholder="Ranking body"
+                        value={item.body}
+                        onChange={(e) => {
+                          const updated = [...overviewRankings];
+                          updated[idx].body = e.target.value;
+                          setOverviewRankings(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Rank"
+                        value={item.rank}
+                        onChange={(e) => {
+                          const updated = [...overviewRankings];
+                          updated[idx].rank = e.target.value;
+                          setOverviewRankings(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Logo key"
+                        value={item.logo}
+                        onChange={(e) => {
+                          const updated = [...overviewRankings];
+                          updated[idx].logo = e.target.value;
+                          setOverviewRankings(updated);
+                        }}
+                      />
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Recognition text"
+                          value={item.recognitions}
+                          onChange={(e) => {
+                            const updated = [...overviewRankings];
+                            updated[idx].recognitions = e.target.value;
+                            setOverviewRankings(updated);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-destructive hover:scale-105"
+                          onClick={() =>
+                            setOverviewRankings(
+                              overviewRankings.filter((_, i) => i !== idx),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Institution parameters */}
@@ -3620,8 +5403,10 @@ export default function SetupProfilePage() {
                   </div>
                 </div>
 
-                {/* Transit & Essentials accessibility grids */}
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
+                {/* Nearby access */}
+                <div className="border-t pt-6 border-border/40 space-y-5">
+                  <Label className="text-sm font-semibold">Nearby Access</Label>
+
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <Label className="flex items-center gap-2">
@@ -3763,6 +5548,143 @@ export default function SetupProfilePage() {
                       </div>
                     ))}
                   </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-cyan-500" /> Utilities
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setUtilitiesAccess([
+                            ...utilitiesAccess,
+                            { type: "ATM", name: "", distance: "" },
+                          ])
+                        }
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Utility
+                      </Button>
+                    </div>
+                    {utilitiesAccess.map((row, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Type"
+                          className="h-8 text-xs"
+                          value={row.type}
+                          onChange={(e) => {
+                            const updated = [...utilitiesAccess];
+                            updated[idx].type = e.target.value;
+                            setUtilitiesAccess(updated);
+                          }}
+                        />
+                        <Input
+                          placeholder="Name"
+                          className="h-8 text-xs"
+                          value={row.name}
+                          onChange={(e) => {
+                            const updated = [...utilitiesAccess];
+                            updated[idx].name = e.target.value;
+                            setUtilitiesAccess(updated);
+                          }}
+                        />
+                        <Input
+                          placeholder="Distance"
+                          className="h-8 text-xs w-28"
+                          value={row.distance}
+                          onChange={(e) => {
+                            const updated = [...utilitiesAccess];
+                            updated[idx].distance = e.target.value;
+                            setUtilitiesAccess(updated);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-destructive hover:scale-105"
+                          onClick={() =>
+                            setUtilitiesAccess(
+                              utilitiesAccess.filter((_, i) => i !== idx),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 border-border/40 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="flex items-center gap-2">
+                      <Compass className="h-4 w-4 text-emerald-500" /> Inside
+                      Campus Facilities
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setInsideCampusFacilities([
+                          ...insideCampusFacilities,
+                          { name: "", description: "", image: "" },
+                        ])
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Facility
+                    </Button>
+                  </div>
+                  {insideCampusFacilities.map((facility, idx) => (
+                    <div
+                      key={idx}
+                      className="grid gap-2 md:grid-cols-3 items-center"
+                    >
+                      <Input
+                        placeholder="Facility name"
+                        value={facility.name}
+                        onChange={(e) => {
+                          const updated = [...insideCampusFacilities];
+                          updated[idx].name = e.target.value;
+                          setInsideCampusFacilities(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Description"
+                        value={facility.description}
+                        onChange={(e) => {
+                          const updated = [...insideCampusFacilities];
+                          updated[idx].description = e.target.value;
+                          setInsideCampusFacilities(updated);
+                        }}
+                      />
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Image URL"
+                          value={facility.image}
+                          onChange={(e) => {
+                            const updated = [...insideCampusFacilities];
+                            updated[idx].image = e.target.value;
+                            setInsideCampusFacilities(updated);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-destructive hover:scale-105"
+                          onClick={() =>
+                            setInsideCampusFacilities(
+                              insideCampusFacilities.filter(
+                                (_, i) => i !== idx,
+                              ),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Campus Ambassadors listing from database */}
@@ -3823,10 +5745,13 @@ export default function SetupProfilePage() {
                     </Button>
                   </div>
                   {campusReels.map((reel, idx) => (
-                    <div key={idx} className="flex gap-4 items-center">
+                    <div
+                      key={idx}
+                      className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] items-center"
+                    >
                       <Input
                         placeholder="Reel Title (e.g. Campus tour)"
-                        className="h-9 text-xs"
+                        className="h-9 text-xs min-w-0"
                         value={reel.title}
                         onChange={(e) => {
                           const updated = [...campusReels];
@@ -3836,7 +5761,7 @@ export default function SetupProfilePage() {
                       />
                       <Input
                         placeholder="Video Link (e.g. https://youtube.com/shorts/...)"
-                        className="h-9 text-xs flex-1"
+                        className="h-9 text-xs min-w-0"
                         value={reel.link}
                         onChange={(e) => {
                           const updated = [...campusReels];
@@ -3859,48 +5784,59 @@ export default function SetupProfilePage() {
                   ))}
                 </div>
 
-                {/* Social links */}
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
-                  <div className="space-y-2">
-                    <Label htmlFor="linkedin-url">LinkedIn Profile</Label>
-                    <Input
-                      id="linkedin-url"
-                      placeholder="https://linkedin.com/school/..."
-                      {...register(
-                        "profileSections.college_overview.connect.linkedin",
-                      )}
-                    />
+                <div className="border-t pt-6 border-border/40 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-indigo-500" /> Connect With
+                      Us Links
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setConnectLinks([
+                          ...connectLinks,
+                          { platform: "", url: "" },
+                        ])
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="insta-url">Instagram Page</Label>
-                    <Input
-                      id="insta-url"
-                      placeholder="https://instagram.com/..."
-                      {...register(
-                        "profileSections.college_overview.connect.instagram",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="twitter-url">Twitter / X Handle</Label>
-                    <Input
-                      id="twitter-url"
-                      placeholder="https://twitter.com/..."
-                      {...register(
-                        "profileSections.college_overview.connect.twitter",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="website-url">Official Website</Label>
-                    <Input
-                      id="website-url"
-                      placeholder="https://example.edu"
-                      {...register(
-                        "profileSections.college_overview.connect.website",
-                      )}
-                    />
-                  </div>
+                  {connectLinks.map((link, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input
+                        placeholder="Platform (Facebook, LinkedIn...)"
+                        value={link.platform}
+                        onChange={(e) => {
+                          const updated = [...connectLinks];
+                          updated[idx].platform = e.target.value;
+                          setConnectLinks(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="https://..."
+                        value={link.url}
+                        onChange={(e) => {
+                          const updated = [...connectLinks];
+                          updated[idx].url = e.target.value;
+                          setConnectLinks(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105"
+                        onClick={() =>
+                          setConnectLinks(
+                            connectLinks.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -4786,119 +6722,340 @@ export default function SetupProfilePage() {
                     <GraduationCap className="h-4 w-4 text-purple-500" />{" "}
                     Eligibility Checkpoints
                   </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setEligibilityCriteria([
-                        ...eligibilityCriteria,
-                        { studentType: "Indian Local", criteria: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Eligibility
-                  </Button>
                 </div>
-                {eligibilityCriteria.map((row, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
-                    <select
-                      className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-44"
-                      value={row.studentType}
-                      onChange={(e) => {
-                        const updated = [...eligibilityCriteria];
-                        updated[idx].studentType = e.target.value;
-                        setEligibilityCriteria(updated);
-                      }}
-                    >
-                      <option value="Indian Local">Indian (Local)</option>
-                      <option value="State Resident">State Resident</option>
-                      <option value="International">International</option>
-                      <option value="Quota Specific">Quota Specific</option>
-                    </select>
-                    <Input
-                      placeholder="Minimum 60% in 12th Board examinations..."
-                      className="h-9 flex-1"
-                      value={row.criteria}
-                      onChange={(e) => {
-                        const updated = [...eligibilityCriteria];
-                        updated[idx].criteria = e.target.value;
-                        setEligibilityCriteria(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setEligibilityCriteria(
-                          eligibilityCriteria.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                <div className="rounded-xl border border-border/50 bg-background/40 p-4 space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {eligibilityCriteriaModel.applicant_type_tabs.map((tab) => (
+                      <Button
+                        key={tab.id}
+                        type="button"
+                        size="sm"
+                        variant={
+                          selectedApplicantTypeId === tab.id
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={() => {
+                          setSelectedApplicantTypeId(tab.id);
+                          setSelectedQuotaId(
+                            tab.quota_categories[0]?.id || "government_quota",
+                          );
+                        }}
+                      >
+                        {tab.label}
+                      </Button>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-indigo-500" />
-                    Admission Requirements
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setAdmissionRequirements([
-                        ...admissionRequirements,
-                        { title: "", description: "" },
-                      ])
+                  {(() => {
+                    const applicantType =
+                      eligibilityCriteriaModel.applicant_type_tabs.find(
+                        (tab) => tab.id === selectedApplicantTypeId,
+                      ) || eligibilityCriteriaModel.applicant_type_tabs[0];
+
+                    if (!applicantType) {
+                      return null;
                     }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Requirement
-                  </Button>
+
+                    const selectedQuota =
+                      applicantType.quota_categories.find(
+                        (quota) => quota.id === selectedQuotaId,
+                      ) || applicantType.quota_categories[0];
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {applicantType.quota_categories.map((quota) => (
+                            <Button
+                              key={`${applicantType.id}-${quota.id}`}
+                              type="button"
+                              size="sm"
+                              variant={
+                                selectedQuota?.id === quota.id
+                                  ? "default"
+                                  : "outline"
+                              }
+                              onClick={() => setSelectedQuotaId(quota.id)}
+                            >
+                              {quota.label}
+                            </Button>
+                          ))}
+                        </div>
+
+                        <div className="flex justify-between items-center border-t border-border/40 pt-3">
+                          <Label className="text-sm font-semibold flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-indigo-500" />
+                            Admission Requirements
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (!selectedQuota) {
+                                return;
+                              }
+                              setEligibilityCriteriaModel((prev) => ({
+                                ...prev,
+                                applicant_type_tabs:
+                                  prev.applicant_type_tabs.map((tab) =>
+                                    tab.id !== applicantType.id
+                                      ? tab
+                                      : {
+                                          ...tab,
+                                          quota_categories:
+                                            tab.quota_categories.map((quota) =>
+                                              quota.id !== selectedQuota.id
+                                                ? quota
+                                                : {
+                                                    ...quota,
+                                                    criteria: [
+                                                      ...quota.criteria,
+                                                      {
+                                                        id: `criteria_${Date.now()}`,
+                                                        label: "",
+                                                        description: "",
+                                                      },
+                                                    ],
+                                                  },
+                                            ),
+                                        },
+                                  ),
+                              }));
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                            Eligibility
+                          </Button>
+                        </div>
+
+                        {(selectedQuota?.criteria || []).map(
+                          (criterion, idx) => (
+                            <div
+                              key={
+                                criterion.id || `${selectedQuota?.id}-${idx}`
+                              }
+                              className="grid gap-3 md:grid-cols-[1fr_2fr_auto] items-center"
+                            >
+                              <Input
+                                placeholder="Title (e.g. Academic Grades)"
+                                value={criterion.label}
+                                onChange={(e) => {
+                                  const nextLabel = e.target.value;
+                                  setEligibilityCriteriaModel((prev) => ({
+                                    ...prev,
+                                    applicant_type_tabs:
+                                      prev.applicant_type_tabs.map((tab) =>
+                                        tab.id !== applicantType.id
+                                          ? tab
+                                          : {
+                                              ...tab,
+                                              quota_categories:
+                                                tab.quota_categories.map(
+                                                  (quota) =>
+                                                    quota.id !==
+                                                    selectedQuota?.id
+                                                      ? quota
+                                                      : {
+                                                          ...quota,
+                                                          criteria:
+                                                            quota.criteria.map(
+                                                              (
+                                                                item,
+                                                                itemIndex,
+                                                              ) =>
+                                                                itemIndex !==
+                                                                idx
+                                                                  ? item
+                                                                  : {
+                                                                      ...item,
+                                                                      label:
+                                                                        nextLabel,
+                                                                      id:
+                                                                        item.id ||
+                                                                        createEligibilityId(
+                                                                          nextLabel,
+                                                                          "criteria",
+                                                                        ),
+                                                                    },
+                                                            ),
+                                                        },
+                                                ),
+                                            },
+                                      ),
+                                  }));
+                                }}
+                              />
+                              <Input
+                                placeholder="Description"
+                                value={criterion.description}
+                                onChange={(e) => {
+                                  const nextDescription = e.target.value;
+                                  setEligibilityCriteriaModel((prev) => ({
+                                    ...prev,
+                                    applicant_type_tabs:
+                                      prev.applicant_type_tabs.map((tab) =>
+                                        tab.id !== applicantType.id
+                                          ? tab
+                                          : {
+                                              ...tab,
+                                              quota_categories:
+                                                tab.quota_categories.map(
+                                                  (quota) =>
+                                                    quota.id !==
+                                                    selectedQuota?.id
+                                                      ? quota
+                                                      : {
+                                                          ...quota,
+                                                          criteria:
+                                                            quota.criteria.map(
+                                                              (
+                                                                item,
+                                                                itemIndex,
+                                                              ) =>
+                                                                itemIndex !==
+                                                                idx
+                                                                  ? item
+                                                                  : {
+                                                                      ...item,
+                                                                      description:
+                                                                        nextDescription,
+                                                                    },
+                                                            ),
+                                                        },
+                                                ),
+                                            },
+                                      ),
+                                  }));
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive"
+                                onClick={() => {
+                                  setEligibilityCriteriaModel((prev) => ({
+                                    ...prev,
+                                    applicant_type_tabs:
+                                      prev.applicant_type_tabs.map((tab) =>
+                                        tab.id !== applicantType.id
+                                          ? tab
+                                          : {
+                                              ...tab,
+                                              quota_categories:
+                                                tab.quota_categories.map(
+                                                  (quota) =>
+                                                    quota.id !==
+                                                    selectedQuota?.id
+                                                      ? quota
+                                                      : {
+                                                          ...quota,
+                                                          criteria:
+                                                            quota.criteria.filter(
+                                                              (_, itemIndex) =>
+                                                                itemIndex !==
+                                                                idx,
+                                                            ),
+                                                        },
+                                                ),
+                                            },
+                                      ),
+                                  }));
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ),
+                        )}
+
+                        {(selectedQuota?.criteria || []).length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            No eligibility criteria added for this quota yet.
+                          </p>
+                        ) : null}
+
+                        <div className="grid gap-3 border-t border-border/40 pt-3 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase text-muted-foreground">
+                              Default Applicant Type
+                            </Label>
+                            <select
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              value={
+                                eligibilityCriteriaModel.default_applicant_type
+                              }
+                              onChange={(e) =>
+                                setEligibilityCriteriaModel((prev) => ({
+                                  ...prev,
+                                  default_applicant_type: e.target.value,
+                                }))
+                              }
+                            >
+                              {eligibilityCriteriaModel.applicant_type_tabs.map(
+                                (tab) => (
+                                  <option key={tab.id} value={tab.id}>
+                                    {tab.label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase text-muted-foreground">
+                              Default Quota
+                            </Label>
+                            <select
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              value={eligibilityCriteriaModel.default_quota}
+                              onChange={(e) =>
+                                setEligibilityCriteriaModel((prev) => ({
+                                  ...prev,
+                                  default_quota: e.target.value,
+                                }))
+                              }
+                            >
+                              {ELIGIBILITY_DEFAULT_QUOTAS.map((quota) => (
+                                <option key={quota.id} value={quota.id}>
+                                  {quota.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase text-muted-foreground">
+                              CTA Label
+                            </Label>
+                            <Input
+                              value={eligibilityCriteriaModel.cta.label}
+                              onChange={(e) =>
+                                setEligibilityCriteriaModel((prev) => ({
+                                  ...prev,
+                                  cta: { ...prev.cta, label: e.target.value },
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase text-muted-foreground">
+                              CTA Action
+                            </Label>
+                            <Input
+                              value={eligibilityCriteriaModel.cta.action}
+                              onChange={(e) =>
+                                setEligibilityCriteriaModel((prev) => ({
+                                  ...prev,
+                                  cta: { ...prev.cta, action: e.target.value },
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-                {admissionRequirements.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-3 gap-4 items-center"
-                  >
-                    <Input
-                      placeholder="Title (e.g. Academic Grades)"
-                      className="h-9"
-                      value={row.title}
-                      onChange={(e) => {
-                        const updated = [...admissionRequirements];
-                        updated[idx].title = e.target.value;
-                        setAdmissionRequirements(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Description"
-                      className="h-9"
-                      value={row.description}
-                      onChange={(e) => {
-                        const updated = [...admissionRequirements];
-                        updated[idx].description = e.target.value;
-                        setAdmissionRequirements(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setAdmissionRequirements(
-                          admissionRequirements.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
               </div>
 
               <div className="border-t pt-6 border-border/40 space-y-4">
@@ -5661,8 +7818,8 @@ export default function SetupProfilePage() {
             <CardHeader>
               <CardTitle>Placements & Recruiter Highlights</CardTitle>
               <CardDescription>
-                Upload stats to show off average packages and notable corporate
-                offers.
+                Configure the placements section with structured input fields
+                for every nested model property.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -5682,80 +7839,88 @@ export default function SetupProfilePage() {
                 </Label>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="placement-rep">
-                    Placement Report (PDF Link)
-                  </Label>
+              <div className="border-t pt-6 border-border/40 space-y-4">
+                <Label className="text-sm font-semibold">Report</Label>
+                <div className="grid gap-4 md:grid-cols-2">
                   <Input
-                    id="placement-rep"
-                    placeholder="https://example.com/placement-report.pdf"
-                    {...register(
-                      "profileSections.placements.placementReportUrl",
-                    )}
+                    placeholder="Report label"
+                    value={placementsReportLabel}
+                    onChange={(e) => setPlacementsReportLabel(e.target.value)}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="placement-grow">
-                    Placement Success/Growth Summary
-                  </Label>
                   <Input
-                    id="placement-grow"
-                    placeholder="35% increase in placement offers over last academic cycle..."
-                    {...register("profileSections.placements.growthSummary")}
+                    placeholder="Report action"
+                    value={placementsReportAction}
+                    onChange={(e) => setPlacementsReportAction(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* Placement stats */}
               <div className="border-t pt-6 border-border/40 space-y-3">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" /> Placement
-                    Quick Stats
-                  </Label>
+                  <Label className="text-sm font-semibold">Summary Stats</Label>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      setPlacementStats([
-                        ...placementStats,
-                        { title: "", value: "" },
+                      setPlacementsSummaryStatsRows([
+                        ...placementsSummaryStatsRows,
+                        { id: "", label: "", value: "", unit: "" },
                       ])
                     }
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Add Stat
                   </Button>
                 </div>
-                {placementStats.map((row, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
+                {placementsSummaryStatsRows.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-5 gap-3 items-center"
+                  >
                     <Input
-                      placeholder="Title (e.g. Average Package)"
-                      className="h-9"
-                      value={row.title}
+                      placeholder="id"
+                      value={row.id}
                       onChange={(e) => {
-                        const updated = [...placementStats];
-                        updated[idx].title = e.target.value;
-                        setPlacementStats(updated);
+                        const updated = [...placementsSummaryStatsRows];
+                        updated[idx].id = e.target.value;
+                        setPlacementsSummaryStatsRows(updated);
                       }}
                     />
                     <Input
-                      placeholder="Value (e.g. 8.5 LPA)"
-                      className="h-9 w-44"
+                      placeholder="label"
+                      value={row.label}
+                      onChange={(e) => {
+                        const updated = [...placementsSummaryStatsRows];
+                        updated[idx].label = e.target.value;
+                        setPlacementsSummaryStatsRows(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="value"
                       value={row.value}
                       onChange={(e) => {
-                        const updated = [...placementStats];
+                        const updated = [...placementsSummaryStatsRows];
                         updated[idx].value = e.target.value;
-                        setPlacementStats(updated);
+                        setPlacementsSummaryStatsRows(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="unit"
+                      value={row.unit}
+                      onChange={(e) => {
+                        const updated = [...placementsSummaryStatsRows];
+                        updated[idx].unit = e.target.value;
+                        setPlacementsSummaryStatsRows(updated);
                       }}
                     />
                     <button
                       type="button"
                       className="text-destructive hover:scale-105"
                       onClick={() =>
-                        setPlacementStats(
-                          placementStats.filter((_, i) => i !== idx),
+                        setPlacementsSummaryStatsRows(
+                          placementsSummaryStatsRows.filter(
+                            (_, i) => i !== idx,
+                          ),
                         )
                       }
                     >
@@ -5765,144 +7930,439 @@ export default function SetupProfilePage() {
                 ))}
               </div>
 
-              {/* Trends chart */}
               <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">
+                  Placement Trends
+                </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    placeholder="Label"
+                    value={placementsTrendsLabel}
+                    onChange={(e) => setPlacementsTrendsLabel(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Period"
+                    value={placementsTrendsPeriod}
+                    onChange={(e) => setPlacementsTrendsPeriod(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Years comma separated (2020, 2021, 2022)"
+                    value={placementsTrendsYearsText}
+                    onChange={(e) =>
+                      setPlacementsTrendsYearsText(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Avg package growth YoY"
+                    value={placementsTrendsGrowthYoy}
+                    onChange={(e) =>
+                      setPlacementsTrendsGrowthYoy(e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">
+                  Industry Salary Report
+                </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    placeholder="Label"
+                    value={industrySalaryReportLabel}
+                    onChange={(e) =>
+                      setIndustrySalaryReportLabel(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Columns comma separated"
+                    value={industrySalaryReportColumnsText}
+                    onChange={(e) =>
+                      setIndustrySalaryReportColumnsText(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="CTA Label"
+                    value={industryCtaLabel}
+                    onChange={(e) => setIndustryCtaLabel(e.target.value)}
+                  />
+                  <Input
+                    placeholder="CTA Action"
+                    value={industryCtaAction}
+                    onChange={(e) => setIndustryCtaAction(e.target.value)}
+                  />
+                </div>
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-purple-500" /> Placement
-                    Package Trends
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Industries
                   </Label>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      setPlacementTrends([
-                        ...placementTrends,
-                        { year: "", averagePackage: "", highestPackage: "" },
+                      setIndustrySalaryRows([
+                        ...industrySalaryRows,
+                        {
+                          id: "",
+                          name: "",
+                          sub_label: "",
+                          students_placed: "",
+                          avg_package: "",
+                          max_package: "",
+                        },
                       ])
                     }
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Trend Year
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Industry
                   </Button>
                 </div>
-                {placementTrends.map((row, idx) => (
+                {industrySalaryRows.map((row, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
+                    className="grid grid-cols-6 gap-3 items-center"
                   >
                     <Input
-                      placeholder="Year (e.g. 2024)"
-                      className="h-9"
-                      value={row.year}
+                      placeholder="id"
+                      value={row.id}
                       onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].year = e.target.value;
-                        setPlacementTrends(updated);
+                        const updated = [...industrySalaryRows];
+                        updated[idx].id = e.target.value;
+                        setIndustrySalaryRows(updated);
                       }}
                     />
                     <Input
-                      placeholder="Average (LPA)"
-                      className="h-9"
-                      value={row.averagePackage}
+                      placeholder="name"
+                      value={row.name}
                       onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].averagePackage = e.target.value;
-                        setPlacementTrends(updated);
+                        const updated = [...industrySalaryRows];
+                        updated[idx].name = e.target.value;
+                        setIndustrySalaryRows(updated);
                       }}
                     />
                     <Input
-                      placeholder="Highest (LPA)"
-                      className="h-9"
-                      value={row.highestPackage}
+                      placeholder="sub label"
+                      value={row.sub_label}
                       onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].highestPackage = e.target.value;
-                        setPlacementTrends(updated);
+                        const updated = [...industrySalaryRows];
+                        updated[idx].sub_label = e.target.value;
+                        setIndustrySalaryRows(updated);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setPlacementTrends(
-                          placementTrends.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <Input
+                      placeholder="students placed"
+                      value={row.students_placed}
+                      onChange={(e) => {
+                        const updated = [...industrySalaryRows];
+                        updated[idx].students_placed = e.target.value;
+                        setIndustrySalaryRows(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="avg package"
+                      value={row.avg_package}
+                      onChange={(e) => {
+                        const updated = [...industrySalaryRows];
+                        updated[idx].avg_package = e.target.value;
+                        setIndustrySalaryRows(updated);
+                      }}
+                    />
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        placeholder="max package"
+                        value={row.max_package}
+                        onChange={(e) => {
+                          const updated = [...industrySalaryRows];
+                          updated[idx].max_package = e.target.value;
+                          setIndustrySalaryRows(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105"
+                        onClick={() =>
+                          setIndustrySalaryRows(
+                            industrySalaryRows.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              {/* Notable Offers */}
               <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">Notable Offers</Label>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Input
+                    placeholder="Label"
+                    value={notableOffersLabel}
+                    onChange={(e) => setNotableOffersLabel(e.target.value)}
+                  />
+                  <Input
+                    placeholder="CTA Label"
+                    value={notableOffersCtaLabel}
+                    onChange={(e) => setNotableOffersCtaLabel(e.target.value)}
+                  />
+                  <Input
+                    placeholder="CTA Action"
+                    value={notableOffersCtaAction}
+                    onChange={(e) => setNotableOffersCtaAction(e.target.value)}
+                  />
+                </div>
+
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4 text-green-500" /> Outstanding
-                    Placement Offers
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Featured Companies
                   </Label>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      setNotableOffers([
-                        ...notableOffers,
-                        { studentName: "", company: "", package: "" },
+                      setNotableFeaturedRows([
+                        ...notableFeaturedRows,
+                        {
+                          company: "",
+                          tag: "",
+                          industry: "",
+                          offersText: "",
+                        },
                       ])
                     }
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Offer Record
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Featured
                   </Button>
                 </div>
-                {notableOffers.map((row, idx) => (
+                {notableFeaturedRows.map((row, idx) => (
+                  <div key={idx} className="space-y-3 rounded-lg border p-3">
+                    <div className="grid gap-3 md:grid-cols-4 items-center">
+                      <Input
+                        placeholder="Company"
+                        value={row.company}
+                        onChange={(e) => {
+                          const updated = [...notableFeaturedRows];
+                          updated[idx].company = e.target.value;
+                          setNotableFeaturedRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Tag"
+                        value={row.tag}
+                        onChange={(e) => {
+                          const updated = [...notableFeaturedRows];
+                          updated[idx].tag = e.target.value;
+                          setNotableFeaturedRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Industry"
+                        value={row.industry}
+                        onChange={(e) => {
+                          const updated = [...notableFeaturedRows];
+                          updated[idx].industry = e.target.value;
+                          setNotableFeaturedRows(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105 justify-self-start"
+                        onClick={() =>
+                          setNotableFeaturedRows(
+                            notableFeaturedRows.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Textarea
+                      placeholder="Offers (role|package|unit|type one per line)"
+                      value={row.offersText}
+                      onChange={(e) => {
+                        const updated = [...notableFeaturedRows];
+                        updated[idx].offersText = e.target.value;
+                        setNotableFeaturedRows(updated);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">
+                  All Company Statistics
+                </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    placeholder="Label"
+                    value={allCompanyStatisticsLabel}
+                    onChange={(e) =>
+                      setAllCompanyStatisticsLabel(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Columns comma separated"
+                    value={allCompanyStatisticsColumnsText}
+                    onChange={(e) =>
+                      setAllCompanyStatisticsColumnsText(e.target.value)
+                    }
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs uppercase text-muted-foreground">
+                    Company Rows
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setAllCompanyRows([
+                        ...allCompanyRows,
+                        {
+                          id: "",
+                          name: "",
+                          students: "",
+                          avg_package: "",
+                          max_package: "",
+                        },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Company
+                  </Button>
+                </div>
+                {allCompanyRows.map((row, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
+                    className="grid grid-cols-5 gap-3 items-center"
                   >
                     <Input
-                      placeholder="Student Name"
-                      className="h-9"
-                      value={row.studentName}
+                      placeholder="id"
+                      value={row.id}
                       onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].studentName = e.target.value;
-                        setNotableOffers(updated);
+                        const updated = [...allCompanyRows];
+                        updated[idx].id = e.target.value;
+                        setAllCompanyRows(updated);
                       }}
                     />
                     <Input
-                      placeholder="Company"
-                      className="h-9"
-                      value={row.company}
+                      placeholder="name"
+                      value={row.name}
                       onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].company = e.target.value;
-                        setNotableOffers(updated);
+                        const updated = [...allCompanyRows];
+                        updated[idx].name = e.target.value;
+                        setAllCompanyRows(updated);
                       }}
                     />
                     <Input
-                      placeholder="Package (LPA)"
-                      className="h-9"
-                      value={row.package}
+                      placeholder="students"
+                      value={row.students}
                       onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].package = e.target.value;
-                        setNotableOffers(updated);
+                        const updated = [...allCompanyRows];
+                        updated[idx].students = e.target.value;
+                        setAllCompanyRows(updated);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setNotableOffers(
-                          notableOffers.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <Input
+                      placeholder="avg package"
+                      value={row.avg_package}
+                      onChange={(e) => {
+                        const updated = [...allCompanyRows];
+                        updated[idx].avg_package = e.target.value;
+                        setAllCompanyRows(updated);
+                      }}
+                    />
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        placeholder="max package"
+                        value={row.max_package}
+                        onChange={(e) => {
+                          const updated = [...allCompanyRows];
+                          updated[idx].max_package = e.target.value;
+                          setAllCompanyRows(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105"
+                        onClick={() =>
+                          setAllCompanyRows(
+                            allCompanyRows.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    Student Success
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setStudentSuccessRows([
+                        ...studentSuccessRows,
+                        { name: "", placed_at: "", quote: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Student
+                  </Button>
+                </div>
+                {studentSuccessRows.map((row, idx) => (
+                  <div key={idx} className="space-y-3 rounded-lg border p-3">
+                    <div className="grid gap-3 md:grid-cols-3 items-center">
+                      <Input
+                        placeholder="Name"
+                        value={row.name}
+                        onChange={(e) => {
+                          const updated = [...studentSuccessRows];
+                          updated[idx].name = e.target.value;
+                          setStudentSuccessRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="Placed at"
+                        value={row.placed_at}
+                        onChange={(e) => {
+                          const updated = [...studentSuccessRows];
+                          updated[idx].placed_at = e.target.value;
+                          setStudentSuccessRows(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105 justify-self-start"
+                        onClick={() =>
+                          setStudentSuccessRows(
+                            studentSuccessRows.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Textarea
+                      placeholder="Quote"
+                      value={row.quote}
+                      onChange={(e) => {
+                        const updated = [...studentSuccessRows];
+                        updated[idx].quote = e.target.value;
+                        setStudentSuccessRows(updated);
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -5934,21 +8394,316 @@ export default function SetupProfilePage() {
                 </Label>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tuition-fees-sum">Tuition Fees Overview</Label>
-                <Textarea
-                  id="tuition-fees-sum"
-                  placeholder="General structure of yearly tuition fees per program levels..."
-                  {...register("profileSections.fees.tuitionFeesSummary")}
-                />
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">
+                  Tuition Fees Download
+                </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    placeholder="Label"
+                    value={feesDownload.label}
+                    onChange={(e) =>
+                      setFeesDownload((prev) => ({
+                        ...prev,
+                        label: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    placeholder="File Label"
+                    value={feesDownload.file_label}
+                    onChange={(e) =>
+                      setFeesDownload((prev) => ({
+                        ...prev,
+                        file_label: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    placeholder="File Size"
+                    value={feesDownload.file_size}
+                    onChange={(e) =>
+                      setFeesDownload((prev) => ({
+                        ...prev,
+                        file_size: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    placeholder="File Type"
+                    value={feesDownload.file_type}
+                    onChange={(e) =>
+                      setFeesDownload((prev) => ({
+                        ...prev,
+                        file_type: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    placeholder="Action"
+                    value={feesDownload.action}
+                    onChange={(e) =>
+                      setFeesDownload((prev) => ({
+                        ...prev,
+                        action: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
               </div>
 
-              {/* Additional Fees */}
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">Filters</Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input
+                    placeholder="Quota label"
+                    value={feesQuotaFilterLabel}
+                    onChange={(e) => setFeesQuotaFilterLabel(e.target.value)}
+                  />
+                  <select
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={selectedFeesQuotaFilter}
+                    onChange={(e) => setSelectedFeesQuotaFilter(e.target.value)}
+                  >
+                    {fromLineText(feesQuotaOptionsText).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <Textarea
+                    placeholder="Quota options (one per line)"
+                    value={feesQuotaOptionsText}
+                    onChange={(e) => setFeesQuotaOptionsText(e.target.value)}
+                  />
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="Gender label"
+                      value={feesGenderFilterLabel}
+                      onChange={(e) => setFeesGenderFilterLabel(e.target.value)}
+                    />
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={selectedFeesGenderTab}
+                      onChange={(e) => setSelectedFeesGenderTab(e.target.value)}
+                    >
+                      {fromLineText(feesGenderOptionsText).map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    <Textarea
+                      placeholder="Gender options (one per line)"
+                      value={feesGenderOptionsText}
+                      onChange={(e) => setFeesGenderOptionsText(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="border-t pt-6 border-border/40 space-y-3">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-blue-500" /> Utility /
-                    Additional Charges
+                  <Label className="text-sm font-semibold">Fee Matrix</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setFeesMatrixRows([
+                        ...feesMatrixRows,
+                        {
+                          quota_category: selectedFeesQuotaFilter,
+                          gender: selectedFeesGenderTab,
+                          year1: "",
+                          year2: "",
+                          year3: "",
+                          year4: "",
+                        },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Row
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {fromLineText(feesGenderOptionsText).map((option) => (
+                    <Button
+                      key={option}
+                      type="button"
+                      size="sm"
+                      variant={
+                        selectedFeesGenderTab === option ? "default" : "outline"
+                      }
+                      onClick={() => setSelectedFeesGenderTab(option)}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+
+                {feesMatrixRows.map((row, idx) => {
+                  if (row.gender !== selectedFeesGenderTab) {
+                    return null;
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-7 gap-3 items-center"
+                    >
+                      <select
+                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={row.quota_category}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].quota_category = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      >
+                        {fromLineText(feesQuotaOptionsText).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={row.gender}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].gender = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      >
+                        {fromLineText(feesGenderOptionsText).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <Input
+                        placeholder="1st Year"
+                        value={row.year1}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].year1 = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="2nd Year"
+                        value={row.year2}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].year2 = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="3rd Year"
+                        value={row.year3}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].year3 = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      />
+                      <Input
+                        placeholder="4th Year"
+                        value={row.year4}
+                        onChange={(e) => {
+                          const updated = [...feesMatrixRows];
+                          updated[idx].year4 = e.target.value;
+                          setFeesMatrixRows(updated);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105"
+                        onClick={() =>
+                          setFeesMatrixRows(
+                            feesMatrixRows.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    One Time Payable Fees
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setOneTimePayableFees([
+                        ...oneTimePayableFees,
+                        { id: "", label: "", amount: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Fee
+                  </Button>
+                </div>
+                {oneTimePayableFees.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-4 gap-3 items-center"
+                  >
+                    <Input
+                      placeholder="id"
+                      value={row.id}
+                      onChange={(e) => {
+                        const updated = [...oneTimePayableFees];
+                        updated[idx].id = e.target.value;
+                        setOneTimePayableFees(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="label"
+                      value={row.label}
+                      onChange={(e) => {
+                        const updated = [...oneTimePayableFees];
+                        updated[idx].label = e.target.value;
+                        setOneTimePayableFees(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="amount"
+                      value={row.amount}
+                      onChange={(e) => {
+                        const updated = [...oneTimePayableFees];
+                        updated[idx].amount = e.target.value;
+                        setOneTimePayableFees(updated);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="text-destructive hover:scale-105"
+                      onClick={() =>
+                        setOneTimePayableFees(
+                          oneTimePayableFees.filter((_, i) => i !== idx),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    Additional Fees
                   </Label>
                   <Button
                     type="button"
@@ -5957,31 +8712,38 @@ export default function SetupProfilePage() {
                     onClick={() =>
                       setAdditionalFees([
                         ...additionalFees,
-                        { name: "", amount: "", frequency: "One-Time" },
+                        { id: "", label: "", amount: "" },
                       ])
                     }
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Charge
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Fee
                   </Button>
                 </div>
                 {additionalFees.map((row, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
+                    className="grid grid-cols-4 gap-3 items-center"
                   >
                     <Input
-                      placeholder="Charge Name (e.g. Admission Fee)"
-                      className="h-9"
-                      value={row.name}
+                      placeholder="id"
+                      value={row.id}
                       onChange={(e) => {
                         const updated = [...additionalFees];
-                        updated[idx].name = e.target.value;
+                        updated[idx].id = e.target.value;
                         setAdditionalFees(updated);
                       }}
                     />
                     <Input
-                      placeholder="Amount"
-                      className="h-9"
+                      placeholder="label"
+                      value={row.label}
+                      onChange={(e) => {
+                        const updated = [...additionalFees];
+                        updated[idx].label = e.target.value;
+                        setAdditionalFees(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="amount"
                       value={row.amount}
                       onChange={(e) => {
                         const updated = [...additionalFees];
@@ -5989,23 +8751,9 @@ export default function SetupProfilePage() {
                         setAdditionalFees(updated);
                       }}
                     />
-                    <select
-                      className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                      value={row.frequency}
-                      onChange={(e) => {
-                        const updated = [...additionalFees];
-                        updated[idx].frequency = e.target.value;
-                        setAdditionalFees(updated);
-                      }}
-                    >
-                      <option value="One-Time">One-Time</option>
-                      <option value="Per Semester">Per Semester</option>
-                      <option value="Annual">Annual</option>
-                      <option value="Refundable">Refundable Deposit</option>
-                    </select>
                     <button
                       type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
+                      className="text-destructive hover:scale-105"
                       onClick={() =>
                         setAdditionalFees(
                           additionalFees.filter((_, i) => i !== idx),
@@ -6018,12 +8766,26 @@ export default function SetupProfilePage() {
                 ))}
               </div>
 
-              {/* Installment Plan */}
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">Inclusions</Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Textarea
+                    placeholder="What's Included (one per line)"
+                    value={inclusionIncludedText}
+                    onChange={(e) => setInclusionIncludedText(e.target.value)}
+                  />
+                  <Textarea
+                    placeholder="What's Excluded (one per line)"
+                    value={inclusionExcludedText}
+                    onChange={(e) => setInclusionExcludedText(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="border-t pt-6 border-border/40 space-y-3">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-500" />{" "}
-                    Installments Schedule & Deadlines
+                  <Label className="text-sm font-semibold">
+                    Deadlines and Installments
                   </Label>
                   <Button
                     type="button"
@@ -6032,7 +8794,7 @@ export default function SetupProfilePage() {
                     onClick={() =>
                       setInstallmentSchedule([
                         ...installmentSchedule,
-                        { installmentNo: "", dueDate: "", percentage: "" },
+                        { id: "", label: "", deadline: "", amount: "" },
                       ])
                     }
                   >
@@ -6042,41 +8804,47 @@ export default function SetupProfilePage() {
                 {installmentSchedule.map((row, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
+                    className="grid grid-cols-5 gap-3 items-center"
                   >
                     <Input
-                      placeholder="No. (e.g. 1st Installment)"
-                      className="h-9"
-                      value={row.installmentNo}
+                      placeholder="id"
+                      value={row.id}
                       onChange={(e) => {
                         const updated = [...installmentSchedule];
-                        updated[idx].installmentNo = e.target.value;
+                        updated[idx].id = e.target.value;
                         setInstallmentSchedule(updated);
                       }}
                     />
                     <Input
-                      placeholder="Due Date (e.g. July 31)"
-                      className="h-9"
-                      value={row.dueDate}
+                      placeholder="label"
+                      value={row.label}
                       onChange={(e) => {
                         const updated = [...installmentSchedule];
-                        updated[idx].dueDate = e.target.value;
+                        updated[idx].label = e.target.value;
                         setInstallmentSchedule(updated);
                       }}
                     />
                     <Input
-                      placeholder="Percentage (e.g. 50%)"
-                      className="h-9"
-                      value={row.percentage}
+                      placeholder="deadline"
+                      value={row.deadline}
                       onChange={(e) => {
                         const updated = [...installmentSchedule];
-                        updated[idx].percentage = e.target.value;
+                        updated[idx].deadline = e.target.value;
+                        setInstallmentSchedule(updated);
+                      }}
+                    />
+                    <Input
+                      placeholder="amount"
+                      value={row.amount}
+                      onChange={(e) => {
+                        const updated = [...installmentSchedule];
+                        updated[idx].amount = e.target.value;
                         setInstallmentSchedule(updated);
                       }}
                     />
                     <button
                       type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
+                      className="text-destructive hover:scale-105"
                       onClick={() =>
                         setInstallmentSchedule(
                           installmentSchedule.filter((_, i) => i !== idx),
@@ -6087,6 +8855,40 @@ export default function SetupProfilePage() {
                     </button>
                   </div>
                 ))}
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-3">
+                <Label className="text-sm font-semibold">Fees Summary</Label>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Input
+                    placeholder="Full course fee"
+                    value={feesSummaryFullCourseFee}
+                    onChange={(e) =>
+                      setFeesSummaryFullCourseFee(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Booking amount"
+                    value={feesSummaryBookingAmount}
+                    onChange={(e) =>
+                      setFeesSummaryBookingAmount(e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Currency"
+                    value={feesSummaryCurrency}
+                    onChange={(e) => setFeesSummaryCurrency(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-2">
+                <Label className="text-sm font-semibold">Refund Policy</Label>
+                <Textarea
+                  placeholder="One refund point per line"
+                  value={refundPolicyText}
+                  onChange={(e) => setRefundPolicyText(e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -6701,8 +9503,8 @@ export default function SetupProfilePage() {
             <CardHeader>
               <CardTitle>Course Info</CardTitle>
               <CardDescription>
-                Configure course header, curriculum, opportunities, facilities,
-                alumni, FAQs, and forum.
+                Configure course name, admissions, curriculum, opportunities,
+                facilities, alumni, FAQs, and forum.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -6722,248 +9524,1359 @@ export default function SetupProfilePage() {
                 </Label>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="course-info-tab-sum">Course Info Summary</Label>
-                <Textarea
-                  id="course-info-tab-sum"
-                  placeholder="Highlight key course details, structure and outcomes..."
-                  {...register(
-                    "profileSections.course_info.eligibilitySummary",
-                  )}
-                />
-              </div>
-
               <div className="space-y-3">
-                <Label className="text-sm font-semibold">Course Header</Label>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Course Name</Label>
                   <Input
                     placeholder="Course Name"
                     value={otherCourseName}
                     onChange={(e) => setOtherCourseName(e.target.value)}
                   />
-                  <Input
-                    placeholder="Admission Status"
-                    value={otherAdmissionStatus}
-                    onChange={(e) => setOtherAdmissionStatus(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Duration"
-                    value={otherDuration}
-                    onChange={(e) => setOtherDuration(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Study Mode"
-                    value={otherStudyMode}
-                    onChange={(e) => setOtherStudyMode(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Academic Cycle"
-                    value={otherAcademicCycle}
-                    onChange={(e) => setOtherAcademicCycle(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Credits"
-                    value={otherCredits}
-                    onChange={(e) => setOtherCredits(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Gender Accepted"
-                    value={otherGenderAccepted}
-                    onChange={(e) => setOtherGenderAccepted(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Course Category"
-                    value={otherCourseCategory}
-                    onChange={(e) => setOtherCourseCategory(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Seat Availability Percent"
-                    value={otherSeatAvailabilityPercent}
-                    onChange={(e) =>
-                      setOtherSeatAvailabilityPercent(e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Seat Availability Message"
-                    value={otherSeatAvailabilityMessage}
-                    onChange={(e) =>
-                      setOtherSeatAvailabilityMessage(e.target.value)
-                    }
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Admissions</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const currentRows = parsePipeRowsWithColumns(
+                          admissionsMatrixText,
+                          10,
+                        );
+                        addPipeRow(
+                          admissionsMatrixText,
+                          setAdmissionsMatrixText,
+                          10,
+                        );
+                        setActiveAdmissionIndex(currentRows.length);
+                      }}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add Admission
+                    </Button>
+                  </div>
+                  {(() => {
+                    const rows =
+                      parsePipeRowsWithColumns(admissionsMatrixText, 10)
+                        .length > 0
+                        ? parsePipeRowsWithColumns(admissionsMatrixText, 10)
+                        : [["", "", "", "", "", "", "", "", "", ""]];
+
+                    const selectedIndex = Math.min(
+                      activeAdmissionIndex,
+                      rows.length - 1,
+                    );
+                    const selected = rows[selectedIndex] || [
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                    ];
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {rows.map((row, rowIndex) => {
+                            const isActive = rowIndex === selectedIndex;
+                            return (
+                              <Button
+                                key={`admission-tab-${rowIndex}`}
+                                type="button"
+                                size="sm"
+                                variant={isActive ? "default" : "outline"}
+                                onClick={() =>
+                                  setActiveAdmissionIndex(rowIndex)
+                                }
+                              >
+                                {row[0]?.trim() || `Admission ${rowIndex + 1}`}
+                              </Button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="space-y-2 rounded-lg border border-border/50 p-3">
+                          <div className="rounded-md bg-muted/40 px-3 py-2 text-sm font-medium">
+                            {selected[0]?.trim() ||
+                              `Admission ${selectedIndex + 1}`}
+                          </div>
+
+                          <Input
+                            placeholder="Year (Admissions 2025)"
+                            value={selected[0]}
+                            onChange={(e) =>
+                              updatePipeCell(
+                                admissionsMatrixText,
+                                setAdmissionsMatrixText,
+                                10,
+                                selectedIndex,
+                                0,
+                                e.target.value,
+                              )
+                            }
+                          />
+
+                          <div className="grid gap-2 md:grid-cols-2">
+                            <Input
+                              placeholder="Status"
+                              value={selected[1]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  1,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Placement Rate"
+                              value={selected[2]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  2,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Seats Note"
+                              value={selected[3]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  3,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+
+                          <div className="pt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Basic Details
+                          </div>
+
+                          <div className="grid gap-2 md:grid-cols-2">
+                            <Input
+                              placeholder="Duration"
+                              value={selected[4]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  4,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Study Mode"
+                              value={selected[5]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  5,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Academic Cycle"
+                              value={selected[6]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  6,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Total Credits"
+                              value={selected[7]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  7,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Gender Accepted"
+                              value={selected[8]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  8,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <Input
+                              placeholder="Course Category"
+                              value={selected[9]}
+                              onChange={(e) =>
+                                updatePipeCell(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                  9,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() =>
+                                removePipeRow(
+                                  admissionsMatrixText,
+                                  setAdmissionsMatrixText,
+                                  10,
+                                  selectedIndex,
+                                )
+                              }
+                            >
+                              <Trash2 className="mr-1 h-4 w-4" /> Remove
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-                <Textarea
-                  placeholder={
-                    "Admission Cycles (one per line)\nAdmissions 2025\nAdmissions 2026"
-                  }
-                  value={otherAdmissionCyclesText}
-                  onChange={(e) => setOtherAdmissionCyclesText(e.target.value)}
-                />
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Program Highlights (one per line)</Label>
-                <Textarea
-                  value={programHighlightsText}
-                  onChange={(e) => setProgramHighlightsText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Program Highlights</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addLineRow(
+                        programHighlightsText,
+                        setProgramHighlightsText,
+                      )
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Highlight
+                  </Button>
+                </div>
+                {(fromLineText(programHighlightsText).length > 0
+                  ? fromLineText(programHighlightsText)
+                  : [""]
+                ).map((item, index) => (
+                  <div
+                    key={`program-highlight-${index}`}
+                    className="flex gap-2"
+                  >
+                    <Input
+                      placeholder="Program highlight"
+                      value={item}
+                      onChange={(e) =>
+                        updateLineRow(
+                          programHighlightsText,
+                          setProgramHighlightsText,
+                          index,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removeLineRow(
+                          programHighlightsText,
+                          setProgramHighlightsText,
+                          index,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Course Accolades (title|description per line)</Label>
-                <Textarea
-                  value={courseAccoladesText}
-                  onChange={(e) => setCourseAccoladesText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Course Accolades</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(courseAccoladesText, setCourseAccoladesText, 3)
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Accolade
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(courseAccoladesText, 3).length > 0
+                  ? parsePipeRowsWithColumns(courseAccoladesText, 3)
+                  : [["", "", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`accolade-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1.4fr_1fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Body"
+                      value={row[0]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          courseAccoladesText,
+                          setCourseAccoladesText,
+                          3,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Rank"
+                      value={row[1]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          courseAccoladesText,
+                          setCourseAccoladesText,
+                          3,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Image"
+                      value={row[2]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          courseAccoladesText,
+                          setCourseAccoladesText,
+                          3,
+                          rowIndex,
+                          2,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          courseAccoladesText,
+                          setCourseAccoladesText,
+                          3,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Important Dates (event|date|tag per line)</Label>
-                <Textarea
-                  value={importantDatesText}
-                  onChange={(e) => setImportantDatesText(e.target.value)}
+              <div className="grid gap-4 md:grid-cols-2 border-t pt-6 border-border/40">
+                <Input
+                  placeholder="Application Start (e.g. 10th June 2024)"
+                  value={applicationStartDate}
+                  onChange={(e) => setApplicationStartDate(e.target.value)}
+                />
+                <Input
+                  placeholder="Application Close Date"
+                  value={applicationCloseDate}
+                  onChange={(e) => setApplicationCloseDate(e.target.value)}
+                />
+                <Input
+                  placeholder="Application Close Urgency (e.g. URGENT)"
+                  value={applicationCloseUrgency}
+                  onChange={(e) => setApplicationCloseUrgency(e.target.value)}
+                />
+                <Input
+                  placeholder="Class Commencement Date"
+                  value={classCommencementDate}
+                  onChange={(e) => setClassCommencementDate(e.target.value)}
+                />
+                <Input
+                  className="md:col-span-2"
+                  placeholder="Class Commencement Note"
+                  value={classCommencementNote}
+                  onChange={(e) => setClassCommencementNote(e.target.value)}
                 />
               </div>
 
               <div className="space-y-3 border-t pt-6 border-border/40">
                 <Label className="text-sm font-semibold">Curriculum</Label>
                 <Input
-                  placeholder="Brochure URL"
+                  placeholder="Brochure Upload"
                   value={curriculumBrochureUrl}
                   onChange={(e) => setCurriculumBrochureUrl(e.target.value)}
                 />
-                <Textarea
-                  placeholder={
-                    "Semesters (semester|subjects comma-separated|specializations comma-separated)\n1|Accounting, Economics|Finance, Marketing"
-                  }
-                  value={curriculumSemestersText}
-                  onChange={(e) => setCurriculumSemestersText(e.target.value)}
-                />
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={curriculumBrochureAvailable}
+                    onChange={(e) =>
+                      setCurriculumBrochureAvailable(e.target.checked)
+                    }
+                  />
+                  Brochure available
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Semesters</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addPipeRow(
+                          curriculumSemestersText,
+                          setCurriculumSemestersText,
+                          6,
+                        )
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add Semester
+                    </Button>
+                  </div>
+                  {(parsePipeRowsWithColumns(curriculumSemestersText, 6)
+                    .length > 0
+                    ? parsePipeRowsWithColumns(curriculumSemestersText, 6)
+                    : [["", "", "", "", "", ""]]
+                  ).map((row, rowIndex) => (
+                    <div
+                      key={`semester-${rowIndex}`}
+                      className="space-y-2 rounded-lg border border-border/50 p-3"
+                    >
+                      <div className="grid gap-2 md:grid-cols-2">
+                        <Input
+                          placeholder="Semester"
+                          value={row[0]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              0,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Core subjects (comma separated)"
+                          value={row[1]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              1,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Specialization 1 name"
+                          value={row[2]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              2,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Specialization 1 electives (comma separated)"
+                          value={row[3]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              3,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Specialization 2 name"
+                          value={row[4]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              4,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Specialization 2 note"
+                          value={row[5]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                              5,
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() =>
+                            removePipeRow(
+                              curriculumSemestersText,
+                              setCurriculumSemestersText,
+                              6,
+                              rowIndex,
+                            )
+                          }
+                        >
+                          <Trash2 className="mr-1 h-4 w-4" /> Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Course Structure (component|credits per line)</Label>
-                <Textarea
-                  value={courseStructureText}
-                  onChange={(e) => setCourseStructureText(e.target.value)}
-                />
+                {/* <Input
+                  placeholder="Course Structure Total Credits"
+                  value={courseStructureTotalCredits}
+                  onChange={(e) => setCourseStructureTotalCredits(e.target.value)}
+                /> */}
+                <div className="flex items-center justify-between">
+                  <Label>Course Structure Breakdown</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(courseStructureText, setCourseStructureText, 2)
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Track
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(courseStructureText, 2).length > 0
+                  ? parsePipeRowsWithColumns(courseStructureText, 2)
+                  : [["", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`course-structure-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1.5fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Track"
+                      value={row[0]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          courseStructureText,
+                          setCourseStructureText,
+                          2,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Credits"
+                      value={row[1]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          courseStructureText,
+                          setCourseStructureText,
+                          2,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          courseStructureText,
+                          setCourseStructureText,
+                          2,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>
-                  Value Added Courses (courseName|credits|deliveryMode per line)
-                </Label>
-                <Textarea
-                  value={valueAddedCoursesText}
-                  onChange={(e) => setValueAddedCoursesText(e.target.value)}
-                />
+                <Label>Value Added Course</Label>
+                <div className="grid gap-2 md:grid-cols-3">
+                  {(() => {
+                    const valueAddedRow = parsePipeRowsWithColumns(
+                      valueAddedCoursesText,
+                      3,
+                    )[0] || ["", "", ""];
+
+                    return (
+                      <>
+                        <Input
+                          placeholder="Name"
+                          value={valueAddedRow[0]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              valueAddedCoursesText,
+                              setValueAddedCoursesText,
+                              3,
+                              0,
+                              0,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Credits"
+                          value={valueAddedRow[1]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              valueAddedCoursesText,
+                              setValueAddedCoursesText,
+                              3,
+                              0,
+                              1,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Delivery Mode"
+                          value={valueAddedRow[2]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              valueAddedCoursesText,
+                              setValueAddedCoursesText,
+                              3,
+                              0,
+                              2,
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Career Opportunities (role|salaryRange per line)</Label>
-                <Textarea
-                  value={careerOpportunitiesText}
-                  onChange={(e) => setCareerOpportunitiesText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Career Opportunities</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(
+                        careerOpportunitiesText,
+                        setCareerOpportunitiesText,
+                        2,
+                      )
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Opportunity
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(careerOpportunitiesText, 2).length >
+                0
+                  ? parsePipeRowsWithColumns(careerOpportunitiesText, 2)
+                  : [["", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`career-opportunity-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1.4fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Role"
+                      value={row[0]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          careerOpportunitiesText,
+                          setCareerOpportunitiesText,
+                          2,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Salary Range"
+                      value={row[1]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          careerOpportunitiesText,
+                          setCareerOpportunitiesText,
+                          2,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          careerOpportunitiesText,
+                          setCareerOpportunitiesText,
+                          2,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 border-t pt-6 border-border/40">
                 <div className="space-y-2">
-                  <Label>Global Certifications (one per line)</Label>
-                  <Textarea
-                    value={higherEducationCertsText}
-                    onChange={(e) =>
-                      setHigherEducationCertsText(e.target.value)
-                    }
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Global Certifications</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addLineRow(
+                          higherEducationCertsText,
+                          setHigherEducationCertsText,
+                        )
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
+                    </Button>
+                  </div>
+                  {(fromLineText(higherEducationCertsText).length > 0
+                    ? fromLineText(higherEducationCertsText)
+                    : [""]
+                  ).map((item, index) => (
+                    <div key={`global-cert-${index}`} className="flex gap-2">
+                      <Input
+                        placeholder="Certification"
+                        value={item}
+                        onChange={(e) =>
+                          updateLineRow(
+                            higherEducationCertsText,
+                            setHigherEducationCertsText,
+                            index,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() =>
+                          removeLineRow(
+                            higherEducationCertsText,
+                            setHigherEducationCertsText,
+                            index,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-2">
-                  <Label>Higher Studies (one per line)</Label>
-                  <Textarea
-                    value={higherEducationStudiesText}
-                    onChange={(e) =>
-                      setHigherEducationStudiesText(e.target.value)
-                    }
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Postgraduation</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addLineRow(
+                          higherEducationStudiesText,
+                          setHigherEducationStudiesText,
+                        )
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
+                    </Button>
+                  </div>
+                  {(fromLineText(higherEducationStudiesText).length > 0
+                    ? fromLineText(higherEducationStudiesText)
+                    : [""]
+                  ).map((item, index) => (
+                    <div key={`postgrad-${index}`} className="flex gap-2">
+                      <Input
+                        placeholder="Postgraduation option"
+                        value={item}
+                        onChange={(e) =>
+                          updateLineRow(
+                            higherEducationStudiesText,
+                            setHigherEducationStudiesText,
+                            index,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() =>
+                          removeLineRow(
+                            higherEducationStudiesText,
+                            setHigherEducationStudiesText,
+                            index,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Exit Options (after|credential per line)</Label>
-                <Textarea
-                  value={exitOptionsText}
-                  onChange={(e) => setExitOptionsText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Flexible Exit Options</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(exitOptionsText, setExitOptionsText, 2)
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Exit Option
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(exitOptionsText, 2).length > 0
+                  ? parsePipeRowsWithColumns(exitOptionsText, 2)
+                  : [["", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`exit-option-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1fr_1.6fr_auto]"
+                  >
+                    <Input
+                      placeholder="After years"
+                      value={row[0]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          exitOptionsText,
+                          setExitOptionsText,
+                          2,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Credential"
+                      value={row[1]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          exitOptionsText,
+                          setExitOptionsText,
+                          2,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          exitOptionsText,
+                          setExitOptionsText,
+                          2,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>Class Timings (day|timing per line)</Label>
-                <Textarea
-                  value={classTimingsText}
-                  onChange={(e) => setClassTimingsText(e.target.value)}
+                <Input
+                  placeholder="Class Timings Mode (e.g. Regular Classes)"
+                  value={classTimingsMode}
+                  onChange={(e) => setClassTimingsMode(e.target.value)}
                 />
+                <div className="flex items-center justify-between">
+                  <Label>Class Timings Schedule</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(classTimingsText, setClassTimingsText, 3)
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Day
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(classTimingsText, 3).length > 0
+                  ? parsePipeRowsWithColumns(classTimingsText, 3)
+                  : [["", "", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`class-timing-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1fr_1.3fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Day"
+                      value={row[0]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          classTimingsText,
+                          setClassTimingsText,
+                          3,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Timing"
+                      value={row[1]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          classTimingsText,
+                          setClassTimingsText,
+                          3,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Status (open/closed)"
+                      value={row[2]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          classTimingsText,
+                          setClassTimingsText,
+                          3,
+                          rowIndex,
+                          2,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          classTimingsText,
+                          setClassTimingsText,
+                          3,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="grid gap-4 md:grid-cols-3 border-t pt-6 border-border/40">
                 <div className="space-y-2">
-                  <Label>Industry Tools (one per line)</Label>
-                  <Textarea
-                    value={industryToolsText}
-                    onChange={(e) => setIndustryToolsText(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Industry Tools</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addLineRow(industryToolsText, setIndustryToolsText)
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
+                    </Button>
+                  </div>
+                  {(fromLineText(industryToolsText).length > 0
+                    ? fromLineText(industryToolsText)
+                    : [""]
+                  ).map((item, index) => (
+                    <div key={`industry-tool-${index}`} className="flex gap-2">
+                      <Input
+                        placeholder="Tool"
+                        value={item}
+                        onChange={(e) =>
+                          updateLineRow(
+                            industryToolsText,
+                            setIndustryToolsText,
+                            index,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() =>
+                          removeLineRow(
+                            industryToolsText,
+                            setIndustryToolsText,
+                            index,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-2">
-                  <Label>Lab Facilities (one per line)</Label>
-                  <Textarea
-                    value={labFacilitiesText}
-                    onChange={(e) => setLabFacilitiesText(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Lab Facilities</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addLineRow(labFacilitiesText, setLabFacilitiesText)
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
+                    </Button>
+                  </div>
+                  {(fromLineText(labFacilitiesText).length > 0
+                    ? fromLineText(labFacilitiesText)
+                    : [""]
+                  ).map((item, index) => (
+                    <div key={`lab-facility-${index}`} className="flex gap-2">
+                      <Input
+                        placeholder="Lab facility"
+                        value={item}
+                        onChange={(e) =>
+                          updateLineRow(
+                            labFacilitiesText,
+                            setLabFacilitiesText,
+                            index,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() =>
+                          removeLineRow(
+                            labFacilitiesText,
+                            setLabFacilitiesText,
+                            index,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-2">
-                  <Label>Classroom Facilities (one per line)</Label>
-                  <Textarea
-                    value={classroomFacilitiesText}
-                    onChange={(e) => setClassroomFacilitiesText(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Classroom Facilities</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        addLineRow(
+                          classroomFacilitiesText,
+                          setClassroomFacilitiesText,
+                        )
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
+                    </Button>
+                  </div>
+                  {(fromLineText(classroomFacilitiesText).length > 0
+                    ? fromLineText(classroomFacilitiesText)
+                    : [""]
+                  ).map((item, index) => (
+                    <div
+                      key={`classroom-facility-${index}`}
+                      className="flex gap-2"
+                    >
+                      <Input
+                        placeholder="Classroom facility"
+                        value={item}
+                        onChange={(e) =>
+                          updateLineRow(
+                            classroomFacilitiesText,
+                            setClassroomFacilitiesText,
+                            index,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() =>
+                          removeLineRow(
+                            classroomFacilitiesText,
+                            setClassroomFacilitiesText,
+                            index,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3 border-t pt-6 border-border/40">
                 <Input
-                  placeholder="Bonus Certification Title"
+                  placeholder="Bonus Certification Name"
                   value={bonusCertificationTitle}
                   onChange={(e) => setBonusCertificationTitle(e.target.value)}
                 />
                 <Input
-                  placeholder="Bonus Certification Description"
+                  placeholder="Bonus Certification Note"
                   value={bonusCertificationDescription}
                   onChange={(e) =>
                     setBonusCertificationDescription(e.target.value)
                   }
                 />
-                <Input
-                  placeholder="Certificate URL"
-                  value={bonusCertificationUrl}
-                  onChange={(e) => setBonusCertificationUrl(e.target.value)}
-                />
+                <label className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={bonusCertificationDetailsAvailable}
+                    onChange={(e) =>
+                      setBonusCertificationDetailsAvailable(e.target.checked)
+                    }
+                  />
+                  Certificate details available
+                </label>
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>
-                  Featured Alumni (name|designation|journeyTimeline separated by
-                  ; per line)
-                </Label>
-                <Textarea
-                  value={featuredAlumniText}
-                  onChange={(e) => setFeaturedAlumniText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>Featured Alumni</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      addPipeRow(featuredAlumniText, setFeaturedAlumniText, 3)
+                    }
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Alumni
+                  </Button>
+                </div>
+                {(parsePipeRowsWithColumns(featuredAlumniText, 3).length > 0
+                  ? parsePipeRowsWithColumns(featuredAlumniText, 3)
+                  : [["", "", ""]]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`featured-alumni-${rowIndex}`}
+                    className="space-y-2 rounded-lg border border-border/50 p-3"
+                  >
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <Input
+                        placeholder="Name"
+                        value={row[0]}
+                        onChange={(e) =>
+                          updatePipeCell(
+                            featuredAlumniText,
+                            setFeaturedAlumniText,
+                            3,
+                            rowIndex,
+                            0,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <Input
+                        placeholder="Designation"
+                        value={row[1]}
+                        onChange={(e) =>
+                          updatePipeCell(
+                            featuredAlumniText,
+                            setFeaturedAlumniText,
+                            3,
+                            rowIndex,
+                            1,
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                    <Input
+                      placeholder="Career progression as year:milestone;year:milestone"
+                      value={row[2]}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          featuredAlumniText,
+                          setFeaturedAlumniText,
+                          3,
+                          rowIndex,
+                          2,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() =>
+                          removePipeRow(
+                            featuredAlumniText,
+                            setFeaturedAlumniText,
+                            3,
+                            rowIndex,
+                          )
+                        }
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" /> Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label>FAQs (question|answer per line)</Label>
-                <Textarea
-                  value={faqsText}
-                  onChange={(e) => setFaqsText(e.target.value)}
-                />
+                <div className="flex items-center justify-between">
+                  <Label>FAQs</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={addFaqRow}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add FAQ
+                  </Button>
+                </div>
+                {parseEditableFaqRows(faqsText).map((question, index) => (
+                  <div key={`faq-${index}`} className="flex gap-2">
+                    <Input
+                      placeholder="FAQ Question"
+                      value={question}
+                      onChange={(e) => updateFaqRow(index, e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => removeFaqRow(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 border-t pt-6 border-border/40">
@@ -6973,7 +10886,7 @@ export default function SetupProfilePage() {
                   onChange={(e) => setStudentForumDescription(e.target.value)}
                 />
                 <Input
-                  placeholder="Student Forum CTA Label"
+                  placeholder="Student Forum CTA"
                   value={studentForumCtaLabel}
                   onChange={(e) => setStudentForumCtaLabel(e.target.value)}
                 />

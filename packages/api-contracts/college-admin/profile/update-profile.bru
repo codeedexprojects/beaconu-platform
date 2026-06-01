@@ -30,9 +30,21 @@ body:json {
         "id": "college_overview",
         "enabled": true,
         "description": "Industry-focused programs with modern infrastructure.",
-        "accreditation_and_affilation": {
-          "img": "https://example.com/naac-badge.png",
-          "description": "NAAC A+ | AICTE Approved"
+        "accreditation_and_affiliation": {
+          "rankings": [
+            {
+              "body": "NIRF",
+              "rank": "MAHE Rank 3",
+              "logo": "nirf",
+              "recognitions": "India's top #131/200 universities in 2024"
+            },
+            {
+              "body": "Outlook ICARE Ranking 2024",
+              "rank": "MAHE Rank 3",
+              "logo": "outlook",
+              "recognitions": "India's top #131/200 universities in 2024"
+            }
+          ]
         },
         "instution_details": {
           "estd": "2005",
@@ -41,20 +53,29 @@ body:json {
           "campus_size": "42",
           "Student_from_outside": "28%"
         },
-        "inside_campus": {
-          "img": "https://example.com/campus.jpg",
-          "description": "Green campus with labs, hostels, and sports arenas."
-        },
+        "inside_campus_facilities": [
+          {
+            "name": "Main Auditorium",
+            "description": "Seating for 2,000+ students and guests",
+            "image": "https://example.com/auditorium.jpg"
+          }
+        ],
         "location": {
           "map_link": "https://maps.google.com/?q=28.5355,77.3910"
         },
-        "connect": {
-          "linkedin": "https://linkedin.com/school/example",
-          "instagram": "https://instagram.com/example",
-          "twitter": "https://x.com/example",
-          "website": "https://example.edu"
+        "connectwithus": {
+          "links": [
+            {
+              "platform": "LinkedIn",
+              "url": "https://linkedin.com/school/example"
+            },
+            {
+              "platform": "Instagram",
+              "url": "https://instagram.com/example"
+            }
+          ]
         },
-        "aminities": ["Library", "Wi-Fi Campus", "Sports Complex"],
+        "amenities": ["Library", "Wi-Fi Campus", "Sports Complex"],
         "nearby_access": {
           "transit": [
             {
@@ -69,6 +90,13 @@ body:json {
               "name": "City Care Hospital",
               "distance": "2.1 km"
             }
+          ],
+          "utilities": [
+            {
+              "type": "ATM",
+              "name": "SBI ATM",
+              "distance": "0.5 km"
+            }
           ]
         },
         "campus_reels": [
@@ -81,56 +109,201 @@ body:json {
       "course_info": {
         "id": "course_info",
         "enabled": true,
-        "eligibilitySummary": "Merit + entrance based admissions.",
-        "course_details": {
-          "courseHeader": {
-            "courseName": "B.Tech Computer Science",
-            "admissionCycle": ["Jan", "Aug"],
-            "admissionStatus": "Open",
-            "seatAvailabilityPercent": 35,
-            "seatAvailabilityMessage": "Limited seats available",
-            "duration": "4 Years",
-            "studyMode": "Full Time",
-            "academicCycle": "Semester",
-            "credits": 160,
-            "genderAccepted": "All",
-            "courseCategory": "UG"
+        "course_name": "B.Tech Computer Science",
+        "admissions": [
+          {
+            "year": "Admissions 2026",
+            "status": "Open",
+            "placement_rate": "35",
+            "seats_note": "Limited seats available",
+            "basic_details": {
+              "duration": "4 Years",
+              "study_mode": "Full Time",
+              "academic_cycle": "Semester",
+              "total_credits": 160,
+              "gender_accepted": "All",
+              "course_category": "UG"
+            }
+          }
+        ],
+        "program_highlights": [
+          "Industry-aligned curriculum",
+          "Capstone with live projects"
+        ],
+        "course_accolades": [
+          {
+            "body": "NBA Accredited",
+            "rank": "A+",
+            "image": "https://example.com/images/nba.png"
+          }
+        ],
+        "key_dates": {
+          "application_start": "2026-04-01",
+          "application_close": {
+            "date": "2026-07-15",
+            "urgency": "Deadline"
           },
-          "programHighlights": [
-            { "description": "Industry-aligned curriculum" },
-            { "description": "Capstone with live projects" }
-          ],
-          "courseAccolades": [
-            {
-              "title": "NBA Accredited",
-              "description": "Recognized for academic excellence"
-            }
-          ],
-          "importantDates": [
-            {
-              "event": "Application Deadline",
-              "date": "2026-07-15",
-              "tag": "Deadline"
-            }
-          ]
+          "class_commencement": {
+            "date": "2026-08-05",
+            "note": "Orientation week starts earlier"
+          }
         }
       },
       "admission_policy": {
         "id": "admission_policy",
         "enabled": true,
-        "summary": "Entrance exam and merit based admissions.",
-        "steps": [
-          "Fill application",
-          "Upload documents",
-          "Final counseling"
-        ]
+        "eligibility_criteria": {
+          "applicant_type_tabs": [
+            {
+              "id": "indian",
+              "label": "Indian Students",
+              "quota_categories": [
+                {
+                  "id": "government_quota",
+                  "label": "Government Quota",
+                  "criteria": [
+                    {
+                      "id": "educational_qualification",
+                      "label": "Educational Qualification",
+                      "description": "Candidates must have completed 10+2 (Intermediate/Senior Secondary Education) from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                    },
+                    {
+                      "id": "age_requirement",
+                      "label": "Age Requirement",
+                      "description": "Minimum 17 years of age as of 31st December. No upper age limit for admission to this course."
+                    },
+                    {
+                      "id": "academic_grades",
+                      "label": "Academic Grades (10+2)",
+                      "description": "Minimum 50% marks in aggregate in 10+2 / 10+3 from a recognized board."
+                    },
+                    {
+                      "id": "entrance_grades",
+                      "label": "Entrance Grades",
+                      "description": "Must secure a valid rank in NEET/CET with a minimum percentile of 50th (40th for SC/ST/OBC categories)."
+                    }
+                  ]
+                },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            },
+            {
+              "id": "foreign",
+              "label": "Foreign Students",
+              "quota_categories": [
+                { "id": "government_quota", "label": "Government Quota", "criteria": [] },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            }
+          ],
+          "default_applicant_type": "indian",
+          "default_quota": "government_quota",
+          "cta": {
+            "label": "Check Eligibility",
+            "action": "check_eligibility"
+          }
+        }
       },
       "placements": {
         "id": "placements",
         "enabled": true,
-        "summary": "Consistent placement support with internship pipeline.",
-        "highestPackageLpa": 24,
-        "averagePackageLpa": 8.5
+        "report": {
+          "label": "Download Full Placement Report 2024",
+          "action": "download_placement_report_2024"
+        },
+        "summary_stats": [
+          { "id": "average_package", "label": "Average Package", "value": 4.2, "unit": "LPA" },
+          { "id": "highest_package", "label": "Highest Package", "value": 14.2, "unit": "LPA" },
+          { "id": "placement_rate", "label": "Placement Rate", "value": 94, "unit": "%" },
+          { "id": "lowest_package", "label": "Lowest Package", "value": 3.5, "unit": "LPA" },
+          { "id": "companies_visited", "label": "Companies Visited", "value": "120+", "unit": null },
+          { "id": "students_placed", "label": "Students Placed", "value": "450+", "unit": null }
+        ],
+        "placement_trends": {
+          "label": "Placement Trends",
+          "period": "Last 5 Years",
+          "years": [2020, 2021, 2022, 2023],
+          "avg_package_growth_yoy": "+12.5%"
+        },
+        "industry_salary_report": {
+          "label": "Industry & Salary Report",
+          "columns": ["Industry", "Placed", "Avg Pkg"],
+          "industries": [
+            {
+              "id": "bfsi",
+              "name": "BFSI",
+              "sub_label": "Banking & Finance",
+              "students_placed": 155,
+              "avg_package": "₹8.2 L",
+              "max_package": "12 LPA"
+            },
+            {
+              "id": "fmcg",
+              "name": "FMCG",
+              "sub_label": "Retail & Goods",
+              "students_placed": 98,
+              "avg_package": "₹7.5 L",
+              "max_package": "10 LPA"
+            },
+            {
+              "id": "consulting",
+              "name": "Consulting",
+              "sub_label": "Mgmt Consulting",
+              "students_placed": 81,
+              "avg_package": "₹9.1 L",
+              "max_package": "14.5 LPA"
+            }
+          ],
+          "cta": {
+            "label": "View All Industries",
+            "action": "view_all_industries"
+          }
+        },
+        "notable_offers": {
+          "label": "Notable Offers",
+          "cta": {
+            "label": "View All",
+            "action": "view_all_notable_offers"
+          },
+          "featured": [
+            {
+              "company": "Deloitte",
+              "tag": "Highest",
+              "industry": "Consulting",
+              "offers": [
+                { "role": "Senior Analyst Role", "package": 14.5, "unit": "LPA", "type": "Package Offered" },
+                { "role": "Manager Role", "package": 12.0, "unit": "LPA", "type": "Package Offered" }
+              ]
+            }
+          ]
+        },
+        "all_company_statistics": {
+          "label": "All Company Statistics",
+          "columns": ["Company Name", "Avg Pkg", "Max Pkg"],
+          "companies": [
+            { "id": "deloitte", "name": "Deloitte", "students": 145, "avg_package": "₹9.2 L", "max_package": "₹14.5 L" },
+            { "id": "accenture", "name": "Accenture", "students": 210, "avg_package": "₹7.8 L", "max_package": "₹11.2 L" },
+            { "id": "tcs", "name": "TCS", "students": 340, "avg_package": "₹6.5 L", "max_package": "₹9.0 L" }
+          ]
+        },
+        "student_success": [
+          {
+            "name": "Rohan Mehta",
+            "placed_at": "Deloitte",
+            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!"
+          },
+          {
+            "name": "Priya S.",
+            "placed_at": "HDFC",
+            "quote": "I never thought I'd get such a high package. The mock interviews were key."
+          }
+        ]
       },
       "fees": {
         "id": "fees",
