@@ -22,6 +22,16 @@ export class CollegeRegistrationController {
       .json(ApiResponse.success("College profile fetched", result));
   }
 
+  static async getProfileSections(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const result =
+      await CollegeRegistrationService.getProfileSections(collegeId);
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("College profile sections fetched", result));
+  }
+
   static async updateProfile(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const data = updateCollegeProfileSchema.parse(req.body);
