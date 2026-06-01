@@ -21,7 +21,9 @@ export interface CollegeProfile {
   logoUrl: string | null;
   coverImageUrl: string | null;
   requestedGroupCode: string | null;
-  profileSections: Record<string, any>;
+  profileSections?: Record<string, any>;
+  tabs?: string[];
+  collegeDetails?: Record<string, any>;
   settings: Record<string, unknown>;
   totalCourses?: number;
   instituteType?: string | null;
@@ -90,14 +92,49 @@ export interface SubmitRegistrationResponse {
   status: string;
 }
 
+type CollegeProfileSections = Record<string, any>;
+
+async function getCollegeProfileSections(): Promise<CollegeProfileSections> {
+  return api.get<CollegeProfileSections>(
+    "/api/v1/college-admin/profile/sections",
+  );
+}
+
+function normalizeCollegeProfileResponse(
+  profile: CollegeProfile,
+  profileSections: CollegeProfileSections,
+): CollegeProfile {
+  const collegeDetails =
+    profile.collegeDetails && typeof profile.collegeDetails === "object"
+      ? (profile.collegeDetails as Record<string, any>)
+      : {};
+
+  return {
+    ...collegeDetails,
+    ...profile,
+    profileSections,
+  };
+}
+
 export async function getCollegeProfile(): Promise<CollegeProfile> {
-  return api.get<CollegeProfile>("/api/v1/college-admin/profile");
+  const [profile, profileSections] = await Promise.all([
+    api.get<CollegeProfile>("/api/v1/college-admin/profile"),
+    getCollegeProfileSections(),
+  ]);
+
+  return normalizeCollegeProfileResponse(profile, profileSections);
 }
 
 export async function updateCollegeProfile(
   data: UpdateCollegeProfileInput,
 ): Promise<CollegeProfile> {
-  return api.patch<CollegeProfile>("/api/v1/college-admin/profile", data);
+  const updatedProfile = await api.patch<CollegeProfile>(
+    "/api/v1/college-admin/profile",
+    data,
+  );
+  const profileSections = await getCollegeProfileSections();
+
+  return normalizeCollegeProfileResponse(updatedProfile, profileSections);
 }
 
 export async function getCollegeCampuses(): Promise<Campus[]> {

@@ -20,6 +20,13 @@ router.get(
   CollegeRegistrationController.getProfile,
 );
 
+router.get(
+  "/profile/sections",
+  ...staffAuth,
+  authorizeAny("profile.view", "profile.edit"),
+  CollegeRegistrationController.getProfileSections,
+);
+
 router.patch(
   "/profile",
   ...staffWriteAuth,
