@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
   Loader2,
@@ -3100,6 +3100,10 @@ export default function SetupProfilePage() {
     submitProfile(data, { redirectToCampuses: true });
   };
 
+  const onInvalidSubmit = () => {
+    toast.error("Please fix the errors before saving");
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -3133,7 +3137,10 @@ export default function SetupProfilePage() {
         })}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
+        className="space-y-6"
+      >
         {/* ==================== TAB 1: BASIC INFO ==================== */}
         {activeTab === "basic" && (
           <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
@@ -3147,7 +3154,11 @@ export default function SetupProfilePage() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">College Name</Label>
-                  <Input id="name" {...register("name")} />
+                  <Input
+                    id="name"
+                    aria-invalid={!!errors.name}
+                    {...register("name")}
+                  />
                   {errors.name && (
                     <p className="text-xs text-destructive">
                       {errors.name.message}
@@ -3160,6 +3171,7 @@ export default function SetupProfilePage() {
                   <Input
                     id="code"
                     placeholder="AMITY-N"
+                    aria-invalid={!!errors.code}
                     {...register("code")}
                   />
                   {errors.code && (
@@ -3171,7 +3183,11 @@ export default function SetupProfilePage() {
 
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Full Address</Label>
-                  <Input id="address" {...register("address")} />
+                  <Input
+                    id="address"
+                    aria-invalid={!!errors.address}
+                    {...register("address")}
+                  />
                   {errors.address && (
                     <p className="text-xs text-destructive">
                       {errors.address.message}
@@ -3181,7 +3197,11 @@ export default function SetupProfilePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register("city")} />
+                  <Input
+                    id="city"
+                    aria-invalid={!!errors.city}
+                    {...register("city")}
+                  />
                   {errors.city && (
                     <p className="text-xs text-destructive">
                       {errors.city.message}
@@ -3191,7 +3211,11 @@ export default function SetupProfilePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="district">District</Label>
-                  <Input id="district" {...register("district")} />
+                  <Input
+                    id="district"
+                    aria-invalid={!!errors.district}
+                    {...register("district")}
+                  />
                   {errors.district && (
                     <p className="text-xs text-destructive">
                       {errors.district.message}
@@ -3201,7 +3225,11 @@ export default function SetupProfilePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state">State</Label>
-                  <Input id="state" {...register("state")} />
+                  <Input
+                    id="state"
+                    aria-invalid={!!errors.state}
+                    {...register("state")}
+                  />
                   {errors.state && (
                     <p className="text-xs text-destructive">
                       {errors.state.message}
@@ -3211,7 +3239,11 @@ export default function SetupProfilePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="pinCode">PIN Code</Label>
-                  <Input id="pinCode" {...register("pinCode")} />
+                  <Input
+                    id="pinCode"
+                    aria-invalid={!!errors.pinCode}
+                    {...register("pinCode")}
+                  />
                   {errors.pinCode && (
                     <p className="text-xs text-destructive">
                       {errors.pinCode.message}
@@ -3224,6 +3256,7 @@ export default function SetupProfilePage() {
                   <Input
                     id="logoUrl"
                     placeholder="https://example.com/logo.png"
+                    aria-invalid={!!errors.logoUrl}
                     {...register("logoUrl")}
                   />
                   {errors.logoUrl && (
@@ -3238,6 +3271,7 @@ export default function SetupProfilePage() {
                   <Input
                     id="coverImageUrl"
                     placeholder="https://example.com/cover.jpg"
+                    aria-invalid={!!errors.coverImageUrl}
                     {...register("coverImageUrl")}
                   />
                   {errors.coverImageUrl && (
@@ -3263,6 +3297,7 @@ export default function SetupProfilePage() {
                   <Input
                     id="requestedGroupCode"
                     placeholder="e.g. IGC-ABCD-1234"
+                    aria-invalid={!!errors.requestedGroupCode}
                     {...register("requestedGroupCode")}
                   />
                   {errors.requestedGroupCode && (
@@ -7017,7 +7052,7 @@ export default function SetupProfilePage() {
             size="lg"
             disabled={isPending}
             onClick={() => {
-              void handleSubmit(onSubmitAndContinue)();
+              void handleSubmit(onSubmitAndContinue, onInvalidSubmit)();
             }}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

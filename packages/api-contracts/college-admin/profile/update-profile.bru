@@ -299,4 +299,26 @@ docs {
     Examples: `aminities`, `nearby_access.transit`, `campus_reels`,
     `courseAccolades`, `grading_scale`, `ratingDistribution`,
     `libraryHours`, `alliance.items`.
+
+  Response shape:
+  ```json
+  {
+    "success": true,
+    "message": "College profile updated",
+    "data": {
+      "collegeDetails": { ... },
+      "tabs": ["college_overview", "course_info", "placements", ...],
+      "totalCourses": 5,
+      "instituteType": "Private University",
+      "campusAmbassadors": []
+    }
+  }
+  ```
+
+  - `tabs` is a flat array of enabled profile section IDs.
+    Disabled sections (where `enabled === false`) are excluded.
+  - `collegeDetails` contains the full college object without raw `profileSections`.
+
+  Requires: college-admin staff access token.
 }
+

@@ -22,5 +22,26 @@ query {
 docs {
   Returns a lightweight college summary with logo, cover image, location, and a single matching active course.
   Filters by universityId and course taxonomy filters (streamId, disciplineId, studyLevelId, programTypeId) when provided.
-  tabListing contains only enabled tab ids (or section keys when id is missing), not full section data.
+
+  Response shape:
+  ```json
+  {
+    "data": {
+      "college": {
+        "id": "CLG-1",
+        "name": "...",
+        "slug": "...",
+        "logoUrl": "...",
+        "coverImageUrl": "...",
+        "location": { "address": "...", "city": "...", "state": "...", "district": "...", "pinCode": "..." },
+        "university": { "id": "...", "name": "...", "universityType": { ... } }
+      },
+      "course": { "id": "...", "name": "...", "discipline": { ... }, ... },
+      "tabListing": ["college_overview", "course_info", "placements", ...]
+    }
+  }
+  ```
+
+  - `tabListing` is a flat array of enabled profile section IDs (or section keys when id is missing).
+    Disabled sections are excluded.
 }

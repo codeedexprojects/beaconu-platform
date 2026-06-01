@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import { Loader2, ArrowRight, ArrowLeft, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
@@ -68,6 +68,10 @@ export default function SetupCampusesPage() {
         reset();
       },
     });
+  };
+
+  const onInvalidSubmit = () => {
+    toast.error("Please fix the errors before saving");
   };
 
   const hasCampuses = campuses.length > 0;
@@ -149,7 +153,7 @@ export default function SetupCampusesPage() {
 
           {isAdding && (
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
               className="space-y-4 bg-muted/20 p-6 rounded-xl border"
             >
               <h4 className="font-medium flex items-center gap-2 mb-4">
@@ -163,6 +167,7 @@ export default function SetupCampusesPage() {
                   <Input
                     id="name"
                     placeholder="e.g. North Campus, Main Campus"
+                    aria-invalid={!!errors.name}
                     {...register("name")}
                   />
                   {errors.name && (
@@ -174,7 +179,11 @@ export default function SetupCampusesPage() {
 
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input id="address" {...register("address")} />
+                  <Input
+                    id="address"
+                    aria-invalid={!!errors.address}
+                    {...register("address")}
+                  />
                   {errors.address && (
                     <p className="text-sm text-destructive">
                       {errors.address.message}
@@ -184,7 +193,11 @@ export default function SetupCampusesPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register("city")} />
+                  <Input
+                    id="city"
+                    aria-invalid={!!errors.city}
+                    {...register("city")}
+                  />
                   {errors.city && (
                     <p className="text-sm text-destructive">
                       {errors.city.message}
@@ -194,7 +207,11 @@ export default function SetupCampusesPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state">State</Label>
-                  <Input id="state" {...register("state")} />
+                  <Input
+                    id="state"
+                    aria-invalid={!!errors.state}
+                    {...register("state")}
+                  />
                   {errors.state && (
                     <p className="text-sm text-destructive">
                       {errors.state.message}
@@ -204,7 +221,11 @@ export default function SetupCampusesPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="pinCode">PIN Code</Label>
-                  <Input id="pinCode" {...register("pinCode")} />
+                  <Input
+                    id="pinCode"
+                    aria-invalid={!!errors.pinCode}
+                    {...register("pinCode")}
+                  />
                   {errors.pinCode && (
                     <p className="text-sm text-destructive">
                       {errors.pinCode.message}

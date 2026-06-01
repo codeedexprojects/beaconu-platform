@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
   UserPlus,
@@ -56,7 +56,7 @@ const staffSchema = z.object({
   email: z.string().trim().email("Enter a valid email address"),
   phoneNumber: z.string().trim().optional().nullable(),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  collegeRoleId: z.string().uuid("Please select a security role"),
+  collegeRoleId: z.string().min(1, "Please select a security role"),
 });
 
 type StaffFormData = z.infer<typeof staffSchema>;

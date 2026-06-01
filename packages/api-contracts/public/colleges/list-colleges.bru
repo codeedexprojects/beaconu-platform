@@ -17,3 +17,23 @@ query {
   studyLevelId: 
   programTypeId: 
 }
+
+docs {
+  Returns a lightweight list of active colleges with optional taxonomy filters.
+
+  Query parameters (all optional):
+  - universityId: Filter by university
+  - streamId: Filter by stream (ignored if disciplineId is set)
+  - disciplineId: Filter by discipline
+  - studyLevelId: Filter by study level
+  - programTypeId: Filter by program type
+
+  Response includes per college:
+  - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
+    state, city, district, address, pinCode, status, createdAt, updatedAt
+  - university: { id, name, logoUrl }
+  - campuses: main campus only [{ city, state }]
+
+  Note: `profileSections` and `settings` are NOT included in the list response.
+  Use Get College By Id or Get College Summary for full details.
+}

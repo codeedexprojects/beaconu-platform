@@ -38,6 +38,18 @@ const PUBLIC_COLLEGE_INCLUDES = {
       programType: true,
     },
   },
+  blinkUsers: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      avatarUrl: true,
+      phoneNumber: true,
+    },
+  },
+  _count: {
+    select: { courses: true },
+  },
   institutionGroupMember: {
     include: {
       group: {
@@ -156,6 +168,65 @@ function normalizeStringParam(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value) ?? "";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function buildTabIdList(profileSections: Record<string, unknown>) {
+  return Object.entries(profileSections).reduce((acc, [tabKey, tabValue]) => {
+    if (
+      isRecord(tabValue) &&
+      typeof tabValue.enabled === "boolean" &&
+      !tabValue.enabled
+    ) {
+      return acc;
+    }
+
+    const tabId =
+      isRecord(tabValue) &&
+      typeof tabValue.id === "string" &&
+      tabValue.id.trim() !== ""
+        ? tabValue.id
+        : tabKey;
+
+    acc.push(tabId);
+    return acc;
+  }, [] as string[]);
+}
+
+function buildPublicProfileResponse(college: any) {
+  const totalCourses = college._count?.courses ?? 0;
+  const instituteType = college.university?.universityType?.name ?? null;
+  const campusAmbassadors = (college.blinkUsers ?? []).map((u: any) => ({
+    id: u.id,
+    fullName: u.fullName,
+    email: u.email,
+    avatarUrl: u.avatarUrl,
+    phoneNumber: u.phoneNumber,
+  }));
+
+  const profileSections = isRecord(college.profileSections)
+    ? (college.profileSections as Record<string, unknown>)
+    : {};
+  const tabs = buildTabIdList(profileSections);
+
+  const {
+    profileSections: _ps,
+    settings: _s,
+    blinkUsers: _bu,
+    _count,
+    ...collegeDetails
+  } = college;
+
+  return {
+    collegeDetails,
+    tabs,
+    totalCourses,
+    instituteType,
+    campusAmbassadors,
+  };
+}
+
 function findSectionByIdentifier(
   profileSections: Record<string, unknown>,
   sectionIdentifier: string,
@@ -210,7 +281,23 @@ export class PublicCollegeController {
 
     const colleges = await prisma.college.findMany({
       where: filters,
-      include: {
+      select: {
+        id: true,
+        universityId: true,
+        name: true,
+        slug: true,
+        code: true,
+        domain: true,
+        logoUrl: true,
+        coverImageUrl: true,
+        state: true,
+        city: true,
+        district: true,
+        address: true,
+        pinCode: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
         university: {
           select: {
             id: true,
@@ -244,11 +331,14 @@ export class PublicCollegeController {
       throw new NotFoundError("College not found");
     }
 
-    const { settings, ...publicData } = college as any;
-
     return res
       .status(200)
-      .json(ApiResponse.success("College fetched successfully", publicData));
+      .json(
+        ApiResponse.success(
+          "College fetched successfully",
+          buildPublicProfileResponse(college),
+        ),
+      );
   }
 
   static async getCollegeSection(req: Request, res: Response) {
@@ -394,12 +484,14 @@ export class PublicCollegeController {
       throw new NotFoundError("College not found");
     }
 
-    // Hide sensitive data
-    const { settings, ...publicData } = college as any;
-
     return res
       .status(200)
-      .json(ApiResponse.success("College fetched successfully", publicData));
+      .json(
+        ApiResponse.success(
+          "College fetched successfully",
+          buildPublicProfileResponse(college),
+        ),
+      );
   }
 
   static async getCollegeCourses(req: Request, res: Response) {

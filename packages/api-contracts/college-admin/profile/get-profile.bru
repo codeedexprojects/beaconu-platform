@@ -13,3 +13,70 @@ get {
 auth:bearer {
   token: {{staffToken}}
 }
+
+docs {
+  Returns the college profile for the currently authenticated staff member's college.
+
+  Response shape:
+  ```json
+  {
+    "success": true,
+    "message": "College profile fetched",
+    "data": {
+      "collegeDetails": {
+        "id": "CLG-1",
+        "name": "Beacon Institute of Technology",
+        "slug": "beacon-it",
+        "code": "BIT-101",
+        "domain": "beacon-it",
+        "logoUrl": "...",
+        "coverImageUrl": "...",
+        "state": "UP",
+        "city": "Noida",
+        "district": "Gautam Buddha Nagar",
+        "address": "123 Main St",
+        "pinCode": "201301",
+        "status": "active",
+        "university": { "id": "...", "name": "...", "universityType": { ... } },
+        "campuses": [...],
+        "courses": [...],
+        ...
+      },
+      "tabs": [
+        "college_overview",
+        "course_info",
+        "admission_policy",
+        "placements",
+        "fees",
+        "financial_aid",
+        "student_housing",
+        "exam_policy",
+        "faculty",
+        "review",
+        "commute",
+        "library",
+        "clubs_associations",
+        "student_code_of_conduct",
+        "happenings",
+        "institutions_across_world",
+        "alliance",
+        "other_courses_offered",
+        "demo_graphics"
+      ],
+      "totalCourses": 5,
+      "instituteType": "Private University",
+      "campusAmbassadors": []
+    }
+  }
+  ```
+
+  Notes:
+  - `collegeDetails` contains the full college object (without `profileSections` raw data).
+  - `tabs` is a flat array of enabled profile section IDs (or section keys when id is missing).
+    Disabled sections (where `enabled === false`) are excluded from this list.
+  - `totalCourses` is a computed count of active courses.
+  - `instituteType` is the university type name (e.g. "Private University").
+  - `campusAmbassadors` lists linked Blink users (campus ambassadors).
+
+  Requires: college-admin staff access token.
+}
