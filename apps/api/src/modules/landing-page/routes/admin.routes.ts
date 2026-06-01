@@ -13,6 +13,14 @@ router.get(
   CollegeLeadsController.getStats,
 );
 
+router.post(
+  "/",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("leads.manage"),
+  CollegeLeadsController.create,
+);
+
 router.get(
   "/",
   authenticate,
@@ -27,6 +35,14 @@ router.get(
   authorizeUserType("platform_admin"),
   authorize("leads.view"),
   CollegeLeadsController.getById,
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("leads.manage"),
+  CollegeLeadsController.update,
 );
 
 router.patch(

@@ -7,6 +7,21 @@ import {
 import { COLLEGE_ONBOARDING_STATUS } from "@/shared/constants";
 
 export class CollegeOnboardingRepository {
+  static async findByContactEmail(email: string, excludeId?: string) {
+    return prisma.collegeOnboardingRequest.findFirst({
+      where: {
+        contactEmail: {
+          equals: email,
+          mode: "insensitive",
+        },
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
   static async create(data: SubmitCollegeOnboardingData) {
     return prisma.collegeOnboardingRequest.create({
       data: {
@@ -17,8 +32,26 @@ export class CollegeOnboardingRepository {
         contactPhone: data.contact_phone,
         city: data.city,
         state: data.state,
+        groupCode: data.group_code,
         message: data.message,
         status: COLLEGE_ONBOARDING_STATUS.PENDING,
+      },
+    });
+  }
+
+  static async updateLead(id: string, data: SubmitCollegeOnboardingData) {
+    return prisma.collegeOnboardingRequest.update({
+      where: { id },
+      data: {
+        collegeName: data.college_name,
+        universityName: data.university_name,
+        contactPersonName: data.contact_person_name,
+        contactEmail: data.contact_email,
+        contactPhone: data.contact_phone,
+        city: data.city,
+        state: data.state,
+        groupCode: data.group_code,
+        message: data.message,
       },
     });
   }

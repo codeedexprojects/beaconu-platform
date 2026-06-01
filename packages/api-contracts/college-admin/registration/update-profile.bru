@@ -68,6 +68,57 @@ body:json {
           ]
         }
       },
+      "admission_policy": {
+        "id": "admission_policy",
+        "enabled": true,
+        "summary": "Applications are processed in multiple rounds.",
+        "steps": [
+          "Apply online",
+          "Entrance shortlist",
+          "Seat confirmation"
+        ]
+      },
+      "placements": {
+        "id": "placements",
+        "enabled": true,
+        "summary": "Placement training starts from second year.",
+        "highestPackageLpa": 22,
+        "averagePackageLpa": 7.8
+      },
+      "fees": {
+        "id": "fees",
+        "enabled": true,
+        "summary": "Semester-wise fee with installment option."
+      },
+      "financial_aid": {
+        "id": "financial_aid",
+        "enabled": true,
+        "meritScholarship": {
+          "title": "Academic Excellence Scholarship",
+          "description": "Scholarship support for high academic performance."
+        }
+      },
+      "student_housing": {
+        "id": "student_housing",
+        "enabled": true,
+        "summary": "Separate hostels with wardens and amenities."
+      },
+      "exam_policy": {
+        "id": "exam_policy",
+        "enabled": true,
+        "grading_scale": [
+          {
+            "percentage": "90-100",
+            "grade": "A+",
+            "gradePoint": "10"
+          }
+        ]
+      },
+      "faculty": {
+        "id": "faculty",
+        "enabled": true,
+        "summary": "Faculty profile and specialization highlights."
+      },
       "review": {
         "id": "review",
         "enabled": true,
@@ -80,6 +131,70 @@ body:json {
             "reviewText": "Supportive peers and quality labs."
           }
         ]
+      },
+      "commute": {
+        "id": "commute",
+        "enabled": true,
+        "summary": "Campus is connected through bus and metro routes."
+      },
+      "library": {
+        "id": "library",
+        "enabled": true,
+        "availableResources": [
+          {
+            "resourceType": "Books",
+            "count": 25000
+          }
+        ]
+      },
+      "clubs_associations": {
+        "id": "clubs_associations",
+        "enabled": true,
+        "summary": "Student clubs for innovation and leadership.",
+        "items": [
+          {
+            "clubName": "Robotics Club",
+            "description": "Build and compete in inter-college events."
+          }
+        ]
+      },
+      "student_code_of_conduct": {
+        "id": "student_code_of_conduct",
+        "enabled": true,
+        "title": "Student Code of Conduct",
+        "description": "Guidelines for behavior, attendance, and discipline."
+      },
+      "happenings": {
+        "id": "happenings",
+        "enabled": true,
+        "summary": "Latest workshops, fests, and announcements.",
+        "items": [
+          {
+            "title": "Hackathon Week",
+            "description": "Campus-wide coding challenge.",
+            "date": "2026-09-15"
+          }
+        ]
+      },
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "summary": "Partner institutions and global touchpoints."
+      },
+      "alliance": {
+        "id": "alliance",
+        "enabled": true,
+        "summary": "Academic alliances and collaboration details."
+      },
+      "other_courses_offered": {
+        "id": "other_courses_offered",
+        "enabled": true,
+        "summary": "Certificate and skill-based short courses."
+      },
+      "demo_graphics": {
+        "id": "demo_graphics",
+        "enabled": true,
+        "summary": "Visual demo assets for course and campus pages."
       }
     }
   }
@@ -90,5 +205,11 @@ docs {
 
   Notes:
   - Use `profileSections` for tab payloads.
+  - Include all setup tab keys:
+    `college_overview`, `course_info`, `admission_policy`, `placements`,
+    `fees`, `financial_aid`, `student_housing`, `exam_policy`, `faculty`,
+    `review`, `commute`, `library`, `clubs_associations`,
+    `student_code_of_conduct`, `happenings`, `institutions_across_world`,
+    `alliance`, `other_courses_offered`, `demo_graphics`.
   - For single or multiple items, always send arrays for list fields.
 }
