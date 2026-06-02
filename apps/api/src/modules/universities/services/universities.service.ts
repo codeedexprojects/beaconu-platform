@@ -95,4 +95,22 @@ export class UniversityService {
 
     return UniversityRepository.updateById(id, { status: "archived" });
   }
+
+  static async activate(id: string) {
+    const existing = await UniversityRepository.findById(id);
+    if (!existing) throw new NotFoundError("University not found");
+
+    if (existing.status === "active") return existing;
+
+    return UniversityRepository.updateById(id, { status: "active" });
+  }
+
+  static async deactivate(id: string) {
+    const existing = await UniversityRepository.findById(id);
+    if (!existing) throw new NotFoundError("University not found");
+
+    if (existing.status === "inactive") return existing;
+
+    return UniversityRepository.updateById(id, { status: "inactive" });
+  }
 }

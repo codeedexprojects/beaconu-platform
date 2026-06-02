@@ -37,4 +37,10 @@ export const universitiesService = {
 
   archive: (id: string) =>
     api.patch<University>(`/api/v1/admin/universities/${id}/archive`, {}),
+
+  activate: (id: string) =>
+    api.patch<University>(`/api/v1/admin/universities/${id}/activate`, {}),
+
+  deactivate: (id: string) =>
+    api.patch<University>(`/api/v1/admin/universities/${id}/deactivate`, {}),
 };
