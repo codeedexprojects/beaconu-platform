@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -16,7 +16,6 @@ import {
   Calendar,
   ShieldCheck,
   Settings,
-  LogOut,
   ChevronRight,
   UserPlus,
   Inbox,
@@ -26,7 +25,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuthStore } from "@/store";
 
 interface NavItem {
   href: string;
@@ -205,14 +203,6 @@ const navSections: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const admin = useAuthStore((state) => state.admin);
-  const clearAuth = useAuthStore((state) => state.clearAuth);
-
-  function handleLogout() {
-    clearAuth();
-    window.location.assign("/login");
-  }
 
   return (
     <aside className="flex h-screen w-60 flex-col bg-sidebar border-r border-sidebar-border">
@@ -282,30 +272,6 @@ export function Sidebar() {
           })}
         </nav>
       </ScrollArea>
-
-      {/* User footer */}
-      <div className="shrink-0 border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
-            {admin?.fullName?.charAt(0) ?? "A"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {admin?.fullName ?? "Admin"}
-            </p>
-            <p className="truncate text-[11px] text-sidebar-foreground/50 capitalize">
-              {admin?.role?.replace("_", " ")}
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-white transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }
