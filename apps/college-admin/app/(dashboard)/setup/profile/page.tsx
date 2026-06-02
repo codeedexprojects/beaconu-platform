@@ -1921,7 +1921,6 @@ export default function SetupProfilePage() {
     watch,
     formState: { errors },
   } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       requestedGroupCode: "",
       profileSections: {
@@ -4796,6 +4795,40 @@ export default function SetupProfilePage() {
       }
     }
   }, [profile, reset]);
+
+  useEffect(() => {
+    setValue(
+      "profileSections.library.availableResources",
+      libraryResourceRows.map((row) => ({
+        resourceType: row.resourceType || "",
+        count: safeNumber(row.count || "0"),
+      })),
+      { shouldDirty: true, shouldValidate: false },
+    );
+  }, [libraryResourceRows, setValue]);
+
+  useEffect(() => {
+    setValue(
+      "profileSections.library.libraryHours",
+      libraryHourRows.map((row) => ({
+        day: row.day || "",
+        workingHours: row.workingHours || "",
+        transactionHours: row.transactionHours || "",
+      })),
+      { shouldDirty: true, shouldValidate: false },
+    );
+  }, [libraryHourRows, setValue]);
+
+  useEffect(() => {
+    setValue(
+      "profileSections.library.facilities",
+      libraryFacilityRows.map((row) => ({
+        title: row.title || "",
+        image: row.image || "",
+      })),
+      { shouldDirty: true, shouldValidate: false },
+    );
+  }, [libraryFacilityRows, setValue]);
 
   useEffect(() => {
     setOtherCoursesRows((prev) => {
