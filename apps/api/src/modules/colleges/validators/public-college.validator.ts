@@ -13,6 +13,10 @@ const sectionIdentifierParam = z
   .min(1, "section identifier is required");
 
 export const publicCollegeSchemas = {
+  filtersQuery: z.object({
+    search: z.string().trim().optional(),
+  }),
+
   collegeIdParam: z.object({
     collegeId: z.string(),
   }),
