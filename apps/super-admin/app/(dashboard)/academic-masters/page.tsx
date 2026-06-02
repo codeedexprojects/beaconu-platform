@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,63 @@ import {
   useCreateDiscipline,
   useCreateProgramType,
   useCreateStudyLevel,
+  useEnableStream,
   useDisableStream,
+  useEnableDiscipline,
   useDisableDiscipline,
+  useEnableProgramType,
   useDisableProgramType,
+  useEnableStudyLevel,
   useDisableStudyLevel,
   useDisciplines,
   useProgramTypes,
   useStreams,
   useStudyLevels,
+  useAllActiveStreams,
 } from "@/hooks/use-academic-taxonomy";
+
+const PAGE_SIZE = 10;
+
+function Pagination({
+  page,
+  totalPages,
+  onPrev,
+  onNext,
+}: {
+  page: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-4 border-t mt-2">
+      <p className="text-xs text-muted-foreground">
+        Page {page} of {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrev}
+          disabled={page <= 1}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Prev
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNext}
+          disabled={page >= totalPages}
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 type Tab = "streams" | "disciplines" | "study-levels" | "program-types";
 
@@ -81,21 +129,45 @@ export default function AcademicMastersPage() {
   const [activeTab, setActiveTab] = useState<Tab>("streams");
   const [showForm, setShowForm] = useState(false);
 
-  const { data: streams = [], isLoading: isLoadingStreams } = useStreams();
-  const { data: disciplines = [], isLoading: isLoadingDisciplines } =
-    useDisciplines();
-  const { data: studyLevels = [], isLoading: isLoadingStudyLevels } =
-    useStudyLevels();
-  const { data: programTypes = [], isLoading: isLoadingProgramTypes } =
-    useProgramTypes();
+  const [streamPage, setStreamPage] = useState(1);
+  const [disciplinePage, setDisciplinePage] = useState(1);
+  const [studyLevelPage, setStudyLevelPage] = useState(1);
+  const [programTypePage, setProgramTypePage] = useState(1);
+
+  const { data: streamsPage, isLoading: isLoadingStreams } = useStreams({
+    page: streamPage,
+    limit: PAGE_SIZE,
+  });
+  const { data: disciplinesPage, isLoading: isLoadingDisciplines } =
+    useDisciplines({ page: disciplinePage, limit: PAGE_SIZE });
+  const { data: studyLevelsPage, isLoading: isLoadingStudyLevels } =
+    useStudyLevels({ page: studyLevelPage, limit: PAGE_SIZE });
+  const { data: programTypesPage, isLoading: isLoadingProgramTypes } =
+    useProgramTypes({ page: programTypePage, limit: PAGE_SIZE });
+
+  // Flat active streams for the discipline dropdown
+  const { data: allActiveStreams = [] } = useAllActiveStreams();
+
+  const streams = streamsPage?.data ?? [];
+  const streamsMeta = streamsPage?.meta;
+  const disciplines = disciplinesPage?.data ?? [];
+  const disciplinesMeta = disciplinesPage?.meta;
+  const studyLevels = studyLevelsPage?.data ?? [];
+  const studyLevelsMeta = studyLevelsPage?.meta;
+  const programTypes = programTypesPage?.data ?? [];
+  const programTypesMeta = programTypesPage?.meta;
 
   const createStream = useCreateStream();
+  const enableStream = useEnableStream();
   const disableStream = useDisableStream();
   const createDiscipline = useCreateDiscipline();
+  const enableDiscipline = useEnableDiscipline();
   const disableDiscipline = useDisableDiscipline();
   const createStudyLevel = useCreateStudyLevel();
+  const enableStudyLevel = useEnableStudyLevel();
   const disableStudyLevel = useDisableStudyLevel();
   const createProgramType = useCreateProgramType();
+  const enableProgramType = useEnableProgramType();
   const disableProgramType = useDisableProgramType();
 
   const [streamForm, setStreamForm] = useState({ name: "", sort_order: 0 });
@@ -113,9 +185,10 @@ export default function AcademicMastersPage() {
     sort_order: 0,
   });
 
-  const sortedStreams = useMemo(
-    () => streams.slice().sort((a, b) => a.sortOrder - b.sortOrder),
-    [streams],
+  // Already sorted by backend; kept for dropdown use
+  const sortedActiveStreams = useMemo(
+    () => allActiveStreams.filter((s) => s.isActive),
+    [allActiveStreams],
   );
 
   function switchTab(tab: Tab) {
@@ -268,13 +341,13 @@ export default function AcademicMastersPage() {
                 <p className="text-sm text-muted-foreground">
                   Loading streams…
                 </p>
-              ) : sortedStreams.length === 0 ? (
+              ) : streams.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">
                   No streams yet.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {sortedStreams.map((stream) => (
+                  {streams.map((stream) => (
                     <div
                       key={stream.id}
                       className="flex items-center justify-between rounded-md border p-3"
@@ -293,8 +366,13 @@ export default function AcademicMastersPage() {
                         </Badge>
                         <Switch
                           checked={stream.isActive}
-                          onCheckedChange={() => {
-                            if (stream.isActive) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              enableStream.mutate(stream.id, {
+                                onSuccess: () =>
+                                  toast.success("Stream enabled"),
+                              });
+                            } else {
                               disableStream.mutate(stream.id, {
                                 onSuccess: () =>
                                   toast.success("Stream disabled"),
@@ -307,6 +385,12 @@ export default function AcademicMastersPage() {
                   ))}
                 </div>
               )}
+              <Pagination
+                page={streamPage}
+                totalPages={streamsMeta?.totalPages ?? 1}
+                onPrev={() => setStreamPage((p) => p - 1)}
+                onNext={() => setStreamPage((p) => p + 1)}
+              />
             </CardContent>
           </Card>
         )}
@@ -355,7 +439,7 @@ export default function AcademicMastersPage() {
                         <SelectValue placeholder="Select stream" />
                       </SelectTrigger>
                       <SelectContent>
-                        {sortedStreams.map((stream) => (
+                        {sortedActiveStreams.map((stream) => (
                           <SelectItem key={stream.id} value={stream.id}>
                             {stream.name}
                           </SelectItem>
@@ -436,8 +520,13 @@ export default function AcademicMastersPage() {
                         </Badge>
                         <Switch
                           checked={discipline.isActive}
-                          onCheckedChange={() => {
-                            if (discipline.isActive) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              enableDiscipline.mutate(discipline.id, {
+                                onSuccess: () =>
+                                  toast.success("Discipline enabled"),
+                              });
+                            } else {
                               disableDiscipline.mutate(discipline.id, {
                                 onSuccess: () =>
                                   toast.success("Discipline disabled"),
@@ -450,6 +539,12 @@ export default function AcademicMastersPage() {
                   ))}
                 </div>
               )}
+              <Pagination
+                page={disciplinePage}
+                totalPages={disciplinesMeta?.totalPages ?? 1}
+                onPrev={() => setDisciplinePage((p) => p - 1)}
+                onNext={() => setDisciplinePage((p) => p + 1)}
+              />
             </CardContent>
           </Card>
         )}
@@ -550,8 +645,13 @@ export default function AcademicMastersPage() {
                         </Badge>
                         <Switch
                           checked={level.isActive}
-                          onCheckedChange={() => {
-                            if (level.isActive) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              enableStudyLevel.mutate(level.id, {
+                                onSuccess: () =>
+                                  toast.success("Study level enabled"),
+                              });
+                            } else {
                               disableStudyLevel.mutate(level.id, {
                                 onSuccess: () =>
                                   toast.success("Study level disabled"),
@@ -564,6 +664,12 @@ export default function AcademicMastersPage() {
                   ))}
                 </div>
               )}
+              <Pagination
+                page={studyLevelPage}
+                totalPages={studyLevelsMeta?.totalPages ?? 1}
+                onPrev={() => setStudyLevelPage((p) => p - 1)}
+                onNext={() => setStudyLevelPage((p) => p + 1)}
+              />
             </CardContent>
           </Card>
         )}
@@ -667,8 +773,13 @@ export default function AcademicMastersPage() {
                         </Badge>
                         <Switch
                           checked={type.isActive}
-                          onCheckedChange={() => {
-                            if (type.isActive) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              enableProgramType.mutate(type.id, {
+                                onSuccess: () =>
+                                  toast.success("Program type enabled"),
+                              });
+                            } else {
                               disableProgramType.mutate(type.id, {
                                 onSuccess: () =>
                                   toast.success("Program type disabled"),
@@ -681,6 +792,12 @@ export default function AcademicMastersPage() {
                   ))}
                 </div>
               )}
+              <Pagination
+                page={programTypePage}
+                totalPages={programTypesMeta?.totalPages ?? 1}
+                onPrev={() => setProgramTypePage((p) => p - 1)}
+                onNext={() => setProgramTypePage((p) => p + 1)}
+              />
             </CardContent>
           </Card>
         )}
