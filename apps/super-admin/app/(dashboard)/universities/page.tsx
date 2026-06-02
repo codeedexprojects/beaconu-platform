@@ -60,7 +60,7 @@ import {
   useActivateUniversity,
   useDeactivateUniversity,
 } from "@/hooks/use-universities";
-import { useStreams } from "@/hooks/use-academic-taxonomy";
+import { useAllActiveStreams } from "@/hooks/use-academic-taxonomy";
 import { useUniversityTypes } from "@/hooks/use-university-types";
 
 function toSlug(value: string): string {
@@ -433,7 +433,7 @@ export default function UniversitiesPage() {
 
   const { data: universities = [], isLoading } = useUniversities();
   const { data: universityTypes = [] } = useUniversityTypes();
-  const { data: streams = [] } = useStreams(true);
+  const { data: streams = [] } = useAllActiveStreams();
   const createMutation = useCreateUniversity();
   const updateMutation = useUpdateUniversity();
   const activateMutation = useActivateUniversity();
