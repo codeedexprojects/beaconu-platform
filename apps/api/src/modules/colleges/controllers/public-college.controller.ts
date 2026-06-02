@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
+import { PublicCollegeQuery } from "../queries/public-college.query";
 
 const PUBLIC_COLLEGE_INCLUDES = {
   university: {
@@ -248,6 +249,14 @@ function findSectionByIdentifier(
 }
 
 export class PublicCollegeController {
+  static async getFilters(req: Request, res: Response) {
+    const { search } = publicCollegeSchemas.filtersQuery.parse(req.query);
+    const result = await PublicCollegeQuery.getFilters(search);
+    res
+      .status(200)
+      .json(ApiResponse.success("College filters fetched", result));
+  }
+
   static async getColleges(req: Request, res: Response) {
     const {
       universityId,

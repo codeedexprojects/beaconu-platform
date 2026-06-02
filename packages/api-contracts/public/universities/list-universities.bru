@@ -11,17 +11,17 @@ get {
 }
 
 query {
-  ~page: 1
-  ~limit: 20
-  ~type_id:
+  ~university_type_id:
+  ~state: Karnataka
+  ~search:
 }
 
 docs {
-  Returns paginated list of active universities.
+  Returns list of active universities.
   No authentication required.
 
   Query Parameters:
-  - page: Page number (optional)
-  - limit: Items per page (optional)
-  - type_id: Filter by university type UUID (optional)
+  - university_type_id: Filter by university type ID (optional)
+  - state: Filter by state name, e.g. "Karnataka" (optional)
+  - search: Search by university name (optional)
 }

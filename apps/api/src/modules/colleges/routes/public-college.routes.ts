@@ -3,6 +3,7 @@ import { PublicCollegeController } from "../controllers/public-college.controlle
 
 const router: Router = Router();
 
+router.get("/filters", PublicCollegeController.getFilters);
 router.get("/", PublicCollegeController.getColleges);
 router.get(
   "/:collegeId/section/:sectionName",

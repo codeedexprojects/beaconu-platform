@@ -3,16 +3,14 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { universitySchemas } from "../validators/universities.validator";
 import { academicTaxonomySchemas } from "../validators/academic-taxonomy.validator";
 import { UniversityQuery } from "../queries/universities.query";
-import { UniversityTypeQuery } from "../queries/university-types.query";
 import { AcademicTaxonomyQuery } from "../queries/academic-taxonomy.query";
 
 export class UniversityPublicController {
-  static async listTypes(req: Request, res: Response): Promise<void> {
-    const query = academicTaxonomySchemas.publicListQuery.parse(req.query);
-    const result = await UniversityTypeQuery.listActive(query);
+  static async listTypes(_req: Request, res: Response): Promise<void> {
+    const result = await UniversityQuery.getFilters();
     res
       .status(200)
-      .json(ApiResponse.success("University types fetched", result));
+      .json(ApiResponse.success("University filters fetched", result));
   }
 
   static async listStreams(req: Request, res: Response): Promise<void> {
