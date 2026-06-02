@@ -29,6 +29,7 @@ import {
 import {
   useCollegeCampuses,
   useCollegeCourses,
+  useCollegeProfile,
   useCreateCollegeCourse,
 } from "@/hooks/use-colleges";
 import {
@@ -84,6 +85,7 @@ export default function SetupAcademicsPage() {
 
   const { data: courses = [], isLoading: isLoadingCourses } =
     useCollegeCourses();
+  const { data: profile } = useCollegeProfile();
   const { data: streams = [] } = useStreams();
   const { data: studyLevels = [] } = useStudyLevels();
   const { data: programTypes = [] } = useProgramTypes();
@@ -122,6 +124,21 @@ export default function SetupAcademicsPage() {
   };
 
   const hasCourses = courses.length > 0;
+
+  const configuredCourseName =
+    ((profile?.profileSections?.course_info as any)?.course_name as string) ||
+    "";
+  const configuredAdmissionDetails =
+    ((profile?.profileSections?.course_info as any)?.admissions?.[0]
+      ?.basic_details as
+      | {
+          duration?: string;
+          study_mode?: string;
+          academic_cycle?: string;
+          total_credits?: number;
+          course_category?: string;
+        }
+      | undefined) || undefined;
 
   // Flatten streams to get all disciplines
   const disciplines = streams.flatMap((s) => {
@@ -171,6 +188,45 @@ export default function SetupAcademicsPage() {
                       <p>• {course.discipline?.name}</p>
                       <p>• {course.programType?.name}</p>
                       {course.campus && <p>• Campus: {course.campus.name}</p>}
+                      {configuredCourseName &&
+                        configuredCourseName.trim() === course.name.trim() && (
+                          <>
+                            <p className="pt-1 font-medium text-foreground/90">
+                              Course Info Details
+                            </p>
+                            {configuredAdmissionDetails?.duration && (
+                              <p>
+                                • Duration:{" "}
+                                {configuredAdmissionDetails.duration}
+                              </p>
+                            )}
+                            {configuredAdmissionDetails?.study_mode && (
+                              <p>
+                                • Study Mode:{" "}
+                                {configuredAdmissionDetails.study_mode}
+                              </p>
+                            )}
+                            {configuredAdmissionDetails?.academic_cycle && (
+                              <p>
+                                • Academic Cycle:{" "}
+                                {configuredAdmissionDetails.academic_cycle}
+                              </p>
+                            )}
+                            {configuredAdmissionDetails?.total_credits !=
+                              null && (
+                              <p>
+                                • Credits:{" "}
+                                {configuredAdmissionDetails.total_credits}
+                              </p>
+                            )}
+                            {configuredAdmissionDetails?.course_category && (
+                              <p>
+                                • Category:{" "}
+                                {configuredAdmissionDetails.course_category}
+                              </p>
+                            )}
+                          </>
+                        )}
                     </div>
                   </div>
                 </Card>

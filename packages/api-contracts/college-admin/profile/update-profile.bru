@@ -30,22 +30,20 @@ body:json {
         "id": "college_overview",
         "enabled": true,
         "description": "Industry-focused programs with modern infrastructure.",
-        "accreditation_and_affiliation": {
-          "rankings": [
-            {
-              "body": "NIRF",
-              "rank": "MAHE Rank 3",
-              "logo": "nirf",
-              "recognitions": "India's top #131/200 universities in 2024"
-            },
-            {
-              "body": "Outlook ICARE Ranking 2024",
-              "rank": "MAHE Rank 3",
-              "logo": "outlook",
-              "recognitions": "India's top #131/200 universities in 2024"
-            }
-          ]
-        },
+        "accreditation_and_affiliation": [
+          {
+            "body": "NIRF",
+            "rank": "MAHE Rank 3",
+            "logo": "nirf",
+            "recognitions": "India's top #131/200 universities in 2024"
+          },
+          {
+            "body": "Outlook ICARE Ranking 2024",
+            "rank": "MAHE Rank 3",
+            "logo": "outlook",
+            "recognitions": "India's top #131/200 universities in 2024"
+          }
+        ],
         "instution_details": {
           "estd": "2005",
           "gender": "Co-Ed",
@@ -110,43 +108,102 @@ body:json {
         "id": "course_info",
         "enabled": true,
         "course_name": "B.Tech Computer Science",
-        "admissions": [
-          {
-            "year": "Admissions 2026",
-            "status": "Open",
-            "placement_rate": "35",
-            "seats_note": "Limited seats available",
-            "basic_details": {
-              "duration": "4 Years",
-              "study_mode": "Full Time",
-              "academic_cycle": "Semester",
-              "total_credits": 160,
-              "gender_accepted": "All",
-              "course_category": "UG"
+        "data": {
+          "course_name": "B.Tech Computer Science",
+          "admissions": [
+            {
+              "year": "Admissions 2026",
+              "status": "Open",
+              "placement_rate": "35",
+              "seats_note": "Limited seats available",
+              "basic_details": {
+                "duration": "4 Years",
+                "study_mode": "Full Time",
+                "academic_cycle": "Semester",
+                "total_credits": 160,
+                "gender_accepted": "All",
+                "course_category": "UG"
+              }
             }
-          }
-        ],
-        "program_highlights": [
-          "Industry-aligned curriculum",
-          "Capstone with live projects"
-        ],
-        "course_accolades": [
-          {
-            "body": "NBA Accredited",
-            "rank": "A+",
-            "image": "https://example.com/images/nba.png"
-          }
-        ],
-        "key_dates": {
-          "application_start": "2026-04-01",
-          "application_close": {
-            "date": "2026-07-15",
-            "urgency": "Deadline"
+          ],
+          "program_highlights": [
+            "Industry-aligned curriculum",
+            "Capstone with live projects"
+          ],
+          "course_accolades": [
+            {
+              "body": "NBA Accredited",
+              "rank": "A+",
+              "image": "https://example.com/images/nba.png"
+            }
+          ],
+          "key_dates": {
+            "application_start": "2026-04-01",
+            "application_close": {
+              "date": "2026-07-15",
+              "urgency": "Deadline"
+            },
+            "class_commencement": {
+              "date": "2026-08-05",
+              "note": "Orientation week starts earlier"
+            }
           },
-          "class_commencement": {
-            "date": "2026-08-05",
-            "note": "Orientation week starts earlier"
-          }
+          "value_added_course": {
+            "name": "Advanced Problem Solving",
+            "credits": 2,
+            "delivery_mode": "Hybrid",
+            "course_type": "Certificate"
+          },
+          "higher_education_and_certifications": [
+            {
+              "title": "Global Certifications",
+              "description": [
+                "AWS Certified Cloud Practitioner",
+                "Google Associate Cloud Engineer"
+              ]
+            },
+            {
+              "title": "Postgraduation",
+              "description": [
+                "M.Tech in Computer Science",
+                "MBA in Technology Management"
+              ]
+            }
+          ],
+          "bonus_certification": [
+            {
+              "name": "Industry Mentor Certification",
+              "note": "Awarded after capstone evaluation",
+              "certificate_details_available": true,
+              "details_page": "https://example.com/certifications/industry-mentor"
+            }
+          ],
+          "featured_alumni": [
+            {
+              "name": "Aarav Sharma",
+              "designation": "Senior Software Engineer",
+              "career_progression": [
+                {
+                  "year": 2021,
+                  "milestone": "Joined as Graduate Trainee"
+                },
+                {
+                  "year": 2024,
+                  "milestone": "Promoted to Senior Software Engineer"
+                }
+              ]
+            }
+          ],
+          "faqs": [
+            {
+              "title": "Is hostel accommodation available?",
+              "description": "Yes, separate on-campus hostels are available for boys and girls."
+            },
+            {
+              "title": "What is the admission process?",
+              "description": "Submit the application form, upload documents, and complete counselling based on eligibility."
+            }
+          ]
         }
       },
       "admission_policy": {
@@ -163,24 +220,24 @@ body:json {
                   "label": "Government Quota",
                   "criteria": [
                     {
-                      "id": "educational_qualification",
-                      "label": "Educational Qualification",
+                      "title": "Educational Qualification",
                       "description": "Candidates must have completed 10+2 (Intermediate/Senior Secondary Education) from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2l9 4.5-9 4.5-9-4.5L12 2z\"/><path d=\"M3 11.5L12 16l9-4.5\"/><path d=\"M7 13.5V17a5 5 0 0 0 10 0v-3.5\"/></svg>"
                     },
                     {
-                      "id": "age_requirement",
-                      "label": "Age Requirement",
+                      "title": "Age Requirement",
                       "description": "Minimum 17 years of age as of 31st December. No upper age limit for admission to this course."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 3\"/></svg>"
                     },
                     {
-                      "id": "academic_grades",
-                      "label": "Academic Grades (10+2)",
+                      "title": "Academic Grades (10+2)",
                       "description": "Minimum 50% marks in aggregate in 10+2 / 10+3 from a recognized board."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 8h10\"/><path d=\"M7 12h10\"/><path d=\"M7 16h6\"/></svg>"
                     },
                     {
-                      "id": "entrance_grades",
-                      "label": "Entrance Grades",
+                      "title": "Entrance Grades",
                       "description": "Must secure a valid rank in NEET/CET with a minimum percentile of 50th (40th for SC/ST/OBC categories)."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 4h16v16H4z\"/><path d=\"M8 14l2 2 6-6\"/></svg>"
                     }
                   ]
                 },
