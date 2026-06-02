@@ -78,6 +78,13 @@ export interface PublicCollege {
   } | null;
   campuses: PublicCampus[];
   courses: PublicCourse[];
+  campusAmbassadors?: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+    phoneNumber: string | null;
+  }[];
   institutionGroups?: {
     members: {
       college: {

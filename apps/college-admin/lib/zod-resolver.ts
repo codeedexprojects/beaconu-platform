@@ -11,15 +11,17 @@
  * is included because some Zod v4 format validators (`.uuid()`, `.regex()`)
  * have been observed to throw even from `safeParse`.
  */
-import type { FieldErrors, Resolver } from "react-hook-form";
+import type { FieldErrors, FieldValues, Resolver } from "react-hook-form";
 import { z } from "zod";
 
-function mapZodErrorToFieldErrors(error: z.ZodError): FieldErrors {
-  const fieldErrors: FieldErrors = {};
+function mapZodErrorToFieldErrors<TFieldValues extends FieldValues>(
+  error: z.ZodError,
+): FieldErrors<TFieldValues> {
+  const fieldErrors = {} as FieldErrors<TFieldValues>;
 
   for (const issue of error.issues ?? (error as any).errors ?? []) {
     const path = issue.path.map(String).join(".");
-    if (path && !fieldErrors[path]) {
+    if (path && !(fieldErrors as Record<string, unknown>)[path]) {
       (fieldErrors as Record<string, unknown>)[path] = {
         type: issue.code ?? "validation",
         message: issue.message,
@@ -30,23 +32,35 @@ function mapZodErrorToFieldErrors(error: z.ZodError): FieldErrors {
   return fieldErrors;
 }
 
-export function zodResolver<T extends z.ZodType<any, any>>(
+export function zodResolver<T extends z.ZodTypeAny>(
   schema: T,
-): Resolver<z.infer<T>> {
-  return async (values) => {
+): Resolver<z.output<T> extends FieldValues ? z.output<T> : FieldValues> {
+  type TResolverValues =
+    z.output<T> extends FieldValues ? z.output<T> : FieldValues;
+
+  const resolver: Resolver<TResolverValues> = async (values) => {
     try {
       const result = schema.safeParse(values);
 
       if (result.success) {
-        return { values: result.data, errors: {} };
+        return {
+          values: result.data as TResolverValues,
+          errors: {},
+        };
       }
 
-      return { values: {}, errors: mapZodErrorToFieldErrors(result.error) };
+      return {
+        values: {} as Record<string, never>,
+        errors: mapZodErrorToFieldErrors<TResolverValues>(result.error),
+      };
     } catch (thrown: unknown) {
       // Zod v4 format validators (.uuid(), .regex(), .email() etc.) can throw
       // even from safeParse.  Catch and map them to field errors.
       if (thrown instanceof z.ZodError) {
-        return { values: {}, errors: mapZodErrorToFieldErrors(thrown) };
+        return {
+          values: {} as Record<string, never>,
+          errors: mapZodErrorToFieldErrors<TResolverValues>(thrown),
+        };
       }
 
       // Duck-type check for ZodError-like objects (cross-version instanceof
@@ -58,12 +72,16 @@ export function zodResolver<T extends z.ZodType<any, any>>(
         Array.isArray((thrown as any).issues)
       ) {
         return {
-          values: {},
-          errors: mapZodErrorToFieldErrors(thrown as z.ZodError),
+          values: {} as Record<string, never>,
+          errors: mapZodErrorToFieldErrors<TResolverValues>(
+            thrown as z.ZodError,
+          ),
         };
       }
 
       throw thrown;
     }
   };
+
+  return resolver;
 }
