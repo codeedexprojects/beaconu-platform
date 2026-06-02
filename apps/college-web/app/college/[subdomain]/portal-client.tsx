@@ -50,6 +50,27 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
   const courseInfo = pSections.course_info || {};
   const placements = pSections.placements || {};
   const tuitionAid = pSections.tuition_and_aid || {};
+  const accreditation =
+    overview.accreditation_and_affiliation ||
+    overview.accreditation_and_affilation ||
+    {};
+  const institutionDetails =
+    overview.institution_details || overview.instution_details || {};
+  const amenities = overview.amenities || overview.aminities || [];
+  const insideCampusFacilities = overview.inside_campus_facilities || [];
+  const nearbyAccess = overview.nearby_access || {};
+  const utilityAccess = nearbyAccess.utilities || nearbyAccess.utility || [];
+  const campusReels = overview.campus || overview.campus_reels || [];
+  const connectLinks =
+    overview.connectwithus?.links ||
+    [
+      { platform: "LinkedIn", url: overview.connect?.linkedin },
+      { platform: "Instagram", url: overview.connect?.instagram },
+      { platform: "Twitter", url: overview.connect?.twitter },
+      { platform: "Website", url: overview.connect?.website },
+    ].filter((item) => !!item.url);
+  const ambassadors =
+    overview.campusambassidors || college.campusAmbassadors || [];
 
   // Filter courses
   const filteredCourses = college.courses.filter(
@@ -162,7 +183,7 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                     "Welcome to the institution. We foster innovation, deep learning, and holistic excellence."}
                 </p>
 
-                {overview.accreditation_and_affilation?.description && (
+                {accreditation?.description && (
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
                     <Award className="h-6 w-6 text-primary shrink-0" />
                     <div>
@@ -170,11 +191,40 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                         Accreditation & Affiliations
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {overview.accreditation_and_affilation.description}
+                        {accreditation.description}
                       </p>
                     </div>
                   </div>
                 )}
+
+                {Array.isArray(accreditation?.rankings) &&
+                  accreditation.rankings.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        Rankings
+                      </p>
+                      <div className="grid gap-2">
+                        {accreditation.rankings.map(
+                          (item: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="rounded-lg border bg-background/60 p-3"
+                            >
+                              <p className="text-sm font-semibold">
+                                {item.body || "Ranking Body"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.rank || "-"}
+                                {item.recognitions
+                                  ? ` • ${item.recognitions}`
+                                  : ""}
+                              </p>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
               </section>
 
               {/* Institution statistics matrix */}
@@ -182,24 +232,29 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                 {[
                   {
                     label: "Established",
-                    value: overview.instution_details?.estd || "N/A",
+                    value:
+                      institutionDetails?.established_year ||
+                      institutionDetails?.estd ||
+                      "N/A",
                     icon: Calendar,
                   },
                   {
                     label: "Gender Type",
-                    value: overview.instution_details?.gender || "Co-Ed",
+                    value:
+                      institutionDetails?.gender_accepted ||
+                      institutionDetails?.gender ||
+                      "Co-Ed",
                     icon: Users,
                   },
                   {
                     label: "Campus Size",
-                    value: `${overview.instution_details?.campus_size || "N/A"} Acres`,
+                    value: `${institutionDetails?.campus_size || "N/A"}`,
                     icon: MapPin,
                   },
                   {
                     label: "Students Strength",
                     value:
-                      overview.instution_details?.average_student_count ||
-                      "1,000+",
+                      institutionDetails?.average_student_count || "1,000+",
                     icon: School,
                   },
                 ].map((stat, idx) => {
@@ -258,11 +313,11 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
               )}
 
               {/* Amenities flex list */}
-              {overview.aminities && overview.aminities.length > 0 && (
+              {amenities && amenities.length > 0 && (
                 <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
                   <h3 className="text-lg font-bold">Campus Amenities</h3>
                   <div className="flex flex-wrap gap-2">
-                    {overview.aminities.map((amenity: string, idx: number) => (
+                    {amenities.map((amenity: string, idx: number) => (
                       <Badge
                         key={idx}
                         variant="secondary"
@@ -271,6 +326,153 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-primary shrink-0" />
                         {amenity}
                       </Badge>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {(nearbyAccess.transit?.length > 0 ||
+                nearbyAccess.essentials?.length > 0 ||
+                utilityAccess?.length > 0) && (
+                <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold">Nearby Access</h3>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                        Transit
+                      </p>
+                      <div className="space-y-2">
+                        {(nearbyAccess.transit || []).map(
+                          (item: any, idx: number) => (
+                            <p
+                              key={idx}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {item.type}: {item.name} ({item.distance})
+                            </p>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                        Essentials
+                      </p>
+                      <div className="space-y-2">
+                        {(nearbyAccess.essentials || []).map(
+                          (item: any, idx: number) => (
+                            <p
+                              key={idx}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {item.type}: {item.name} ({item.distance})
+                            </p>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                        Utilities
+                      </p>
+                      <div className="space-y-2">
+                        {(utilityAccess || []).map((item: any, idx: number) => (
+                          <p
+                            key={idx}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {item.type}: {item.name} ({item.distance})
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {insideCampusFacilities.length > 0 && (
+                <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold">
+                    Inside Campus Facilities
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {insideCampusFacilities.map((item: any, idx: number) => (
+                      <Card key={idx}>
+                        <CardContent className="p-4 space-y-2">
+                          <p className="font-semibold text-sm">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name || "Campus facility"}
+                              className="h-28 w-full rounded-md object-cover"
+                            />
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {ambassadors.length > 0 && (
+                <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold">Campus Ambassadors</h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {ambassadors.map((amb: any, idx: number) => (
+                      <div key={idx} className="rounded-lg border p-3">
+                        <p className="text-sm font-semibold">
+                          {amb.name || amb.fullName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {amb.email}
+                        </p>
+                        {amb.phoneNumber && (
+                          <p className="text-xs text-muted-foreground">
+                            {amb.phoneNumber}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {campusReels.length > 0 && (
+                <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold">Campus Reels</h3>
+                  <div className="space-y-2">
+                    {campusReels.map((item: any, idx: number) => (
+                      <a
+                        key={idx}
+                        href={item.link || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block rounded-lg border p-3 text-sm hover:bg-muted/40"
+                      >
+                        {item.title || "Campus Short Video"}
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {connectLinks.length > 0 && (
+                <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold">Connect With Us</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {connectLinks.map((item: any, idx: number) => (
+                      <a
+                        key={idx}
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex rounded-lg border px-3 py-1.5 text-sm hover:bg-muted/40"
+                      >
+                        {item.platform}
+                      </a>
                     ))}
                   </div>
                 </section>

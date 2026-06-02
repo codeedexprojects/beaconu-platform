@@ -210,16 +210,13 @@ function buildPublicProfileResponse(college: any) {
     : {};
   const tabs = buildTabIdList(profileSections);
 
-  const {
-    profileSections: _ps,
-    settings: _s,
-    blinkUsers: _bu,
-    _count,
-    ...collegeDetails
-  } = college;
+  const { settings: _s, blinkUsers: _bu, _count, ...collegeDetails } = college;
 
   return {
-    collegeDetails,
+    collegeDetails: {
+      ...collegeDetails,
+      profileSections,
+    },
     tabs,
     totalCourses,
     instituteType,

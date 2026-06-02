@@ -28,7 +28,30 @@ body:json {
         "id": "college_overview",
         "enabled": true,
         "description": "Practice-driven learning with strong outcomes.",
-        "aminities": ["Library", "Hostel Facility", "AC Classrooms"],
+        "accreditation_and_affiliation": {
+          "rankings": [
+            {
+              "body": "NIRF",
+              "rank": "MAHE Rank 3",
+              "logo": "nirf",
+              "recognitions": "India's top #131/200 universities in 2024"
+            },
+            {
+              "body": "Outlook ICARE Ranking 2024",
+              "rank": "MAHE Rank 3",
+              "logo": "outlook",
+              "recognitions": "India's top #131/200 universities in 2024"
+            }
+          ]
+        },
+        "amenities": ["Library", "Hostel Facility", "AC Classrooms"],
+        "inside_campus_facilities": [
+          {
+            "name": "Central Library",
+            "description": "Digital archives and quiet study zones",
+            "image": "https://example.com/library.jpg"
+          }
+        ],
         "nearby_access": {
           "transit": [
             {
@@ -43,6 +66,13 @@ body:json {
               "name": "SBI ATM",
               "distance": "0.3 km"
             }
+          ],
+          "utilities": [
+            {
+              "type": "Bank",
+              "name": "State Bank of India",
+              "distance": "0.6 km"
+            }
           ]
         },
         "campus_reels": [
@@ -55,35 +85,185 @@ body:json {
       "course_info": {
         "id": "course_info",
         "enabled": true,
-        "eligibilitySummary": "Based on merit and entrance score.",
-        "course_details": {
-          "programHighlights": [
-            { "description": "Hands-on lab sessions" }
-          ],
-          "courseAccolades": [
-            {
-              "title": "Top Recruiters",
-              "description": "120+ recruiters in 2025"
+        "course_name": "BBA",
+        "admissions": [
+          {
+            "year": "Admissions 2026",
+            "status": "Open",
+            "placement_rate": "42",
+            "seats_note": "Few seats left",
+            "basic_details": {
+              "duration": "3 Years",
+              "study_mode": "Full Time",
+              "academic_cycle": "Semester",
+              "total_credits": 128,
+              "gender_accepted": "All",
+              "course_category": "UG"
             }
-          ]
+          }
+        ],
+        "program_highlights": [
+          "Hands-on lab sessions"
+        ],
+        "course_accolades": [
+          {
+            "body": "Top Recruiters",
+            "rank": "120+",
+            "image": "https://example.com/images/recruiters.png"
+          }
+        ],
+        "key_dates": {
+          "application_start": "2026-05-01",
+          "application_close": {
+            "date": "2026-07-31",
+            "urgency": "Closing Soon"
+          },
+          "class_commencement": {
+            "date": "2026-08-20",
+            "note": "Reporting starts one week before classes"
+          }
         }
       },
       "admission_policy": {
         "id": "admission_policy",
         "enabled": true,
-        "summary": "Applications are processed in multiple rounds.",
-        "steps": [
-          "Apply online",
-          "Entrance shortlist",
-          "Seat confirmation"
-        ]
+        "eligibility_criteria": {
+          "applicant_type_tabs": [
+            {
+              "id": "indian",
+              "label": "Indian Students",
+              "quota_categories": [
+                {
+                  "id": "government_quota",
+                  "label": "Government Quota",
+                  "criteria": [
+                    {
+                      "id": "educational_qualification",
+                      "label": "Educational Qualification",
+                      "description": "Candidates must have completed 10+2 (Intermediate/Senior Secondary Education) from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                    }
+                  ]
+                },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            },
+            {
+              "id": "foreign",
+              "label": "Foreign Students",
+              "quota_categories": [
+                { "id": "government_quota", "label": "Government Quota", "criteria": [] },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            }
+          ],
+          "default_applicant_type": "indian",
+          "default_quota": "government_quota",
+          "cta": {
+            "label": "Check Eligibility",
+            "action": "check_eligibility"
+          }
+        }
       },
       "placements": {
         "id": "placements",
         "enabled": true,
-        "summary": "Placement training starts from second year.",
-        "highestPackageLpa": 22,
-        "averagePackageLpa": 7.8
+        "report": {
+          "label": "Download Full Placement Report 2024",
+          "action": "download_placement_report_2024"
+        },
+        "summary_stats": [
+          { "id": "average_package", "label": "Average Package", "value": 4.2, "unit": "LPA" },
+          { "id": "highest_package", "label": "Highest Package", "value": 14.2, "unit": "LPA" },
+          { "id": "placement_rate", "label": "Placement Rate", "value": 94, "unit": "%" },
+          { "id": "lowest_package", "label": "Lowest Package", "value": 3.5, "unit": "LPA" },
+          { "id": "companies_visited", "label": "Companies Visited", "value": "120+", "unit": null },
+          { "id": "students_placed", "label": "Students Placed", "value": "450+", "unit": null }
+        ],
+        "placement_trends": {
+          "label": "Placement Trends",
+          "period": "Last 5 Years",
+          "years": [2020, 2021, 2022, 2023],
+          "avg_package_growth_yoy": "+12.5%"
+        },
+        "industry_salary_report": {
+          "label": "Industry & Salary Report",
+          "columns": ["Industry", "Placed", "Avg Pkg"],
+          "industries": [
+            {
+              "id": "bfsi",
+              "name": "BFSI",
+              "sub_label": "Banking & Finance",
+              "students_placed": 155,
+              "avg_package": "₹8.2 L",
+              "max_package": "12 LPA"
+            },
+            {
+              "id": "fmcg",
+              "name": "FMCG",
+              "sub_label": "Retail & Goods",
+              "students_placed": 98,
+              "avg_package": "₹7.5 L",
+              "max_package": "10 LPA"
+            },
+            {
+              "id": "consulting",
+              "name": "Consulting",
+              "sub_label": "Mgmt Consulting",
+              "students_placed": 81,
+              "avg_package": "₹9.1 L",
+              "max_package": "14.5 LPA"
+            }
+          ],
+          "cta": {
+            "label": "View All Industries",
+            "action": "view_all_industries"
+          }
+        },
+        "notable_offers": {
+          "label": "Notable Offers",
+          "cta": {
+            "label": "View All",
+            "action": "view_all_notable_offers"
+          },
+          "featured": [
+            {
+              "company": "Deloitte",
+              "tag": "Highest",
+              "industry": "Consulting",
+              "offers": [
+                { "role": "Senior Analyst Role", "package": 14.5, "unit": "LPA", "type": "Package Offered" },
+                { "role": "Manager Role", "package": 12.0, "unit": "LPA", "type": "Package Offered" }
+              ]
+            }
+          ]
+        },
+        "all_company_statistics": {
+          "label": "All Company Statistics",
+          "columns": ["Company Name", "Avg Pkg", "Max Pkg"],
+          "companies": [
+            { "id": "deloitte", "name": "Deloitte", "students": 145, "avg_package": "₹9.2 L", "max_package": "₹14.5 L" },
+            { "id": "accenture", "name": "Accenture", "students": 210, "avg_package": "₹7.8 L", "max_package": "₹11.2 L" },
+            { "id": "tcs", "name": "TCS", "students": 340, "avg_package": "₹6.5 L", "max_package": "₹9.0 L" }
+          ]
+        },
+        "student_success": [
+          {
+            "name": "Rohan Mehta",
+            "placed_at": "Deloitte",
+            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!"
+          },
+          {
+            "name": "Priya S.",
+            "placed_at": "HDFC",
+            "quote": "I never thought I'd get such a high package. The mock interviews were key."
+          }
+        ]
       },
       "fees": {
         "id": "fees",
