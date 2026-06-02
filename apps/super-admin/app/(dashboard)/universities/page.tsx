@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   GraduationCap,
   Search,
@@ -16,6 +17,7 @@ import {
   MinusCircle,
   ToggleRight,
   ToggleLeft,
+  Eye,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -491,7 +493,7 @@ export default function UniversitiesPage() {
     }));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let metadata: Record<string, unknown>;
     try {
@@ -548,7 +550,7 @@ export default function UniversitiesPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingUniversity) return;
     let metadata: Record<string, unknown>;
@@ -857,6 +859,12 @@ export default function UniversitiesPage() {
                             >
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
+                              <DropdownMenuItem className="gap-2" asChild>
+                                <Link href={`/universities/${university.id}`}>
+                                  <Eye className="h-4 w-4 text-muted-foreground" />
+                                  View
+                                </Link>
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => handleEditClick(university)}

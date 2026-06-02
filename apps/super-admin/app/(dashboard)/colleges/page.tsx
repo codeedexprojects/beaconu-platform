@@ -17,6 +17,7 @@ import {
   Copy,
   Network,
 } from "lucide-react";
+import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -624,6 +625,14 @@ export default function CollegesPage() {
 
                         <TableCell>
                           <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs gap-1"
+                              asChild
+                            >
+                              <Link href={`/colleges/${college.id}`}>View</Link>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"

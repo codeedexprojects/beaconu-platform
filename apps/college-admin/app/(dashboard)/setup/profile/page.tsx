@@ -42,10 +42,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 import {
+  useCollegeCampuses,
+  useCreateCollegeCourse,
+  useCollegeCourses,
   useCollegeProfile,
   useMyInstitutionGroup,
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
+import {
+  useProgramTypes,
+  useStreams,
+  useStudyLevels,
+} from "@/hooks/use-lookups";
 import { usePublicColleges } from "@/hooks/use-public-colleges";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
@@ -74,6 +82,7 @@ const PROFILE_SECTION_IDS = {
 const PROFILE_SECTION_TABS = [
   { key: "college_overview", label: "College Overview" },
   { key: "course_info", label: "Course Info" },
+  { key: "other_courses_offered", label: "Other Courses" },
   { key: "admission_policy", label: "Admission Policy" },
   { key: "placements", label: "Placements" },
   { key: "fees", label: "Fees" },
@@ -99,6 +108,7 @@ const ONBOARDING_TABS = [
   { id: "basic", label: "Basic Info", icon: Building },
   { id: "college_overview", label: "College Overview", icon: Compass },
   { id: "course_info", label: "Course Info", icon: BookOpen },
+  { id: "other_courses_offered", label: "Other Courses", icon: BookOpen },
   { id: "admission_policy", label: "Admission Policy", icon: GraduationCap },
   { id: "placements", label: "Placements", icon: TrendingUp },
   { id: "fees", label: "Fees", icon: DollarSign },
@@ -224,7 +234,14 @@ const librarySectionSchema = metaSectionSchema.extend({
       }),
     )
     .default([]),
-  facilities: z.array(z.string()).default([]),
+  facilities: z
+    .array(
+      z.object({
+        title: z.string().default(""),
+        image: z.string().default(""),
+      }),
+    )
+    .default([]),
 });
 
 const studentCodeOfConductSectionSchema = metaSectionSchema.extend({
@@ -380,6 +397,7 @@ const otherCoursesOfferedSectionSchema = metaSectionSchema.extend({
   value_added_course: z.object({
     name: z.string().default(""),
     delivery_mode: z.string().default(""),
+    course_type: z.string().default(""),
     credits: z.number().default(0),
   }),
   career_opportunities: z
@@ -390,10 +408,20 @@ const otherCoursesOfferedSectionSchema = metaSectionSchema.extend({
       }),
     )
     .default([]),
-  higher_education_and_certifications: z.object({
-    global_certifications: z.array(z.string()).default([]),
-    postgraduation: z.array(z.string()).default([]),
-  }),
+  higher_education_and_certifications: z
+    .union([
+      z.array(
+        z.object({
+          title: z.string().default(""),
+          description: z.array(z.string()).default([]),
+        }),
+      ),
+      z.object({
+        global_certifications: z.array(z.string()).default([]),
+        postgraduation: z.array(z.string()).default([]),
+      }),
+    ])
+    .default([]),
   flexible_exit_options: z
     .array(
       z.object({
@@ -417,11 +445,24 @@ const otherCoursesOfferedSectionSchema = metaSectionSchema.extend({
   industry_tools: z.array(z.string()).default([]),
   lab_facilities: z.array(z.string()).default([]),
   classroom_facilities: z.array(z.string()).default([]),
-  bonus_certification: z.object({
-    name: z.string().default(""),
-    note: z.string().default(""),
-    certificate_details_available: z.boolean().default(false),
-  }),
+  bonus_certification: z
+    .union([
+      z.array(
+        z.object({
+          name: z.string().default(""),
+          note: z.string().default(""),
+          certificate_details_available: z.boolean().default(false),
+          details_page: z.string().default(""),
+        }),
+      ),
+      z.object({
+        name: z.string().default(""),
+        note: z.string().default(""),
+        certificate_details_available: z.boolean().default(false),
+        details_page: z.string().default(""),
+      }),
+    ])
+    .default([]),
   featured_alumni: z
     .array(
       z.object({
@@ -438,7 +479,14 @@ const otherCoursesOfferedSectionSchema = metaSectionSchema.extend({
       }),
     )
     .default([]),
-  faqs: z.array(z.string()).default([]),
+  faqs: z
+    .array(
+      z.object({
+        title: z.string().default(""),
+        description: z.string().default(""),
+      }),
+    )
+    .default([]),
   student_forum: z.object({
     description: z.string().default(""),
     cta: z.string().default(""),
@@ -473,6 +521,79 @@ function fromLineText(value: string) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function serializeFaqsToText(faqs: unknown): string {
+  if (!Array.isArray(faqs)) {
+    return "";
+  }
+
+  return faqs
+    .map((item) => {
+      if (typeof item === "string") {
+        return `${item}|`;
+      }
+
+      if (item && typeof item === "object") {
+        const title =
+          typeof (item as any).title === "string" ? (item as any).title : "";
+        const description =
+          typeof (item as any).description === "string"
+            ? (item as any).description
+            : "";
+        return `${title}|${description}`;
+      }
+
+      return "|";
+    })
+    .join("\n");
+}
+
+function parseFaqTextRows(value: string): string[][] {
+  return value
+    .split("\n")
+    .map((line) => line.split("|").map((cell) => cell.trim()))
+    .map((cells) => [cells[0] || "", cells[1] || ""]);
+}
+
+function serializeHigherEducationHeadingsToText(value: unknown): string {
+  if (!Array.isArray(value)) {
+    return "";
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return "|";
+      }
+
+      const title =
+        typeof (item as any).title === "string" ? (item as any).title : "";
+      const description = Array.isArray((item as any).description)
+        ? (item as any).description
+            .map((entry: unknown) =>
+              typeof entry === "string" ? entry.trim() : "",
+            )
+            .filter(Boolean)
+            .join(";")
+        : "";
+
+      return `${title}|${description}`;
+    })
+    .join("\n");
+}
+
+function parseHigherEducationHeadingsText(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.split("|").map((cell) => cell.trim()))
+    .map((cells) => ({
+      title: cells[0] || "",
+      description: (cells[1] || "")
+        .split(";")
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    }));
 }
 
 function safeNumber(value: string) {
@@ -862,6 +983,9 @@ const profileFormSchema = z.object({
         id: true,
         enabled: true,
       }).shape,
+      data: otherCoursesOfferedSectionSchema
+        .omit({ id: true, enabled: true })
+        .optional(),
     }),
     admission_policy: z.object({
       id: z.string().min(1).default(PROFILE_SECTION_IDS.admission_policy),
@@ -1088,9 +1212,9 @@ const PREDEFINED_AMENITIES = [
 ];
 
 type EligibilityCriterion = {
-  id: string;
-  label: string;
+  title: string;
   description: string;
+  logo: string;
 };
 
 type EligibilityQuotaCategory = {
@@ -1114,6 +1238,155 @@ type EligibilityCriteriaModel = {
     action: string;
   };
 };
+
+type CourseInfoDraft = {
+  course_name: string;
+  admissionsMatrixText: string;
+  programHighlightsText: string;
+  courseAccoladesText: string;
+  applicationStartDate: string;
+  applicationCloseDate: string;
+  applicationCloseUrgency: string;
+  classCommencementDate: string;
+  classCommencementNote: string;
+  curriculumBrochureUrl: string;
+  curriculumBrochureAvailable: boolean;
+  curriculumSemestersText: string;
+  courseStructureTotalCredits: string;
+  courseStructureText: string;
+  valueAddedCoursesText: string;
+  careerOpportunitiesText: string;
+  higherEducationHeadingsText: string;
+  exitOptionsText: string;
+  classTimingsMode: string;
+  classTimingsText: string;
+  industryToolsText: string;
+  labFacilitiesText: string;
+  classroomFacilitiesText: string;
+  bonusCertificationText: string;
+  featuredAlumniText: string;
+  faqsText: string;
+  studentForumDescription: string;
+  studentForumCtaLabel: string;
+};
+
+const COURSE_INFO_DETAIL_KEYS = [
+  "faqs",
+  "key_dates",
+  "admissions",
+  "curriculum",
+  "class_timings",
+  "student_forum",
+  "industry_tools",
+  "lab_facilities",
+  "featured_alumni",
+  "course_accolades",
+  "program_highlights",
+  "value_added_course",
+  "bonus_certification",
+  "career_opportunities",
+  "classroom_facilities",
+  "flexible_exit_options",
+  "higher_education_and_certifications",
+] as const;
+
+const COURSE_INFO_RESERVED_KEYS = new Set<string>([
+  "id",
+  "enabled",
+  "summary",
+  "course_name",
+  "data",
+  "course_variants",
+  ...COURSE_INFO_DETAIL_KEYS,
+]);
+
+function extractCourseInfoCourseEntries(courseInfo: any) {
+  const extracted: Record<string, any> = {};
+
+  if (
+    courseInfo?.data &&
+    typeof courseInfo.data === "object" &&
+    !Array.isArray(courseInfo.data)
+  ) {
+    const dataCourseName =
+      typeof courseInfo?.data?.course_name === "string" &&
+      courseInfo.data.course_name.trim().length > 0
+        ? courseInfo.data.course_name.trim()
+        : typeof courseInfo?.course_name === "string" &&
+            courseInfo.course_name.trim().length > 0
+          ? courseInfo.course_name.trim()
+          : "data";
+
+    extracted[dataCourseName] = courseInfo.data;
+  }
+
+  if (
+    courseInfo?.course_variants &&
+    typeof courseInfo.course_variants === "object" &&
+    !Array.isArray(courseInfo.course_variants)
+  ) {
+    for (const [courseName, payload] of Object.entries(
+      courseInfo.course_variants,
+    )) {
+      if (!courseName.trim()) {
+        continue;
+      }
+      extracted[courseName] = payload;
+    }
+  }
+
+  if (
+    courseInfo &&
+    typeof courseInfo === "object" &&
+    !Array.isArray(courseInfo)
+  ) {
+    for (const [key, value] of Object.entries(courseInfo)) {
+      if (COURSE_INFO_RESERVED_KEYS.has(key)) {
+        continue;
+      }
+
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        continue;
+      }
+
+      extracted[key] = value;
+    }
+  }
+
+  return extracted;
+}
+
+function hasMeaningfulCourseInfoValue(value: unknown): boolean {
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => hasMeaningfulCourseInfoValue(item));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).some((item) =>
+      hasMeaningfulCourseInfoValue(item),
+    );
+  }
+
+  return false;
+}
+
+function hasMeaningfulCourseInfoDetails(payload: any): boolean {
+  return COURSE_INFO_DETAIL_KEYS.some((key) =>
+    hasMeaningfulCourseInfoValue(payload?.[key]),
+  );
+}
 
 const ELIGIBILITY_DEFAULT_QUOTAS: EligibilityQuotaCategory[] = [
   { id: "government_quota", label: "Government Quota", criteria: [] },
@@ -1167,9 +1440,16 @@ export default function SetupProfilePage() {
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
   const { data: profile, isLoading } = useCollegeProfile();
+  const { data: campuses = [] } = useCollegeCampuses();
+  const { data: collegeCourses = [] } = useCollegeCourses();
+  const { data: streams = [] } = useStreams();
+  const { data: studyLevels = [] } = useStudyLevels();
+  const { data: programTypes = [] } = useProgramTypes();
   const { data: institutionGroupData, isLoading: isInstitutionGroupLoading } =
     useMyInstitutionGroup();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
+  const { mutate: createCourse, isPending: isCreatingCourse } =
+    useCreateCollegeCourse();
 
   const [activeTab, setActiveTab] = useState<OnboardingTabId>("basic");
   const { data: publicColleges = [] } = usePublicColleges(
@@ -1319,14 +1599,32 @@ export default function SetupProfilePage() {
   const [libraryTotalSeats, setLibraryTotalSeats] = useState("0");
   const [libraryTotalVolumes, setLibraryTotalVolumes] = useState("0");
   const [libraryResearchCabins, setLibraryResearchCabins] = useState("0");
-  const [libraryResourcesText, setLibraryResourcesText] = useState("");
-  const [libraryHoursText, setLibraryHoursText] = useState("");
-  const [libraryFacilitiesText, setLibraryFacilitiesText] = useState("");
+  const [libraryResourceRows, setLibraryResourceRows] = useState<
+    { resourceType: string; count: string }[]
+  >([]);
+  const [libraryHourRows, setLibraryHourRows] = useState<
+    { day: string; workingHours: string; transactionHours: string }[]
+  >([]);
+  const [libraryFacilityRows, setLibraryFacilityRows] = useState<
+    { title: string; image: string }[]
+  >([]);
 
   const [conductTitle, setConductTitle] = useState("");
   const [conductRulesText, setConductRulesText] = useState("");
 
   const [otherCourseName, setOtherCourseName] = useState("");
+  const [courseInfoDrafts, setCourseInfoDrafts] = useState<
+    Record<string, CourseInfoDraft>
+  >({});
+  const [otherCoursesRows, setOtherCoursesRows] = useState<
+    {
+      id: string;
+      catalogCourseId: string;
+      name: string;
+      code: string;
+      studyLevel: string;
+    }[]
+  >([]);
   const [admissionsMatrixText, setAdmissionsMatrixText] = useState("");
   const [activeAdmissionIndex, setActiveAdmissionIndex] = useState(0);
   const [otherAdmissionCyclesText, setOtherAdmissionCyclesText] = useState("");
@@ -1341,6 +1639,18 @@ export default function SetupProfilePage() {
   const [otherCredits, setOtherCredits] = useState("0");
   const [otherGenderAccepted, setOtherGenderAccepted] = useState("");
   const [otherCourseCategory, setOtherCourseCategory] = useState("");
+  const [newOtherCourseForm, setNewOtherCourseForm] = useState({
+    name: "",
+    code: "",
+    disciplineId: "",
+    studyLevelId: "",
+    programTypeId: "",
+    campusId: "",
+    studyMode: "full_time",
+    duration: "",
+    eligibility: "",
+    intakeCapacity: "",
+  });
 
   const [programHighlightsText, setProgramHighlightsText] = useState("");
   const [courseAccoladesText, setCourseAccoladesText] = useState("");
@@ -1358,8 +1668,7 @@ export default function SetupProfilePage() {
   const [courseStructureText, setCourseStructureText] = useState("");
   const [valueAddedCoursesText, setValueAddedCoursesText] = useState("");
   const [careerOpportunitiesText, setCareerOpportunitiesText] = useState("");
-  const [higherEducationCertsText, setHigherEducationCertsText] = useState("");
-  const [higherEducationStudiesText, setHigherEducationStudiesText] =
+  const [higherEducationHeadingsText, setHigherEducationHeadingsText] =
     useState("");
   const [exitOptionsText, setExitOptionsText] = useState("");
   const [classTimingsMode, setClassTimingsMode] = useState("");
@@ -1367,13 +1676,7 @@ export default function SetupProfilePage() {
   const [industryToolsText, setIndustryToolsText] = useState("");
   const [labFacilitiesText, setLabFacilitiesText] = useState("");
   const [classroomFacilitiesText, setClassroomFacilitiesText] = useState("");
-  const [bonusCertificationTitle, setBonusCertificationTitle] = useState("");
-  const [bonusCertificationDescription, setBonusCertificationDescription] =
-    useState("");
-  const [
-    bonusCertificationDetailsAvailable,
-    setBonusCertificationDetailsAvailable,
-  ] = useState(false);
+  const [bonusCertificationText, setBonusCertificationText] = useState("");
   const [featuredAlumniText, setFeaturedAlumniText] = useState("");
   const [faqsText, setFaqsText] = useState("");
   const [studentForumDescription, setStudentForumDescription] = useState("");
@@ -1640,13 +1943,11 @@ export default function SetupProfilePage() {
           value_added_course: {
             name: "",
             delivery_mode: "",
+            course_type: "",
             credits: 0,
           },
           career_opportunities: [],
-          higher_education_and_certifications: {
-            global_certifications: [],
-            postgraduation: [],
-          },
+          higher_education_and_certifications: [],
           flexible_exit_options: [],
           class_timings: {
             mode: "",
@@ -1655,11 +1956,7 @@ export default function SetupProfilePage() {
           industry_tools: [],
           lab_facilities: [],
           classroom_facilities: [],
-          bonus_certification: {
-            name: "",
-            note: "",
-            certificate_details_available: false,
-          },
+          bonus_certification: [],
           featured_alumni: [],
           faqs: [],
           student_forum: {
@@ -1899,6 +2196,473 @@ export default function SetupProfilePage() {
       ? institutionGroupData.group
       : institutionGroupData?.membership?.group;
   const linkedInstitutionMembers = linkedInstitutionGroup?.members ?? [];
+  const disciplines = streams.flatMap((stream) => {
+    if (!Array.isArray(stream.disciplines)) {
+      return [];
+    }
+
+    return stream.disciplines.map((discipline) => ({
+      ...discipline,
+      streamName: stream.name,
+    }));
+  });
+
+  const normalizeStudyLevelHeading = (value: string) => {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "ug" || normalized.includes("undergraduate")) {
+      return "UG";
+    }
+
+    if (normalized === "pg" || normalized.includes("postgraduate")) {
+      return "PG";
+    }
+
+    return value.trim() || "Other";
+  };
+
+  const createEmptyCourseInfoDraft = (courseName = ""): CourseInfoDraft => ({
+    course_name: courseName,
+    admissionsMatrixText: "",
+    programHighlightsText: "",
+    courseAccoladesText: "",
+    applicationStartDate: "",
+    applicationCloseDate: "",
+    applicationCloseUrgency: "",
+    classCommencementDate: "",
+    classCommencementNote: "",
+    curriculumBrochureUrl: "",
+    curriculumBrochureAvailable: false,
+    curriculumSemestersText: "",
+    courseStructureTotalCredits: "0",
+    courseStructureText: "",
+    valueAddedCoursesText: "",
+    careerOpportunitiesText: "",
+    higherEducationHeadingsText: "",
+    exitOptionsText: "",
+    classTimingsMode: "",
+    classTimingsText: "",
+    industryToolsText: "",
+    labFacilitiesText: "",
+    classroomFacilitiesText: "",
+    bonusCertificationText: "",
+    featuredAlumniText: "",
+    faqsText: "",
+    studentForumDescription: "",
+    studentForumCtaLabel: "",
+  });
+
+  const hydrateCourseInfoDraftFromPayload = (
+    payload: any,
+    fallbackCourseName = "",
+  ): CourseInfoDraft => {
+    const admissions = Array.isArray(payload?.admissions)
+      ? payload.admissions
+      : [];
+
+    return {
+      course_name: payload?.course_name || fallbackCourseName,
+      admissionsMatrixText: admissions
+        .map((item: any) => {
+          const basicDetails = item?.basic_details || {};
+          return [
+            item?.year || "",
+            item?.status || "",
+            item?.placement_rate || "",
+            item?.seats_note || "",
+            basicDetails?.duration || "",
+            basicDetails?.study_mode || "",
+            basicDetails?.academic_cycle || "",
+            String(basicDetails?.total_credits ?? 0),
+            basicDetails?.gender_accepted || "",
+            basicDetails?.course_category || "",
+          ].join("|");
+        })
+        .join("\n"),
+      programHighlightsText: Array.isArray(payload?.program_highlights)
+        ? payload.program_highlights.join("\n")
+        : "",
+      courseAccoladesText: Array.isArray(payload?.course_accolades)
+        ? payload.course_accolades
+            .map(
+              (item: any) =>
+                `${item.body || ""}|${item.rank || ""}|${item.image || ""}`,
+            )
+            .join("\n")
+        : "",
+      applicationStartDate: payload?.key_dates?.application_start || "",
+      applicationCloseDate: payload?.key_dates?.application_close?.date || "",
+      applicationCloseUrgency:
+        payload?.key_dates?.application_close?.urgency || "",
+      classCommencementDate: payload?.key_dates?.class_commencement?.date || "",
+      classCommencementNote: payload?.key_dates?.class_commencement?.note || "",
+      curriculumBrochureUrl: payload?.curriculum?.brochure_upload || "",
+      curriculumBrochureAvailable: Boolean(
+        payload?.curriculum?.brochure_available,
+      ),
+      curriculumSemestersText: Array.isArray(payload?.curriculum?.semesters)
+        ? payload.curriculum.semesters
+            .map(
+              (item: any) =>
+                `${item.semester ?? 0}|${(item.core_subjects || []).join(", ")}|${item.specialization_1?.name || ""}|${(item.specialization_1?.electives || []).join(", ")}|${item.specialization_2?.name || ""}|${item.specialization_2?.note || ""}`,
+            )
+            .join("\n")
+        : "",
+      courseStructureTotalCredits: String(
+        payload?.curriculum?.course_structure?.total_credits ?? 0,
+      ),
+      courseStructureText: Array.isArray(
+        payload?.curriculum?.course_structure?.breakdown,
+      )
+        ? payload.curriculum.course_structure.breakdown
+            .map((item: any) => `${item.track || ""}|${item.credits ?? 0}`)
+            .join("\n")
+        : "",
+      valueAddedCoursesText: payload?.value_added_course
+        ? `${payload.value_added_course.name || ""}|${payload.value_added_course.credits ?? ""}|${payload.value_added_course.delivery_mode || ""}|${payload.value_added_course.course_type || ""}`
+        : "",
+      careerOpportunitiesText: Array.isArray(payload?.career_opportunities)
+        ? payload.career_opportunities
+            .map((item: any) => `${item.role || ""}|${item.salary_range || ""}`)
+            .join("\n")
+        : "",
+      higherEducationHeadingsText: Array.isArray(
+        payload?.higher_education_and_certifications,
+      )
+        ? serializeHigherEducationHeadingsToText(
+            payload.higher_education_and_certifications,
+          )
+        : "",
+      exitOptionsText: Array.isArray(payload?.flexible_exit_options)
+        ? payload.flexible_exit_options
+            .map(
+              (item: any) =>
+                `${item.after_years ?? 0}|${item.credential || ""}`,
+            )
+            .join("\n")
+        : "",
+      classTimingsMode: payload?.class_timings?.mode || "",
+      classTimingsText: Array.isArray(payload?.class_timings?.schedule)
+        ? payload.class_timings.schedule
+            .map(
+              (item: any) =>
+                `${item.day || ""}|${item.timing || ""}|${item.status || ""}`,
+            )
+            .join("\n")
+        : "",
+      industryToolsText: Array.isArray(payload?.industry_tools)
+        ? payload.industry_tools.join("\n")
+        : "",
+      labFacilitiesText: Array.isArray(payload?.lab_facilities)
+        ? payload.lab_facilities.join("\n")
+        : "",
+      classroomFacilitiesText: Array.isArray(payload?.classroom_facilities)
+        ? payload.classroom_facilities.join("\n")
+        : "",
+      bonusCertificationText: Array.isArray(payload?.bonus_certification)
+        ? payload.bonus_certification
+            .map(
+              (item: any) =>
+                `${item?.name || ""}|${item?.note || ""}|${Boolean(item?.certificate_details_available)}|${item?.details_page || ""}`,
+            )
+            .join("\n")
+        : payload?.bonus_certification &&
+            typeof payload.bonus_certification === "object"
+          ? `${payload?.bonus_certification?.name || ""}|${payload?.bonus_certification?.note || ""}|${Boolean(payload?.bonus_certification?.certificate_details_available)}|${payload?.bonus_certification?.details_page || ""}`
+          : "",
+      featuredAlumniText: Array.isArray(payload?.featured_alumni)
+        ? payload.featured_alumni
+            .map(
+              (item: any) =>
+                `${item.name || ""}|${item.designation || ""}|${(
+                  item.career_progression || []
+                )
+                  .map(
+                    (progression: any) =>
+                      `${progression.year || ""}:${progression.milestone || ""}`,
+                  )
+                  .join(";")}`,
+            )
+            .join("\n")
+        : "",
+      faqsText: serializeFaqsToText(payload?.faqs),
+      studentForumDescription: payload?.student_forum?.description || "",
+      studentForumCtaLabel: payload?.student_forum?.cta || "",
+    };
+  };
+
+  const applyCourseInfoDraftToState = (draft: CourseInfoDraft) => {
+    setAdmissionsMatrixText(draft.admissionsMatrixText);
+    setProgramHighlightsText(draft.programHighlightsText);
+    setCourseAccoladesText(draft.courseAccoladesText);
+    setApplicationStartDate(draft.applicationStartDate);
+    setApplicationCloseDate(draft.applicationCloseDate);
+    setApplicationCloseUrgency(draft.applicationCloseUrgency);
+    setClassCommencementDate(draft.classCommencementDate);
+    setClassCommencementNote(draft.classCommencementNote);
+    setCurriculumBrochureUrl(draft.curriculumBrochureUrl);
+    setCurriculumBrochureAvailable(draft.curriculumBrochureAvailable);
+    setCurriculumSemestersText(draft.curriculumSemestersText);
+    setCourseStructureTotalCredits(draft.courseStructureTotalCredits);
+    setCourseStructureText(draft.courseStructureText);
+    setValueAddedCoursesText(draft.valueAddedCoursesText);
+    setCareerOpportunitiesText(draft.careerOpportunitiesText);
+    setHigherEducationHeadingsText(draft.higherEducationHeadingsText);
+    setExitOptionsText(draft.exitOptionsText);
+    setClassTimingsMode(draft.classTimingsMode);
+    setClassTimingsText(draft.classTimingsText);
+    setIndustryToolsText(draft.industryToolsText);
+    setLabFacilitiesText(draft.labFacilitiesText);
+    setClassroomFacilitiesText(draft.classroomFacilitiesText);
+    setBonusCertificationText(draft.bonusCertificationText);
+    setFeaturedAlumniText(draft.featuredAlumniText);
+    setFaqsText(draft.faqsText);
+    setStudentForumDescription(draft.studentForumDescription);
+    setStudentForumCtaLabel(draft.studentForumCtaLabel);
+    setActiveAdmissionIndex(0);
+  };
+
+  const buildCourseInfoDraftFromCurrentState = (
+    courseNameOverride?: string,
+  ): CourseInfoDraft => ({
+    course_name: courseNameOverride ?? otherCourseName,
+    admissionsMatrixText,
+    programHighlightsText,
+    courseAccoladesText,
+    applicationStartDate,
+    applicationCloseDate,
+    applicationCloseUrgency,
+    classCommencementDate,
+    classCommencementNote,
+    curriculumBrochureUrl,
+    curriculumBrochureAvailable,
+    curriculumSemestersText,
+    courseStructureTotalCredits,
+    courseStructureText,
+    valueAddedCoursesText,
+    careerOpportunitiesText,
+    higherEducationHeadingsText,
+    exitOptionsText,
+    classTimingsMode,
+    classTimingsText,
+    industryToolsText,
+    labFacilitiesText,
+    classroomFacilitiesText,
+    bonusCertificationText,
+    featuredAlumniText,
+    faqsText,
+    studentForumDescription,
+    studentForumCtaLabel,
+  });
+
+  const buildCourseInfoPayloadFromDraft = (draft: CourseInfoDraft) => {
+    const curriculumSemesterRows = parsePipeRows(draft.curriculumSemestersText)
+      .filter((row) => row[0] || row[1] || row[2] || row[3] || row[4] || row[5])
+      .map(
+        ([
+          semester,
+          coreSubjects,
+          specializationOneName,
+          specializationOneElectives,
+          specializationTwoName,
+          specializationTwoNote,
+        ]) => ({
+          semester: safeNumber(semester || "0"),
+          core_subjects: (coreSubjects || "")
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          specialization_1: {
+            name: specializationOneName || "",
+            electives: (specializationOneElectives || "")
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+          },
+          specialization_2: {
+            name: specializationTwoName || "",
+            note: specializationTwoNote || "",
+          },
+        }),
+      );
+
+    const admissionsRows = parsePipeRows(draft.admissionsMatrixText)
+      .filter((row) => row.some((cell) => cell && cell.trim().length > 0))
+      .map(
+        ([
+          year,
+          status,
+          placementRate,
+          seatsNote,
+          duration,
+          studyMode,
+          academicCycle,
+          totalCredits,
+          genderAccepted,
+          courseCategory,
+        ]) => ({
+          year: year || "",
+          status: status?.trim() ? status : null,
+          placement_rate: placementRate?.trim() ? placementRate : null,
+          seats_note: seatsNote?.trim() ? seatsNote : null,
+          basic_details: {
+            duration: duration || "",
+            study_mode: studyMode || "",
+            academic_cycle: academicCycle || "",
+            total_credits: safeNumber(totalCredits || "0"),
+            gender_accepted: genderAccepted || "",
+            course_category: courseCategory || "",
+          },
+        }),
+      );
+
+    const classTimingsRows = parsePipeRows(draft.classTimingsText)
+      .filter((row) => row[0] || row[1] || row[2])
+      .map(([day, timing, status]) => ({
+        day: day || "",
+        timing: timing || null,
+        status: status || (timing ? "open" : "closed"),
+      }));
+
+    const featuredAlumniRows = parsePipeRows(draft.featuredAlumniText)
+      .filter((row) => row[0] || row[1] || row[2])
+      .map(([name, designation, careerProgression]) => ({
+        name: name || "",
+        designation: designation || "",
+        career_progression: (careerProgression || "")
+          .split(";")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item) => {
+            const [year, ...milestoneParts] = item.split(":");
+            return {
+              year: safeNumber(year || "0"),
+              milestone: milestoneParts.join(":").trim(),
+            };
+          }),
+      }));
+
+    const courseStructureRows = parsePipeRows(draft.courseStructureText)
+      .filter((row) => row[0] || row[1])
+      .map(([track, credits]) => ({
+        track: track || "",
+        credits: safeNumber(credits || "0"),
+      }));
+
+    return {
+      course_name: draft.course_name || "",
+      admissions: admissionsRows,
+      program_highlights: fromLineText(draft.programHighlightsText),
+      course_accolades: parsePipeRows(draft.courseAccoladesText)
+        .filter((row) => row[0] || row[1] || row[2])
+        .map(([body, rank, image]) => ({
+          body: body || "",
+          rank: rank || "",
+          image: image || "",
+        })),
+      key_dates: {
+        application_start: draft.applicationStartDate,
+        application_close: {
+          date: draft.applicationCloseDate,
+          urgency: draft.applicationCloseUrgency,
+        },
+        class_commencement: {
+          date: draft.classCommencementDate,
+          note: draft.classCommencementNote,
+        },
+      },
+      curriculum: {
+        brochure_upload: draft.curriculumBrochureUrl,
+        brochure_available: draft.curriculumBrochureAvailable,
+        semesters: curriculumSemesterRows,
+        course_structure: {
+          total_credits: safeNumber(draft.courseStructureTotalCredits),
+          breakdown: courseStructureRows,
+        },
+      },
+      value_added_course: (() => {
+        const [name = "", credits = "0", delivery_mode = "", course_type = ""] =
+          parsePipeRows(draft.valueAddedCoursesText)[0] || [];
+        return {
+          name,
+          delivery_mode,
+          course_type,
+          credits: safeNumber(credits),
+        };
+      })(),
+      career_opportunities: parsePipeRows(draft.careerOpportunitiesText)
+        .filter((row) => row[0] || row[1])
+        .map(([role, salary_range]) => ({
+          role: role || "",
+          salary_range: salary_range || "",
+        })),
+      higher_education_and_certifications: parseHigherEducationHeadingsText(
+        draft.higherEducationHeadingsText,
+      )
+        .filter((item) => item.title || item.description.length > 0)
+        .map((item) => ({
+          title: item.title,
+          description: item.description,
+        })),
+      flexible_exit_options: parsePipeRows(draft.exitOptionsText)
+        .filter((row) => row[0] || row[1])
+        .map(([after_years, credential]) => ({
+          after_years: safeNumber(after_years || "0"),
+          credential: credential || "",
+        })),
+      class_timings: {
+        mode: draft.classTimingsMode,
+        schedule: classTimingsRows,
+      },
+      industry_tools: fromLineText(draft.industryToolsText),
+      lab_facilities: fromLineText(draft.labFacilitiesText),
+      classroom_facilities: fromLineText(draft.classroomFacilitiesText),
+      bonus_certification: parsePipeRows(draft.bonusCertificationText)
+        .filter((row) => row[0] || row[1] || row[2] || row[3])
+        .map(([name, note, certificateDetailsAvailable, detailsPage]) => ({
+          name: name || "",
+          note: note || "",
+          certificate_details_available:
+            String(certificateDetailsAvailable || "")
+              .trim()
+              .toLowerCase() === "true",
+          details_page: detailsPage || "",
+        })),
+      featured_alumni: featuredAlumniRows,
+      faqs: parseFaqTextRows(draft.faqsText)
+        .filter((row) => row[0] || row[1])
+        .map(([title, description]) => ({
+          title: title || "",
+          description: description || "",
+        })),
+      student_forum: {
+        description: draft.studentForumDescription,
+        cta: draft.studentForumCtaLabel,
+      },
+    };
+  };
+
+  const handleCourseInfoSelectionChange = (nextValue: string) => {
+    const currentKey = otherCourseName.trim();
+    const nextKey = nextValue.trim();
+    const nextDrafts = { ...courseInfoDrafts };
+
+    if (currentKey) {
+      nextDrafts[currentKey] = buildCourseInfoDraftFromCurrentState(currentKey);
+    }
+
+    const nextDraft = nextKey
+      ? (nextDrafts[nextKey] ?? createEmptyCourseInfoDraft(nextKey))
+      : createEmptyCourseInfoDraft("");
+
+    if (nextKey && !nextDrafts[nextKey]) {
+      nextDrafts[nextKey] = nextDraft;
+    }
+
+    setCourseInfoDrafts(nextDrafts);
+    setOtherCourseName(nextValue);
+    applyCourseInfoDraftToState(nextDraft);
+  };
 
   useEffect(() => {
     if (profile) {
@@ -2013,6 +2777,7 @@ export default function SetupProfilePage() {
               ?.value_added_course || {
               name: "",
               delivery_mode: "",
+              course_type: "",
               credits: 0,
             },
             career_opportunities: Array.isArray(
@@ -2022,12 +2787,9 @@ export default function SetupProfilePage() {
               ? (profile.profileSections?.course_info as any)
                   .career_opportunities
               : [],
-            higher_education_and_certifications: (
-              profile.profileSections?.course_info as any
-            )?.higher_education_and_certifications || {
-              global_certifications: [],
-              postgraduation: [],
-            },
+            higher_education_and_certifications:
+              (profile.profileSections?.course_info as any)
+                ?.higher_education_and_certifications || [],
             flexible_exit_options: Array.isArray(
               (profile.profileSections?.course_info as any)
                 ?.flexible_exit_options,
@@ -2057,12 +2819,9 @@ export default function SetupProfilePage() {
               ? (profile.profileSections?.course_info as any)
                   .classroom_facilities
               : [],
-            bonus_certification: (profile.profileSections?.course_info as any)
-              ?.bonus_certification || {
-              name: "",
-              note: "",
-              certificate_details_available: false,
-            },
+            bonus_certification:
+              (profile.profileSections?.course_info as any)
+                ?.bonus_certification || [],
             featured_alumni: Array.isArray(
               (profile.profileSections?.course_info as any)?.featured_alumni,
             )
@@ -2494,9 +3253,20 @@ export default function SetupProfilePage() {
       if (
         Array.isArray(
           profile.profileSections?.college_overview
+            ?.accreditation_and_affiliation,
+        )
+      ) {
+        setOverviewRankings(
+          profile.profileSections.college_overview
+            .accreditation_and_affiliation,
+        );
+      } else if (
+        Array.isArray(
+          profile.profileSections?.college_overview
             ?.accreditation_and_affiliation?.rankings,
         )
       ) {
+        // Backward compatibility for previously saved object-based payloads.
         setOverviewRankings(
           profile.profileSections.college_overview.accreditation_and_affiliation
             .rankings,
@@ -2584,22 +3354,19 @@ export default function SetupProfilePage() {
                       criteria: Array.isArray(quota?.criteria)
                         ? quota.criteria.map(
                             (criterion: any, criterionIndex: number) => ({
-                              id:
-                                (typeof criterion?.id === "string" &&
-                                  criterion.id) ||
-                                createEligibilityId(
-                                  typeof criterion?.label === "string"
-                                    ? criterion.label
-                                    : "",
-                                  `criteria_${criterionIndex + 1}`,
-                                ),
-                              label:
+                              title:
+                                (typeof criterion?.title === "string" &&
+                                  criterion.title) ||
                                 (typeof criterion?.label === "string" &&
                                   criterion.label) ||
                                 `Criteria ${criterionIndex + 1}`,
                               description:
                                 (typeof criterion?.description === "string" &&
                                   criterion.description) ||
+                                "",
+                              logo:
+                                (typeof criterion?.logo === "string" &&
+                                  criterion.logo) ||
                                 "",
                             }),
                           )
@@ -2659,11 +3426,9 @@ export default function SetupProfilePage() {
               (item?.title || "").trim() || (item?.description || "").trim(),
           )
           .map((item: any, index: number) => ({
-            id:
-              createEligibilityId(item?.title || "", "criteria") +
-              `_${index + 1}`,
-            label: item?.title || `Criteria ${index + 1}`,
+            title: item?.title || `Criteria ${index + 1}`,
             description: item?.description || "",
+            logo: item?.logo || "",
           }));
 
         const fallbackModel = createDefaultEligibilityCriteria();
@@ -3487,7 +4252,9 @@ export default function SetupProfilePage() {
               workingHours?: string;
               transactionHours?: string;
             }[];
-            facilities?: string[];
+            facilities?:
+              | string[]
+              | { title?: string; image?: string; img?: string }[];
           }
         | undefined;
 
@@ -3504,27 +4271,34 @@ export default function SetupProfilePage() {
       setLibraryResearchCabins(
         String(librarySection?.libraryInfo?.researchCabins ?? 0),
       );
-      setLibraryResourcesText(
+      setLibraryResourceRows(
         Array.isArray(librarySection?.availableResources)
-          ? librarySection.availableResources
-              .map((item) => `${item.resourceType || ""}|${item.count ?? 0}`)
-              .join("\n")
-          : "",
+          ? librarySection.availableResources.map((item) => ({
+              resourceType: item.resourceType || "",
+              count: String(item.count ?? ""),
+            }))
+          : [],
       );
-      setLibraryHoursText(
+      setLibraryHourRows(
         Array.isArray(librarySection?.libraryHours)
-          ? librarySection.libraryHours
-              .map(
-                (item) =>
-                  `${item.day || ""}|${item.workingHours || ""}|${item.transactionHours || ""}`,
-              )
-              .join("\n")
-          : "",
+          ? librarySection.libraryHours.map((item) => ({
+              day: item.day || "",
+              workingHours: item.workingHours || "",
+              transactionHours: item.transactionHours || "",
+            }))
+          : [],
       );
-      setLibraryFacilitiesText(
+      setLibraryFacilityRows(
         Array.isArray(librarySection?.facilities)
-          ? librarySection.facilities.join("\n")
-          : "",
+          ? librarySection.facilities.map((item) =>
+              typeof item === "string"
+                ? { title: item, image: "" }
+                : {
+                    title: item.title || "",
+                    image: item.image || item.img || "",
+                  },
+            )
+          : [],
       );
 
       const conductSection = profile.profileSections
@@ -3544,8 +4318,19 @@ export default function SetupProfilePage() {
           : "",
       );
 
-      const currentCourseInfo = (profile.profileSections?.course_info ||
+      const courseInfoSection = (profile.profileSections?.course_info ||
         {}) as any;
+      const currentCourseInfo =
+        courseInfoSection?.data &&
+        typeof courseInfoSection.data === "object" &&
+        !Array.isArray(courseInfoSection.data)
+          ? {
+              ...courseInfoSection.data,
+              course_name:
+                courseInfoSection.course_name ||
+                courseInfoSection.data.course_name,
+            }
+          : courseInfoSection;
       const legacyCourseInfo =
         currentCourseInfo.course_details ||
         (profile.profileSections?.other_courses_offered as any) ||
@@ -3602,10 +4387,47 @@ export default function SetupProfilePage() {
           .join("\n"),
       );
 
-      setOtherCourseName(
+      const selectedCourseName =
         currentCourseInfo.course_name ||
-          legacyCourseInfo?.courseHeader?.courseName ||
-          "",
+        legacyCourseInfo?.courseHeader?.courseName ||
+        "";
+
+      setOtherCourseName(selectedCourseName);
+
+      const profileOtherCoursesSection = profile.profileSections
+        ?.other_courses_offered as
+        | {
+            courses?: {
+              id?: string;
+              catalogCourseId?: string;
+              catalog_course_id?: string;
+              name?: string;
+              courseName?: string;
+              course_name?: string;
+              code?: string;
+              studyLevel?: string;
+              study_level?: string;
+            }[];
+          }
+        | undefined;
+
+      setOtherCoursesRows(
+        Array.isArray(profileOtherCoursesSection?.courses)
+          ? profileOtherCoursesSection.courses
+              .map((course) => ({
+                id: course.id || "",
+                catalogCourseId:
+                  course.catalogCourseId || course.catalog_course_id || "",
+                name:
+                  course.name || course.courseName || course.course_name || "",
+                code: course.code || "",
+                studyLevel:
+                  normalizeStudyLevelHeading(
+                    course.studyLevel || course.study_level || "",
+                  ) || "Other",
+              }))
+              .filter((course) => course.name || course.code)
+          : [],
       );
       setOtherAdmissionCyclesText(
         admissions
@@ -3714,7 +4536,7 @@ export default function SetupProfilePage() {
 
       if (currentCourseInfo?.value_added_course) {
         setValueAddedCoursesText(
-          `${currentCourseInfo.value_added_course.name || ""}|${currentCourseInfo.value_added_course.credits ?? ""}|${currentCourseInfo.value_added_course.delivery_mode || ""}`,
+          `${currentCourseInfo.value_added_course.name || ""}|${currentCourseInfo.value_added_course.credits ?? ""}|${currentCourseInfo.value_added_course.delivery_mode || ""}|${currentCourseInfo.value_added_course.course_type || ""}`,
         );
       } else {
         setValueAddedCoursesText(
@@ -3722,7 +4544,7 @@ export default function SetupProfilePage() {
             ? legacyCourseInfo.valueAddedCourses
                 .map(
                   (item: any) =>
-                    `${item.courseName || ""}|${item.credits || ""}|${item.deliveryMode || ""}`,
+                    `${item.courseName || ""}|${item.credits || ""}|${item.deliveryMode || ""}|${item.courseType || ""}`,
                 )
                 .join("\n")
             : "",
@@ -3745,31 +4567,29 @@ export default function SetupProfilePage() {
             : "",
       );
 
-      setHigherEducationCertsText(
-        Array.isArray(
-          currentCourseInfo?.higher_education_and_certifications
-            ?.global_certifications,
-        )
-          ? currentCourseInfo.higher_education_and_certifications.global_certifications.join(
-              "\n",
+      setHigherEducationHeadingsText(
+        Array.isArray(currentCourseInfo?.higher_education_and_certifications)
+          ? serializeHigherEducationHeadingsToText(
+              currentCourseInfo.higher_education_and_certifications,
             )
-          : Array.isArray(
-                legacyCourseInfo?.higherEducation?.globalCertifications,
-              )
-            ? legacyCourseInfo.higherEducation.globalCertifications.join("\n")
-            : "",
-      );
-      setHigherEducationStudiesText(
-        Array.isArray(
-          currentCourseInfo?.higher_education_and_certifications
-            ?.postgraduation,
-        )
-          ? currentCourseInfo.higher_education_and_certifications.postgraduation.join(
-              "\n",
-            )
-          : Array.isArray(legacyCourseInfo?.higherEducation?.higherStudies)
-            ? legacyCourseInfo.higherEducation.higherStudies.join("\n")
-            : "",
+          : serializeHigherEducationHeadingsToText([
+              {
+                title: "Global Certifications",
+                description: Array.isArray(
+                  legacyCourseInfo?.higherEducation?.globalCertifications,
+                )
+                  ? legacyCourseInfo.higherEducation.globalCertifications
+                  : [],
+              },
+              {
+                title: "Postgraduation",
+                description: Array.isArray(
+                  legacyCourseInfo?.higherEducation?.higherStudies,
+                )
+                  ? legacyCourseInfo.higherEducation.higherStudies
+                  : [],
+              },
+            ]),
       );
       setExitOptionsText(
         Array.isArray(currentCourseInfo?.flexible_exit_options)
@@ -3823,20 +4643,20 @@ export default function SetupProfilePage() {
             ? legacyCourseInfo.classroomFacilities.join("\n")
             : "",
       );
-      setBonusCertificationTitle(
-        currentCourseInfo?.bonus_certification?.name ||
-          legacyCourseInfo?.bonusCertification?.title ||
-          "",
-      );
-      setBonusCertificationDescription(
-        currentCourseInfo?.bonus_certification?.note ||
-          legacyCourseInfo?.bonusCertification?.description ||
-          "",
-      );
-      setBonusCertificationDetailsAvailable(
-        Boolean(
-          currentCourseInfo?.bonus_certification?.certificate_details_available,
-        ),
+      setBonusCertificationText(
+        Array.isArray(currentCourseInfo?.bonus_certification)
+          ? currentCourseInfo.bonus_certification
+              .map(
+                (item: any) =>
+                  `${item?.name || ""}|${item?.note || ""}|${Boolean(item?.certificate_details_available)}|${item?.details_page || ""}`,
+              )
+              .join("\n")
+          : currentCourseInfo?.bonus_certification &&
+              typeof currentCourseInfo.bonus_certification === "object"
+            ? `${currentCourseInfo?.bonus_certification?.name || ""}|${currentCourseInfo?.bonus_certification?.note || ""}|${Boolean(currentCourseInfo?.bonus_certification?.certificate_details_available)}|${currentCourseInfo?.bonus_certification?.details_page || ""}`
+            : legacyCourseInfo?.bonusCertification
+              ? `${legacyCourseInfo?.bonusCertification?.title || ""}|${legacyCourseInfo?.bonusCertification?.description || ""}|false|${legacyCourseInfo?.bonusCertification?.detailsPage || ""}`
+              : "",
       );
       setFeaturedAlumniText(
         Array.isArray(currentCourseInfo?.featured_alumni)
@@ -3864,10 +4684,12 @@ export default function SetupProfilePage() {
       );
       setFaqsText(
         Array.isArray(currentCourseInfo?.faqs)
-          ? currentCourseInfo.faqs.join("\n")
+          ? serializeFaqsToText(currentCourseInfo.faqs)
           : Array.isArray(legacyCourseInfo?.faqs)
             ? legacyCourseInfo.faqs
-                .map((item: any) => item.question || "")
+                .map(
+                  (item: any) => `${item.question || ""}|${item.answer || ""}`,
+                )
                 .join("\n")
             : "",
       );
@@ -3881,8 +4703,86 @@ export default function SetupProfilePage() {
           legacyCourseInfo?.studentForum?.ctaLabel ||
           "",
       );
+
+      const persistedCourseEntries =
+        extractCourseInfoCourseEntries(courseInfoSection);
+
+      const hydratedVariants = Object.entries(persistedCourseEntries).reduce<
+        Record<string, CourseInfoDraft>
+      >((acc, [courseName, payload]) => {
+        if (!courseName.trim()) {
+          return acc;
+        }
+
+        if (!hasMeaningfulCourseInfoDetails(payload)) {
+          return acc;
+        }
+
+        acc[courseName] = hydrateCourseInfoDraftFromPayload(
+          payload,
+          courseName,
+        );
+        return acc;
+      }, {});
+
+      const activeCoursePayload = {
+        ...currentCourseInfo,
+        course_name: selectedCourseName,
+        admissions,
+      };
+
+      if (
+        selectedCourseName.trim() &&
+        !hydratedVariants[selectedCourseName] &&
+        hasMeaningfulCourseInfoDetails(activeCoursePayload)
+      ) {
+        hydratedVariants[selectedCourseName] =
+          hydrateCourseInfoDraftFromPayload(
+            activeCoursePayload,
+            selectedCourseName,
+          );
+      }
+
+      setCourseInfoDrafts(hydratedVariants);
+
+      const preferredCourseName =
+        selectedCourseName.trim() || Object.keys(hydratedVariants)[0] || "";
+
+      if (preferredCourseName) {
+        setOtherCourseName(preferredCourseName);
+        const preferredDraft =
+          hydratedVariants[preferredCourseName] ||
+          createEmptyCourseInfoDraft(preferredCourseName);
+        applyCourseInfoDraftToState(preferredDraft);
+      }
     }
   }, [profile, reset]);
+
+  useEffect(() => {
+    setOtherCoursesRows((prev) => {
+      const manualRows = prev.filter((row) => !row.catalogCourseId);
+      const rowByCatalogId = new Map(
+        prev
+          .filter((row) => row.catalogCourseId)
+          .map((row) => [row.catalogCourseId, row]),
+      );
+
+      const catalogRows = collegeCourses.map((course) => {
+        const existing = rowByCatalogId.get(course.id);
+        return {
+          id: existing?.id || "",
+          catalogCourseId: course.id,
+          name: existing?.name || course.name || "",
+          code: existing?.code || course.code || "",
+          studyLevel: normalizeStudyLevelHeading(
+            existing?.studyLevel || course.studyLevel?.name || "Other",
+          ),
+        };
+      });
+
+      return [...catalogRows, ...manualRows];
+    });
+  }, [collegeCourses]);
 
   useEffect(() => {
     const totalAdmissions = parsePipeRows(admissionsMatrixText).length;
@@ -3930,6 +4830,65 @@ export default function SetupProfilePage() {
     })
     .slice(0, 8);
 
+  const courseNameOptions = Array.from(
+    new Set(
+      [
+        ...Object.keys(courseInfoDrafts),
+        ...otherCoursesRows.map((course) => course.name),
+        ...collegeCourses.map((course) => course.name),
+        otherCourseName,
+      ]
+        .map((name) => name.trim())
+        .filter(Boolean),
+    ),
+  );
+
+  const groupedOtherCourses = otherCoursesRows.reduce<
+    Record<
+      string,
+      {
+        index: number;
+        id: string;
+        catalogCourseId: string;
+        name: string;
+        code: string;
+        studyLevel: string;
+      }[]
+    >
+  >((acc, course, rowIndex) => {
+    const heading = normalizeStudyLevelHeading(course.studyLevel);
+
+    if (!acc[heading]) {
+      acc[heading] = [];
+    }
+
+    acc[heading].push({
+      index: rowIndex,
+      ...course,
+    });
+    return acc;
+  }, {});
+
+  const sortedOtherCourseHeadings = Object.keys(groupedOtherCourses).sort(
+    (a, b) => {
+      const order: Record<string, number> = {
+        UG: 0,
+        PG: 1,
+        Doctorate: 2,
+        Diploma: 3,
+        Other: 99,
+      };
+
+      const indexA = order[a] ?? 50;
+      const indexB = order[b] ?? 50;
+      if (indexA === indexB) {
+        return a.localeCompare(b);
+      }
+
+      return indexA - indexB;
+    },
+  );
+
   const setAllianceTextList = (
     index: number,
     field: "documents" | "allianceActivities",
@@ -3963,6 +4922,56 @@ export default function SetupProfilePage() {
     });
     setSelectedAllianceIndex(nextIndex);
     setAllianceSearchQuery("");
+  };
+
+  const handleAddOtherCourse = () => {
+    if (
+      !newOtherCourseForm.name.trim() ||
+      !newOtherCourseForm.code.trim() ||
+      !newOtherCourseForm.disciplineId ||
+      !newOtherCourseForm.studyLevelId ||
+      !newOtherCourseForm.programTypeId ||
+      !newOtherCourseForm.studyMode
+    ) {
+      toast.error(
+        "Please fill course name, code, discipline, study level, program type, and study mode.",
+      );
+      return;
+    }
+
+    createCourse(
+      {
+        name: newOtherCourseForm.name.trim(),
+        code: newOtherCourseForm.code.trim(),
+        disciplineId: newOtherCourseForm.disciplineId,
+        studyLevelId: newOtherCourseForm.studyLevelId,
+        programTypeId: newOtherCourseForm.programTypeId,
+        studyMode: newOtherCourseForm.studyMode,
+        campusId: newOtherCourseForm.campusId || null,
+        duration: newOtherCourseForm.duration.trim() || null,
+        eligibility: newOtherCourseForm.eligibility.trim() || null,
+        intakeCapacity: newOtherCourseForm.intakeCapacity
+          ? Number(newOtherCourseForm.intakeCapacity)
+          : null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Course added successfully");
+          setNewOtherCourseForm({
+            name: "",
+            code: "",
+            disciplineId: "",
+            studyLevelId: "",
+            programTypeId: "",
+            campusId: "",
+            studyMode: "full_time",
+            duration: "",
+            eligibility: "",
+            intakeCapacity: "",
+          });
+        },
+      },
+    );
   };
 
   const toggleAmenity = (amenity: string) => {
@@ -4156,6 +5165,13 @@ export default function SetupProfilePage() {
       "review",
       data.profileSections.review as unknown as Record<string, unknown>,
     );
+    const normalizedOtherCoursesOffered = normalizeSectionMeta(
+      "other_courses_offered",
+      data.profileSections.other_courses_offered as unknown as Record<
+        string,
+        unknown
+      >,
+    );
     const normalizedLibrary = normalizeSectionMeta(
       "library",
       data.profileSections.library as unknown as Record<string, unknown>,
@@ -4188,18 +5204,33 @@ export default function SetupProfilePage() {
         reviewText: reviewText || "",
       }));
 
-    const libraryResourceRows = parsePipeRows(libraryResourcesText)
-      .filter((row) => row[0])
-      .map(([resourceType, count]) => ({
-        resourceType,
-        count: safeNumber(count || "0"),
+    const normalizedLibraryResourceRows = libraryResourceRows
+      .filter((row) => row.resourceType || row.count)
+      .map((row) => ({
+        resourceType: row.resourceType,
+        count: safeNumber(row.count || "0"),
       }));
-    const libraryHourRows = parsePipeRows(libraryHoursText)
-      .filter((row) => row[0] || row[1] || row[2])
-      .map(([day, workingHours, transactionHours]) => ({
-        day: day || "",
-        workingHours: workingHours || "",
-        transactionHours: transactionHours || "",
+    const normalizedLibraryHourRows = libraryHourRows
+      .filter((row) => row.day || row.workingHours || row.transactionHours)
+      .map((row) => ({
+        day: row.day,
+        workingHours: row.workingHours,
+        transactionHours: row.transactionHours,
+      }));
+    const normalizedLibraryFacilityRows = libraryFacilityRows
+      .filter((row) => row.title || row.image)
+      .map((row) => ({
+        title: row.title,
+        image: row.image,
+      }));
+    const normalizedOtherCoursesRows = otherCoursesRows
+      .filter((row) => row.name || row.code)
+      .map((row) => ({
+        id: row.id,
+        catalogCourseId: row.catalogCourseId,
+        name: row.name,
+        code: row.code,
+        studyLevel: normalizeStudyLevelHeading(row.studyLevel),
       }));
 
     const conductRuleRows = parsePipeRows(conductRulesText)
@@ -4209,98 +5240,17 @@ export default function SetupProfilePage() {
         rule: rule || "",
       }));
 
-    const curriculumSemesterRows = parsePipeRows(curriculumSemestersText)
-      .filter((row) => row[0] || row[1] || row[2] || row[3] || row[4] || row[5])
-      .map(
-        ([
-          semester,
-          coreSubjects,
-          specializationOneName,
-          specializationOneElectives,
-          specializationTwoName,
-          specializationTwoNote,
-        ]) => ({
-          semester: safeNumber(semester || "0"),
-          core_subjects: (coreSubjects || "")
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
-          specialization_1: {
-            name: specializationOneName || "",
-            electives: (specializationOneElectives || "")
-              .split(",")
-              .map((item) => item.trim())
-              .filter(Boolean),
-          },
-          specialization_2: {
-            name: specializationTwoName || "",
-            note: specializationTwoNote || "",
-          },
-        }),
-      );
+    const currentCourseDraft =
+      buildCourseInfoDraftFromCurrentState(otherCourseName);
+    const currentCourseKey = currentCourseDraft.course_name.trim();
+    const combinedCourseDrafts = { ...courseInfoDrafts };
 
-    const courseStructureRows = parsePipeRows(courseStructureText)
-      .filter((row) => row[0] || row[1])
-      .map(([track, credits]) => ({
-        track: track || "",
-        credits: safeNumber(credits || "0"),
-      }));
+    if (currentCourseKey) {
+      combinedCourseDrafts[currentCourseKey] = currentCourseDraft;
+    }
 
-    const admissionsRows = parsePipeRows(admissionsMatrixText)
-      .filter((row) => row.some((cell) => cell && cell.trim().length > 0))
-      .map(
-        ([
-          year,
-          status,
-          placementRate,
-          seatsNote,
-          duration,
-          studyMode,
-          academicCycle,
-          totalCredits,
-          genderAccepted,
-          courseCategory,
-        ]) => ({
-          year: year || "",
-          status: status?.trim() ? status : null,
-          placement_rate: placementRate?.trim() ? placementRate : null,
-          seats_note: seatsNote?.trim() ? seatsNote : null,
-          basic_details: {
-            duration: duration || "",
-            study_mode: studyMode || "",
-            academic_cycle: academicCycle || "",
-            total_credits: safeNumber(totalCredits || "0"),
-            gender_accepted: genderAccepted || "",
-            course_category: courseCategory || "",
-          },
-        }),
-      );
-
-    const classTimingsRows = parsePipeRows(classTimingsText)
-      .filter((row) => row[0] || row[1] || row[2])
-      .map(([day, timing, status]) => ({
-        day: day || "",
-        timing: timing || null,
-        status: status || (timing ? "open" : "closed"),
-      }));
-
-    const featuredAlumniRows = parsePipeRows(featuredAlumniText)
-      .filter((row) => row[0] || row[1] || row[2])
-      .map(([name, designation, careerProgression]) => ({
-        name: name || "",
-        designation: designation || "",
-        career_progression: (careerProgression || "")
-          .split(";")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .map((item) => {
-            const [year, ...milestoneParts] = item.split(":");
-            return {
-              year: safeNumber(year || "0"),
-              milestone: milestoneParts.join(":").trim(),
-            };
-          }),
-      }));
+    const activeCourseInfoPayload =
+      buildCourseInfoPayloadFromDraft(currentCourseDraft);
 
     const profileSectionsPayload = {
       ...data.profileSections,
@@ -4312,9 +5262,7 @@ export default function SetupProfilePage() {
           } = normalizedOverview as Record<string, unknown>;
           return rest;
         })(),
-        accreditation_and_affiliation: {
-          rankings: overviewRankings,
-        },
+        accreditation_and_affiliation: overviewRankings,
         institution_details: {
           established_year:
             data.profileSections.college_overview.instution_details.estd,
@@ -4354,79 +5302,12 @@ export default function SetupProfilePage() {
       course_info: {
         id: (normalizedCourseInfo as Record<string, unknown>).id,
         enabled: (normalizedCourseInfo as Record<string, unknown>).enabled,
-        course_name: otherCourseName || "",
-        admissions: admissionsRows,
-        program_highlights: fromLineText(programHighlightsText),
-        course_accolades: parsePipeRows(courseAccoladesText)
-          .filter((row) => row[0] || row[1] || row[2])
-          .map(([body, rank, image]) => ({
-            body: body || "",
-            rank: rank || "",
-            image: image || "",
-          })),
-        key_dates: {
-          application_start: applicationStartDate,
-          application_close: {
-            date: applicationCloseDate,
-            urgency: applicationCloseUrgency,
-          },
-          class_commencement: {
-            date: classCommencementDate,
-            note: classCommencementNote,
-          },
-        },
-        curriculum: {
-          brochure_upload: curriculumBrochureUrl,
-          brochure_available: curriculumBrochureAvailable,
-          semesters: curriculumSemesterRows,
-          course_structure: {
-            total_credits: safeNumber(courseStructureTotalCredits),
-            breakdown: courseStructureRows,
-          },
-        },
-        value_added_course: (() => {
-          const [name = "", credits = "0", delivery_mode = ""] =
-            parsePipeRows(valueAddedCoursesText)[0] || [];
-          return {
-            name,
-            delivery_mode,
-            credits: safeNumber(credits),
-          };
-        })(),
-        career_opportunities: parsePipeRows(careerOpportunitiesText)
-          .filter((row) => row[0] || row[1])
-          .map(([role, salary_range]) => ({
-            role: role || "",
-            salary_range: salary_range || "",
-          })),
-        higher_education_and_certifications: {
-          global_certifications: fromLineText(higherEducationCertsText),
-          postgraduation: fromLineText(higherEducationStudiesText),
-        },
-        flexible_exit_options: parsePipeRows(exitOptionsText)
-          .filter((row) => row[0] || row[1])
-          .map(([after_years, credential]) => ({
-            after_years: safeNumber(after_years || "0"),
-            credential: credential || "",
-          })),
-        class_timings: {
-          mode: classTimingsMode,
-          schedule: classTimingsRows,
-        },
-        industry_tools: fromLineText(industryToolsText),
-        lab_facilities: fromLineText(labFacilitiesText),
-        classroom_facilities: fromLineText(classroomFacilitiesText),
-        bonus_certification: {
-          name: bonusCertificationTitle,
-          note: bonusCertificationDescription,
-          certificate_details_available: bonusCertificationDetailsAvailable,
-        },
-        featured_alumni: featuredAlumniRows,
-        faqs: fromLineText(faqsText),
-        student_forum: {
-          description: studentForumDescription,
-          cta: studentForumCtaLabel,
-        },
+        course_name: activeCourseInfoPayload.course_name,
+        data: activeCourseInfoPayload,
+      },
+      other_courses_offered: {
+        ...normalizedOtherCoursesOffered,
+        courses: normalizedOtherCoursesRows,
       },
       admission_policy: {
         ...normalizedAdmissionPolicy,
@@ -4446,13 +5327,14 @@ export default function SetupProfilePage() {
                 criteria: quota.criteria
                   .filter(
                     (criterion) =>
-                      criterion.label.trim().length > 0 ||
-                      criterion.description.trim().length > 0,
+                      criterion.title.trim().length > 0 ||
+                      criterion.description.trim().length > 0 ||
+                      criterion.logo.trim().length > 0,
                   )
                   .map((criterion) => ({
-                    id: criterion.id,
-                    label: criterion.label,
+                    title: criterion.title,
                     description: criterion.description,
+                    logo: criterion.logo,
                   })),
               })),
             }),
@@ -4662,9 +5544,9 @@ export default function SetupProfilePage() {
           totalVolumes: safeNumber(libraryTotalVolumes),
           researchCabins: safeNumber(libraryResearchCabins),
         },
-        availableResources: libraryResourceRows,
-        libraryHours: libraryHourRows,
-        facilities: fromLineText(libraryFacilitiesText),
+        availableResources: normalizedLibraryResourceRows,
+        libraryHours: normalizedLibraryHourRows,
+        facilities: normalizedLibraryFacilityRows,
       },
       student_code_of_conduct: {
         ...normalizedStudentCodeOfConduct,
@@ -4803,32 +5685,122 @@ export default function SetupProfilePage() {
     setValueFn(serializePipeRows(rows));
   };
 
-  const parseEditableFaqRows = (value: string) => value.split("\n");
+  const parseEditableFaqRows = (value: string) =>
+    parsePipeRowsWithColumns(value, 2);
 
   const addFaqRow = () => {
     const rows = parseEditableFaqRows(faqsText);
-    rows.push("");
-    setFaqsText(rows.join("\n"));
+    rows.push(["", ""]);
+    setFaqsText(serializePipeRows(rows, { keepEmptyRows: true }));
   };
 
-  const updateFaqRow = (rowIndex: number, nextValue: string) => {
+  const updateFaqRow = (
+    rowIndex: number,
+    columnIndex: number,
+    nextValue: string,
+  ) => {
     const rows = parseEditableFaqRows(faqsText);
     while (rows.length <= rowIndex) {
-      rows.push("");
+      rows.push(["", ""]);
     }
-    rows[rowIndex] = nextValue;
-    setFaqsText(rows.join("\n"));
+    while (rows[rowIndex].length < 2) {
+      rows[rowIndex].push("");
+    }
+    rows[rowIndex][columnIndex] = nextValue;
+    setFaqsText(serializePipeRows(rows, { keepEmptyRows: true }));
   };
 
   const removeFaqRow = (rowIndex: number) => {
     const rows = parseEditableFaqRows(faqsText).filter(
       (_, index) => index !== rowIndex,
     );
-    setFaqsText(rows.length > 0 ? rows.join("\n") : "");
+    setFaqsText(rows.length > 0 ? serializePipeRows(rows) : "");
   };
 
+  const parseHigherEducationHeadingRows = (value: string) =>
+    parsePipeRowsWithColumns(value, 2).map(([title, description]) => ({
+      title,
+      descriptions: (description || "").split(";").map((item) => item.trim()),
+    }));
+
+  const serializeHigherEducationHeadingRows = (
+    rows: { title: string; descriptions: string[] }[],
+  ) =>
+    rows
+      .map((row) => [row.title.trim(), row.descriptions.join(";")].join("|"))
+      .join("\n");
+
+  const addHigherEducationHeading = () => {
+    const rows = parseHigherEducationHeadingRows(higherEducationHeadingsText);
+    rows.push({ title: "", descriptions: [] });
+    setHigherEducationHeadingsText(serializeHigherEducationHeadingRows(rows));
+  };
+
+  const updateHigherEducationHeadingTitle = (
+    rowIndex: number,
+    nextTitle: string,
+  ) => {
+    const rows = parseHigherEducationHeadingRows(higherEducationHeadingsText);
+    while (rows.length <= rowIndex) {
+      rows.push({ title: "", descriptions: [] });
+    }
+    rows[rowIndex].title = nextTitle;
+    setHigherEducationHeadingsText(serializeHigherEducationHeadingRows(rows));
+  };
+
+  const removeHigherEducationHeading = (rowIndex: number) => {
+    const rows = parseHigherEducationHeadingRows(
+      higherEducationHeadingsText,
+    ).filter((_, index) => index !== rowIndex);
+    setHigherEducationHeadingsText(
+      rows.length > 0 ? serializeHigherEducationHeadingRows(rows) : "",
+    );
+  };
+
+  const addHigherEducationDescription = (rowIndex: number) => {
+    const rows = parseHigherEducationHeadingRows(higherEducationHeadingsText);
+    while (rows.length <= rowIndex) {
+      rows.push({ title: "", descriptions: [] });
+    }
+    rows[rowIndex].descriptions.push("");
+    setHigherEducationHeadingsText(serializeHigherEducationHeadingRows(rows));
+  };
+
+  const updateHigherEducationDescription = (
+    rowIndex: number,
+    descriptionIndex: number,
+    nextValue: string,
+  ) => {
+    const rows = parseHigherEducationHeadingRows(higherEducationHeadingsText);
+    while (rows.length <= rowIndex) {
+      rows.push({ title: "", descriptions: [] });
+    }
+    while (rows[rowIndex].descriptions.length <= descriptionIndex) {
+      rows[rowIndex].descriptions.push("");
+    }
+    rows[rowIndex].descriptions[descriptionIndex] = nextValue;
+    setHigherEducationHeadingsText(serializeHigherEducationHeadingRows(rows));
+  };
+
+  const removeHigherEducationDescription = (
+    rowIndex: number,
+    descriptionIndex: number,
+  ) => {
+    const rows = parseHigherEducationHeadingRows(higherEducationHeadingsText);
+    if (!rows[rowIndex]) {
+      return;
+    }
+    rows[rowIndex].descriptions = rows[rowIndex].descriptions.filter(
+      (_, index) => index !== descriptionIndex,
+    );
+    setHigherEducationHeadingsText(serializeHigherEducationHeadingRows(rows));
+  };
+
+  const parseEditableLineRows = (value: string) =>
+    value.length > 0 ? value.split("\n") : [];
+
   const addLineRow = (value: string, setValueFn: (next: string) => void) => {
-    const rows = fromLineText(value);
+    const rows = parseEditableLineRows(value);
     rows.push("");
     setValueFn(rows.join("\n"));
   };
@@ -4839,7 +5811,7 @@ export default function SetupProfilePage() {
     rowIndex: number,
     nextValue: string,
   ) => {
-    const rows = fromLineText(value);
+    const rows = parseEditableLineRows(value);
     while (rows.length <= rowIndex) {
       rows.push("");
     }
@@ -4852,8 +5824,147 @@ export default function SetupProfilePage() {
     setValueFn: (next: string) => void,
     rowIndex: number,
   ) => {
-    const rows = fromLineText(value).filter((_, index) => index !== rowIndex);
+    const rows = parseEditableLineRows(value).filter(
+      (_, index) => index !== rowIndex,
+    );
     setValueFn(rows.join("\n"));
+  };
+
+  const parseBonusCertificationRows = (value: string) =>
+    parsePipeRowsWithColumns(value, 4).map(
+      ([name, note, certificateDetailsAvailable, detailsPage]) => ({
+        name,
+        note,
+        certificateDetailsAvailable,
+        detailsPage,
+      }),
+    );
+
+  const addBonusCertificationRow = () => {
+    const rows = parseBonusCertificationRows(bonusCertificationText);
+    rows.push({
+      name: "",
+      note: "",
+      certificateDetailsAvailable: "false",
+      detailsPage: "",
+    });
+    setBonusCertificationText(
+      rows
+        .map((row) =>
+          [
+            row.name,
+            row.note,
+            row.certificateDetailsAvailable,
+            row.detailsPage,
+          ].join("|"),
+        )
+        .join("\n"),
+    );
+  };
+
+  type FeaturedProgressionRow = { year: string; milestone: string };
+  type FeaturedAlumniRow = {
+    name: string;
+    designation: string;
+    progressions: FeaturedProgressionRow[];
+  };
+
+  const parseFeaturedAlumniRows = (value: string): FeaturedAlumniRow[] =>
+    parsePipeRowsWithColumns(value, 3).map(
+      ([name, designation, progression]) => ({
+        name,
+        designation,
+        progressions:
+          progression.length > 0
+            ? progression.split(";").map((entry) => {
+                const [year = "", ...milestoneParts] = entry.split(":");
+                return {
+                  year: year.trim(),
+                  milestone: milestoneParts.join(":").trim(),
+                };
+              })
+            : [],
+      }),
+    );
+
+  const serializeFeaturedAlumniRows = (rows: FeaturedAlumniRow[]) =>
+    rows
+      .map((row) => {
+        const progression = row.progressions
+          .map((entry) => `${entry.year}:${entry.milestone}`)
+          .join(";");
+        return [row.name, row.designation, progression].join("|");
+      })
+      .join("\n");
+
+  const addFeaturedAlumniRow = () => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText);
+    rows.push({
+      name: "",
+      designation: "",
+      progressions: [{ year: "", milestone: "" }],
+    });
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
+  };
+
+  const updateFeaturedAlumniField = (
+    rowIndex: number,
+    field: "name" | "designation",
+    nextValue: string,
+  ) => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText);
+    while (rows.length <= rowIndex) {
+      rows.push({ name: "", designation: "", progressions: [] });
+    }
+    rows[rowIndex][field] = nextValue;
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
+  };
+
+  const addFeaturedAlumniProgression = (rowIndex: number) => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText);
+    while (rows.length <= rowIndex) {
+      rows.push({ name: "", designation: "", progressions: [] });
+    }
+    rows[rowIndex].progressions.push({ year: "", milestone: "" });
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
+  };
+
+  const updateFeaturedAlumniProgression = (
+    rowIndex: number,
+    progressionIndex: number,
+    field: "year" | "milestone",
+    nextValue: string,
+  ) => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText);
+    while (rows.length <= rowIndex) {
+      rows.push({ name: "", designation: "", progressions: [] });
+    }
+    while (rows[rowIndex].progressions.length <= progressionIndex) {
+      rows[rowIndex].progressions.push({ year: "", milestone: "" });
+    }
+    rows[rowIndex].progressions[progressionIndex][field] = nextValue;
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
+  };
+
+  const removeFeaturedAlumniProgression = (
+    rowIndex: number,
+    progressionIndex: number,
+  ) => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText);
+    if (!rows[rowIndex]) {
+      return;
+    }
+    rows[rowIndex].progressions = rows[rowIndex].progressions.filter(
+      (_, index) => index !== progressionIndex,
+    );
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
+  };
+
+  const removeFeaturedAlumniRow = (rowIndex: number) => {
+    const rows = parseFeaturedAlumniRows(featuredAlumniText).filter(
+      (_, index) => index !== rowIndex,
+    );
+    setFeaturedAlumniText(serializeFeaturedAlumniRows(rows));
   };
 
   if (isLoading) {
@@ -6812,9 +7923,9 @@ export default function SetupProfilePage() {
                                                     criteria: [
                                                       ...quota.criteria,
                                                       {
-                                                        id: `criteria_${Date.now()}`,
-                                                        label: "",
+                                                        title: "",
                                                         description: "",
+                                                        logo: "",
                                                       },
                                                     ],
                                                   },
@@ -6832,16 +7943,14 @@ export default function SetupProfilePage() {
                         {(selectedQuota?.criteria || []).map(
                           (criterion, idx) => (
                             <div
-                              key={
-                                criterion.id || `${selectedQuota?.id}-${idx}`
-                              }
-                              className="grid gap-3 md:grid-cols-[1fr_2fr_auto] items-center"
+                              key={`${selectedQuota?.id}-${idx}`}
+                              className="grid gap-3 md:grid-cols-[1fr_2fr_2fr_auto] items-center"
                             >
                               <Input
                                 placeholder="Title (e.g. Academic Grades)"
-                                value={criterion.label}
+                                value={criterion.title}
                                 onChange={(e) => {
-                                  const nextLabel = e.target.value;
+                                  const nextTitle = e.target.value;
                                   setEligibilityCriteriaModel((prev) => ({
                                     ...prev,
                                     applicant_type_tabs:
@@ -6869,14 +7978,8 @@ export default function SetupProfilePage() {
                                                                   ? item
                                                                   : {
                                                                       ...item,
-                                                                      label:
-                                                                        nextLabel,
-                                                                      id:
-                                                                        item.id ||
-                                                                        createEligibilityId(
-                                                                          nextLabel,
-                                                                          "criteria",
-                                                                        ),
+                                                                      title:
+                                                                        nextTitle,
                                                                     },
                                                             ),
                                                         },
@@ -6920,6 +8023,48 @@ export default function SetupProfilePage() {
                                                                       ...item,
                                                                       description:
                                                                         nextDescription,
+                                                                    },
+                                                            ),
+                                                        },
+                                                ),
+                                            },
+                                      ),
+                                  }));
+                                }}
+                              />
+                              <Input
+                                placeholder="Logo SVG"
+                                value={criterion.logo}
+                                onChange={(e) => {
+                                  const nextLogo = e.target.value;
+                                  setEligibilityCriteriaModel((prev) => ({
+                                    ...prev,
+                                    applicant_type_tabs:
+                                      prev.applicant_type_tabs.map((tab) =>
+                                        tab.id !== applicantType.id
+                                          ? tab
+                                          : {
+                                              ...tab,
+                                              quota_categories:
+                                                tab.quota_categories.map(
+                                                  (quota) =>
+                                                    quota.id !==
+                                                    selectedQuota?.id
+                                                      ? quota
+                                                      : {
+                                                          ...quota,
+                                                          criteria:
+                                                            quota.criteria.map(
+                                                              (
+                                                                item,
+                                                                itemIndex,
+                                                              ) =>
+                                                                itemIndex !==
+                                                                idx
+                                                                  ? item
+                                                                  : {
+                                                                      ...item,
+                                                                      logo: nextLogo,
                                                                     },
                                                             ),
                                                         },
@@ -9405,40 +10550,211 @@ export default function SetupProfilePage() {
                 </div>
               </div>
 
-              <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label htmlFor="library-resources">
-                  Available Resources (resourceType|count per line)
-                </Label>
-                <Textarea
-                  id="library-resources"
-                  placeholder={"Encyclopaedias|50\nJournals (Online)|6150"}
-                  value={libraryResourcesText}
-                  onChange={(e) => setLibraryResourcesText(e.target.value)}
-                />
+              <div className="space-y-3 border-t pt-6 border-border/40">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    Available Resources
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setLibraryResourceRows((prev) => [
+                        ...prev,
+                        { resourceType: "", count: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Resource
+                  </Button>
+                </div>
+                {libraryResourceRows.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="grid gap-3 items-center md:grid-cols-[1fr_220px_auto]"
+                  >
+                    <Input
+                      placeholder="Resource Type"
+                      value={row.resourceType}
+                      onChange={(e) =>
+                        setLibraryResourceRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, resourceType: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Count"
+                      value={row.count}
+                      onChange={(e) =>
+                        setLibraryResourceRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, count: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setLibraryResourceRows((prev) =>
+                          prev.filter((_, itemIdx) => itemIdx !== idx),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label htmlFor="library-hours">
-                  Library Hours (day|workingHours|transactionHours per line)
-                </Label>
-                <Textarea
-                  id="library-hours"
-                  placeholder={"Monday|09:00 AM - 04:30 PM|09:00 AM - 04:30 PM"}
-                  value={libraryHoursText}
-                  onChange={(e) => setLibraryHoursText(e.target.value)}
-                />
+              <div className="space-y-3 border-t pt-6 border-border/40">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">Library Hours</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setLibraryHourRows((prev) => [
+                        ...prev,
+                        { day: "", workingHours: "", transactionHours: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Hours
+                  </Button>
+                </div>
+                {libraryHourRows.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="grid gap-3 items-center md:grid-cols-[220px_1fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Day"
+                      value={row.day}
+                      onChange={(e) =>
+                        setLibraryHourRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, day: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Working Hours"
+                      value={row.workingHours}
+                      onChange={(e) =>
+                        setLibraryHourRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, workingHours: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Transaction Hours"
+                      value={row.transactionHours}
+                      onChange={(e) =>
+                        setLibraryHourRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, transactionHours: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setLibraryHourRows((prev) =>
+                          prev.filter((_, itemIdx) => itemIdx !== idx),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
-              <div className="space-y-2 border-t pt-6 border-border/40">
-                <Label htmlFor="library-facilities">
-                  Facilities (one item per line)
-                </Label>
-                <Textarea
-                  id="library-facilities"
-                  placeholder={"Quiet Study Areas\nComputer Labs"}
-                  value={libraryFacilitiesText}
-                  onChange={(e) => setLibraryFacilitiesText(e.target.value)}
-                />
+              <div className="space-y-3 border-t pt-6 border-border/40">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">Facilities</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setLibraryFacilityRows((prev) => [
+                        ...prev,
+                        { title: "", image: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Facility
+                  </Button>
+                </div>
+                {libraryFacilityRows.map((row, idx) => (
+                  <div
+                    key={idx}
+                    className="grid gap-3 items-center md:grid-cols-[1fr_1fr_auto]"
+                  >
+                    <Input
+                      placeholder="Facility Title"
+                      value={row.title}
+                      onChange={(e) =>
+                        setLibraryFacilityRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, title: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Facility Image URL"
+                      value={row.image}
+                      onChange={(e) =>
+                        setLibraryFacilityRows((prev) =>
+                          prev.map((item, itemIdx) =>
+                            itemIdx === idx
+                              ? { ...item, image: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setLibraryFacilityRows((prev) =>
+                          prev.filter((_, itemIdx) => itemIdx !== idx),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -9527,10 +10843,26 @@ export default function SetupProfilePage() {
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Course Name</Label>
-                  <Input
-                    placeholder="Course Name"
+                  <select
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={otherCourseName}
-                    onChange={(e) => setOtherCourseName(e.target.value)}
+                    onChange={(e) =>
+                      handleCourseInfoSelectionChange(e.target.value)
+                    }
+                  >
+                    <option value="">Select Course</option>
+                    {courseNameOptions.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    placeholder="Or type a custom course name"
+                    value={otherCourseName}
+                    onChange={(e) =>
+                      handleCourseInfoSelectionChange(e.target.value)
+                    }
                   />
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-semibold">Admissions</Label>
@@ -10180,12 +11512,12 @@ export default function SetupProfilePage() {
 
               <div className="space-y-2 border-t pt-6 border-border/40">
                 <Label>Value Added Course</Label>
-                <div className="grid gap-2 md:grid-cols-3">
+                <div className="grid gap-2 md:grid-cols-4">
                   {(() => {
                     const valueAddedRow = parsePipeRowsWithColumns(
                       valueAddedCoursesText,
-                      3,
-                    )[0] || ["", "", ""];
+                      4,
+                    )[0] || ["", "", "", ""];
 
                     return (
                       <>
@@ -10196,7 +11528,7 @@ export default function SetupProfilePage() {
                             updatePipeCell(
                               valueAddedCoursesText,
                               setValueAddedCoursesText,
-                              3,
+                              4,
                               0,
                               0,
                               e.target.value,
@@ -10210,7 +11542,7 @@ export default function SetupProfilePage() {
                             updatePipeCell(
                               valueAddedCoursesText,
                               setValueAddedCoursesText,
-                              3,
+                              4,
                               0,
                               1,
                               e.target.value,
@@ -10224,9 +11556,23 @@ export default function SetupProfilePage() {
                             updatePipeCell(
                               valueAddedCoursesText,
                               setValueAddedCoursesText,
-                              3,
+                              4,
                               0,
                               2,
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <Input
+                          placeholder="Course Type"
+                          value={valueAddedRow[3]}
+                          onChange={(e) =>
+                            updatePipeCell(
+                              valueAddedCoursesText,
+                              setValueAddedCoursesText,
+                              4,
+                              0,
+                              3,
                               e.target.value,
                             )
                           }
@@ -10312,37 +11658,34 @@ export default function SetupProfilePage() {
                 ))}
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 border-t pt-6 border-border/40">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Global Certifications</Label>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        addLineRow(
-                          higherEducationCertsText,
-                          setHigherEducationCertsText,
-                        )
-                      }
-                    >
-                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
-                    </Button>
-                  </div>
-                  {(fromLineText(higherEducationCertsText).length > 0
-                    ? fromLineText(higherEducationCertsText)
-                    : [""]
-                  ).map((item, index) => (
-                    <div key={`global-cert-${index}`} className="flex gap-2">
+              <div className="space-y-3 border-t pt-6 border-border/40">
+                <div className="flex items-center justify-between">
+                  <Label>Higher Education and Certifications</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={addHigherEducationHeading}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Heading
+                  </Button>
+                </div>
+                {(parseHigherEducationHeadingRows(higherEducationHeadingsText)
+                  .length > 0
+                  ? parseHigherEducationHeadingRows(higherEducationHeadingsText)
+                  : [{ title: "", descriptions: [""] }]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`higher-education-heading-${rowIndex}`}
+                    className="space-y-3 rounded-lg border border-border/50 p-3"
+                  >
+                    <div className="grid gap-2 md:grid-cols-[1fr_auto]">
                       <Input
-                        placeholder="Certification"
-                        value={item}
+                        placeholder="Heading Title"
+                        value={row.title}
                         onChange={(e) =>
-                          updateLineRow(
-                            higherEducationCertsText,
-                            setHigherEducationCertsText,
-                            index,
+                          updateHigherEducationHeadingTitle(
+                            rowIndex,
                             e.target.value,
                           )
                         }
@@ -10350,73 +11693,69 @@ export default function SetupProfilePage() {
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         className="text-destructive"
-                        onClick={() =>
-                          removeLineRow(
-                            higherEducationCertsText,
-                            setHigherEducationCertsText,
-                            index,
-                          )
-                        }
+                        onClick={() => removeHigherEducationHeading(rowIndex)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="mr-1 h-4 w-4" /> Remove Heading
                       </Button>
                     </div>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Postgraduation</Label>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        addLineRow(
-                          higherEducationStudiesText,
-                          setHigherEducationStudiesText,
-                        )
-                      }
-                    >
-                      <Plus className="mr-1 h-3.5 w-3.5" /> Add
-                    </Button>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Description Items
+                        </Label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            addHigherEducationDescription(rowIndex)
+                          }
+                        >
+                          <Plus className="mr-1 h-3.5 w-3.5" /> Add Description
+                        </Button>
+                      </div>
+                      {(
+                        (row.descriptions.length > 0
+                          ? row.descriptions
+                          : [""]) || [""]
+                      ).map((description, descriptionIndex) => (
+                        <div
+                          key={`higher-education-description-${rowIndex}-${descriptionIndex}`}
+                          className="grid gap-2 md:grid-cols-[1fr_auto]"
+                        >
+                          <Input
+                            placeholder="Description"
+                            value={description}
+                            onChange={(e) =>
+                              updateHigherEducationDescription(
+                                rowIndex,
+                                descriptionIndex,
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() =>
+                              removeHigherEducationDescription(
+                                rowIndex,
+                                descriptionIndex,
+                              )
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {(fromLineText(higherEducationStudiesText).length > 0
-                    ? fromLineText(higherEducationStudiesText)
-                    : [""]
-                  ).map((item, index) => (
-                    <div key={`postgrad-${index}`} className="flex gap-2">
-                      <Input
-                        placeholder="Postgraduation option"
-                        value={item}
-                        onChange={(e) =>
-                          updateLineRow(
-                            higherEducationStudiesText,
-                            setHigherEducationStudiesText,
-                            index,
-                            e.target.value,
-                          )
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        onClick={() =>
-                          removeLineRow(
-                            higherEducationStudiesText,
-                            setHigherEducationStudiesText,
-                            index,
-                          )
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
@@ -10593,8 +11932,8 @@ export default function SetupProfilePage() {
                       <Plus className="mr-1 h-3.5 w-3.5" /> Add
                     </Button>
                   </div>
-                  {(fromLineText(industryToolsText).length > 0
-                    ? fromLineText(industryToolsText)
+                  {(parseEditableLineRows(industryToolsText).length > 0
+                    ? parseEditableLineRows(industryToolsText)
                     : [""]
                   ).map((item, index) => (
                     <div key={`industry-tool-${index}`} className="flex gap-2">
@@ -10642,8 +11981,8 @@ export default function SetupProfilePage() {
                       <Plus className="mr-1 h-3.5 w-3.5" /> Add
                     </Button>
                   </div>
-                  {(fromLineText(labFacilitiesText).length > 0
-                    ? fromLineText(labFacilitiesText)
+                  {(parseEditableLineRows(labFacilitiesText).length > 0
+                    ? parseEditableLineRows(labFacilitiesText)
                     : [""]
                   ).map((item, index) => (
                     <div key={`lab-facility-${index}`} className="flex gap-2">
@@ -10694,8 +12033,8 @@ export default function SetupProfilePage() {
                       <Plus className="mr-1 h-3.5 w-3.5" /> Add
                     </Button>
                   </div>
-                  {(fromLineText(classroomFacilitiesText).length > 0
-                    ? fromLineText(classroomFacilitiesText)
+                  {(parseEditableLineRows(classroomFacilitiesText).length > 0
+                    ? parseEditableLineRows(classroomFacilitiesText)
                     : [""]
                   ).map((item, index) => (
                     <div
@@ -10734,29 +12073,114 @@ export default function SetupProfilePage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3 border-t pt-6 border-border/40">
-                <Input
-                  placeholder="Bonus Certification Name"
-                  value={bonusCertificationTitle}
-                  onChange={(e) => setBonusCertificationTitle(e.target.value)}
-                />
-                <Input
-                  placeholder="Bonus Certification Note"
-                  value={bonusCertificationDescription}
-                  onChange={(e) =>
-                    setBonusCertificationDescription(e.target.value)
-                  }
-                />
-                <label className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={bonusCertificationDetailsAvailable}
-                    onChange={(e) =>
-                      setBonusCertificationDetailsAvailable(e.target.checked)
-                    }
-                  />
-                  Certificate details available
-                </label>
+              <div className="space-y-2 border-t pt-6 border-border/40">
+                <div className="flex items-center justify-between">
+                  <Label>Bonus Certification</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={addBonusCertificationRow}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" /> Add Certification
+                  </Button>
+                </div>
+                {(parseBonusCertificationRows(bonusCertificationText).length > 0
+                  ? parseBonusCertificationRows(bonusCertificationText)
+                  : [
+                      {
+                        name: "",
+                        note: "",
+                        certificateDetailsAvailable: "false",
+                        detailsPage: "",
+                      },
+                    ]
+                ).map((row, rowIndex) => (
+                  <div
+                    key={`bonus-certification-${rowIndex}`}
+                    className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto_auto]"
+                  >
+                    <Input
+                      placeholder="Certification Name"
+                      value={row.name}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          bonusCertificationText,
+                          setBonusCertificationText,
+                          4,
+                          rowIndex,
+                          0,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Certification Note"
+                      value={row.note}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          bonusCertificationText,
+                          setBonusCertificationText,
+                          4,
+                          rowIndex,
+                          1,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="Details Page URL"
+                      value={row.detailsPage}
+                      onChange={(e) =>
+                        updatePipeCell(
+                          bonusCertificationText,
+                          setBonusCertificationText,
+                          4,
+                          rowIndex,
+                          3,
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <label className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={
+                          String(
+                            row.certificateDetailsAvailable,
+                          ).toLowerCase() === "true"
+                        }
+                        onChange={(e) =>
+                          updatePipeCell(
+                            bonusCertificationText,
+                            setBonusCertificationText,
+                            4,
+                            rowIndex,
+                            2,
+                            String(e.target.checked),
+                          )
+                        }
+                      />
+                      Details Available
+                    </label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() =>
+                        removePipeRow(
+                          bonusCertificationText,
+                          setBonusCertificationText,
+                          4,
+                          rowIndex,
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-2 border-t pt-6 border-border/40">
@@ -10766,79 +12190,121 @@ export default function SetupProfilePage() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() =>
-                      addPipeRow(featuredAlumniText, setFeaturedAlumniText, 3)
-                    }
+                    onClick={addFeaturedAlumniRow}
                   >
                     <Plus className="mr-1 h-3.5 w-3.5" /> Add Alumni
                   </Button>
                 </div>
-                {(parsePipeRowsWithColumns(featuredAlumniText, 3).length > 0
-                  ? parsePipeRowsWithColumns(featuredAlumniText, 3)
-                  : [["", "", ""]]
+                {(parseFeaturedAlumniRows(featuredAlumniText).length > 0
+                  ? parseFeaturedAlumniRows(featuredAlumniText)
+                  : [
+                      {
+                        name: "",
+                        designation: "",
+                        progressions: [{ year: "", milestone: "" }],
+                      },
+                    ]
                 ).map((row, rowIndex) => (
                   <div
                     key={`featured-alumni-${rowIndex}`}
-                    className="space-y-2 rounded-lg border border-border/50 p-3"
+                    className="space-y-3 rounded-lg border border-border/50 p-3"
                   >
                     <div className="grid gap-2 md:grid-cols-2">
                       <Input
                         placeholder="Name"
-                        value={row[0]}
+                        value={row.name}
                         onChange={(e) =>
-                          updatePipeCell(
-                            featuredAlumniText,
-                            setFeaturedAlumniText,
-                            3,
+                          updateFeaturedAlumniField(
                             rowIndex,
-                            0,
+                            "name",
                             e.target.value,
                           )
                         }
                       />
                       <Input
                         placeholder="Designation"
-                        value={row[1]}
+                        value={row.designation}
                         onChange={(e) =>
-                          updatePipeCell(
-                            featuredAlumniText,
-                            setFeaturedAlumniText,
-                            3,
+                          updateFeaturedAlumniField(
                             rowIndex,
-                            1,
+                            "designation",
                             e.target.value,
                           )
                         }
                       />
                     </div>
-                    <Input
-                      placeholder="Career progression as year:milestone;year:milestone"
-                      value={row[2]}
-                      onChange={(e) =>
-                        updatePipeCell(
-                          featuredAlumniText,
-                          setFeaturedAlumniText,
-                          3,
-                          rowIndex,
-                          2,
-                          e.target.value,
-                        )
-                      }
-                    />
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Career Progression
+                        </Label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => addFeaturedAlumniProgression(rowIndex)}
+                        >
+                          <Plus className="mr-1 h-3.5 w-3.5" /> Add Progression
+                        </Button>
+                      </div>
+                      {(row.progressions.length > 0
+                        ? row.progressions
+                        : [{ year: "", milestone: "" }]
+                      ).map((progression, progressionIndex) => (
+                        <div
+                          key={`alumni-progression-${rowIndex}-${progressionIndex}`}
+                          className="grid gap-2 md:grid-cols-[180px_1fr_auto]"
+                        >
+                          <Input
+                            placeholder="Year"
+                            value={progression.year}
+                            onChange={(e) =>
+                              updateFeaturedAlumniProgression(
+                                rowIndex,
+                                progressionIndex,
+                                "year",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <Input
+                            placeholder="Milestone"
+                            value={progression.milestone}
+                            onChange={(e) =>
+                              updateFeaturedAlumniProgression(
+                                rowIndex,
+                                progressionIndex,
+                                "milestone",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() =>
+                              removeFeaturedAlumniProgression(
+                                rowIndex,
+                                progressionIndex,
+                              )
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
                     <div className="flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         className="text-destructive"
-                        onClick={() =>
-                          removePipeRow(
-                            featuredAlumniText,
-                            setFeaturedAlumniText,
-                            3,
-                            rowIndex,
-                          )
-                        }
+                        onClick={() => removeFeaturedAlumniRow(rowIndex)}
                       >
                         <Trash2 className="mr-1 h-4 w-4" /> Remove
                       </Button>
@@ -10859,12 +12325,20 @@ export default function SetupProfilePage() {
                     <Plus className="mr-1 h-3.5 w-3.5" /> Add FAQ
                   </Button>
                 </div>
-                {parseEditableFaqRows(faqsText).map((question, index) => (
-                  <div key={`faq-${index}`} className="flex gap-2">
+                {parseEditableFaqRows(faqsText).map((row, index) => (
+                  <div
+                    key={`faq-${index}`}
+                    className="grid gap-2 md:grid-cols-[1fr_1fr_auto]"
+                  >
                     <Input
-                      placeholder="FAQ Question"
-                      value={question}
-                      onChange={(e) => updateFaqRow(index, e.target.value)}
+                      placeholder="FAQ Title"
+                      value={row[0] || ""}
+                      onChange={(e) => updateFaqRow(index, 0, e.target.value)}
+                    />
+                    <Input
+                      placeholder="FAQ Description"
+                      value={row[1] || ""}
+                      onChange={(e) => updateFaqRow(index, 1, e.target.value)}
                     />
                     <Button
                       type="button"
@@ -10890,6 +12364,239 @@ export default function SetupProfilePage() {
                   value={studentForumCtaLabel}
                   onChange={(e) => setStudentForumCtaLabel(e.target.value)}
                 />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "other_courses_offered" && (
+          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle>Other Courses</CardTitle>
+              <CardDescription>
+                Manage all courses and group them by study level. Courses added
+                in Academics Catalog are auto-synced here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-border/40 pb-4">
+                <input
+                  type="hidden"
+                  {...register("profileSections.other_courses_offered.id")}
+                />
+                <input
+                  type="checkbox"
+                  id="other-courses-enabled"
+                  className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary"
+                  {...register("profileSections.other_courses_offered.enabled")}
+                />
+                <Label htmlFor="other-courses-enabled">
+                  Show this section on public profile
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="other-courses-summary">Section Summary</Label>
+                <Textarea
+                  id="other-courses-summary"
+                  placeholder="Describe your UG, PG, and advanced course offerings."
+                  {...register("profileSections.other_courses_offered.summary")}
+                />
+              </div>
+
+              <div className="border-t pt-6 border-border/40 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">
+                    New Course Details
+                  </Label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 rounded-lg border border-border/50 p-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Course Name</Label>
+                    <Input
+                      placeholder="e.g. Bachelor of Technology in Computer Science"
+                      value={newOtherCourseForm.name}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Course Code</Label>
+                    <Input
+                      placeholder="e.g. BTECH-CS"
+                      value={newOtherCourseForm.code}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          code: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Discipline</Label>
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={newOtherCourseForm.disciplineId}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          disciplineId: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Select discipline</option>
+                      {disciplines.map((discipline) => (
+                        <option key={discipline.id} value={discipline.id}>
+                          {discipline.name} ({discipline.streamName})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Study Level</Label>
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={newOtherCourseForm.studyLevelId}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          studyLevelId: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Select level</option>
+                      {studyLevels.map((level) => (
+                        <option key={level.id} value={level.id}>
+                          {level.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Program Type</Label>
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={newOtherCourseForm.programTypeId}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          programTypeId: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Select type</option>
+                      {programTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Campus (optional)</Label>
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={newOtherCourseForm.campusId}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          campusId: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Select campus</option>
+                      {campuses.map((campus) => (
+                        <option key={campus.id} value={campus.id}>
+                          {campus.name} {campus.isMainCampus ? "(Main)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Study Mode</Label>
+                    <select
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={newOtherCourseForm.studyMode}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          studyMode: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="full_time">Full Time</option>
+                      <option value="part_time">Part Time</option>
+                      <option value="online">Online</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Duration (optional)</Label>
+                    <Input
+                      placeholder="e.g. 4 Years"
+                      value={newOtherCourseForm.duration}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          duration: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Eligibility (optional)</Label>
+                    <Input
+                      placeholder="e.g. 10+2 with PCM"
+                      value={newOtherCourseForm.eligibility}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          eligibility: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Intake Capacity (optional)</Label>
+                    <Input
+                      type="number"
+                      value={newOtherCourseForm.intakeCapacity}
+                      onChange={(e) =>
+                        setNewOtherCourseForm((prev) => ({
+                          ...prev,
+                          intakeCapacity: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={handleAddOtherCourse}
+                      disabled={isCreatingCourse}
+                    >
+                      {isCreatingCourse && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Add Course
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
