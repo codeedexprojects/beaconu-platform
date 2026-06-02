@@ -234,14 +234,42 @@ const librarySectionSchema = metaSectionSchema.extend({
       }),
     )
     .default([]),
-  facilities: z
-    .array(
-      z.object({
-        title: z.string().default(""),
-        image: z.string().default(""),
-      }),
-    )
-    .default([]),
+  facilities: z.preprocess(
+    (value) => {
+      if (!Array.isArray(value)) {
+        return [];
+      }
+
+      return value.map((item) => {
+        if (typeof item === "string") {
+          return { title: item, image: "" };
+        }
+
+        if (item && typeof item === "object") {
+          const asRecord = item as Record<string, unknown>;
+          return {
+            title: typeof asRecord.title === "string" ? asRecord.title : "",
+            image:
+              typeof asRecord.image === "string"
+                ? asRecord.image
+                : typeof asRecord.img === "string"
+                  ? asRecord.img
+                  : "",
+          };
+        }
+
+        return { title: "", image: "" };
+      });
+    },
+    z
+      .array(
+        z.object({
+          title: z.string().default(""),
+          image: z.string().default(""),
+        }),
+      )
+      .default([]),
+  ),
 });
 
 const studentCodeOfConductSectionSchema = metaSectionSchema.extend({
@@ -3143,7 +3171,18 @@ export default function SetupProfilePage() {
             availableResources:
               profile.profileSections?.library?.availableResources || [],
             libraryHours: profile.profileSections?.library?.libraryHours || [],
-            facilities: profile.profileSections?.library?.facilities || [],
+            facilities: Array.isArray(
+              profile.profileSections?.library?.facilities,
+            )
+              ? profile.profileSections.library.facilities.map((item: any) =>
+                  typeof item === "string"
+                    ? { title: item, image: "" }
+                    : {
+                        title: item?.title || "",
+                        image: item?.image || item?.img || "",
+                      },
+                )
+              : [],
           },
           clubs_associations: {
             id:
