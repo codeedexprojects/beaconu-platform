@@ -28,22 +28,20 @@ body:json {
         "id": "college_overview",
         "enabled": true,
         "description": "Practice-driven learning with strong outcomes.",
-        "accreditation_and_affiliation": {
-          "rankings": [
-            {
-              "body": "NIRF",
-              "rank": "MAHE Rank 3",
-              "logo": "nirf",
-              "recognitions": "India's top #131/200 universities in 2024"
-            },
-            {
-              "body": "Outlook ICARE Ranking 2024",
-              "rank": "MAHE Rank 3",
-              "logo": "outlook",
-              "recognitions": "India's top #131/200 universities in 2024"
-            }
-          ]
-        },
+        "accreditation_and_affiliation": [
+          {
+            "body": "NIRF",
+            "rank": "MAHE Rank 3",
+            "logo": "nirf",
+            "recognitions": "India's top #131/200 universities in 2024"
+          },
+          {
+            "body": "Outlook ICARE Ranking 2024",
+            "rank": "MAHE Rank 3",
+            "logo": "outlook",
+            "recognitions": "India's top #131/200 universities in 2024"
+          }
+        ],
         "amenities": ["Library", "Hostel Facility", "AC Classrooms"],
         "inside_campus_facilities": [
           {
@@ -86,42 +84,101 @@ body:json {
         "id": "course_info",
         "enabled": true,
         "course_name": "BBA",
-        "admissions": [
-          {
-            "year": "Admissions 2026",
-            "status": "Open",
-            "placement_rate": "42",
-            "seats_note": "Few seats left",
-            "basic_details": {
-              "duration": "3 Years",
-              "study_mode": "Full Time",
-              "academic_cycle": "Semester",
-              "total_credits": 128,
-              "gender_accepted": "All",
-              "course_category": "UG"
+        "data": {
+          "course_name": "BBA",
+          "admissions": [
+            {
+              "year": "Admissions 2026",
+              "status": "Open",
+              "placement_rate": "42",
+              "seats_note": "Few seats left",
+              "basic_details": {
+                "duration": "3 Years",
+                "study_mode": "Full Time",
+                "academic_cycle": "Semester",
+                "total_credits": 128,
+                "gender_accepted": "All",
+                "course_category": "UG"
+              }
             }
-          }
-        ],
-        "program_highlights": [
-          "Hands-on lab sessions"
-        ],
-        "course_accolades": [
-          {
-            "body": "Top Recruiters",
-            "rank": "120+",
-            "image": "https://example.com/images/recruiters.png"
-          }
-        ],
-        "key_dates": {
-          "application_start": "2026-05-01",
-          "application_close": {
-            "date": "2026-07-31",
-            "urgency": "Closing Soon"
+          ],
+          "program_highlights": [
+            "Hands-on lab sessions"
+          ],
+          "course_accolades": [
+            {
+              "body": "Top Recruiters",
+              "rank": "120+",
+              "image": "https://example.com/images/recruiters.png"
+            }
+          ],
+          "key_dates": {
+            "application_start": "2026-05-01",
+            "application_close": {
+              "date": "2026-07-31",
+              "urgency": "Closing Soon"
+            },
+            "class_commencement": {
+              "date": "2026-08-20",
+              "note": "Reporting starts one week before classes"
+            }
           },
-          "class_commencement": {
-            "date": "2026-08-20",
-            "note": "Reporting starts one week before classes"
-          }
+          "value_added_course": {
+            "name": "Business Analytics Foundation",
+            "credits": 3,
+            "delivery_mode": "Full Time",
+            "course_type": "Add-on"
+          },
+          "higher_education_and_certifications": [
+            {
+              "title": "Global Certifications",
+              "description": [
+                "CFA Level 1",
+                "NISM Research Analyst"
+              ]
+            },
+            {
+              "title": "Postgraduation",
+              "description": [
+                "MBA in Finance",
+                "PGDM in Marketing"
+              ]
+            }
+          ],
+          "bonus_certification": [
+            {
+              "name": "Corporate Readiness Badge",
+              "note": "Granted on completion of internship module",
+              "certificate_details_available": true,
+              "details_page": "https://example.com/certifications/corporate-readiness"
+            }
+          ],
+          "featured_alumni": [
+            {
+              "name": "Riya Mehta",
+              "designation": "Marketing Manager",
+              "career_progression": [
+                {
+                  "year": 2020,
+                  "milestone": "Joined as Management Trainee"
+                },
+                {
+                  "year": 2023,
+                  "milestone": "Moved to Marketing Manager role"
+                }
+              ]
+            }
+          ],
+          "faqs": [
+            {
+              "title": "Do I need an entrance exam score?",
+              "description": "A valid score is preferred for merit seats, while management seats may have alternate criteria."
+            },
+            {
+              "title": "Can I apply online?",
+              "description": "Yes, applications can be submitted online through the admissions portal."
+            }
+          ]
         }
       },
       "admission_policy": {

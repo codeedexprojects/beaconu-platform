@@ -54,6 +54,14 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
     overview.accreditation_and_affiliation ||
     overview.accreditation_and_affilation ||
     {};
+  const accreditationDescription = Array.isArray(accreditation)
+    ? ""
+    : accreditation?.description;
+  const accreditationRankings = Array.isArray(accreditation)
+    ? accreditation
+    : Array.isArray(accreditation?.rankings)
+      ? accreditation.rankings
+      : [];
   const institutionDetails =
     overview.institution_details || overview.instution_details || {};
   const amenities = overview.amenities || overview.aminities || [];
@@ -137,6 +145,33 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
     }
   };
 
+  const getEligibilityTitle = (criterion: any) =>
+    criterion?.title ||
+    criterion?.studentType ||
+    criterion?.label ||
+    "Eligibility Info";
+
+  const getEligibilityDescription = (criterion: any) =>
+    criterion?.description || criterion?.criteria || "";
+
+  const getEligibilityLogoSrc = (criterion: any) => {
+    const rawLogo =
+      typeof criterion?.logo === "string" ? criterion.logo.trim() : "";
+    if (!rawLogo) {
+      return null;
+    }
+
+    if (rawLogo.startsWith("<svg")) {
+      return `data:image/svg+xml;utf8,${encodeURIComponent(rawLogo)}`;
+    }
+
+    if (rawLogo.startsWith("data:image/") || /^https?:\/\//i.test(rawLogo)) {
+      return rawLogo;
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-8">
       {/* Premium Glassmorphic Tab Selector */}
@@ -183,7 +218,7 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                     "Welcome to the institution. We foster innovation, deep learning, and holistic excellence."}
                 </p>
 
-                {accreditation?.description && (
+                {accreditationDescription && (
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
                     <Award className="h-6 w-6 text-primary shrink-0" />
                     <div>
@@ -191,40 +226,35 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                         Accreditation & Affiliations
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {accreditation.description}
+                        {accreditationDescription}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {Array.isArray(accreditation?.rankings) &&
-                  accreditation.rankings.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-foreground">
-                        Rankings
-                      </p>
-                      <div className="grid gap-2">
-                        {accreditation.rankings.map(
-                          (item: any, idx: number) => (
-                            <div
-                              key={idx}
-                              className="rounded-lg border bg-background/60 p-3"
-                            >
-                              <p className="text-sm font-semibold">
-                                {item.body || "Ranking Body"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.rank || "-"}
-                                {item.recognitions
-                                  ? ` • ${item.recognitions}`
-                                  : ""}
-                              </p>
-                            </div>
-                          ),
-                        )}
-                      </div>
+                {accreditationRankings.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      Rankings
+                    </p>
+                    <div className="grid gap-2">
+                      {accreditationRankings.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="rounded-lg border bg-background/60 p-3"
+                        >
+                          <p className="text-sm font-semibold">
+                            {item.body || "Ranking Body"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.rank || "-"}
+                            {item.recognitions ? ` • ${item.recognitions}` : ""}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
               </section>
 
               {/* Institution statistics matrix */}
@@ -508,13 +538,21 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                               key={idx}
                               className="flex gap-3 items-start bg-muted/40 border p-3 rounded-lg"
                             >
-                              <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                              {getEligibilityLogoSrc(crit) ? (
+                                <img
+                                  src={getEligibilityLogoSrc(crit) || ""}
+                                  alt={getEligibilityTitle(crit)}
+                                  className="h-5 w-5 shrink-0 mt-0.5 object-contain"
+                                />
+                              ) : (
+                                <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                              )}
                               <div>
                                 <span className="font-semibold text-xs text-foreground uppercase">
-                                  {crit.studentType || "Eligibility Info"}
+                                  {getEligibilityTitle(crit)}
                                 </span>
                                 <p className="text-sm text-muted-foreground mt-0.5">
-                                  {crit.criteria}
+                                  {getEligibilityDescription(crit)}
                                 </p>
                               </div>
                             </div>
