@@ -65,3 +65,25 @@ export function useArchiveUniversity() {
     },
   });
 }
+
+export function useActivateUniversity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => universitiesService.activate(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.universities });
+    },
+  });
+}
+
+export function useDeactivateUniversity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => universitiesService.deactivate(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.universities });
+    },
+  });
+}

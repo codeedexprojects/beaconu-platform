@@ -256,4 +256,20 @@ router.patch(
   UniversityPlatformAdminController.archive,
 );
 
+router.patch(
+  "/:id/activate",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("universities.manage"),
+  UniversityPlatformAdminController.activate,
+);
+
+router.patch(
+  "/:id/deactivate",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("universities.manage"),
+  UniversityPlatformAdminController.deactivate,
+);
+
 export default router;

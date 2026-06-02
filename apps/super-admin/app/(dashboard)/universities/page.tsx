@@ -8,13 +8,14 @@ import {
   Plus,
   MoreHorizontal,
   Edit,
-  Archive,
   Check,
   MapPin,
   Loader2,
   X,
   PlusCircle,
   MinusCircle,
+  ToggleRight,
+  ToggleLeft,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,7 +55,8 @@ import {
   useUniversities,
   useCreateUniversity,
   useUpdateUniversity,
-  useArchiveUniversity,
+  useActivateUniversity,
+  useDeactivateUniversity,
 } from "@/hooks/use-universities";
 import { useStreams } from "@/hooks/use-academic-taxonomy";
 import { useUniversityTypes } from "@/hooks/use-university-types";
@@ -432,7 +434,8 @@ export default function UniversitiesPage() {
   const { data: streams = [] } = useStreams(true);
   const createMutation = useCreateUniversity();
   const updateMutation = useUpdateUniversity();
-  const archiveMutation = useArchiveUniversity();
+  const activateMutation = useActivateUniversity();
+  const deactivateMutation = useDeactivateUniversity();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -690,15 +693,15 @@ export default function UniversitiesPage() {
     });
   };
 
-  const handleArchive = (id: string) => {
-    if (
-      !confirm(
-        "Archive this university? It will no longer be visible publicly.",
-      )
-    )
-      return;
-    archiveMutation.mutate(id, {
-      onSuccess: () => toast.success("University archived"),
+  const handleActivate = (id: string) => {
+    activateMutation.mutate(id, {
+      onSuccess: () => toast.success("University set to active"),
+    });
+  };
+
+  const handleDeactivate = (id: string) => {
+    deactivateMutation.mutate(id, {
+      onSuccess: () => toast.success("University set to inactive"),
     });
   };
 
@@ -861,13 +864,24 @@ export default function UniversitiesPage() {
                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                 Edit
                               </DropdownMenuItem>
-                              {university.status !== "archived" && (
+                              {university.status !== "active" && (
                                 <DropdownMenuItem
-                                  className="gap-2 text-destructive focus:text-destructive"
-                                  onClick={() => handleArchive(university.id)}
+                                  className="gap-2"
+                                  onClick={() => handleActivate(university.id)}
                                 >
-                                  <Archive className="h-4 w-4" />
-                                  Archive
+                                  <ToggleRight className="h-4 w-4 text-muted-foreground" />
+                                  Activate
+                                </DropdownMenuItem>
+                              )}
+                              {university.status !== "inactive" && (
+                                <DropdownMenuItem
+                                  className="gap-2"
+                                  onClick={() =>
+                                    handleDeactivate(university.id)
+                                  }
+                                >
+                                  <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                                  Deactivate
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>

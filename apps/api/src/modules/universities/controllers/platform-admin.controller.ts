@@ -216,4 +216,20 @@ export class UniversityPlatformAdminController {
       .status(200)
       .json(ApiResponse.success("University archived", university));
   }
+
+  static async activate(req: Request, res: Response): Promise<void> {
+    const { id } = universitySchemas.idParam.parse(req.params);
+    const university = await UniversityService.activate(id);
+    res
+      .status(200)
+      .json(ApiResponse.success("University activated", university));
+  }
+
+  static async deactivate(req: Request, res: Response): Promise<void> {
+    const { id } = universitySchemas.idParam.parse(req.params);
+    const university = await UniversityService.deactivate(id);
+    res
+      .status(200)
+      .json(ApiResponse.success("University deactivated", university));
+  }
 }

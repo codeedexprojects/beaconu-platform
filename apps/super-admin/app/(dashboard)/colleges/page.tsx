@@ -74,6 +74,8 @@ function InstitutionGroupModal({
   const [groupName, setGroupName] = useState(college.name + " Group");
   const [groupDescription, setGroupDescription] = useState("");
 
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+
   const { data: group, isLoading, refetch } = useInstitutionGroup(college.id);
 
   const enableMutation = useEnableInstitutionGroup();
@@ -109,22 +111,20 @@ function InstitutionGroupModal({
     );
   };
 
-  const handleDisable = () => {
-    if (
-      !confirm(
-        "Disable this institution group? New colleges will no longer be able to join using the code.",
-      )
-    )
-      return;
+  const handleDisable = () => setShowDisableConfirm(true);
+
+  const confirmDisable = () => {
     disableMutation.mutate(college.id, {
       onSuccess: () => {
         toast.success("Institution group disabled");
+        setShowDisableConfirm(false);
         refetch();
       },
       onError: (error) => {
         toast.error(
           error instanceof Error ? error.message : "Failed to disable group",
         );
+        setShowDisableConfirm(false);
       },
     });
   };
@@ -262,20 +262,51 @@ function InstitutionGroupModal({
                 )}
               </div>
 
-              {/* Disable Button */}
+              {/* Disable Button / Inline Confirm */}
               <div className="pt-2 border-t">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDisable}
-                  disabled={disableMutation.isPending}
-                  className="w-full"
-                >
-                  {disableMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  Disable Institution Group
-                </Button>
+                {showDisableConfirm ? (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+                    <p className="text-sm font-medium text-destructive">
+                      Disable this group?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      New colleges won&apos;t be able to join using the code.
+                      You can reactivate it later.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setShowDisableConfirm(false)}
+                        disabled={disableMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={confirmDisable}
+                        disabled={disableMutation.isPending}
+                      >
+                        {disableMutation.isPending && (
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        )}
+                        Yes, disable
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDisable}
+                    className="w-full"
+                  >
+                    Disable Institution Group
+                  </Button>
+                )}
               </div>
             </>
           ) : (
