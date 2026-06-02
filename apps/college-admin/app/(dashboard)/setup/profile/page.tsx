@@ -3759,10 +3759,10 @@ export default function SetupProfilePage() {
         string,
         unknown
       >;
-      const tuitionDownload = (tuitionFees.download || {}) as Record<
-        string,
-        unknown
-      >;
+      const feesDownloadSource =
+        (feesSection.download as Record<string, unknown>) ||
+        ((tuitionFees.download || {}) as Record<string, unknown>);
+      const tuitionDownload = feesDownloadSource as Record<string, unknown>;
       setFeesDownload((prev) => ({
         label:
           typeof tuitionDownload.label === "string"
@@ -3786,10 +3786,10 @@ export default function SetupProfilePage() {
             : prev.action,
       }));
 
-      const tuitionFilters = (tuitionFees.filters || {}) as Record<
-        string,
-        unknown
-      >;
+      const feesFiltersSource =
+        (feesSection.filters as Record<string, unknown>) ||
+        ((tuitionFees.filters || {}) as Record<string, unknown>);
+      const tuitionFilters = feesFiltersSource as Record<string, unknown>;
       const quotaCategory = (tuitionFilters.quota_category || {}) as Record<
         string,
         unknown
@@ -3844,7 +3844,34 @@ export default function SetupProfilePage() {
             ),
       );
 
-      if (Array.isArray(tuitionFees.fee_matrix)) {
+      const feeStructures = Array.isArray(feesSection.fee_structures)
+        ? (feesSection.fee_structures as any[])
+        : [];
+
+      if (feeStructures.length > 0) {
+        setFeesMatrixRows(
+          feeStructures.map((entry: any) => ({
+            quota_category: entry?.quota_category || "",
+            gender: entry?.gender || "",
+            year1:
+              entry?.tuition_fees?.[0]?.amount == null
+                ? ""
+                : String(entry.tuition_fees[0].amount),
+            year2:
+              entry?.tuition_fees?.[1]?.amount == null
+                ? ""
+                : String(entry.tuition_fees[1].amount),
+            year3:
+              entry?.tuition_fees?.[2]?.amount == null
+                ? ""
+                : String(entry.tuition_fees[2].amount),
+            year4:
+              entry?.tuition_fees?.[3]?.amount == null
+                ? ""
+                : String(entry.tuition_fees[3].amount),
+          })),
+        );
+      } else if (Array.isArray(tuitionFees.fee_matrix)) {
         setFeesMatrixRows(
           tuitionFees.fee_matrix.map((entry: any) => ({
             quota_category: entry?.quota_category || "",
@@ -3869,7 +3896,31 @@ export default function SetupProfilePage() {
         );
       }
 
-      if (Array.isArray(feesSection.one_time_payable_fees)) {
+      const activeFeeStructure =
+        feeStructures.find(
+          (entry: any) =>
+            entry?.quota_category ===
+              (typeof quotaCategory.default === "string"
+                ? quotaCategory.default
+                : DEFAULT_FEES_ADVANCED.tuition_fees.filters.quota_category
+                    .default) &&
+            entry?.gender ===
+              (typeof genderFilter.default === "string"
+                ? genderFilter.default
+                : DEFAULT_FEES_ADVANCED.tuition_fees.filters.gender.default),
+        ) || feeStructures[0];
+
+      if (Array.isArray(activeFeeStructure?.one_time_payable_fees)) {
+        setOneTimePayableFees(
+          activeFeeStructure.one_time_payable_fees.map(
+            (row: any, index: number) => ({
+              id: row?.id || `one_time_${index + 1}`,
+              label: row?.label || "",
+              amount: row?.amount == null ? "" : String(row.amount),
+            }),
+          ),
+        );
+      } else if (Array.isArray(feesSection.one_time_payable_fees)) {
         setOneTimePayableFees(
           feesSection.one_time_payable_fees.map((row: any, index: number) => ({
             id: row?.id || `one_time_${index + 1}`,
@@ -3879,7 +3930,15 @@ export default function SetupProfilePage() {
         );
       }
 
-      if (Array.isArray(feesSection.additional_fees)) {
+      if (Array.isArray(activeFeeStructure?.additional_fees)) {
+        setAdditionalFees(
+          activeFeeStructure.additional_fees.map((row: any, index: number) => ({
+            id: row?.id || `additional_${index + 1}`,
+            label: row?.label || "",
+            amount: row?.amount == null ? "" : String(row.amount),
+          })),
+        );
+      } else if (Array.isArray(feesSection.additional_fees)) {
         setAdditionalFees(
           feesSection.additional_fees.map((row: any, index: number) => ({
             id: row?.id || `additional_${index + 1}`,
@@ -3935,19 +3994,22 @@ export default function SetupProfilePage() {
         string,
         unknown
       >;
+      const activeFeesSummary = (activeFeeStructure?.fees_summary ||
+        feesSummary ||
+        {}) as Record<string, unknown>;
       setFeesSummaryFullCourseFee(
-        feesSummary.full_course_fee == null
+        activeFeesSummary.full_course_fee == null
           ? ""
-          : String(feesSummary.full_course_fee),
+          : String(activeFeesSummary.full_course_fee),
       );
       setFeesSummaryBookingAmount(
-        feesSummary.booking_amount == null
+        activeFeesSummary.booking_amount == null
           ? ""
-          : String(feesSummary.booking_amount),
+          : String(activeFeesSummary.booking_amount),
       );
       setFeesSummaryCurrency(
-        typeof feesSummary.currency === "string"
-          ? feesSummary.currency
+        typeof activeFeesSummary.currency === "string"
+          ? activeFeesSummary.currency
           : DEFAULT_FEES_ADVANCED.fees_summary.currency,
       );
 
@@ -4961,6 +5023,14 @@ export default function SetupProfilePage() {
     },
   );
 
+  useEffect(() => {
+    setFeesQuotaDefault(selectedFeesQuotaFilter);
+  }, [selectedFeesQuotaFilter]);
+
+  useEffect(() => {
+    setFeesGenderDefault(selectedFeesGenderTab);
+  }, [selectedFeesGenderTab]);
+
   const setAllianceTextList = (
     index: number,
     field: "documents" | "allianceActivities",
@@ -5491,76 +5561,96 @@ export default function SetupProfilePage() {
         academic_policies: academicPoliciesRows,
       },
       fees: {
-        ...normalizedFees,
-        tuition_fees: {
-          download: {
-            label: feesDownload.label,
-            file_label: feesDownload.file_label,
-            file_size: feesDownload.file_size,
-            file_type: feesDownload.file_type,
-            action: feesDownload.action,
+        id: normalizedFees.id,
+        enabled: normalizedFees.enabled,
+        filters: {
+          quota_category: {
+            label: feesQuotaFilterLabel,
+            default: feesQuotaDefault,
+            options: fromLineText(feesQuotaOptionsText),
           },
-          filters: {
-            quota_category: {
-              label: feesQuotaFilterLabel,
-              default: feesQuotaDefault,
-              options: fromLineText(feesQuotaOptionsText),
-            },
-            gender: {
-              label: feesGenderFilterLabel,
-              default: feesGenderDefault,
-              options: fromLineText(feesGenderOptionsText),
-            },
+          gender: {
+            label: feesGenderFilterLabel,
+            default: feesGenderDefault,
+            options: fromLineText(feesGenderOptionsText),
           },
-          fee_matrix: feesMatrixRows.map((row) => ({
-            quota_category: row.quota_category,
-            gender: row.gender,
-            year_wise_fees: [
-              {
-                year: "1st Year",
-                amount: row.year1.trim() ? safeNumber(row.year1) : null,
-              },
-              {
-                year: "2nd Year",
-                amount: row.year2.trim() ? safeNumber(row.year2) : null,
-              },
-              {
-                year: "3rd Year",
-                amount: row.year3.trim() ? safeNumber(row.year3) : null,
-              },
-              {
-                year: "4th Year",
-                amount: row.year4.trim() ? safeNumber(row.year4) : null,
-              },
-            ],
-          })),
         },
-        one_time_payable_fees: oneTimePayableFees.map((row) => ({
-          id: row.id,
-          label: row.label,
-          amount: safeNumber(row.amount || "0"),
-        })),
-        additional_fees: additionalFees.map((row) => ({
-          id: row.id,
-          label: row.label,
-          amount: safeNumber(row.amount || "0"),
-        })),
         inclusions: {
           whats_included: fromLineText(inclusionIncludedText),
           whats_excluded: fromLineText(inclusionExcludedText),
         },
+        download: {
+          label: feesDownload.label,
+          file_label: feesDownload.file_label,
+          file_size: feesDownload.file_size,
+          file_type: feesDownload.file_type,
+          action: feesDownload.action,
+        },
+        fee_structures: feesMatrixRows.map((row) => {
+          const tuitionFeeCandidates = [
+            {
+              year: "1st Year",
+              amount: row.year1.trim() ? safeNumber(row.year1) : null,
+            },
+            {
+              year: "2nd Year",
+              amount: row.year2.trim() ? safeNumber(row.year2) : null,
+            },
+            {
+              year: "3rd Year",
+              amount: row.year3.trim() ? safeNumber(row.year3) : null,
+            },
+            {
+              year: "4th Year",
+              amount: row.year4.trim() ? safeNumber(row.year4) : null,
+            },
+          ];
+          const tuitionFees = tuitionFeeCandidates.filter(
+            (item): item is { year: string; amount: number } =>
+              item.amount != null,
+          );
+          const computedFullCourseFee = tuitionFees.reduce(
+            (sum, item) =>
+              sum + (Number.isFinite(item.amount) ? item.amount : 0),
+            0,
+          );
+
+          return {
+            gender: row.gender,
+            quota_category: row.quota_category,
+            fees_summary: {
+              full_course_fee:
+                computedFullCourseFee > 0
+                  ? computedFullCourseFee
+                  : safeNumber(feesSummaryFullCourseFee || "0"),
+              booking_amount: safeNumber(feesSummaryBookingAmount || "0"),
+              currency: feesSummaryCurrency,
+            },
+            tuition_fees: tuitionFees,
+            one_time_payable_fees: oneTimePayableFees.map((item) => ({
+              id: item.id,
+              label: item.label,
+              amount: safeNumber(item.amount || "0"),
+            })),
+            additional_fees: additionalFees.map((item) => ({
+              id: item.id,
+              label: item.label,
+              amount: safeNumber(item.amount || "0"),
+            })),
+            tuitionFeesSummary:
+              typeof tuitionFees[0]?.amount === "number" &&
+              tuitionFees[0].amount > 0
+                ? `₹${tuitionFees[0].amount.toLocaleString("en-IN")} per year`
+                : "",
+          };
+        }),
+        refund_policy: fromLineText(refundPolicyText),
         deadlines_and_installments: installmentSchedule.map((row) => ({
           id: row.id,
           label: row.label,
           deadline: row.deadline,
           amount: safeNumber(row.amount || "0"),
         })),
-        fees_summary: {
-          full_course_fee: safeNumber(feesSummaryFullCourseFee || "0"),
-          booking_amount: safeNumber(feesSummaryBookingAmount || "0"),
-          currency: feesSummaryCurrency,
-        },
-        refund_policy: fromLineText(refundPolicyText),
       },
       financial_aid: {
         ...normalizedFinancialAid,
@@ -9761,7 +9851,10 @@ export default function SetupProfilePage() {
                 </div>
 
                 {feesMatrixRows.map((row, idx) => {
-                  if (row.gender !== selectedFeesGenderTab) {
+                  if (
+                    row.gender !== selectedFeesGenderTab ||
+                    row.quota_category !== selectedFeesQuotaFilter
+                  ) {
                     return null;
                   }
                   return (
