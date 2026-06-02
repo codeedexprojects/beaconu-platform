@@ -16,6 +16,8 @@ import {
   Trash2,
   Lock,
   ArrowRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -73,6 +75,7 @@ export default function StaffDirectoryPage() {
   const { mutate: updateStaff } = useUpdateStaffMember();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showStaffPassword, setShowStaffPassword] = useState(false);
 
   const {
     register,
@@ -358,12 +361,29 @@ export default function StaffDirectoryPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="staff-pass">Initial Login Password</Label>
-                  <Input
-                    id="staff-pass"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="staff-pass"
+                      type={showStaffPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pr-10"
+                      {...register("password")}
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showStaffPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={() => setShowStaffPassword((v) => !v)}
+                    >
+                      {showStaffPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && (
                     <p className="text-xs text-destructive">
                       {errors.password.message}
