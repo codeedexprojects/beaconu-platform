@@ -123,3 +123,27 @@ export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
 export type FirebaseStudentLoginInput = z.infer<
   typeof firebaseStudentLoginSchema
 >;
+
+// ── Blink forgot-password ──────────────────────────────────────────────────
+
+export const blinkForgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+export const blinkVerifyResetOtpSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  otp: z.string().trim().length(4),
+});
+
+export const blinkResetPasswordSchema = z.object({
+  reset_token: z.string().uuid(),
+  new_password: z.string().min(8),
+});
+
+export type BlinkForgotPasswordInput = z.infer<
+  typeof blinkForgotPasswordSchema
+>;
+export type BlinkVerifyResetOtpInput = z.infer<
+  typeof blinkVerifyResetOtpSchema
+>;
+export type BlinkResetPasswordInput = z.infer<typeof blinkResetPasswordSchema>;

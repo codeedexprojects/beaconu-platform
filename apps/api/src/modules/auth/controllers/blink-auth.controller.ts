@@ -64,4 +64,25 @@ export class BlinkAuthController {
       .status(200)
       .json(ApiResponse.success("Logged out successfully", null));
   }
+
+  static async forgotPassword(req: Request, res: Response) {
+    const result = await AuthService.blinkForgotPassword(req.body.email);
+    return res
+      .status(200)
+      .json(ApiResponse.success("OTP sent to registered phone number", result));
+  }
+
+  static async verifyResetOtp(req: Request, res: Response) {
+    const { email, otp } = req.body;
+    const result = await AuthService.blinkVerifyResetOtp(email, otp);
+    return res.status(200).json(ApiResponse.success("OTP verified", result));
+  }
+
+  static async resetPassword(req: Request, res: Response) {
+    const { reset_token, new_password } = req.body;
+    await AuthService.blinkResetPassword(reset_token, new_password);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Password reset successfully", null));
+  }
 }

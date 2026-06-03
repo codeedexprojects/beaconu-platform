@@ -5,6 +5,7 @@ import {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
+  ValidationError,
 } from "@/shared/errors";
 import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
 import { auth as firebaseAuth } from "@/shared/lib/firebase";
@@ -27,8 +28,10 @@ import {
 } from "../validators/auth.validator";
 
 const OTP_TTL_MS = 5 * 60 * 1000;
-// Swap this Map with Redis (setex/get/del) when moving to production.
+const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+// Swap both Maps with Redis (setex/get/del) when moving to production.
 const otpStore = new Map<string, { otp: string; expiresAt: Date }>();
+const resetTokenStore = new Map<string, { userId: string; expiresAt: Date }>();
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -709,5 +712,71 @@ export class AuthService {
       default:
         return null;
     }
+  }
+
+  // ── Blink forgot-password ────────────────────────────────────────────────
+
+  static async blinkForgotPassword(
+    email: string,
+  ): Promise<{ devOtp?: string }> {
+    const user = await AuthRepository.findBlinkUserByEmail(email);
+    if (!user) throw new NotFoundError("No account found with this email");
+    if (!user.phoneNumber)
+      throw new ValidationError("No phone number on file for this account");
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const key = `blink-reset:${email}`;
+    otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
+
+    // TODO: deliver via SMS/WhatsApp to user.phoneCountryCode + user.phoneNumber
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[DEV RESET OTP] ${email}: ${otp}`);
+      return { devOtp: otp };
+    }
+    return {};
+  }
+
+  static async blinkVerifyResetOtp(
+    email: string,
+    otp: string,
+  ): Promise<{ resetToken: string }> {
+    const key = `blink-reset:${email}`;
+    const stored = otpStore.get(key);
+
+    if (!stored || stored.otp !== otp || stored.expiresAt < new Date()) {
+      throw new ValidationError("Invalid or expired OTP");
+    }
+
+    const user = await AuthRepository.findBlinkUserByEmail(email);
+    if (!user) throw new NotFoundError("User not found");
+
+    otpStore.delete(key);
+
+    const resetToken = crypto.randomUUID();
+    resetTokenStore.set(resetToken, {
+      userId: user.id,
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    });
+
+    return { resetToken };
+  }
+
+  static async blinkResetPassword(
+    resetToken: string,
+    newPassword: string,
+  ): Promise<void> {
+    const entry = resetTokenStore.get(resetToken);
+
+    if (!entry || entry.expiresAt < new Date()) {
+      throw new ValidationError("Invalid or expired reset token");
+    }
+
+    const passwordHash = await CryptoUtils.hash(newPassword);
+    await AuthRepository.updateBlinkUserById(entry.userId, {
+      passwordHash,
+      passwordChangedAt: new Date(),
+    });
+
+    resetTokenStore.delete(resetToken);
   }
 }

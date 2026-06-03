@@ -4,6 +4,9 @@ import {
   loginSchema,
   registerAssociateAdminSchema,
   registerEmployeeSchema,
+  blinkForgotPasswordSchema,
+  blinkVerifyResetOtpSchema,
+  blinkResetPasswordSchema,
 } from "../validators/auth.validator";
 import { BlinkAuthController } from "../controllers/blink-auth.controller";
 
@@ -22,5 +25,21 @@ router.post(
 router.post("/login", validate(loginSchema), BlinkAuthController.login);
 router.post("/refresh-token", BlinkAuthController.refresh);
 router.post("/logout", BlinkAuthController.logout);
+
+router.post(
+  "/forgot-password",
+  validate(blinkForgotPasswordSchema),
+  BlinkAuthController.forgotPassword,
+);
+router.post(
+  "/verify-reset-otp",
+  validate(blinkVerifyResetOtpSchema),
+  BlinkAuthController.verifyResetOtp,
+);
+router.post(
+  "/reset-password",
+  validate(blinkResetPasswordSchema),
+  BlinkAuthController.resetPassword,
+);
 
 export default router;
