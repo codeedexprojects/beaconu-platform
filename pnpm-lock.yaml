@@ -552,6 +552,10 @@ importers:
         version: 6.0.3
 
   packages/utils:
+    dependencies:
+      country-state-city:
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       typescript:
         specifier: ^6.0.3
@@ -4513,6 +4517,12 @@ packages:
         integrity: sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw==,
       }
     engines: { node: ">= 0.10" }
+
+  country-state-city@3.2.1:
+    resolution:
+      {
+        integrity: sha512-kxbanqMc6izjhc/EHkGPCTabSPZ2G6eG4/97akAYHJUN4stzzFEvQPZoF8oXDQ+10gM/O/yUmISCR1ZVxyb6EA==,
+      }
 
   cron-parser@4.9.0:
     resolution:
@@ -11474,6 +11484,8 @@ snapshots:
     dependencies:
       object-assign: 4.1.1
       vary: 1.1.2
+
+  country-state-city@3.2.1: {}
 
   cron-parser@4.9.0:
     dependencies:

@@ -20,6 +20,9 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src"
   },
+  "dependencies": {
+    "country-state-city": "^3.2.1"
+  },
   "devDependencies": {
     "typescript": "^6.0.3"
   }

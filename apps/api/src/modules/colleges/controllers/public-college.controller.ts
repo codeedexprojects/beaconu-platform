@@ -264,12 +264,22 @@ export class PublicCollegeController {
       disciplineId,
       studyLevelId,
       programTypeId,
+      state,
+      district,
     } = publicCollegeSchemas.listQuery.parse(req.query);
 
     const filters: any = { status: "active" };
 
     if (universityId) {
       filters.universityId = universityId as string;
+    }
+
+    if (state) {
+      filters.state = { equals: state, mode: "insensitive" };
+    }
+
+    if (district) {
+      filters.district = { equals: district, mode: "insensitive" };
     }
 
     if (streamId || disciplineId || studyLevelId || programTypeId) {

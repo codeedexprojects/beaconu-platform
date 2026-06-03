@@ -5,28 +5,35 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges?universityId=&streamId=&disciplineId=&studyLevelId=&programTypeId=
+  url: {{baseUrl}}/api/v1/public/colleges
   body: none
   auth: none
 }
 
 query {
-  universityId: 
-  streamId: 
-  disciplineId: 
-  studyLevelId: 
-  programTypeId: 
+  ~universityId:
+  ~streamId:
+  ~disciplineId:
+  ~studyLevelId:
+  ~programTypeId:
+  ~state: Karnataka
+  ~district: Bangalore
 }
 
 docs {
-  Returns a lightweight list of active colleges with optional taxonomy filters.
+  Returns a lightweight list of active colleges with optional taxonomy and location filters.
 
   Query parameters (all optional):
-  - universityId: Filter by university
-  - streamId: Filter by stream (ignored if disciplineId is set)
-  - disciplineId: Filter by discipline
-  - studyLevelId: Filter by study level
-  - programTypeId: Filter by program type
+  - universityId: Filter by university UUID
+  - streamId: Filter by stream UUID (ignored if disciplineId is set)
+  - disciplineId: Filter by discipline UUID
+  - studyLevelId: Filter by study level UUID
+  - programTypeId: Filter by program type UUID
+  - state: Filter by state name (case-insensitive, e.g. "Karnataka")
+  - district: Filter by district/city name (case-insensitive, e.g. "Bangalore")
+
+  State and district values must match the country-state-city dataset used
+  in the college-admin profile form — free-text values are not accepted there.
 
   Response includes per college:
   - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
@@ -34,6 +41,6 @@ docs {
   - university: { id, name, logoUrl }
   - campuses: main campus only [{ city, state }]
 
-  Note: `profileSections` and `settings` are NOT included in the list response.
+  Note: profileSections and settings are NOT included in the list response.
   Use Get College By Id or Get College Summary for full details.
 }
