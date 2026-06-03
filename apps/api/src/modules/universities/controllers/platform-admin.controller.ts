@@ -12,7 +12,7 @@ export class UniversityPlatformAdminController {
   // ── Academic taxonomy ────────────────────────────────────────────────────
 
   static async listStreams(req: Request, res: Response): Promise<void> {
-    const query = academicTaxonomySchemas.listSimpleQuery.parse(req.query);
+    const query = academicTaxonomySchemas.adminListQuery.parse(req.query);
     const streams = await AcademicTaxonomyService.listStreams(query);
     res.status(200).json(ApiResponse.success("Streams fetched", streams));
   }
@@ -43,7 +43,7 @@ export class UniversityPlatformAdminController {
   }
 
   static async listDisciplines(req: Request, res: Response): Promise<void> {
-    const query = academicTaxonomySchemas.listDisciplinesQuery.parse(req.query);
+    const query = academicTaxonomySchemas.adminListQuery.parse(req.query);
     const disciplines = await AcademicTaxonomyService.listDisciplines(query);
     res
       .status(200)
@@ -78,7 +78,7 @@ export class UniversityPlatformAdminController {
   }
 
   static async listStudyLevels(req: Request, res: Response): Promise<void> {
-    const query = academicTaxonomySchemas.listSimpleQuery.parse(req.query);
+    const query = academicTaxonomySchemas.adminListQuery.parse(req.query);
     const levels = await AcademicTaxonomyService.listStudyLevels(query);
     res.status(200).json(ApiResponse.success("Study levels fetched", levels));
   }
@@ -109,7 +109,7 @@ export class UniversityPlatformAdminController {
   }
 
   static async listProgramTypes(req: Request, res: Response): Promise<void> {
-    const query = academicTaxonomySchemas.listSimpleQuery.parse(req.query);
+    const query = academicTaxonomySchemas.adminListQuery.parse(req.query);
     const types = await AcademicTaxonomyService.listProgramTypes(query);
     res.status(200).json(ApiResponse.success("Program types fetched", types));
   }

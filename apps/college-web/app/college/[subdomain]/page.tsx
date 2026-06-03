@@ -31,12 +31,14 @@ export default async function CollegeLandingPage({
     notFound();
   }
 
-  const mainCampus =
-    college.campuses.find((c) => c.isMainCampus) || college.campuses[0];
+  const campuses = Array.isArray(college.campuses) ? college.campuses : [];
+  const courses = Array.isArray(college.courses) ? college.courses : [];
+
+  const mainCampus = campuses.find((c) => c.isMainCampus) || campuses[0];
   const aboutText =
     college.profileSections?.college_overview?.description ||
     "Experience a future-ready campus designed for innovation, creativity, and academic excellence.";
-  const featuredCourses = college.courses.slice(0, 6);
+  const featuredCourses = courses.slice(0, 6);
   const universityType =
     college.university?.universityType?.name || "University";
   const locationText = [college.city, college.state].filter(Boolean).join(", ");

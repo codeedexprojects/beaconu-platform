@@ -4,23 +4,31 @@ import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
   academicTaxonomyService,
+  type TaxonomyListParams,
   type CreateDisciplineInput,
   type CreateSimpleTaxonomyInput,
   type UpdateDisciplineInput,
   type UpdateSimpleTaxonomyInput,
 } from "@/lib/services/academic-taxonomy.service";
 
-export function useStreams(isActive?: boolean) {
+export function useStreams(params: TaxonomyListParams = {}) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.academicTaxonomy.streams, isActive],
-    queryFn: () => academicTaxonomyService.getStreams(isActive),
+    queryKey: [...QUERY_KEYS.academicTaxonomy.streams, params],
+    queryFn: () => academicTaxonomyService.getStreams(params),
   });
 }
 
-export function useDisciplines(isActive?: boolean) {
+export function useAllActiveStreams() {
   return useQuery({
-    queryKey: [...QUERY_KEYS.academicTaxonomy.disciplines, isActive],
-    queryFn: () => academicTaxonomyService.getDisciplines(isActive),
+    queryKey: [...QUERY_KEYS.academicTaxonomy.streams, "all-active"],
+    queryFn: () => academicTaxonomyService.getAllActiveStreams(),
+  });
+}
+
+export function useDisciplines(params: TaxonomyListParams = {}) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.academicTaxonomy.disciplines, params],
+    queryFn: () => academicTaxonomyService.getDisciplines(params),
   });
 }
 
@@ -30,6 +38,20 @@ export function useCreateStream() {
   return useMutation({
     mutationFn: (data: CreateSimpleTaxonomyInput) =>
       academicTaxonomyService.createStream(data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.streams,
+      });
+    },
+  });
+}
+
+export function useEnableStream() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.enableStream(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -53,17 +75,17 @@ export function useDisableStream() {
   });
 }
 
-export function useStudyLevels(isActive?: boolean) {
+export function useStudyLevels(params: TaxonomyListParams = {}) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.academicTaxonomy.studyLevels, isActive],
-    queryFn: () => academicTaxonomyService.getStudyLevels(isActive),
+    queryKey: [...QUERY_KEYS.academicTaxonomy.studyLevels, params],
+    queryFn: () => academicTaxonomyService.getStudyLevels(params),
   });
 }
 
-export function useProgramTypes(isActive?: boolean) {
+export function useProgramTypes(params: TaxonomyListParams = {}) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.academicTaxonomy.programTypes, isActive],
-    queryFn: () => academicTaxonomyService.getProgramTypes(isActive),
+    queryKey: [...QUERY_KEYS.academicTaxonomy.programTypes, params],
+    queryFn: () => academicTaxonomyService.getProgramTypes(params),
   });
 }
 
@@ -88,6 +110,20 @@ export function useUpdateDiscipline() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateDisciplineInput }) =>
       academicTaxonomyService.updateDiscipline(id, data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.disciplines,
+      });
+    },
+  });
+}
+
+export function useEnableDiscipline() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.enableDiscipline(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({
@@ -146,6 +182,20 @@ export function useUpdateStudyLevel() {
   });
 }
 
+export function useEnableStudyLevel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.enableStudyLevel(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.studyLevels,
+      });
+    },
+  });
+}
+
 export function useDisableStudyLevel() {
   const queryClient = useQueryClient();
 
@@ -186,6 +236,20 @@ export function useUpdateProgramType() {
       id: string;
       data: UpdateSimpleTaxonomyInput;
     }) => academicTaxonomyService.updateProgramType(id, data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.programTypes,
+      });
+    },
+  });
+}
+
+export function useEnableProgramType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.enableProgramType(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({

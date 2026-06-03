@@ -325,7 +325,99 @@ body:json {
       "fees": {
         "id": "fees",
         "enabled": true,
-        "summary": "Semester-wise fee with installment option."
+        "filters": {
+          "quota_category": {
+            "label": "Quota Category",
+            "default": "General",
+            "options": ["General", "Management", "NRI"]
+          },
+          "gender": {
+            "label": "Gender",
+            "default": "Male",
+            "options": ["Male", "Female"]
+          }
+        },
+        "inclusions": {
+          "whats_included": [
+            "Tuition",
+            "Library Access"
+          ],
+          "whats_excluded": [
+            "Hostel",
+            "Transport"
+          ]
+        },
+        "download": {
+          "label": "Download Fee Structure",
+          "file_label": "BBA Fee Structure 2026",
+          "file_size": "2.4 MB",
+          "file_type": "PDF",
+          "action": "download"
+        },
+        "fee_structures": [
+          {
+            "gender": "Male",
+            "quota_category": "General",
+            "fees_summary": {
+              "full_course_fee": 370000,
+              "booking_amount": 50000,
+              "currency": "INR"
+            },
+            "tuition_fees": [
+              { "year": "1st Year", "amount": 185000 },
+              { "year": "2nd Year", "amount": 185000 }
+            ],
+            "one_time_payable_fees": [
+              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
+              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
+            ],
+            "additional_fees": [
+              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
+              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
+            ],
+            "tuitionFeesSummary": "₹1,85,000 per year"
+          },
+          {
+            "gender": "Female",
+            "quota_category": "General",
+            "fees_summary": {
+              "full_course_fee": 350000,
+              "booking_amount": 50000,
+              "currency": "INR"
+            },
+            "tuition_fees": [
+              { "year": "1st Year", "amount": 175000 },
+              { "year": "2nd Year", "amount": 175000 }
+            ],
+            "one_time_payable_fees": [
+              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
+              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
+            ],
+            "additional_fees": [
+              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
+              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
+            ],
+            "tuitionFeesSummary": "₹1,75,000 per year"
+          }
+        ],
+        "refund_policy": [
+          "100% refund before classes start",
+          "50% refund within first 15 days"
+        ],
+        "deadlines_and_installments": [
+          {
+            "id": "installment_1",
+            "label": "Installment 1",
+            "deadline": "2026-07-15",
+            "amount": 100000
+          },
+          {
+            "id": "installment_2",
+            "label": "Installment 2",
+            "deadline": "2026-11-15",
+            "amount": 85000
+          }
+        ]
       },
       "financial_aid": {
         "id": "financial_aid",
