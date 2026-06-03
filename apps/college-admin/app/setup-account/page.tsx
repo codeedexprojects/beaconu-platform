@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
-import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Loader2, ShieldCheck, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -45,6 +45,8 @@ function SetupAccountPageContent() {
   const token = searchParams?.get("token");
   const setAuth = useAuthStore((state) => state.setAuth);
   const [collegeSlug, setCollegeSlug] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { mutateAsync: setupCollegeAccount, isPending: isSubmitting } =
     useSetupCollegeAccount();
 
@@ -157,7 +159,26 @@ function SetupAccountPageContent() {
 
             <div className="space-y-2 pt-2">
               <Label htmlFor="password">New Password</Label>
-              <Input id="password" type="password" {...register("password")} />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-sm text-destructive">
                   {errors.password.message}
@@ -167,11 +188,30 @@ function SetupAccountPageContent() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                {...register("confirmPassword")}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="pr-10"
+                  {...register("confirmPassword")}
+                />
+                <button
+                  type="button"
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">
                   {errors.confirmPassword.message}

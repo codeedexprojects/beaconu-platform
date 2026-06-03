@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import { Loader2, ArrowRight, ArrowLeft, Plus, MapPin } from "lucide-react";
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 
 import {
   useCollegeCampuses,
@@ -52,6 +53,7 @@ export default function SetupCampusesPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CampusFormData>({
     resolver: zodResolver(campusSchema as any),
@@ -206,11 +208,16 @@ export default function SetupCampusesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    aria-invalid={!!errors.state}
-                    {...register("state")}
+                  <Label>State</Label>
+                  <Controller
+                    name="state"
+                    control={control}
+                    render={({ field }) => (
+                      <IndiaStateSelect
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                   {errors.state && (
                     <p className="text-sm text-destructive">

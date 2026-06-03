@@ -32,6 +32,16 @@ export const publicCollegeSchemas = {
     disciplineId: optionalUuidFromQuery,
     studyLevelId: optionalUuidFromQuery,
     programTypeId: optionalUuidFromQuery,
+    state: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
+    district: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
   }),
 
   summaryQuery: z.object({
