@@ -117,6 +117,13 @@ export class AuthRepository {
     });
   }
 
+  static async updateBlinkUserById(
+    id: string,
+    data: { passwordHash?: string; passwordChangedAt?: Date },
+  ) {
+    return prisma.blinkUser.update({ where: { id }, data });
+  }
+
   static async findBlinkUserByRegNumber(regNumber: string) {
     return prisma.blinkUser.findUnique({
       where: { agencyRegNumber: regNumber },

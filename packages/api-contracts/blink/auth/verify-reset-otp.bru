@@ -1,0 +1,38 @@
+meta {
+  name: Verify Reset OTP
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/auth/verify-reset-otp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "john@agency.com",
+    "otp": "1234"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.resetToken) {
+      bru.setEnvVar("resetToken", data.data.resetToken);
+    }
+  }
+}
+
+docs {
+  Step 2 of the blink forgot-password flow.
+  Validates the 4-digit OTP (5 min TTL). On success returns a resetToken (UUID, 15 min TTL)
+  that must be passed to the reset-password endpoint.
+  No authentication required.
+}
