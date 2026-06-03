@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  Building2,
-  Mail,
-  Phone,
-  MapPin,
-  MessageSquare,
-  AlertCircle,
-  Clock,
-  X,
-} from "lucide-react";
+import { Building2, MessageSquare, AlertCircle, X } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +180,36 @@ export function CollegeLeadDetailModal({
                     </a>
                   </div>
                 </div>
+
+                {!lead.createdCollege?.adminSetupCompleted &&
+                  lead.createdCollege?.setupUrl && (
+                    <div className="pt-2 border-t border-emerald-100/50">
+                      <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-0.5">
+                        One-Time Setup Link
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mb-1">
+                        Admin has not completed password setup yet. Share this
+                        link if they didn&apos;t receive the email.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="flex-1 font-mono text-xs text-emerald-900 break-all select-all bg-emerald-100/50 px-2 py-1 rounded">
+                          {lead.createdCollege.setupUrl}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              lead.createdCollege!.setupUrl!,
+                            );
+                            toast.success("Setup link copied");
+                          }}
+                          className="shrink-0 text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:underline"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                 {lead.createdCollege?.ownedGroupCode && (
                   <div className="pt-2 border-t border-emerald-100/50">

@@ -4,6 +4,7 @@ import {
   ensureUniqueCollegeSlug,
   ensureUniqueCollegeCode,
 } from "@/shared/utils/slug.utils";
+import { buildCollegeSetupUrl } from "@/shared/utils/college-url.utils";
 import { CollegeProvisioningRepository } from "../repositories/college-provisioning.repository";
 
 export interface ProvisionCollegeInput {
@@ -60,33 +61,7 @@ export class CollegeProvisioningService {
         onboardingRequestId: input.onboardingRequestId,
       });
 
-    let collegeAdminBaseUrl =
-      process.env.COLLEGE_ADMIN_URL ?? "http://localhost:3002";
-
-    // Auto-prepend protocol if missing (e.g. "admin.beaconuedx.com" → "https://admin.beaconuedx.com")
-    if (
-      !collegeAdminBaseUrl.startsWith("http://") &&
-      !collegeAdminBaseUrl.startsWith("https://")
-    ) {
-      collegeAdminBaseUrl = `https://${collegeAdminBaseUrl}`;
-    }
-
-    const setupUrlBase = new URL(collegeAdminBaseUrl);
-    const baseHostname = setupUrlBase.hostname;
-    const isLocal =
-      baseHostname === "localhost" || baseHostname === "127.0.0.1";
-
-    if (isLocal) {
-      // Local: http://{slug}.admin.localhost:3002/{slug}/login?token=...
-      setupUrlBase.hostname = `${slug}.admin.localhost`;
-    } else {
-      // Production: e.g. https://admin.beaconuedx.com → https://{slug}.admin.beaconuedx.com
-      setupUrlBase.hostname = `${slug}.${baseHostname}`;
-    }
-
-    setupUrlBase.pathname = `/${slug}/login`;
-    setupUrlBase.searchParams.set("token", setupToken);
-    const setupUrl = setupUrlBase.toString();
+    const setupUrl = buildCollegeSetupUrl(slug, setupToken);
 
     return {
       college: {

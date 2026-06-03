@@ -16,6 +16,7 @@ import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.
 import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans.routes";
 import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-guide-videos.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
+import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
 
 const router: Router = Router();
 
@@ -36,5 +37,6 @@ router.use("/colleges", collegeDashboardRoutes);
 router.use("/colleges/:id", adminInstitutionGroupRouter);
 router.use("/blogs", adminBlogRoutes);
 router.use("/notifications", notificationsRoutes);
+router.use("/uploads", platformAdminUploadRoutes);
 
 export default router;

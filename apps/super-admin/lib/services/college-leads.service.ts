@@ -18,6 +18,8 @@ export interface CollegeLead {
     id: string;
     slug: string;
     ownedGroupCode?: string | null;
+    adminSetupCompleted: boolean;
+    setupUrl?: string | null;
   } | null;
   groupCode?: string | null;
   createdAt: string;

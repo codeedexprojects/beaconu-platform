@@ -3,11 +3,28 @@ export const MIME_TO_EXT = {
   "image/png": "png",
   "image/webp": "webp",
   "application/pdf": "pdf",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
 } as const;
 
 export type AllowedMimeType = keyof typeof MIME_TO_EXT;
 export const ALLOWED_MIME_TYPES = Object.keys(MIME_TO_EXT) as AllowedMimeType[];
 
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+export const IMAGE_MIME_TYPES: AllowedMimeType[] = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+export const VIDEO_MIME_TYPES: AllowedMimeType[] = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+];
+
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB  (images/PDFs)
+export const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB (videos)
 export const PRESIGN_EXPIRY_SECONDS = 300; // 5 min
+export const VIDEO_PRESIGN_EXPIRY_SECONDS = 900; // 15 min (videos need more time)
 export const VIEW_URL_EXPIRY_SECONDS = 3600; // 1 hr

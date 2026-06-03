@@ -29,16 +29,24 @@ export class UploadService {
   static async presign(
     key: string,
     mimeType: string,
+    expiresIn: number = PRESIGN_EXPIRY_SECONDS,
   ): Promise<PresignResponse> {
-    const uploadUrl = await generateUploadUrl(key, mimeType, PRESIGN_EXPIRY_SECONDS);
-    logger.info({ action: "UPLOAD_PRESIGNED", module: "upload", key, mimeType });
-    return { uploadUrl, key, expiresIn: PRESIGN_EXPIRY_SECONDS };
+    const uploadUrl = await generateUploadUrl(key, mimeType, expiresIn);
+    logger.info({
+      action: "UPLOAD_PRESIGNED",
+      module: "upload",
+      key,
+      mimeType,
+    });
+    return { uploadUrl, key, expiresIn };
   }
 
   static async verify(key: string): Promise<VerifyResponse> {
     const exists = await objectExists(key);
     if (!exists) {
-      throw new NotFoundError("File not found in storage. Please upload first.");
+      throw new NotFoundError(
+        "File not found in storage. Please upload first.",
+      );
     }
     const viewUrl = await generateDownloadUrl(key, VIEW_URL_EXPIRY_SECONDS);
     logger.info({ action: "UPLOAD_VERIFIED", module: "upload", key });

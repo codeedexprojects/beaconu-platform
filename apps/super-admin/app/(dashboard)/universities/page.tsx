@@ -20,6 +20,8 @@ import {
   Eye,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { VideoListEditor } from "@/components/universities/video-list-editor";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1032,40 +1034,22 @@ export default function UniversitiesPage() {
                     placeholder="e.g. NAAC A+"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="create-cover">
-                    Cover URL{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="create-cover"
-                    value={createForm.cover_url ?? ""}
-                    onChange={(e) =>
-                      setCreateForm((prev) => ({
-                        ...prev,
-                        cover_url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="create-logo">
-                    Logo URL{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="create-logo"
-                    value={createForm.logo_url}
-                    onChange={(e) =>
-                      setCreateForm((prev) => ({
-                        ...prev,
-                        logo_url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
+                <ImageUpload
+                  label="Cover Image (optional)"
+                  value={createForm.cover_url ?? ""}
+                  onChange={(url) =>
+                    setCreateForm((prev) => ({ ...prev, cover_url: url }))
+                  }
+                  context="university-covers"
+                />
+                <ImageUpload
+                  label="Logo (optional)"
+                  value={createForm.logo_url ?? ""}
+                  onChange={(url) =>
+                    setCreateForm((prev) => ({ ...prev, logo_url: url }))
+                  }
+                  context="university-logos"
+                />
 
                 <div className="flex gap-2 rounded-lg bg-muted/60 p-1">
                   <Button
@@ -1344,26 +1328,15 @@ export default function UniversitiesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="create-videos-json">
-                      Videos JSON (Array)
-                    </Label>
-                    <textarea
-                      id="create-videos-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={createMetadataForm.overview.videosJson}
-                      onChange={(e) =>
-                        setCreateMetadataForm((prev) => ({
-                          ...prev,
-                          overview: {
-                            ...prev.overview,
-                            videosJson: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder='[{"title":"Campus Tour","url":"https://..."}]'
-                    />
-                  </div>
+                  <VideoListEditor
+                    value={createMetadataForm.overview.videosJson}
+                    onChange={(json) =>
+                      setCreateMetadataForm((prev) => ({
+                        ...prev,
+                        overview: { ...prev.overview, videosJson: json },
+                      }))
+                    }
+                  />
                 </div>
 
                 <div
@@ -1811,40 +1784,22 @@ export default function UniversitiesPage() {
                     placeholder="e.g. NAAC A+"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-cover">
-                    Cover URL{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="edit-cover"
-                    value={editForm.cover_url ?? ""}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        cover_url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-logo">
-                    Logo URL{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="edit-logo"
-                    value={editForm.logo_url ?? ""}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        logo_url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
+                <ImageUpload
+                  label="Cover Image (optional)"
+                  value={editForm.cover_url ?? ""}
+                  onChange={(url) =>
+                    setEditForm((prev) => ({ ...prev, cover_url: url }))
+                  }
+                  context="university-covers"
+                />
+                <ImageUpload
+                  label="Logo (optional)"
+                  value={editForm.logo_url ?? ""}
+                  onChange={(url) =>
+                    setEditForm((prev) => ({ ...prev, logo_url: url }))
+                  }
+                  context="university-logos"
+                />
 
                 <div className="flex gap-2 rounded-lg bg-muted/60 p-1">
                   <Button
@@ -2119,26 +2074,15 @@ export default function UniversitiesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-videos-json">
-                      Videos JSON (Array)
-                    </Label>
-                    <textarea
-                      id="edit-videos-json"
-                      className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={editMetadataForm.overview.videosJson}
-                      onChange={(e) =>
-                        setEditMetadataForm((prev) => ({
-                          ...prev,
-                          overview: {
-                            ...prev.overview,
-                            videosJson: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder='[{"title":"Campus Tour","url":"https://..."}]'
-                    />
-                  </div>
+                  <VideoListEditor
+                    value={editMetadataForm.overview.videosJson}
+                    onChange={(json) =>
+                      setEditMetadataForm((prev) => ({
+                        ...prev,
+                        overview: { ...prev.overview, videosJson: json },
+                      }))
+                    }
+                  />
                 </div>
 
                 <div

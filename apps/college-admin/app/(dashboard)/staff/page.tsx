@@ -71,6 +71,8 @@ export default function StaffDirectoryPage() {
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("staff.manage") ?? false);
 
+  const isSelf = (memberId: string) => memberId === user?.id;
+
   const { mutate: inviteStaff, isPending: inviting } = useInviteStaffMember();
   const { mutate: updateStaff } = useUpdateStaffMember();
 
@@ -98,7 +100,7 @@ export default function StaffDirectoryPage() {
     currentStatus: "active" | "inactive",
     name: string,
   ) => {
-    if (!canManageStaff) return;
+    if (!canManageStaff || isSelf(id)) return;
     const nextStatus = currentStatus === "active" ? "inactive" : "active";
     if (
       confirm(
@@ -119,7 +121,7 @@ export default function StaffDirectoryPage() {
   };
 
   const handleRoleChange = (id: string, roleId: string, name: string) => {
-    if (!canManageStaff) return;
+    if (!canManageStaff || isSelf(id)) return;
     updateStaff(
       { id, data: { collegeRoleId: roleId } },
       {
@@ -223,7 +225,7 @@ export default function StaffDirectoryPage() {
                         <select
                           className="rounded-md border border-input bg-background px-2.5 py-1 text-xs focus:outline-none"
                           value={member.collegeRoleId}
-                          disabled={!canManageStaff}
+                          disabled={!canManageStaff || isSelf(member.id)}
                           onChange={(e) =>
                             handleRoleChange(
                               member.id,
@@ -266,7 +268,7 @@ export default function StaffDirectoryPage() {
 
                     {/* Status switcher button */}
                     <TableCell className="text-right pr-6">
-                      {canManageStaff ? (
+                      {canManageStaff && !isSelf(member.id) ? (
                         <Button
                           variant="ghost"
                           size="sm"
