@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateEducationLoan } from "@/hooks/use-financial-aid-loans";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const LOAN_TYPES = ["domestic", "abroad", "both"] as const;
 
@@ -348,25 +349,19 @@ export default function NewEducationLoanPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="bank_logo_url">
-                  Bank Logo URL{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
-                </Label>
-                <Input
-                  id="bank_logo_url"
-                  type="url"
-                  placeholder="https://example.com/logo.png"
-                  {...form.register("bank_logo_url")}
-                />
-                {form.formState.errors.bank_logo_url && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.bank_logo_url.message}
-                  </p>
-                )}
-              </div>
+              <ImageUpload
+                label="Bank Logo (optional)"
+                value={form.watch("bank_logo_url") ?? ""}
+                onChange={(url) =>
+                  form.setValue("bank_logo_url", url, { shouldValidate: true })
+                }
+                context="financial-aid-logos"
+              />
+              {form.formState.errors.bank_logo_url && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.bank_logo_url.message}
+                </p>
+              )}
             </CardContent>
           </Card>
 

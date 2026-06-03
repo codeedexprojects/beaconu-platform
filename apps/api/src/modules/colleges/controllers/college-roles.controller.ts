@@ -418,6 +418,10 @@ export class CollegeRolesController {
       throw new NotFoundError("Staff member not found");
     }
 
+    if (id === req.userId) {
+      throw new ForbiddenError("You cannot modify your own staff record");
+    }
+
     if (body.collegeRoleId) {
       const role = await prisma.collegeRole.findUnique({
         where: { id: body.collegeRoleId },

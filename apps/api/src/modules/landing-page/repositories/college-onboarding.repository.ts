@@ -67,6 +67,7 @@ export class CollegeOnboardingRepository {
           select: {
             id: true,
             slug: true,
+            settings: true,
             institutionGroups: {
               select: { groupCode: true },
             },
@@ -121,8 +122,14 @@ export class CollegeOnboardingRepository {
             select: {
               id: true,
               slug: true,
+              settings: true,
               institutionGroups: {
                 select: { groupCode: true },
+              },
+              staffMembers: {
+                select: { id: true, status: true },
+                take: 1,
+                orderBy: { createdAt: "asc" },
               },
             },
           },
