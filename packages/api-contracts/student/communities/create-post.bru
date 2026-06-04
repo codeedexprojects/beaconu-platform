@@ -1,0 +1,40 @@
+meta {
+  name: Create Post
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "content": "Excited to be part of this community!",
+    "attachments": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("communityPostId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a post in the community.
+  Allowed only for joined members or the community owner.
+}

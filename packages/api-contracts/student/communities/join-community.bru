@@ -1,0 +1,25 @@
+meta {
+  name: Join Community
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/join
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Joins a community by id.
+  Set communityId from create-community response or manually.
+  Requires login token from student auth.
+}

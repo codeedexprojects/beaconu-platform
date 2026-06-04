@@ -1,0 +1,31 @@
+meta {
+  name: List All Communities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/communities
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 20
+  ~status:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists all communities for super admin.
+  Optional status filter: active or disabled.
+  Requires platform admin token with super admin permissions.
+}

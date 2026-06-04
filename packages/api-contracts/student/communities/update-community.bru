@@ -1,0 +1,33 @@
+meta {
+  name: Update Community
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "AI Builders Hub - Updated",
+    "description": "Updated community description",
+    "iconUrl": "https://images.example.com/community-icon.png",
+    "coverImageUrl": "https://images.example.com/community-cover.png"
+  }
+}
+
+docs {
+  Updates a community. Allowed for the creator (or platform admin via backend rules).
+  Requires login token from student auth.
+}

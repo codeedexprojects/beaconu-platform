@@ -15,9 +15,12 @@ docs {
 
   Response includes: university info, active campuses, active courses
   (with discipline/stream/studyLevel/programType), institution group
-  membership, and related sister colleges.
+  membership, related sister colleges, `collegeDetails.profileSections`,
+  and top-level `tabs`.
 
-  Note: `profileSections` raw data and `settings` are excluded from the response.
+  `tabs` is a flat array of enabled section IDs in id-style format
+  (snake_case). If a section id is missing, the section key is used.
+
+  Note: `settings` is excluded from the response.
   To get individual profile sections, use the Get College Section endpoint.
-  To get the enabled tabs list, use the Get College Summary endpoint.
 }

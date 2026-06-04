@@ -7,6 +7,7 @@ import counsellingAdminRoutes from "@/modules/counselling/routes/platform-admin.
 import adminUniversityRoutes from "@/modules/universities/routes/platform-admin.routes";
 import collegeLeadsAdminRoutes from "@/modules/landing-page/routes/admin.routes";
 import adminBlogRoutes from "@/modules/content/routes/platform-admin.routes";
+import platformAdminCommunityRoutes from "@/modules/community/routes/platform-admin.routes";
 import platformAdminMgmtRoutes from "@/modules/platform-admin/routes/platform-admin-mgmt.routes";
 import platformPermissionsRoutes from "@/modules/platform-admin/routes/platform-permissions.routes";
 import collegeDashboardRoutes from "@/modules/colleges/routes/college-dashboard.routes";
@@ -36,6 +37,7 @@ router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);
 router.use("/colleges/:id", adminInstitutionGroupRouter);
 router.use("/blogs", adminBlogRoutes);
+router.use("/communities", platformAdminCommunityRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/uploads", platformAdminUploadRoutes);
 

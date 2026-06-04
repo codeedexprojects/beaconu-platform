@@ -1,0 +1,40 @@
+meta {
+  name: Create Community
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "AI Builders Hub",
+    "description": "Community for sharing AI projects and resources"
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("communityId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a community as the logged-in user.
+  Requires login token from student auth.
+}

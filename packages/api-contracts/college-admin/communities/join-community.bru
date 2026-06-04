@@ -1,0 +1,24 @@
+meta {
+  name: Join Community
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}/join
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Joins a community by id as the logged-in staff user.
+  Set communityId from create-community response or manually.
+}
