@@ -10,12 +10,16 @@ post {
   auth: bearer
 }
 
+headers {
+  Content-Type: application/json
+}
+
 auth:bearer {
   token: {{accessToken}}
 }
 
-headers {
-  Content-Type: application/json
+vars:pre-request {
+  communityId: CMT-1
 }
 
 docs {

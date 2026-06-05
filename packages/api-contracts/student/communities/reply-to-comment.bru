@@ -1,0 +1,43 @@
+meta {
+  name: Reply To Comment
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/comments/{{communityCommentId}}/replies
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "content": "This is a reply to your comment."
+  }
+}
+
+vars:pre-request {
+  communityId: CMT-1
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("communityReplyCommentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Adds a reply to an existing comment.
+  Set communityId, communityPostId, and communityCommentId env vars before calling.
+}

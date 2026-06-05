@@ -74,4 +74,83 @@ export class CommunityCollegeAdminController {
 
     res.status(201).json(ApiResponse.success("Community post created", result));
   }
+
+  static async listPosts(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.idParam.parse(req.params);
+    const filters = CommunitySchema.listQuery.parse(req.query);
+    const result = await CommunityService.listCommunityPosts(
+      params.id,
+      filters,
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Community posts fetched",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  static async sharePost(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.postDeleteParam.parse(req.params);
+    const result = await CommunityService.sharePost(params.id, params.postId);
+
+    res.status(200).json(ApiResponse.success("Community post shared", result));
+  }
+
+  static async createComment(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.postDeleteParam.parse(req.params);
+    const input = CommunitySchema.createComment.parse(req.body);
+    const result = await CommunityService.createComment(
+      params.id,
+      params.postId,
+      input,
+      req.userId!,
+      req.userType!,
+    );
+
+    res.status(201).json(ApiResponse.success("Comment created", result));
+  }
+
+  static async replyToComment(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.commentDeleteParam.parse(req.params);
+    const input = CommunitySchema.createComment.parse(req.body);
+    const result = await CommunityService.replyToComment(
+      params.id,
+      params.postId,
+      params.commentId,
+      input,
+      req.userId!,
+      req.userType!,
+    );
+
+    res.status(201).json(ApiResponse.success("Reply created", result));
+  }
+
+  static async likeComment(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.commentDeleteParam.parse(req.params);
+    const result = await CommunityService.likeComment(
+      params.id,
+      params.postId,
+      params.commentId,
+    );
+
+    res.status(200).json(ApiResponse.success("Comment liked", result));
+  }
+
+  static async deleteComment(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.commentDeleteParam.parse(req.params);
+    const result = await CommunityService.deleteComment(
+      params.id,
+      params.postId,
+      params.commentId,
+      req.userId!,
+      req.userType!,
+    );
+
+    res.status(200).json(ApiResponse.success("Comment deleted", result));
+  }
 }
