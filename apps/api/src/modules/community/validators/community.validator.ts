@@ -42,10 +42,28 @@ export const CommunitySchema = {
     commentId: z.string().min(1),
   }),
 
-  createPost: z.object({
-    content: z.string().trim().min(1).max(5000),
-    attachments: z.array(z.string().trim().url()).max(10).optional(),
-  }),
+  createPost: z
+    .object({
+      content: z.string().trim().max(5000).optional().default(""),
+      attachments: z
+        .array(
+          z.object({
+            type: z.enum(["image", "video", "link"]),
+            url: z.string().trim().url(),
+            thumbnailUrl: z.string().trim().url().optional(),
+            fileName: z.string().trim().max(255).optional(),
+            mimeType: z.string().trim().max(100).optional(),
+          }),
+        )
+        .max(10)
+        .optional(),
+    })
+    .refine(
+      (data) =>
+        (data.content && data.content.length > 0) ||
+        (data.attachments && data.attachments.length > 0),
+      { message: "Post must have content or at least one attachment" },
+    ),
 
   createComment: z.object({
     content: z.string().trim().min(1).max(2000),

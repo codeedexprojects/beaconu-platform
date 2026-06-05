@@ -25,4 +25,15 @@ vars:pre-request {
 docs {
   Lists active posts of a community with pagination.
   Set communityId env var before calling.
+
+  Response includes for each post:
+    - authorName        (String|null) — full name of the post author
+    - authorAvatarUrl   (String|null) — avatar URL of the post author
+    - upvoteCount       (Int) — total upvotes on the post
+    - downvoteCount     (Int) — total downvotes on the post
+    - currentUserVote   ("upvote"|"downvote"|null) — current user's vote
+    - isLiked           (Boolean) — true if current user upvoted
+    - isDisliked        (Boolean) — true if current user downvoted
+    - attachments       (Array) — media attachments with type, url, thumbnailUrl, fileName, mimeType
+    - comments          (Array) — each comment and reply also includes authorName and authorAvatarUrl
 }
