@@ -1,0 +1,29 @@
+meta {
+  name: List Communities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/communities
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+query {
+  page: 1
+  limit: 10
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists active communities for logged-in staff user.
+  Requires college-admin login token (staffToken).
+}

@@ -43,10 +43,6 @@ model Student {
   commuteRideHistory      CommuteRideHistory[]
   blinkUsersLinked        BlinkUser[]                @relation("LinkedStudent")
   referrals               Referral[]
-  communities             CommunityMember[]
-  communityPosts          CommunityPost[]
-  communityPostVotes      CommunityPostVote[]
-  communityComments       CommunityComment[]
   squadSearches           SquadSearch[]
   beaconuCard             BeaconuCard?
   studentBankAccounts     StudentBankAccount[]

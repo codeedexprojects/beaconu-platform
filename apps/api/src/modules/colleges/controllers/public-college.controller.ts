@@ -173,26 +173,44 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function toIdStyleTabName(value: string) {
+  return value
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
+    .toLowerCase();
+}
+
 function buildTabIdList(profileSections: Record<string, unknown>) {
-  return Object.entries(profileSections).reduce((acc, [tabKey, tabValue]) => {
-    if (
-      isRecord(tabValue) &&
-      typeof tabValue.enabled === "boolean" &&
-      !tabValue.enabled
-    ) {
+  const tabIds = Object.entries(profileSections).reduce(
+    (acc, [tabKey, tabValue]) => {
+      if (
+        isRecord(tabValue) &&
+        typeof tabValue.enabled === "boolean" &&
+        !tabValue.enabled
+      ) {
+        return acc;
+      }
+
+      const tabIdRaw =
+        isRecord(tabValue) &&
+        typeof tabValue.id === "string" &&
+        tabValue.id.trim() !== ""
+          ? tabValue.id
+          : tabKey;
+
+      const tabId = toIdStyleTabName(tabIdRaw);
+
+      if (tabId !== "") {
+        acc.push(tabId);
+      }
+
       return acc;
-    }
+    },
+    [] as string[],
+  );
 
-    const tabId =
-      isRecord(tabValue) &&
-      typeof tabValue.id === "string" &&
-      tabValue.id.trim() !== ""
-        ? tabValue.id
-        : tabKey;
-
-    acc.push(tabId);
-    return acc;
-  }, [] as string[]);
+  return Array.from(new Set(tabIds));
 }
 
 function buildPublicProfileResponse(college: any) {
@@ -441,31 +459,7 @@ export class PublicCollegeController {
 
     const profileSections =
       (college.profileSections as Record<string, unknown> | null) || {};
-    const tabListing = Object.entries(profileSections)
-      .filter(([, sectionValue]) => {
-        if (
-          sectionValue &&
-          typeof sectionValue === "object" &&
-          !Array.isArray(sectionValue) &&
-          "enabled" in sectionValue
-        ) {
-          return (sectionValue as { enabled?: unknown }).enabled !== false;
-        }
-
-        return true;
-      })
-      .map(([sectionKey, sectionValue]) => {
-        if (
-          sectionValue &&
-          typeof sectionValue === "object" &&
-          !Array.isArray(sectionValue) &&
-          typeof (sectionValue as { id?: unknown }).id === "string"
-        ) {
-          return (sectionValue as { id: string }).id;
-        }
-
-        return sectionKey;
-      });
+    const tabListing = buildTabIdList(profileSections);
 
     const { profileSections: _profileSections, ...collegeMeta } =
       college as any;
