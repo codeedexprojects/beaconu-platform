@@ -1,0 +1,29 @@
+meta {
+  name: Like Post
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/like
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  communityId: CMT-1
+  communityPostId: CPT-1
+}
+
+docs {
+  Adds an upvote to a community post for the current user.
+  Set communityId and communityPostId env vars before calling.
+}

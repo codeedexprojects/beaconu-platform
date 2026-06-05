@@ -220,6 +220,8 @@ export class CommunityRepository {
     communityId: string,
     skip: number,
     take: number,
+    userId: string,
+    userType: string,
   ) {
     const where = {
       communityId,
@@ -231,6 +233,16 @@ export class CommunityRepository {
         where,
         orderBy: [{ createdAt: "desc" }],
         include: {
+          votes: {
+            where: {
+              voterId: userId,
+              voterType: userType,
+            },
+            select: {
+              voteType: true,
+            },
+            take: 1,
+          },
           comments: {
             where: {
               status: "active",
@@ -253,7 +265,18 @@ export class CommunityRepository {
       prisma.communityPost.count({ where }),
     ]);
 
-    return { data, total };
+    const formattedData = data.map((post) => {
+      const currentUserVote = post.votes[0]?.voteType ?? null;
+
+      return {
+        ...post,
+        currentUserVote,
+        isLiked: currentUserVote === "upvote",
+        isDisliked: currentUserVote === "downvote",
+      };
+    });
+
+    return { data: formattedData, total };
   }
 
   static async hasMembership(
@@ -414,6 +437,112 @@ export class CommunityRepository {
           increment: 1,
         },
       },
+    });
+  }
+
+  static async applyPostVote(
+    postId: string,
+    voterId: string,
+    voterType: string,
+    voteType: "upvote" | "downvote",
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const existingVote = await tx.communityPostVote.findFirst({
+        where: {
+          postId,
+          voterId,
+          voterType,
+        },
+        select: {
+          id: true,
+          voteType: true,
+        },
+      });
+
+      if (!existingVote) {
+        await tx.communityPostVote.create({
+          data: {
+            postId,
+            voterId,
+            voterType,
+            voteType,
+          },
+        });
+
+        const post = await tx.communityPost.update({
+          where: { id: postId },
+          data:
+            voteType === "upvote"
+              ? {
+                  upvoteCount: {
+                    increment: 1,
+                  },
+                }
+              : {
+                  downvoteCount: {
+                    increment: 1,
+                  },
+                },
+        });
+
+        return {
+          ...post,
+          currentUserVote: voteType,
+          isLiked: voteType === "upvote",
+          isDisliked: voteType === "downvote",
+        };
+      }
+
+      if (existingVote.voteType === voteType) {
+        const post = await tx.communityPost.findUnique({
+          where: { id: postId },
+        });
+
+        if (!post) {
+          return null;
+        }
+
+        return {
+          ...post,
+          currentUserVote: existingVote.voteType,
+          isLiked: existingVote.voteType === "upvote",
+          isDisliked: existingVote.voteType === "downvote",
+        };
+      }
+
+      await tx.communityPostVote.update({
+        where: { id: existingVote.id },
+        data: { voteType },
+      });
+
+      const post = await tx.communityPost.update({
+        where: { id: postId },
+        data:
+          voteType === "upvote"
+            ? {
+                upvoteCount: {
+                  increment: 1,
+                },
+                downvoteCount: {
+                  decrement: 1,
+                },
+              }
+            : {
+                upvoteCount: {
+                  decrement: 1,
+                },
+                downvoteCount: {
+                  increment: 1,
+                },
+              },
+      });
+
+      return {
+        ...post,
+        currentUserVote: voteType,
+        isLiked: voteType === "upvote",
+        isDisliked: voteType === "downvote",
+      };
     });
   }
 

@@ -123,6 +123,8 @@ export class CommunityCollegeAdminController {
     const result = await CommunityService.listCommunityPosts(
       params.id,
       filters,
+      req.userId!,
+      req.userType!,
     );
 
     res
@@ -141,6 +143,32 @@ export class CommunityCollegeAdminController {
     const result = await CommunityService.sharePost(params.id, params.postId);
 
     res.status(200).json(ApiResponse.success("Community post shared", result));
+  }
+
+  static async likePost(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.postDeleteParam.parse(req.params);
+    const result = await CommunityService.likePost(
+      params.id,
+      params.postId,
+      req.userId!,
+      req.userType!,
+    );
+
+    res.status(200).json(ApiResponse.success("Community post liked", result));
+  }
+
+  static async dislikePost(req: Request, res: Response): Promise<void> {
+    const params = CommunitySchema.postDeleteParam.parse(req.params);
+    const result = await CommunityService.dislikePost(
+      params.id,
+      params.postId,
+      req.userId!,
+      req.userType!,
+    );
+
+    res
+      .status(200)
+      .json(ApiResponse.success("Community post disliked", result));
   }
 
   static async createComment(req: Request, res: Response): Promise<void> {
