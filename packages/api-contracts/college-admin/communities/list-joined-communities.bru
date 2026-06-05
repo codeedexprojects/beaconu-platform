@@ -1,0 +1,30 @@
+meta {
+  name: List Joined Communities
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/communities/joined
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+query {
+  page: 1
+  limit: 10
+  search: 
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists communities joined by current college-admin with pagination and optional search.
+  Response includes iconUrl, coverImageUrl, and isJoined=true.
+}
