@@ -4,8 +4,10 @@ import { generateSlug } from "@/shared/utils";
 import { CommunityRepository } from "../repositories/community.repository";
 import type {
   AdminListCommunitiesQuery,
+  CreateCommunityCommentInput,
   CreateCommunityInput,
   CreateCommunityPostInput,
+  ListCommunityPostsQuery,
   ListCommunitiesQuery,
 } from "../validators/community.validator";
 
@@ -226,5 +228,192 @@ export class CommunityService {
       content: input.content,
       attachments: (input.attachments ?? []) as Prisma.InputJsonValue,
     });
+  }
+
+  static async listCommunityPosts(
+    communityId: string,
+    filters: ListCommunityPostsQuery,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const page = filters.page;
+    const limit = filters.limit;
+    const skip = (page - 1) * limit;
+
+    const result = await CommunityRepository.listPostsByCommunityId(
+      communityId,
+      skip,
+      limit,
+    );
+
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        hasNext: page * limit < result.total,
+      },
+    };
+  }
+
+  static async sharePost(communityId: string, postId: string) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    return CommunityRepository.incrementShareCount(postId);
+  }
+
+  static async createComment(
+    communityId: string,
+    postId: string,
+    input: CreateCommunityCommentInput,
+    userId: string,
+    userType: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    return CommunityRepository.createCommentAndIncrementCount({
+      postId,
+      authorId: userId,
+      authorType: userType,
+      content: input.content,
+    });
+  }
+
+  static async replyToComment(
+    communityId: string,
+    postId: string,
+    commentId: string,
+    input: CreateCommunityCommentInput,
+    userId: string,
+    userType: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    const parentComment = await CommunityRepository.findCommentById(commentId);
+
+    if (
+      !parentComment ||
+      parentComment.postId !== postId ||
+      parentComment.status !== "active"
+    ) {
+      throw new NotFoundError("Parent comment not found");
+    }
+
+    return CommunityRepository.createCommentAndIncrementCount({
+      postId,
+      authorId: userId,
+      authorType: userType,
+      content: input.content,
+      parentCommentId: commentId,
+    });
+  }
+
+  static async likeComment(
+    communityId: string,
+    postId: string,
+    commentId: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    const comment = await CommunityRepository.findCommentById(commentId);
+
+    if (!comment || comment.postId !== postId || comment.status !== "active") {
+      throw new NotFoundError("Comment not found");
+    }
+
+    return CommunityRepository.incrementCommentLikeCount(commentId);
+  }
+
+  static async deleteComment(
+    communityId: string,
+    postId: string,
+    commentId: string,
+    userId: string,
+    userType: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId) {
+      throw new NotFoundError("Post not found");
+    }
+
+    const comment = await CommunityRepository.findCommentById(commentId);
+
+    if (!comment || comment.postId !== postId) {
+      throw new NotFoundError("Comment not found");
+    }
+
+    const isCommunityOwner =
+      community.createdById === userId && community.createdByType === userType;
+
+    const isCommentAuthor =
+      comment.authorId === userId && comment.authorType === userType;
+
+    if (!isCommunityOwner && !isCommentAuthor) {
+      throw new ForbiddenError(
+        "Only community owner or comment author can delete this comment",
+      );
+    }
+
+    if (comment.status === "deleted") {
+      throw new ConflictError("Comment already deleted");
+    }
+
+    return CommunityRepository.softDeleteComment(
+      commentId,
+      postId,
+      post.commentCount > 0,
+    );
   }
 }

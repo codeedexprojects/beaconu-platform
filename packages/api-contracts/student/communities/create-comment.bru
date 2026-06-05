@@ -1,11 +1,11 @@
 meta {
-  name: Create Post
+  name: Create Comment
   type: http
-  seq: 6
+  seq: 8
 }
 
 post {
-  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/comments
   body: json
   auth: bearer
 }
@@ -20,8 +20,7 @@ auth:bearer {
 
 body:json {
   {
-    "content": "Excited to be part of this community!",
-    "attachments": []
+    "content": "Thanks for sharing this update."
   }
 }
 
@@ -33,12 +32,12 @@ script:post-response {
   if (res.status === 201 || res.status === 200) {
     const data = res.getBody();
     if (data.data && data.data.id) {
-      bru.setEnvVar("communityPostId", data.data.id);
+      bru.setEnvVar("communityCommentId", data.data.id);
     }
   }
 }
 
 docs {
-  Creates a post in the community.
-  Allowed only for joined members or the community owner.
+  Adds a comment to a community post.
+  Set communityId and communityPostId env vars before calling.
 }

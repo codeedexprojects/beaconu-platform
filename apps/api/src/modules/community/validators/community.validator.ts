@@ -35,20 +35,37 @@ export const CommunitySchema = {
     postId: z.string().min(1),
   }),
 
+  commentDeleteParam: z.object({
+    id: z.string().min(1),
+    postId: z.string().min(1),
+    commentId: z.string().min(1),
+  }),
+
   createPost: z.object({
     content: z.string().trim().min(1).max(5000),
     attachments: z.array(z.string().trim().url()).max(10).optional(),
+  }),
+
+  createComment: z.object({
+    content: z.string().trim().min(1).max(2000),
   }),
 };
 export type CreateCommunityInput = z.infer<typeof CommunitySchema.create>;
 export type UpdateCommunityInput = z.infer<typeof CommunitySchema.update>;
 export type ListCommunitiesQuery = z.infer<typeof CommunitySchema.listQuery>;
+export type ListCommunityPostsQuery = z.infer<typeof CommunitySchema.listQuery>;
 export type AdminListCommunitiesQuery = z.infer<
   typeof CommunitySchema.adminListQuery
 >;
 export type DeleteCommunityPostParam = z.infer<
   typeof CommunitySchema.postDeleteParam
 >;
+export type DeleteCommunityCommentParam = z.infer<
+  typeof CommunitySchema.commentDeleteParam
+>;
 export type CreateCommunityPostInput = z.infer<
   typeof CommunitySchema.createPost
+>;
+export type CreateCommunityCommentInput = z.infer<
+  typeof CommunitySchema.createComment
 >;

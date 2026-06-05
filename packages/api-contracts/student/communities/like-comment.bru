@@ -1,0 +1,28 @@
+meta {
+  name: Like Comment
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/comments/{{communityCommentId}}/like
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  communityId: CMT-1
+}
+
+docs {
+  Increments like count for a comment.
+  Set communityId, communityPostId, and communityCommentId env vars before calling.
+}

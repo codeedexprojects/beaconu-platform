@@ -54,6 +54,46 @@ export class CommunityRepository {
     return prisma.community.findUnique({ where: { id } });
   }
 
+  static async listPostsByCommunityId(
+    communityId: string,
+    skip: number,
+    take: number,
+  ) {
+    const where = {
+      communityId,
+      status: "active" as const,
+    };
+
+    const [data, total] = await prisma.$transaction([
+      prisma.communityPost.findMany({
+        where,
+        orderBy: [{ createdAt: "desc" }],
+        include: {
+          comments: {
+            where: {
+              status: "active",
+              parentCommentId: null,
+            },
+            orderBy: [{ createdAt: "asc" }],
+            include: {
+              replies: {
+                where: {
+                  status: "active",
+                },
+                orderBy: [{ createdAt: "asc" }],
+              },
+            },
+          },
+        },
+        skip,
+        take,
+      }),
+      prisma.communityPost.count({ where }),
+    ]);
+
+    return { data, total };
+  }
+
   static async hasMembership(
     communityId: string,
     memberId: string,
@@ -113,6 +153,7 @@ export class CommunityRepository {
         communityId: true,
         authorId: true,
         authorType: true,
+        commentCount: true,
         status: true,
       },
     });
@@ -143,6 +184,102 @@ export class CommunityRepository {
       }
 
       return deletedPost;
+    });
+  }
+
+  static async findCommentById(commentId: string) {
+    return prisma.communityComment.findUnique({
+      where: { id: commentId },
+      select: {
+        id: true,
+        postId: true,
+        authorId: true,
+        authorType: true,
+        parentCommentId: true,
+        status: true,
+      },
+    });
+  }
+
+  static async createCommentAndIncrementCount(data: {
+    postId: string;
+    authorId: string;
+    authorType: string;
+    content: string;
+    parentCommentId?: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const comment = await tx.communityComment.create({
+        data: {
+          postId: data.postId,
+          authorId: data.authorId,
+          authorType: data.authorType,
+          content: data.content,
+          parentCommentId: data.parentCommentId,
+          status: "active",
+        },
+      });
+
+      await tx.communityPost.update({
+        where: { id: data.postId },
+        data: {
+          commentCount: {
+            increment: 1,
+          },
+        },
+      });
+
+      return comment;
+    });
+  }
+
+  static async incrementCommentLikeCount(commentId: string) {
+    return prisma.communityComment.update({
+      where: { id: commentId },
+      data: {
+        likeCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  static async incrementShareCount(postId: string) {
+    return prisma.communityPost.update({
+      where: { id: postId },
+      data: {
+        shareCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  static async softDeleteComment(
+    commentId: string,
+    postId: string,
+    shouldDecrementCommentCount: boolean,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const deletedComment = await tx.communityComment.update({
+        where: { id: commentId },
+        data: {
+          status: "deleted",
+        },
+      });
+
+      if (shouldDecrementCommentCount) {
+        await tx.communityPost.update({
+          where: { id: postId },
+          data: {
+            commentCount: {
+              decrement: 1,
+            },
+          },
+        });
+      }
+
+      return deletedComment;
     });
   }
 

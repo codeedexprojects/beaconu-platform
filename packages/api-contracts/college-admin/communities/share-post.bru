@@ -1,0 +1,24 @@
+meta {
+  name: Share Post
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}/posts/{{communityPostId}}/share
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Increments share count for a community post.
+  Set communityId and communityPostId env vars before calling.
+}
