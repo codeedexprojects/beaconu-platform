@@ -96,7 +96,7 @@ export function CollegeLeadStatusModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="review-remarks">Review Remarks (optional)</Label>
+              <Label htmlFor="review-remarks">Review Remarks</Label>
               <textarea
                 id="review-remarks"
                 {...form.register("review_remarks")}

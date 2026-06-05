@@ -160,7 +160,7 @@ export function AdminFormModal({ open, onOpenChange, editAdmin }: Props) {
 
           <div className="space-y-1.5">
             <Label htmlFor="password">
-              {editAdmin ? "New Password (optional)" : "Password"}
+              {editAdmin ? "New Password " : "Password"}
             </Label>
             <div className="relative">
               <Input

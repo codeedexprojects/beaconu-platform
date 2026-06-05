@@ -145,7 +145,7 @@ export default function NewBlogPage() {
 
               {/* Cover image */}
               <ImageUpload
-                label="Cover Image (optional)"
+                label="Cover Image "
                 value={form.watch("cover_image_url") ?? ""}
                 onChange={(url) =>
                   form.setValue("cover_image_url", url, {

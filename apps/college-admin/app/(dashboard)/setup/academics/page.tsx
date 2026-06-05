@@ -372,7 +372,7 @@ export default function SetupAcademicsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Campus (optional)</Label>
+                  <Label>Campus</Label>
                   <Select
                     onValueChange={(val) => {
                       setValue("campusId", val);
@@ -424,7 +424,7 @@ export default function SetupAcademicsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (optional)</Label>
+                  <Label htmlFor="duration">Duration</Label>
                   <Input
                     id="duration"
                     placeholder="e.g. 4 Years"
@@ -439,7 +439,7 @@ export default function SetupAcademicsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="eligibility">Eligibility (optional)</Label>
+                  <Label htmlFor="eligibility">Eligibility</Label>
                   <Input
                     id="eligibility"
                     placeholder="e.g. 10+2 with PCM"
@@ -454,9 +454,7 @@ export default function SetupAcademicsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="intakeCapacity">
-                    Intake Capacity (optional)
-                  </Label>
+                  <Label htmlFor="intakeCapacity">Intake Capacity</Label>
                   <Input
                     id="intakeCapacity"
                     type="number"

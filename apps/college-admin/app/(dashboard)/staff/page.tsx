@@ -353,7 +353,7 @@ export default function StaffDirectoryPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="staff-phone">Phone Number (Optional)</Label>
+                  <Label htmlFor="staff-phone">Phone Number </Label>
                   <Input
                     id="staff-phone"
                     placeholder="e.g. +91 98765 43210"
