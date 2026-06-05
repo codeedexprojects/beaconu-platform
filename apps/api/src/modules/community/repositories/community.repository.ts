@@ -14,20 +14,182 @@ export class CommunityRepository {
     return prisma.community.create({ data });
   }
 
-  static async listActive(skip: number, take: number) {
-    const where = { status: "active" as const };
+  static async listVisibleWithJoinStatus(
+    skip: number,
+    take: number,
+    userId: string,
+    userType: string,
+    search?: string,
+  ) {
+    const searchClause = search
+      ? {
+          name: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        }
+      : {};
 
-    const [data, total] = await prisma.$transaction([
-      prisma.community.findMany({
+    const where = {
+      ...searchClause,
+      OR: [
+        { status: "active" as const },
+        { createdById: userId, createdByType: userType },
+      ],
+    };
+
+    return prisma.$transaction(async (tx) => {
+      const [communities, total] = await Promise.all([
+        tx.community.findMany({
+          where,
+          orderBy: [{ memberCount: "desc" }, { createdAt: "desc" }],
+          skip,
+          take,
+        }),
+        tx.community.count({ where }),
+      ]);
+
+      const communityIds = communities.map((community) => community.id);
+
+      const memberships =
+        communityIds.length > 0
+          ? await tx.communityMember.findMany({
+              where: {
+                communityId: { in: communityIds },
+                memberId: userId,
+                memberType: userType,
+              },
+              select: {
+                communityId: true,
+              },
+            })
+          : [];
+
+      const joinedCommunityIds = new Set(
+        memberships.map((membership) => membership.communityId),
+      );
+
+      const data = communities.map((community) => {
+        const isOwner =
+          community.createdById === userId &&
+          community.createdByType === userType;
+
+        return {
+          ...community,
+          isJoined: isOwner || joinedCommunityIds.has(community.id),
+        };
+      });
+
+      return { data, total };
+    });
+  }
+
+  static async listJoinedWithSearch(
+    skip: number,
+    take: number,
+    userId: string,
+    userType: string,
+    search?: string,
+  ) {
+    const communitySearchClause = search
+      ? {
+          name: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        }
+      : {};
+
+    const where = {
+      memberId: userId,
+      memberType: userType,
+      community: {
+        status: "active" as const,
+        ...communitySearchClause,
+      },
+    };
+
+    const [memberships, total] = await prisma.$transaction([
+      prisma.communityMember.findMany({
         where,
-        orderBy: [{ memberCount: "desc" }, { createdAt: "desc" }],
+        include: {
+          community: true,
+        },
+        orderBy: [{ joinedAt: "desc" }],
         skip,
         take,
       }),
-      prisma.community.count({ where }),
+      prisma.communityMember.count({ where }),
     ]);
 
+    const data = memberships.map((membership) => ({
+      ...membership.community,
+      isJoined: true,
+    }));
+
     return { data, total };
+  }
+
+  static async listCreatedWithJoinStatus(
+    skip: number,
+    take: number,
+    userId: string,
+    userType: string,
+    search?: string,
+  ) {
+    const searchClause = search
+      ? {
+          name: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        }
+      : {};
+
+    const where = {
+      createdById: userId,
+      createdByType: userType,
+      ...searchClause,
+    };
+
+    return prisma.$transaction(async (tx) => {
+      const [communities, total] = await Promise.all([
+        tx.community.findMany({
+          where,
+          orderBy: [{ createdAt: "desc" }],
+          skip,
+          take,
+        }),
+        tx.community.count({ where }),
+      ]);
+
+      const communityIds = communities.map((community) => community.id);
+
+      const memberships =
+        communityIds.length > 0
+          ? await tx.communityMember.findMany({
+              where: {
+                communityId: { in: communityIds },
+                memberId: userId,
+                memberType: userType,
+              },
+              select: {
+                communityId: true,
+              },
+            })
+          : [];
+
+      const joinedCommunityIds = new Set(
+        memberships.map((membership) => membership.communityId),
+      );
+
+      const data = communities.map((community) => ({
+        ...community,
+        isJoined: joinedCommunityIds.has(community.id),
+      }));
+
+      return { data, total };
+    });
   }
 
   static async listForAdmin(

@@ -17,6 +17,7 @@ auth:bearer {
 query {
   page: 1
   limit: 10
+  search: 
 }
 
 headers {
@@ -24,6 +25,7 @@ headers {
 }
 
 docs {
-  Lists active communities for logged-in staff user.
+  Lists communities with pagination and optional search.
+  Response includes iconUrl, coverImageUrl, and isJoined fields.
   Requires college-admin login token (staffToken).
 }

@@ -31,12 +31,78 @@ export class CommunityService {
     });
   }
 
-  static async list(filters: ListCommunitiesQuery) {
+  static async list(
+    filters: ListCommunitiesQuery,
+    userId: string,
+    userType: string,
+  ) {
     const page = filters.page;
     const limit = filters.limit;
     const skip = (page - 1) * limit;
 
-    const result = await CommunityRepository.listActive(skip, limit);
+    const result = await CommunityRepository.listVisibleWithJoinStatus(
+      skip,
+      limit,
+      userId,
+      userType,
+      filters.search,
+    );
+
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        hasNext: page * limit < result.total,
+      },
+    };
+  }
+
+  static async listJoinedCommunities(
+    filters: ListCommunitiesQuery,
+    userId: string,
+    userType: string,
+  ) {
+    const page = filters.page;
+    const limit = filters.limit;
+    const skip = (page - 1) * limit;
+
+    const result = await CommunityRepository.listJoinedWithSearch(
+      skip,
+      limit,
+      userId,
+      userType,
+      filters.search,
+    );
+
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        hasNext: page * limit < result.total,
+      },
+    };
+  }
+
+  static async listMyCreatedCommunities(
+    filters: ListCommunitiesQuery,
+    userId: string,
+    userType: string,
+  ) {
+    const page = filters.page;
+    const limit = filters.limit;
+    const skip = (page - 1) * limit;
+
+    const result = await CommunityRepository.listCreatedWithJoinStatus(
+      skip,
+      limit,
+      userId,
+      userType,
+      filters.search,
+    );
 
     return {
       data: result.data,

@@ -5,6 +5,8 @@ import { CommunityCollegeAdminController } from "../controllers/college-admin.co
 const router: Router = Router();
 
 router.get("/", authenticate, CommunityCollegeAdminController.list);
+router.get("/joined", authenticate, CommunityCollegeAdminController.listJoined);
+router.get("/my", authenticate, CommunityCollegeAdminController.listMyCreated);
 router.get(
   "/:id/posts",
   authenticate,

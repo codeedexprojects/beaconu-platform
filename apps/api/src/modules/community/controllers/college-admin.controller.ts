@@ -6,12 +6,54 @@ import { CommunitySchema } from "../validators/community.validator";
 export class CommunityCollegeAdminController {
   static async list(req: Request, res: Response): Promise<void> {
     const filters = CommunitySchema.listQuery.parse(req.query);
-    const result = await CommunityService.list(filters);
+    const result = await CommunityService.list(
+      filters,
+      req.userId!,
+      req.userType!,
+    );
 
     res
       .status(200)
       .json(
         ApiResponse.success("Communities fetched", result.data, result.meta),
+      );
+  }
+
+  static async listJoined(req: Request, res: Response): Promise<void> {
+    const filters = CommunitySchema.listQuery.parse(req.query);
+    const result = await CommunityService.listJoinedCommunities(
+      filters,
+      req.userId!,
+      req.userType!,
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Joined communities fetched",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  static async listMyCreated(req: Request, res: Response): Promise<void> {
+    const filters = CommunitySchema.listQuery.parse(req.query);
+    const result = await CommunityService.listMyCreatedCommunities(
+      filters,
+      req.userId!,
+      req.userType!,
+    );
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "My created communities fetched",
+          result.data,
+          result.meta,
+        ),
       );
   }
 
