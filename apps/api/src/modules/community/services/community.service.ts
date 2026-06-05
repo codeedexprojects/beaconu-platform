@@ -299,6 +299,8 @@ export class CommunityService {
   static async listCommunityPosts(
     communityId: string,
     filters: ListCommunityPostsQuery,
+    userId: string,
+    userType: string,
   ) {
     const community = await CommunityRepository.findById(communityId);
 
@@ -314,6 +316,8 @@ export class CommunityService {
       communityId,
       skip,
       limit,
+      userId,
+      userType,
     );
 
     return {
@@ -341,6 +345,58 @@ export class CommunityService {
     }
 
     return CommunityRepository.incrementShareCount(postId);
+  }
+
+  static async likePost(
+    communityId: string,
+    postId: string,
+    userId: string,
+    userType: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    return CommunityRepository.applyPostVote(
+      postId,
+      userId,
+      userType,
+      "upvote",
+    );
+  }
+
+  static async dislikePost(
+    communityId: string,
+    postId: string,
+    userId: string,
+    userType: string,
+  ) {
+    const community = await CommunityRepository.findById(communityId);
+
+    if (!community) {
+      throw new NotFoundError("Community not found");
+    }
+
+    const post = await CommunityRepository.findPostById(postId);
+
+    if (!post || post.communityId !== communityId || post.status !== "active") {
+      throw new NotFoundError("Post not found");
+    }
+
+    return CommunityRepository.applyPostVote(
+      postId,
+      userId,
+      userType,
+      "downvote",
+    );
   }
 
   static async createComment(

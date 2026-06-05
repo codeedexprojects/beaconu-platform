@@ -1,0 +1,29 @@
+meta {
+  name: Dislike Post
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/dislike
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  communityId: CMT-1
+  communityPostId: CPT-1
+}
+
+docs {
+  Adds a downvote to a community post for the current user.
+  Set communityId and communityPostId env vars before calling.
+}

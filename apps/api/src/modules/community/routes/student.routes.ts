@@ -17,6 +17,16 @@ router.post(
   CommunityStudentController.sharePost,
 );
 router.post(
+  "/:id/posts/:postId/like",
+  authenticate,
+  CommunityStudentController.likePost,
+);
+router.post(
+  "/:id/posts/:postId/dislike",
+  authenticate,
+  CommunityStudentController.dislikePost,
+);
+router.post(
   "/:id/posts/:postId/comments",
   authenticate,
   CommunityStudentController.createComment,

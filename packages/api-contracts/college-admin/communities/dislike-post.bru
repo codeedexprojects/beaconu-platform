@@ -1,0 +1,24 @@
+meta {
+  name: Dislike Post
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}/posts/{{communityPostId}}/dislike
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Adds a downvote to a community post for the current user.
+  Set communityId and communityPostId env vars before calling.
+}

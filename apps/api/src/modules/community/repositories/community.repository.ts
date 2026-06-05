@@ -220,6 +220,8 @@ export class CommunityRepository {
     communityId: string,
     skip: number,
     take: number,
+    userId: string,
+    userType: string,
   ) {
     const where = {
       communityId,
@@ -231,6 +233,16 @@ export class CommunityRepository {
         where,
         orderBy: [{ createdAt: "desc" }],
         include: {
+          votes: {
+            where: {
+              voterId: userId,
+              voterType: userType,
+            },
+            select: {
+              voteType: true,
+            },
+            take: 1,
+          },
           comments: {
             where: {
               status: "active",
@@ -253,7 +265,180 @@ export class CommunityRepository {
       prisma.communityPost.count({ where }),
     ]);
 
-    return { data, total };
+    // Collect all unique author identifiers (posts + comments + replies)
+    const authorKeys = new Map<string, { id: string; type: string }>();
+
+    for (const post of data) {
+      const postKey = `${post.authorType}:${post.authorId}`;
+      if (!authorKeys.has(postKey)) {
+        authorKeys.set(postKey, {
+          id: post.authorId,
+          type: post.authorType,
+        });
+      }
+
+      for (const comment of post.comments) {
+        const commentKey = `${comment.authorType}:${comment.authorId}`;
+        if (!authorKeys.has(commentKey)) {
+          authorKeys.set(commentKey, {
+            id: comment.authorId,
+            type: comment.authorType,
+          });
+        }
+
+        for (const reply of comment.replies) {
+          const replyKey = `${reply.authorType}:${reply.authorId}`;
+          if (!authorKeys.has(replyKey)) {
+            authorKeys.set(replyKey, {
+              id: reply.authorId,
+              type: reply.authorType,
+            });
+          }
+        }
+      }
+    }
+
+    // Batch-resolve author profiles (avatarUrl, fullName) by type
+    const authorProfiles = await this.resolveAuthorProfiles(
+      Array.from(authorKeys.values()),
+    );
+
+    const formattedData = data.map((post) => {
+      const currentUserVote = post.votes[0]?.voteType ?? null;
+      const postAuthorKey = `${post.authorType}:${post.authorId}`;
+      const postAuthor = authorProfiles.get(postAuthorKey);
+
+      const enrichedComments = post.comments.map((comment) => {
+        const commentAuthorKey = `${comment.authorType}:${comment.authorId}`;
+        const commentAuthor = authorProfiles.get(commentAuthorKey);
+
+        const enrichedReplies = comment.replies.map((reply) => {
+          const replyAuthorKey = `${reply.authorType}:${reply.authorId}`;
+          const replyAuthor = authorProfiles.get(replyAuthorKey);
+          return {
+            ...reply,
+            authorName: replyAuthor?.fullName ?? null,
+            authorAvatarUrl: replyAuthor?.avatarUrl ?? null,
+          };
+        });
+
+        return {
+          ...comment,
+          authorName: commentAuthor?.fullName ?? null,
+          authorAvatarUrl: commentAuthor?.avatarUrl ?? null,
+          replies: enrichedReplies,
+        };
+      });
+
+      const { votes, ...postWithoutVotes } = post;
+
+      return {
+        ...postWithoutVotes,
+        currentUserVote,
+        isLiked: currentUserVote === "upvote",
+        isDisliked: currentUserVote === "downvote",
+        upvoteCount: post.upvoteCount,
+        downvoteCount: post.downvoteCount,
+        authorName: postAuthor?.fullName ?? null,
+        authorAvatarUrl: postAuthor?.avatarUrl ?? null,
+        comments: enrichedComments,
+      };
+    });
+
+    return { data: formattedData, total };
+  }
+
+  /**
+   * Batch-resolve author profiles from polymorphic user tables.
+   * Groups author IDs by type, queries each table once, and returns a
+   * Map keyed by "type:id" with { fullName, avatarUrl }.
+   */
+  private static async resolveAuthorProfiles(
+    authors: { id: string; type: string }[],
+  ): Promise<Map<string, { fullName: string; avatarUrl: string | null }>> {
+    const byType = new Map<string, string[]>();
+    for (const author of authors) {
+      const ids = byType.get(author.type) ?? [];
+      ids.push(author.id);
+      byType.set(author.type, ids);
+    }
+
+    const result = new Map<
+      string,
+      { fullName: string; avatarUrl: string | null }
+    >();
+
+    const studentIds = byType.get("student") ?? [];
+    if (studentIds.length > 0) {
+      const students = await prisma.student.findMany({
+        where: { id: { in: studentIds } },
+        select: { id: true, fullName: true, avatarUrl: true },
+      });
+      for (const s of students) {
+        result.set(`student:${s.id}`, {
+          fullName: s.fullName,
+          avatarUrl: s.avatarUrl,
+        });
+      }
+    }
+
+    const staffIds = byType.get("staff") ?? [];
+    if (staffIds.length > 0) {
+      const staff = await prisma.staffMember.findMany({
+        where: { id: { in: staffIds } },
+        select: { id: true, fullName: true, avatarUrl: true },
+      });
+      for (const s of staff) {
+        result.set(`staff:${s.id}`, {
+          fullName: s.fullName,
+          avatarUrl: s.avatarUrl,
+        });
+      }
+    }
+
+    const platformAdminIds = byType.get("platform_admin") ?? [];
+    if (platformAdminIds.length > 0) {
+      const admins = await prisma.platformAdmin.findMany({
+        where: { id: { in: platformAdminIds } },
+        select: { id: true, fullName: true, avatarUrl: true },
+      });
+      for (const a of admins) {
+        result.set(`platform_admin:${a.id}`, {
+          fullName: a.fullName,
+          avatarUrl: a.avatarUrl,
+        });
+      }
+    }
+
+    const blinkIds = byType.get("blink") ?? [];
+    if (blinkIds.length > 0) {
+      const blinkUsers = await prisma.blinkUser.findMany({
+        where: { id: { in: blinkIds } },
+        select: { id: true, fullName: true, avatarUrl: true },
+      });
+      for (const b of blinkUsers) {
+        result.set(`blink:${b.id}`, {
+          fullName: b.fullName,
+          avatarUrl: b.avatarUrl,
+        });
+      }
+    }
+
+    const counsellorIds = byType.get("counsellor") ?? [];
+    if (counsellorIds.length > 0) {
+      const counsellors = await prisma.counsellor.findMany({
+        where: { id: { in: counsellorIds } },
+        select: { id: true, fullName: true, avatarUrl: true },
+      });
+      for (const c of counsellors) {
+        result.set(`counsellor:${c.id}`, {
+          fullName: c.fullName,
+          avatarUrl: c.avatarUrl,
+        });
+      }
+    }
+
+    return result;
   }
 
   static async hasMembership(
@@ -414,6 +599,112 @@ export class CommunityRepository {
           increment: 1,
         },
       },
+    });
+  }
+
+  static async applyPostVote(
+    postId: string,
+    voterId: string,
+    voterType: string,
+    voteType: "upvote" | "downvote",
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const existingVote = await tx.communityPostVote.findFirst({
+        where: {
+          postId,
+          voterId,
+          voterType,
+        },
+        select: {
+          id: true,
+          voteType: true,
+        },
+      });
+
+      if (!existingVote) {
+        await tx.communityPostVote.create({
+          data: {
+            postId,
+            voterId,
+            voterType,
+            voteType,
+          },
+        });
+
+        const post = await tx.communityPost.update({
+          where: { id: postId },
+          data:
+            voteType === "upvote"
+              ? {
+                  upvoteCount: {
+                    increment: 1,
+                  },
+                }
+              : {
+                  downvoteCount: {
+                    increment: 1,
+                  },
+                },
+        });
+
+        return {
+          ...post,
+          currentUserVote: voteType,
+          isLiked: voteType === "upvote",
+          isDisliked: voteType === "downvote",
+        };
+      }
+
+      if (existingVote.voteType === voteType) {
+        const post = await tx.communityPost.findUnique({
+          where: { id: postId },
+        });
+
+        if (!post) {
+          return null;
+        }
+
+        return {
+          ...post,
+          currentUserVote: existingVote.voteType,
+          isLiked: existingVote.voteType === "upvote",
+          isDisliked: existingVote.voteType === "downvote",
+        };
+      }
+
+      await tx.communityPostVote.update({
+        where: { id: existingVote.id },
+        data: { voteType },
+      });
+
+      const post = await tx.communityPost.update({
+        where: { id: postId },
+        data:
+          voteType === "upvote"
+            ? {
+                upvoteCount: {
+                  increment: 1,
+                },
+                downvoteCount: {
+                  decrement: 1,
+                },
+              }
+            : {
+                upvoteCount: {
+                  decrement: 1,
+                },
+                downvoteCount: {
+                  increment: 1,
+                },
+              },
+      });
+
+      return {
+        ...post,
+        currentUserVote: voteType,
+        isLiked: voteType === "upvote",
+        isDisliked: voteType === "downvote",
+      };
     });
   }
 
