@@ -26,10 +26,7 @@ const onboardingSchema = z.object({
   contact_phone: z
     .string()
     .trim()
-    .optional()
-    .refine((val) => !val || /^\+?[\d\s-]{10,15}$/.test(val), {
-      message: "Please enter a valid phone number",
-    }),
+    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   city: z.string().trim().optional(),
   state: z.string().trim().optional(),
   message: z.string().trim().optional(),
@@ -394,9 +391,17 @@ export default function HomePage(): React.JSX.Element {
                     </label>
                     <input
                       id="contact_phone"
+                      type="tel"
+                      maxLength={10}
+                      inputMode="numeric"
                       {...register("contact_phone")}
                       className={`form-input ${errors.contact_phone ? "error" : ""}`}
-                      placeholder="+91 98765 43210"
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(
+                          /\D/g,
+                          "",
+                        );
+                      }}
                     />
                     {errors.contact_phone && (
                       <span className="error-text">

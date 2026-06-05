@@ -1043,7 +1043,7 @@ export default function UniversitiesPage() {
                   context="university-covers"
                 />
                 <ImageUpload
-                  label="Logo (optional)"
+                  label="Logo "
                   value={createForm.logo_url ?? ""}
                   onChange={(url) =>
                     setCreateForm((prev) => ({ ...prev, logo_url: url }))
@@ -1785,7 +1785,7 @@ export default function UniversitiesPage() {
                   />
                 </div>
                 <ImageUpload
-                  label="Cover Image (optional)"
+                  label="Cover Image "
                   value={editForm.cover_url ?? ""}
                   onChange={(url) =>
                     setEditForm((prev) => ({ ...prev, cover_url: url }))
@@ -1793,7 +1793,7 @@ export default function UniversitiesPage() {
                   context="university-covers"
                 />
                 <ImageUpload
-                  label="Logo (optional)"
+                  label="Logo"
                   value={editForm.logo_url ?? ""}
                   onChange={(url) =>
                     setEditForm((prev) => ({ ...prev, logo_url: url }))

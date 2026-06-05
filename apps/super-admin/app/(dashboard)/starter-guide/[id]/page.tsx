@@ -214,7 +214,7 @@ export default function StarterGuideVideoDetailPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Replace Video (optional)</Label>
+            <Label>Replace Video </Label>
             <div
               className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => fileRef.current?.click()}

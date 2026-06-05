@@ -6312,7 +6312,7 @@ export default function SetupProfilePage() {
                     className="flex items-center gap-2"
                   >
                     <Building className="h-4 w-4 text-primary" />
-                    Institution Group Join Code (Optional)
+                    Institution Group Join Code
                   </Label>
                   <p className="text-xs text-muted-foreground mb-2">
                     If you are joining an existing group of colleges, enter the
@@ -12669,7 +12669,7 @@ export default function SetupProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Campus (optional)</Label>
+                    <Label>Campus </Label>
                     <select
                       className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={newOtherCourseForm.campusId}
@@ -12708,7 +12708,7 @@ export default function SetupProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Duration (optional)</Label>
+                    <Label>Duration </Label>
                     <Input
                       placeholder="e.g. 4 Years"
                       value={newOtherCourseForm.duration}
@@ -12722,7 +12722,7 @@ export default function SetupProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Eligibility (optional)</Label>
+                    <Label>Eligibility </Label>
                     <Input
                       placeholder="e.g. 10+2 with PCM"
                       value={newOtherCourseForm.eligibility}
@@ -12736,7 +12736,7 @@ export default function SetupProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Intake Capacity (optional)</Label>
+                    <Label>Intake Capacity </Label>
                     <Input
                       type="number"
                       value={newOtherCourseForm.intakeCapacity}
