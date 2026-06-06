@@ -469,6 +469,8 @@ export class CommunityService {
     communityId: string,
     postId: string,
     commentId: string,
+    userId: string,
+    userType: string,
   ) {
     const community = await CommunityRepository.findById(communityId);
 
@@ -488,7 +490,7 @@ export class CommunityService {
       throw new NotFoundError("Comment not found");
     }
 
-    return CommunityRepository.incrementCommentLikeCount(commentId);
+    return CommunityRepository.applyCommentLike(commentId, userId, userType);
   }
 
   static async deleteComment(

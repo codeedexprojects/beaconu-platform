@@ -8,6 +8,9 @@ const COUNSELLOR_SELECT = {
   avatarUrl: true,
   counsellorType: true,
   status: true,
+  rating: true,
+  knownLanguages: true,
+  sessionFee: true,
   lastLoginAt: true,
   createdAt: true,
 } as const;
@@ -37,7 +40,14 @@ export class CounsellingRepository {
 
   static async updateById(
     id: string,
-    data: { fullName?: string; phoneNumber?: string; avatarUrl?: string },
+    data: {
+      fullName?: string;
+      phoneNumber?: string;
+      avatarUrl?: string;
+      counsellorType?: string;
+      knownLanguages?: string;
+      sessionFee?: number;
+    },
   ) {
     return prisma.counsellor.update({
       where: { id },

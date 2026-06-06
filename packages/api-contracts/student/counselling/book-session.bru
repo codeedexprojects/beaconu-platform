@@ -1,0 +1,64 @@
+meta {
+  name: Book Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "availability_id": "{{availabilityId}}",
+    "session_mode": "video_call",
+    "session_type": "career",
+    "booking_reason": "Need guidance for higher studies"
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List Available Slots first and pick a slot id from time_slots array.");
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("sessionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Books a counselling session for the logged-in student.
+  Requires: student access token.
+
+  ## Required fields
+  - availability_id : slot id from time_slots[].id in List Available Slots response
+  - session_mode    : "voice_call" | "video_call"
+  - session_type    : "career" | "academic" | "personal" | "mental_health"
+  - booking_reason  : required, max 500 chars
+
+  ## Fee logic (no need to pass session_fee)
+  Fee is taken automatically from the slot's session_fee.
+  Falls back to counsellor's default fee if slot has no fee set.
+
+  ## Wallet
+  On successful booking, session_fee is credited directly to the counsellor's wallet.
+}

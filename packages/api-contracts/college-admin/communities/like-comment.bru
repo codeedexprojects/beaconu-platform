@@ -18,7 +18,20 @@ headers {
   Content-Type: application/json
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("communityCommentId", data.data.id);
+    }
+  }
+}
+
 docs {
-  Increments like count for a comment.
+  Toggles like on a comment (like if not liked, unlike if already liked).
   Set communityId, communityPostId, and communityCommentId env vars before calling.
+
+  Response includes:
+    - likeCount  (Int)     — updated like count after toggle
+    - isLiked    — derive from list-posts response; this endpoint returns the updated comment row
 }

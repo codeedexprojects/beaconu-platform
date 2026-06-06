@@ -10,6 +10,7 @@ model CounsellorAvailability {
   endTime             DateTime @map("end_time") @db.Time
   sessionDurationMins Int      @default(45) @map("session_duration_mins")
   isBooked            Boolean  @default(false) @map("is_booked")
+  sessionFee          Decimal  @default(0.0) @db.Decimal(10, 2) @map("session_fee")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -46,6 +47,8 @@ model CounsellingSession {
   cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz
   completedAt        DateTime? @map("completed_at") @db.Timestamptz
   sessionNotes       String?   @map("session_notes") @db.Text
+  rating             Int?      @map("rating")
+  ratingFeedback     String?   @map("rating_feedback") @db.Text
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
