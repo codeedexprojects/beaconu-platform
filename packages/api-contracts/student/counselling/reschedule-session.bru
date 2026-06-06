@@ -12,7 +12,7 @@ patch {
 
 headers {
   Content-Type: application/json
-  Authorization: Bearer {{accessToken}}
+  Authorization: Bearer {{studentAccessToken}}
 }
 
 body:json {
@@ -23,8 +23,13 @@ body:json {
 }
 
 script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
   const sessionId = bru.getEnvVar("sessionId");
   const availabilityId = bru.getEnvVar("availabilityId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
   if (!sessionId) {
     throw new Error("sessionId is not set. Run List Sessions first.");
   }

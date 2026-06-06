@@ -16,7 +16,15 @@ params:query {
 }
 
 headers {
-  Authorization: Bearer {{accessToken}}
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
 }
 
 script:post-response {
@@ -31,4 +39,10 @@ script:post-response {
 docs {
   Lists counselling sessions for logged-in student.
   Requires: student access token.
+
+  ## Response keys are snake_case
+  Example fields:
+  - session_mode, session_type, scheduled_date
+  - booking_reason, session_fee, payment_status
+  - student.full_name, counsellor.full_name
 }

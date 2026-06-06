@@ -24,4 +24,8 @@ script:pre-request {
 docs {
   Gets one session owned by logged-in counsellor.
   Requires: counsellor access token.
+
+  ## Response keys are snake_case
+  Includes: session_mode, session_type, scheduled_date, session_fee,
+  payment_status, booking_reason, and nested student/counsellor objects.
 }

@@ -1,17 +1,25 @@
 meta {
-  name: Get Session
+  name: Rate Session
   type: http
-  seq: 4
+  seq: 8
 }
 
-get {
-  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}
-  body: none
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}/rate
+  body: json
   auth: none
 }
 
 headers {
+  Content-Type: application/json
   Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "rating": 5,
+    "rating_feedback": "Highly recommend! Very helpful academic counselling session."
+  }
 }
 
 script:pre-request {
@@ -27,10 +35,7 @@ script:pre-request {
 }
 
 docs {
-  Returns one counselling session owned by the logged-in student.
-  Requires: student access token.
-
-  ## Response keys are snake_case
-  Includes: session_mode, session_type, scheduled_date, session_fee,
-  payment_status, booking_reason, and nested student/counsellor objects.
+  Rates a completed counselling session.
+  - `rating`: integer between 1 and 5 (inclusive).
+  - `rating_feedback`: optional text comment/notes.
 }

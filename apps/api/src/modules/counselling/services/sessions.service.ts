@@ -15,6 +15,7 @@ import {
   ListSlotsQueryInput,
   RescheduleSessionInput,
   UpdateMeetingInput,
+  RateSessionInput,
 } from "../validators/sessions.validator";
 
 function parseDateOnly(value: string): Date {
@@ -47,20 +48,237 @@ function ensureOwnsSession(
   }
 }
 
+function formatCounsellor(counsellor: any) {
+  if (!counsellor) return counsellor;
+  return {
+    id: counsellor.id,
+    full_name: counsellor.fullName,
+    avatar_url: counsellor.avatarUrl ?? null,
+    counsellor_type: counsellor.counsellorType,
+    phone_number: counsellor.phoneNumber,
+    email: counsellor.email,
+    status: counsellor.status,
+    rating: Number(counsellor.rating ?? 0.0),
+    known_languages: counsellor.knownLanguages,
+    session_fee: Number(counsellor.sessionFee ?? 0.0),
+    profile_metadata: counsellor.profileMetadata,
+    last_login_at: counsellor.lastLoginAt,
+    created_at: counsellor.createdAt,
+    updated_at: counsellor.updatedAt,
+  };
+}
+
+function formatStudent(student: any) {
+  if (!student) return student;
+  return {
+    id: student.id,
+    full_name: student.fullName,
+    avatar_url: student.avatarUrl ?? null,
+    email: student.email,
+  };
+}
+
+function formatAvailability(availability: any) {
+  if (!availability) return availability;
+  return {
+    id: availability.id,
+    counsellor_id: availability.counsellorId,
+    available_date: availability.availableDate,
+    start_time: availability.startTime,
+    end_time: availability.endTime,
+    session_duration_mins: availability.sessionDurationMins,
+    is_booked: availability.isBooked,
+    session_fee: Number(availability.sessionFee ?? 0),
+    created_at: availability.createdAt,
+    updated_at: availability.updatedAt,
+  };
+}
+
+function formatReschedule(reschedule: any) {
+  if (!reschedule) return reschedule;
+  return {
+    id: reschedule.id,
+    session_id: reschedule.sessionId,
+    rescheduled_by: reschedule.rescheduledBy,
+    from_date: reschedule.fromDate,
+    from_time: reschedule.fromTime,
+    to_availability_id: reschedule.toAvailabilityId,
+    to_date: reschedule.toDate,
+    to_time: reschedule.toTime,
+    reason: reschedule.reason,
+    created_at: reschedule.createdAt,
+  };
+}
+
+function formatWallet(wallet: any) {
+  if (!wallet) return wallet;
+  return {
+    id: wallet.id,
+    counsellor_id: wallet.counsellorId,
+    balance: Number(wallet.balance ?? 0),
+    total_earned: Number(wallet.totalEarned ?? 0),
+    total_withdrawn: Number(wallet.totalWithdrawn ?? 0),
+    created_at: wallet.createdAt,
+    updated_at: wallet.updatedAt,
+    transactions: Array.isArray(wallet.transactions)
+      ? wallet.transactions.map((txn: any) => ({
+          id: txn.id,
+          wallet_id: txn.walletId,
+          counsellor_id: txn.counsellorId,
+          type: txn.type,
+          amount: Number(txn.amount ?? 0),
+          description: txn.description,
+          session_id: txn.sessionId,
+          withdrawal_status: txn.withdrawalStatus,
+          bank_details: txn.bankDetails,
+          balance_after: Number(txn.balanceAfter ?? 0),
+          created_at: txn.createdAt,
+        }))
+      : undefined,
+  };
+}
+
+function formatSession(session: any) {
+  if (!session) return session;
+  return {
+    id: session.id,
+    status: session.status,
+    session_mode: session.sessionMode,
+    session_type: session.sessionType,
+    scheduled_date: session.scheduledDate,
+    start_time: session.startTime,
+    end_time: session.endTime,
+    booking_reason: session.bookingReason,
+    session_fee: session.sessionFee ? Number(session.sessionFee) : null,
+    payment_status: session.paymentStatus,
+    transaction_id: session.transactionId,
+    cancelled_by: session.cancelledBy,
+    cancellation_reason: session.cancellationReason,
+    cancelled_at: session.cancelledAt,
+    completed_at: session.completedAt,
+    session_notes: session.sessionNotes,
+    rating: session.rating,
+    rating_feedback: session.ratingFeedback,
+    created_at: session.createdAt,
+    updated_at: session.updatedAt,
+    student: formatStudent(session.student),
+    availability: formatAvailability(session.availability),
+    reschedules: Array.isArray(session.reschedules)
+      ? session.reschedules.map(formatReschedule)
+      : undefined,
+    counsellor: session.counsellor
+      ? formatCounsellor(session.counsellor)
+      : undefined,
+  };
+}
+
+function formatSlot(slot: any) {
+  if (!slot) return slot;
+  const fee =
+    slot.sessionFee ?? slot.session_fee ?? slot.counsellor?.sessionFee ?? 0;
+  return {
+    id: slot.id,
+    available_date: slot.availableDate,
+    start_time: slot.startTime,
+    end_time: slot.endTime,
+    session_duration_mins: slot.sessionDurationMins,
+    is_booked: slot.isBooked,
+    session_fee: Number(fee),
+    counsellor: slot.counsellor ? formatCounsellor(slot.counsellor) : undefined,
+  };
+}
+
+function groupSlotsByDate(formattedSlots: any[]) {
+  const map = new Map<string, any[]>();
+  for (const slot of formattedSlots) {
+    const dateObj =
+      slot.available_date instanceof Date
+        ? slot.available_date
+        : new Date(slot.available_date);
+    const dateKey = dateObj.toISOString().slice(0, 10);
+
+    if (!map.has(dateKey)) map.set(dateKey, []);
+    map.get(dateKey)!.push({
+      id: slot.id,
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      session_duration_mins: slot.session_duration_mins,
+      session_fee: slot.session_fee,
+      is_booked: slot.is_booked,
+    });
+  }
+
+  return Array.from(map.entries()).map(([date, time_slots]) => ({
+    date,
+    counsellor: formattedSlots.find(
+      (s) =>
+        (s.available_date instanceof Date
+          ? s.available_date
+          : new Date(s.available_date)
+        )
+          .toISOString()
+          .slice(0, 10) === date,
+    )?.counsellor,
+    time_slots,
+  }));
+}
+
 export class SessionService {
   static async addSlot(counsellorId: string, input: AddSlotInput) {
-    const startTime = parseTimeOnly(input.start_time);
-    const endTime = parseTimeOnly(input.end_time);
-    ensureStartBeforeEnd(startTime, endTime);
+    const counsellor = await prisma.counsellor.findUnique({
+      where: { id: counsellorId },
+      select: { sessionFee: true },
+    });
+
+    const finalFee =
+      input.session_fee !== undefined
+        ? input.session_fee
+        : Number(counsellor?.sessionFee ?? 0.0);
+
+    const dates: string[] = [];
+    if (input.available_dates && input.available_dates.length > 0) {
+      dates.push(...input.available_dates);
+    } else if (input.available_date) {
+      dates.push(input.available_date);
+    }
+
+    const times: Array<{ start_time: string; end_time: string }> = [];
+    if (input.time_slots && input.time_slots.length > 0) {
+      times.push(...input.time_slots);
+    } else if (input.start_time && input.end_time) {
+      times.push({ start_time: input.start_time, end_time: input.end_time });
+    }
+
+    if (dates.length === 0) {
+      throw new BadRequestError(
+        "available_date or available_dates is required",
+      );
+    }
+    if (times.length === 0) {
+      throw new BadRequestError("time slots are required");
+    }
+
+    const slotsToCreate = dates.flatMap((dateStr) => {
+      const availableDate = parseDateOnly(dateStr);
+      return times.map((t) => {
+        const startTime = parseTimeOnly(t.start_time);
+        const endTime = parseTimeOnly(t.end_time);
+        ensureStartBeforeEnd(startTime, endTime);
+        return {
+          counsellorId,
+          availableDate,
+          startTime,
+          endTime,
+          sessionDurationMins: input.session_duration_mins,
+          sessionFee: finalFee,
+        };
+      });
+    });
 
     try {
-      return await SessionRepository.createSlot({
-        counsellorId,
-        availableDate: parseDateOnly(input.available_date),
-        startTime,
-        endTime,
-        sessionDurationMins: input.session_duration_mins,
-      });
+      const createdSlots = await SessionRepository.createSlots(slotsToCreate);
+      const formatted = createdSlots.map(formatSlot);
+      return groupSlotsByDate(formatted);
     } catch (error) {
       const prismaCode =
         typeof error === "object" && error !== null && "code" in error
@@ -81,10 +299,25 @@ export class SessionService {
       ? parseDateOnly(query.from_date)
       : undefined;
 
-    return SessionRepository.listSlotsByCounsellor(counsellorId, fromDate, {
-      page: query.page,
-      limit: query.limit,
+    const counsellor = await prisma.counsellor.findUnique({
+      where: { id: counsellorId },
+      select: { sessionFee: true },
     });
+    const fee = Number(counsellor?.sessionFee ?? 0.0);
+
+    const slots = await SessionRepository.listSlotsByCounsellor(
+      counsellorId,
+      fromDate,
+      {
+        page: query.page,
+        limit: query.limit,
+      },
+    );
+
+    const formatted = slots.map((slot) =>
+      formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
+    );
+    return groupSlotsByDate(formatted);
   }
 
   static async listAvailableSlots(query: ListAvailableSlotsQueryInput) {
@@ -97,7 +330,7 @@ export class SessionService {
       throw new BadRequestError("from_date cannot be after to_date");
     }
 
-    return SessionRepository.listAvailableSlots(
+    const slots = await SessionRepository.listAvailableSlots(
       {
         counsellorId: query.counsellor_id,
         fromDate,
@@ -108,6 +341,8 @@ export class SessionService {
         limit: query.limit,
       },
     );
+
+    return groupSlotsByDate(slots.map(formatSlot));
   }
 
   static async bookSession(studentId: string, input: BookSessionInput) {
@@ -124,6 +359,18 @@ export class SessionService {
         throw new ConflictError("This slot is already booked");
       }
 
+      const counsellor = await tx.counsellor.findUnique({
+        where: { id: slot.counsellorId },
+        select: { sessionFee: true },
+      });
+
+      const finalFee =
+        slot.sessionFee && Number(slot.sessionFee) > 0
+          ? Number(slot.sessionFee)
+          : input.session_fee !== undefined
+            ? input.session_fee
+            : Number(counsellor?.sessionFee ?? 0.0);
+
       const session = await tx.counsellingSession.create({
         data: {
           studentId,
@@ -135,7 +382,8 @@ export class SessionService {
           startTime: slot.startTime,
           endTime: slot.endTime,
           bookingReason: input.booking_reason,
-          sessionFee: input.session_fee,
+          sessionFee: finalFee,
+          paymentStatus: "paid",
         },
       });
 
@@ -144,7 +392,40 @@ export class SessionService {
         data: { isBooked: true },
       });
 
-      return session;
+      if (finalFee > 0) {
+        await tx.counsellorWallet.upsert({
+          where: { counsellorId: slot.counsellorId },
+          create: {
+            counsellorId: slot.counsellorId,
+            balance: finalFee,
+            totalEarned: finalFee,
+            totalWithdrawn: 0,
+          },
+          update: {
+            balance: { increment: finalFee },
+            totalEarned: { increment: finalFee },
+          },
+        });
+
+        const wallet = await tx.counsellorWallet.findUniqueOrThrow({
+          where: { counsellorId: slot.counsellorId },
+        });
+
+        await tx.counsellorWalletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            counsellorId: slot.counsellorId,
+            type: "credit",
+            amount: finalFee,
+            description: "Session booking payment",
+            sessionId: session.id,
+            balanceAfter: wallet.balance,
+            bankDetails: {},
+          },
+        });
+      }
+
+      return formatSession(session);
     });
   }
 
@@ -152,20 +433,25 @@ export class SessionService {
     studentId: string,
     query: ListSlotsQueryInput,
   ) {
-    return SessionRepository.listSessionsByStudent(studentId, {
+    const sessions = await SessionRepository.listSessionsByStudent(studentId, {
       page: query.page,
       limit: query.limit,
     });
+    return sessions.map(formatSession);
   }
 
   static async listCounsellorSessions(
     counsellorId: string,
     query: ListSlotsQueryInput,
   ) {
-    return SessionRepository.listSessionsByCounsellor(counsellorId, {
-      page: query.page,
-      limit: query.limit,
-    });
+    const sessions = await SessionRepository.listSessionsByCounsellor(
+      counsellorId,
+      {
+        page: query.page,
+        limit: query.limit,
+      },
+    );
+    return sessions.map(formatSession);
   }
 
   static async getSessionForActor(
@@ -178,7 +464,7 @@ export class SessionService {
     }
 
     ensureOwnsSession(session, actor);
-    return session;
+    return formatSession(session);
   }
 
   static async cancelSession(
@@ -216,9 +502,39 @@ export class SessionService {
         where: { id: session.availabilityId },
         data: { isBooked: false },
       });
+
+      if (session.paymentStatus === "paid" && session.sessionFee) {
+        const amount = Number(session.sessionFee);
+        if (amount > 0) {
+          const wallet = await tx.counsellorWallet.findUnique({
+            where: { counsellorId: session.counsellorId },
+          });
+          if (wallet && Number(wallet.balance) >= amount) {
+            await tx.counsellorWallet.update({
+              where: { counsellorId: session.counsellorId },
+              data: { balance: { decrement: amount } },
+            });
+            const updatedWallet = await tx.counsellorWallet.findUniqueOrThrow({
+              where: { counsellorId: session.counsellorId },
+            });
+            await tx.counsellorWalletTransaction.create({
+              data: {
+                walletId: updatedWallet.id,
+                counsellorId: session.counsellorId,
+                type: "debit",
+                amount,
+                description: `Refund for cancelled session: ${sessionId}`,
+                sessionId: session.id,
+                balanceAfter: updatedWallet.balance,
+                bankDetails: {},
+              },
+            });
+          }
+        }
+      }
     });
 
-    return SessionRepository.findSessionById(sessionId);
+    return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
   static async rescheduleSession(
@@ -297,7 +613,7 @@ export class SessionService {
       });
     });
 
-    return SessionRepository.findSessionById(sessionId);
+    return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
   static async updateMeeting(
@@ -329,7 +645,7 @@ export class SessionService {
         : {}),
     });
 
-    return SessionRepository.findSessionById(sessionId);
+    return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
   static async completeSession(
@@ -362,21 +678,47 @@ export class SessionService {
         : {}),
     });
 
-    if (session.paymentStatus === "paid" && session.sessionFee) {
-      await SessionRepository.findOrCreateWallet(counsellorId);
-      await SessionRepository.creditWallet(
-        counsellorId,
-        Number(session.sessionFee),
-        sessionId,
-        "Session completion payout",
-      );
-    }
+    // Note: Session fee is credited to the counsellor's wallet at the time of booking.
+    // Hence, no additional credit is done upon session completion to avoid duplicate payments.
 
-    return SessionRepository.findSessionById(sessionId);
+    return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
   static async getWallet(counsellorId: string) {
     await SessionRepository.findOrCreateWallet(counsellorId);
-    return SessionRepository.getWallet(counsellorId);
+    const wallet = await SessionRepository.getWallet(counsellorId);
+    return formatWallet(wallet);
+  }
+
+  static async rateSession(
+    studentId: string,
+    sessionId: string,
+    input: RateSessionInput,
+  ) {
+    const session = await SessionRepository.findSessionById(sessionId);
+    if (!session) {
+      throw new NotFoundError("Session not found");
+    }
+
+    if (session.studentId !== studentId) {
+      throw new ForbiddenError("You can only rate your own sessions");
+    }
+
+    if (session.status !== "completed") {
+      throw new BadRequestError("Only completed sessions can be rated");
+    }
+
+    if (session.rating !== null) {
+      throw new BadRequestError("Session has already been rated");
+    }
+
+    return formatSession(
+      await SessionRepository.rateSessionAndRecalculateCounsellorRating(
+        sessionId,
+        session.counsellorId,
+        input.rating,
+        input.rating_feedback,
+      ),
+    );
   }
 }

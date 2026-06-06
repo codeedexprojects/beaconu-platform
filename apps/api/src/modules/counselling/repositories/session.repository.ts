@@ -38,8 +38,24 @@ export class SessionRepository {
     startTime: Date;
     endTime: Date;
     sessionDurationMins: number;
+    sessionFee?: number;
   }) {
     return prisma.counsellorAvailability.create({ data });
+  }
+
+  static async createSlots(
+    slots: Array<{
+      counsellorId: string;
+      availableDate: Date;
+      startTime: Date;
+      endTime: Date;
+      sessionDurationMins: number;
+      sessionFee: number;
+    }>,
+  ) {
+    return prisma.$transaction(
+      slots.map((slot) => prisma.counsellorAvailability.create({ data: slot })),
+    );
   }
 
   static async findSlotById(id: string) {
@@ -96,6 +112,9 @@ export class SessionRepository {
             fullName: true,
             avatarUrl: true,
             counsellorType: true,
+            rating: true,
+            sessionFee: true,
+            knownLanguages: true,
           },
         },
       },
@@ -133,7 +152,18 @@ export class SessionRepository {
       where: { id },
       include: {
         student: { select: { id: true, fullName: true, email: true } },
-        counsellor: { select: { id: true, fullName: true, email: true } },
+        counsellor: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            avatarUrl: true,
+            counsellorType: true,
+            rating: true,
+            sessionFee: true,
+            knownLanguages: true,
+          },
+        },
         availability: true,
         reschedules: { orderBy: { createdAt: "desc" } },
       },
@@ -154,6 +184,9 @@ export class SessionRepository {
             fullName: true,
             avatarUrl: true,
             counsellorType: true,
+            rating: true,
+            sessionFee: true,
+            knownLanguages: true,
           },
         },
         availability: true,
@@ -334,6 +367,51 @@ export class SessionRepository {
           take: 20,
         },
       },
+    });
+  }
+
+  /**
+   * Rates a counselling session and updates the counsellor's average rating.
+   * Runs in a transaction to guarantee data consistency.
+   */
+  static async rateSessionAndRecalculateCounsellorRating(
+    sessionId: string,
+    counsellorId: string,
+    rating: number,
+    ratingFeedback?: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Update the session rating
+      const updatedSession = await tx.counsellingSession.update({
+        where: { id: sessionId },
+        data: {
+          rating,
+          ratingFeedback,
+        },
+      });
+
+      // 2. Calculate the new average rating of the counsellor
+      const aggregateResult = await tx.counsellingSession.aggregate({
+        where: {
+          counsellorId,
+          rating: { not: null },
+        },
+        _avg: {
+          rating: true,
+        },
+      });
+
+      const average = aggregateResult._avg.rating ?? 0.0;
+
+      // 3. Update the counsellor's rating field
+      await tx.counsellor.update({
+        where: { id: counsellorId },
+        data: {
+          rating: average,
+        },
+      });
+
+      return updatedSession;
     });
   }
 }

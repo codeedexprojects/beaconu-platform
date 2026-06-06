@@ -23,9 +23,22 @@ export function validate(
       return;
     }
 
-    if (target === "body") req.body = result.data;
-    else if (target === "query") req.query = result.data as typeof req.query;
-    else req.params = result.data as typeof req.params;
+    if (target === "body") {
+      req.body = result.data;
+    } else if (target === "query") {
+      // In Express 5, req.query can be getter-only; mutate in place instead of reassigning.
+      const query = req.query as Record<string, unknown>;
+      for (const key of Object.keys(query)) {
+        delete query[key];
+      }
+      Object.assign(query, result.data as Record<string, unknown>);
+    } else {
+      const params = req.params as Record<string, unknown>;
+      for (const key of Object.keys(params)) {
+        delete params[key];
+      }
+      Object.assign(params, result.data as Record<string, unknown>);
+    }
 
     next();
   };

@@ -9,6 +9,7 @@ import {
   listSlotsQuerySchema,
   rescheduleSessionSchema,
   sessionIdParamsSchema,
+  rateSessionSchema,
 } from "../validators/sessions.validator";
 import { StudentSessionController } from "../controllers/session.controller";
 
@@ -62,6 +63,15 @@ router.patch(
   validate(sessionIdParamsSchema, "params"),
   validate(rescheduleSessionSchema),
   StudentSessionController.rescheduleSession,
+);
+
+router.post(
+  "/sessions/:id/rate",
+  authenticate,
+  authorizeUserType("student"),
+  validate(sessionIdParamsSchema, "params"),
+  validate(rateSessionSchema),
+  StudentSessionController.rateSession,
 );
 
 export default router;

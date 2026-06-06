@@ -2,10 +2,31 @@ import z from "zod";
 
 // Counsellor: add a slot
 export const addSlotSchema = z.object({
-  available_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD"),
-  start_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
-  end_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
+  available_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+    .optional(),
+  available_dates: z
+    .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD"))
+    .optional(),
+  start_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "HH:MM")
+    .optional(),
+  end_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "HH:MM")
+    .optional(),
+  time_slots: z
+    .array(
+      z.object({
+        start_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
+        end_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
+      }),
+    )
+    .optional(),
   session_duration_mins: z.number().int().min(15).max(120).default(45),
+  session_fee: z.coerce.number().min(0).optional(),
 });
 
 export const listSlotsQuerySchema = z.object({
@@ -34,10 +55,10 @@ export const listAvailableSlotsQuerySchema = z.object({
 // Student: book a session
 export const bookSessionSchema = z.object({
   availability_id: z.string().min(1),
-  session_mode: z.enum(["online", "offline"]),
+  session_mode: z.enum(["voice_call", "video_call"]),
   session_type: z.enum(["career", "academic", "personal", "mental_health"]),
-  booking_reason: z.string().max(500).optional(),
-  session_fee: z.coerce.number().positive().optional(),
+  booking_reason: z.string().min(1, "Booking reason is required").max(500),
+  session_fee: z.coerce.number().min(0).optional(),
 });
 
 // Student: reschedule
@@ -74,3 +95,10 @@ export type RescheduleSessionInput = z.infer<typeof rescheduleSessionSchema>;
 export type CancelSessionInput = z.infer<typeof cancelSessionSchema>;
 export type UpdateMeetingInput = z.infer<typeof updateMeetingSchema>;
 export type CompleteSessionInput = z.infer<typeof completeSessionSchema>;
+
+export const rateSessionSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  rating_feedback: z.string().max(1000).optional(),
+});
+
+export type RateSessionInput = z.infer<typeof rateSessionSchema>;

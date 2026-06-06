@@ -21,6 +21,24 @@ headers {
 }
 
 docs {
-  Lists availability slots for logged-in counsellor.
+  Lists availability slots for the logged-in counsellor, grouped by date.
   Requires: counsellor access token.
+
+  ## Response structure
+  data: [
+    {
+      "date": "2026-06-12",
+      "counsellor": null,
+      "time_slots": [
+        {
+          "id": "CNA-4",
+          "start_time": "10:00:00.000Z",
+          "end_time": "10:45:00.000Z",
+          "session_duration_mins": 45,
+          "session_fee": 499,
+          "is_booked": false
+        }
+      ]
+    }
+  ]
 }

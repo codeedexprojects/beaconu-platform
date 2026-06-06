@@ -31,6 +31,7 @@ script:post-response {
     if (data.data) {
       if (data.data.accessToken) {
         bru.setEnvVar("accessToken", data.data.accessToken);
+        bru.setEnvVar("studentAccessToken", data.data.accessToken);
       }
       if (data.data.refreshToken) {
         bru.setEnvVar("studentRefreshToken", data.data.refreshToken);

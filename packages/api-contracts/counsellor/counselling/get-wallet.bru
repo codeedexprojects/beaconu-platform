@@ -17,4 +17,8 @@ headers {
 docs {
   Returns counsellor wallet summary and recent transactions.
   Requires: counsellor access token.
+
+  ## Response keys are snake_case
+  - counsellor_id, total_earned, total_withdrawn, created_at, updated_at
+  - transactions[].wallet_id, session_id, withdrawal_status, balance_after
 }

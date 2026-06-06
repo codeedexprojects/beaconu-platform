@@ -17,23 +17,51 @@ headers {
 
 body:json {
   {
-    "available_date": "2026-06-10",
+    "available_date": "2026-06-12",
     "start_time": "10:00",
     "end_time": "10:45",
-    "session_duration_mins": 45
+    "session_duration_mins": 45,
+    "session_fee": 499
   }
 }
 
 script:post-response {
   if (res.status === 201) {
     const data = res.getBody();
-    if (data.data && data.data.id) {
-      bru.setEnvVar("availabilityId", data.data.id);
+    // Response is grouped by date: data.data[0].time_slots[0].id
+    if (Array.isArray(data.data) && data.data.length > 0) {
+      const firstDate = data.data[0];
+      if (firstDate.time_slots && firstDate.time_slots.length > 0) {
+        bru.setEnvVar("availabilityId", firstDate.time_slots[0].id);
+      }
     }
   }
 }
 
 docs {
-  Creates a counselling availability slot for the logged-in counsellor.
+  Creates one or more availability slots for the logged-in counsellor.
   Requires: counsellor access token.
+
+  ## Single slot
+  {
+    "available_date": "2026-06-12",
+    "start_time": "10:00",
+    "end_time": "10:45",
+    "session_duration_mins": 45,
+    "session_fee": 499
+  }
+
+  ## Bulk — multiple dates × multiple times
+  {
+    "available_dates": ["2026-06-12", "2026-06-13"],
+    "time_slots": [
+      { "start_time": "10:00", "end_time": "10:45" },
+      { "start_time": "11:00", "end_time": "11:45" }
+    ],
+    "session_duration_mins": 45,
+    "session_fee": 499
+  }
+
+  ## Response (always grouped by date)
+  session_fee is the per-slot fee. Falls back to counsellor's default if omitted.
 }

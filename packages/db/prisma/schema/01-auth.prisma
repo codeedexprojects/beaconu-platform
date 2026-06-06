@@ -292,6 +292,9 @@ model Counsellor {
   avatarUrl       String?   @map("avatar_url") @db.Text
   counsellorType  String    @map("counsellor_type") @db.VarChar(20)
   status          String    @default("active") @db.VarChar(20)
+  rating          Decimal   @default(0.0) @db.Decimal(2, 1) @map("rating")
+  knownLanguages  String?   @map("known_languages") @db.VarChar(255)
+  sessionFee      Decimal   @default(0.0) @db.Decimal(10, 2) @map("session_fee")
   profileMetadata Json      @default("{}") @map("profile_metadata")
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz

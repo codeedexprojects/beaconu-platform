@@ -27,6 +27,7 @@ script:post-response {
     if (data.data) {
       if (data.data.accessToken) {
         bru.setEnvVar("accessToken", data.data.accessToken);
+        bru.setEnvVar("studentAccessToken", data.data.accessToken);
       }
       if (data.data.refreshToken) {
         bru.setEnvVar("studentRefreshToken", data.data.refreshToken);
@@ -58,7 +59,7 @@ docs {
   Leave {{studentFcmToken}} empty if not testing push notifications.
 
   Response:
-  - accessToken: JWT (15 min), auto-captured into {{accessToken}}
+  - accessToken: JWT (15 min), auto-captured into {{accessToken}} and {{studentAccessToken}}
   - refreshToken: long-lived token (90 days), also set as httpOnly cookie,
                   auto-captured into {{studentRefreshToken}}
   - user: { id, fullName, email, avatarUrl }

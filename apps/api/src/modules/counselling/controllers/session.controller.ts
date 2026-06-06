@@ -152,4 +152,15 @@ export class StudentSessionController {
       .status(200)
       .json(ApiResponse.success("Session rescheduled", session));
   }
+
+  static async rateSession(req: Request, res: Response) {
+    const session = await SessionService.rateSession(
+      req.userId!,
+      req.params.id as string,
+      req.body,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Session rated successfully", session));
+  }
 }
