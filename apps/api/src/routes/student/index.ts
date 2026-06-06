@@ -8,6 +8,7 @@ import studentEntranceExamsRoutes from "@/modules/platform-admin/routes/entrance
 import studentFinancialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans-public.routes";
 import studentProfileRoutes from "@/modules/students/routes/student.routes";
 import studentUploadRoutes from "@/modules/upload/routes/student.routes";
+import studentCounsellingRoutes from "@/modules/counselling/routes/student.routes";
 
 const router: Router = Router();
 
@@ -17,6 +18,7 @@ router.use("/communities", studentCommunityRoutes);
 router.use("/news", studentNewsAlertsRoutes);
 router.use("/entrance-exams", studentEntranceExamsRoutes);
 router.use("/financial-aid/loans", studentFinancialAidLoansRoutes);
+router.use("/counselling", studentCounsellingRoutes);
 router.use("/", studentProfileRoutes);
 router.use("/uploads", studentUploadRoutes);
 

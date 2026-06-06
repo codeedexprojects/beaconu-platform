@@ -1,0 +1,39 @@
+meta {
+  name: Reschedule Session
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}/reschedule
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "new_availability_id": "{{availabilityId}}",
+    "reason": "Need an evening slot"
+  }
+}
+
+script:pre-request {
+  const sessionId = bru.getEnvVar("sessionId");
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run List Sessions first.");
+  }
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List Available Slots first.");
+  }
+}
+
+docs {
+  Reschedules a session to another slot of the same counsellor.
+  Requires: student access token.
+}

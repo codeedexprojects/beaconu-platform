@@ -1,0 +1,47 @@
+meta {
+  name: Book Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "availability_id": "{{availabilityId}}",
+    "session_mode": "online",
+    "session_type": "career",
+    "booking_reason": "Need guidance for higher studies",
+    "session_fee": 499
+  }
+}
+
+script:pre-request {
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List Available Slots first.");
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("sessionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Books a counselling session for the logged-in student.
+  Requires: student access token.
+}

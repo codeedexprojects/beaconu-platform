@@ -104,6 +104,7 @@ model CommunityComment {
   parentComment CommunityComment? @relation("CommentReplies", fields: [parentCommentId], references: [id] )
 
   replies CommunityComment[] @relation("CommentReplies")
+  likes   CommunityCommentLike[]
 
   @@index([postId, createdAt], name: "idx_comments_post")
   @@index([authorId], name: "idx_comments_author")
@@ -111,6 +112,22 @@ model CommunityComment {
 
   @@map("community_comments")
 }
+
+model CommunityCommentLike {
+  id        String   @id @default(dbgenerated("('CCL-'::text || (nextval('community_comment_like_seq'::regclass))::text)"))
+  commentId String   @map("comment_id")
+  likerId   String   @map("liker_id")
+  likerType String   @map("liker_type") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  comment CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, likerId, likerType], name: "uq_comment_like")
+  @@index([commentId], name: "idx_clikes_comment")
+  @@index([likerId], name: "idx_clikes_liker")
+  @@map("community_comment_likes")
+}
+
 model SquadSearch {
   id             String   @id @default(dbgenerated("('SQS-'::text || (nextval('squad_search_seq'::regclass))::text)"))
   studentId      String   @map("student_id")

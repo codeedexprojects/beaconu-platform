@@ -1,0 +1,27 @@
+meta {
+  name: Get Session
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/counsellor/sessions/{{sessionId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:pre-request {
+  const sessionId = bru.getEnvVar("sessionId");
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run List Sessions first.");
+  }
+}
+
+docs {
+  Gets one session owned by logged-in counsellor.
+  Requires: counsellor access token.
+}

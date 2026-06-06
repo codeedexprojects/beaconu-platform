@@ -1,0 +1,76 @@
+import z from "zod";
+
+// Counsellor: add a slot
+export const addSlotSchema = z.object({
+  available_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD"),
+  start_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
+  end_time: z.string().regex(/^\d{2}:\d{2}$/, "HH:MM"),
+  session_duration_mins: z.number().int().min(15).max(120).default(45),
+});
+
+export const listSlotsQuerySchema = z.object({
+  from_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+    .optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const listAvailableSlotsQuerySchema = z.object({
+  counsellor_id: z.string().min(1).optional(),
+  from_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+    .optional(),
+  to_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+    .optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+// Student: book a session
+export const bookSessionSchema = z.object({
+  availability_id: z.string().min(1),
+  session_mode: z.enum(["online", "offline"]),
+  session_type: z.enum(["career", "academic", "personal", "mental_health"]),
+  booking_reason: z.string().max(500).optional(),
+  session_fee: z.coerce.number().positive().optional(),
+});
+
+// Student: reschedule
+export const rescheduleSessionSchema = z.object({
+  new_availability_id: z.string().min(1),
+  reason: z.string().max(500).optional(),
+});
+
+// Student/Counsellor: cancel
+export const cancelSessionSchema = z.object({
+  cancellation_reason: z.string().max(500).optional(),
+});
+
+export const updateMeetingSchema = z.object({
+  meeting_url: z.string().url().optional(),
+  meeting_id: z.string().max(50).optional(),
+});
+
+export const completeSessionSchema = z.object({
+  session_notes: z.string().max(5000).optional(),
+});
+
+export const sessionIdParamsSchema = z.object({
+  id: z.string().min(1),
+});
+
+export type AddSlotInput = z.infer<typeof addSlotSchema>;
+export type ListSlotsQueryInput = z.infer<typeof listSlotsQuerySchema>;
+export type ListAvailableSlotsQueryInput = z.infer<
+  typeof listAvailableSlotsQuerySchema
+>;
+export type BookSessionInput = z.infer<typeof bookSessionSchema>;
+export type RescheduleSessionInput = z.infer<typeof rescheduleSessionSchema>;
+export type CancelSessionInput = z.infer<typeof cancelSessionSchema>;
+export type UpdateMeetingInput = z.infer<typeof updateMeetingSchema>;
+export type CompleteSessionInput = z.infer<typeof completeSessionSchema>;

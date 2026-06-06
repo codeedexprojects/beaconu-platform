@@ -234,27 +234,29 @@ export class CommunityRepository {
         orderBy: [{ createdAt: "desc" }],
         include: {
           votes: {
-            where: {
-              voterId: userId,
-              voterType: userType,
-            },
-            select: {
-              voteType: true,
-            },
+            where: { voterId: userId, voterType: userType },
+            select: { voteType: true },
             take: 1,
           },
           comments: {
-            where: {
-              status: "active",
-              parentCommentId: null,
-            },
+            where: { status: "active", parentCommentId: null },
             orderBy: [{ createdAt: "asc" }],
             include: {
+              likes: {
+                where: { likerId: userId, likerType: userType },
+                select: { id: true },
+                take: 1,
+              },
               replies: {
-                where: {
-                  status: "active",
-                },
+                where: { status: "active" },
                 orderBy: [{ createdAt: "asc" }],
+                include: {
+                  likes: {
+                    where: { likerId: userId, likerType: userType },
+                    select: { id: true },
+                    take: 1,
+                  },
+                },
               },
             },
           },
@@ -271,10 +273,7 @@ export class CommunityRepository {
     for (const post of data) {
       const postKey = `${post.authorType}:${post.authorId}`;
       if (!authorKeys.has(postKey)) {
-        authorKeys.set(postKey, {
-          id: post.authorId,
-          type: post.authorType,
-        });
+        authorKeys.set(postKey, { id: post.authorId, type: post.authorType });
       }
 
       for (const comment of post.comments) {
@@ -311,21 +310,33 @@ export class CommunityRepository {
       const enrichedComments = post.comments.map((comment) => {
         const commentAuthorKey = `${comment.authorType}:${comment.authorId}`;
         const commentAuthor = authorProfiles.get(commentAuthorKey);
+        const { likes: commentLikes, replies, ...commentRest } = comment;
 
-        const enrichedReplies = comment.replies.map((reply) => {
+        const enrichedReplies = replies.map((reply) => {
           const replyAuthorKey = `${reply.authorType}:${reply.authorId}`;
           const replyAuthor = authorProfiles.get(replyAuthorKey);
+          const { likes: replyLikes, ...replyRest } = reply;
           return {
-            ...reply,
+            ...replyRest,
             authorName: replyAuthor?.fullName ?? null,
             authorAvatarUrl: replyAuthor?.avatarUrl ?? null,
+            isOwnReply:
+              reply.authorId === userId && reply.authorType === userType,
+            isLiked: replyLikes.length > 0,
+            isComment: false,
+            isReplyComment: true,
           };
         });
 
         return {
-          ...comment,
+          ...commentRest,
           authorName: commentAuthor?.fullName ?? null,
           authorAvatarUrl: commentAuthor?.avatarUrl ?? null,
+          isOwnComment:
+            comment.authorId === userId && comment.authorType === userType,
+          isLiked: commentLikes.length > 0,
+          isComment: true,
+          isReplyComment: false,
           replies: enrichedReplies,
         };
       });
@@ -337,6 +348,7 @@ export class CommunityRepository {
         currentUserVote,
         isLiked: currentUserVote === "upvote",
         isDisliked: currentUserVote === "downvote",
+        isOwnPost: post.authorId === userId && post.authorType === userType,
         upvoteCount: post.upvoteCount,
         downvoteCount: post.downvoteCount,
         authorName: postAuthor?.fullName ?? null,
@@ -580,14 +592,33 @@ export class CommunityRepository {
     });
   }
 
-  static async incrementCommentLikeCount(commentId: string) {
-    return prisma.communityComment.update({
-      where: { id: commentId },
-      data: {
-        likeCount: {
-          increment: 1,
-        },
-      },
+  static async applyCommentLike(
+    commentId: string,
+    likerId: string,
+    likerType: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.communityCommentLike.findFirst({
+        where: { commentId, likerId, likerType },
+        select: { id: true },
+      });
+
+      if (existing) {
+        await tx.communityCommentLike.delete({ where: { id: existing.id } });
+        return tx.communityComment.update({
+          where: { id: commentId },
+          data: { likeCount: { decrement: 1 } },
+        });
+      }
+
+      await tx.communityCommentLike.create({
+        data: { commentId, likerId, likerType },
+      });
+
+      return tx.communityComment.update({
+        where: { id: commentId },
+        data: { likeCount: { increment: 1 } },
+      });
     });
   }
 
@@ -655,20 +686,23 @@ export class CommunityRepository {
         };
       }
 
+      // Same vote called again → toggle OFF (remove the vote)
       if (existingVote.voteType === voteType) {
-        const post = await tx.communityPost.findUnique({
-          where: { id: postId },
-        });
+        await tx.communityPostVote.delete({ where: { id: existingVote.id } });
 
-        if (!post) {
-          return null;
-        }
+        const post = await tx.communityPost.update({
+          where: { id: postId },
+          data:
+            voteType === "upvote"
+              ? { upvoteCount: { decrement: 1 } }
+              : { downvoteCount: { decrement: 1 } },
+        });
 
         return {
           ...post,
-          currentUserVote: existingVote.voteType,
-          isLiked: existingVote.voteType === "upvote",
-          isDisliked: existingVote.voteType === "downvote",
+          currentUserVote: null,
+          isLiked: false,
+          isDisliked: false,
         };
       }
 

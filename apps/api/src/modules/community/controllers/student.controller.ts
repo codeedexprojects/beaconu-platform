@@ -205,6 +205,8 @@ export class CommunityStudentController {
       params.id,
       params.postId,
       params.commentId,
+      req.userId!,
+      req.userType!,
     );
 
     res.status(200).json(ApiResponse.success("Comment liked", result));
