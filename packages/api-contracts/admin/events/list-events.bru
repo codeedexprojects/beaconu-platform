@@ -1,0 +1,50 @@
+meta {
+  name: List Events
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/events
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~status: published
+  ~category: webinar
+  ~event_mode: online
+  ~search:
+  ~is_free: true
+  ~has_recording: false
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("eventId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns all events with pagination and filters. Platform admin only.
+
+  Query Parameters:
+  - status: Filter by status — draft | published | cancelled | completed | archived (optional)
+  - category: Filter by category (optional)
+  - event_mode: Filter by mode — online | offline | hybrid (optional)
+  - search: Search in title (optional)
+  - is_free: Filter by free events — true | false (optional)
+  - has_recording: Filter by events with recordings — true | false (optional)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10, max: 50)
+}

@@ -1,0 +1,75 @@
+meta {
+  name: Create Event
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/events
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "Career Guidance Workshop 2025",
+    "description": "A comprehensive workshop on career planning and guidance for students exploring higher education options.",
+    "cover_image_url": "https://example.com/career-workshop.jpg",
+    "category": "workshop",
+    "speaker_name": "Dr. Priya Sharma",
+    "speaker_title": "Career Counsellor & Education Expert",
+    "organizer": "BeaconU",
+    "event_date": "2025-08-15",
+    "start_time": "10:00",
+    "end_time": "13:00",
+    "duration": "3 hours",
+    "event_mode": "offline",
+    "venue": "BeaconU Hub, Bangalore",
+    "is_free": true,
+    "ticket_price": 0,
+    "total_seats": 200
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("eventId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Create a new event as a platform admin. Saved as draft — publish separately via status update.
+
+  Body:
+  - title (required): Event title, max 255 chars
+  - description (optional): Full description text
+  - cover_image_url (optional): URL of the cover image
+  - category (required): Category — workshop, webinar, fair, seminar, etc.
+  - speaker_name (optional): Speaker full name
+  - speaker_title (optional): Speaker designation
+  - organizer (optional): Organizer name
+  - event_date (required): Event date in YYYY-MM-DD format
+  - start_time (optional): Start time in HH:MM format
+  - end_time (optional): End time in HH:MM format
+  - duration (optional): Human-readable duration string
+  - event_mode (required): online | offline | hybrid
+  - venue (optional): Physical venue address
+  - online_link (optional): Online meeting link
+  - is_free (optional, default: true): Whether event is free
+  - ticket_price (optional, default: 0): Price if not free
+  - total_seats (optional): Max seats, null = unlimited
+  - college_id (optional): Scope to a college
+  - status (optional): draft | published | cancelled | completed | archived
+  - has_recording (optional): true | false
+  - recording_url (optional): Recording URL
+  - recording_duration (optional): Recording duration label
+  - recorded_at (optional): Recording date YYYY-MM-DD
+}

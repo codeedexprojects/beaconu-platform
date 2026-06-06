@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { authenticate } from "@/shared/middleware/authenticate";
+import { authorizeUserType } from "@/shared/middleware/authorize";
 
 import studentAuthRoutes from "@/modules/auth/routes/student-auth.routes";
 import studentBlogRoutes from "@/modules/content/routes/student.routes";
@@ -9,6 +11,7 @@ import studentFinancialAidLoansRoutes from "@/modules/platform-admin/routes/fina
 import studentProfileRoutes from "@/modules/students/routes/student.routes";
 import studentUploadRoutes from "@/modules/upload/routes/student.routes";
 import studentCounsellingRoutes from "@/modules/counselling/routes/student.routes";
+import studentEventRoutes from "@/modules/events/routes/student.routes";
 
 const router: Router = Router();
 
@@ -19,7 +22,13 @@ router.use("/news", studentNewsAlertsRoutes);
 router.use("/entrance-exams", studentEntranceExamsRoutes);
 router.use("/financial-aid/loans", studentFinancialAidLoansRoutes);
 router.use("/counselling", studentCounsellingRoutes);
-router.use("/", studentProfileRoutes);
+router.use(
+  "/events",
+  authenticate,
+  authorizeUserType("student"),
+  studentEventRoutes,
+);
 router.use("/uploads", studentUploadRoutes);
+router.use("/", studentProfileRoutes);
 
 export default router;

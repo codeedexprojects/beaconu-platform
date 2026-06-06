@@ -40,4 +40,11 @@ export const QUERY_KEYS = {
       ? ["starter-guide-videos", params]
       : (["starter-guide-videos"] as const),
   starterGuideVideo: (id: string) => ["starter-guide-videos", id] as const,
+  events: (params?: object) =>
+    params ? ["events", params] : (["events"] as const),
+  event: (id: string) => ["events", id] as const,
+  eventRegistrations: (eventId: string, params?: object) =>
+    params
+      ? ["event-registrations", eventId, params]
+      : (["event-registrations", eventId] as const),
 } as const;

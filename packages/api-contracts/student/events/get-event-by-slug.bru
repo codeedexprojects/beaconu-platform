@@ -1,0 +1,39 @@
+meta {
+  name: Get Event Detail By Slug
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/events/slug/{{eventSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.slug) {
+      bru.setEnvVar("eventSlug", data.data.slug);
+    }
+  }
+}
+
+docs {
+  Get full details of a published/completed event by slug.
+  Student auth required.
+  Returns all event fields including is_joined and is_youtube_video.
+}

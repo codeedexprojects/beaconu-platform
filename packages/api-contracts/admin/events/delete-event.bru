@@ -1,0 +1,21 @@
+meta {
+  name: Delete Event (Soft)
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/events/{{eventId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes an event by archiving it. Platform admin only.
+  Sets status to "archived" — never physically deleted.
+}
