@@ -10,3 +10,4 @@ export * from "./students";
 export * from "./financial-aid";
 export * from "./starter-guide";
 export * from "./events";
+export * from "./counselling";

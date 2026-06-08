@@ -200,32 +200,32 @@ model EventRegistration {
 }
 
 model EducationLoan {
-  id                   String  @id @default(dbgenerated("('EDL-'::text || (nextval('education_loan_seq'::regclass))::text)"))
-  bankName             String  @map("bank_name") @db.VarChar(255)
-  bankLogoUrl          String? @map("bank_logo_url") @db.Text
-  productName          String  @map("product_name") @db.VarChar(255)
-  tag                  String? @db.VarChar(100)
-  interestRate         String  @map("interest_rate") @db.VarChar(100)
+  id                   String   @id @default(dbgenerated("('EDL-'::text || (nextval('education_loan_seq'::regclass))::text)"))
+  bankName             String   @map("bank_name") @db.VarChar(255)
+  bankLogoUrl          String?  @map("bank_logo_url") @db.Text
+  productName          String   @map("product_name") @db.VarChar(255)
+  tag                  String?  @db.VarChar(100)
+  interestRate         String   @map("interest_rate") @db.VarChar(100)
   interestRateMin      Decimal? @map("interest_rate_min") @db.Decimal(5, 2)
-  maxAmount            String  @map("max_amount") @db.VarChar(100)
-  moratorium           String  @db.VarChar(100)
-  processingFee        String  @map("processing_fee") @db.VarChar(100)
-  loanType             String  @map("loan_type") @db.VarChar(20)
-  status               String  @default("active") @db.VarChar(20)
-  sortOrder            Int     @default(0) @map("sort_order")
-  processingTime       String? @map("processing_time") @db.VarChar(100)
-  margin               String? @db.VarChar(100)
-  collateralAmount     String? @map("collateral_amount") @db.VarChar(100)
-  nonCollateralAmount  String? @map("non_collateral_amount") @db.VarChar(100)
-  repaymentTenure      String? @map("repayment_tenure") @db.VarChar(100)
-  requiresCosigner     Boolean @default(false) @map("requires_cosigner")
-  description          String? @db.Text
-  expensesCovered      Json    @default("[]") @map("expenses_covered")
-  eligibility          Json    @default("[]")
-  eligibleCourses      String? @map("eligible_courses") @db.Text
-  documentsApplicant   Json    @default("[]") @map("documents_applicant")
-  documentsCoApplicant Json    @default("[]") @map("documents_co_applicant")
-  helpfulVideos        Json    @default("[]") @map("helpful_videos")
+  maxAmount            String   @map("max_amount") @db.VarChar(100)
+  moratorium           String   @db.VarChar(100)
+  processingFee        String   @map("processing_fee") @db.VarChar(100)
+  loanType             String   @map("loan_type") @db.VarChar(20)
+  status               String   @default("active") @db.VarChar(20)
+  sortOrder            Int      @default(0) @map("sort_order")
+  processingTime       String?  @map("processing_time") @db.VarChar(100)
+  margin               String?  @db.VarChar(100)
+  collateralAmount     String?  @map("collateral_amount") @db.VarChar(100)
+  nonCollateralAmount  String?  @map("non_collateral_amount") @db.VarChar(100)
+  repaymentTenure      String?  @map("repayment_tenure") @db.VarChar(100)
+  requiresCosigner     Boolean  @default(false) @map("requires_cosigner")
+  description          String?  @db.Text
+  expensesCovered      Json     @default("[]") @map("expenses_covered")
+  eligibility          Json     @default("[]")
+  eligibleCourses      String?  @map("eligible_courses") @db.Text
+  documentsApplicant   Json     @default("[]") @map("documents_applicant")
+  documentsCoApplicant Json     @default("[]") @map("documents_co_applicant")
+  helpfulVideos        Json     @default("[]") @map("helpful_videos")
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

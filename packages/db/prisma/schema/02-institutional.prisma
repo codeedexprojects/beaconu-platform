@@ -86,25 +86,25 @@ model InstitutionGroupMember {
 }
 
 model College {
-  id              String   @id @default(dbgenerated("('CLG-'::text || (nextval('college_seq'::regclass))::text)"))
-  universityId    String   @map("university_id")
-  name            String   @db.VarChar(255)
-  slug            String   @unique @db.VarChar(100)
-  code            String   @unique @db.VarChar(20)
-  domain          String?  @db.VarChar(255)
-  logoUrl         String?  @map("logo_url") @db.Text
-  coverImageUrl   String?  @map("cover_image_url") @db.Text
-  state           String?  @db.VarChar(100)
-  city            String?  @db.VarChar(100)
-  district        String?  @db.VarChar(100)
-  address         String?  @db.Text
-  pinCode         String?  @map("pin_code") @db.VarChar(10)
-  status          String   @default("active") @db.VarChar(20)
-  requestedGroupCode String? @map("requested_group_code") @db.VarChar(30)
-  profileSections Json     @default("{}") @map("profile_sections")
-  settings        Json     @default("{}")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("('CLG-'::text || (nextval('college_seq'::regclass))::text)"))
+  universityId       String   @map("university_id")
+  name               String   @db.VarChar(255)
+  slug               String   @unique @db.VarChar(100)
+  code               String   @unique @db.VarChar(20)
+  domain             String?  @db.VarChar(255)
+  logoUrl            String?  @map("logo_url") @db.Text
+  coverImageUrl      String?  @map("cover_image_url") @db.Text
+  state              String?  @db.VarChar(100)
+  city               String?  @db.VarChar(100)
+  district           String?  @db.VarChar(100)
+  address            String?  @db.Text
+  pinCode            String?  @map("pin_code") @db.VarChar(10)
+  status             String   @default("active") @db.VarChar(20)
+  requestedGroupCode String?  @map("requested_group_code") @db.VarChar(30)
+  profileSections    Json     @default("{}") @map("profile_sections")
+  settings           Json     @default("{}")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   university                University                 @relation(fields: [universityId], references: [id])
@@ -227,7 +227,7 @@ model Stream {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  disciplines   Discipline[]
+  disciplines Discipline[]
 
   @@map("streams")
 }
@@ -243,8 +243,8 @@ model Discipline {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  stream        Stream        @relation(fields: [streamId], references: [id])
-  courses       Course[]
+  stream  Stream   @relation(fields: [streamId], references: [id])
+  courses Course[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")
@@ -261,7 +261,7 @@ model StudyLevel {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses       Course[]
+  courses Course[]
 
   @@map("study_levels")
 }
@@ -276,11 +276,10 @@ model ProgramType {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses       Course[]
+  courses Course[]
 
   @@map("program_types")
 }
-
 
 model Course {
   id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))

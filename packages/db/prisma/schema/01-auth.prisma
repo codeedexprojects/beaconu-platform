@@ -84,6 +84,7 @@ model PlatformAdmin {
   blogs                     Blog[]                     @relation("BlogReviewer")
   platformRole              PlatformRole?              @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
   collegeOnboardingRequests CollegeOnboardingRequest[]
+  counsellorRegistrationRequests CounsellorRegistrationRequest[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")

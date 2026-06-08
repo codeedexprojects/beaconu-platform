@@ -47,4 +47,9 @@ export const QUERY_KEYS = {
     params
       ? ["event-registrations", eventId, params]
       : (["event-registrations", eventId] as const),
+  counsellorRequests: (params?: object) =>
+    params
+      ? ["counsellor-requests", params]
+      : (["counsellor-requests"] as const),
+  counsellorRequest: (id: string) => ["counsellor-requests", id] as const,
 } as const;

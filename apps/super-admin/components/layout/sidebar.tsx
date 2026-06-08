@@ -192,6 +192,18 @@ const navSections: NavSection[] = [
         permission: "platform.admins.manage",
       },
       {
+        href: "/blink/academic-counsellor-requests",
+        label: "Academic Counsellor Requests",
+        icon: GraduationCap,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/blink/mindcare-counsellor-requests",
+        label: "MindCare Counsellor Requests",
+        icon: HeartHandshake,
+        permission: "counsellors.view",
+      },
+      {
         href: "/blink/users",
         label: "Blink Users",
         icon: Users,

@@ -1,0 +1,40 @@
+meta {
+  name: Update Counsellor Request Status
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/counsellor-requests/{{counsellorRequestId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "approved",
+    "review_remarks": "Qualifications verified — cleared to onboard."
+  }
+}
+
+script:pre-request {
+  const counsellorRequestId = bru.getEnvVar("counsellorRequestId");
+  if (!counsellorRequestId) {
+    throw new Error("counsellorRequestId is not set. Run List Counsellor Requests first.");
+  }
+}
+
+docs {
+  Approves or rejects a counsellor registration request.
+  Requires: super admin access token + counsellors.manage permission.
+
+  status: approved | rejected
+  review_remarks: optional reviewer note
+
+  Table: counsellor_registration_requests
+}

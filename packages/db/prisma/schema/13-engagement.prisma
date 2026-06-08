@@ -2,30 +2,30 @@
 // MODULE 13 — ENGAGEMENT
 // ============================================================
 
-  model Community {
-    id            String   @id @default(dbgenerated("('CMT-'::text || (nextval('community_seq'::regclass))::text)"))
-    name          String   @db.VarChar(255)
-    slug          String   @unique @db.VarChar(100)
-    description   String?  @db.Text
-    coverImageUrl String?  @map("cover_image_url") @db.Text
-    iconUrl       String?  @map("icon_url") @db.Text
-    createdById   String   @map("created_by_id")
-    createdByType String   @map("created_by_type") @db.VarChar(20)
-    memberCount   Int      @default(0) @map("member_count")
-    postCount     Int      @default(0) @map("post_count")
-    status        String   @default("active") @db.VarChar(20)
-    createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
-    updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+model Community {
+  id            String   @id @default(dbgenerated("('CMT-'::text || (nextval('community_seq'::regclass))::text)"))
+  name          String   @db.VarChar(255)
+  slug          String   @unique @db.VarChar(100)
+  description   String?  @db.Text
+  coverImageUrl String?  @map("cover_image_url") @db.Text
+  iconUrl       String?  @map("icon_url") @db.Text
+  createdById   String   @map("created_by_id")
+  createdByType String   @map("created_by_type") @db.VarChar(20)
+  memberCount   Int      @default(0) @map("member_count")
+  postCount     Int      @default(0) @map("post_count")
+  status        String   @default("active") @db.VarChar(20)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-    // Relations
-    members CommunityMember[]
-    posts   CommunityPost[]
+  // Relations
+  members CommunityMember[]
+  posts   CommunityPost[]
 
-    @@index([slug], name: "idx_communities_slug")
-    @@index([status], name: "idx_communities_status")
-    @@index([memberCount(sort: Desc)], name: "idx_communities_members")
-    @@map("communities")
-  }
+  @@index([slug], name: "idx_communities_slug")
+  @@index([status], name: "idx_communities_status")
+  @@index([memberCount(sort: Desc)], name: "idx_communities_members")
+  @@map("communities")
+}
 
 model CommunityMember {
   id          String   @id @default(dbgenerated("('CMM-'::text || (nextval('community_member_seq'::regclass))::text)"))
@@ -35,12 +35,11 @@ model CommunityMember {
   notifyMe    Boolean  @default(false) @map("notify_me")
   joinedAt    DateTime @default(now()) @map("joined_at") @db.Timestamptz
 
-  community Community @relation( fields: [communityId], references: [id], onDelete: Cascade )
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, memberType, memberId], name: "uq_community_member")
   @@index([communityId], name: "idx_cmembers_community")
   @@index([memberType, memberId], name: "idx_cmembers_member")
-
   @@map("community_members")
 }
 
@@ -79,9 +78,9 @@ model CommunityPostVote {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  post    CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@unique( [postId, voterId, voterType], name: "uq_post_vote" )
+  @@unique([postId, voterId, voterType], name: "uq_post_vote")
   @@index([postId], name: "idx_votes_post")
   @@index([voterId], name: "idx_votes_voter")
   @@map("community_post_votes")
@@ -99,17 +98,16 @@ model CommunityComment {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  post CommunityPost @relation( fields: [postId], references: [id], onDelete: Cascade )
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  parentComment CommunityComment? @relation("CommentReplies", fields: [parentCommentId], references: [id] )
+  parentComment CommunityComment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
 
-  replies CommunityComment[] @relation("CommentReplies")
+  replies CommunityComment[]     @relation("CommentReplies")
   likes   CommunityCommentLike[]
 
   @@index([postId, createdAt], name: "idx_comments_post")
   @@index([authorId], name: "idx_comments_author")
   @@index([parentCommentId], name: "idx_comments_parent")
-
   @@map("community_comments")
 }
 
