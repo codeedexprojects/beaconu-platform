@@ -1,0 +1,29 @@
+meta {
+  name: Update Event Status
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/events/{{eventId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "published"
+  }
+}
+
+docs {
+  Update the status of an event. Platform admin only.
+
+  Body:
+  - status (required): draft | published | cancelled | completed | archived
+}

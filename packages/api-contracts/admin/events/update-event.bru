@@ -1,0 +1,27 @@
+meta {
+  name: Update Event
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/events/{{eventId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "Updated Career Guidance Workshop 2025",
+    "total_seats": 300
+  }
+}
+
+docs {
+  Update event details. All fields are optional. Platform admin only.
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Cancel Registration
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/events/{{eventId}}/cancel
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Cancel the authenticated student's registration for an event.
+  Atomically decrements registered_count.
+
+  Errors:
+  - 404: Registration not found
+  - 409: Registration already cancelled
+}

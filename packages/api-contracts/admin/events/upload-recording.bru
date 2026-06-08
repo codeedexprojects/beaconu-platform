@@ -1,0 +1,35 @@
+meta {
+  name: Upload Recording
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/events/{{eventId}}/recording
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "recording_url": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/events/recordings/career-workshop-2025.mp4",
+    "is_youtube_video": false,
+    "recording_duration": "2h 45m",
+    "recorded_at": "2025-08-15"
+  }
+}
+
+docs {
+  Upload a recording for a completed event. Platform admin only.
+
+  Body:
+  - recording_url (required): URL of the recording file
+  - is_youtube_video (optional): true for YouTube links, false for non-YouTube links
+  - recording_duration (optional): Human-readable duration (e.g., "2h 45m")
+  - recorded_at (optional, default: today): Date recorded in YYYY-MM-DD format
+}

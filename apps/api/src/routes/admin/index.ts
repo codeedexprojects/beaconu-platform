@@ -18,6 +18,7 @@ import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-a
 import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-guide-videos.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
 import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
+import eventAdminRoutes from "@/modules/events/routes/platform-admin.routes";
 
 const router: Router = Router();
 
@@ -40,5 +41,6 @@ router.use("/blogs", adminBlogRoutes);
 router.use("/communities", platformAdminCommunityRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/uploads", platformAdminUploadRoutes);
+router.use("/events", eventAdminRoutes);
 
 export default router;
