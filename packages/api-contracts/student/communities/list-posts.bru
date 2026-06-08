@@ -51,15 +51,19 @@ docs {
     - comments[]        (Array)                    — top-level comments, each includes:
         - authorName      (String|null)
         - authorAvatarUrl (String|null)
+      - currentUserVote ("upvote"|null)         — current user's vote on this comment
         - isOwnComment    (Boolean)                — true if the requesting user authored this comment
         - isLiked         (Boolean)                — true if the requesting user has liked this comment
+      - isDisliked      (Boolean)                — always false for comments (dislike not supported)
         - isComment       (Boolean)                — always true for top-level comments
         - isReplyComment  (Boolean)                — always false for top-level comments
         - replies[]       (Array)                  — each reply includes:
             - authorName      (String|null)
             - authorAvatarUrl (String|null)
+        - currentUserVote ("upvote"|null)     — current user's vote on this reply
             - isOwnReply      (Boolean)            — true if the requesting user authored this reply
             - isLiked         (Boolean)            — true if the requesting user has liked this reply
+        - isDisliked      (Boolean)            — always false for replies (dislike not supported)
             - isComment       (Boolean)            — always false for replies
             - isReplyComment  (Boolean)            — always true for replies
 }

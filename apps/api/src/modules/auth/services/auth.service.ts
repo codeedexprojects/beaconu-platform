@@ -199,7 +199,7 @@ export class AuthService {
     const role = await AuthRepository.findBlinkRoleBySlug(
       BLINK_ROLES.ASSOCIATE_ADMIN,
     );
-    if (!role) throw new NotFoundError("Blink role not found");
+    if (!role) throw new NotFoundError("Blink role");
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -213,6 +213,10 @@ export class AuthService {
       agencyRegNumber: data.agency_reg_number,
       blinkRoleId: role.id,
       status: ACCOUNT_STATUS.PENDING_APPROVAL,
+      companyPan: data.companyPan,
+      currentAccNo: data.currentAccNo,
+      ifsc: data.ifsc,
+      gstin: data.gstin,
     });
 
     const userType = USER_TYPES.BLINK_ASSOCIATE as UserType;
@@ -237,6 +241,10 @@ export class AuthService {
         fullName: user.fullName,
         agencyName: user.agencyName,
         roleSlug: user.blinkRole.slug,
+        companyPan: user.companyPan,
+        currentAccNo: user.currentAccNo,
+        ifsc: user.ifsc,
+        gstin: user.gstin,
       },
       tokens: { accessToken, refreshToken: session.refreshToken },
     };
@@ -252,8 +260,7 @@ export class AuthService {
     const parentUser = await AuthRepository.findBlinkUserByRegNumberWithRole(
       data.agency_reg_number,
     );
-    if (!parentUser)
-      throw new NotFoundError("Agency registration number not found");
+    if (!parentUser) throw new NotFoundError("Agency registration number");
     if (parentUser.blinkRole.slug !== BLINK_ROLES.ASSOCIATE_ADMIN) {
       throw new ForbiddenError(
         "Target agency is not an associate admin account",
@@ -263,7 +270,7 @@ export class AuthService {
     const role = await AuthRepository.findBlinkRoleBySlug(
       BLINK_ROLES.ASSOCIATE_EMPLOYEE,
     );
-    if (!role) throw new NotFoundError("Blink role not found");
+    if (!role) throw new NotFoundError("Blink role");
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -720,7 +727,7 @@ export class AuthService {
     email: string,
   ): Promise<{ devOtp?: string }> {
     const user = await AuthRepository.findBlinkUserByEmail(email);
-    if (!user) throw new NotFoundError("No account found with this email");
+    if (!user) throw new NotFoundError("Account with this email");
     if (!user.phoneNumber)
       throw new ValidationError("No phone number on file for this account");
 
@@ -748,7 +755,7 @@ export class AuthService {
     }
 
     const user = await AuthRepository.findBlinkUserByEmail(email);
-    if (!user) throw new NotFoundError("User not found");
+    if (!user) throw new NotFoundError("User");
 
     otpStore.delete(key);
 

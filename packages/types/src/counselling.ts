@@ -34,3 +34,15 @@ export interface UpdateCounsellorRequestStatusInput {
   status: Extract<CounsellorRequestStatus, "approved" | "rejected">;
   review_remarks?: string;
 }
+
+// ─── Counselling Session DTOs ───────────────────────────────
+
+export type CounsellingSessionStatus = "booked" | "completed" | "cancelled";
+
+export interface ListCounsellingSessionsQuery {
+  page?: number;
+  limit?: number;
+  date?: string;
+  status?: CounsellingSessionStatus;
+  search?: string;
+}

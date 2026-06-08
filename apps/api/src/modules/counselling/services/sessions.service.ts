@@ -12,6 +12,7 @@ import {
   CancelSessionInput,
   CompleteSessionInput,
   ListAvailableSlotsQueryInput,
+  ListSessionsQueryInput,
   ListSlotsQueryInput,
   RescheduleSessionInput,
   UpdateMeetingInput,
@@ -431,21 +432,60 @@ export class SessionService {
 
   static async listStudentSessions(
     studentId: string,
-    query: ListSlotsQueryInput,
+    query: ListSessionsQueryInput,
   ) {
-    const sessions = await SessionRepository.listSessionsByStudent(studentId, {
-      page: query.page,
-      limit: query.limit,
-    });
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+
+    const sessions = await SessionRepository.listSessionsByStudent(
+      studentId,
+      {
+        date,
+        status: query.status,
+        search: query.search,
+      },
+      {
+        page: query.page,
+        limit: query.limit,
+      },
+    );
+    return sessions.map(formatSession);
+  }
+
+  static async listStudentSessionsByStatus(
+    studentId: string,
+    status: "booked" | "completed",
+    query: ListSessionsQueryInput,
+  ) {
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+
+    const sessions = await SessionRepository.listSessionsByStudent(
+      studentId,
+      {
+        date,
+        status,
+        search: query.search,
+      },
+      {
+        page: query.page,
+        limit: query.limit,
+      },
+    );
     return sessions.map(formatSession);
   }
 
   static async listCounsellorSessions(
     counsellorId: string,
-    query: ListSlotsQueryInput,
+    query: ListSessionsQueryInput,
   ) {
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+
     const sessions = await SessionRepository.listSessionsByCounsellor(
       counsellorId,
+      {
+        date,
+        status: query.status,
+        search: query.search,
+      },
       {
         page: query.page,
         limit: query.limit,

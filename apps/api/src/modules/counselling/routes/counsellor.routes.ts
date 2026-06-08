@@ -8,6 +8,7 @@ import {
   addSlotSchema,
   cancelSessionSchema,
   completeSessionSchema,
+  listSessionsQuerySchema,
   listSlotsQuerySchema,
   sessionIdParamsSchema,
   updateMeetingSchema,
@@ -50,7 +51,7 @@ router.get(
   "/sessions",
   authenticate,
   authorizeUserType("counsellor"),
-  validate(listSlotsQuerySchema, "query"),
+  validate(listSessionsQuerySchema, "query"),
   CounsellorSessionController.listSessions,
 );
 

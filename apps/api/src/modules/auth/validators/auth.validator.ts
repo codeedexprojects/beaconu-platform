@@ -42,6 +42,13 @@ export const registerAssociateAdminSchema = z
     agency_reg_number: z.string().trim().min(1),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
+    companyPan: z.string().trim().min(1, "Company PAN is required"),
+    currentAccNo: z
+      .string()
+      .trim()
+      .min(1, "Current Account Number is required"),
+    ifsc: z.string().trim().min(1, "IFSC is required"),
+    gstin: z.string().trim().optional(),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
