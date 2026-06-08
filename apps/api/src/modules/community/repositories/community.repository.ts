@@ -767,4 +767,65 @@ export class CommunityRepository {
       return post;
     });
   }
+
+  static async applyCommentLike(
+    commentId: string,
+    likerId: string,
+    likerType: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const existingLike = await tx.communityCommentLike.findFirst({
+        where: {
+          commentId,
+          likerId,
+          likerType,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (existingLike) {
+        await tx.communityCommentLike.delete({
+          where: { id: existingLike.id },
+        });
+
+        const comment = await tx.communityComment.update({
+          where: { id: commentId },
+          data: {
+            likeCount: {
+              decrement: 1,
+            },
+          },
+        });
+
+        return {
+          ...comment,
+          isLiked: false,
+        };
+      }
+
+      await tx.communityCommentLike.create({
+        data: {
+          commentId,
+          likerId,
+          likerType,
+        },
+      });
+
+      const comment = await tx.communityComment.update({
+        where: { id: commentId },
+        data: {
+          likeCount: {
+            increment: 1,
+          },
+        },
+      });
+
+      return {
+        ...comment,
+        isLiked: true,
+      };
+    });
+  }
 }

@@ -41,7 +41,7 @@ const schema = z.object({
   end_time: z.string().optional(),
   duration: z.string().trim().max(50).optional(),
   event_mode: z.enum(["online", "offline", "hybrid"], {
-    required_error: "Select an event mode",
+    message: "Select an event mode",
   }),
   venue: z.string().trim().max(255).optional(),
   online_link: z.string().url("Enter a valid URL").optional().or(z.literal("")),
