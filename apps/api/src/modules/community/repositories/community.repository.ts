@@ -250,11 +250,33 @@ export class CommunityRepository {
             },
             orderBy: [{ createdAt: "asc" }],
             include: {
+              likes: {
+                where: {
+                  likerId: userId,
+                  likerType: userType,
+                },
+                select: {
+                  id: true,
+                },
+                take: 1,
+              },
               replies: {
                 where: {
                   status: "active",
                 },
                 orderBy: [{ createdAt: "asc" }],
+                include: {
+                  likes: {
+                    where: {
+                      likerId: userId,
+                      likerType: userType,
+                    },
+                    select: {
+                      id: true,
+                    },
+                    take: 1,
+                  },
+                },
               },
             },
           },
@@ -307,25 +329,46 @@ export class CommunityRepository {
       const currentUserVote = post.votes[0]?.voteType ?? null;
       const postAuthorKey = `${post.authorType}:${post.authorId}`;
       const postAuthor = authorProfiles.get(postAuthorKey);
+      const isOwnPost =
+        post.authorId === userId && post.authorType === userType;
 
       const enrichedComments = post.comments.map((comment) => {
         const commentAuthorKey = `${comment.authorType}:${comment.authorId}`;
         const commentAuthor = authorProfiles.get(commentAuthorKey);
+        const commentCurrentUserVote =
+          comment.likes.length > 0 ? "upvote" : null;
+        const isOwnComment =
+          comment.authorId === userId && comment.authorType === userType;
 
         const enrichedReplies = comment.replies.map((reply) => {
           const replyAuthorKey = `${reply.authorType}:${reply.authorId}`;
           const replyAuthor = authorProfiles.get(replyAuthorKey);
+          const replyCurrentUserVote = reply.likes.length > 0 ? "upvote" : null;
+          const isOwnReply =
+            reply.authorId === userId && reply.authorType === userType;
+          const { likes: _replyLikes, ...replyWithoutLikes } = reply;
+
           return {
-            ...reply,
+            ...replyWithoutLikes,
             authorName: replyAuthor?.fullName ?? null,
             authorAvatarUrl: replyAuthor?.avatarUrl ?? null,
+            currentUserVote: replyCurrentUserVote,
+            isLiked: replyCurrentUserVote === "upvote",
+            isDisliked: false,
+            isOwnReply,
           };
         });
 
+        const { likes: _commentLikes, ...commentWithoutLikes } = comment;
+
         return {
-          ...comment,
+          ...commentWithoutLikes,
           authorName: commentAuthor?.fullName ?? null,
           authorAvatarUrl: commentAuthor?.avatarUrl ?? null,
+          currentUserVote: commentCurrentUserVote,
+          isLiked: commentCurrentUserVote === "upvote",
+          isDisliked: false,
+          isOwnComment,
           replies: enrichedReplies,
         };
       });
@@ -337,6 +380,7 @@ export class CommunityRepository {
         currentUserVote,
         isLiked: currentUserVote === "upvote",
         isDisliked: currentUserVote === "downvote",
+        isOwnPost,
         upvoteCount: post.upvoteCount,
         downvoteCount: post.downvoteCount,
         authorName: postAuthor?.fullName ?? null,
@@ -801,7 +845,9 @@ export class CommunityRepository {
 
         return {
           ...comment,
+          currentUserVote: null,
           isLiked: false,
+          isDisliked: false,
         };
       }
 
@@ -824,7 +870,9 @@ export class CommunityRepository {
 
       return {
         ...comment,
+        currentUserVote: "upvote",
         isLiked: true,
+        isDisliked: false,
       };
     });
   }
