@@ -6,7 +6,7 @@ import {
   bookSessionSchema,
   cancelSessionSchema,
   listAvailableSlotsQuerySchema,
-  listSlotsQuerySchema,
+  listSessionsQuerySchema,
   rescheduleSessionSchema,
   sessionIdParamsSchema,
   rateSessionSchema,
@@ -35,8 +35,24 @@ router.get(
   "/sessions",
   authenticate,
   authorizeUserType("student"),
-  validate(listSlotsQuerySchema, "query"),
+  validate(listSessionsQuerySchema, "query"),
   StudentSessionController.listSessions,
+);
+
+router.get(
+  "/sessions/booked",
+  authenticate,
+  authorizeUserType("student"),
+  validate(listSessionsQuerySchema, "query"),
+  StudentSessionController.listBookedSessions,
+);
+
+router.get(
+  "/sessions/completed",
+  authenticate,
+  authorizeUserType("student"),
+  validate(listSessionsQuerySchema, "query"),
+  StudentSessionController.listCompletedSessions,
 );
 
 router.get(

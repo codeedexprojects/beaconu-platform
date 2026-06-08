@@ -38,6 +38,17 @@ export const listSlotsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const listSessionsQuerySchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+    .optional(),
+  status: z.enum(["booked", "completed", "cancelled"]).optional(),
+  search: z.string().trim().min(1).max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 export const listAvailableSlotsQuerySchema = z.object({
   counsellor_id: z.string().min(1).optional(),
   from_date: z
@@ -87,6 +98,7 @@ export const sessionIdParamsSchema = z.object({
 
 export type AddSlotInput = z.infer<typeof addSlotSchema>;
 export type ListSlotsQueryInput = z.infer<typeof listSlotsQuerySchema>;
+export type ListSessionsQueryInput = z.infer<typeof listSessionsQuerySchema>;
 export type ListAvailableSlotsQueryInput = z.infer<
   typeof listAvailableSlotsQuerySchema
 >;

@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { SessionService } from "../services/sessions.service";
 import {
   ListAvailableSlotsQueryInput,
+  ListSessionsQueryInput,
   ListSlotsQueryInput,
 } from "../validators/sessions.validator";
 
@@ -23,7 +24,7 @@ export class CounsellorSessionController {
   static async listSessions(req: Request, res: Response) {
     const sessions = await SessionService.listCounsellorSessions(
       req.userId!,
-      req.query as unknown as ListSlotsQueryInput,
+      req.query as unknown as ListSessionsQueryInput,
     );
     return res
       .status(200)
@@ -108,11 +109,33 @@ export class StudentSessionController {
   static async listSessions(req: Request, res: Response) {
     const sessions = await SessionService.listStudentSessions(
       req.userId!,
-      req.query as unknown as ListSlotsQueryInput,
+      req.query as unknown as ListSessionsQueryInput,
     );
     return res
       .status(200)
       .json(ApiResponse.success("Sessions retrieved", sessions));
+  }
+
+  static async listBookedSessions(req: Request, res: Response) {
+    const sessions = await SessionService.listStudentSessionsByStatus(
+      req.userId!,
+      "booked",
+      req.query as unknown as ListSessionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Booked sessions retrieved", sessions));
+  }
+
+  static async listCompletedSessions(req: Request, res: Response) {
+    const sessions = await SessionService.listStudentSessionsByStatus(
+      req.userId!,
+      "completed",
+      req.query as unknown as ListSessionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Completed sessions retrieved", sessions));
   }
 
   static async getSession(req: Request, res: Response) {

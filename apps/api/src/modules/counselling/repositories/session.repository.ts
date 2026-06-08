@@ -9,6 +9,12 @@ interface PaginationOptions {
   limit?: number;
 }
 
+interface SessionFilters {
+  date?: Date;
+  status?: string;
+  search?: string;
+}
+
 interface SlotFilters {
   counsellorId?: string;
   fromDate?: Date;
@@ -173,10 +179,42 @@ export class SessionRepository {
   /** Paginated session list for a student (newest first). */
   static async listSessionsByStudent(
     studentId: string,
+    filters: SessionFilters = {},
     pagination: PaginationOptions = {},
   ) {
+    const search = filters.search?.trim();
+
     return prisma.counsellingSession.findMany({
-      where: { studentId },
+      where: {
+        studentId,
+        ...(filters.date
+          ? {
+              scheduledDate: {
+                gte: filters.date,
+                lt: new Date(filters.date.getTime() + 24 * 60 * 60 * 1000),
+              },
+            }
+          : {}),
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(search
+          ? {
+              OR: [
+                { bookingReason: { contains: search, mode: "insensitive" } },
+                { sessionType: { contains: search, mode: "insensitive" } },
+                { sessionMode: { contains: search, mode: "insensitive" } },
+                { status: { contains: search, mode: "insensitive" } },
+                {
+                  counsellor: {
+                    OR: [
+                      { fullName: { contains: search, mode: "insensitive" } },
+                      { email: { contains: search, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
       include: {
         counsellor: {
           select: {
@@ -191,7 +229,7 @@ export class SessionRepository {
         },
         availability: true,
       },
-      orderBy: { scheduledDate: "desc" },
+      orderBy: [{ scheduledDate: "desc" }, { startTime: "asc" }],
       ...this.paginate(pagination),
     });
   }
@@ -199,15 +237,49 @@ export class SessionRepository {
   /** Paginated session list for a counsellor (newest first). */
   static async listSessionsByCounsellor(
     counsellorId: string,
+    filters: SessionFilters = {},
     pagination: PaginationOptions = {},
   ) {
+    const search = filters.search?.trim();
+
     return prisma.counsellingSession.findMany({
-      where: { counsellorId },
+      where: {
+        counsellorId,
+        ...(filters.date
+          ? {
+              scheduledDate: {
+                gte: filters.date,
+                lt: new Date(filters.date.getTime() + 24 * 60 * 60 * 1000),
+              },
+            }
+          : {}),
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(search
+          ? {
+              OR: [
+                { bookingReason: { contains: search, mode: "insensitive" } },
+                { sessionType: { contains: search, mode: "insensitive" } },
+                { sessionMode: { contains: search, mode: "insensitive" } },
+                { status: { contains: search, mode: "insensitive" } },
+                {
+                  student: {
+                    OR: [
+                      { fullName: { contains: search, mode: "insensitive" } },
+                      { email: { contains: search, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
       include: {
-        student: { select: { id: true, fullName: true, avatarUrl: true } },
+        student: {
+          select: { id: true, fullName: true, avatarUrl: true, email: true },
+        },
         availability: true,
       },
-      orderBy: { scheduledDate: "desc" },
+      orderBy: [{ scheduledDate: "desc" }, { startTime: "asc" }],
       ...this.paginate(pagination),
     });
   }

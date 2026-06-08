@@ -13,9 +13,14 @@ interface AuthBlinkUserData {
   country?: string | null;
   agencyName?: string | null;
   agencyRegNumber?: string | null;
+  companyPan?: string | null;
+  currentAccNo?: string | null;
+  ifsc?: string | null;
+  gstin?: string | null;
   associateParentId?: string | null;
   blinkRoleId: string;
   status: string;
+  profileMetadata?: Prisma.InputJsonValue;
 }
 
 interface AuthCounsellorData {
@@ -158,9 +163,14 @@ export class AuthRepository {
         country: data.country,
         agencyName: data.agencyName,
         agencyRegNumber: data.agencyRegNumber,
+        companyPan: data.companyPan,
+        currentAccNo: data.currentAccNo,
+        ifsc: data.ifsc,
+        gstin: data.gstin,
         associateParentId: data.associateParentId,
         blinkRoleId: data.blinkRoleId,
         status: data.status,
+        profileMetadata: data.profileMetadata ?? {},
       },
       include: { blinkRole: true },
     });
