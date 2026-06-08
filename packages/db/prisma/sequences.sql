@@ -52,6 +52,7 @@ CREATE SEQUENCE IF NOT EXISTS "counsellor_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_availability_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_registration_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_quota_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_switch_request_seq";

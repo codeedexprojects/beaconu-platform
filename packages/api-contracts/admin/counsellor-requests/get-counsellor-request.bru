@@ -1,0 +1,28 @@
+meta {
+  name: Get Counsellor Request
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellor-requests/{{counsellorRequestId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:pre-request {
+  const counsellorRequestId = bru.getEnvVar("counsellorRequestId");
+  if (!counsellorRequestId) {
+    throw new Error("counsellorRequestId is not set. Run List Counsellor Requests or Submit Counsellor Registration Request first.");
+  }
+}
+
+docs {
+  Returns a single counsellor registration request by id.
+  Requires: super admin access token + counsellors.view permission.
+}

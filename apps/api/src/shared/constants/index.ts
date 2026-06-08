@@ -41,3 +41,9 @@ export const COLLEGE_ONBOARDING_STATUS = {
   APPROVED: "approved",
   REJECTED: "rejected",
 } as const;
+
+export const COUNSELLOR_REQUEST_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+} as const;

@@ -1,0 +1,47 @@
+meta {
+  name: List Counsellor Requests
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellor-requests
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+  ~status: pending
+  ~counsellor_type: academic
+  ~search: priya
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (
+      data.data &&
+      data.data.data &&
+      data.data.data[0] &&
+      data.data.data[0].id
+    ) {
+      bru.setEnvVar("counsellorRequestId", data.data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns paginated list of counsellor registration requests.
+  Requires: super admin access token + counsellors.view permission.
+
+  Filters: status (pending|approved|rejected), counsellor_type (academic|mindcare), search, page, limit.
+
+  Saves counsellorRequestId to env from the first item if returned.
+}

@@ -6,6 +6,7 @@
     "dev": "turbo dev",
     "dev:api": "turbo dev --filter=@beaconu/api",
     "dev:web": "turbo dev --filter=@beaconu/web",
+    "dev:blink-web": "turbo dev --filter=@beaconu/blink-web",
     "dev:college-web": "turbo dev --filter=@beaconu/college-web",
     "dev:college-admin": "turbo dev --filter=@beaconu/college-admin",
     "dev:super-admin": "turbo dev --filter=@beaconu/super-admin",
