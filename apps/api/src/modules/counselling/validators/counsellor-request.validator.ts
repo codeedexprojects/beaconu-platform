@@ -1,20 +1,32 @@
 import { z } from "zod";
 
 export const counsellorRequestSchemas = {
-  submit: z.object({
-    full_name: z.string().trim().min(1).max(255),
-    email: z
-      .string()
-      .trim()
-      .email()
-      .max(255)
-      .transform((v) => v.toLowerCase()),
-    phone_number: z.string().trim().max(20).optional(),
-    counsellor_type: z.enum(["academic", "mindcare"]),
-    qualification: z.string().trim().max(255).optional(),
-    years_of_experience: z.string().trim().max(50).optional(),
-    message: z.string().trim().optional(),
-  }),
+  submit: z
+    .object({
+      full_name: z.string().trim().min(1).max(255),
+      email: z
+        .string()
+        .trim()
+        .email()
+        .max(255)
+        .transform((v) => v.toLowerCase()),
+      phone_number: z.string().trim().min(10).max(20),
+      gender: z.enum(["male", "female", "non_binary", "prefer_not_to_say"]),
+      city: z.string().trim().min(1).max(100),
+      counsellor_type: z.enum(["academic", "mindcare"]),
+      qualification: z.string().trim().min(1).max(255),
+      years_of_experience: z.string().trim().min(1).max(50),
+      known_languages: z.string().trim().min(1).max(255),
+      specialization: z.string().trim().min(1),
+      license_number: z.string().trim().max(100).optional(),
+      message: z.string().trim().min(20),
+      password: z.string().min(8),
+      confirm_password: z.string().min(1),
+    })
+    .refine((d) => d.password === d.confirm_password, {
+      message: "Passwords don't match",
+      path: ["confirm_password"],
+    }),
 
   updateStatus: z.object({
     status: z.enum(["approved", "rejected"]),

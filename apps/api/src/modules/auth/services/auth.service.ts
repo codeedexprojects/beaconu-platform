@@ -15,6 +15,7 @@ import {
 } from "@/modules/blink/blink.permissions";
 import { JwtUtils } from "../auth.jwt";
 import { AuthRepository } from "../repositories/auth.repository";
+import { CounsellorRequestRepository } from "@/modules/counselling/repositories/counsellor-request.repository";
 import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
@@ -108,7 +109,21 @@ export class AuthService {
 
     const counsellor =
       await AuthRepository.findCounsellorByEmail(normalizedEmail);
-    if (!counsellor) throw new UnauthorizedError("Invalid credentials");
+    if (!counsellor) {
+      const request =
+        await CounsellorRequestRepository.findByEmail(normalizedEmail);
+      if (request?.status === "pending") {
+        throw new ForbiddenError(
+          "Your registration is pending admin approval. You will be able to log in once approved.",
+        );
+      }
+      if (request?.status === "rejected") {
+        throw new ForbiddenError(
+          "Your registration was not approved. Please contact support.",
+        );
+      }
+      throw new UnauthorizedError("Invalid credentials");
+    }
 
     const isMatch = await CryptoUtils.compare(
       data.password,

@@ -7,18 +7,32 @@ import {
 import { COUNSELLOR_REQUEST_STATUS } from "@/shared/constants";
 
 export class CounsellorRequestRepository {
-  static async create(data: SubmitCounsellorRequestData) {
+  static async create(data: SubmitCounsellorRequestData, passwordHash: string) {
     return prisma.counsellorRegistrationRequest.create({
       data: {
         fullName: data.full_name,
         email: data.email,
         phoneNumber: data.phone_number,
+        gender: data.gender,
+        city: data.city,
         counsellorType: data.counsellor_type,
         qualification: data.qualification,
         yearsOfExperience: data.years_of_experience,
+        knownLanguages: data.known_languages,
+        specialization: data.specialization,
+        licenseNumber: data.license_number,
         message: data.message,
+        passwordHash,
         status: COUNSELLOR_REQUEST_STATUS.PENDING,
       },
+    });
+  }
+
+  static async findByEmail(email: string) {
+    return prisma.counsellorRegistrationRequest.findFirst({
+      where: { email },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
     });
   }
 

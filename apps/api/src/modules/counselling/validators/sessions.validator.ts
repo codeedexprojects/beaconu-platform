@@ -39,12 +39,21 @@ export const listSlotsQuerySchema = z.object({
 });
 
 export const listSessionsQuerySchema = z.object({
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
-    .optional(),
-  status: z.enum(["booked", "completed", "cancelled"]).optional(),
-  search: z.string().trim().min(1).max(100).optional(),
+  date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
+  status: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["booked", "completed", "cancelled"]).optional(),
+  ),
+  search: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.string().trim().min(1).max(100).optional(),
+  ),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

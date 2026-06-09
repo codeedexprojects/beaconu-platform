@@ -151,7 +151,7 @@ export default function AmbassadorsPage() {
                   <Label htmlFor="full_name">Full Name</Label>
                   <Input
                     id="full_name"
-                    placeholder="Priya Sharma"
+                    placeholder="Full name"
                     {...form.register("full_name")}
                   />
                   {form.formState.errors.full_name && (
@@ -166,7 +166,7 @@ export default function AmbassadorsPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="ambassador@college.edu"
+                    placeholder="Email address"
                     {...form.register("email")}
                   />
                   {form.formState.errors.email && (

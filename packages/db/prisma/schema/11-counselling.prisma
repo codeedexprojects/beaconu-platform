@@ -3,7 +3,7 @@
 // ============================================================
 
 model CounsellorAvailability {
-  id                  String   @id @default(dbgenerated("('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text)"))
+  id                  String   @id @default(dbgenerated("('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text)")) @db.Text
   counsellorId        String   @map("counsellor_id")
   availableDate       DateTime @map("available_date") @db.Date
   startTime           DateTime @map("start_time") @db.Time
@@ -26,7 +26,7 @@ model CounsellorAvailability {
 }
 
 model CounsellingSession {
-  id                 String    @id @default(dbgenerated("('CLS-'::text || (nextval('counselling_session_seq'::regclass))::text)"))
+  id                 String    @id @default(dbgenerated("('CLS-'::text || (nextval('counselling_session_seq'::regclass))::text)")) @db.Text
   studentId          String    @map("student_id")
   counsellorId       String    @map("counsellor_id")
   availabilityId     String    @map("availability_id")
@@ -69,7 +69,7 @@ model CounsellingSession {
 }
 
 model SessionReschedule {
-  id               String   @id @default(dbgenerated("('SRS-'::text || (nextval('session_reschedule_seq'::regclass))::text)"))
+  id               String   @id @default(dbgenerated("('SRS-'::text || (nextval('session_reschedule_seq'::regclass))::text)")) @db.Text
   sessionId        String   @map("session_id")
   rescheduledBy    String   @map("rescheduled_by") @db.VarChar(20)
   fromDate         DateTime @map("from_date") @db.Date
@@ -89,7 +89,7 @@ model SessionReschedule {
 }
 
 model CounsellorWallet {
-  id             String   @id @default(dbgenerated("('CNW-'::text || (nextval('counsellor_wallet_seq'::regclass))::text)"))
+  id             String   @id @default(dbgenerated("('CNW-'::text || (nextval('counsellor_wallet_seq'::regclass))::text)")) @db.Text
   counsellorId   String   @unique @map("counsellor_id")
   balance        Decimal  @default(0) @db.Decimal(12, 2)
   totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
@@ -106,7 +106,7 @@ model CounsellorWallet {
 }
 
 model CounsellorWalletTransaction {
-  id               String   @id @default(dbgenerated("('CWT-'::text || (nextval('counsellor_wallet_transaction_seq'::regclass))::text)"))
+  id               String   @id @default(dbgenerated("('CWT-'::text || (nextval('counsellor_wallet_transaction_seq'::regclass))::text)")) @db.Text
   walletId         String   @map("wallet_id")
   counsellorId     String   @map("counsellor_id")
   type             String   @db.VarChar(20)
@@ -131,15 +131,21 @@ model CounsellorWalletTransaction {
 }
 
 model CounsellorRegistrationRequest {
-  id String @id @default(dbgenerated("('CRR-'::text || (nextval('counsellor_registration_request_seq'::regclass))::text)"))
+  id String @id @default(dbgenerated("('CRR-'::text || (nextval('counsellor_registration_request_seq'::regclass))::text)")) @db.Text
 
   fullName          String   @map("full_name") @db.VarChar(255)
   email             String   @db.VarChar(255)
   phoneNumber       String?  @map("phone_number") @db.VarChar(20)
+  gender            String?  @db.VarChar(20)
+  city              String?  @db.VarChar(100)
   counsellorType    String   @map("counsellor_type") @db.VarChar(20)
   qualification     String?  @db.VarChar(255)
   yearsOfExperience String?  @map("years_of_experience") @db.VarChar(50)
+  knownLanguages    String?  @map("known_languages") @db.VarChar(255)
+  specialization    String?  @db.Text
+  licenseNumber     String?  @map("license_number") @db.VarChar(100)
   message           String?  @db.Text
+  passwordHash      String?  @map("password_hash") @db.Text
   status            String   @default("pending") @db.VarChar(20)
   reviewedBy        String?  @map("reviewed_by")
   reviewRemarks     String?  @map("review_remarks") @db.Text

@@ -7,11 +7,18 @@ export type CounsellorRequestStatus = "pending" | "approved" | "rejected";
 export interface SubmitCounsellorRequestInput {
   full_name: string;
   email: string;
-  phone_number?: string;
+  phone_number: string;
+  gender: "male" | "female" | "non_binary" | "prefer_not_to_say";
+  city: string;
   counsellor_type: CounsellorType;
-  qualification?: string;
-  years_of_experience?: string;
-  message?: string;
+  qualification: string;
+  years_of_experience: string;
+  known_languages: string;
+  specialization: string;
+  license_number?: string;
+  message: string;
+  password: string;
+  confirm_password: string;
 }
 
 export interface CounsellorRegistrationRequest {
@@ -19,9 +26,14 @@ export interface CounsellorRegistrationRequest {
   full_name: string;
   email: string;
   phone_number: string | null;
+  gender: string | null;
+  city: string | null;
   counsellor_type: CounsellorType;
   qualification: string | null;
   years_of_experience: string | null;
+  known_languages: string | null;
+  specialization: string | null;
+  license_number: string | null;
   message: string | null;
   status: CounsellorRequestStatus;
   review_remarks: string | null;
