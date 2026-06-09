@@ -69,5 +69,6 @@ export interface BlinkUserCreateData {
   collegeId?: string;
   linkedStudentId?: string;
   ambassadorType?: string;
+  campusCode?: string;
   createdByStaffId?: string;
 }

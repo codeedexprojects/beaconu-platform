@@ -73,7 +73,10 @@ export class BlinkService {
     );
     if (!role) throw new NotFoundError("Blink role not found");
 
-    const passwordHash = await CryptoUtils.hash(data.password);
+    const [passwordHash, campusCode] = await Promise.all([
+      CryptoUtils.hash(data.password),
+      BlinkRepository.getNextAmbassadorCode(),
+    ]);
 
     const user = await BlinkRepository.create({
       fullName: data.full_name,
@@ -83,6 +86,7 @@ export class BlinkService {
       collegeId: data.college_id,
       linkedStudentId: data.linked_student_id,
       ambassadorType: data.ambassador_type,
+      campusCode,
       createdByStaffId,
       roleId: role.id,
       status: ACCOUNT_STATUS.ACTIVE,
@@ -94,6 +98,7 @@ export class BlinkService {
       fullName: user.fullName,
       collegeId: user.collegeId,
       ambassadorType: user.ambassadorType,
+      campusCode: user.campusCode,
       roleSlug: user.blinkRole.slug,
       status: user.status,
     };
@@ -173,5 +178,21 @@ export class BlinkService {
     if (!user) throw new NotFoundError("User not found");
 
     return await BlinkRepository.updateStatus(id, status);
+  }
+
+  static async listCampusAmbassadors(collegeId: string) {
+    const ambassadors =
+      await BlinkRepository.findAmbassadorsByCollege(collegeId);
+    return ambassadors.map((a) => ({
+      id: a.id,
+      fullName: a.fullName,
+      email: a.email,
+      phoneNumber: a.phoneNumber,
+      avatarUrl: a.avatarUrl,
+      ambassadorType: a.ambassadorType,
+      campusCode: a.campusCode,
+      status: a.status,
+      createdAt: a.createdAt,
+    }));
   }
 }

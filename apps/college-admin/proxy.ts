@@ -68,6 +68,7 @@ export function proxy(request: NextRequest) {
     "hostels",
     "commute",
     "settings",
+    "ambassadors",
   ]);
 
   if (ACTIVE_CONSOLE_ROUTES.has(segments[1])) {

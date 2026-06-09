@@ -29,12 +29,25 @@ script:pre-request {
   }
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.counsellor_code) {
+      bru.setEnvVar("counsellorCode", data.data.counsellor_code);
+    }
+  }
+}
+
 docs {
   Approves or rejects a counsellor registration request.
+  When approved, creates a counsellor account and returns counsellor_code + temp_password.
   Requires: super admin access token + counsellors.manage permission.
 
   status: approved | rejected
   review_remarks: optional reviewer note
 
-  Table: counsellor_registration_requests
+  On approval response includes:
+    counsellor_code: e.g. "CC-1" — unique code assigned to the counsellor account
+
+  Table: counsellor_registration_requests + counsellors
 }

@@ -11,8 +11,12 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  Hash,
+  Copy,
+  CheckCheck,
   type LucideIcon,
 } from "lucide-react";
+
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +35,10 @@ import {
   useCounsellorRequests,
   useUpdateCounsellorRequestStatus,
 } from "@/hooks/use-counsellor-requests";
-import type { CounsellorType } from "@beaconu/types";
+import type {
+  CounsellorType,
+  UpdateCounsellorRequestStatusResult,
+} from "@beaconu/types";
 
 const STATUS_FILTERS = ["", "pending", "approved", "rejected"] as const;
 
@@ -69,6 +76,9 @@ export function CounsellorRequestsView({
   const [statusFilter, setStatusFilter] = useState<
     "" | "pending" | "approved" | "rejected"
   >("pending");
+  const [approvalResult, setApprovalResult] =
+    useState<UpdateCounsellorRequestStatusResult | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const { data, isLoading, refetch } = useCounsellorRequests({
     counsellor_type: counsellorType,
@@ -78,20 +88,82 @@ export function CounsellorRequestsView({
   const requests = data?.data ?? [];
   const statusMutation = useUpdateCounsellorRequestStatus();
 
+  function handleCopyCode(text: string) {
+    void navigator.clipboard.writeText(text);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
+
   function handleStatusUpdate(id: string, status: "approved" | "rejected") {
     statusMutation.mutate(
       { id, data: { status } },
       {
-        onSuccess: () =>
-          toast.success(
-            `Request ${status === "approved" ? "approved" : "rejected"} successfully`,
-          ),
+        onSuccess: (result) => {
+          if (status === "approved" && result.counsellor_code) {
+            setApprovalResult(result);
+          } else {
+            toast.success("Request rejected successfully");
+          }
+        },
       },
     );
   }
 
   return (
     <div className="flex flex-col min-h-full">
+      {approvalResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setApprovalResult(null)}
+        >
+          <Card
+            className="w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 p-6 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Counsellor Approved</p>
+                <p className="text-xs text-muted-foreground">
+                  Account created successfully
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Counsellor Code
+              </p>
+              <div className="flex items-center justify-between gap-2 bg-muted rounded-md px-3 py-2">
+                <div className="flex items-center gap-1.5 font-mono text-sm font-semibold">
+                  <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                  {approvalResult.counsellor_code}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleCopyCode(approvalResult.counsellor_code!)
+                  }
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {codeCopied ? (
+                    <CheckCheck className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <Button className="w-full" onClick={() => setApprovalResult(null)}>
+              Done
+            </Button>
+          </Card>
+        </div>
+      )}
+
       <Header title={title} description={description}>
         <Button
           variant="outline"
@@ -139,6 +211,7 @@ export function CounsellorRequestsView({
                 <TableRow>
                   <TableHead>Applicant</TableHead>
                   <TableHead>Track</TableHead>
+                  <TableHead>Code</TableHead>
                   <TableHead>Qualification</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Status</TableHead>
@@ -155,6 +228,9 @@ export function CounsellorRequestsView({
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-[140px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-20" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-4 w-[160px]" />
@@ -176,7 +252,7 @@ export function CounsellorRequestsView({
                 ) : requests.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="h-24 text-center text-muted-foreground"
                     >
                       No requests found.
@@ -213,6 +289,18 @@ export function CounsellorRequestsView({
                             <TrackIcon className="h-3.5 w-3.5" />
                             {trackLabel}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {req.counsellor_code ? (
+                            <div className="flex items-center gap-1 font-mono text-xs bg-muted px-2 py-1 rounded w-fit">
+                              <Hash className="h-3 w-3 text-muted-foreground" />
+                              {req.counsellor_code}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">
+                              —
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">

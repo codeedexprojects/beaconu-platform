@@ -8,7 +8,10 @@ import {
   updateCounsellorRequestStatus,
   type CounsellorRequestFilters,
 } from "@/lib/services/counsellor-requests.service";
-import type { UpdateCounsellorRequestStatusInput } from "@beaconu/types";
+import type {
+  UpdateCounsellorRequestStatusInput,
+  UpdateCounsellorRequestStatusResult,
+} from "@beaconu/types";
 
 export function useCounsellorRequests(filters: CounsellorRequestFilters = {}) {
   return useQuery({
@@ -27,14 +30,12 @@ export function useCounsellorRequest(id: string) {
 
 export function useUpdateCounsellorRequestStatus() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateCounsellorRequestStatusInput;
-    }) => updateCounsellorRequestStatus(id, data),
+  return useMutation<
+    UpdateCounsellorRequestStatusResult,
+    Error,
+    { id: string; data: UpdateCounsellorRequestStatusInput }
+  >({
+    mutationFn: ({ id, data }) => updateCounsellorRequestStatus(id, data),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({

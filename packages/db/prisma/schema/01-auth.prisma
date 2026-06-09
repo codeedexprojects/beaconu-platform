@@ -249,6 +249,7 @@ model BlinkUser {
   country           String?   @db.VarChar(100)
   avatarUrl         String?   @map("avatar_url") @db.Text
   ambassadorType    String?   @map("ambassador_type") @db.VarChar(20)
+  campusCode        String?   @unique @map("ambassador_code") @db.Text
   agencyName        String?   @map("agency_name") @db.VarChar(255)
   agencyRegNumber   String?   @unique @map("agency_reg_number") @db.VarChar(100)
   companyPan        String?   @map("company_pan") @db.VarChar(50)
@@ -296,6 +297,7 @@ model Counsellor {
   phoneNumber     String?   @map("phone_number") @db.VarChar(15)
   avatarUrl       String?   @map("avatar_url") @db.Text
   counsellorType  String    @map("counsellor_type") @db.VarChar(20)
+  counsellorCode  String?   @unique @map("counsellor_code") @db.Text
   status          String    @default("active") @db.VarChar(20)
   rating          Decimal   @default(0.0) @db.Decimal(2, 1) @map("rating")
   knownLanguages  String?   @map("known_languages") @db.VarChar(255)

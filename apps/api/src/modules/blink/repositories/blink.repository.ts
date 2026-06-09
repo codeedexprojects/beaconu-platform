@@ -22,6 +22,13 @@ export class BlinkRepository {
     });
   }
 
+  static async getNextAmbassadorCode(): Promise<string> {
+    const result = await prisma.$queryRaw<[{ code: string }]>`
+      SELECT 'CA-' || nextval('ambassador_code_seq'::regclass)::text AS code
+    `;
+    return result[0].code;
+  }
+
   static async create(data: BlinkUserCreateData) {
     return prisma.blinkUser.create({
       data: {
@@ -36,6 +43,7 @@ export class BlinkRepository {
         collegeId: data.collegeId,
         linkedStudentId: data.linkedStudentId,
         ambassadorType: data.ambassadorType,
+        campusCode: data.campusCode,
         createdByStaffId: data.createdByStaffId,
         blinkRoleId: data.roleId,
         status: data.status,
@@ -75,5 +83,26 @@ export class BlinkRepository {
 
   static async findRoleBySlug(slug: string) {
     return prisma.blinkRole.findUnique({ where: { slug } });
+  }
+
+  static async findAmbassadorsByCollege(collegeId: string) {
+    return prisma.blinkUser.findMany({
+      where: {
+        collegeId,
+        blinkRole: { slug: "campus_ambassador" },
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phoneNumber: true,
+        avatarUrl: true,
+        ambassadorType: true,
+        campusCode: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
   }
 }

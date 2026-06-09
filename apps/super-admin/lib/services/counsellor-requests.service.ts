@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import type {
   CounsellorRegistrationRequest,
   UpdateCounsellorRequestStatusInput,
+  UpdateCounsellorRequestStatusResult,
 } from "@beaconu/types";
 
 export interface CounsellorRequestFilters {
@@ -48,8 +49,8 @@ export async function getCounsellorRequestById(
 export async function updateCounsellorRequestStatus(
   id: string,
   data: UpdateCounsellorRequestStatusInput,
-): Promise<CounsellorRegistrationRequest> {
-  return api.patch<CounsellorRegistrationRequest>(
+): Promise<UpdateCounsellorRequestStatusResult> {
+  return api.patch<UpdateCounsellorRequestStatusResult>(
     `/api/v1/admin/counsellor-requests/${id}/status`,
     data,
   );

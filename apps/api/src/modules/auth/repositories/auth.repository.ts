@@ -181,6 +181,21 @@ export class AuthRepository {
     return prisma.counsellor.findUnique({ where: { email } });
   }
 
+  static async findCounsellorCodesByEmails(
+    emails: string[],
+  ): Promise<Map<string, string>> {
+    if (emails.length === 0) return new Map();
+    const counsellors = await prisma.counsellor.findMany({
+      where: { email: { in: emails } },
+      select: { email: true, counsellorCode: true },
+    });
+    return new Map(
+      counsellors
+        .filter((c) => c.counsellorCode !== null)
+        .map((c) => [c.email, c.counsellorCode!]),
+    );
+  }
+
   static async findCounsellorById(id: string) {
     return prisma.counsellor.findUnique({ where: { id } });
   }
