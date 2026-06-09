@@ -2,6 +2,35 @@ import { prisma } from "@beaconu/db";
 import type { Prisma } from "@beaconu/db";
 
 export class CommunityRepository {
+  private static async enrichCommentResponse(
+    comment: Prisma.CommunityCommentGetPayload<Record<string, never>>,
+    userId: string,
+    userType: string,
+  ) {
+    const authorProfiles = await this.resolveAuthorProfiles([
+      {
+        id: comment.authorId,
+        type: comment.authorType,
+      },
+    ]);
+
+    const authorProfile = authorProfiles.get(
+      `${comment.authorType}:${comment.authorId}`,
+    );
+
+    return {
+      ...comment,
+      replies: [],
+      authorName: authorProfile?.fullName ?? null,
+      authorAvatarUrl: authorProfile?.avatarUrl ?? null,
+      currentUserVote: null,
+      isLiked: false,
+      isDisliked: false,
+      isOwnComment:
+        comment.authorId === userId && comment.authorType === userType,
+    };
+  }
+
   static async create(data: {
     name: string;
     slug: string;
@@ -598,9 +627,11 @@ export class CommunityRepository {
     authorType: string;
     content: string;
     parentCommentId?: string;
+    userId: string;
+    userType: string;
   }) {
-    return prisma.$transaction(async (tx) => {
-      const comment = await tx.communityComment.create({
+    const comment = await prisma.$transaction(async (tx) => {
+      const createdComment = await tx.communityComment.create({
         data: {
           postId: data.postId,
           authorId: data.authorId,
@@ -620,8 +651,10 @@ export class CommunityRepository {
         },
       });
 
-      return comment;
+      return createdComment;
     });
+
+    return this.enrichCommentResponse(comment, data.userId, data.userType);
   }
 
   static async incrementCommentLikeCount(commentId: string) {

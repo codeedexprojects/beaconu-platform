@@ -40,4 +40,30 @@ script:post-response {
 docs {
   Adds a comment to a community post.
   Set communityId and communityPostId env vars before calling.
+
+  Response:
+  {
+    "success": true,
+    "message": "Comment created",
+    "data": {
+      "id": "CCT-1",
+      "postId": "CPT-1",
+      "authorId": "STU-1",
+      "authorType": "student",
+      "parentCommentId": null,
+      "content": "Thanks for sharing this update.",
+      "likeCount": 0,
+      "status": "active",
+      "createdAt": "2026-06-08T12:13:43.280Z",
+      "updatedAt": "2026-06-08T12:13:48.644Z",
+      "replies": [],
+      "authorName": "Rahul Sharma",
+      "authorAvatarUrl": null,
+      "currentUserVote": null,
+      "isLiked": false,
+      "isDisliked": false,
+      "isOwnComment": true
+    },
+    "timestamp": "2026-06-08T12:13:48.644Z"
+  }
 }
