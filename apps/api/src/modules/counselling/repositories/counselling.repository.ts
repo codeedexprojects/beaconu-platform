@@ -38,6 +38,56 @@ export class CounsellingRepository {
     });
   }
 
+  static async findActiveWithSlots(filters: {
+    date?: Date;
+    counsellorType?: string;
+    page: number;
+    limit: number;
+  }) {
+    const skip = (filters.page - 1) * filters.limit;
+
+    const availabilityWhere = {
+      isBooked: false,
+      ...(filters.date ? { availableDate: filters.date } : {}),
+    };
+
+    const where = {
+      status: "active",
+      ...(filters.counsellorType
+        ? { counsellorType: filters.counsellorType }
+        : {}),
+      ...(filters.date ? { availability: { some: availabilityWhere } } : {}),
+    };
+
+    const [counsellors, total] = await Promise.all([
+      prisma.counsellor.findMany({
+        where,
+        select: {
+          ...COUNSELLOR_SELECT,
+          availability: {
+            where: availabilityWhere,
+            select: {
+              id: true,
+              availableDate: true,
+              startTime: true,
+              endTime: true,
+              sessionDurationMins: true,
+              sessionFee: true,
+              isBooked: true,
+            },
+            orderBy: [{ availableDate: "asc" }, { startTime: "asc" }],
+          },
+        },
+        orderBy: { rating: "desc" },
+        skip,
+        take: filters.limit,
+      }),
+      prisma.counsellor.count({ where }),
+    ]);
+
+    return { counsellors, total };
+  }
+
   static async updateById(
     id: string,
     data: {

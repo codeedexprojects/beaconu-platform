@@ -1,0 +1,31 @@
+meta {
+  name: List Counsellors
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/counsellors
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~date: 2026-06-10
+  ~counsellor_type: academic
+  ~page: 1
+  ~limit: 20
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("counsellorId", data.data[0].id);
+    }
+  }
+}

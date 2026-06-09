@@ -6,6 +6,7 @@ import {
   bookSessionSchema,
   cancelSessionSchema,
   listAvailableSlotsQuerySchema,
+  listCounsellorsQuerySchema,
   listSessionsQuerySchema,
   rescheduleSessionSchema,
   sessionIdParamsSchema,
@@ -14,6 +15,14 @@ import {
 import { StudentSessionController } from "../controllers/session.controller";
 
 const router: Router = Router();
+
+router.get(
+  "/counsellors",
+  authenticate,
+  authorizeUserType("student"),
+  validate(listCounsellorsQuerySchema, "query"),
+  StudentSessionController.listCounsellors,
+);
 
 router.get(
   "/slots",
