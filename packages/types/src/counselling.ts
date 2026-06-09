@@ -25,6 +25,7 @@ export interface CounsellorRegistrationRequest {
   message: string | null;
   status: CounsellorRequestStatus;
   review_remarks: string | null;
+  counsellor_code: string | null;
   reviewer: { id: string; name: string } | null;
   created_at: string;
   updated_at: string;
@@ -33,6 +34,14 @@ export interface CounsellorRegistrationRequest {
 export interface UpdateCounsellorRequestStatusInput {
   status: Extract<CounsellorRequestStatus, "approved" | "rejected">;
   review_remarks?: string;
+}
+
+export interface UpdateCounsellorRequestStatusResult {
+  id: string;
+  status: CounsellorRequestStatus;
+  review_remarks: string | null;
+  updated_at: string;
+  counsellor_code: string | null;
 }
 
 // ─── Counselling Session DTOs ───────────────────────────────

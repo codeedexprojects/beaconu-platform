@@ -9,6 +9,7 @@ function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
   return {
     id: counsellor.id,
+    counsellor_code: counsellor.counsellorCode ?? null,
     full_name: counsellor.fullName,
     email: counsellor.email,
     phone_number: counsellor.phoneNumber,

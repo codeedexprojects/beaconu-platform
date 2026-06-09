@@ -12,7 +12,7 @@ CREATE TABLE "counsellor_registration_requests" (
     "years_of_experience" VARCHAR(50),
     "message" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "reviewed_by" UUID,
+    "reviewed_by" TEXT,
     "review_remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,

@@ -15,6 +15,7 @@ import {
   Truck,
   Settings,
   LayoutDashboard,
+  Star,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -192,6 +193,7 @@ export default function DashboardLayout({
     if (path.includes("/hostels")) return "hostel.view";
     if (path.includes("/commute")) return "commute.view";
     if (path.includes("/settings")) return "profile.view";
+    if (path.includes("/ambassadors")) return "staff.view";
     return null;
   };
 
@@ -331,6 +333,12 @@ export default function DashboardLayout({
                     path: "/commute",
                     icon: Truck,
                     permission: "commute.view",
+                  },
+                  {
+                    name: "Campus Ambassadors",
+                    path: "/ambassadors",
+                    icon: Star,
+                    permission: "staff.view",
                   },
                   {
                     name: "Settings",

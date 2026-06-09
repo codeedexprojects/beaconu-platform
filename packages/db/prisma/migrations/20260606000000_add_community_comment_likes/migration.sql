@@ -4,7 +4,7 @@ CREATE SEQUENCE IF NOT EXISTS "community_comment_like_seq";
 -- CreateTable
 CREATE TABLE "community_comment_likes" (
     "id" TEXT NOT NULL DEFAULT ('CCL-'::text || (nextval('community_comment_like_seq'::regclass))::text),
-    "comment_id" UUID NOT NULL,
+    "comment_id" TEXT NOT NULL,
     "liker_id" TEXT NOT NULL,
     "liker_type" VARCHAR(20) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

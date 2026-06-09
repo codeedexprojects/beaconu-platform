@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   MoreVertical,
   Briefcase,
+  Hash,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import {
 const DUMMY_COUNSELLORS = [
   {
     id: "1",
+    code: "CC-1",
     name: "Dr. Sameer Gupta",
     email: "sameer@beaconu.com",
     type: "Expert",
@@ -38,6 +40,7 @@ const DUMMY_COUNSELLORS = [
   },
   {
     id: "2",
+    code: "CC-2",
     name: "Megha Rao",
     email: "megha.r@beaconu.com",
     type: "Senior",
@@ -47,6 +50,7 @@ const DUMMY_COUNSELLORS = [
   },
   {
     id: "3",
+    code: "CC-3",
     name: "James Wilson",
     email: "james@beaconu.com",
     type: "Expert",
@@ -56,6 +60,7 @@ const DUMMY_COUNSELLORS = [
   },
   {
     id: "4",
+    code: "CC-4",
     name: "Sophia Lee",
     email: "sophia@beaconu.com",
     type: "Junior",
@@ -100,6 +105,7 @@ export default function CounsellorsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Counsellor</TableHead>
+                    <TableHead>Code</TableHead>
                     <TableHead>Expertise Level</TableHead>
                     <TableHead>Rating</TableHead>
                     <TableHead>Active Assignments</TableHead>
@@ -126,6 +132,12 @@ export default function CounsellorsPage() {
                               {c.email}
                             </span>
                           </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 font-mono text-xs bg-muted px-2 py-1 rounded w-fit">
+                          <Hash className="h-3 w-3 text-muted-foreground" />
+                          {c.code}
                         </div>
                       </TableCell>
                       <TableCell>

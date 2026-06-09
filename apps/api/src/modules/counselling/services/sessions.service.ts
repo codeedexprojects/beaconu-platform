@@ -53,6 +53,7 @@ function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
   return {
     id: counsellor.id,
+    counsellor_code: counsellor.counsellorCode ?? null,
     full_name: counsellor.fullName,
     avatar_url: counsellor.avatarUrl ?? null,
     counsellor_type: counsellor.counsellorType,

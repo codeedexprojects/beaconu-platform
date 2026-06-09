@@ -6,6 +6,29 @@ export interface CampusAmbassador {
   phoneNumber: string | null;
 }
 
+export interface CampusAmbassadorDto {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  avatarUrl: string | null;
+  ambassadorType: string | null;
+  campusCode: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface CreateCampusAmbassadorInput {
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  college_id: string;
+  linked_student_id?: string;
+  ambassador_type: "student" | "teacher";
+  password: string;
+  confirm_password: string;
+}
+
 export interface CollegeProfileDetails {
   totalCourses: number;
   instituteType: string | null;
