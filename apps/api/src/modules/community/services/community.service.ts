@@ -423,6 +423,8 @@ export class CommunityService {
       authorId: userId,
       authorType: userType,
       content: input.content,
+      userId,
+      userType,
     });
   }
 
@@ -462,6 +464,8 @@ export class CommunityService {
       authorType: userType,
       content: input.content,
       parentCommentId: commentId,
+      userId,
+      userType,
     });
   }
 
