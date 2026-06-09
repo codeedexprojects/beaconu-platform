@@ -6,12 +6,14 @@ import {
   NotFoundError,
 } from "@/shared/errors";
 import { SessionRepository } from "../repositories/session.repository";
+import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
   AddSlotInput,
   BookSessionInput,
   CancelSessionInput,
   CompleteSessionInput,
   ListAvailableSlotsQueryInput,
+  ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
   RescheduleSessionInput,
@@ -345,6 +347,41 @@ export class SessionService {
     );
 
     return groupSlotsByDate(slots.map(formatSlot));
+  }
+
+  static async listCounsellors(query: ListCounsellorsQueryInput) {
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+
+    const { counsellors, total } =
+      await CounsellingRepository.findActiveWithSlots({
+        date,
+        counsellorType: query.counsellor_type,
+        page: query.page,
+        limit: query.limit,
+      });
+
+    const data = counsellors.map((c) => ({
+      ...formatCounsellor(c),
+      available_slots:
+        (c as any).availability?.map((slot: any) => ({
+          id: slot.id,
+          available_date: slot.availableDate,
+          start_time: slot.startTime,
+          end_time: slot.endTime,
+          session_duration_mins: slot.sessionDurationMins,
+          session_fee: Number(slot.sessionFee ?? 0),
+        })) ?? [],
+    }));
+
+    return {
+      data,
+      meta: {
+        total,
+        page: query.page,
+        limit: query.limit,
+        hasNext: query.page * query.limit < total,
+      },
+    };
   }
 
   static async bookSession(studentId: string, input: BookSessionInput) {
