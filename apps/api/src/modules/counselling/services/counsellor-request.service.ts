@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { CounsellorRequestRepository } from "../repositories/counsellor-request.repository";
 import {
   SubmitCounsellorRequestData,
@@ -15,9 +14,14 @@ function formatRequest(
     fullName: string;
     email: string;
     phoneNumber: string | null;
+    gender: string | null;
+    city: string | null;
     counsellorType: string;
     qualification: string | null;
     yearsOfExperience: string | null;
+    knownLanguages: string | null;
+    specialization: string | null;
+    licenseNumber: string | null;
     message: string | null;
     status: string;
     reviewRemarks: string | null;
@@ -32,9 +36,14 @@ function formatRequest(
     full_name: request.fullName,
     email: request.email,
     phone_number: request.phoneNumber,
+    gender: request.gender,
+    city: request.city,
     counsellor_type: request.counsellorType,
     qualification: request.qualification,
     years_of_experience: request.yearsOfExperience,
+    known_languages: request.knownLanguages,
+    specialization: request.specialization,
+    license_number: request.licenseNumber,
     message: request.message,
     status: request.status,
     review_remarks: request.reviewRemarks,
@@ -49,7 +58,16 @@ function formatRequest(
 
 export class CounsellorRequestService {
   static async submit(data: SubmitCounsellorRequestData) {
-    const request = await CounsellorRequestRepository.create(data);
+    const existing = await AuthRepository.findCounsellorByEmail(data.email);
+    if (existing) {
+      throw new ConflictError("An account already exists with this email");
+    }
+
+    const passwordHash = await CryptoUtils.hash(data.password);
+    const request = await CounsellorRequestRepository.create(
+      data,
+      passwordHash,
+    );
     return {
       id: request.id,
       status: request.status,
@@ -112,18 +130,27 @@ export class CounsellorRequestService {
         );
       }
 
-      const passwordHash = await CryptoUtils.hash(
-        crypto.randomBytes(16).toString("hex"),
-      );
+      if (!existing.passwordHash) {
+        throw new ConflictError(
+          "Registration is missing password — counsellor must re-register",
+        );
+      }
 
       const [updated, counsellor] = await Promise.all([
         CounsellorRequestRepository.updateStatus(id, data, reviewedBy),
         AuthRepository.createCounsellor({
           fullName: existing.fullName,
           email: existing.email,
-          passwordHash,
+          passwordHash: existing.passwordHash,
           phoneNumber: existing.phoneNumber,
           counsellorType: existing.counsellorType as "academic" | "mindcare",
+          knownLanguages: existing.knownLanguages,
+          profileMetadata: {
+            gender: existing.gender ?? undefined,
+            city: existing.city ?? undefined,
+            specialization: existing.specialization ?? undefined,
+            license_number: existing.licenseNumber ?? undefined,
+          },
           status: "active",
         }),
       ]);

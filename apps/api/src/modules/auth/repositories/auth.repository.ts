@@ -29,6 +29,8 @@ interface AuthCounsellorData {
   passwordHash: string;
   phoneNumber?: string | null;
   counsellorType: "academic" | "mindcare";
+  knownLanguages?: string | null;
+  profileMetadata?: Prisma.InputJsonValue;
   status: string;
 }
 
@@ -215,6 +217,8 @@ export class AuthRepository {
         passwordHash: data.passwordHash,
         phoneNumber: data.phoneNumber,
         counsellorType: data.counsellorType,
+        knownLanguages: data.knownLanguages,
+        profileMetadata: data.profileMetadata ?? {},
         status: data.status,
       },
     });
