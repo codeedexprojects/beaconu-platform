@@ -32,7 +32,11 @@ export class CounsellingRepository {
   }
 
   static async findAll(
-    filters: { counsellorType?: string; status?: string } = {},
+    filters: {
+      counsellorType?: string;
+      status?: string;
+      language?: string;
+    } = {},
   ) {
     return prisma.counsellor.findMany({
       where: {
@@ -40,6 +44,14 @@ export class CounsellingRepository {
           ? { counsellorType: filters.counsellorType }
           : {}),
         ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.language
+          ? {
+              knownLanguages: {
+                contains: filters.language,
+                mode: "insensitive" as const,
+              },
+            }
+          : {}),
       },
       select: COUNSELLOR_SELECT,
       orderBy: { createdAt: "desc" },

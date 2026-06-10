@@ -9,6 +9,7 @@ export class CounsellingPlatformAdminController {
     const counsellors = await CounsellingService.listAll({
       counsellor_type: req.query["counsellor_type"] as string | undefined,
       status: req.query["status"] as string | undefined,
+      language: req.query["language"] as string | undefined,
     });
     return res
       .status(200)
