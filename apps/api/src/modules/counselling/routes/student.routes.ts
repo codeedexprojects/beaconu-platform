@@ -18,6 +18,13 @@ import { StudentSessionController } from "../controllers/session.controller";
 const router: Router = Router();
 
 router.get(
+  "/counsellors/languages",
+  authenticate,
+  authorizeUserType("student"),
+  StudentSessionController.listKnownLanguages,
+);
+
+router.get(
   "/counsellors",
   authenticate,
   authorizeUserType("student"),

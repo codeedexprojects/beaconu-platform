@@ -23,6 +23,14 @@ export class CounsellingRepository {
     });
   }
 
+  static async findAllKnownLanguages(): Promise<string[]> {
+    const rows = await prisma.counsellor.findMany({
+      where: { status: "active", knownLanguages: { not: null } },
+      select: { knownLanguages: true },
+    });
+    return rows.map((row) => row.knownLanguages as string);
+  }
+
   static async findAll(
     filters: { counsellorType?: string; status?: string } = {},
   ) {
