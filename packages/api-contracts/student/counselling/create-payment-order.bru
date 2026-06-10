@@ -1,0 +1,56 @@
+meta {
+  name: Create Payment Order
+  type: http
+  seq: 1.5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/create-order
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "availability_id": "{{availabilityId}}"
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List Available Slots first and pick a slot id from time_slots array.");
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.order_id) {
+      bru.setEnvVar("razorpayOrderId", data.data.order_id);
+    }
+  }
+}
+
+docs {
+  Creates a Razorpay order for booking a counselling slot.
+
+  ## Flow
+  1. Call this endpoint with `availability_id`.
+  2. If `payment_required` is false, the slot is free — skip Razorpay
+     and call Book Session directly (no razorpay_* fields needed).
+  3. If `payment_required` is true, open Razorpay Checkout on the
+     client using `order_id`, `amount`, `currency`, `key_id`.
+  4. After successful payment, pass `razorpay_order_id`,
+     `razorpay_payment_id`, and `razorpay_signature` to Book Session.
+}

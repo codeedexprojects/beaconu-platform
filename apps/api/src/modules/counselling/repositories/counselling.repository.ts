@@ -44,43 +44,31 @@ export class CounsellingRepository {
     page: number;
     limit: number;
   }) {
-    const skip = (filters.page - 1) * filters.limit;
-
-    const availabilityWhere = {
-      isBooked: false,
-      ...(filters.date ? { availableDate: filters.date } : {}),
-    };
+    const page = Number(filters.page) || 1;
+    const limit = Number(filters.limit) || 20;
+    const skip = (page - 1) * limit;
 
     const where = {
       status: "active",
       ...(filters.counsellorType
         ? { counsellorType: filters.counsellorType }
         : {}),
-      ...(filters.date ? { availability: { some: availabilityWhere } } : {}),
+      ...(filters.date
+        ? {
+            availability: {
+              some: { isBooked: false, availableDate: filters.date },
+            },
+          }
+        : {}),
     };
 
     const [counsellors, total] = await Promise.all([
       prisma.counsellor.findMany({
         where,
-        select: {
-          ...COUNSELLOR_SELECT,
-          availability: {
-            where: availabilityWhere,
-            select: {
-              id: true,
-              availableDate: true,
-              startTime: true,
-              endTime: true,
-              sessionDurationMins: true,
-              sessionFee: true,
-              isBooked: true,
-            },
-            orderBy: [{ availableDate: "asc" }, { startTime: "asc" }],
-          },
-        },
+        select: COUNSELLOR_SELECT,
         orderBy: { rating: "desc" },
         skip,
-        take: filters.limit,
+        take: limit,
       }),
       prisma.counsellor.count({ where }),
     ]);

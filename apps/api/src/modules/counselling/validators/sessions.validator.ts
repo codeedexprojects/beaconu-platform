@@ -82,13 +82,20 @@ export const listAvailableSlotsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+// Student: create a Razorpay order for a slot before booking
+export const createPaymentOrderSchema = z.object({
+  availability_id: z.string().min(1),
+});
+
 // Student: book a session
 export const bookSessionSchema = z.object({
   availability_id: z.string().min(1),
   session_mode: z.enum(["voice_call", "video_call"]),
   session_type: z.enum(["career", "academic", "personal", "mental_health"]),
   booking_reason: z.string().min(1, "Booking reason is required").max(500),
-  session_fee: z.coerce.number().min(0).optional(),
+  razorpay_order_id: z.string().optional(),
+  razorpay_payment_id: z.string().optional(),
+  razorpay_signature: z.string().optional(),
 });
 
 // Student: reschedule
@@ -124,6 +131,7 @@ export type ListCounsellorsQueryInput = z.infer<
 export type ListAvailableSlotsQueryInput = z.infer<
   typeof listAvailableSlotsQuerySchema
 >;
+export type CreatePaymentOrderInput = z.infer<typeof createPaymentOrderSchema>;
 export type BookSessionInput = z.infer<typeof bookSessionSchema>;
 export type RescheduleSessionInput = z.infer<typeof rescheduleSessionSchema>;
 export type CancelSessionInput = z.infer<typeof cancelSessionSchema>;
