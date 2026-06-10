@@ -1,0 +1,49 @@
+meta {
+  name: Get Counsellor Detail
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}/detail
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Full counsellor detail view for the platform admin panel.
+  Requires: super admin access token + counsellors.view permission.
+
+  ## Response shape
+  {
+    "counsellor": { ...full profile, including session_fee, rating, known_languages },
+    "stats": {
+      "slots": { "total": number, "available": number, "booked": number },
+      "sessions": { "total": number, "booked": number, "completed": number, "cancelled": number },
+      "payments": { "paid_sessions_count": number, "total_payment_received": number }
+    },
+    "wallet": {
+      "balance": number,
+      "total_earned": number,
+      "total_withdrawn": number,
+      "transactions": [ ...last 20 wallet transactions ]
+    },
+    "slots": {
+      "available": [ ...up to 50 unbooked availability slots ],
+      "booked": [ ...up to 50 booked availability slots ]
+    },
+    "recent_sessions": [
+      {
+        "id", "status", "session_mode", "session_type",
+        "scheduled_date", "start_time", "end_time",
+        "session_fee", "payment_status", "transaction_id",
+        "student": { "id", "full_name", "avatar_url", "email" }
+      }
+      ... up to 20, most recent first
+    ]
+  }
+}

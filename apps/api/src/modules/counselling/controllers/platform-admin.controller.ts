@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { CounsellingService } from "../services/counselling.service";
+import { SessionService } from "../services/sessions.service";
 import { CounsellorRequestService } from "../services/counsellor-request.service";
 import { counsellorRequestSchemas } from "../validators/counsellor-request.validator";
 
@@ -23,6 +24,15 @@ export class CounsellingPlatformAdminController {
     return res
       .status(200)
       .json(ApiResponse.success("Counsellor retrieved", counsellor));
+  }
+
+  static async getDetail(req: Request, res: Response) {
+    const detail = await SessionService.getCounsellorDetailForAdmin(
+      req.params["id"] as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Counsellor detail retrieved", detail));
   }
 
   static async updateStatus(req: Request, res: Response) {

@@ -67,3 +67,99 @@ export interface ListCounsellingSessionsQuery {
   status?: CounsellingSessionStatus;
   search?: string;
 }
+
+// ─── Counsellor (Admin) DTOs ────────────────────────────────
+
+export type CounsellorStatus = "active" | "inactive" | "pending_verification";
+
+export interface Counsellor {
+  id: string;
+  counsellor_code: string | null;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  avatar_url: string | null;
+  counsellor_type: CounsellorType;
+  status: CounsellorStatus;
+  rating: number;
+  known_languages: string | null;
+  session_fee: number;
+  profile_metadata: unknown;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListCounsellorsFilters {
+  counsellor_type?: CounsellorType;
+  status?: CounsellorStatus;
+  language?: string;
+}
+
+export interface CounsellorSlot {
+  id: string;
+  available_date: string;
+  start_time: string;
+  end_time: string;
+  session_duration_mins: number;
+  is_booked: boolean;
+  session_fee: number;
+}
+
+export interface CounsellorWalletTransaction {
+  id: string;
+  type: string;
+  amount: number;
+  description: string | null;
+  session_id: string | null;
+  withdrawal_status: string | null;
+  balance_after: number;
+  created_at: string;
+}
+
+export interface CounsellorWallet {
+  id: string;
+  counsellor_id: string;
+  balance: number;
+  total_earned: number;
+  total_withdrawn: number;
+  created_at: string;
+  updated_at: string;
+  transactions: CounsellorWalletTransaction[];
+}
+
+export interface CounsellorRecentSession {
+  id: string;
+  status: CounsellingSessionStatus;
+  session_mode: string;
+  session_type: string;
+  scheduled_date: string;
+  start_time: string;
+  end_time: string;
+  session_fee: number | null;
+  payment_status: string;
+  transaction_id: string | null;
+  student: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+    email: string;
+  };
+}
+
+export interface CounsellorDetail {
+  counsellor: Counsellor;
+  stats: {
+    slots: { total: number; available: number; booked: number };
+    sessions: {
+      total: number;
+      booked: number;
+      completed: number;
+      cancelled: number;
+    };
+    payments: { paid_sessions_count: number; total_payment_received: number };
+  };
+  wallet: CounsellorWallet | null;
+  slots: { available: CounsellorSlot[]; booked: CounsellorSlot[] };
+  recent_sessions: CounsellorRecentSession[];
+}

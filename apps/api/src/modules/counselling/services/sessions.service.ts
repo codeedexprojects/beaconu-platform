@@ -320,6 +320,86 @@ export class SessionService {
     return groupSlotsByDate(formatted);
   }
 
+  /**
+   * Full counsellor detail view for the platform admin panel:
+   * profile, slot/session stats, wallet, and recent slot/session lists.
+   */
+  static async getCounsellorDetailForAdmin(counsellorId: string) {
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor) throw new NotFoundError("Counsellor not found");
+
+    const fee = Number(counsellor.sessionFee ?? 0.0);
+
+    const [
+      slotStats,
+      sessionStats,
+      wallet,
+      availableSlots,
+      bookedSlots,
+      sessions,
+    ] = await Promise.all([
+      SessionRepository.getSlotStats(counsellorId),
+      SessionRepository.getSessionStats(counsellorId),
+      SessionRepository.getWallet(counsellorId),
+      SessionRepository.listSlotsByCounsellor(
+        counsellorId,
+        undefined,
+        { limit: 50 },
+        false,
+      ),
+      SessionRepository.listSlotsByCounsellor(
+        counsellorId,
+        undefined,
+        { limit: 50 },
+        true,
+      ),
+      SessionRepository.listSessionsByCounsellor(
+        counsellorId,
+        {},
+        { limit: 20 },
+      ),
+    ]);
+
+    return {
+      counsellor: formatCounsellor(counsellor),
+      stats: {
+        slots: slotStats,
+        sessions: {
+          total: sessionStats.total,
+          booked: sessionStats.booked,
+          completed: sessionStats.completed,
+          cancelled: sessionStats.cancelled,
+        },
+        payments: {
+          paid_sessions_count: sessionStats.paidSessionsCount,
+          total_payment_received: sessionStats.totalPaymentReceived,
+        },
+      },
+      wallet: formatWallet(wallet),
+      slots: {
+        available: availableSlots.map((slot) =>
+          formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
+        ),
+        booked: bookedSlots.map((slot) =>
+          formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
+        ),
+      },
+      recent_sessions: sessions.map((session) => ({
+        id: session.id,
+        status: session.status,
+        session_mode: session.sessionMode,
+        session_type: session.sessionType,
+        scheduled_date: session.scheduledDate,
+        start_time: session.startTime,
+        end_time: session.endTime,
+        session_fee: session.sessionFee ? Number(session.sessionFee) : null,
+        payment_status: session.paymentStatus,
+        transaction_id: session.transactionId,
+        student: formatStudent(session.student),
+      })),
+    };
+  }
+
   static async listAvailableSlots(query: ListAvailableSlotsQueryInput) {
     const fromDate = query.from_date
       ? parseDateOnly(query.from_date)
