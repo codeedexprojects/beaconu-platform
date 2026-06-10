@@ -1,4 +1,5 @@
 import { prisma } from "@beaconu/db";
+import { ConflictError } from "@/shared/errors";
 
 // ─────────────────────────────────────────────
 // Types
@@ -283,6 +284,205 @@ export class SessionRepository {
       },
       orderBy: [{ scheduledDate: "desc" }, { startTime: "asc" }],
       ...this.paginate(pagination),
+    });
+  }
+
+  /**
+   * Atomically claim an availability slot and create the session.
+   * Credits the counsellor's wallet when finalFee > 0.
+   */
+  static async bookSlotAndCreateSession(params: {
+    slot: {
+      id: string;
+      counsellorId: string;
+      availableDate: Date;
+      startTime: Date;
+      endTime: Date;
+    };
+    studentId: string;
+    sessionMode: string;
+    sessionType: string;
+    bookingReason: string;
+    finalFee: number;
+    transactionId?: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const claim = await tx.counsellorAvailability.updateMany({
+        where: { id: params.slot.id, isBooked: false },
+        data: { isBooked: true },
+      });
+
+      if (claim.count === 0) {
+        throw new ConflictError("This slot is already booked");
+      }
+
+      const session = await tx.counsellingSession.create({
+        data: {
+          studentId: params.studentId,
+          counsellorId: params.slot.counsellorId,
+          availabilityId: params.slot.id,
+          sessionMode: params.sessionMode,
+          sessionType: params.sessionType,
+          scheduledDate: params.slot.availableDate,
+          startTime: params.slot.startTime,
+          endTime: params.slot.endTime,
+          bookingReason: params.bookingReason,
+          sessionFee: params.finalFee,
+          paymentStatus: "paid",
+          ...(params.transactionId
+            ? { transactionId: params.transactionId }
+            : {}),
+        },
+      });
+
+      if (params.finalFee > 0) {
+        await tx.counsellorWallet.upsert({
+          where: { counsellorId: params.slot.counsellorId },
+          create: {
+            counsellorId: params.slot.counsellorId,
+            balance: params.finalFee,
+            totalEarned: params.finalFee,
+            totalWithdrawn: 0,
+          },
+          update: {
+            balance: { increment: params.finalFee },
+            totalEarned: { increment: params.finalFee },
+          },
+        });
+
+        const wallet = await tx.counsellorWallet.findUniqueOrThrow({
+          where: { counsellorId: params.slot.counsellorId },
+        });
+
+        await tx.counsellorWalletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            counsellorId: params.slot.counsellorId,
+            type: "credit",
+            amount: params.finalFee,
+            description: "Session booking payment",
+            sessionId: session.id,
+            balanceAfter: wallet.balance,
+            bankDetails: {},
+          },
+        });
+      }
+
+      return session;
+    });
+  }
+
+  /**
+   * Mark a session cancelled, free its slot, and refund the counsellor's
+   * wallet when sufficient balance is available.
+   */
+  static async cancelSessionAndRefund(params: {
+    sessionId: string;
+    availabilityId: string;
+    counsellorId: string;
+    cancelledBy: string;
+    cancellationReason?: string;
+    refundAmount: number;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      await tx.counsellingSession.update({
+        where: { id: params.sessionId },
+        data: {
+          status: "cancelled",
+          cancelledBy: params.cancelledBy,
+          cancellationReason: params.cancellationReason,
+          cancelledAt: new Date(),
+        },
+      });
+
+      await tx.counsellorAvailability.update({
+        where: { id: params.availabilityId },
+        data: { isBooked: false },
+      });
+
+      if (params.refundAmount > 0) {
+        const wallet = await tx.counsellorWallet.findUnique({
+          where: { counsellorId: params.counsellorId },
+        });
+
+        if (wallet && Number(wallet.balance) >= params.refundAmount) {
+          await tx.counsellorWallet.update({
+            where: { counsellorId: params.counsellorId },
+            data: { balance: { decrement: params.refundAmount } },
+          });
+
+          const updatedWallet = await tx.counsellorWallet.findUniqueOrThrow({
+            where: { counsellorId: params.counsellorId },
+          });
+
+          await tx.counsellorWalletTransaction.create({
+            data: {
+              walletId: updatedWallet.id,
+              counsellorId: params.counsellorId,
+              type: "debit",
+              amount: params.refundAmount,
+              description: `Refund for cancelled session: ${params.sessionId}`,
+              sessionId: params.sessionId,
+              balanceAfter: updatedWallet.balance,
+              bankDetails: {},
+            },
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Atomically claim the new slot, free the old one, move the session,
+   * and log the reschedule.
+   */
+  static async rescheduleSessionTx(params: {
+    sessionId: string;
+    oldAvailabilityId: string;
+    newAvailabilityId: string;
+    newSlot: { availableDate: Date; startTime: Date; endTime: Date };
+    rescheduledBy: string;
+    fromDate: Date;
+    fromTime: Date;
+    reason?: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const claim = await tx.counsellorAvailability.updateMany({
+        where: { id: params.newAvailabilityId, isBooked: false },
+        data: { isBooked: true },
+      });
+
+      if (claim.count === 0) {
+        throw new ConflictError("Selected slot is already booked");
+      }
+
+      await tx.counsellorAvailability.update({
+        where: { id: params.oldAvailabilityId },
+        data: { isBooked: false },
+      });
+
+      await tx.counsellingSession.update({
+        where: { id: params.sessionId },
+        data: {
+          availabilityId: params.newAvailabilityId,
+          scheduledDate: params.newSlot.availableDate,
+          startTime: params.newSlot.startTime,
+          endTime: params.newSlot.endTime,
+        },
+      });
+
+      await tx.sessionReschedule.create({
+        data: {
+          sessionId: params.sessionId,
+          rescheduledBy: params.rescheduledBy,
+          fromDate: params.fromDate,
+          fromTime: params.fromTime,
+          toAvailabilityId: params.newAvailabilityId,
+          toDate: params.newSlot.availableDate,
+          toTime: params.newSlot.startTime,
+          reason: params.reason,
+        },
+      });
     });
   }
 

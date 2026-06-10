@@ -20,7 +20,10 @@ body:json {
     "availability_id": "{{availabilityId}}",
     "session_mode": "video_call",
     "session_type": "career",
-    "booking_reason": "Need guidance for higher studies"
+    "booking_reason": "Need guidance for higher studies",
+    "razorpay_order_id": "{{razorpayOrderId}}",
+    "razorpay_payment_id": "{{razorpayPaymentId}}",
+    "razorpay_signature": "{{razorpaySignature}}"
   }
 }
 
@@ -58,6 +61,15 @@ docs {
   ## Fee logic (no need to pass session_fee)
   Fee is taken automatically from the slot's session_fee.
   Falls back to counsellor's default fee if slot has no fee set.
+
+  ## Payment (Razorpay)
+  If the resolved fee > 0, run Create Payment Order first and complete
+  Razorpay Checkout, then pass:
+  - razorpay_order_id
+  - razorpay_payment_id
+  - razorpay_signature
+
+  If the slot is free (fee = 0), omit the razorpay_* fields entirely.
 
   ## Wallet
   On successful booking, session_fee is credited directly to the counsellor's wallet.

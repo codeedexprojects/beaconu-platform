@@ -6,6 +6,7 @@ import {
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
+  CreatePaymentOrderInput,
 } from "../validators/sessions.validator";
 
 export class CounsellorSessionController {
@@ -102,6 +103,16 @@ export class StudentSessionController {
       .json(
         ApiResponse.success("Counsellors retrieved", result.data, result.meta),
       );
+  }
+
+  static async createPaymentOrder(req: Request, res: Response) {
+    const order = await SessionService.createPaymentOrder(
+      req.userId!,
+      req.body as CreatePaymentOrderInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Payment order created", order));
   }
 
   static async listAvailableSlots(req: Request, res: Response) {

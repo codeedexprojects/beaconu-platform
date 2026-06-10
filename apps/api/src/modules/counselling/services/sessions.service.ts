@@ -1,10 +1,15 @@
-import { prisma } from "@beaconu/db";
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
+import {
+  getRazorpay,
+  isRazorpayReady,
+  verifyPaymentSignature,
+} from "@/shared/lib/razorpay";
+import { env } from "@/shared/config/env";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
@@ -12,6 +17,7 @@ import {
   BookSessionInput,
   CancelSessionInput,
   CompleteSessionInput,
+  CreatePaymentOrderInput,
   ListAvailableSlotsQueryInput,
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
@@ -229,10 +235,7 @@ function groupSlotsByDate(formattedSlots: any[]) {
 
 export class SessionService {
   static async addSlot(counsellorId: string, input: AddSlotInput) {
-    const counsellor = await prisma.counsellor.findUnique({
-      where: { id: counsellorId },
-      select: { sessionFee: true },
-    });
+    const counsellor = await CounsellingRepository.findById(counsellorId);
 
     const finalFee =
       input.session_fee !== undefined
@@ -303,10 +306,7 @@ export class SessionService {
       ? parseDateOnly(query.from_date)
       : undefined;
 
-    const counsellor = await prisma.counsellor.findUnique({
-      where: { id: counsellorId },
-      select: { sessionFee: true },
-    });
+    const counsellor = await CounsellingRepository.findById(counsellorId);
     const fee = Number(counsellor?.sessionFee ?? 0.0);
 
     const slots = await SessionRepository.listSlotsByCounsellor(
@@ -351,121 +351,147 @@ export class SessionService {
 
   static async listCounsellors(query: ListCounsellorsQueryInput) {
     const date = query.date ? parseDateOnly(query.date) : undefined;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
 
     const { counsellors, total } =
       await CounsellingRepository.findActiveWithSlots({
         date,
         counsellorType: query.counsellor_type,
-        page: query.page,
-        limit: query.limit,
+        page,
+        limit,
       });
 
-    const data = counsellors.map((c) => ({
-      ...formatCounsellor(c),
-      available_slots:
-        (c as any).availability?.map((slot: any) => ({
-          id: slot.id,
-          available_date: slot.availableDate,
-          start_time: slot.startTime,
-          end_time: slot.endTime,
-          session_duration_mins: slot.sessionDurationMins,
-          session_fee: Number(slot.sessionFee ?? 0),
-        })) ?? [],
-    }));
+    const data = counsellors.map(formatCounsellor);
 
     return {
       data,
       meta: {
         total,
-        page: query.page,
-        limit: query.limit,
-        hasNext: query.page * query.limit < total,
+        page,
+        limit,
+        hasNext: page * limit < total,
       },
     };
   }
 
-  static async bookSession(studentId: string, input: BookSessionInput) {
-    return prisma.$transaction(async (tx) => {
-      const slot = await tx.counsellorAvailability.findUnique({
-        where: { id: input.availability_id },
-      });
+  /**
+   * Resolve the authoritative fee for a slot — never trust client input.
+   */
+  private static async resolveSlotFee(slot: {
+    sessionFee: unknown;
+    counsellorId: string;
+  }): Promise<number> {
+    if (slot.sessionFee && Number(slot.sessionFee) > 0) {
+      return Number(slot.sessionFee);
+    }
+    const counsellor = await CounsellingRepository.findById(slot.counsellorId);
+    return Number(counsellor?.sessionFee ?? 0.0);
+  }
 
-      if (!slot) {
-        throw new NotFoundError("Availability slot not found");
-      }
+  static async createPaymentOrder(
+    studentId: string,
+    input: CreatePaymentOrderInput,
+  ) {
+    const slot = await SessionRepository.findSlotById(input.availability_id);
 
-      if (slot.isBooked) {
-        throw new ConflictError("This slot is already booked");
-      }
+    if (!slot) {
+      throw new NotFoundError("Availability slot not found");
+    }
 
-      const counsellor = await tx.counsellor.findUnique({
-        where: { id: slot.counsellorId },
-        select: { sessionFee: true },
-      });
+    if (slot.isBooked) {
+      throw new ConflictError("This slot is already booked");
+    }
 
-      const finalFee =
-        slot.sessionFee && Number(slot.sessionFee) > 0
-          ? Number(slot.sessionFee)
-          : input.session_fee !== undefined
-            ? input.session_fee
-            : Number(counsellor?.sessionFee ?? 0.0);
+    const fee = await this.resolveSlotFee(slot);
 
-      const session = await tx.counsellingSession.create({
-        data: {
-          studentId,
-          counsellorId: slot.counsellorId,
-          availabilityId: slot.id,
-          sessionMode: input.session_mode,
-          sessionType: input.session_type,
-          scheduledDate: slot.availableDate,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          bookingReason: input.booking_reason,
-          sessionFee: finalFee,
-          paymentStatus: "paid",
-        },
-      });
+    if (fee <= 0) {
+      return { payment_required: false, fee: 0 };
+    }
 
-      await tx.counsellorAvailability.update({
-        where: { id: slot.id },
-        data: { isBooked: true },
-      });
+    if (!isRazorpayReady()) {
+      throw new BadRequestError("Payment gateway is not configured");
+    }
 
-      if (finalFee > 0) {
-        await tx.counsellorWallet.upsert({
-          where: { counsellorId: slot.counsellorId },
-          create: {
-            counsellorId: slot.counsellorId,
-            balance: finalFee,
-            totalEarned: finalFee,
-            totalWithdrawn: 0,
-          },
-          update: {
-            balance: { increment: finalFee },
-            totalEarned: { increment: finalFee },
-          },
-        });
-
-        const wallet = await tx.counsellorWallet.findUniqueOrThrow({
-          where: { counsellorId: slot.counsellorId },
-        });
-
-        await tx.counsellorWalletTransaction.create({
-          data: {
-            walletId: wallet.id,
-            counsellorId: slot.counsellorId,
-            type: "credit",
-            amount: finalFee,
-            description: "Session booking payment",
-            sessionId: session.id,
-            balanceAfter: wallet.balance,
-            bankDetails: {},
-          },
-        });
-      }
-
-      return formatSession(session);
+    const order = await getRazorpay().orders.create({
+      amount: Math.round(fee * 100),
+      currency: "INR",
+      receipt: `CNS-${slot.id}-${Date.now()}`,
+      notes: {
+        availability_id: slot.id,
+        student_id: studentId,
+      },
     });
+
+    return {
+      payment_required: true,
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: env.RAZORPAY_KEY_ID,
+      fee,
+    };
+  }
+
+  static async bookSession(studentId: string, input: BookSessionInput) {
+    const slot = await SessionRepository.findSlotById(input.availability_id);
+
+    if (!slot) {
+      throw new NotFoundError("Availability slot not found");
+    }
+
+    if (slot.isBooked) {
+      throw new ConflictError("This slot is already booked");
+    }
+
+    const finalFee = await this.resolveSlotFee(slot);
+    let transactionId: string | undefined;
+
+    if (finalFee > 0) {
+      if (
+        !input.razorpay_order_id ||
+        !input.razorpay_payment_id ||
+        !input.razorpay_signature
+      ) {
+        throw new BadRequestError(
+          "Payment details are required for this session",
+        );
+      }
+
+      const validSignature = verifyPaymentSignature(
+        input.razorpay_order_id,
+        input.razorpay_payment_id,
+        input.razorpay_signature,
+      );
+      if (!validSignature) {
+        throw new BadRequestError("Invalid payment signature");
+      }
+
+      const order = await getRazorpay().orders.fetch(input.razorpay_order_id);
+      if (
+        order.notes?.availability_id !== slot.id ||
+        order.notes?.student_id !== studentId
+      ) {
+        throw new BadRequestError("Payment order does not match this booking");
+      }
+      if (Number(order.amount) !== Math.round(finalFee * 100)) {
+        throw new BadRequestError("Payment amount mismatch");
+      }
+
+      transactionId = input.razorpay_payment_id;
+    }
+
+    const session = await SessionRepository.bookSlotAndCreateSession({
+      slot,
+      studentId,
+      sessionMode: input.session_mode,
+      sessionType: input.session_type,
+      bookingReason: input.booking_reason,
+      finalFee,
+      transactionId,
+    });
+
+    return formatSession(session);
   }
 
   static async listStudentSessions(
@@ -565,51 +591,18 @@ export class SessionService {
       throw new BadRequestError("Completed sessions cannot be cancelled");
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.counsellingSession.update({
-        where: { id: sessionId },
-        data: {
-          status: "cancelled",
-          cancelledBy: actor.userType,
-          cancellationReason: input.cancellation_reason,
-          cancelledAt: new Date(),
-        },
-      });
+    const refundAmount =
+      session.paymentStatus === "paid" && session.sessionFee
+        ? Number(session.sessionFee)
+        : 0;
 
-      await tx.counsellorAvailability.update({
-        where: { id: session.availabilityId },
-        data: { isBooked: false },
-      });
-
-      if (session.paymentStatus === "paid" && session.sessionFee) {
-        const amount = Number(session.sessionFee);
-        if (amount > 0) {
-          const wallet = await tx.counsellorWallet.findUnique({
-            where: { counsellorId: session.counsellorId },
-          });
-          if (wallet && Number(wallet.balance) >= amount) {
-            await tx.counsellorWallet.update({
-              where: { counsellorId: session.counsellorId },
-              data: { balance: { decrement: amount } },
-            });
-            const updatedWallet = await tx.counsellorWallet.findUniqueOrThrow({
-              where: { counsellorId: session.counsellorId },
-            });
-            await tx.counsellorWalletTransaction.create({
-              data: {
-                walletId: updatedWallet.id,
-                counsellorId: session.counsellorId,
-                type: "debit",
-                amount,
-                description: `Refund for cancelled session: ${sessionId}`,
-                sessionId: session.id,
-                balanceAfter: updatedWallet.balance,
-                bankDetails: {},
-              },
-            });
-          }
-        }
-      }
+    await SessionRepository.cancelSessionAndRefund({
+      sessionId,
+      availabilityId: session.availabilityId,
+      counsellorId: session.counsellorId,
+      cancelledBy: actor.userType,
+      cancellationReason: input.cancellation_reason,
+      refundAmount,
     });
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
@@ -638,57 +631,33 @@ export class SessionService {
       throw new BadRequestError("Cancelled sessions cannot be rescheduled");
     }
 
-    await prisma.$transaction(async (tx) => {
-      const newSlot = await tx.counsellorAvailability.findUnique({
-        where: { id: input.new_availability_id },
-      });
+    const newSlot = await SessionRepository.findSlotById(
+      input.new_availability_id,
+    );
 
-      if (!newSlot) {
-        throw new NotFoundError("New availability slot not found");
-      }
+    if (!newSlot) {
+      throw new NotFoundError("New availability slot not found");
+    }
 
-      if (newSlot.counsellorId !== session.counsellorId) {
-        throw new ConflictError(
-          "Reschedule slot must belong to the same counsellor",
-        );
-      }
+    if (newSlot.counsellorId !== session.counsellorId) {
+      throw new ConflictError(
+        "Reschedule slot must belong to the same counsellor",
+      );
+    }
 
-      if (newSlot.isBooked) {
-        throw new ConflictError("Selected slot is already booked");
-      }
+    if (newSlot.isBooked) {
+      throw new ConflictError("Selected slot is already booked");
+    }
 
-      await tx.counsellorAvailability.update({
-        where: { id: session.availabilityId },
-        data: { isBooked: false },
-      });
-
-      await tx.counsellorAvailability.update({
-        where: { id: newSlot.id },
-        data: { isBooked: true },
-      });
-
-      await tx.counsellingSession.update({
-        where: { id: sessionId },
-        data: {
-          availabilityId: newSlot.id,
-          scheduledDate: newSlot.availableDate,
-          startTime: newSlot.startTime,
-          endTime: newSlot.endTime,
-        },
-      });
-
-      await tx.sessionReschedule.create({
-        data: {
-          sessionId,
-          rescheduledBy: "student",
-          fromDate: session.scheduledDate,
-          fromTime: session.startTime,
-          toAvailabilityId: newSlot.id,
-          toDate: newSlot.availableDate,
-          toTime: newSlot.startTime,
-          reason: input.reason,
-        },
-      });
+    await SessionRepository.rescheduleSessionTx({
+      sessionId,
+      oldAvailabilityId: session.availabilityId,
+      newAvailabilityId: newSlot.id,
+      newSlot,
+      rescheduledBy: "student",
+      fromDate: session.scheduledDate,
+      fromTime: session.startTime,
+      reason: input.reason,
     });
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
