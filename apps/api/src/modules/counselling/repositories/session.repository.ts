@@ -302,7 +302,7 @@ export class SessionRepository {
     studentId: string;
     sessionMode: string;
     sessionType: string;
-    bookingReason: string;
+    bookingReason?: string;
     finalFee: number;
     transactionId?: string;
   }) {
