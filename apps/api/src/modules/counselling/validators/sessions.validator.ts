@@ -93,7 +93,7 @@ export const bookSessionSchema = z.object({
   availability_id: z.string().min(1),
   session_mode: z.enum(["voice_call", "video_call"]),
   session_type: z.enum(["career", "academic", "personal", "mental_health"]),
-  booking_reason: z.string().min(1, "Booking reason is required").max(500),
+  booking_reason: z.string().max(500).optional(),
 });
 
 // Student: reschedule

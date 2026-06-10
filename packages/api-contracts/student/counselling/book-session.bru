@@ -49,11 +49,11 @@ docs {
   Books a counselling session for the logged-in student.
   Requires: student access token.
 
-  ## Required fields
-  - availability_id : slot id from time_slots[].id in List Available Slots response
-  - session_mode    : "voice_call" | "video_call"
-  - session_type    : "career" | "academic" | "personal" | "mental_health"
-  - booking_reason  : required, max 500 chars
+  ## Fields
+  - availability_id : required, slot id from time_slots[].id in List Available Slots response
+  - session_mode    : required, "voice_call" | "video_call"
+  - session_type    : required, "career" | "academic" | "personal" | "mental_health"
+  - booking_reason  : optional, max 500 chars
 
   ## Fee logic (no need to pass session_fee)
   Fee is taken automatically from the slot's session_fee.
