@@ -57,10 +57,15 @@ export class CounsellingService {
     return formatCounsellor(updated);
   }
 
-  static async listAll(filters: { counsellor_type?: string; status?: string }) {
+  static async listAll(filters: {
+    counsellor_type?: string;
+    status?: string;
+    language?: string;
+  }) {
     const counsellors = await CounsellingRepository.findAll({
       counsellorType: filters.counsellor_type,
       status: filters.status,
+      language: filters.language,
     });
     return counsellors.map(formatCounsellor);
   }
