@@ -94,6 +94,13 @@ export class CounsellorSessionController {
 }
 
 export class StudentSessionController {
+  static async listKnownLanguages(_req: Request, res: Response) {
+    const languages = await SessionService.listKnownLanguages();
+    return res
+      .status(200)
+      .json(ApiResponse.success("Languages retrieved", languages));
+  }
+
   static async listCounsellors(req: Request, res: Response) {
     const result = await SessionService.listCounsellors(
       req.query as unknown as ListCounsellorsQueryInput,

@@ -345,6 +345,20 @@ export class SessionService {
     return groupSlotsByDate(slots.map(formatSlot));
   }
 
+  static async listKnownLanguages(): Promise<string[]> {
+    const rows = await CounsellingRepository.findAllKnownLanguages();
+    const languages = new Map<string, string>();
+    for (const row of rows) {
+      for (const lang of row.split(",")) {
+        const trimmed = lang.trim();
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        if (!languages.has(key)) languages.set(key, trimmed);
+      }
+    }
+    return Array.from(languages.values()).sort((a, b) => a.localeCompare(b));
+  }
+
   static async listCounsellors(query: ListCounsellorsQueryInput) {
     const date = query.date ? parseDateOnly(query.date) : undefined;
     const page = Number(query.page) || 1;

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { knownLanguagesSchema } from "./shared";
 
 export const updateMyProfileSchema = z.object({
   full_name: z.string().trim().min(1).optional(),
   phone_number: z.string().trim().optional(),
   avatar_url: z.string().url().optional(),
   counsellor_type: z.string().trim().optional(),
-  known_languages: z.string().trim().optional(),
+  known_languages: knownLanguagesSchema.optional(),
   session_fee: z.coerce.number().min(0).optional(),
 });
 

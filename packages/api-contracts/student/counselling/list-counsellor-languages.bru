@@ -1,0 +1,29 @@
+meta {
+  name: List Counsellor Languages
+  type: http
+  seq: 0.5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/counsellors/languages
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Returns a deduplicated, alphabetically sorted list of all languages
+  spoken by active counsellors (from their known_languages field).
+
+  Use this to populate the language filter dropdown for
+  List Counsellors (?language=...).
+
+  ## Response
+  {
+    "success": true,
+    "data": ["English", "Hindi", "Malayalam", "Tamil"]
+  }
+}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { knownLanguagesSchema } from "./shared";
 
 export const counsellorRequestSchemas = {
   submit: z
@@ -16,7 +17,7 @@ export const counsellorRequestSchemas = {
       counsellor_type: z.enum(["academic", "mindcare"]),
       qualification: z.string().trim().min(1).max(255),
       years_of_experience: z.string().trim().min(1).max(50),
-      known_languages: z.string().trim().min(1).max(255),
+      known_languages: knownLanguagesSchema,
       specialization: z.string().trim().min(1),
       license_number: z.string().trim().max(100).optional(),
       message: z.string().trim().min(20),
