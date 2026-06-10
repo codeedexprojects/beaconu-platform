@@ -93,9 +93,6 @@ export const bookSessionSchema = z.object({
   session_mode: z.enum(["voice_call", "video_call"]),
   session_type: z.enum(["career", "academic", "personal", "mental_health"]),
   booking_reason: z.string().min(1, "Booking reason is required").max(500),
-  razorpay_order_id: z.string().optional(),
-  razorpay_payment_id: z.string().optional(),
-  razorpay_signature: z.string().optional(),
 });
 
 // Student: reschedule

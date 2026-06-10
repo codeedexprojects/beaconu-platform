@@ -20,10 +20,7 @@ body:json {
     "availability_id": "{{availabilityId}}",
     "session_mode": "video_call",
     "session_type": "career",
-    "booking_reason": "Need guidance for higher studies",
-    "razorpay_order_id": "{{razorpayOrderId}}",
-    "razorpay_payment_id": "{{razorpayPaymentId}}",
-    "razorpay_signature": "{{razorpaySignature}}"
+    "booking_reason": "Need guidance for higher studies"
   }
 }
 
@@ -64,12 +61,14 @@ docs {
 
   ## Payment (Razorpay)
   If the resolved fee > 0, run Create Payment Order first and complete
-  Razorpay Checkout, then pass:
-  - razorpay_order_id
-  - razorpay_payment_id
-  - razorpay_signature
+  Razorpay Checkout. Payment confirmation is received via the Razorpay
+  `payment.captured` webhook (POST /api/v1/webhooks/counselling/razorpay),
+  which marks the order as paid server-side. This endpoint then verifies
+  that marker for (availability_id, student) — no payment fields are
+  passed in the request body.
 
-  If the slot is free (fee = 0), omit the razorpay_* fields entirely.
+  If the slot is free (fee = 0), this endpoint can be called directly
+  after Create Payment Order returns payment_required: false.
 
   ## Wallet
   On successful booking, session_fee is credited directly to the counsellor's wallet.

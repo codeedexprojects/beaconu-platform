@@ -52,7 +52,14 @@ app.use(
   }),
 );
 app.use(compression());
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, _res, buf) => {
+      (req as express.Request).rawBody = buf;
+    },
+  }),
+);
 app.use(cookieParser());
 app.use(requestId);
 app.use(morgan("combined"));

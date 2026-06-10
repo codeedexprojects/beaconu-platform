@@ -1,0 +1,58 @@
+meta {
+  name: Razorpay Counselling Payment Captured
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/webhooks/counselling/razorpay
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Razorpay-Signature: {{razorpaySignature}}
+}
+
+body:json {
+  {
+    "event": "payment.captured",
+    "payload": {
+      "payment": {
+        "entity": {
+          "id": "pay_xxxxxxxxxxxx",
+          "order_id": "order_xxxxxxxxxxxx",
+          "amount": 50000,
+          "currency": "INR",
+          "status": "captured",
+          "notes": {
+            "availability_id": "{{availabilityId}}",
+            "student_id": "{{studentId}}"
+          }
+        }
+      }
+    }
+  }
+}
+
+docs {
+  Razorpay webhook — NOT called manually. Configure this URL in the
+  Razorpay Dashboard for the `payment.captured` event.
+
+  ## Signature
+  Razorpay signs the raw request body with HMAC-SHA256 using
+  RAZORPAY_WEBHOOK_SECRET, sent as the `X-Razorpay-Signature` header.
+  This sample request will fail signature verification unless you
+  compute a real signature for the exact raw body bytes — it exists
+  here purely to document the contract shape.
+
+  ## Effect
+  On a valid `payment.captured` event, the server marks the order as
+  paid for (availability_id, student_id) from `payload.payment.entity.notes`,
+  for 30 minutes. `POST /api/v1/student/counselling/sessions` (Book Session)
+  then consumes this marker to confirm payment without trusting client input.
+
+  Idempotent: duplicate webhook deliveries for the same payment id are
+  ignored (Redis key `payment-processed:{paymentId}`, 24h TTL).
+}
