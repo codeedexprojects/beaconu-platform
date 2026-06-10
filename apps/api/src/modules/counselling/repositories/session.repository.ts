@@ -79,15 +79,58 @@ export class SessionRepository {
     counsellorId: string,
     fromDate?: Date,
     pagination: PaginationOptions = {},
+    isBooked?: boolean,
   ) {
     return prisma.counsellorAvailability.findMany({
       where: {
         counsellorId,
         ...(fromDate ? { availableDate: { gte: fromDate } } : {}),
+        ...(isBooked !== undefined ? { isBooked } : {}),
       },
       orderBy: [{ availableDate: "asc" }, { startTime: "asc" }],
       ...this.paginate(pagination),
     });
+  }
+
+  static async getSlotStats(counsellorId: string) {
+    const [total, available, booked] = await Promise.all([
+      prisma.counsellorAvailability.count({ where: { counsellorId } }),
+      prisma.counsellorAvailability.count({
+        where: { counsellorId, isBooked: false },
+      }),
+      prisma.counsellorAvailability.count({
+        where: { counsellorId, isBooked: true },
+      }),
+    ]);
+    return { total, available, booked };
+  }
+
+  static async getSessionStats(counsellorId: string) {
+    const [total, booked, completed, cancelled, paidAgg] = await Promise.all([
+      prisma.counsellingSession.count({ where: { counsellorId } }),
+      prisma.counsellingSession.count({
+        where: { counsellorId, status: "booked" },
+      }),
+      prisma.counsellingSession.count({
+        where: { counsellorId, status: "completed" },
+      }),
+      prisma.counsellingSession.count({
+        where: { counsellorId, status: "cancelled" },
+      }),
+      prisma.counsellingSession.aggregate({
+        where: { counsellorId, paymentStatus: "paid" },
+        _sum: { sessionFee: true },
+        _count: true,
+      }),
+    ]);
+    return {
+      total,
+      booked,
+      completed,
+      cancelled,
+      paidSessionsCount: paidAgg._count,
+      totalPaymentReceived: Number(paidAgg._sum.sessionFee ?? 0),
+    };
   }
 
   /**

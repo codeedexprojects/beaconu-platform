@@ -52,4 +52,7 @@ export const QUERY_KEYS = {
       ? ["counsellor-requests", params]
       : (["counsellor-requests"] as const),
   counsellorRequest: (id: string) => ["counsellor-requests", id] as const,
+  counsellors: (params?: object) =>
+    params ? ["counsellors", params] : (["counsellors"] as const),
+  counsellorDetail: (id: string) => ["counsellors", id, "detail"] as const,
 } as const;

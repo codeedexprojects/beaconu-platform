@@ -15,6 +15,13 @@ router.get(
   CounsellingPlatformAdminController.listAll,
 );
 router.get(
+  "/:id/detail",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.view"),
+  CounsellingPlatformAdminController.getDetail,
+);
+router.get(
   "/:id",
   authenticate,
   authorizeUserType("platform_admin"),
