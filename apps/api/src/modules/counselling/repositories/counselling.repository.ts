@@ -41,6 +41,7 @@ export class CounsellingRepository {
   static async findActiveWithSlots(filters: {
     date?: Date;
     counsellorType?: string;
+    language?: string;
     page: number;
     limit: number;
   }) {
@@ -52,6 +53,14 @@ export class CounsellingRepository {
       status: "active",
       ...(filters.counsellorType
         ? { counsellorType: filters.counsellorType }
+        : {}),
+      ...(filters.language
+        ? {
+            knownLanguages: {
+              contains: filters.language,
+              mode: "insensitive" as const,
+            },
+          }
         : {}),
       ...(filters.date
         ? {

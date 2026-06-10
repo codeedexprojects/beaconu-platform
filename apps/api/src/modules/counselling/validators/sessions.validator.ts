@@ -64,6 +64,7 @@ export const listCounsellorsQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
     .optional(),
   counsellor_type: z.enum(["academic", "mindcare"]).optional(),
+  language: z.string().trim().min(1).max(50).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

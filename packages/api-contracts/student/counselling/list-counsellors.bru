@@ -17,8 +17,18 @@ auth:bearer {
 params:query {
   ~date: 2026-06-10
   ~counsellor_type: academic
+  ~language: English
   ~page: 1
   ~limit: 20
+}
+
+docs {
+  ## Query params
+  - date            : YYYY-MM-DD — only counsellors with a free slot on this date
+  - counsellor_type : "academic" | "mindcare"
+  - language        : matches against counsellor's known_languages
+                       (case-insensitive substring match, e.g. "Hindi")
+  - page, limit     : pagination
 }
 
 script:post-response {

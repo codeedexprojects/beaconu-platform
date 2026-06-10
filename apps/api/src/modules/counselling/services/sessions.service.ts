@@ -354,6 +354,7 @@ export class SessionService {
       await CounsellingRepository.findActiveWithSlots({
         date,
         counsellorType: query.counsellor_type,
+        language: query.language,
         page,
         limit,
       });
