@@ -4,12 +4,8 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
-import {
-  getRazorpay,
-  isRazorpayReady,
-  verifyPaymentSignature,
-} from "@/shared/lib/razorpay";
-import { env } from "@/shared/config/env";
+import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
+import { getRedisClient } from "@/shared/lib/redis";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
@@ -389,6 +385,57 @@ export class SessionService {
     return Number(counsellor?.sessionFee ?? 0.0);
   }
 
+  private static capturedPaymentKey(
+    availabilityId: string,
+    studentId: string,
+  ): string {
+    return `razorpay:captured:${availabilityId}:${studentId}`;
+  }
+
+  /**
+   * Called by the Razorpay webhook on `payment.captured`.
+   * Marks the order as paid so `bookSession` can confirm it without
+   * the client passing payment details directly.
+   */
+  static async markPaymentCaptured(payment: {
+    id: string;
+    amount: number;
+    notes?: { availability_id?: string; student_id?: string };
+  }): Promise<void> {
+    const availabilityId = payment.notes?.availability_id;
+    const studentId = payment.notes?.student_id;
+    if (!availabilityId || !studentId) return;
+
+    const redis = getRedisClient();
+    const idempotencyKey = `payment-processed:${payment.id}`;
+    const isNew = await redis.set(idempotencyKey, "1", "EX", 86400, "NX");
+    if (!isNew) return;
+
+    await redis.set(
+      this.capturedPaymentKey(availabilityId, studentId),
+      JSON.stringify({ paymentId: payment.id, amount: payment.amount }),
+      "EX",
+      1800,
+    );
+  }
+
+  /**
+   * Reads and clears the "payment captured" marker for a slot/student
+   * pair set by the Razorpay webhook.
+   */
+  private static async consumeCapturedPayment(
+    availabilityId: string,
+    studentId: string,
+  ): Promise<{ paymentId: string; amount: number } | null> {
+    const redis = getRedisClient();
+    const key = this.capturedPaymentKey(availabilityId, studentId);
+    const raw = await redis.get(key);
+    if (!raw) return null;
+
+    await redis.del(key);
+    return JSON.parse(raw) as { paymentId: string; amount: number };
+  }
+
   static async createPaymentOrder(
     studentId: string,
     input: CreatePaymentOrderInput,
@@ -416,7 +463,8 @@ export class SessionService {
     const order = await getRazorpay().orders.create({
       amount: Math.round(fee * 100),
       currency: "INR",
-      receipt: `CNS-${slot.id}-${Date.now()}`,
+      // Razorpay caps receipt at 40 chars — use the slot's last 8 chars + a timestamp.
+      receipt: `CNS-${slot.id.slice(-8)}-${Date.now()}`,
       notes: {
         availability_id: slot.id,
         student_id: studentId,
@@ -428,7 +476,6 @@ export class SessionService {
       order_id: order.id,
       amount: order.amount,
       currency: order.currency,
-      key_id: env.RAZORPAY_KEY_ID,
       fee,
     };
   }
@@ -448,37 +495,19 @@ export class SessionService {
     let transactionId: string | undefined;
 
     if (finalFee > 0) {
-      if (
-        !input.razorpay_order_id ||
-        !input.razorpay_payment_id ||
-        !input.razorpay_signature
-      ) {
+      const paidPayment = await this.consumeCapturedPayment(slot.id, studentId);
+
+      if (!paidPayment) {
         throw new BadRequestError(
-          "Payment details are required for this session",
+          "Payment not completed for this slot. Please complete payment via Razorpay first.",
         );
       }
 
-      const validSignature = verifyPaymentSignature(
-        input.razorpay_order_id,
-        input.razorpay_payment_id,
-        input.razorpay_signature,
-      );
-      if (!validSignature) {
-        throw new BadRequestError("Invalid payment signature");
-      }
-
-      const order = await getRazorpay().orders.fetch(input.razorpay_order_id);
-      if (
-        order.notes?.availability_id !== slot.id ||
-        order.notes?.student_id !== studentId
-      ) {
-        throw new BadRequestError("Payment order does not match this booking");
-      }
-      if (Number(order.amount) !== Math.round(finalFee * 100)) {
+      if (paidPayment.amount !== Math.round(finalFee * 100)) {
         throw new BadRequestError("Payment amount mismatch");
       }
 
-      transactionId = input.razorpay_payment_id;
+      transactionId = paidPayment.paymentId;
     }
 
     const session = await SessionRepository.bookSlotAndCreateSession({

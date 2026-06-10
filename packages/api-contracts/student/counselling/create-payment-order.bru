@@ -48,9 +48,15 @@ docs {
   ## Flow
   1. Call this endpoint with `availability_id`.
   2. If `payment_required` is false, the slot is free — skip Razorpay
-     and call Book Session directly (no razorpay_* fields needed).
+     and call Book Session directly.
   3. If `payment_required` is true, open Razorpay Checkout on the
-     client using `order_id`, `amount`, `currency`, `key_id`.
-  4. After successful payment, pass `razorpay_order_id`,
-     `razorpay_payment_id`, and `razorpay_signature` to Book Session.
+     client using `order_id`, `amount`, `currency`, and the public
+     Razorpay key from app config (NEXT_PUBLIC_RAZORPAY_KEY_ID /
+     mobile equivalent) — not returned by this endpoint.
+  4. After payment succeeds, Razorpay sends a `payment.captured`
+     webhook to POST /api/v1/webhooks/counselling/razorpay, which marks
+     the order as paid server-side (keyed by availability_id + student_id
+     from the order notes).
+  5. Call Book Session with just `availability_id` — it checks the
+     paid marker set by the webhook.
 }

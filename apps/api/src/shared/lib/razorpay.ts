@@ -23,14 +23,13 @@ export function getRazorpay(): Razorpay {
   return _razorpay;
 }
 
-export function verifyPaymentSignature(
-  orderId: string,
-  paymentId: string,
+export function verifyWebhookSignature(
+  rawBody: Buffer | string,
   signature: string,
 ): boolean {
   const expected = crypto
-    .createHmac("sha256", env.RAZORPAY_KEY_SECRET)
-    .update(`${orderId}|${paymentId}`)
+    .createHmac("sha256", env.RAZORPAY_WEBHOOK_SECRET)
+    .update(rawBody)
     .digest("hex");
 
   const expectedBuf = Buffer.from(expected, "hex");
