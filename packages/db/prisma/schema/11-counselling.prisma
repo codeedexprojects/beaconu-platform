@@ -39,6 +39,7 @@ model CounsellingSession {
   status             String    @default("booked") @db.VarChar(20)
   meetingUrl         String?   @map("meeting_url") @db.Text
   meetingId          String?   @map("meeting_id") @db.VarChar(50)
+  googleEventId      String?   @map("google_event_id") @db.VarChar(255)
   sessionFee         Decimal?  @map("session_fee") @db.Decimal(10, 2)
   paymentStatus      String    @default("pending") @map("payment_status") @db.VarChar(20)
   transactionId      String?   @map("transaction_id") @db.VarChar(100)
