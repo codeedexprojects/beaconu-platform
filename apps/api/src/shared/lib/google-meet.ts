@@ -1,9 +1,10 @@
 import { randomUUID } from "crypto";
-import { google } from "googleapis";
+import { calendar, calendar_v3 } from "@googleapis/calendar";
+import { JWT } from "google-auth-library";
 import { env } from "@/shared/config/env";
 import { logger } from "@/shared/lib/logger";
 
-let _calendar: ReturnType<typeof google.calendar> | null = null;
+let _calendar: calendar_v3.Calendar | null = null;
 
 export function isGoogleMeetReady(): boolean {
   return !!(
@@ -13,7 +14,7 @@ export function isGoogleMeetReady(): boolean {
   );
 }
 
-function getCalendarClient(): ReturnType<typeof google.calendar> {
+function getCalendarClient(): calendar_v3.Calendar {
   if (!isGoogleMeetReady()) {
     throw new Error(
       "Google Meet is not configured. Set GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL, " +
@@ -22,13 +23,13 @@ function getCalendarClient(): ReturnType<typeof google.calendar> {
   }
 
   if (!_calendar) {
-    const auth = new google.auth.JWT({
+    const auth = new JWT({
       email: env.GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL,
       // Render/most env stores escape newlines as literal "\n".
       key: env.GOOGLE_MEET_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n"),
       scopes: ["https://www.googleapis.com/auth/calendar.events"],
     });
-    _calendar = google.calendar({ version: "v3", auth });
+    _calendar = calendar({ version: "v3", auth });
   }
 
   return _calendar;
