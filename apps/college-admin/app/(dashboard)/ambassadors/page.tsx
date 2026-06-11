@@ -53,7 +53,7 @@ const createAmbassadorSchema = z
     email: z.string().email("Invalid email address"),
     phone_number: z.string().optional(),
     ambassador_type: z.enum(["student", "teacher"], {
-      required_error: "Select a type",
+      error: "Select a type",
     }),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string().min(1, "Please confirm the password"),
