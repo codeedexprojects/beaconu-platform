@@ -6,6 +6,13 @@ import {
 } from "@/shared/errors";
 import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
+import { logger } from "@/shared/lib/logger";
+import {
+  createMeetEvent,
+  deleteMeetEvent,
+  isGoogleMeetReady,
+  updateMeetEventTime,
+} from "@/shared/lib/google-meet";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
@@ -29,6 +36,13 @@ function parseDateOnly(value: string): Date {
 
 function parseTimeOnly(value: string): Date {
   return new Date(`1970-01-01T${value}:00.000Z`);
+}
+
+/** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
+function toISODateTime(date: Date, time: Date): string {
+  const datePart = date.toISOString().slice(0, 10);
+  const timePart = time.toISOString().slice(11, 19);
+  return `${datePart}T${timePart}.000Z`;
 }
 
 function ensureStartBeforeEnd(start: Date, end: Date): void {
@@ -155,6 +169,8 @@ function formatSession(session: any) {
     start_time: session.startTime,
     end_time: session.endTime,
     booking_reason: session.bookingReason,
+    meeting_url: session.meetingUrl,
+    meeting_id: session.meetingId,
     session_fee: session.sessionFee ? Number(session.sessionFee) : null,
     payment_status: session.paymentStatus,
     transaction_id: session.transactionId,
@@ -615,7 +631,66 @@ export class SessionService {
       transactionId,
     });
 
+    if (session.sessionMode === "video_call" && isGoogleMeetReady()) {
+      await this.attachGoogleMeetLink(session);
+    }
+
     return formatSession(session);
+  }
+
+  /**
+   * Best-effort: creates a Google Meet link for an online session and
+   * persists it. Mutates `session` in place so the caller's response
+   * reflects the new link without a refetch. Never throws — booking must
+   * succeed even if Calendar/Meet is unavailable.
+   */
+  private static async attachGoogleMeetLink(session: {
+    id: string;
+    studentId: string;
+    counsellorId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    endTime: Date;
+    bookingReason: string | null;
+    meetingUrl: string | null;
+    meetingId: string | null;
+  }): Promise<void> {
+    try {
+      const fullSession = await SessionRepository.findSessionById(session.id);
+      const studentEmail = fullSession?.student?.email;
+      const counsellorEmail = fullSession?.counsellor?.email;
+      const counsellorName = fullSession?.counsellor?.fullName ?? "Counsellor";
+
+      if (!studentEmail || !counsellorEmail) {
+        return;
+      }
+
+      const meetEvent = await createMeetEvent({
+        summary: `Counselling session with ${counsellorName}`,
+        description: session.bookingReason ?? undefined,
+        startDateTime: toISODateTime(session.scheduledDate, session.startTime),
+        endDateTime: toISODateTime(session.scheduledDate, session.endTime),
+        attendeeEmails: [studentEmail, counsellorEmail],
+      });
+
+      if (!meetEvent) {
+        return;
+      }
+
+      await SessionRepository.updateSession(session.id, {
+        meetingUrl: meetEvent.meetingUrl,
+        ...(meetEvent.meetingId ? { meetingId: meetEvent.meetingId } : {}),
+        googleEventId: meetEvent.eventId,
+      });
+
+      session.meetingUrl = meetEvent.meetingUrl;
+      session.meetingId = meetEvent.meetingId;
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to attach Google Meet link to session",
+      );
+    }
   }
 
   static async listStudentSessions(
@@ -729,6 +804,10 @@ export class SessionService {
       refundAmount,
     });
 
+    if (session.googleEventId) {
+      await deleteMeetEvent(session.googleEventId);
+    }
+
     return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
@@ -783,6 +862,14 @@ export class SessionService {
       fromTime: session.startTime,
       reason: input.reason,
     });
+
+    if (session.googleEventId) {
+      await updateMeetEventTime(
+        session.googleEventId,
+        toISODateTime(newSlot.availableDate, newSlot.startTime),
+        toISODateTime(newSlot.availableDate, newSlot.endTime),
+      );
+    }
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
   }

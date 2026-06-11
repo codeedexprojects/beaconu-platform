@@ -542,6 +542,7 @@ export class SessionRepository {
       sessionNotes: string;
       meetingUrl: string;
       meetingId: string;
+      googleEventId: string;
       availabilityId: string;
       scheduledDate: Date;
       startTime: Date;
