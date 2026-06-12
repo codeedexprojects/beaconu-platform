@@ -1,0 +1,46 @@
+meta {
+  name: Reschedule Session
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/counsellor/sessions/{{sessionId}}/reschedule
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "new_availability_id": "{{availabilityId}}",
+    "reason": "Need to shift to another slot"
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("accessToken");
+  const sessionId = bru.getEnvVar("sessionId");
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!token) {
+    throw new Error("accessToken is not set. Run Counsellor Login first.");
+  }
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run List Sessions first.");
+  }
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List My Slots first.");
+  }
+}
+
+docs {
+  Reschedules a session to a different availability slot belonging to the same counsellor.
+  Requires: counsellor access token. Notifies the student of the updated slot.
+
+  - new_availability_id: an unbooked slot belonging to this counsellor
+  - reason: optional reason for the reschedule
+}

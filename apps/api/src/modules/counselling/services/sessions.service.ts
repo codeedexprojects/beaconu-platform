@@ -860,7 +860,7 @@ export class SessionService {
   }
 
   static async rescheduleSession(
-    studentId: string,
+    actor: { userType: "student" | "counsellor"; userId: string },
     sessionId: string,
     input: RescheduleSessionInput,
   ) {
@@ -870,9 +870,7 @@ export class SessionService {
       throw new NotFoundError("Session");
     }
 
-    if (session.studentId !== studentId) {
-      throw new ForbiddenError("You can only reschedule your own sessions");
-    }
+    ensureOwnsSession(session, actor);
 
     if (session.status === "completed") {
       throw new BadRequestError("Completed sessions cannot be rescheduled");
@@ -905,7 +903,7 @@ export class SessionService {
       oldAvailabilityId: session.availabilityId,
       newAvailabilityId: newSlot.id,
       newSlot,
-      rescheduledBy: "student",
+      rescheduledBy: actor.userType,
       fromDate: session.scheduledDate,
       fromTime: session.startTime,
       reason: input.reason,

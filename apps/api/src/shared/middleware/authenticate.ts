@@ -26,6 +26,7 @@ export function authenticate(
     req.collegeId = payload.collegeId;
     req.roleId = payload.roleId;
     req.permissions = payload.permissions;
+    req.counsellorType = payload.counsellorType;
     next();
   } catch {
     next(new UnauthorizedError("Invalid or expired token"));

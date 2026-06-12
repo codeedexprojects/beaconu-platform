@@ -146,6 +146,7 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       permissions: [],
       sessionId: session.sessionId,
+      counsellorType: counsellor.counsellorType as "academic" | "mindcare",
     });
 
     return {
@@ -185,6 +186,7 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       permissions: [],
       sessionId: session.sessionId,
+      counsellorType: counsellor.counsellorType as "academic" | "mindcare",
     });
 
     return {
@@ -404,6 +406,8 @@ export class AuthService {
       collegeId: userData.collegeId,
       permissions: userData.permissions,
       sessionId: newSession.sessionId,
+      counsellorType: (userData as { counsellorType?: "academic" | "mindcare" })
+        .counsellorType,
     });
 
     return { accessToken, refreshToken: newSession.refreshToken };
@@ -720,7 +724,14 @@ export class AuthService {
       case USER_TYPES.COUNSELLOR: {
         const counsellor = await AuthRepository.findCounsellorById(userId);
         return counsellor
-          ? { roleId: undefined, collegeId: undefined, permissions: [] }
+          ? {
+              roleId: undefined,
+              collegeId: undefined,
+              permissions: [],
+              counsellorType: counsellor.counsellorType as
+                | "academic"
+                | "mindcare",
+            }
           : null;
       }
 

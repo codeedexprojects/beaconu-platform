@@ -62,6 +62,17 @@ export class CounsellorSessionController {
       .json(ApiResponse.success("Session cancelled", session));
   }
 
+  static async rescheduleSession(req: Request, res: Response) {
+    const session = await SessionService.rescheduleSession(
+      { userType: "counsellor", userId: req.userId! },
+      req.params.id as string,
+      req.body,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Session rescheduled", session));
+  }
+
   static async updateMeeting(req: Request, res: Response) {
     const session = await SessionService.updateMeeting(
       req.userId!,
@@ -201,7 +212,7 @@ export class StudentSessionController {
 
   static async rescheduleSession(req: Request, res: Response) {
     const session = await SessionService.rescheduleSession(
-      req.userId!,
+      { userType: "student", userId: req.userId! },
       req.params.id as string,
       req.body,
     );
