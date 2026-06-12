@@ -19,7 +19,10 @@ export class CounsellingRepository {
   static async findById(id: string) {
     return prisma.counsellor.findUnique({
       where: { id },
-      select: COUNSELLOR_SELECT,
+      select: {
+        ...COUNSELLOR_SELECT,
+        wallet: { select: { balance: true } },
+      },
     });
   }
 

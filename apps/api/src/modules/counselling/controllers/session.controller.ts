@@ -6,6 +6,7 @@ import {
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
+  ListWalletTransactionsQueryInput,
   CreatePaymentOrderInput,
 } from "../validators/sessions.validator";
 
@@ -24,13 +25,13 @@ export class CounsellorSessionController {
   }
 
   static async listSessions(req: Request, res: Response) {
-    const sessions = await SessionService.listCounsellorSessions(
+    const { data, meta } = await SessionService.listCounsellorSessions(
       req.userId!,
       req.query as unknown as ListSessionsQueryInput,
     );
     return res
       .status(200)
-      .json(ApiResponse.success("Sessions retrieved", sessions));
+      .json(ApiResponse.success("Sessions retrieved", data, meta));
   }
 
   static async getSession(req: Request, res: Response) {
@@ -86,7 +87,10 @@ export class CounsellorSessionController {
   }
 
   static async getWallet(req: Request, res: Response) {
-    const wallet = await SessionService.getWallet(req.userId!);
+    const wallet = await SessionService.getWallet(
+      req.userId!,
+      req.query as unknown as ListWalletTransactionsQueryInput,
+    );
     return res
       .status(200)
       .json(ApiResponse.success("Wallet retrieved", wallet));
