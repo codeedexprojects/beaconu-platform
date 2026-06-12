@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
-import { authorizeUserType } from "@/shared/middleware/authorize";
+import {
+  authorizeUserType,
+  authorizeCounsellorType,
+} from "@/shared/middleware/authorize";
 import { validate } from "@/shared/middleware/validate";
 import { updateMyProfileSchema } from "../validators/counselling.validator";
 import { CounsellorController } from "../controllers/counsellor.controller";
@@ -11,6 +14,7 @@ import {
   listSessionsQuerySchema,
   listSlotsQuerySchema,
   listWalletTransactionsQuerySchema,
+  rescheduleSessionSchema,
   sessionIdParamsSchema,
   updateMeetingSchema,
 } from "../validators/sessions.validator";
@@ -74,6 +78,15 @@ router.patch(
 );
 
 router.patch(
+  "/sessions/:id/reschedule",
+  authenticate,
+  authorizeUserType("counsellor"),
+  validate(sessionIdParamsSchema, "params"),
+  validate(rescheduleSessionSchema),
+  CounsellorSessionController.rescheduleSession,
+);
+
+router.patch(
   "/sessions/:id/meeting",
   authenticate,
   authorizeUserType("counsellor"),
@@ -95,6 +108,7 @@ router.get(
   "/wallet",
   authenticate,
   authorizeUserType("counsellor"),
+  authorizeCounsellorType("academic"),
   validate(listWalletTransactionsQuerySchema, "query"),
   CounsellorSessionController.getWallet,
 );

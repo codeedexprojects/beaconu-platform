@@ -41,6 +41,15 @@ function parseTimeOnly(value: string): Date {
   return new Date(`1970-01-01T${value}:00.000Z`);
 }
 
+/** Formats a `@db.Time` value (stored as a Date) as "HH:MM". */
+function formatTimeOnly(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString().slice(11, 16);
+}
+
 /** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
 function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
@@ -860,7 +869,7 @@ export class SessionService {
   }
 
   static async rescheduleSession(
-    studentId: string,
+    actor: { userType: "student" | "counsellor"; userId: string },
     sessionId: string,
     input: RescheduleSessionInput,
   ) {
@@ -870,9 +879,7 @@ export class SessionService {
       throw new NotFoundError("Session");
     }
 
-    if (session.studentId !== studentId) {
-      throw new ForbiddenError("You can only reschedule your own sessions");
-    }
+    ensureOwnsSession(session, actor);
 
     if (session.status === "completed") {
       throw new BadRequestError("Completed sessions cannot be rescheduled");
@@ -905,7 +912,7 @@ export class SessionService {
       oldAvailabilityId: session.availabilityId,
       newAvailabilityId: newSlot.id,
       newSlot,
-      rescheduledBy: "student",
+      rescheduledBy: actor.userType,
       fromDate: session.scheduledDate,
       fromTime: session.startTime,
       reason: input.reason,
