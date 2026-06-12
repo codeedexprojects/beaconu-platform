@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "counsellors" ADD COLUMN "rating" DECIMAL(2,1) NOT NULL DEFAULT 0.0,
-ADD COLUMN "known_languages" VARCHAR(255),
-ADD COLUMN "session_fee" DECIMAL(10,2) NOT NULL DEFAULT 0.0;

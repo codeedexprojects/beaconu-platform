@@ -20,6 +20,7 @@ const ALLOWED_EXTENSIONS = new Set([
   ".env",
   ".md",
   ".sql",
+  ".prisma",
 ]);
 
 function walk(dir: string, fileList: string[] = []): string[] {

@@ -106,8 +106,38 @@ model College {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  // College Overview
+  establishedYear  Int?     @map("established_year")
+  collegeType      String?  @map("college_type") @db.VarChar(30) // public|private|deemed|autonomous
+  genderType       String?  @map("gender_type") @db.VarChar(20) // co_ed|boys|girls
+  avgStudentCount  Int?     @map("avg_student_count")
+  campusSizeAcres  Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
+  outsideStatePct  Decimal? @map("outside_state_pct") @db.Decimal(5, 2)
+  avgRating        Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
+  reviewCount      Int      @default(0) @map("review_count")
+  amenities        Json     @default("[]") // [{name, iconKey}]
+  campusFacilities Json     @default("[]") @map("campus_facilities") // [{name, category, iconUrl}]
+  nearbyAccess     Json     @default("{}") @map("nearby_access") // {transit:[], essentials:[], utility:[]}
+  socialLinks      Json     @default("{}") @map("social_links") // {facebook, linkedin, instagram}
+  campusReels      Json     @default("[]") @map("campus_reels") // [{videoUrl, title, duration}]
+  view360Url       String?  @map("view_360_url") @db.Text
+
+  // Student Code of Conduct
+  codeOfConduct Json @default("[]") @map("code_of_conduct") // [{order, rule}]
+
+  // Library, Clubs & Alliances
+  libraries Json @default("[]") // [{type, departmentId?, name, ...}]
+  clubs     Json @default("[]") // [{id, name, slug, category, ...}]
+  alliances Json @default("[]") // [{id, partnerName, allianceType, ...}]
+
+  // Placements & Demographics
+  placementData           Json      @default("{}") @map("placement_data") // {academicYear: {...}}
+  demographics            Json      @default("{}") // college-level demographics
+  demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
+
   // Relations
   university                University                 @relation(fields: [universityId], references: [id])
+  departments               Department[]
   campuses                  Campus[]
   courses                   Course[]
   gallery                   CollegeGallery[]
@@ -208,6 +238,7 @@ model Campus {
 
   // Relations
   college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  departments  Department[]
   courses      Course[]
   applications Application[]
   enrollments  Enrollment[]
@@ -215,6 +246,30 @@ model Campus {
   @@index([collegeId], name: "idx_campuses_college")
   @@index([collegeId, status], name: "idx_campuses_status")
   @@map("campuses")
+}
+
+model Department {
+  id        String   @id @default(dbgenerated("('DPT-'::text || (nextval('department_seq'::regclass))::text)"))
+  collegeId String   @map("college_id")
+  campusId  String?  @map("campus_id")
+  name      String   @db.VarChar(255)
+  slug      String   @db.VarChar(100)
+  faculty   Json     @default("[]") // [{id, name, designation, avatarUrl, education[], experience[]}]
+  status    String   @default("active") @db.VarChar(20)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  campus     Campus?     @relation(fields: [campusId], references: [id])
+  courses    Course[]
+  newsAlerts NewsAlert[]
+
+  @@unique([collegeId, slug], name: "uq_department_slug")
+  @@index([collegeId], name: "idx_departments_college")
+  @@index([campusId], name: "idx_departments_campus")
+  @@map("departments")
 }
 
 model Stream {
@@ -303,9 +358,34 @@ model Course {
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  // Course Detail Page (display-only, write-once)
+  departmentId String? @map("department_id")
+
+  highlights                     Json      @default("[]")
+  curriculum                     Json      @default("[]") // [{semester, subjects[], specializations[]}]
+  courseStructure                Json      @default("{}") @map("course_structure") // credit breakdown
+  valueAddedCourses              Json      @default("[]") @map("value_added_courses") // [{name, credits, deliveryMode}]
+  careerOpportunities            Json      @default("[]") @map("career_opportunities") // [{role, salaryRange}]
+  higherEducationCertifications  Json      @default("{}") @map("higher_education_certifications") // {global[], postGraduation[]}
+  flexibleExitOptions            Json      @default("[]") @map("flexible_exit_options") // [{afterYears, awardName}]
+  classTimings                   Json      @default("{}") @map("class_timings") // {monday: {start,end,status}, ...}
+  industryTools                  Json      @default("[]") @map("industry_tools")
+  labFacilities                  Json      @default("[]") @map("lab_facilities")
+  roomFacilities                 Json      @default("[]") @map("room_facilities")
+  featuredAlumni                 Json      @default("[]") @map("featured_alumni")
+  faqs                           Json      @default("[]")
+  examPolicy                     Json      @default("{}") @map("exam_policy")
+  entranceExamEligibility        Json      @default("[]") @map("entrance_exam_eligibility")
+  eligibilityCriteria            Json      @default("{}") @map("eligibility_criteria")
+  accreditations                 Json      @default("[]")
+  keyDates                        Json      @default("[]") @map("key_dates")
+  demographics                    Json      @default("{}") // course-level demographics
+  demographicsRefreshedAt          DateTime? @map("demographics_refreshed_at") @db.Timestamptz
+
   // Relations
   college                College                 @relation(fields: [collegeId], references: [id])
   campus                 Campus?                 @relation(fields: [campusId], references: [id])
+  department             Department?             @relation(fields: [departmentId], references: [id])
   discipline             Discipline              @relation(fields: [disciplineId], references: [id])
   studyLevel             StudyLevel              @relation(fields: [studyLevelId], references: [id])
   programType            ProgramType             @relation(fields: [programTypeId], references: [id])
@@ -319,10 +399,14 @@ model Course {
   mediaKits              MediaKit[]
   enrollments            Enrollment[]
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
+  seatMatrices           SeatMatrix[]
+  newsAlerts             NewsAlert[]
+  collegeReviews         CollegeReview[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
   @@index([campusId], name: "idx_courses_campus")
+  @@index([departmentId], name: "idx_courses_department")
   @@index([disciplineId], name: "idx_courses_discipline")
   @@index([studyLevelId], name: "idx_courses_level")
   @@index([programTypeId], name: "idx_courses_program")
@@ -343,6 +427,7 @@ model CourseQuota {
   // Relations
   course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   applicationCourses ApplicationCourse[]
+  seatMatrices       SeatMatrix[]
 
   @@unique([courseId, quotaName], name: "uq_course_quota")
   @@index([courseId], name: "idx_quotas_course")
@@ -375,11 +460,18 @@ model CollegeReview {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  courseId        String?  @map("course_id") // null = campus_life, filled = faculty_course
+  reviewType      String   @default("campus_life") @map("review_type") @db.VarChar(20)
+  categoryRatings Json     @default("{}") @map("category_ratings") // {facultyAndCourse: 4, campusLife: 4}
+  isAnonymous     Boolean  @default(true) @map("is_anonymous")
+
   // Relations
   college College @relation(fields: [collegeId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
+  course  Course?  @relation(fields: [courseId], references: [id])
 
   @@index([collegeId, status], name: "idx_reviews_college")
   @@index([studentId], name: "idx_reviews_student")
+  @@index([courseId], name: "idx_reviews_course")
   @@map("college_reviews")
 }
