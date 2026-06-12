@@ -17,7 +17,7 @@ headers {
 body:json {
   {
     "full_name": "Dr. Meera Kapoor",
-    "email": "meera@counsellor.com",
+    "email": "meera+1@counsellor.com",
     "password": "Password@123",
     "confirm_password": "Password@123",
     "phone_number": "+919990001111",
@@ -28,9 +28,6 @@ body:json {
 script:post-response {
   if (res.status === 201 || res.status === 200) {
     const data = res.getBody();
-    if (data.data && data.data.accessToken) {
-      bru.setEnvVar("accessToken", data.data.accessToken);
-    }
     if (data.data && data.data.user && data.data.user.id) {
       bru.setEnvVar("counsellorId", data.data.user.id);
     }
@@ -38,12 +35,13 @@ script:post-response {
 }
 
 docs {
-  Registers a new counsellor account.
+  Registers a new counsellor account in pending verification state.
   No authentication required.
-
+  
   counsellor_type: academic | mindcare
-  Returns an access token (15 min) and sets a refreshToken cookie (90 days).
+  Super admin must verify/activate the account before counsellor login.
+  Register endpoint does not return access/refresh tokens.
   Saves counsellorId to env for use in super-admin counselling endpoints.
-
+  
   Table: counsellors (separate from blink_users)
 }

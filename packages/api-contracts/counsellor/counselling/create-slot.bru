@@ -17,7 +17,7 @@ headers {
 
 body:json {
   {
-    "available_date": "2026-06-12",
+    "available_date": "2026-06-14",
     "start_time": "10:00",
     "end_time": "10:45",
     "session_duration_mins": 45,
@@ -41,7 +41,7 @@ script:post-response {
 docs {
   Creates one or more availability slots for the logged-in counsellor.
   Requires: counsellor access token.
-
+  
   ## Single slot
   {
     "available_date": "2026-06-12",
@@ -50,7 +50,7 @@ docs {
     "session_duration_mins": 45,
     "session_fee": 499
   }
-
+  
   ## Bulk — multiple dates × multiple times
   {
     "available_dates": ["2026-06-12", "2026-06-13"],
@@ -61,7 +61,7 @@ docs {
     "session_duration_mins": 45,
     "session_fee": 499
   }
-
+  
   ## Response (always grouped by date)
   session_fee is the per-slot fee. Falls back to counsellor's default if omitted.
 }
