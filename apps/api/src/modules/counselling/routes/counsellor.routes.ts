@@ -10,6 +10,7 @@ import {
   completeSessionSchema,
   listSessionsQuerySchema,
   listSlotsQuerySchema,
+  listWalletTransactionsQuerySchema,
   sessionIdParamsSchema,
   updateMeetingSchema,
 } from "../validators/sessions.validator";
@@ -94,6 +95,7 @@ router.get(
   "/wallet",
   authenticate,
   authorizeUserType("counsellor"),
+  validate(listWalletTransactionsQuerySchema, "query"),
   CounsellorSessionController.getWallet,
 );
 

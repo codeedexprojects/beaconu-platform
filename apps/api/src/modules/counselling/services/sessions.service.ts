@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
 import { logger } from "@/shared/lib/logger";
@@ -26,6 +27,7 @@ import {
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
+  ListWalletTransactionsQueryInput,
   RescheduleSessionInput,
   UpdateMeetingInput,
   RateSessionInput,
@@ -150,6 +152,7 @@ function formatWallet(wallet: any) {
           amount: Number(txn.amount ?? 0),
           description: txn.description,
           session_id: txn.sessionId,
+          student_name: txn.session?.student?.fullName ?? null,
           withdrawal_status: txn.withdrawalStatus,
           bank_details: txn.bankDetails,
           balance_after: Number(txn.balanceAfter ?? 0),
@@ -415,7 +418,7 @@ export class SessionService {
         counsellorId,
         {},
         { limit: 20 },
-      ),
+      ).then((r) => r.sessions),
     ]);
 
     return {
@@ -776,20 +779,30 @@ export class SessionService {
     query: ListSessionsQueryInput,
   ) {
     const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
 
-    const sessions = await SessionRepository.listSessionsByCounsellor(
-      counsellorId,
-      {
-        date,
-        status: query.status,
-        search: query.search,
-      },
-      {
-        page: query.page,
-        limit: query.limit,
-      },
-    );
-    return sessions.map(formatSession);
+    const { sessions, total } =
+      await SessionRepository.listSessionsByCounsellor(
+        counsellorId,
+        {
+          date,
+          fromDate,
+          toDate,
+          status: query.status,
+          search: query.search,
+        },
+        {
+          page: query.page,
+          limit: query.limit,
+        },
+      );
+    return {
+      data: sessions.map(formatSession),
+      meta: PaginationHelper.createMeta(total, query.page, query.limit),
+    };
   }
 
   static async getSessionForActor(
@@ -977,10 +990,33 @@ export class SessionService {
     return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
-  static async getWallet(counsellorId: string) {
+  static async getWallet(
+    counsellorId: string,
+    query: ListWalletTransactionsQueryInput,
+  ) {
     await SessionRepository.findOrCreateWallet(counsellorId);
-    const wallet = await SessionRepository.getWallet(counsellorId);
-    return formatWallet(wallet);
+
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
+
+    const wallet = await SessionRepository.getWallet(
+      counsellorId,
+      { date, fromDate, toDate, type: query.type },
+      { page: query.page, limit: query.limit },
+    );
+    if (!wallet) return null;
+
+    return {
+      ...formatWallet(wallet),
+      transactions_meta: PaginationHelper.createMeta(
+        wallet.transactionsTotal,
+        query.page,
+        query.limit,
+      ),
+    };
   }
 
   static async rateSession(

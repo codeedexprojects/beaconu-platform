@@ -19,6 +19,7 @@ function formatCounsellor(counsellor: any) {
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
     session_fee: Number(counsellor.sessionFee ?? 0.0),
+    wallet_balance: Number(counsellor.wallet?.balance ?? 0.0),
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
