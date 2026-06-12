@@ -41,6 +41,15 @@ function parseTimeOnly(value: string): Date {
   return new Date(`1970-01-01T${value}:00.000Z`);
 }
 
+/** Formats a `@db.Time` value (stored as a Date) as "HH:MM". */
+function formatTimeOnly(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString().slice(11, 16);
+}
+
 /** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
 function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
