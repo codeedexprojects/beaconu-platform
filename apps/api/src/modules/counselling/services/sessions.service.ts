@@ -107,8 +107,8 @@ function formatAvailability(availability: any) {
     id: availability.id,
     counsellor_id: availability.counsellorId,
     available_date: availability.availableDate,
-    start_time: availability.startTime,
-    end_time: availability.endTime,
+    start_time: formatTimeOnly(availability.startTime),
+    end_time: formatTimeOnly(availability.endTime),
     session_duration_mins: availability.sessionDurationMins,
     is_booked: availability.isBooked,
     session_fee: Number(availability.sessionFee ?? 0),
@@ -124,10 +124,10 @@ function formatReschedule(reschedule: any) {
     session_id: reschedule.sessionId,
     rescheduled_by: reschedule.rescheduledBy,
     from_date: reschedule.fromDate,
-    from_time: reschedule.fromTime,
+    from_time: formatTimeOnly(reschedule.fromTime),
     to_availability_id: reschedule.toAvailabilityId,
     to_date: reschedule.toDate,
-    to_time: reschedule.toTime,
+    to_time: formatTimeOnly(reschedule.toTime),
     reason: reschedule.reason,
     created_at: reschedule.createdAt,
   };
@@ -170,8 +170,8 @@ function formatSession(session: any) {
     session_mode: session.sessionMode,
     session_type: session.sessionType,
     scheduled_date: session.scheduledDate,
-    start_time: session.startTime,
-    end_time: session.endTime,
+    start_time: formatTimeOnly(session.startTime),
+    end_time: formatTimeOnly(session.endTime),
     booking_reason: session.bookingReason,
     meeting_url: session.meetingUrl,
     meeting_id: session.meetingId,
@@ -205,8 +205,8 @@ function formatSlot(slot: any) {
   return {
     id: slot.id,
     available_date: slot.availableDate,
-    start_time: slot.startTime,
-    end_time: slot.endTime,
+    start_time: formatTimeOnly(slot.startTime),
+    end_time: formatTimeOnly(slot.endTime),
     session_duration_mins: slot.sessionDurationMins,
     is_booked: slot.isBooked,
     session_fee: Number(fee),
@@ -811,7 +811,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     ensureOwnsSession(session, actor);
@@ -825,7 +825,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     ensureOwnsSession(session, actor);
@@ -867,7 +867,7 @@ export class SessionService {
     const session = await SessionRepository.findSessionById(sessionId);
 
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.studentId !== studentId) {
@@ -929,7 +929,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.counsellorId !== counsellorId) {
@@ -961,7 +961,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.counsellorId !== counsellorId) {
@@ -1026,7 +1026,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.studentId !== studentId) {
