@@ -71,6 +71,17 @@ export class SessionRepository {
     return prisma.counsellorAvailability.findUnique({ where: { id } });
   }
 
+  static async updateSlot(
+    id: string,
+    data: Partial<{
+      meetingUrl: string;
+      meetingId: string;
+      googleEventId: string;
+    }>,
+  ) {
+    return prisma.counsellorAvailability.update({ where: { id }, data });
+  }
+
   /**
    * All slots for a counsellor (paginated).
    * Default: page 1, 20 per page.
