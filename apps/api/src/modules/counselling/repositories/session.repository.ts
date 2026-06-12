@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import { ConflictError } from "@/shared/errors";
 
 // ─────────────────────────────────────────────
@@ -12,8 +12,17 @@ interface PaginationOptions {
 
 interface SessionFilters {
   date?: Date;
+  fromDate?: Date;
+  toDate?: Date;
   status?: string;
   search?: string;
+}
+
+interface WalletTransactionFilters {
+  date?: Date;
+  fromDate?: Date;
+  toDate?: Date;
+  type?: string;
 }
 
 interface SlotFilters {
@@ -69,6 +78,17 @@ export class SessionRepository {
 
   static async findSlotById(id: string) {
     return prisma.counsellorAvailability.findUnique({ where: { id } });
+  }
+
+  static async updateSlot(
+    id: string,
+    data: Partial<{
+      meetingUrl: string;
+      meetingId: string;
+      googleEventId: string;
+    }>,
+  ) {
+    return prisma.counsellorAvailability.update({ where: { id }, data });
   }
 
   /**
@@ -288,46 +308,67 @@ export class SessionRepository {
   ) {
     const search = filters.search?.trim();
 
-    return prisma.counsellingSession.findMany({
-      where: {
-        counsellorId,
-        ...(filters.date
-          ? {
-              scheduledDate: {
-                gte: filters.date,
-                lt: new Date(filters.date.getTime() + 24 * 60 * 60 * 1000),
-              },
-            }
-          : {}),
-        ...(filters.status ? { status: filters.status } : {}),
-        ...(search
-          ? {
-              OR: [
-                { bookingReason: { contains: search, mode: "insensitive" } },
-                { sessionType: { contains: search, mode: "insensitive" } },
-                { sessionMode: { contains: search, mode: "insensitive" } },
-                { status: { contains: search, mode: "insensitive" } },
-                {
-                  student: {
-                    OR: [
-                      { fullName: { contains: search, mode: "insensitive" } },
-                      { email: { contains: search, mode: "insensitive" } },
-                    ],
-                  },
+    const where: Prisma.CounsellingSessionWhereInput = {
+      counsellorId,
+      ...(filters.date
+        ? {
+            scheduledDate: {
+              gte: filters.date,
+              lt: new Date(filters.date.getTime() + 24 * 60 * 60 * 1000),
+            },
+          }
+        : {}),
+      ...(filters.fromDate || filters.toDate
+        ? {
+            scheduledDate: {
+              ...(filters.fromDate ? { gte: filters.fromDate } : {}),
+              ...(filters.toDate
+                ? {
+                    lt: new Date(
+                      filters.toDate.getTime() + 24 * 60 * 60 * 1000,
+                    ),
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(search
+        ? {
+            OR: [
+              { bookingReason: { contains: search, mode: "insensitive" } },
+              { sessionType: { contains: search, mode: "insensitive" } },
+              { sessionMode: { contains: search, mode: "insensitive" } },
+              { status: { contains: search, mode: "insensitive" } },
+              {
+                student: {
+                  OR: [
+                    { fullName: { contains: search, mode: "insensitive" } },
+                    { email: { contains: search, mode: "insensitive" } },
+                  ],
                 },
-              ],
-            }
-          : {}),
-      },
-      include: {
-        student: {
-          select: { id: true, fullName: true, avatarUrl: true, email: true },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const [sessions, total] = await Promise.all([
+      prisma.counsellingSession.findMany({
+        where,
+        include: {
+          student: {
+            select: { id: true, fullName: true, avatarUrl: true, email: true },
+          },
+          availability: true,
         },
-        availability: true,
-      },
-      orderBy: [{ scheduledDate: "desc" }, { startTime: "asc" }],
-      ...this.paginate(pagination),
-    });
+        orderBy: [{ scheduledDate: "desc" }, { startTime: "asc" }],
+        ...this.paginate(pagination),
+      }),
+      prisma.counsellingSession.count({ where }),
+    ]);
+
+    return { sessions, total };
   }
 
   /**
@@ -673,19 +714,62 @@ export class SessionRepository {
   }
 
   /**
-   * Get wallet with the last 20 transactions.
-   * Increase `take` or add cursor pagination if you need more.
+   * Get wallet with paginated, filterable transactions.
    */
-  static async getWallet(counsellorId: string) {
-    return prisma.counsellorWallet.findUnique({
+  static async getWallet(
+    counsellorId: string,
+    filters: WalletTransactionFilters = {},
+    pagination: PaginationOptions = {},
+  ) {
+    const wallet = await prisma.counsellorWallet.findUnique({
       where: { counsellorId },
-      include: {
-        transactions: {
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        },
-      },
     });
+    if (!wallet) return null;
+
+    const where: Prisma.CounsellorWalletTransactionWhereInput = {
+      walletId: wallet.id,
+      ...(filters.type ? { type: filters.type } : {}),
+      ...(filters.date
+        ? {
+            createdAt: {
+              gte: filters.date,
+              lt: new Date(filters.date.getTime() + 24 * 60 * 60 * 1000),
+            },
+          }
+        : {}),
+      ...(filters.fromDate || filters.toDate
+        ? {
+            createdAt: {
+              ...(filters.fromDate ? { gte: filters.fromDate } : {}),
+              ...(filters.toDate
+                ? {
+                    lt: new Date(
+                      filters.toDate.getTime() + 24 * 60 * 60 * 1000,
+                    ),
+                  }
+                : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [transactions, total] = await Promise.all([
+      prisma.counsellorWalletTransaction.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: {
+          session: {
+            select: {
+              student: { select: { fullName: true } },
+            },
+          },
+        },
+        ...this.paginate(pagination),
+      }),
+      prisma.counsellorWalletTransaction.count({ where }),
+    ]);
+
+    return { ...wallet, transactions, transactionsTotal: total };
   }
 
   /**

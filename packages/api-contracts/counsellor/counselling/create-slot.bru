@@ -64,4 +64,17 @@ docs {
   
   ## Response (always grouped by date)
   session_fee is the per-slot fee. Falls back to counsellor's default if omitted.
+
+  ## Google Meet
+  If Google Meet is configured on the server
+  (GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL / _PRIVATE_KEY / GOOGLE_MEET_CALENDAR_ID),
+  each created slot gets its own Google Calendar event with an
+  auto-generated Meet link (counsellor added as attendee). The link is
+  returned as time_slots[].meeting_url / meeting_id.
+
+  When a student books this slot for a video_call session, they are added
+  as an attendee to this same Calendar event — no new event is created.
+
+  If Meet is not configured or the Calendar API call fails, the slot is
+  still created with meeting_url/meeting_id as null.
 }

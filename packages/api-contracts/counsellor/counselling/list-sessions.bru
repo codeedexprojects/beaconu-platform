@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/counsellor/sessions
+  url: {{baseUrl}}/api/v1/counsellor/sessions?page=1&limit=20&date=&from_date=&to_date=&status=&search=
   body: none
   auth: none
 }
@@ -13,6 +13,11 @@ get {
 params:query {
   page: 1
   limit: 20
+  date:
+  from_date:
+  to_date:
+  status:
+  search:
 }
 
 headers {
@@ -31,4 +36,11 @@ script:post-response {
 docs {
   Lists counselling sessions for logged-in counsellor.
   Requires: counsellor access token.
+
+  Query params:
+  - page, limit: pagination (response includes `meta` with page, limit, total, totalPages, hasNextPage, hasPreviousPage)
+  - date: filter sessions on a single date (YYYY-MM-DD)
+  - from_date / to_date: filter sessions within a date range (YYYY-MM-DD)
+  - status: booked | completed | cancelled
+  - search: free-text search across booking reason, type, mode, status, student name/email
 }

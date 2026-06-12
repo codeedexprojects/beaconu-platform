@@ -4,10 +4,12 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
 import { logger } from "@/shared/lib/logger";
 import {
+  addEventAttendee,
   createMeetEvent,
   deleteMeetEvent,
   isGoogleMeetReady,
@@ -25,6 +27,7 @@ import {
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
+  ListWalletTransactionsQueryInput,
   RescheduleSessionInput,
   UpdateMeetingInput,
   RateSessionInput,
@@ -149,6 +152,7 @@ function formatWallet(wallet: any) {
           amount: Number(txn.amount ?? 0),
           description: txn.description,
           session_id: txn.sessionId,
+          student_name: txn.session?.student?.fullName ?? null,
           withdrawal_status: txn.withdrawalStatus,
           bank_details: txn.bankDetails,
           balance_after: Number(txn.balanceAfter ?? 0),
@@ -206,6 +210,8 @@ function formatSlot(slot: any) {
     session_duration_mins: slot.sessionDurationMins,
     is_booked: slot.isBooked,
     session_fee: Number(fee),
+    meeting_url: slot.meetingUrl ?? null,
+    meeting_id: slot.meetingId ?? null,
     counsellor: slot.counsellor ? formatCounsellor(slot.counsellor) : undefined,
   };
 }
@@ -227,6 +233,8 @@ function groupSlotsByDate(formattedSlots: any[]) {
       session_duration_mins: slot.session_duration_mins,
       session_fee: slot.session_fee,
       is_booked: slot.is_booked,
+      meeting_url: slot.meeting_url,
+      meeting_id: slot.meeting_id,
     });
   }
 
@@ -296,6 +304,43 @@ export class SessionService {
 
     try {
       const createdSlots = await SessionRepository.createSlots(slotsToCreate);
+
+      if (isGoogleMeetReady() && counsellor?.email) {
+        await Promise.all(
+          createdSlots.map(async (slot) => {
+            try {
+              const meetEvent = await createMeetEvent({
+                summary: `Counselling session with ${counsellor.fullName ?? "Counsellor"}`,
+                startDateTime: toISODateTime(
+                  slot.availableDate,
+                  slot.startTime,
+                ),
+                endDateTime: toISODateTime(slot.availableDate, slot.endTime),
+                attendeeEmails: [counsellor.email],
+              });
+
+              if (!meetEvent) return;
+
+              await SessionRepository.updateSlot(slot.id, {
+                meetingUrl: meetEvent.meetingUrl,
+                ...(meetEvent.meetingId
+                  ? { meetingId: meetEvent.meetingId }
+                  : {}),
+                googleEventId: meetEvent.eventId,
+              });
+
+              slot.meetingUrl = meetEvent.meetingUrl;
+              slot.meetingId = meetEvent.meetingId;
+            } catch (error) {
+              logger.error(
+                { err: error, slotId: slot.id },
+                "Failed to attach Google Meet link to slot",
+              );
+            }
+          }),
+        );
+      }
+
       const formatted = createdSlots.map(formatSlot);
       return groupSlotsByDate(formatted);
     } catch (error) {
@@ -373,7 +418,7 @@ export class SessionService {
         counsellorId,
         {},
         { limit: 20 },
-      ),
+      ).then((r) => r.sessions),
     ]);
 
     return {
@@ -632,59 +677,52 @@ export class SessionService {
     });
 
     if (session.sessionMode === "video_call" && isGoogleMeetReady()) {
-      await this.attachGoogleMeetLink(session);
+      await this.attachGoogleMeetLink(session, slot);
     }
 
     return formatSession(session);
   }
 
   /**
-   * Best-effort: creates a Google Meet link for an online session and
-   * persists it. Mutates `session` in place so the caller's response
-   * reflects the new link without a refetch. Never throws — booking must
-   * succeed even if Calendar/Meet is unavailable.
+   * Best-effort: copies the slot's pre-generated Google Meet link onto the
+   * session and adds the student as an attendee on the slot's Calendar
+   * event. Mutates `session` in place so the caller's response reflects the
+   * link without a refetch. Never throws — booking must succeed even if
+   * Calendar/Meet is unavailable.
    */
-  private static async attachGoogleMeetLink(session: {
-    id: string;
-    studentId: string;
-    counsellorId: string;
-    scheduledDate: Date;
-    startTime: Date;
-    endTime: Date;
-    bookingReason: string | null;
-    meetingUrl: string | null;
-    meetingId: string | null;
-  }): Promise<void> {
+  private static async attachGoogleMeetLink(
+    session: {
+      id: string;
+      studentId: string;
+      meetingUrl: string | null;
+      meetingId: string | null;
+    },
+    slot: {
+      meetingUrl: string | null;
+      meetingId: string | null;
+      googleEventId: string | null;
+    },
+  ): Promise<void> {
     try {
+      if (!slot.googleEventId || !slot.meetingUrl) {
+        return;
+      }
+
       const fullSession = await SessionRepository.findSessionById(session.id);
       const studentEmail = fullSession?.student?.email;
-      const counsellorEmail = fullSession?.counsellor?.email;
-      const counsellorName = fullSession?.counsellor?.fullName ?? "Counsellor";
-
-      if (!studentEmail || !counsellorEmail) {
-        return;
-      }
-
-      const meetEvent = await createMeetEvent({
-        summary: `Counselling session with ${counsellorName}`,
-        description: session.bookingReason ?? undefined,
-        startDateTime: toISODateTime(session.scheduledDate, session.startTime),
-        endDateTime: toISODateTime(session.scheduledDate, session.endTime),
-        attendeeEmails: [studentEmail, counsellorEmail],
-      });
-
-      if (!meetEvent) {
-        return;
-      }
 
       await SessionRepository.updateSession(session.id, {
-        meetingUrl: meetEvent.meetingUrl,
-        ...(meetEvent.meetingId ? { meetingId: meetEvent.meetingId } : {}),
-        googleEventId: meetEvent.eventId,
+        meetingUrl: slot.meetingUrl,
+        ...(slot.meetingId ? { meetingId: slot.meetingId } : {}),
+        googleEventId: slot.googleEventId,
       });
 
-      session.meetingUrl = meetEvent.meetingUrl;
-      session.meetingId = meetEvent.meetingId;
+      session.meetingUrl = slot.meetingUrl;
+      session.meetingId = slot.meetingId;
+
+      if (studentEmail) {
+        await addEventAttendee(slot.googleEventId, studentEmail);
+      }
     } catch (error) {
       logger.error(
         { err: error, sessionId: session.id },
@@ -741,20 +779,30 @@ export class SessionService {
     query: ListSessionsQueryInput,
   ) {
     const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
 
-    const sessions = await SessionRepository.listSessionsByCounsellor(
-      counsellorId,
-      {
-        date,
-        status: query.status,
-        search: query.search,
-      },
-      {
-        page: query.page,
-        limit: query.limit,
-      },
-    );
-    return sessions.map(formatSession);
+    const { sessions, total } =
+      await SessionRepository.listSessionsByCounsellor(
+        counsellorId,
+        {
+          date,
+          fromDate,
+          toDate,
+          status: query.status,
+          search: query.search,
+        },
+        {
+          page: query.page,
+          limit: query.limit,
+        },
+      );
+    return {
+      data: sessions.map(formatSession),
+      meta: PaginationHelper.createMeta(total, query.page, query.limit),
+    };
   }
 
   static async getSessionForActor(
@@ -942,10 +990,33 @@ export class SessionService {
     return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
-  static async getWallet(counsellorId: string) {
+  static async getWallet(
+    counsellorId: string,
+    query: ListWalletTransactionsQueryInput,
+  ) {
     await SessionRepository.findOrCreateWallet(counsellorId);
-    const wallet = await SessionRepository.getWallet(counsellorId);
-    return formatWallet(wallet);
+
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
+
+    const wallet = await SessionRepository.getWallet(
+      counsellorId,
+      { date, fromDate, toDate, type: query.type },
+      { page: query.page, limit: query.limit },
+    );
+    if (!wallet) return null;
+
+    return {
+      ...formatWallet(wallet),
+      transactions_meta: PaginationHelper.createMeta(
+        wallet.transactionsTotal,
+        query.page,
+        query.limit,
+      ),
+    };
   }
 
   static async rateSession(
