@@ -217,7 +217,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-sidebar border-r border-sidebar-border">
+    <aside className="flex h-screen w-72 flex-col bg-sidebar border-r border-sidebar-border shrink-0">
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/30">
@@ -256,23 +256,23 @@ export function Sidebar() {
                         <Link
                           href={item.href}
                           className={cn(
-                            "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
+                            "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]",
                             isActive
-                              ? "bg-primary text-white shadow-sm shadow-primary/20"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white",
+                              ? "bg-gradient-to-r from-primary to-rose-700 text-white shadow-[0_4px_12px_rgba(179,27,77,0.25)] border border-primary/20"
+                              : "text-sidebar-foreground hover:bg-slate-100 hover:text-slate-900 border border-transparent",
                           )}
                         >
                           <item.icon
                             className={cn(
-                              "h-4 w-4 shrink-0 transition-colors",
+                              "h-4 w-4 shrink-0 transition-colors duration-200",
                               isActive
                                 ? "text-white"
-                                : "text-sidebar-foreground/60 group-hover:text-white",
+                                : "text-sidebar-foreground/60 group-hover:text-slate-900",
                             )}
                           />
                           <span className="truncate">{item.label}</span>
                           {isActive && (
-                            <ChevronRight className="ml-auto h-3 w-3 opacity-60" />
+                            <ChevronRight className="ml-auto h-3 w-3 opacity-80 animate-pulse" />
                           )}
                         </Link>
                       </li>
