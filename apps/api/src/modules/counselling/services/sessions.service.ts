@@ -64,11 +64,11 @@ function toISODateTime(date: Date, time: Date): string {
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 /**
- * Resolves a slot's `availableDate` + `startTime` (stored as raw IST wall-clock
+ * Resolves a `@db.Date` + `@db.Time` pair (stored as raw IST wall-clock
  * values) to the actual UTC instant it represents, so it can be compared
  * against `new Date()`.
  */
-function slotStartInstant(date: Date, time: Date): Date {
+function istWallTimeToInstant(date: Date, time: Date): Date {
   const naiveISO = toISODateTime(date, time);
   return new Date(new Date(`${naiveISO}.000Z`).getTime() - IST_OFFSET_MS);
 }
@@ -743,7 +743,7 @@ export class SessionService {
       transactionId,
     });
 
-    if (session.sessionMode === "video_call" && isGoogleMeetReady()) {
+    if (isGoogleMeetReady()) {
       await this.createMeetLinkForSession(session);
     }
 
@@ -969,7 +969,8 @@ export class SessionService {
     }
 
     if (
-      slotStartInstant(newSlot.availableDate, newSlot.startTime) <= new Date()
+      istWallTimeToInstant(newSlot.availableDate, newSlot.startTime) <=
+      new Date()
     ) {
       throw new BadRequestError("Cannot reschedule to a slot in the past");
     }
@@ -1062,6 +1063,31 @@ export class SessionService {
     // Hence, no additional credit is done upon session completion to avoid duplicate payments.
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
+  }
+
+  /**
+   * Auto-completes "booked" sessions whose end time has passed. Run
+   * periodically by the `session-auto-complete` job — counsellors who
+   * forget to mark a session complete shouldn't block the student from
+   * rating it.
+   */
+  static async autoCompletePastSessions(): Promise<number> {
+    const now = new Date();
+    const todayIST = new Date(now.getTime() + IST_OFFSET_MS);
+    const todayDateOnly = parseDateOnly(todayIST.toISOString().slice(0, 10));
+
+    const candidates =
+      await SessionRepository.findBookedSessionsOnOrBefore(todayDateOnly);
+
+    const dueIds = candidates
+      .filter(
+        (session) =>
+          istWallTimeToInstant(session.scheduledDate, session.endTime) <= now,
+      )
+      .map((session) => session.id);
+
+    const { count } = await SessionRepository.markSessionsCompleted(dueIds);
+    return count;
   }
 
   static async getWallet(

@@ -1,0 +1,40 @@
+meta {
+  name: Verify Avatar Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/counsellor/uploads/avatar/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{uploadKey}}"
+  }
+}
+
+docs {
+  Step 2 of 2 — Confirm the avatar was successfully uploaded to S3.
+
+  Returns a short-lived signed view URL and a permanent public URL.
+  Store `permanentUrl` in the counsellor profile (PATCH /counsellor/profile with avatar_url).
+
+  Body:
+  - key (required): the S3 key returned by presign-avatar
+
+  Response:
+  - verified: true
+  - permanentUrl: permanent public S3 URL — persist this via PATCH /counsellor/profile
+  - viewUrl: signed URL valid for 1 hour (for immediate display)
+}
