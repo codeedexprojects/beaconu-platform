@@ -23,6 +23,7 @@ model AdmissionCycle {
   enrollments           Enrollment[]
   admissionFormConfigs  AdmissionFormConfig[]
   documentUploadConfigs DocumentUploadConfig[]
+  seatMatrices          SeatMatrix[]
 
   @@unique([collegeId, slug], name: "uq_cycle_slug_college")
   @@index([collegeId], name: "idx_cycles_college")
@@ -324,4 +325,26 @@ model DocumentUploadConfig {
   @@index([documentCategory], name: "idx_duc_category")
   @@index([collegeId, isActive], name: "idx_duc_active")
   @@map("document_upload_configs")
+}
+
+model SeatMatrix {
+  id               String   @id @default(dbgenerated("('SMX-'::text || (nextval('seat_matrix_seq'::regclass))::text)"))
+  courseId         String   @map("course_id")
+  admissionCycleId String   @map("admission_cycle_id")
+  quotaId          String   @map("quota_id")
+  totalSeats       Int      @map("total_seats")
+  openSeats        Int      @map("open_seats")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  admissionCycle AdmissionCycle @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  quota          CourseQuota    @relation(fields: [quotaId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, admissionCycleId, quotaId], name: "uq_seat_matrix")
+  @@index([courseId], name: "idx_seat_matrix_course")
+  @@index([admissionCycleId], name: "idx_seat_matrix_cycle")
+  @@index([quotaId], name: "idx_seat_matrix_quota")
+  @@map("seat_matrix")
 }

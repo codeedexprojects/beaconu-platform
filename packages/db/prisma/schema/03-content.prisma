@@ -34,14 +34,22 @@ model NewsAlert {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
+  happeningCategory String? @map("happening_category") @db.VarChar(50) // college_news|student_achievements|faculty_achievements|department_news
+  departmentId      String? @map("department_id")
+  courseId          String? @map("course_id")
+
   // Relations
   college        College?       @relation(fields: [collegeId], references: [id])
   publishedAdmin PlatformAdmin? @relation(fields: [publishedBy], references: [id])
+  department     Department?    @relation(fields: [departmentId], references: [id])
+  course         Course?        @relation(fields: [courseId], references: [id])
 
   @@index([status], name: "idx_news_status")
   @@index([collegeId], name: "idx_news_college")
   @@index([publishedAt(sort: Desc)], name: "idx_news_published")
   @@index([slug], name: "idx_news_slug")
+  @@index([departmentId], name: "idx_news_department")
+  @@index([courseId], name: "idx_news_course")
   @@map("news_alerts")
 }
 

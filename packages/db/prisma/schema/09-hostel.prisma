@@ -25,6 +25,9 @@ model Hostel {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  safetyTier String? @map("safety_tier") @db.VarChar(100) // "Safe & Secure - Premium PG Partner"
+  badge      String? @db.VarChar(50)
+
   // Relations
   college       College              @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   roomTypes     HostelRoomType[]

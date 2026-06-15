@@ -1,12 +1,16 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateSequence
-CREATE SEQUENCE IF NOT EXISTS "admission_cycle_seq";
 CREATE SEQUENCE IF NOT EXISTS "admission_cycle_course_seq";
+CREATE SEQUENCE IF NOT EXISTS "admission_cycle_seq";
 CREATE SEQUENCE IF NOT EXISTS "admission_form_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "ambassador_code_seq";
 CREATE SEQUENCE IF NOT EXISTS "announcement_seq";
 CREATE SEQUENCE IF NOT EXISTS "anti_ragging_complaint_seq";
-CREATE SEQUENCE IF NOT EXISTS "application_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_course_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_document_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_status_log_seq";
 CREATE SEQUENCE IF NOT EXISTS "article_seq";
 CREATE SEQUENCE IF NOT EXISTS "assessment_attempt_seq";
@@ -21,39 +25,43 @@ CREATE SEQUENCE IF NOT EXISTS "blink_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_user_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_wallet_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_wallet_transaction_seq";
-CREATE SEQUENCE IF NOT EXISTS "blog_seq";
 CREATE SEQUENCE IF NOT EXISTS "blog_author_seq";
+CREATE SEQUENCE IF NOT EXISTS "blog_seq";
 CREATE SEQUENCE IF NOT EXISTS "broadcast_notification_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_conversation_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_message_seq";
-CREATE SEQUENCE IF NOT EXISTS "college_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_gallery_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_onboarding_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_payment_account_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_review_seq";
-CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_seq";
 CREATE SEQUENCE IF NOT EXISTS "commission_seq";
-CREATE SEQUENCE IF NOT EXISTS "community_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_comment_like_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_comment_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_post_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_post_vote_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_bus_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_ride_history_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_route_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_route_stop_seq";
 CREATE SEQUENCE IF NOT EXISTS "counselling_session_seq";
-CREATE SEQUENCE IF NOT EXISTS "counsellor_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_availability_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_code_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_registration_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_transaction_seq";
-CREATE SEQUENCE IF NOT EXISTS "course_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_quota_seq";
+CREATE SEQUENCE IF NOT EXISTS "course_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_switch_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "department_seq";
 CREATE SEQUENCE IF NOT EXISTS "discipline_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_template_seq";
@@ -61,18 +69,18 @@ CREATE SEQUENCE IF NOT EXISTS "document_upload_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "education_loan_seq";
 CREATE SEQUENCE IF NOT EXISTS "enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "entrance_exam_seq";
-CREATE SEQUENCE IF NOT EXISTS "event_seq";
 CREATE SEQUENCE IF NOT EXISTS "event_registration_seq";
+CREATE SEQUENCE IF NOT EXISTS "event_seq";
 CREATE SEQUENCE IF NOT EXISTS "fee_structure_seq";
-CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_addon_service_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_mess_plan_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_review_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_room_type_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_wishlist_seq";
-CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
 CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
+CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_booking_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_reschedule_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_slot_seq";
@@ -85,28 +93,30 @@ CREATE SEQUENCE IF NOT EXISTS "paper_question_seq";
 CREATE SEQUENCE IF NOT EXISTS "payment_receipt_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_admin_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_permission_seq";
-CREATE SEQUENCE IF NOT EXISTS "platform_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "program_type_seq";
-CREATE SEQUENCE IF NOT EXISTS "question_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_course_mapping_seq";
+CREATE SEQUENCE IF NOT EXISTS "question_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_type_seq";
-CREATE SEQUENCE IF NOT EXISTS "referral_seq";
 CREATE SEQUENCE IF NOT EXISTS "referral_code_seq";
+CREATE SEQUENCE IF NOT EXISTS "referral_seq";
 CREATE SEQUENCE IF NOT EXISTS "refund_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_application_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_seq";
+CREATE SEQUENCE IF NOT EXISTS "seat_matrix_seq";
 CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";
 CREATE SEQUENCE IF NOT EXISTS "squad_search_seq";
 CREATE SEQUENCE IF NOT EXISTS "staff_member_seq";
+CREATE SEQUENCE IF NOT EXISTS "starter_guide_video_seq";
 CREATE SEQUENCE IF NOT EXISTS "stream_seq";
-CREATE SEQUENCE IF NOT EXISTS "student_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_answer_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_bank_account_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_fee_ledger_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_lead_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_wallet_transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "study_level_seq";
 CREATE SEQUENCE IF NOT EXISTS "support_ticket_seq";
@@ -119,7 +129,7 @@ CREATE SEQUENCE IF NOT EXISTS "user_session_seq";
 
 -- CreateTable
 CREATE TABLE "students" (
-    "id" TEXT NOT NULL DEFAULT 'STU-' || nextval('student_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('STU-'::text || (nextval('student_seq'::regclass))::text),
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255),
     "phone_country_code" VARCHAR(5) DEFAULT '+91',
@@ -141,7 +151,7 @@ CREATE TABLE "students" (
 
 -- CreateTable
 CREATE TABLE "platform_admins" (
-    "id" TEXT NOT NULL DEFAULT 'PAD-' || nextval('platform_admin_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PAD-'::text || (nextval('platform_admin_seq'::regclass))::text),
     "platform_role_id" TEXT,
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
@@ -158,7 +168,7 @@ CREATE TABLE "platform_admins" (
 
 -- CreateTable
 CREATE TABLE "platform_roles" (
-    "id" TEXT NOT NULL DEFAULT 'PLR-' || nextval('platform_role_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PLR-'::text || (nextval('platform_role_seq'::regclass))::text),
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -171,7 +181,7 @@ CREATE TABLE "platform_roles" (
 
 -- CreateTable
 CREATE TABLE "platform_permissions" (
-    "id" TEXT NOT NULL DEFAULT 'PPM-' || nextval('platform_permission_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PPM-'::text || (nextval('platform_permission_seq'::regclass))::text),
     "code" VARCHAR(100) NOT NULL,
     "description" VARCHAR(255),
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -182,7 +192,7 @@ CREATE TABLE "platform_permissions" (
 
 -- CreateTable
 CREATE TABLE "platform_role_permissions" (
-    "id" TEXT NOT NULL DEFAULT 'PRP-' || nextval('platform_role_permission_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PRP-'::text || (nextval('platform_role_permission_seq'::regclass))::text),
     "platform_role_id" TEXT NOT NULL,
     "permission_code" VARCHAR(100) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -192,7 +202,7 @@ CREATE TABLE "platform_role_permissions" (
 
 -- CreateTable
 CREATE TABLE "college_roles" (
-    "id" TEXT NOT NULL DEFAULT 'CLR-' || nextval('college_role_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CLR-'::text || (nextval('college_role_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
@@ -206,7 +216,7 @@ CREATE TABLE "college_roles" (
 
 -- CreateTable
 CREATE TABLE "college_role_permissions" (
-    "id" TEXT NOT NULL DEFAULT 'CRP-' || nextval('college_role_permission_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CRP-'::text || (nextval('college_role_permission_seq'::regclass))::text),
     "college_role_id" TEXT NOT NULL,
     "permission_code" VARCHAR(100) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -216,7 +226,7 @@ CREATE TABLE "college_role_permissions" (
 
 -- CreateTable
 CREATE TABLE "staff_members" (
-    "id" TEXT NOT NULL DEFAULT 'STF-' || nextval('staff_member_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('STF-'::text || (nextval('staff_member_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "college_role_id" TEXT NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
@@ -235,7 +245,7 @@ CREATE TABLE "staff_members" (
 
 -- CreateTable
 CREATE TABLE "blink_roles" (
-    "id" TEXT NOT NULL DEFAULT 'BLR-' || nextval('blink_role_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BLR-'::text || (nextval('blink_role_seq'::regclass))::text),
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "is_system_role" BOOLEAN NOT NULL DEFAULT false,
@@ -248,7 +258,7 @@ CREATE TABLE "blink_roles" (
 
 -- CreateTable
 CREATE TABLE "blink_users" (
-    "id" TEXT NOT NULL DEFAULT 'BLU-' || nextval('blink_user_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BLU-'::text || (nextval('blink_user_seq'::regclass))::text),
     "blink_role_id" TEXT NOT NULL,
     "college_id" TEXT,
     "associate_parent_id" TEXT,
@@ -261,8 +271,13 @@ CREATE TABLE "blink_users" (
     "country" VARCHAR(100),
     "avatar_url" TEXT,
     "ambassador_type" VARCHAR(20),
+    "ambassador_code" TEXT,
     "agency_name" VARCHAR(255),
     "agency_reg_number" VARCHAR(100),
+    "company_pan" VARCHAR(50),
+    "current_acc_no" VARCHAR(50),
+    "ifsc" VARCHAR(20),
+    "gstin" VARCHAR(50),
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "created_by_staff_id" TEXT,
     "profile_metadata" JSONB NOT NULL DEFAULT '{}',
@@ -276,14 +291,18 @@ CREATE TABLE "blink_users" (
 
 -- CreateTable
 CREATE TABLE "counsellors" (
-    "id" TEXT NOT NULL DEFAULT 'CNS-' || nextval('counsellor_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CNS-'::text || (nextval('counsellor_seq'::regclass))::text),
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
     "phone_number" VARCHAR(15),
     "avatar_url" TEXT,
     "counsellor_type" VARCHAR(20) NOT NULL,
+    "counsellor_code" TEXT,
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "rating" DECIMAL(2,1) NOT NULL DEFAULT 0.0,
+    "known_languages" VARCHAR(255),
+    "session_fee" DECIMAL(10,2) NOT NULL DEFAULT 0.0,
     "profile_metadata" JSONB NOT NULL DEFAULT '{}',
     "last_login_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -294,7 +313,7 @@ CREATE TABLE "counsellors" (
 
 -- CreateTable
 CREATE TABLE "user_sessions" (
-    "id" TEXT NOT NULL DEFAULT 'USS-' || nextval('user_session_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('USS-'::text || (nextval('user_session_seq'::regclass))::text),
     "user_type" VARCHAR(20) NOT NULL,
     "user_id" TEXT NOT NULL,
     "refresh_token" TEXT NOT NULL,
@@ -310,7 +329,7 @@ CREATE TABLE "user_sessions" (
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
-    "id" TEXT NOT NULL DEFAULT 'AUL-' || nextval('audit_log_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('AUL-'::text || (nextval('audit_log_seq'::regclass))::text),
     "actor_type" VARCHAR(20) NOT NULL,
     "actor_id" TEXT NOT NULL,
     "action" VARCHAR(100) NOT NULL,
@@ -325,7 +344,7 @@ CREATE TABLE "audit_logs" (
 
 -- CreateTable
 CREATE TABLE "student_leads" (
-    "id" TEXT NOT NULL DEFAULT 'SLD-' || nextval('student_lead_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SLD-'::text || (nextval('student_lead_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "preferred_streams" JSONB NOT NULL DEFAULT '[]',
     "preferred_level" VARCHAR(20),
@@ -345,7 +364,7 @@ CREATE TABLE "student_leads" (
 
 -- CreateTable
 CREATE TABLE "university_types" (
-    "id" TEXT NOT NULL DEFAULT 'UVT-' || nextval('university_type_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('UVT-'::text || (nextval('university_type_seq'::regclass))::text),
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
@@ -357,7 +376,7 @@ CREATE TABLE "university_types" (
 
 -- CreateTable
 CREATE TABLE "universities" (
-    "id" TEXT NOT NULL DEFAULT 'UNV-' || nextval('university_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('UNV-'::text || (nextval('university_seq'::regclass))::text),
     "university_type_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
@@ -376,7 +395,7 @@ CREATE TABLE "universities" (
 
 -- CreateTable
 CREATE TABLE "institution_groups" (
-    "id" TEXT NOT NULL DEFAULT 'ING-' || nextval('institution_group_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ING-'::text || (nextval('institution_group_seq'::regclass))::text),
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -393,7 +412,7 @@ CREATE TABLE "institution_groups" (
 
 -- CreateTable
 CREATE TABLE "institution_group_members" (
-    "id" TEXT NOT NULL DEFAULT 'IGM-' || nextval('institution_group_member_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('IGM-'::text || (nextval('institution_group_member_seq'::regclass))::text),
     "group_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "role" VARCHAR(20) NOT NULL DEFAULT 'member',
@@ -405,7 +424,7 @@ CREATE TABLE "institution_group_members" (
 
 -- CreateTable
 CREATE TABLE "colleges" (
-    "id" TEXT NOT NULL DEFAULT 'CLG-' || nextval('college_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CLG-'::text || (nextval('college_seq'::regclass))::text),
     "university_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
@@ -424,13 +443,34 @@ CREATE TABLE "colleges" (
     "settings" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "established_year" INTEGER,
+    "college_type" VARCHAR(30),
+    "gender_type" VARCHAR(20),
+    "avg_student_count" INTEGER,
+    "campus_size_acres" DECIMAL(8,2),
+    "outside_state_pct" DECIMAL(5,2),
+    "avg_rating" DECIMAL(2,1) NOT NULL DEFAULT 0,
+    "review_count" INTEGER NOT NULL DEFAULT 0,
+    "amenities" JSONB NOT NULL DEFAULT '[]',
+    "campus_facilities" JSONB NOT NULL DEFAULT '[]',
+    "nearby_access" JSONB NOT NULL DEFAULT '{}',
+    "social_links" JSONB NOT NULL DEFAULT '{}',
+    "campus_reels" JSONB NOT NULL DEFAULT '[]',
+    "view_360_url" TEXT,
+    "code_of_conduct" JSONB NOT NULL DEFAULT '[]',
+    "libraries" JSONB NOT NULL DEFAULT '[]',
+    "clubs" JSONB NOT NULL DEFAULT '[]',
+    "alliances" JSONB NOT NULL DEFAULT '[]',
+    "placement_data" JSONB NOT NULL DEFAULT '{}',
+    "demographics" JSONB NOT NULL DEFAULT '{}',
+    "demographics_refreshed_at" TIMESTAMPTZ,
 
     CONSTRAINT "colleges_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "college_onboarding_requests" (
-    "id" TEXT NOT NULL DEFAULT 'COR-' || nextval('college_onboarding_request_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('COR-'::text || (nextval('college_onboarding_request_seq'::regclass))::text),
     "college_name" VARCHAR(255) NOT NULL,
     "university_name" VARCHAR(255),
     "contact_person_name" VARCHAR(255) NOT NULL,
@@ -452,7 +492,7 @@ CREATE TABLE "college_onboarding_requests" (
 
 -- CreateTable
 CREATE TABLE "campuses" (
-    "id" TEXT NOT NULL DEFAULT 'CMP-' || nextval('campus_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMP-'::text || (nextval('campus_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "address" TEXT,
@@ -470,8 +510,24 @@ CREATE TABLE "campuses" (
 );
 
 -- CreateTable
+CREATE TABLE "departments" (
+    "id" TEXT NOT NULL DEFAULT ('DPT-'::text || (nextval('department_seq'::regclass))::text),
+    "college_id" TEXT NOT NULL,
+    "campus_id" TEXT,
+    "name" VARCHAR(255) NOT NULL,
+    "slug" VARCHAR(100) NOT NULL,
+    "faculty" JSONB NOT NULL DEFAULT '[]',
+    "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "sort_order" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "streams" (
-    "id" TEXT NOT NULL DEFAULT 'STR-' || nextval('stream_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('STR-'::text || (nextval('stream_seq'::regclass))::text),
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
     "logo_url" TEXT,
@@ -484,7 +540,7 @@ CREATE TABLE "streams" (
 
 -- CreateTable
 CREATE TABLE "disciplines" (
-    "id" TEXT NOT NULL DEFAULT 'DSC-' || nextval('discipline_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('DSC-'::text || (nextval('discipline_seq'::regclass))::text),
     "stream_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
@@ -498,7 +554,7 @@ CREATE TABLE "disciplines" (
 
 -- CreateTable
 CREATE TABLE "study_levels" (
-    "id" TEXT NOT NULL DEFAULT 'SVL-' || nextval('study_level_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SVL-'::text || (nextval('study_level_seq'::regclass))::text),
     "name" VARCHAR(50) NOT NULL,
     "slug" VARCHAR(30) NOT NULL,
     "logo_url" TEXT,
@@ -511,7 +567,7 @@ CREATE TABLE "study_levels" (
 
 -- CreateTable
 CREATE TABLE "program_types" (
-    "id" TEXT NOT NULL DEFAULT 'PGT-' || nextval('program_type_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PGT-'::text || (nextval('program_type_seq'::regclass))::text),
     "name" VARCHAR(50) NOT NULL,
     "slug" VARCHAR(30) NOT NULL,
     "logo_url" TEXT,
@@ -524,7 +580,7 @@ CREATE TABLE "program_types" (
 
 -- CreateTable
 CREATE TABLE "courses" (
-    "id" TEXT NOT NULL DEFAULT 'CRS-' || nextval('course_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CRS-'::text || (nextval('course_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "campus_id" TEXT,
     "discipline_id" TEXT NOT NULL,
@@ -544,13 +600,34 @@ CREATE TABLE "courses" (
     "metadata" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "department_id" TEXT,
+    "highlights" JSONB NOT NULL DEFAULT '[]',
+    "curriculum" JSONB NOT NULL DEFAULT '[]',
+    "course_structure" JSONB NOT NULL DEFAULT '{}',
+    "value_added_courses" JSONB NOT NULL DEFAULT '[]',
+    "career_opportunities" JSONB NOT NULL DEFAULT '[]',
+    "higher_education_certifications" JSONB NOT NULL DEFAULT '{}',
+    "flexible_exit_options" JSONB NOT NULL DEFAULT '[]',
+    "class_timings" JSONB NOT NULL DEFAULT '{}',
+    "industry_tools" JSONB NOT NULL DEFAULT '[]',
+    "lab_facilities" JSONB NOT NULL DEFAULT '[]',
+    "room_facilities" JSONB NOT NULL DEFAULT '[]',
+    "featured_alumni" JSONB NOT NULL DEFAULT '[]',
+    "faqs" JSONB NOT NULL DEFAULT '[]',
+    "exam_policy" JSONB NOT NULL DEFAULT '{}',
+    "entrance_exam_eligibility" JSONB NOT NULL DEFAULT '[]',
+    "eligibility_criteria" JSONB NOT NULL DEFAULT '{}',
+    "accreditations" JSONB NOT NULL DEFAULT '[]',
+    "key_dates" JSONB NOT NULL DEFAULT '[]',
+    "demographics" JSONB NOT NULL DEFAULT '{}',
+    "demographics_refreshed_at" TIMESTAMPTZ,
 
     CONSTRAINT "courses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "course_quotas" (
-    "id" TEXT NOT NULL DEFAULT 'CRQ-' || nextval('course_quota_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text),
     "course_id" TEXT NOT NULL,
     "tuition_fee_override" DECIMAL(12,2),
     "quota_name" VARCHAR(100) NOT NULL,
@@ -564,7 +641,7 @@ CREATE TABLE "course_quotas" (
 
 -- CreateTable
 CREATE TABLE "college_gallery" (
-    "id" TEXT NOT NULL DEFAULT 'CGY-' || nextval('college_gallery_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CGY-'::text || (nextval('college_gallery_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "media_type" VARCHAR(10) NOT NULL,
     "url" TEXT NOT NULL,
@@ -577,7 +654,7 @@ CREATE TABLE "college_gallery" (
 
 -- CreateTable
 CREATE TABLE "college_reviews" (
-    "id" TEXT NOT NULL DEFAULT 'CRV-' || nextval('college_review_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CRV-'::text || (nextval('college_review_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "rating" SMALLINT NOT NULL,
@@ -585,13 +662,17 @@ CREATE TABLE "college_reviews" (
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "course_id" TEXT,
+    "review_type" VARCHAR(20) NOT NULL DEFAULT 'campus_life',
+    "category_ratings" JSONB NOT NULL DEFAULT '{}',
+    "is_anonymous" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "college_reviews_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "blog_authors" (
-    "id" TEXT NOT NULL DEFAULT 'BLA-' || nextval('blog_author_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BLA-'::text || (nextval('blog_author_seq'::regclass))::text),
     "full_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -607,7 +688,7 @@ CREATE TABLE "blog_authors" (
 
 -- CreateTable
 CREATE TABLE "news_alerts" (
-    "id" TEXT NOT NULL DEFAULT 'NWS-' || nextval('news_alert_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('NWS-'::text || (nextval('news_alert_seq'::regclass))::text),
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
@@ -621,13 +702,16 @@ CREATE TABLE "news_alerts" (
     "published_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "happening_category" VARCHAR(50),
+    "department_id" TEXT,
+    "course_id" TEXT,
 
     CONSTRAINT "news_alerts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "articles" (
-    "id" TEXT NOT NULL DEFAULT 'ART-' || nextval('article_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ART-'::text || (nextval('article_seq'::regclass))::text),
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
@@ -649,7 +733,7 @@ CREATE TABLE "articles" (
 
 -- CreateTable
 CREATE TABLE "blogs" (
-    "id" TEXT NOT NULL DEFAULT 'BLG-' || nextval('blog_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BLG-'::text || (nextval('blog_seq'::regclass))::text),
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "summary" TEXT,
@@ -673,7 +757,7 @@ CREATE TABLE "blogs" (
 
 -- CreateTable
 CREATE TABLE "entrance_exams" (
-    "id" TEXT NOT NULL DEFAULT 'ENX-' || nextval('entrance_exam_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ENX-'::text || (nextval('entrance_exam_seq'::regclass))::text),
     "name" VARCHAR(255) NOT NULL,
     "code" VARCHAR(20) NOT NULL,
     "conducting_body" VARCHAR(255),
@@ -696,7 +780,7 @@ CREATE TABLE "entrance_exams" (
 
 -- CreateTable
 CREATE TABLE "events" (
-    "id" TEXT NOT NULL DEFAULT 'EVT-' || nextval('event_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('EVT-'::text || (nextval('event_seq'::regclass))::text),
     "title" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -732,7 +816,7 @@ CREATE TABLE "events" (
 
 -- CreateTable
 CREATE TABLE "event_registrations" (
-    "id" TEXT NOT NULL DEFAULT 'ERG-' || nextval('event_registration_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ERG-'::text || (nextval('event_registration_seq'::regclass))::text),
     "event_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "payment_status" VARCHAR(20) NOT NULL DEFAULT 'not_applicable',
@@ -746,7 +830,7 @@ CREATE TABLE "event_registrations" (
 
 -- CreateTable
 CREATE TABLE "education_loans" (
-    "id" TEXT NOT NULL DEFAULT 'EDL-' || nextval('education_loan_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('EDL-'::text || (nextval('education_loan_seq'::regclass))::text),
     "bank_name" VARCHAR(255) NOT NULL,
     "bank_logo_url" TEXT,
     "product_name" VARCHAR(255) NOT NULL,
@@ -779,8 +863,21 @@ CREATE TABLE "education_loans" (
 );
 
 -- CreateTable
+CREATE TABLE "starter_guide_videos" (
+    "id" TEXT NOT NULL DEFAULT ('SGV-'::text || (nextval('starter_guide_video_seq'::regclass))::text),
+    "title" VARCHAR(255) NOT NULL,
+    "video_key" TEXT NOT NULL,
+    "display_order" INTEGER NOT NULL DEFAULT 0,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "starter_guide_videos_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "admission_cycles" (
-    "id" TEXT NOT NULL DEFAULT 'ACV-' || nextval('admission_cycle_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
@@ -798,7 +895,7 @@ CREATE TABLE "admission_cycles" (
 
 -- CreateTable
 CREATE TABLE "admission_cycle_courses" (
-    "id" TEXT NOT NULL DEFAULT 'ACC-' || nextval('admission_cycle_course_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ACC-'::text || (nextval('admission_cycle_course_seq'::regclass))::text),
     "admission_cycle_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
     "application_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -814,7 +911,7 @@ CREATE TABLE "admission_cycle_courses" (
 
 -- CreateTable
 CREATE TABLE "applications" (
-    "id" TEXT NOT NULL DEFAULT 'APP-' || nextval('application_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('APP-'::text || (nextval('application_seq'::regclass))::text),
     "application_number" VARCHAR(30) NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -851,7 +948,7 @@ CREATE TABLE "applications" (
 
 -- CreateTable
 CREATE TABLE "application_courses" (
-    "id" TEXT NOT NULL DEFAULT 'APC-' || nextval('application_course_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('APC-'::text || (nextval('application_course_seq'::regclass))::text),
     "application_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
     "application_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -868,7 +965,7 @@ CREATE TABLE "application_courses" (
 
 -- CreateTable
 CREATE TABLE "application_documents" (
-    "id" TEXT NOT NULL DEFAULT 'APD-' || nextval('application_document_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('APD-'::text || (nextval('application_document_seq'::regclass))::text),
     "application_id" TEXT NOT NULL,
     "document_type" VARCHAR(50) NOT NULL,
     "document_category" VARCHAR(30) NOT NULL,
@@ -887,7 +984,7 @@ CREATE TABLE "application_documents" (
 
 -- CreateTable
 CREATE TABLE "application_status_logs" (
-    "id" TEXT NOT NULL DEFAULT 'APL-' || nextval('application_status_log_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('APL-'::text || (nextval('application_status_log_seq'::regclass))::text),
     "application_course_id" TEXT NOT NULL,
     "from_status" VARCHAR(30),
     "to_status" VARCHAR(30) NOT NULL,
@@ -901,7 +998,7 @@ CREATE TABLE "application_status_logs" (
 
 -- CreateTable
 CREATE TABLE "seat_cancellations" (
-    "id" TEXT NOT NULL DEFAULT 'SCN-' || nextval('seat_cancellation_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SCN-'::text || (nextval('seat_cancellation_seq'::regclass))::text),
     "application_course_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
@@ -919,7 +1016,7 @@ CREATE TABLE "seat_cancellations" (
 
 -- CreateTable
 CREATE TABLE "enrollments" (
-    "id" TEXT NOT NULL DEFAULT 'ENR-' || nextval('enrollment_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ENR-'::text || (nextval('enrollment_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
@@ -939,7 +1036,7 @@ CREATE TABLE "enrollments" (
 
 -- CreateTable
 CREATE TABLE "course_switch_requests" (
-    "id" TEXT NOT NULL DEFAULT 'CSR-' || nextval('course_switch_request_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CSR-'::text || (nextval('course_switch_request_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "enrollment_id" TEXT NOT NULL,
@@ -959,7 +1056,7 @@ CREATE TABLE "course_switch_requests" (
 
 -- CreateTable
 CREATE TABLE "admission_form_configs" (
-    "id" TEXT NOT NULL DEFAULT 'AFC-' || nextval('admission_form_config_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('AFC-'::text || (nextval('admission_form_config_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "admission_cycle_id" TEXT,
     "section" VARCHAR(30) NOT NULL,
@@ -974,7 +1071,7 @@ CREATE TABLE "admission_form_configs" (
 
 -- CreateTable
 CREATE TABLE "document_upload_configs" (
-    "id" TEXT NOT NULL DEFAULT 'DUC-' || nextval('document_upload_config_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('DUC-'::text || (nextval('document_upload_config_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "admission_cycle_id" TEXT,
     "document_type" VARCHAR(50) NOT NULL,
@@ -993,8 +1090,22 @@ CREATE TABLE "document_upload_configs" (
 );
 
 -- CreateTable
+CREATE TABLE "seat_matrix" (
+    "id" TEXT NOT NULL DEFAULT ('SMX-'::text || (nextval('seat_matrix_seq'::regclass))::text),
+    "course_id" TEXT NOT NULL,
+    "admission_cycle_id" TEXT NOT NULL,
+    "quota_id" TEXT NOT NULL,
+    "total_seats" INTEGER NOT NULL,
+    "open_seats" INTEGER NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "seat_matrix_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "assessment_sections" (
-    "id" TEXT NOT NULL DEFAULT 'ASC-' || nextval('assessment_section_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ASC-'::text || (nextval('assessment_section_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
@@ -1010,7 +1121,7 @@ CREATE TABLE "assessment_sections" (
 
 -- CreateTable
 CREATE TABLE "question_types" (
-    "id" TEXT NOT NULL DEFAULT 'QTP-' || nextval('question_type_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('QTP-'::text || (nextval('question_type_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
@@ -1031,7 +1142,7 @@ CREATE TABLE "question_types" (
 
 -- CreateTable
 CREATE TABLE "questions" (
-    "id" TEXT NOT NULL DEFAULT 'QST-' || nextval('question_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('QST-'::text || (nextval('question_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "section_id" TEXT NOT NULL,
     "question_type_id" TEXT NOT NULL,
@@ -1053,7 +1164,7 @@ CREATE TABLE "questions" (
 
 -- CreateTable
 CREATE TABLE "question_course_mappings" (
-    "id" TEXT NOT NULL DEFAULT 'QCM-' || nextval('question_course_mapping_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('QCM-'::text || (nextval('question_course_mapping_seq'::regclass))::text),
     "question_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
 
@@ -1062,7 +1173,7 @@ CREATE TABLE "question_course_mappings" (
 
 -- CreateTable
 CREATE TABLE "assessment_templates" (
-    "id" TEXT NOT NULL DEFAULT 'AST-' || nextval('assessment_template_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('AST-'::text || (nextval('assessment_template_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "template_type" VARCHAR(20) NOT NULL DEFAULT 'admission',
@@ -1080,7 +1191,7 @@ CREATE TABLE "assessment_templates" (
 
 -- CreateTable
 CREATE TABLE "template_sections" (
-    "id" TEXT NOT NULL DEFAULT 'TPS-' || nextval('template_section_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('TPS-'::text || (nextval('template_section_seq'::regclass))::text),
     "template_id" TEXT NOT NULL,
     "section_id" TEXT NOT NULL,
     "question_count" INTEGER NOT NULL,
@@ -1094,7 +1205,7 @@ CREATE TABLE "template_sections" (
 
 -- CreateTable
 CREATE TABLE "assessment_papers" (
-    "id" TEXT NOT NULL DEFAULT 'ASP-' || nextval('assessment_paper_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ASP-'::text || (nextval('assessment_paper_seq'::regclass))::text),
     "template_id" TEXT NOT NULL,
     "paper_code" VARCHAR(30) NOT NULL,
     "generation_type" VARCHAR(10) NOT NULL,
@@ -1109,7 +1220,7 @@ CREATE TABLE "assessment_papers" (
 
 -- CreateTable
 CREATE TABLE "paper_questions" (
-    "id" TEXT NOT NULL DEFAULT 'PQS-' || nextval('paper_question_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('PQS-'::text || (nextval('paper_question_seq'::regclass))::text),
     "paper_id" TEXT NOT NULL,
     "question_id" TEXT NOT NULL,
     "section_id" TEXT NOT NULL,
@@ -1120,7 +1231,7 @@ CREATE TABLE "paper_questions" (
 
 -- CreateTable
 CREATE TABLE "assessment_slots" (
-    "id" TEXT NOT NULL DEFAULT 'ASL-' || nextval('assessment_slot_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ASL-'::text || (nextval('assessment_slot_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "template_id" TEXT NOT NULL,
     "slot_type" VARCHAR(10) NOT NULL,
@@ -1136,7 +1247,7 @@ CREATE TABLE "assessment_slots" (
 
 -- CreateTable
 CREATE TABLE "assessment_attempts" (
-    "id" TEXT NOT NULL DEFAULT 'AAT-' || nextval('assessment_attempt_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('AAT-'::text || (nextval('assessment_attempt_seq'::regclass))::text),
     "application_course_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "paper_id" TEXT NOT NULL,
@@ -1157,7 +1268,7 @@ CREATE TABLE "assessment_attempts" (
 
 -- CreateTable
 CREATE TABLE "student_answers" (
-    "id" TEXT NOT NULL DEFAULT 'SAN-' || nextval('student_answer_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SAN-'::text || (nextval('student_answer_seq'::regclass))::text),
     "attempt_id" TEXT NOT NULL,
     "question_id" TEXT NOT NULL,
     "section_id" TEXT NOT NULL,
@@ -1177,7 +1288,7 @@ CREATE TABLE "student_answers" (
 
 -- CreateTable
 CREATE TABLE "assessment_reschedules" (
-    "id" TEXT NOT NULL DEFAULT 'ARD-' || nextval('assessment_reschedule_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ARD-'::text || (nextval('assessment_reschedule_seq'::regclass))::text),
     "attempt_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "from_slot_id" TEXT NOT NULL,
@@ -1193,7 +1304,7 @@ CREATE TABLE "assessment_reschedules" (
 
 -- CreateTable
 CREATE TABLE "interview_slots" (
-    "id" TEXT NOT NULL DEFAULT 'ITS-' || nextval('interview_slot_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ITS-'::text || (nextval('interview_slot_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "mode" VARCHAR(20) NOT NULL,
     "scheduled_date" DATE NOT NULL,
@@ -1217,7 +1328,7 @@ CREATE TABLE "interview_slots" (
 
 -- CreateTable
 CREATE TABLE "interview_bookings" (
-    "id" TEXT NOT NULL DEFAULT 'IBK-' || nextval('interview_booking_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('IBK-'::text || (nextval('interview_booking_seq'::regclass))::text),
     "application_course_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "slot_id" TEXT NOT NULL,
@@ -1237,7 +1348,7 @@ CREATE TABLE "interview_bookings" (
 
 -- CreateTable
 CREATE TABLE "interview_reschedules" (
-    "id" TEXT NOT NULL DEFAULT 'IRS-' || nextval('interview_reschedule_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('IRS-'::text || (nextval('interview_reschedule_seq'::regclass))::text),
     "booking_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "from_slot_id" TEXT NOT NULL,
@@ -1254,7 +1365,7 @@ CREATE TABLE "interview_reschedules" (
 
 -- CreateTable
 CREATE TABLE "offer_letters" (
-    "id" TEXT NOT NULL DEFAULT 'OFL-' || nextval('offer_letter_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('OFL-'::text || (nextval('offer_letter_seq'::regclass))::text),
     "application_course_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1275,7 +1386,7 @@ CREATE TABLE "offer_letters" (
 
 -- CreateTable
 CREATE TABLE "fee_structures" (
-    "id" TEXT NOT NULL DEFAULT 'FST-' || nextval('fee_structure_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('FST-'::text || (nextval('fee_structure_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
     "academic_year" VARCHAR(10) NOT NULL,
@@ -1287,13 +1398,19 @@ CREATE TABLE "fee_structures" (
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "gender" VARCHAR(10) DEFAULT 'both',
+    "fee_pdf_url" TEXT,
+    "one_time_fees" JSONB NOT NULL DEFAULT '[]',
+    "additional_fees" JSONB NOT NULL DEFAULT '[]',
+    "whats_included" JSONB NOT NULL DEFAULT '[]',
+    "whats_excluded" JSONB NOT NULL DEFAULT '[]',
 
     CONSTRAINT "fee_structures_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "student_fee_ledger" (
-    "id" TEXT NOT NULL DEFAULT 'SFL-' || nextval('student_fee_ledger_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SFL-'::text || (nextval('student_fee_ledger_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "application_course_id" TEXT,
@@ -1315,7 +1432,7 @@ CREATE TABLE "student_fee_ledger" (
 
 -- CreateTable
 CREATE TABLE "transactions" (
-    "id" TEXT NOT NULL DEFAULT 'TXN-' || nextval('transaction_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('TXN-'::text || (nextval('transaction_seq'::regclass))::text),
     "transaction_number" VARCHAR(30) NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1351,7 +1468,7 @@ CREATE TABLE "transactions" (
 
 -- CreateTable
 CREATE TABLE "payment_receipts" (
-    "id" TEXT NOT NULL DEFAULT 'RCP-' || nextval('payment_receipt_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('RCP-'::text || (nextval('payment_receipt_seq'::regclass))::text),
     "transaction_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1368,7 +1485,7 @@ CREATE TABLE "payment_receipts" (
 
 -- CreateTable
 CREATE TABLE "refunds" (
-    "id" TEXT NOT NULL DEFAULT 'RFD-' || nextval('refund_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('RFD-'::text || (nextval('refund_seq'::regclass))::text),
     "transaction_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1388,7 +1505,7 @@ CREATE TABLE "refunds" (
 
 -- CreateTable
 CREATE TABLE "scholarship_configs" (
-    "id" TEXT NOT NULL DEFAULT 'SCG-' || nextval('scholarship_config_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SCG-'::text || (nextval('scholarship_config_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "scholarship_type" VARCHAR(30) NOT NULL,
@@ -1400,13 +1517,16 @@ CREATE TABLE "scholarship_configs" (
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "calculator_config" JSONB NOT NULL DEFAULT '{}',
+    "display_label" VARCHAR(100),
+    "discount_display" VARCHAR(20),
 
     CONSTRAINT "scholarship_configs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "scholarship_applications" (
-    "id" TEXT NOT NULL DEFAULT 'SCA-' || nextval('scholarship_application_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SCA-'::text || (nextval('scholarship_application_seq'::regclass))::text),
     "scholarship_config_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "application_course_id" TEXT NOT NULL,
@@ -1425,7 +1545,7 @@ CREATE TABLE "scholarship_applications" (
 
 -- CreateTable
 CREATE TABLE "college_payment_accounts" (
-    "id" TEXT NOT NULL DEFAULT 'CPA-' || nextval('college_payment_account_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CPA-'::text || (nextval('college_payment_account_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "razorpay_account_id" VARCHAR(100) NOT NULL,
     "onboarding_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -1444,7 +1564,7 @@ CREATE TABLE "college_payment_accounts" (
 
 -- CreateTable
 CREATE TABLE "document_templates" (
-    "id" TEXT NOT NULL DEFAULT 'DTM-' || nextval('document_template_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('DTM-'::text || (nextval('document_template_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
@@ -1462,7 +1582,7 @@ CREATE TABLE "document_templates" (
 
 -- CreateTable
 CREATE TABLE "document_requests" (
-    "id" TEXT NOT NULL DEFAULT 'DRQ-' || nextval('document_request_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('DRQ-'::text || (nextval('document_request_seq'::regclass))::text),
     "request_number" VARCHAR(30) NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1489,7 +1609,7 @@ CREATE TABLE "document_requests" (
 
 -- CreateTable
 CREATE TABLE "issued_documents" (
-    "id" TEXT NOT NULL DEFAULT 'ISD-' || nextval('issued_document_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ISD-'::text || (nextval('issued_document_seq'::regclass))::text),
     "document_request_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -1506,7 +1626,7 @@ CREATE TABLE "issued_documents" (
 
 -- CreateTable
 CREATE TABLE "hostels" (
-    "id" TEXT NOT NULL DEFAULT 'HST-' || nextval('hostel_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HST-'::text || (nextval('hostel_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
@@ -1527,13 +1647,15 @@ CREATE TABLE "hostels" (
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "safety_tier" VARCHAR(100),
+    "badge" VARCHAR(50),
 
     CONSTRAINT "hostels_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "hostel_room_types" (
-    "id" TEXT NOT NULL DEFAULT 'HRT-' || nextval('hostel_room_type_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HRT-'::text || (nextval('hostel_room_type_seq'::regclass))::text),
     "hostel_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -1554,7 +1676,7 @@ CREATE TABLE "hostel_room_types" (
 
 -- CreateTable
 CREATE TABLE "hostel_mess_plans" (
-    "id" TEXT NOT NULL DEFAULT 'HMP-' || nextval('hostel_mess_plan_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HMP-'::text || (nextval('hostel_mess_plan_seq'::regclass))::text),
     "hostel_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -1573,7 +1695,7 @@ CREATE TABLE "hostel_mess_plans" (
 
 -- CreateTable
 CREATE TABLE "hostel_addon_services" (
-    "id" TEXT NOT NULL DEFAULT 'HAS-' || nextval('hostel_addon_service_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HAS-'::text || (nextval('hostel_addon_service_seq'::regclass))::text),
     "hostel_id" TEXT NOT NULL,
     "service_type" VARCHAR(30) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -1591,7 +1713,7 @@ CREATE TABLE "hostel_addon_services" (
 
 -- CreateTable
 CREATE TABLE "hostel_reviews" (
-    "id" TEXT NOT NULL DEFAULT 'HRV-' || nextval('hostel_review_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HRV-'::text || (nextval('hostel_review_seq'::regclass))::text),
     "hostel_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "rating" SMALLINT NOT NULL,
@@ -1606,7 +1728,7 @@ CREATE TABLE "hostel_reviews" (
 
 -- CreateTable
 CREATE TABLE "hostel_enrollments" (
-    "id" TEXT NOT NULL DEFAULT 'HEN-' || nextval('hostel_enrollment_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HEN-'::text || (nextval('hostel_enrollment_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "hostel_id" TEXT NOT NULL,
@@ -1627,7 +1749,7 @@ CREATE TABLE "hostel_enrollments" (
 
 -- CreateTable
 CREATE TABLE "hostel_wishlists" (
-    "id" TEXT NOT NULL DEFAULT 'HWL-' || nextval('hostel_wishlist_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('HWL-'::text || (nextval('hostel_wishlist_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "hostel_id" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1637,20 +1759,22 @@ CREATE TABLE "hostel_wishlists" (
 
 -- CreateTable
 CREATE TABLE "commute_routes" (
-    "id" TEXT NOT NULL DEFAULT 'CMR-' || nextval('commute_route_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMR-'::text || (nextval('commute_route_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR(255),
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "is_verified" BOOLEAN NOT NULL DEFAULT false,
+    "conduct_policy" JSONB NOT NULL DEFAULT '[]',
 
     CONSTRAINT "commute_routes_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "commute_route_stops" (
-    "id" TEXT NOT NULL DEFAULT 'CMS-' || nextval('commute_route_stop_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMS-'::text || (nextval('commute_route_stop_seq'::regclass))::text),
     "route_id" TEXT NOT NULL,
     "stop_name" VARCHAR(255) NOT NULL,
     "landmark" VARCHAR(255),
@@ -1666,7 +1790,7 @@ CREATE TABLE "commute_route_stops" (
 
 -- CreateTable
 CREATE TABLE "commute_buses" (
-    "id" TEXT NOT NULL DEFAULT 'CMB-' || nextval('commute_bus_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMB-'::text || (nextval('commute_bus_seq'::regclass))::text),
     "route_id" TEXT NOT NULL,
     "bus_number" VARCHAR(20) NOT NULL,
     "bus_name" VARCHAR(100),
@@ -1680,13 +1804,15 @@ CREATE TABLE "commute_buses" (
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
+    "bus_model" VARCHAR(100),
+    "payment_structure_notes" TEXT,
 
     CONSTRAINT "commute_buses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "commute_enrollments" (
-    "id" TEXT NOT NULL DEFAULT 'CME-' || nextval('commute_enrollment_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CME-'::text || (nextval('commute_enrollment_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "route_id" TEXT NOT NULL,
@@ -1703,7 +1829,7 @@ CREATE TABLE "commute_enrollments" (
 
 -- CreateTable
 CREATE TABLE "commute_ride_history" (
-    "id" TEXT NOT NULL DEFAULT 'CRH-' || nextval('commute_ride_history_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CRH-'::text || (nextval('commute_ride_history_seq'::regclass))::text),
     "enrollment_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "bus_id" TEXT NOT NULL,
@@ -1719,13 +1845,14 @@ CREATE TABLE "commute_ride_history" (
 
 -- CreateTable
 CREATE TABLE "counsellor_availability" (
-    "id" TEXT NOT NULL DEFAULT 'CNA-' || nextval('counsellor_availability_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text),
     "counsellor_id" TEXT NOT NULL,
     "available_date" DATE NOT NULL,
     "start_time" TIME NOT NULL,
     "end_time" TIME NOT NULL,
     "session_duration_mins" INTEGER NOT NULL DEFAULT 45,
     "is_booked" BOOLEAN NOT NULL DEFAULT false,
+    "session_fee" DECIMAL(10,2) NOT NULL DEFAULT 0.0,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1734,7 +1861,7 @@ CREATE TABLE "counsellor_availability" (
 
 -- CreateTable
 CREATE TABLE "counselling_sessions" (
-    "id" TEXT NOT NULL DEFAULT 'CLS-' || nextval('counselling_session_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CLS-'::text || (nextval('counselling_session_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "counsellor_id" TEXT NOT NULL,
     "availability_id" TEXT NOT NULL,
@@ -1747,14 +1874,17 @@ CREATE TABLE "counselling_sessions" (
     "status" VARCHAR(20) NOT NULL DEFAULT 'booked',
     "meeting_url" TEXT,
     "meeting_id" VARCHAR(50),
+    "google_event_id" VARCHAR(255),
     "session_fee" DECIMAL(10,2),
     "payment_status" VARCHAR(20) NOT NULL DEFAULT 'pending',
-    "transaction_id" TEXT,
+    "transaction_id" VARCHAR(100),
     "cancelled_by" VARCHAR(20),
     "cancellation_reason" TEXT,
     "cancelled_at" TIMESTAMPTZ,
     "completed_at" TIMESTAMPTZ,
     "session_notes" TEXT,
+    "rating" INTEGER,
+    "rating_feedback" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1763,7 +1893,7 @@ CREATE TABLE "counselling_sessions" (
 
 -- CreateTable
 CREATE TABLE "session_reschedules" (
-    "id" TEXT NOT NULL DEFAULT 'SRS-' || nextval('session_reschedule_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SRS-'::text || (nextval('session_reschedule_seq'::regclass))::text),
     "session_id" TEXT NOT NULL,
     "rescheduled_by" VARCHAR(20) NOT NULL,
     "from_date" DATE NOT NULL,
@@ -1779,7 +1909,7 @@ CREATE TABLE "session_reschedules" (
 
 -- CreateTable
 CREATE TABLE "counsellor_wallets" (
-    "id" TEXT NOT NULL DEFAULT 'CNW-' || nextval('counsellor_wallet_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CNW-'::text || (nextval('counsellor_wallet_seq'::regclass))::text),
     "counsellor_id" TEXT NOT NULL,
     "balance" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_earned" DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -1792,7 +1922,7 @@ CREATE TABLE "counsellor_wallets" (
 
 -- CreateTable
 CREATE TABLE "counsellor_wallet_transactions" (
-    "id" TEXT NOT NULL DEFAULT 'CWT-' || nextval('counsellor_wallet_transaction_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CWT-'::text || (nextval('counsellor_wallet_transaction_seq'::regclass))::text),
     "wallet_id" TEXT NOT NULL,
     "counsellor_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
@@ -1808,8 +1938,33 @@ CREATE TABLE "counsellor_wallet_transactions" (
 );
 
 -- CreateTable
+CREATE TABLE "counsellor_registration_requests" (
+    "id" TEXT NOT NULL DEFAULT ('CRR-'::text || (nextval('counsellor_registration_request_seq'::regclass))::text),
+    "full_name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "phone_number" VARCHAR(20),
+    "gender" VARCHAR(20),
+    "city" VARCHAR(100),
+    "counsellor_type" VARCHAR(20) NOT NULL,
+    "qualification" VARCHAR(255),
+    "years_of_experience" VARCHAR(50),
+    "known_languages" VARCHAR(255),
+    "specialization" TEXT,
+    "license_number" VARCHAR(100),
+    "message" TEXT,
+    "password_hash" TEXT,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+    "reviewed_by" TEXT,
+    "review_remarks" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "counsellor_registration_requests_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "referral_codes" (
-    "id" TEXT NOT NULL DEFAULT 'RFC-' || nextval('referral_code_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('RFC-'::text || (nextval('referral_code_seq'::regclass))::text),
     "blink_user_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "course_id" TEXT,
@@ -1825,7 +1980,7 @@ CREATE TABLE "referral_codes" (
 
 -- CreateTable
 CREATE TABLE "referrals" (
-    "id" TEXT NOT NULL DEFAULT 'RFL-' || nextval('referral_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('RFL-'::text || (nextval('referral_seq'::regclass))::text),
     "referral_code_id" TEXT NOT NULL,
     "blink_user_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
@@ -1841,7 +1996,7 @@ CREATE TABLE "referrals" (
 
 -- CreateTable
 CREATE TABLE "service_charge_configs" (
-    "id" TEXT NOT NULL DEFAULT 'SCC-' || nextval('service_charge_config_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SCC-'::text || (nextval('service_charge_config_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
     "academic_year" VARCHAR(10) NOT NULL,
@@ -1860,7 +2015,7 @@ CREATE TABLE "service_charge_configs" (
 
 -- CreateTable
 CREATE TABLE "commissions" (
-    "id" TEXT NOT NULL DEFAULT 'CMN-' || nextval('commission_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMN-'::text || (nextval('commission_seq'::regclass))::text),
     "referral_id" TEXT NOT NULL,
     "blink_user_id" TEXT NOT NULL,
     "service_charge_id" TEXT NOT NULL,
@@ -1879,7 +2034,7 @@ CREATE TABLE "commissions" (
 
 -- CreateTable
 CREATE TABLE "blink_wallets" (
-    "id" TEXT NOT NULL DEFAULT 'BLW-' || nextval('blink_wallet_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BLW-'::text || (nextval('blink_wallet_seq'::regclass))::text),
     "blink_user_id" TEXT NOT NULL,
     "balance" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "total_earned" DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -1893,7 +2048,7 @@ CREATE TABLE "blink_wallets" (
 
 -- CreateTable
 CREATE TABLE "blink_wallet_transactions" (
-    "id" TEXT NOT NULL DEFAULT 'BWT-' || nextval('blink_wallet_transaction_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BWT-'::text || (nextval('blink_wallet_transaction_seq'::regclass))::text),
     "wallet_id" TEXT NOT NULL,
     "blink_user_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
@@ -1909,7 +2064,7 @@ CREATE TABLE "blink_wallet_transactions" (
 
 -- CreateTable
 CREATE TABLE "campus_visits" (
-    "id" TEXT NOT NULL DEFAULT 'CMV-' || nextval('campus_visit_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMV-'::text || (nextval('campus_visit_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "ambassador_id" TEXT NOT NULL,
@@ -1931,7 +2086,7 @@ CREATE TABLE "campus_visits" (
 
 -- CreateTable
 CREATE TABLE "media_kits" (
-    "id" TEXT NOT NULL DEFAULT 'MDK-' || nextval('media_kit_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('MDK-'::text || (nextval('media_kit_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "course_id" TEXT,
     "title" VARCHAR(255) NOT NULL,
@@ -1951,7 +2106,7 @@ CREATE TABLE "media_kits" (
 
 -- CreateTable
 CREATE TABLE "communities" (
-    "id" TEXT NOT NULL DEFAULT 'CMT-' || nextval('community_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMT-'::text || (nextval('community_seq'::regclass))::text),
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "description" TEXT,
@@ -1970,9 +2125,10 @@ CREATE TABLE "communities" (
 
 -- CreateTable
 CREATE TABLE "community_members" (
-    "id" TEXT NOT NULL DEFAULT 'CMM-' || nextval('community_member_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMM-'::text || (nextval('community_member_seq'::regclass))::text),
     "community_id" TEXT NOT NULL,
-    "student_id" TEXT NOT NULL,
+    "member_type" VARCHAR(20) NOT NULL,
+    "member_id" TEXT NOT NULL,
     "notify_me" BOOLEAN NOT NULL DEFAULT false,
     "joined_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1981,9 +2137,10 @@ CREATE TABLE "community_members" (
 
 -- CreateTable
 CREATE TABLE "community_posts" (
-    "id" TEXT NOT NULL DEFAULT 'CPT-' || nextval('community_post_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CPT-'::text || (nextval('community_post_seq'::regclass))::text),
     "community_id" TEXT NOT NULL,
     "author_id" TEXT NOT NULL,
+    "author_type" VARCHAR(20) NOT NULL,
     "content" TEXT NOT NULL,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "upvote_count" INTEGER NOT NULL DEFAULT 0,
@@ -1999,9 +2156,10 @@ CREATE TABLE "community_posts" (
 
 -- CreateTable
 CREATE TABLE "community_post_votes" (
-    "id" TEXT NOT NULL DEFAULT 'CPV-' || nextval('community_post_vote_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CPV-'::text || (nextval('community_post_vote_seq'::regclass))::text),
     "post_id" TEXT NOT NULL,
-    "student_id" TEXT NOT NULL,
+    "voter_id" TEXT NOT NULL,
+    "voter_type" VARCHAR(20) NOT NULL,
     "vote_type" VARCHAR(10) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -2010,9 +2168,10 @@ CREATE TABLE "community_post_votes" (
 
 -- CreateTable
 CREATE TABLE "community_comments" (
-    "id" TEXT NOT NULL DEFAULT 'CCT-' || nextval('community_comment_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CCT-'::text || (nextval('community_comment_seq'::regclass))::text),
     "post_id" TEXT NOT NULL,
     "author_id" TEXT NOT NULL,
+    "author_type" VARCHAR(20) NOT NULL,
     "parent_comment_id" TEXT,
     "content" TEXT NOT NULL,
     "like_count" INTEGER NOT NULL DEFAULT 0,
@@ -2024,8 +2183,19 @@ CREATE TABLE "community_comments" (
 );
 
 -- CreateTable
+CREATE TABLE "community_comment_likes" (
+    "id" TEXT NOT NULL DEFAULT ('CCL-'::text || (nextval('community_comment_like_seq'::regclass))::text),
+    "comment_id" TEXT NOT NULL,
+    "liker_id" TEXT NOT NULL,
+    "liker_type" VARCHAR(20) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "community_comment_likes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "squad_searches" (
-    "id" TEXT NOT NULL DEFAULT 'SQS-' || nextval('squad_search_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SQS-'::text || (nextval('squad_search_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "preferred_city" VARCHAR(100),
     "preferred_state" VARCHAR(100),
@@ -2038,7 +2208,7 @@ CREATE TABLE "squad_searches" (
 
 -- CreateTable
 CREATE TABLE "beaconu_cards" (
-    "id" TEXT NOT NULL DEFAULT 'BCR-' || nextval('beaconu_card_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BCR-'::text || (nextval('beaconu_card_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "card_number" VARCHAR(20) NOT NULL,
     "card_holder_name" VARCHAR(255) NOT NULL,
@@ -2055,7 +2225,7 @@ CREATE TABLE "beaconu_cards" (
 
 -- CreateTable
 CREATE TABLE "student_bank_accounts" (
-    "id" TEXT NOT NULL DEFAULT 'SBA-' || nextval('student_bank_account_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SBA-'::text || (nextval('student_bank_account_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "bank_name" VARCHAR(100) NOT NULL,
     "account_holder_name" VARCHAR(255) NOT NULL,
@@ -2073,7 +2243,7 @@ CREATE TABLE "student_bank_accounts" (
 
 -- CreateTable
 CREATE TABLE "student_wallet_transactions" (
-    "id" TEXT NOT NULL DEFAULT 'SWT-' || nextval('student_wallet_transaction_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('SWT-'::text || (nextval('student_wallet_transaction_seq'::regclass))::text),
     "card_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
     "type" VARCHAR(20) NOT NULL,
@@ -2090,7 +2260,7 @@ CREATE TABLE "student_wallet_transactions" (
 
 -- CreateTable
 CREATE TABLE "anti_ragging_complaints" (
-    "id" TEXT NOT NULL DEFAULT 'ARC-' || nextval('anti_ragging_complaint_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ARC-'::text || (nextval('anti_ragging_complaint_seq'::regclass))::text),
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "complaint_number" VARCHAR(30) NOT NULL,
@@ -2110,7 +2280,7 @@ CREATE TABLE "anti_ragging_complaints" (
 
 -- CreateTable
 CREATE TABLE "notifications" (
-    "id" TEXT NOT NULL DEFAULT 'NTF-' || nextval('notification_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('NTF-'::text || (nextval('notification_seq'::regclass))::text),
     "recipient_type" VARCHAR(20) NOT NULL,
     "recipient_id" TEXT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
@@ -2130,7 +2300,7 @@ CREATE TABLE "notifications" (
 
 -- CreateTable
 CREATE TABLE "broadcast_notifications" (
-    "id" TEXT NOT NULL DEFAULT 'BCN-' || nextval('broadcast_notification_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('BCN-'::text || (nextval('broadcast_notification_seq'::regclass))::text),
     "college_id" TEXT,
     "title" VARCHAR(255) NOT NULL,
     "body" TEXT NOT NULL,
@@ -2151,7 +2321,7 @@ CREATE TABLE "broadcast_notifications" (
 
 -- CreateTable
 CREATE TABLE "announcements" (
-    "id" TEXT NOT NULL DEFAULT 'ANN-' || nextval('announcement_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('ANN-'::text || (nextval('announcement_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "title" VARCHAR(255) NOT NULL,
     "content" TEXT NOT NULL,
@@ -2168,7 +2338,7 @@ CREATE TABLE "announcements" (
 
 -- CreateTable
 CREATE TABLE "support_tickets" (
-    "id" TEXT NOT NULL DEFAULT 'TKT-' || nextval('support_ticket_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('TKT-'::text || (nextval('support_ticket_seq'::regclass))::text),
     "ticket_number" VARCHAR(30) NOT NULL,
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
@@ -2188,7 +2358,7 @@ CREATE TABLE "support_tickets" (
 
 -- CreateTable
 CREATE TABLE "ticket_messages" (
-    "id" TEXT NOT NULL DEFAULT 'TKM-' || nextval('ticket_message_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('TKM-'::text || (nextval('ticket_message_seq'::regclass))::text),
     "ticket_id" TEXT NOT NULL,
     "sender_type" VARCHAR(20) NOT NULL,
     "sender_id" TEXT,
@@ -2202,7 +2372,7 @@ CREATE TABLE "ticket_messages" (
 
 -- CreateTable
 CREATE TABLE "chat_conversations" (
-    "id" TEXT NOT NULL DEFAULT 'CCV-' || nextval('chat_conversation_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CCV-'::text || (nextval('chat_conversation_seq'::regclass))::text),
     "participant_1_type" VARCHAR(20) NOT NULL,
     "participant_1_id" TEXT NOT NULL,
     "participant_2_type" VARCHAR(20) NOT NULL,
@@ -2220,7 +2390,7 @@ CREATE TABLE "chat_conversations" (
 
 -- CreateTable
 CREATE TABLE "chat_messages" (
-    "id" TEXT NOT NULL DEFAULT 'CMG-' || nextval('chat_message_seq')::text,
+    "id" TEXT NOT NULL DEFAULT ('CMG-'::text || (nextval('chat_message_seq'::regclass))::text),
     "conversation_id" TEXT NOT NULL,
     "sender_type" VARCHAR(20) NOT NULL,
     "sender_id" TEXT NOT NULL,
@@ -2312,6 +2482,9 @@ CREATE UNIQUE INDEX "blink_roles_slug_key" ON "blink_roles"("slug");
 CREATE UNIQUE INDEX "blink_users_email_key" ON "blink_users"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "blink_users_ambassador_code_key" ON "blink_users"("ambassador_code");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "blink_users_agency_reg_number_key" ON "blink_users"("agency_reg_number");
 
 -- CreateIndex
@@ -2334,6 +2507,9 @@ CREATE INDEX "idx_blink_email" ON "blink_users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "counsellors_email_key" ON "counsellors"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "counsellors_counsellor_code_key" ON "counsellors"("counsellor_code");
 
 -- CreateIndex
 CREATE INDEX "idx_counsellors_type" ON "counsellors"("counsellor_type");
@@ -2459,6 +2635,15 @@ CREATE INDEX "idx_campuses_college" ON "campuses"("college_id");
 CREATE INDEX "idx_campuses_status" ON "campuses"("college_id", "status");
 
 -- CreateIndex
+CREATE INDEX "idx_departments_college" ON "departments"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_departments_campus" ON "departments"("campus_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "departments_college_id_slug_key" ON "departments"("college_id", "slug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "streams_name_key" ON "streams"("name");
 
 -- CreateIndex
@@ -2487,6 +2672,9 @@ CREATE INDEX "idx_courses_college" ON "courses"("college_id");
 
 -- CreateIndex
 CREATE INDEX "idx_courses_campus" ON "courses"("campus_id");
+
+-- CreateIndex
+CREATE INDEX "idx_courses_department" ON "courses"("department_id");
 
 -- CreateIndex
 CREATE INDEX "idx_courses_discipline" ON "courses"("discipline_id");
@@ -2519,6 +2707,9 @@ CREATE INDEX "idx_reviews_college" ON "college_reviews"("college_id", "status");
 CREATE INDEX "idx_reviews_student" ON "college_reviews"("student_id");
 
 -- CreateIndex
+CREATE INDEX "idx_reviews_course" ON "college_reviews"("course_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "blog_authors_email_key" ON "blog_authors"("email");
 
 -- CreateIndex
@@ -2538,6 +2729,12 @@ CREATE INDEX "idx_news_published" ON "news_alerts"("published_at" DESC);
 
 -- CreateIndex
 CREATE INDEX "idx_news_slug" ON "news_alerts"("slug");
+
+-- CreateIndex
+CREATE INDEX "idx_news_department" ON "news_alerts"("department_id");
+
+-- CreateIndex
+CREATE INDEX "idx_news_course" ON "news_alerts"("course_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "articles_slug_key" ON "articles"("slug");
@@ -2631,6 +2828,12 @@ CREATE INDEX "idx_education_loans_loan_type" ON "education_loans"("loan_type");
 
 -- CreateIndex
 CREATE INDEX "idx_education_loans_sort_order" ON "education_loans"("sort_order");
+
+-- CreateIndex
+CREATE INDEX "idx_sgv_is_active" ON "starter_guide_videos"("is_active");
+
+-- CreateIndex
+CREATE INDEX "idx_sgv_display_order" ON "starter_guide_videos"("display_order");
 
 -- CreateIndex
 CREATE INDEX "idx_cycles_college" ON "admission_cycles"("college_id");
@@ -2775,6 +2978,18 @@ CREATE INDEX "idx_duc_category" ON "document_upload_configs"("document_category"
 
 -- CreateIndex
 CREATE INDEX "idx_duc_active" ON "document_upload_configs"("college_id", "is_active");
+
+-- CreateIndex
+CREATE INDEX "idx_seat_matrix_course" ON "seat_matrix"("course_id");
+
+-- CreateIndex
+CREATE INDEX "idx_seat_matrix_cycle" ON "seat_matrix"("admission_cycle_id");
+
+-- CreateIndex
+CREATE INDEX "idx_seat_matrix_quota" ON "seat_matrix"("quota_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "seat_matrix_course_id_admission_cycle_id_quota_id_key" ON "seat_matrix"("course_id", "admission_cycle_id", "quota_id");
 
 -- CreateIndex
 CREATE INDEX "idx_sections_college" ON "assessment_sections"("college_id");
@@ -3290,6 +3505,12 @@ CREATE INDEX "idx_wtxn_type" ON "counsellor_wallet_transactions"("type");
 CREATE INDEX "idx_wtxn_created" ON "counsellor_wallet_transactions"("created_at");
 
 -- CreateIndex
+CREATE INDEX "idx_counsellor_request_status" ON "counsellor_registration_requests"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_counsellor_request_type" ON "counsellor_registration_requests"("counsellor_type");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "referral_codes_code_key" ON "referral_codes"("code");
 
 -- CreateIndex
@@ -3401,10 +3622,10 @@ CREATE INDEX "idx_communities_members" ON "communities"("member_count" DESC);
 CREATE INDEX "idx_cmembers_community" ON "community_members"("community_id");
 
 -- CreateIndex
-CREATE INDEX "idx_cmembers_student" ON "community_members"("student_id");
+CREATE INDEX "idx_cmembers_member" ON "community_members"("member_type", "member_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "community_members_community_id_student_id_key" ON "community_members"("community_id", "student_id");
+CREATE UNIQUE INDEX "community_members_community_id_member_type_member_id_key" ON "community_members"("community_id", "member_type", "member_id");
 
 -- CreateIndex
 CREATE INDEX "idx_cposts_community" ON "community_posts"("community_id", "created_at" DESC);
@@ -3419,10 +3640,10 @@ CREATE INDEX "idx_cposts_status" ON "community_posts"("status");
 CREATE INDEX "idx_votes_post" ON "community_post_votes"("post_id");
 
 -- CreateIndex
-CREATE INDEX "idx_votes_student" ON "community_post_votes"("student_id");
+CREATE INDEX "idx_votes_voter" ON "community_post_votes"("voter_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "community_post_votes_post_id_student_id_key" ON "community_post_votes"("post_id", "student_id");
+CREATE UNIQUE INDEX "community_post_votes_post_id_voter_id_voter_type_key" ON "community_post_votes"("post_id", "voter_id", "voter_type");
 
 -- CreateIndex
 CREATE INDEX "idx_comments_post" ON "community_comments"("post_id", "created_at");
@@ -3432,6 +3653,15 @@ CREATE INDEX "idx_comments_author" ON "community_comments"("author_id");
 
 -- CreateIndex
 CREATE INDEX "idx_comments_parent" ON "community_comments"("parent_comment_id");
+
+-- CreateIndex
+CREATE INDEX "idx_clikes_comment" ON "community_comment_likes"("comment_id");
+
+-- CreateIndex
+CREATE INDEX "idx_clikes_liker" ON "community_comment_likes"("liker_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "community_comment_likes_comment_id_liker_id_liker_type_key" ON "community_comment_likes"("comment_id", "liker_id", "liker_type");
 
 -- CreateIndex
 CREATE INDEX "idx_squad_student" ON "squad_searches"("student_id");
@@ -3632,6 +3862,12 @@ ALTER TABLE "college_onboarding_requests" ADD CONSTRAINT "college_onboarding_req
 ALTER TABLE "campuses" ADD CONSTRAINT "campuses_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "departments" ADD CONSTRAINT "departments_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "departments" ADD CONSTRAINT "departments_campus_id_fkey" FOREIGN KEY ("campus_id") REFERENCES "campuses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "disciplines" ADD CONSTRAINT "disciplines_stream_id_fkey" FOREIGN KEY ("stream_id") REFERENCES "streams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -3639,6 +3875,9 @@ ALTER TABLE "courses" ADD CONSTRAINT "courses_college_id_fkey" FOREIGN KEY ("col
 
 -- AddForeignKey
 ALTER TABLE "courses" ADD CONSTRAINT "courses_campus_id_fkey" FOREIGN KEY ("campus_id") REFERENCES "campuses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "courses" ADD CONSTRAINT "courses_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "courses" ADD CONSTRAINT "courses_discipline_id_fkey" FOREIGN KEY ("discipline_id") REFERENCES "disciplines"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -3662,10 +3901,19 @@ ALTER TABLE "college_reviews" ADD CONSTRAINT "college_reviews_college_id_fkey" F
 ALTER TABLE "college_reviews" ADD CONSTRAINT "college_reviews_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "college_reviews" ADD CONSTRAINT "college_reviews_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "news_alerts" ADD CONSTRAINT "news_alerts_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "news_alerts" ADD CONSTRAINT "news_alerts_published_by_fkey" FOREIGN KEY ("published_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "news_alerts" ADD CONSTRAINT "news_alerts_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "news_alerts" ADD CONSTRAINT "news_alerts_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "articles" ADD CONSTRAINT "articles_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -3780,6 +4028,15 @@ ALTER TABLE "document_upload_configs" ADD CONSTRAINT "document_upload_configs_co
 
 -- AddForeignKey
 ALTER TABLE "document_upload_configs" ADD CONSTRAINT "document_upload_configs_admission_cycle_id_fkey" FOREIGN KEY ("admission_cycle_id") REFERENCES "admission_cycles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_admission_cycle_id_fkey" FOREIGN KEY ("admission_cycle_id") REFERENCES "admission_cycles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_quota_id_fkey" FOREIGN KEY ("quota_id") REFERENCES "course_quotas"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "assessment_sections" ADD CONSTRAINT "assessment_sections_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -4118,6 +4375,9 @@ ALTER TABLE "counsellor_wallet_transactions" ADD CONSTRAINT "counsellor_wallet_t
 ALTER TABLE "counsellor_wallet_transactions" ADD CONSTRAINT "counsellor_wallet_transactions_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "counselling_sessions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "counsellor_registration_requests" ADD CONSTRAINT "counsellor_registration_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "referral_codes" ADD CONSTRAINT "referral_codes_blink_user_id_fkey" FOREIGN KEY ("blink_user_id") REFERENCES "blink_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -4187,28 +4447,19 @@ ALTER TABLE "media_kits" ADD CONSTRAINT "media_kits_course_id_fkey" FOREIGN KEY 
 ALTER TABLE "community_members" ADD CONSTRAINT "community_members_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "community_members" ADD CONSTRAINT "community_members_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "community_posts" ADD CONSTRAINT "community_posts_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "community_posts" ADD CONSTRAINT "community_posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "community_post_votes" ADD CONSTRAINT "community_post_votes_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "community_posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "community_post_votes" ADD CONSTRAINT "community_post_votes_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "community_posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_parent_comment_id_fkey" FOREIGN KEY ("parent_comment_id") REFERENCES "community_comments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "community_comments" ADD CONSTRAINT "community_comments_parent_comment_id_fkey" FOREIGN KEY ("parent_comment_id") REFERENCES "community_comments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "community_comment_likes" ADD CONSTRAINT "community_comment_likes_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "community_comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "squad_searches" ADD CONSTRAINT "squad_searches_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
