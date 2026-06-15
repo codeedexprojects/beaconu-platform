@@ -4,10 +4,12 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
 import { logger } from "@/shared/lib/logger";
 import {
+  addEventAttendee,
   createMeetEvent,
   deleteMeetEvent,
   isGoogleMeetReady,
@@ -25,6 +27,7 @@ import {
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
+  ListWalletTransactionsQueryInput,
   RescheduleSessionInput,
   UpdateMeetingInput,
   RateSessionInput,
@@ -38,11 +41,24 @@ function parseTimeOnly(value: string): Date {
   return new Date(`1970-01-01T${value}:00.000Z`);
 }
 
-/** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
+/** Formats a `@db.Time` value (stored as a Date) as "HH:MM". */
+function formatTimeOnly(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString().slice(11, 16);
+}
+
+/**
+ * Combines a `@db.Date` value and a `@db.Time` value into a timezone-naive
+ * ISO datetime (no "Z"/offset) so Google Calendar interprets it using the
+ * `timeZone` field (Asia/Kolkata) rather than as UTC.
+ */
 function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);
-  return `${datePart}T${timePart}.000Z`;
+  return `${datePart}T${timePart}`;
 }
 
 function ensureStartBeforeEnd(start: Date, end: Date): void {
@@ -69,6 +85,7 @@ function ensureOwnsSession(
 
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
+  const metadata = counsellor.profileMetadata ?? {};
   return {
     id: counsellor.id,
     counsellor_code: counsellor.counsellorCode ?? null,
@@ -81,6 +98,9 @@ function formatCounsellor(counsellor: any) {
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
     session_fee: Number(counsellor.sessionFee ?? 0.0),
+    about: metadata.about ?? null,
+    expertise: metadata.expertise ?? [],
+    education: metadata.education ?? [],
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -104,8 +124,8 @@ function formatAvailability(availability: any) {
     id: availability.id,
     counsellor_id: availability.counsellorId,
     available_date: availability.availableDate,
-    start_time: availability.startTime,
-    end_time: availability.endTime,
+    start_time: formatTimeOnly(availability.startTime),
+    end_time: formatTimeOnly(availability.endTime),
     session_duration_mins: availability.sessionDurationMins,
     is_booked: availability.isBooked,
     session_fee: Number(availability.sessionFee ?? 0),
@@ -121,10 +141,10 @@ function formatReschedule(reschedule: any) {
     session_id: reschedule.sessionId,
     rescheduled_by: reschedule.rescheduledBy,
     from_date: reschedule.fromDate,
-    from_time: reschedule.fromTime,
+    from_time: formatTimeOnly(reschedule.fromTime),
     to_availability_id: reschedule.toAvailabilityId,
     to_date: reschedule.toDate,
-    to_time: reschedule.toTime,
+    to_time: formatTimeOnly(reschedule.toTime),
     reason: reschedule.reason,
     created_at: reschedule.createdAt,
   };
@@ -149,6 +169,7 @@ function formatWallet(wallet: any) {
           amount: Number(txn.amount ?? 0),
           description: txn.description,
           session_id: txn.sessionId,
+          student_name: txn.session?.student?.fullName ?? null,
           withdrawal_status: txn.withdrawalStatus,
           bank_details: txn.bankDetails,
           balance_after: Number(txn.balanceAfter ?? 0),
@@ -166,8 +187,8 @@ function formatSession(session: any) {
     session_mode: session.sessionMode,
     session_type: session.sessionType,
     scheduled_date: session.scheduledDate,
-    start_time: session.startTime,
-    end_time: session.endTime,
+    start_time: formatTimeOnly(session.startTime),
+    end_time: formatTimeOnly(session.endTime),
     booking_reason: session.bookingReason,
     meeting_url: session.meetingUrl,
     meeting_id: session.meetingId,
@@ -201,11 +222,13 @@ function formatSlot(slot: any) {
   return {
     id: slot.id,
     available_date: slot.availableDate,
-    start_time: slot.startTime,
-    end_time: slot.endTime,
+    start_time: formatTimeOnly(slot.startTime),
+    end_time: formatTimeOnly(slot.endTime),
     session_duration_mins: slot.sessionDurationMins,
     is_booked: slot.isBooked,
     session_fee: Number(fee),
+    meeting_url: slot.meetingUrl ?? null,
+    meeting_id: slot.meetingId ?? null,
     counsellor: slot.counsellor ? formatCounsellor(slot.counsellor) : undefined,
   };
 }
@@ -227,6 +250,8 @@ function groupSlotsByDate(formattedSlots: any[]) {
       session_duration_mins: slot.session_duration_mins,
       session_fee: slot.session_fee,
       is_booked: slot.is_booked,
+      meeting_url: slot.meeting_url,
+      meeting_id: slot.meeting_id,
     });
   }
 
@@ -296,6 +321,43 @@ export class SessionService {
 
     try {
       const createdSlots = await SessionRepository.createSlots(slotsToCreate);
+
+      if (isGoogleMeetReady() && counsellor?.email) {
+        await Promise.all(
+          createdSlots.map(async (slot) => {
+            try {
+              const meetEvent = await createMeetEvent({
+                summary: `Counselling session with ${counsellor.fullName ?? "Counsellor"}`,
+                startDateTime: toISODateTime(
+                  slot.availableDate,
+                  slot.startTime,
+                ),
+                endDateTime: toISODateTime(slot.availableDate, slot.endTime),
+                attendeeEmails: [counsellor.email],
+              });
+
+              if (!meetEvent) return;
+
+              await SessionRepository.updateSlot(slot.id, {
+                meetingUrl: meetEvent.meetingUrl,
+                ...(meetEvent.meetingId
+                  ? { meetingId: meetEvent.meetingId }
+                  : {}),
+                googleEventId: meetEvent.eventId,
+              });
+
+              slot.meetingUrl = meetEvent.meetingUrl;
+              slot.meetingId = meetEvent.meetingId;
+            } catch (error) {
+              logger.error(
+                { err: error, slotId: slot.id },
+                "Failed to attach Google Meet link to slot",
+              );
+            }
+          }),
+        );
+      }
+
       const formatted = createdSlots.map(formatSlot);
       return groupSlotsByDate(formatted);
     } catch (error) {
@@ -373,7 +435,7 @@ export class SessionService {
         counsellorId,
         {},
         { limit: 20 },
-      ),
+      ).then((r) => r.sessions),
     ]);
 
     return {
@@ -480,6 +542,18 @@ export class SessionService {
         hasNext: page * limit < total,
       },
     };
+  }
+
+  /**
+   * Full counsellor profile for the student-facing detail page — includes
+   * about/expertise/education from profile metadata.
+   */
+  static async getCounsellorDetail(counsellorId: string) {
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor || counsellor.status !== "active") {
+      throw new NotFoundError("Counsellor not found");
+    }
+    return formatCounsellor(counsellor);
   }
 
   /**
@@ -632,59 +706,52 @@ export class SessionService {
     });
 
     if (session.sessionMode === "video_call" && isGoogleMeetReady()) {
-      await this.attachGoogleMeetLink(session);
+      await this.attachGoogleMeetLink(session, slot);
     }
 
     return formatSession(session);
   }
 
   /**
-   * Best-effort: creates a Google Meet link for an online session and
-   * persists it. Mutates `session` in place so the caller's response
-   * reflects the new link without a refetch. Never throws — booking must
-   * succeed even if Calendar/Meet is unavailable.
+   * Best-effort: copies the slot's pre-generated Google Meet link onto the
+   * session and adds the student as an attendee on the slot's Calendar
+   * event. Mutates `session` in place so the caller's response reflects the
+   * link without a refetch. Never throws — booking must succeed even if
+   * Calendar/Meet is unavailable.
    */
-  private static async attachGoogleMeetLink(session: {
-    id: string;
-    studentId: string;
-    counsellorId: string;
-    scheduledDate: Date;
-    startTime: Date;
-    endTime: Date;
-    bookingReason: string | null;
-    meetingUrl: string | null;
-    meetingId: string | null;
-  }): Promise<void> {
+  private static async attachGoogleMeetLink(
+    session: {
+      id: string;
+      studentId: string;
+      meetingUrl: string | null;
+      meetingId: string | null;
+    },
+    slot: {
+      meetingUrl: string | null;
+      meetingId: string | null;
+      googleEventId: string | null;
+    },
+  ): Promise<void> {
     try {
+      if (!slot.googleEventId || !slot.meetingUrl) {
+        return;
+      }
+
       const fullSession = await SessionRepository.findSessionById(session.id);
       const studentEmail = fullSession?.student?.email;
-      const counsellorEmail = fullSession?.counsellor?.email;
-      const counsellorName = fullSession?.counsellor?.fullName ?? "Counsellor";
-
-      if (!studentEmail || !counsellorEmail) {
-        return;
-      }
-
-      const meetEvent = await createMeetEvent({
-        summary: `Counselling session with ${counsellorName}`,
-        description: session.bookingReason ?? undefined,
-        startDateTime: toISODateTime(session.scheduledDate, session.startTime),
-        endDateTime: toISODateTime(session.scheduledDate, session.endTime),
-        attendeeEmails: [studentEmail, counsellorEmail],
-      });
-
-      if (!meetEvent) {
-        return;
-      }
 
       await SessionRepository.updateSession(session.id, {
-        meetingUrl: meetEvent.meetingUrl,
-        ...(meetEvent.meetingId ? { meetingId: meetEvent.meetingId } : {}),
-        googleEventId: meetEvent.eventId,
+        meetingUrl: slot.meetingUrl,
+        ...(slot.meetingId ? { meetingId: slot.meetingId } : {}),
+        googleEventId: slot.googleEventId,
       });
 
-      session.meetingUrl = meetEvent.meetingUrl;
-      session.meetingId = meetEvent.meetingId;
+      session.meetingUrl = slot.meetingUrl;
+      session.meetingId = slot.meetingId;
+
+      if (studentEmail) {
+        await addEventAttendee(slot.googleEventId, studentEmail);
+      }
     } catch (error) {
       logger.error(
         { err: error, sessionId: session.id },
@@ -741,20 +808,30 @@ export class SessionService {
     query: ListSessionsQueryInput,
   ) {
     const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
 
-    const sessions = await SessionRepository.listSessionsByCounsellor(
-      counsellorId,
-      {
-        date,
-        status: query.status,
-        search: query.search,
-      },
-      {
-        page: query.page,
-        limit: query.limit,
-      },
-    );
-    return sessions.map(formatSession);
+    const { sessions, total } =
+      await SessionRepository.listSessionsByCounsellor(
+        counsellorId,
+        {
+          date,
+          fromDate,
+          toDate,
+          status: query.status,
+          search: query.search,
+        },
+        {
+          page: query.page,
+          limit: query.limit,
+        },
+      );
+    return {
+      data: sessions.map(formatSession),
+      meta: PaginationHelper.createMeta(total, query.page, query.limit),
+    };
   }
 
   static async getSessionForActor(
@@ -763,7 +840,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     ensureOwnsSession(session, actor);
@@ -777,7 +854,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     ensureOwnsSession(session, actor);
@@ -812,19 +889,17 @@ export class SessionService {
   }
 
   static async rescheduleSession(
-    studentId: string,
+    actor: { userType: "student" | "counsellor"; userId: string },
     sessionId: string,
     input: RescheduleSessionInput,
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
 
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
-    if (session.studentId !== studentId) {
-      throw new ForbiddenError("You can only reschedule your own sessions");
-    }
+    ensureOwnsSession(session, actor);
 
     if (session.status === "completed") {
       throw new BadRequestError("Completed sessions cannot be rescheduled");
@@ -857,7 +932,7 @@ export class SessionService {
       oldAvailabilityId: session.availabilityId,
       newAvailabilityId: newSlot.id,
       newSlot,
-      rescheduledBy: "student",
+      rescheduledBy: actor.userType,
       fromDate: session.scheduledDate,
       fromTime: session.startTime,
       reason: input.reason,
@@ -881,7 +956,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.counsellorId !== counsellorId) {
@@ -913,7 +988,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.counsellorId !== counsellorId) {
@@ -942,10 +1017,33 @@ export class SessionService {
     return formatSession(await SessionRepository.findSessionById(sessionId));
   }
 
-  static async getWallet(counsellorId: string) {
+  static async getWallet(
+    counsellorId: string,
+    query: ListWalletTransactionsQueryInput,
+  ) {
     await SessionRepository.findOrCreateWallet(counsellorId);
-    const wallet = await SessionRepository.getWallet(counsellorId);
-    return formatWallet(wallet);
+
+    const date = query.date ? parseDateOnly(query.date) : undefined;
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
+
+    const wallet = await SessionRepository.getWallet(
+      counsellorId,
+      { date, fromDate, toDate, type: query.type },
+      { page: query.page, limit: query.limit },
+    );
+    if (!wallet) return null;
+
+    return {
+      ...formatWallet(wallet),
+      transactions_meta: PaginationHelper.createMeta(
+        wallet.transactionsTotal,
+        query.page,
+        query.limit,
+      ),
+    };
   }
 
   static async rateSession(
@@ -955,7 +1053,7 @@ export class SessionService {
   ) {
     const session = await SessionRepository.findSessionById(sessionId);
     if (!session) {
-      throw new NotFoundError("Session not found");
+      throw new NotFoundError("Session");
     }
 
     if (session.studentId !== studentId) {

@@ -9,6 +9,7 @@ declare global {
       collegeId?: string;
       roleId?: string;
       permissions?: string[];
+      counsellorType?: "academic" | "mindcare";
       rawBody?: Buffer;
     }
   }

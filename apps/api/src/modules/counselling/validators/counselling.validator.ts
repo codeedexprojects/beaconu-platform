@@ -8,6 +8,9 @@ export const updateMyProfileSchema = z.object({
   counsellor_type: z.string().trim().optional(),
   known_languages: knownLanguagesSchema.optional(),
   session_fee: z.coerce.number().min(0).optional(),
+  about: z.string().trim().max(2000).optional(),
+  expertise: z.array(z.string().trim().min(1)).optional(),
+  education: z.array(z.string().trim().min(1)).optional(),
 });
 
 export const updateCounsellorStatusSchema = z.object({

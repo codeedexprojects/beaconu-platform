@@ -16,7 +16,7 @@ headers {
 
 body:json {
   {
-    "email": "meera@counsellor.com",
+    "email": "meera+1@counsellor.com",
     "password": "Password@123"
   }
 }
@@ -36,9 +36,9 @@ script:post-response {
 docs {
   Authenticates a counsellor.
   No authentication required.
-
+  
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   JWT userType: counsellor
-
+  
   Table: counsellors
 }

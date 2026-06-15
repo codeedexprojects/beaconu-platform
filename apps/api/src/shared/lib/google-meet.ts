@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { calendar, calendar_v3 } from "@googleapis/calendar";
-import { JWT } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 import { env } from "@/shared/config/env";
 import { logger } from "@/shared/lib/logger";
 
@@ -8,8 +8,9 @@ let _calendar: calendar_v3.Calendar | null = null;
 
 export function isGoogleMeetReady(): boolean {
   return !!(
-    env.GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL &&
-    env.GOOGLE_MEET_SERVICE_ACCOUNT_PRIVATE_KEY &&
+    env.GOOGLE_CLIENT_ID &&
+    env.GOOGLE_CLIENT_SECRET &&
+    env.GOOGLE_MEET_REFRESH_TOKEN &&
     env.GOOGLE_MEET_CALENDAR_ID
   );
 }
@@ -17,18 +18,17 @@ export function isGoogleMeetReady(): boolean {
 function getCalendarClient(): calendar_v3.Calendar {
   if (!isGoogleMeetReady()) {
     throw new Error(
-      "Google Meet is not configured. Set GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL, " +
-        "GOOGLE_MEET_SERVICE_ACCOUNT_PRIVATE_KEY and GOOGLE_MEET_CALENDAR_ID.",
+      "Google Meet is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, " +
+        "GOOGLE_MEET_REFRESH_TOKEN and GOOGLE_MEET_CALENDAR_ID.",
     );
   }
 
   if (!_calendar) {
-    const auth = new JWT({
-      email: env.GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL,
-      // Render/most env stores escape newlines as literal "\n".
-      key: env.GOOGLE_MEET_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/calendar.events"],
+    const auth = new OAuth2Client({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     });
+    auth.setCredentials({ refresh_token: env.GOOGLE_MEET_REFRESH_TOKEN });
     _calendar = calendar({ version: "v3", auth });
   }
 
@@ -38,9 +38,9 @@ function getCalendarClient(): calendar_v3.Calendar {
 export interface CreateMeetEventParams {
   summary: string;
   description?: string;
-  /** ISO 8601 datetime, e.g. 2026-06-15T10:00:00.000Z */
+  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:00:00 */
   startDateTime: string;
-  /** ISO 8601 datetime, e.g. 2026-06-15T10:45:00.000Z */
+  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:45:00 */
   endDateTime: string;
   attendeeEmails: string[];
 }
@@ -69,8 +69,8 @@ export async function createMeetEvent(
       requestBody: {
         summary: params.summary,
         description: params.description,
-        start: { dateTime: params.startDateTime, timeZone: "UTC" },
-        end: { dateTime: params.endDateTime, timeZone: "UTC" },
+        start: { dateTime: params.startDateTime, timeZone: "Asia/Kolkata" },
+        end: { dateTime: params.endDateTime, timeZone: "Asia/Kolkata" },
         attendees: params.attendeeEmails.map((email) => ({ email })),
         conferenceData: {
           createRequest: {
@@ -118,14 +118,51 @@ export async function updateMeetEventTime(
       eventId,
       sendUpdates: "all",
       requestBody: {
-        start: { dateTime: startDateTime, timeZone: "UTC" },
-        end: { dateTime: endDateTime, timeZone: "UTC" },
+        start: { dateTime: startDateTime, timeZone: "Asia/Kolkata" },
+        end: { dateTime: endDateTime, timeZone: "Asia/Kolkata" },
       },
     });
   } catch (error) {
     logger.error(
       { err: error, eventId },
       "Failed to update Google Meet event time",
+    );
+  }
+}
+
+/**
+ * Best-effort: adds an attendee (e.g. the booking student) to an existing
+ * Calendar event without removing existing attendees.
+ */
+export async function addEventAttendee(
+  eventId: string,
+  attendeeEmail: string,
+): Promise<void> {
+  try {
+    const calendar = getCalendarClient();
+
+    const existing = await calendar.events.get({
+      calendarId: env.GOOGLE_MEET_CALENDAR_ID,
+      eventId,
+    });
+
+    const attendees = existing.data.attendees ?? [];
+    if (attendees.some((attendee) => attendee.email === attendeeEmail)) {
+      return;
+    }
+
+    await calendar.events.patch({
+      calendarId: env.GOOGLE_MEET_CALENDAR_ID,
+      eventId,
+      sendUpdates: "all",
+      requestBody: {
+        attendees: [...attendees, { email: attendeeEmail }],
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, eventId },
+      "Failed to add attendee to Google Meet event",
     );
   }
 }

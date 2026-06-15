@@ -74,14 +74,15 @@ docs {
   On successful booking, session_fee is credited directly to the counsellor's wallet.
 
   ## Google Meet (online sessions)
-  If session_mode is "video_call" and Google Meet is configured on the
-  server (GOOGLE_MEET_SERVICE_ACCOUNT_EMAIL / _PRIVATE_KEY / GOOGLE_MEET_CALENDAR_ID),
-  a Google Calendar event with an auto-generated Meet link is created and
-  both the student and counsellor are added as attendees (calendar invite
-  email sent to both). The response's data.meeting_url / data.meeting_id
-  will be populated.
+  If session_mode is "video_call", the Meet link is taken from the slot
+  (generated when the counsellor created the availability slot — see
+  Create Slot). On booking, the student is added as an attendee to that
+  slot's existing Calendar event (calendar invite email sent to the
+  student). The response's data.meeting_url / data.meeting_id are copied
+  from the slot.
 
-  If Meet is not configured or the Calendar API call fails, booking still
-  succeeds with meeting_url/meeting_id as null — the counsellor can set
-  them manually via PATCH /api/v1/counsellor/sessions/:id/meeting.
+  If the slot has no Meet link (Meet wasn't configured when the slot was
+  created, or the Calendar API call failed at slot-creation time), booking
+  still succeeds with meeting_url/meeting_id as null — the counsellor can
+  set them manually via PATCH /api/v1/counsellor/sessions/:id/meeting.
 }

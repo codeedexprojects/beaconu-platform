@@ -18,7 +18,10 @@ headers {
 body:json {
   {
     "full_name": "Dr. Updated Name",
-    "phone_number": "+919876543210"
+    "phone_number": "+919876543210",
+    "about": "I help students navigate college admissions with 8+ years of experience.",
+    "expertise": ["Career Counselling", "Study Abroad", "Course Selection"],
+    "education": ["M.A. Psychology - Delhi University", "B.Ed - Mumbai University"]
   }
 }
 
@@ -28,4 +31,8 @@ docs {
 
   Only the counsellor can update their own profile (uses userId from JWT).
   Table: counsellors
+
+  - about, expertise, education are stored in profile_metadata (JSON) and
+    are merged with existing metadata (each field replaces its own key only).
+  - expertise / education are arrays of strings.
 }

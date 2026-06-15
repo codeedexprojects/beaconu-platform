@@ -46,6 +46,20 @@ export const listSessionsQuerySchema = z.object({
       .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
       .optional(),
   ),
+  from_date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
+  to_date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
   status: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.enum(["booked", "completed", "cancelled"]).optional(),
@@ -53,6 +67,36 @@ export const listSessionsQuerySchema = z.object({
   search: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.string().trim().min(1).max(100).optional(),
+  ),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const listWalletTransactionsQuerySchema = z.object({
+  date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
+  from_date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
+  to_date: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+  ),
+  type: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.enum(["credit", "debit"]).optional(),
   ),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -120,9 +164,16 @@ export const sessionIdParamsSchema = z.object({
   id: z.string().min(1),
 });
 
+export const counsellorIdParamsSchema = z.object({
+  id: z.string().min(1),
+});
+
 export type AddSlotInput = z.infer<typeof addSlotSchema>;
 export type ListSlotsQueryInput = z.infer<typeof listSlotsQuerySchema>;
 export type ListSessionsQueryInput = z.infer<typeof listSessionsQuerySchema>;
+export type ListWalletTransactionsQueryInput = z.infer<
+  typeof listWalletTransactionsQuerySchema
+>;
 export type ListCounsellorsQueryInput = z.infer<
   typeof listCounsellorsQuerySchema
 >;

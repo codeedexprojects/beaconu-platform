@@ -11,6 +11,9 @@ model CounsellorAvailability {
   sessionDurationMins Int      @default(45) @map("session_duration_mins")
   isBooked            Boolean  @default(false) @map("is_booked")
   sessionFee          Decimal  @default(0.0) @map("session_fee") @db.Decimal(10, 2)
+  meetingUrl          String?  @map("meeting_url") @db.Text
+  meetingId           String?  @map("meeting_id") @db.VarChar(50)
+  googleEventId       String?  @map("google_event_id") @db.VarChar(255)
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
