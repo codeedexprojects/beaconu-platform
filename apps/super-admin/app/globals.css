@@ -4,70 +4,340 @@
 
 @layer base {
   :root {
-    /* Canvas */
-    --background: 220 20% 97%;
+    /* Canvas - clean white background */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
-    /* Cards */
-    --card: 0 0% 100%;
+    /* Cards - frosted white glass */
+    --card: 0 0% 100% / 0.4;
     --card-foreground: 222 47% 11%;
 
     /* Popover */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary — BeaconU orange */
-    --primary: 24.6 95% 53.1%;
+    /* Primary — Premium Crimson/Maroon (#B31B4D) */
+    --primary: 341 74% 40.6%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary */
-    --secondary: 220 14% 93%;
+    /* Secondary - subtle soft slate */
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
 
     /* Muted */
-    --muted: 220 14% 93%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
     /* Accent */
-    --accent: 24.6 95% 96%;
-    --accent-foreground: 24.6 95% 40%;
+    --accent: 341 74% 96%;
+    --accent-foreground: 341 74% 40.6%;
 
     /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Borders */
-    --border: 220 13% 86%;
-    --input: 220 13% 82%;
-    --ring: 24.6 95% 53.1%;
+    /* Borders & Inputs */
+    --border: 214.3 31.8% 90%;
+    --input: 214.3 31.8% 90%;
+    --ring: 341 74% 40.6%;
 
-    --radius: 0.625rem;
+    --radius: 0.875rem;
 
-    /* Sidebar — deep slate matching mobile dark hero */
-    --sidebar: 222 47% 7%;
-    --sidebar-foreground: 215 20% 70%;
-    --sidebar-border: 222 47% 12%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-ring: 24.6 95% 53.1%;
+    /* Sidebar - frosted light sidebar */
+    --sidebar: 0 0% 100% / 0.55;
+    --sidebar-foreground: 215.4 16.3% 30%;
+    --sidebar-border: 214.3 31.8% 92%;
+    --sidebar-accent: 341 74% 96%;
+    --sidebar-accent-foreground: 341 74% 40.6%;
+    --sidebar-ring: 341 74% 40.6%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/60;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
   }
+
+  /* Glass scrollbars for light theme */
   ::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
   }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(179, 27, 77, 0.25);
+  }
+}
+
+/* ==========================================
+   LIQUID GLASS (LIGHT WHITE & MAROON) STYLES
+   ========================================== */
+
+/* 1. Frosted White Glass Cards & Panels */
+.bg-card, 
+.rounded-xl.border {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 8px 30px 0 rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+}
+
+/* Hover highlights with Maroon glow and scale */
+.bg-card.cursor-pointer:hover,
+.rounded-xl.border.cursor-pointer:hover,
+.bg-card[class*="hover:"]:hover {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(179, 27, 77, 0.3) !important; /* Maroon border */
+  box-shadow: 0 16px 40px 0 rgba(15, 23, 42, 0.08), 0 0 12px 1px rgba(179, 27, 77, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* 2. Frosted Sidebar & Header */
+aside.bg-sidebar {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(24px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 4px 0 24px 0 rgba(15, 23, 42, 0.02) !important;
+}
+
+header.bg-card {
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(20px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 4px 20px 0 rgba(15, 23, 42, 0.02) !important;
+}
+
+/* 3. Inputs, Selects & Textareas (Light Glass fields) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea,
+.bg-background.border {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.09) !important;
+  color: #0f172a !important;
+  border-radius: 0.625rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+select:focus,
+textarea:focus {
+  background-color: #ffffff !important;
+  border-color: rgba(179, 27, 77, 0.5) !important; /* Maroon Accent */
+  box-shadow: 0 0 0 3px rgba(179, 27, 77, 0.15) !important;
+  outline: none;
+}
+
+/* 4. Popovers & Select Dropdowns for light theme */
+[data-radix-popper-content-wrapper] > div,
+.bg-popover {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 12px 30px 0 rgba(15, 23, 42, 0.1) !important;
+  border-radius: 0.75rem !important;
+}
+
+/* 5. Light Liquid Glass List rows */
+table {
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+thead tr {
+  border-bottom: none !important;
+}
+
+tr.border-b {
+  border: none !important;
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-out;
+}
+
+tr.border-b td {
+  border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  background: transparent !important;
+}
+
+tr.border-b td:first-child {
+  border-left: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+}
+
+tr.border-b td:last-child {
+  border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+/* Hover lists highlight in subtle maroon shade */
+tr.border-b:hover {
+  background-color: rgba(179, 27, 77, 0.03) !important;
+  transform: translateY(-1px);
+}
+
+tr.border-b:hover td {
+  border-top-color: rgba(179, 27, 77, 0.15) !important;
+  border-bottom-color: rgba(179, 27, 77, 0.15) !important;
+}
+
+tr.border-b:hover td:first-child {
+  border-left-color: rgba(179, 27, 77, 0.15) !important;
+}
+
+tr.border-b:hover td:last-child {
+  border-right-color: rgba(179, 27, 77, 0.15) !important;
+}
+
+th {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding-bottom: 8px !important;
+}
+
+/* 6. Tabs styling (Pill Glass Selector in Light Theme) */
+.flex.gap-1.border-b,
+[role="tablist"],
+.border-b.mb-6 {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  gap: 4px !important;
+  margin-bottom: 1.5rem !important;
+  width: fit-content;
+}
+
+.flex.gap-1.border-b button,
+[role="tablist"] button,
+.border-b.mb-6 button {
+  border: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  margin-bottom: 0 !important;
+  border-radius: 999px !important;
+  padding: 6px 16px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  background: transparent !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.flex.gap-1.border-b button:hover,
+[role="tablist"] button:hover,
+.border-b.mb-6 button:hover {
+  color: #0f172a !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Active tab state */
+.flex.gap-1.border-b button[class*="text-primary"],
+[role="tablist"] button[data-state="active"],
+.border-b.mb-6 button[class*="text-primary"],
+.flex.gap-1.border-b button.border-primary,
+.border-b.mb-6 button.border-primary {
+  background: rgba(179, 27, 77, 0.08) !important;
+  color: #b31b4d !important;
+  border: 1px solid rgba(179, 27, 77, 0.2) !important;
+  box-shadow: 0 2px 10px 0 rgba(179, 27, 77, 0.08) !important;
+}
+
+/* 7. Status Badges on Light Backgrounds */
+.bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+  color: #2563eb !important;
+  border-color: rgba(59, 130, 246, 0.15) !important;
+}
+.bg-violet-50 {
+  background-color: rgba(139, 92, 246, 0.08) !important;
+  color: #7c3aed !important;
+  border-color: rgba(139, 92, 246, 0.15) !important;
+}
+.bg-orange-50 {
+  background-color: rgba(179, 27, 77, 0.08) !important;
+  color: #b31b4d !important;
+  border-color: rgba(179, 27, 77, 0.15) !important;
+}
+.bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  color: #059669 !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+}
+.bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  color: #d97706 !important;
+  border-color: rgba(245, 158, 11, 0.15) !important;
+}
+.bg-gray-50 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  color: #475569 !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+.bg-muted {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  color: #334155 !important;
+}
+
+/* 8. Light-mode text contrast adjustments */
+.text-foreground {
+  color: #1e293b !important;
+}
+.text-muted-foreground {
+  color: #64748b !important;
+}
+.text-black, .text-slate-900, .text-slate-800, .text-neutral-900, .text-neutral-800 {
+  color: #0f172a !important;
+}
+.text-slate-700, .text-neutral-700 {
+  color: #334155 !important;
+}
+.text-slate-600, .text-neutral-600 {
+  color: #475569 !important;
+}
+.text-slate-500, .text-neutral-500 {
+  color: #64748b !important;
+}
+
+/* Modal backgrounds overlay */
+.fixed.inset-0.bg-black\/50 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
