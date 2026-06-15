@@ -81,6 +81,7 @@ function ensureOwnsSession(
 
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
+  const metadata = counsellor.profileMetadata ?? {};
   return {
     id: counsellor.id,
     counsellor_code: counsellor.counsellorCode ?? null,
@@ -93,6 +94,9 @@ function formatCounsellor(counsellor: any) {
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
     session_fee: Number(counsellor.sessionFee ?? 0.0),
+    about: metadata.about ?? null,
+    expertise: metadata.expertise ?? [],
+    education: metadata.education ?? [],
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -534,6 +538,18 @@ export class SessionService {
         hasNext: page * limit < total,
       },
     };
+  }
+
+  /**
+   * Full counsellor profile for the student-facing detail page — includes
+   * about/expertise/education from profile metadata.
+   */
+  static async getCounsellorDetail(counsellorId: string) {
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor || counsellor.status !== "active") {
+      throw new NotFoundError("Counsellor not found");
+    }
+    return formatCounsellor(counsellor);
   }
 
   /**

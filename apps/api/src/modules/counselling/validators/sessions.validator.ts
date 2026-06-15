@@ -164,6 +164,10 @@ export const sessionIdParamsSchema = z.object({
   id: z.string().min(1),
 });
 
+export const counsellorIdParamsSchema = z.object({
+  id: z.string().min(1),
+});
+
 export type AddSlotInput = z.infer<typeof addSlotSchema>;
 export type ListSlotsQueryInput = z.infer<typeof listSlotsQuerySchema>;
 export type ListSessionsQueryInput = z.infer<typeof listSessionsQuerySchema>;

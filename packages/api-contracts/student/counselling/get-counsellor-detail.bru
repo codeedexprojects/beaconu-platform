@@ -1,0 +1,22 @@
+meta {
+  name: Get Counsellor Detail
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/counsellors/{{counsellorId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Returns the full profile of a single active counsellor, including
+  about, expertise and education (sourced from profile_metadata).
+
+  404 if the counsellor doesn't exist or isn't active.
+}

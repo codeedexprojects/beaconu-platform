@@ -5,6 +5,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   bookSessionSchema,
   cancelSessionSchema,
+  counsellorIdParamsSchema,
   createPaymentOrderSchema,
   listAvailableSlotsQuerySchema,
   listCounsellorsQuerySchema,
@@ -30,6 +31,14 @@ router.get(
   authorizeUserType("student"),
   validate(listCounsellorsQuerySchema, "query"),
   StudentSessionController.listCounsellors,
+);
+
+router.get(
+  "/counsellors/:id",
+  authenticate,
+  authorizeUserType("student"),
+  validate(counsellorIdParamsSchema, "params"),
+  StudentSessionController.getCounsellorDetail,
 );
 
 router.get(
