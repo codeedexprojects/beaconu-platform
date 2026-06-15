@@ -3,6 +3,10 @@ import app from "@/app";
 import { getRedisClient, disconnectRedis } from "@/shared/lib/redis";
 import { prisma } from "@beaconu/db";
 import { logger } from "@/shared/lib/logger";
+import {
+  startSessionAutoCompleteJob,
+  stopSessionAutoCompleteJob,
+} from "@/modules/counselling/jobs/session-auto-complete.job";
 
 async function startServer(): Promise<void> {
   try {
@@ -12,6 +16,16 @@ async function startServer(): Promise<void> {
 
     await prisma.$connect();
     logger.info("Database connected successfully");
+
+    try {
+      await startSessionAutoCompleteJob();
+      logger.info("Session auto-complete job scheduled");
+    } catch (error) {
+      logger.error(
+        { error },
+        "Failed to schedule session auto-complete job — continuing startup",
+      );
+    }
 
     const server = app.listen(env.PORT, () => {
       logger.info(
@@ -23,6 +37,7 @@ async function startServer(): Promise<void> {
     const shutdown = async (signal: string): Promise<void> => {
       logger.info({ signal }, "Graceful shutdown initiated");
       server.close(async () => {
+        await stopSessionAutoCompleteJob();
         await disconnectRedis();
         await prisma.$disconnect();
         logger.info("Server shut down cleanly");

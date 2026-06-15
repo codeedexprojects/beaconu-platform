@@ -73,12 +73,13 @@ docs {
   ## Wallet
   On successful booking, session_fee is credited directly to the counsellor's wallet.
 
-  ## Google Meet (online sessions)
-  If session_mode is "video_call" and Google Meet is configured on the
-  server, a Google Calendar event with an auto-generated Meet link is
-  created for this session at booking time, with the counsellor and
-  student added as attendees (calendar invite emails sent to both). The
-  response's data.meeting_url / data.meeting_id reflect this new event.
+  ## Google Meet (all sessions)
+  If Google Meet is configured on the server, a Google Calendar event with
+  an auto-generated Meet link is created for this session at booking time
+  (regardless of session_mode — "voice_call" or "video_call"), with the
+  counsellor and student added as attendees (calendar invite emails sent
+  to both). The response's data.meeting_url / data.meeting_id reflect this
+  new event.
 
   If Meet is not configured or the Calendar API call fails, booking still
   succeeds with meeting_url/meeting_id as null — the counsellor can set

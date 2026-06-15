@@ -817,6 +817,31 @@ export class SessionRepository {
     });
   }
 
+  /**
+   * Booked sessions scheduled on or before `onOrBeforeDate` (IST date,
+   * `@db.Date`) — candidates for auto-completion. Callers must still check
+   * each session's end time against "now" since `scheduledDate` alone
+   * doesn't capture the time-of-day.
+   */
+  static async findBookedSessionsOnOrBefore(onOrBeforeDate: Date) {
+    return prisma.counsellingSession.findMany({
+      where: {
+        status: "booked",
+        scheduledDate: { lte: onOrBeforeDate },
+      },
+      select: { id: true, scheduledDate: true, endTime: true },
+    });
+  }
+
+  /** Bulk-marks sessions as completed (used by the auto-complete job). */
+  static async markSessionsCompleted(ids: string[]) {
+    if (ids.length === 0) return { count: 0 };
+    return prisma.counsellingSession.updateMany({
+      where: { id: { in: ids } },
+      data: { status: "completed", completedAt: new Date() },
+    });
+  }
+
   /** Rated sessions for a counsellor, newest first — used for the ratings/reviews list. */
   static async listRatingsByCounsellor(
     counsellorId: string,
