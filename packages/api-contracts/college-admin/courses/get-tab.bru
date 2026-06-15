@@ -1,0 +1,35 @@
+meta {
+  name: Get Course Tab
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/{{courseTabName}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns a single tab's data for a course (admin view).
+
+  Requires: staff access token with academics.view or academics.manage.
+
+  Valid tab names:
+  highlights, curriculum, course_structure, value_added_courses,
+  career_opportunities, higher_education_certifications,
+  flexible_exit_options, class_timings, industry_tools,
+  lab_facilities, room_facilities, featured_alumni, faqs,
+  exam_policy, entrance_exam_eligibility, eligibility_criteria,
+  accreditations, key_dates, demographics
+
+  Response shape:
+  {
+    "tabName": "curriculum",
+    "data": [...]
+  }
+}

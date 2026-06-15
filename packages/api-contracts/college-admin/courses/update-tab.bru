@@ -1,0 +1,56 @@
+meta {
+  name: Update Course Tab
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/{{courseTabName}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": [
+      {
+        "semester": 1,
+        "subjects": ["Mathematics I", "Physics I", "Chemistry", "Engineering Drawing"],
+        "specializations": []
+      },
+      {
+        "semester": 2,
+        "subjects": ["Mathematics II", "Physics II", "Programming in C", "Workshop Practice"],
+        "specializations": []
+      }
+    ]
+  }
+}
+
+docs {
+  Updates a single tab's data for a course.
+  The body.data value replaces the entire tab content.
+
+  Requires: staff access token with academics.manage permission.
+
+  Valid tab names:
+  highlights, curriculum, course_structure, value_added_courses,
+  career_opportunities, higher_education_certifications,
+  flexible_exit_options, class_timings, industry_tools,
+  lab_facilities, room_facilities, featured_alumni, faqs,
+  exam_policy, entrance_exam_eligibility, eligibility_criteria,
+  accreditations, key_dates, demographics
+
+  Note: The example body shows curriculum tab data. Adjust the
+  data structure based on the tab being updated.
+
+  Response shape:
+  {
+    "tabName": "curriculum",
+    "data": [...]
+  }
+}
