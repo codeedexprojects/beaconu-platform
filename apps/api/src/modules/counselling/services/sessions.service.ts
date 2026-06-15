@@ -14,6 +14,7 @@ import {
   isGoogleMeetReady,
   updateMeetEventTime,
 } from "@/shared/lib/google-meet";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
@@ -747,7 +748,42 @@ export class SessionService {
       await this.createMeetLinkForSession(session);
     }
 
+    await this.notifyCounsellorOfBooking(session);
+
     return formatSession(session);
+  }
+
+  /**
+   * Best-effort: push-notifies the counsellor that a student booked a
+   * session. Never throws — booking must succeed even if the push fails.
+   */
+  private static async notifyCounsellorOfBooking(session: {
+    id: string;
+    counsellorId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    sessionMode: string;
+  }): Promise<void> {
+    try {
+      const fullSession = await SessionRepository.findSessionById(session.id);
+      const studentName = fullSession?.student?.fullName ?? "A student";
+      const dateStr = session.scheduledDate.toISOString().slice(0, 10);
+      const timeStr = formatTimeOnly(session.startTime);
+
+      await PushService.sendToUser(session.counsellorId, "counsellor", {
+        title: "New session booked",
+        body: `${studentName} booked a ${session.sessionMode.replace("_", " ")} session on ${dateStr} at ${timeStr}`,
+        data: {
+          type: "session_booked",
+          sessionId: session.id,
+        },
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to notify counsellor of new booking",
+      );
+    }
   }
 
   /**
