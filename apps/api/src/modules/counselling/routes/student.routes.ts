@@ -8,6 +8,7 @@ import {
   counsellorIdParamsSchema,
   createPaymentOrderSchema,
   listAvailableSlotsQuerySchema,
+  listCounsellorRatingsQuerySchema,
   listCounsellorsQuerySchema,
   listSessionsQuerySchema,
   rescheduleSessionSchema,
@@ -39,6 +40,15 @@ router.get(
   authorizeUserType("student"),
   validate(counsellorIdParamsSchema, "params"),
   StudentSessionController.getCounsellorDetail,
+);
+
+router.get(
+  "/counsellors/:id/ratings",
+  authenticate,
+  authorizeUserType("student"),
+  validate(counsellorIdParamsSchema, "params"),
+  validate(listCounsellorRatingsQuerySchema, "query"),
+  StudentSessionController.getCounsellorRatings,
 );
 
 router.get(

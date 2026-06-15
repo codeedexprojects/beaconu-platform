@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { SessionService } from "../services/sessions.service";
 import {
   ListAvailableSlotsQueryInput,
+  ListCounsellorRatingsQueryInput,
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
@@ -134,6 +135,22 @@ export class StudentSessionController {
     return res
       .status(200)
       .json(ApiResponse.success("Counsellor retrieved", counsellor));
+  }
+
+  static async getCounsellorRatings(req: Request, res: Response) {
+    const result = await SessionService.getCounsellorRatings(
+      req.params.id as string,
+      req.query as unknown as ListCounsellorRatingsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Counsellor ratings retrieved",
+          result,
+          result.meta,
+        ),
+      );
   }
 
   static async createPaymentOrder(req: Request, res: Response) {

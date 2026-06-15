@@ -113,6 +113,11 @@ export const listCounsellorsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const listCounsellorRatingsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 export const listAvailableSlotsQuerySchema = z.object({
   counsellor_id: z.string().min(1).optional(),
   from_date: z
@@ -176,6 +181,9 @@ export type ListWalletTransactionsQueryInput = z.infer<
 >;
 export type ListCounsellorsQueryInput = z.infer<
   typeof listCounsellorsQuerySchema
+>;
+export type ListCounsellorRatingsQueryInput = z.infer<
+  typeof listCounsellorRatingsQuerySchema
 >;
 export type ListAvailableSlotsQueryInput = z.infer<
   typeof listAvailableSlotsQuerySchema
