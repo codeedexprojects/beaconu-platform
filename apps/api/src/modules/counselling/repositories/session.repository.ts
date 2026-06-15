@@ -816,4 +816,34 @@ export class SessionRepository {
       return updatedSession;
     });
   }
+
+  /** Rated sessions for a counsellor, newest first — used for the ratings/reviews list. */
+  static async listRatingsByCounsellor(
+    counsellorId: string,
+    pagination: PaginationOptions = {},
+  ) {
+    const where: Prisma.CounsellingSessionWhereInput = {
+      counsellorId,
+      rating: { not: null },
+    };
+
+    const [sessions, total] = await Promise.all([
+      prisma.counsellingSession.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          rating: true,
+          ratingFeedback: true,
+          scheduledDate: true,
+          updatedAt: true,
+          student: { select: { fullName: true, avatarUrl: true } },
+        },
+        ...this.paginate(pagination),
+      }),
+      prisma.counsellingSession.count({ where }),
+    ]);
+
+    return { sessions, total };
+  }
 }

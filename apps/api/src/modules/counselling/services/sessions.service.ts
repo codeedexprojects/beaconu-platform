@@ -9,7 +9,6 @@ import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
 import { logger } from "@/shared/lib/logger";
 import {
-  addEventAttendee,
   createMeetEvent,
   deleteMeetEvent,
   isGoogleMeetReady,
@@ -24,6 +23,7 @@ import {
   CompleteSessionInput,
   CreatePaymentOrderInput,
   ListAvailableSlotsQueryInput,
+  ListCounsellorRatingsQueryInput,
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
@@ -59,6 +59,18 @@ function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);
   return `${datePart}T${timePart}`;
+}
+
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+/**
+ * Resolves a slot's `availableDate` + `startTime` (stored as raw IST wall-clock
+ * values) to the actual UTC instant it represents, so it can be compared
+ * against `new Date()`.
+ */
+function slotStartInstant(date: Date, time: Date): Date {
+  const naiveISO = toISODateTime(date, time);
+  return new Date(new Date(`${naiveISO}.000Z`).getTime() - IST_OFFSET_MS);
 }
 
 function ensureStartBeforeEnd(start: Date, end: Date): void {
@@ -350,42 +362,6 @@ export class SessionService {
     try {
       const createdSlots = await SessionRepository.createSlots(slotsToCreate);
 
-      if (isGoogleMeetReady() && counsellor?.email) {
-        await Promise.all(
-          createdSlots.map(async (slot) => {
-            try {
-              const meetEvent = await createMeetEvent({
-                summary: `Counselling session with ${counsellor.fullName ?? "Counsellor"}`,
-                startDateTime: toISODateTime(
-                  slot.availableDate,
-                  slot.startTime,
-                ),
-                endDateTime: toISODateTime(slot.availableDate, slot.endTime),
-                attendeeEmails: [counsellor.email],
-              });
-
-              if (!meetEvent) return;
-
-              await SessionRepository.updateSlot(slot.id, {
-                meetingUrl: meetEvent.meetingUrl,
-                ...(meetEvent.meetingId
-                  ? { meetingId: meetEvent.meetingId }
-                  : {}),
-                googleEventId: meetEvent.eventId,
-              });
-
-              slot.meetingUrl = meetEvent.meetingUrl;
-              slot.meetingId = meetEvent.meetingId;
-            } catch (error) {
-              logger.error(
-                { err: error, slotId: slot.id },
-                "Failed to attach Google Meet link to slot",
-              );
-            }
-          }),
-        );
-      }
-
       const formatted = createdSlots.map(formatSlot);
       return groupSlotsByDate(formatted);
     } catch (error) {
@@ -585,6 +561,40 @@ export class SessionService {
   }
 
   /**
+   * Aggregate rating plus a paginated list of session reviews/feedback for
+   * a counsellor.
+   */
+  static async getCounsellorRatings(
+    counsellorId: string,
+    query: ListCounsellorRatingsQueryInput,
+  ) {
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor || counsellor.status !== "active") {
+      throw new NotFoundError("Counsellor not found");
+    }
+
+    const { sessions, total } = await SessionRepository.listRatingsByCounsellor(
+      counsellorId,
+      { page: query.page, limit: query.limit },
+    );
+
+    return {
+      rating: Number(counsellor.rating ?? 0.0),
+      rating_count: total,
+      data: sessions.map((session) => ({
+        session_id: session.id,
+        rating: session.rating,
+        rating_feedback: session.ratingFeedback,
+        scheduled_date: session.scheduledDate,
+        rated_at: session.updatedAt,
+        student_name: session.student.fullName,
+        student_avatar_url: session.student.avatarUrl,
+      })),
+      meta: PaginationHelper.createMeta(total, query.page, query.limit),
+    };
+  }
+
+  /**
    * Resolve the authoritative fee for a slot — never trust client input.
    */
   private static async resolveSlotFee(slot: {
@@ -734,56 +744,59 @@ export class SessionService {
     });
 
     if (session.sessionMode === "video_call" && isGoogleMeetReady()) {
-      await this.attachGoogleMeetLink(session, slot);
+      await this.createMeetLinkForSession(session);
     }
 
     return formatSession(session);
   }
 
   /**
-   * Best-effort: copies the slot's pre-generated Google Meet link onto the
-   * session and adds the student as an attendee on the slot's Calendar
-   * event. Mutates `session` in place so the caller's response reflects the
-   * link without a refetch. Never throws — booking must succeed even if
-   * Calendar/Meet is unavailable.
+   * Best-effort: creates the Google Calendar/Meet event for a freshly
+   * booked session and attaches the link to it. Mutates `session` in place
+   * so the caller's response reflects the link without a refetch. Never
+   * throws — booking must succeed even if Calendar/Meet is unavailable.
    */
-  private static async attachGoogleMeetLink(
-    session: {
-      id: string;
-      studentId: string;
-      meetingUrl: string | null;
-      meetingId: string | null;
-    },
-    slot: {
-      meetingUrl: string | null;
-      meetingId: string | null;
-      googleEventId: string | null;
-    },
-  ): Promise<void> {
+  private static async createMeetLinkForSession(session: {
+    id: string;
+    counsellorId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    endTime: Date;
+    meetingUrl: string | null;
+    meetingId: string | null;
+  }): Promise<void> {
     try {
-      if (!slot.googleEventId || !slot.meetingUrl) {
-        return;
-      }
+      const [counsellor, fullSession] = await Promise.all([
+        CounsellingRepository.findById(session.counsellorId),
+        SessionRepository.findSessionById(session.id),
+      ]);
 
-      const fullSession = await SessionRepository.findSessionById(session.id);
-      const studentEmail = fullSession?.student?.email;
+      const attendeeEmails = [
+        counsellor?.email,
+        fullSession?.student?.email,
+      ].filter((email): email is string => !!email);
 
-      await SessionRepository.updateSession(session.id, {
-        meetingUrl: slot.meetingUrl,
-        ...(slot.meetingId ? { meetingId: slot.meetingId } : {}),
-        googleEventId: slot.googleEventId,
+      const meetEvent = await createMeetEvent({
+        summary: `Counselling session with ${counsellor?.fullName ?? "Counsellor"}`,
+        startDateTime: toISODateTime(session.scheduledDate, session.startTime),
+        endDateTime: toISODateTime(session.scheduledDate, session.endTime),
+        attendeeEmails,
       });
 
-      session.meetingUrl = slot.meetingUrl;
-      session.meetingId = slot.meetingId;
+      if (!meetEvent) return;
 
-      if (studentEmail) {
-        await addEventAttendee(slot.googleEventId, studentEmail);
-      }
+      await SessionRepository.updateSession(session.id, {
+        meetingUrl: meetEvent.meetingUrl,
+        ...(meetEvent.meetingId ? { meetingId: meetEvent.meetingId } : {}),
+        googleEventId: meetEvent.eventId,
+      });
+
+      session.meetingUrl = meetEvent.meetingUrl;
+      session.meetingId = meetEvent.meetingId;
     } catch (error) {
       logger.error(
         { err: error, sessionId: session.id },
-        "Failed to attach Google Meet link to session",
+        "Failed to create Google Meet link for session",
       );
     }
   }
@@ -953,6 +966,12 @@ export class SessionService {
 
     if (newSlot.isBooked) {
       throw new ConflictError("Selected slot is already booked");
+    }
+
+    if (
+      slotStartInstant(newSlot.availableDate, newSlot.startTime) <= new Date()
+    ) {
+      throw new BadRequestError("Cannot reschedule to a slot in the past");
     }
 
     await SessionRepository.rescheduleSessionTx({

@@ -1,0 +1,31 @@
+meta {
+  name: Get Counsellor Ratings
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/counsellors/{{counsellorId}}/ratings?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Returns a counsellor's aggregate rating plus a paginated list of
+  individual session ratings/feedback.
+
+  - rating: counsellor's current average rating
+  - rating_count: total number of rated sessions
+  - data[]: { session_id, rating, rating_feedback, scheduled_date, rated_at, student_name, student_avatar_url }
+
+  404 if the counsellor doesn't exist or isn't active.
+}
