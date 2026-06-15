@@ -38,9 +38,9 @@ function getCalendarClient(): calendar_v3.Calendar {
 export interface CreateMeetEventParams {
   summary: string;
   description?: string;
-  /** ISO 8601 datetime, e.g. 2026-06-15T10:00:00.000Z */
+  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:00:00 */
   startDateTime: string;
-  /** ISO 8601 datetime, e.g. 2026-06-15T10:45:00.000Z */
+  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:45:00 */
   endDateTime: string;
   attendeeEmails: string[];
 }
@@ -69,8 +69,8 @@ export async function createMeetEvent(
       requestBody: {
         summary: params.summary,
         description: params.description,
-        start: { dateTime: params.startDateTime, timeZone: "UTC" },
-        end: { dateTime: params.endDateTime, timeZone: "UTC" },
+        start: { dateTime: params.startDateTime, timeZone: "Asia/Kolkata" },
+        end: { dateTime: params.endDateTime, timeZone: "Asia/Kolkata" },
         attendees: params.attendeeEmails.map((email) => ({ email })),
         conferenceData: {
           createRequest: {
@@ -118,8 +118,8 @@ export async function updateMeetEventTime(
       eventId,
       sendUpdates: "all",
       requestBody: {
-        start: { dateTime: startDateTime, timeZone: "UTC" },
-        end: { dateTime: endDateTime, timeZone: "UTC" },
+        start: { dateTime: startDateTime, timeZone: "Asia/Kolkata" },
+        end: { dateTime: endDateTime, timeZone: "Asia/Kolkata" },
       },
     });
   } catch (error) {

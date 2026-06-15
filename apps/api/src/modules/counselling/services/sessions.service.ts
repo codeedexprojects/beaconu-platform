@@ -50,11 +50,15 @@ function formatTimeOnly(
   return date.toISOString().slice(11, 16);
 }
 
-/** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
+/**
+ * Combines a `@db.Date` value and a `@db.Time` value into a timezone-naive
+ * ISO datetime (no "Z"/offset) so Google Calendar interprets it using the
+ * `timeZone` field (Asia/Kolkata) rather than as UTC.
+ */
 function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);
-  return `${datePart}T${timePart}.000Z`;
+  return `${datePart}T${timePart}`;
 }
 
 function ensureStartBeforeEnd(start: Date, end: Date): void {
