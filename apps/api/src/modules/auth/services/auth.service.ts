@@ -137,6 +137,7 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: counsellor.id,
       userType: USER_TYPES.COUNSELLOR,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
 
     await AuthRepository.updateCounsellorLastLogin(counsellor.id);
