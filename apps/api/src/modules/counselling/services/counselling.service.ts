@@ -1,3 +1,4 @@
+import { Prisma } from "@beaconu/db";
 import { NotFoundError } from "@/shared/errors";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
@@ -7,6 +8,7 @@ import {
 
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
+  const metadata = counsellor.profileMetadata ?? {};
   return {
     id: counsellor.id,
     counsellor_code: counsellor.counsellorCode ?? null,
@@ -20,6 +22,9 @@ function formatCounsellor(counsellor: any) {
     known_languages: counsellor.knownLanguages,
     session_fee: Number(counsellor.sessionFee ?? 0.0),
     wallet_balance: Number(counsellor.wallet?.balance ?? 0.0),
+    about: metadata.about ?? null,
+    expertise: metadata.expertise ?? [],
+    education: metadata.education ?? [],
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -38,6 +43,15 @@ export class CounsellingService {
     const counsellor = await CounsellingRepository.findById(userId);
     if (!counsellor) throw new NotFoundError("Counsellor not found");
 
+    const existingMetadata = (counsellor.profileMetadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const metadataUpdate: Record<string, unknown> = {};
+    if (data.about !== undefined) metadataUpdate.about = data.about;
+    if (data.expertise !== undefined) metadataUpdate.expertise = data.expertise;
+    if (data.education !== undefined) metadataUpdate.education = data.education;
+
     const updated = await CounsellingRepository.updateById(userId, {
       ...(data.full_name ? { fullName: data.full_name } : {}),
       ...(data.phone_number !== undefined
@@ -52,6 +66,14 @@ export class CounsellingService {
         : {}),
       ...(data.session_fee !== undefined
         ? { sessionFee: data.session_fee }
+        : {}),
+      ...(Object.keys(metadataUpdate).length > 0
+        ? {
+            profileMetadata: {
+              ...existingMetadata,
+              ...metadataUpdate,
+            } as Prisma.InputJsonValue,
+          }
         : {}),
     });
 

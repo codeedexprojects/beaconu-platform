@@ -127,6 +127,15 @@ export class StudentSessionController {
       );
   }
 
+  static async getCounsellorDetail(req: Request, res: Response) {
+    const counsellor = await SessionService.getCounsellorDetail(
+      req.params.id as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Counsellor retrieved", counsellor));
+  }
+
   static async createPaymentOrder(req: Request, res: Response) {
     const order = await SessionService.createPaymentOrder(
       req.userId!,

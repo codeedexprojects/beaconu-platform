@@ -1,7 +1,8 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 
 const COUNSELLOR_SELECT = {
   id: true,
+  counsellorCode: true,
   fullName: true,
   email: true,
   phoneNumber: true,
@@ -11,8 +12,10 @@ const COUNSELLOR_SELECT = {
   rating: true,
   knownLanguages: true,
   sessionFee: true,
+  profileMetadata: true,
   lastLoginAt: true,
   createdAt: true,
+  updatedAt: true,
 } as const;
 
 export class CounsellingRepository {
@@ -117,6 +120,7 @@ export class CounsellingRepository {
       counsellorType?: string;
       knownLanguages?: string;
       sessionFee?: number;
+      profileMetadata?: Prisma.InputJsonValue;
     },
   ) {
     return prisma.counsellor.update({

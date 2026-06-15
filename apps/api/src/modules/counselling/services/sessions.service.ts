@@ -50,11 +50,15 @@ function formatTimeOnly(
   return date.toISOString().slice(11, 16);
 }
 
-/** Combines a `@db.Date` value and a `@db.Time` value into an ISO datetime. */
+/**
+ * Combines a `@db.Date` value and a `@db.Time` value into a timezone-naive
+ * ISO datetime (no "Z"/offset) so Google Calendar interprets it using the
+ * `timeZone` field (Asia/Kolkata) rather than as UTC.
+ */
 function toISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);
-  return `${datePart}T${timePart}.000Z`;
+  return `${datePart}T${timePart}`;
 }
 
 function ensureStartBeforeEnd(start: Date, end: Date): void {
@@ -81,6 +85,7 @@ function ensureOwnsSession(
 
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
+  const metadata = counsellor.profileMetadata ?? {};
   return {
     id: counsellor.id,
     counsellor_code: counsellor.counsellorCode ?? null,
@@ -93,6 +98,9 @@ function formatCounsellor(counsellor: any) {
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
     session_fee: Number(counsellor.sessionFee ?? 0.0),
+    about: metadata.about ?? null,
+    expertise: metadata.expertise ?? [],
+    education: metadata.education ?? [],
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -534,6 +542,18 @@ export class SessionService {
         hasNext: page * limit < total,
       },
     };
+  }
+
+  /**
+   * Full counsellor profile for the student-facing detail page — includes
+   * about/expertise/education from profile metadata.
+   */
+  static async getCounsellorDetail(counsellorId: string) {
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor || counsellor.status !== "active") {
+      throw new NotFoundError("Counsellor not found");
+    }
+    return formatCounsellor(counsellor);
   }
 
   /**
