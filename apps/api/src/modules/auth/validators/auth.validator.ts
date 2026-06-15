@@ -5,6 +5,7 @@ export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
   agency_reg_number: z.string().trim().optional(),
+  fcm_token: z.string().trim().optional(),
 });
 
 export const staffLoginSchema = z.object({

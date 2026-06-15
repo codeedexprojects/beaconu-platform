@@ -17,7 +17,8 @@ headers {
 body:json {
   {
     "email": "meera+1@counsellor.com",
-    "password": "Password@123"
+    "password": "Password@123",
+    "fcm_token": ""
   }
 }
 
@@ -36,9 +37,13 @@ script:post-response {
 docs {
   Authenticates a counsellor.
   No authentication required.
-  
+
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   JWT userType: counsellor
-  
+
+  Optional `fcm_token`: if provided, stored on the new session's
+  deviceInfo.fcmToken so push notifications (e.g. "New session booked")
+  can be delivered to this device.
+
   Table: counsellors
 }
