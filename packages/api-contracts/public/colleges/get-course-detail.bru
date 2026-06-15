@@ -1,0 +1,49 @@
+meta {
+  name: Get Course Detail by Slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the course detail page with metadata and a list of available tabs.
+  Only tabs with non-empty data are included in the tabs array.
+  No authentication required.
+
+  Note: collegeSlug and courseId env vars must be set.
+
+  Response shape:
+  {
+    "course": {
+      "id": "CRS-1",
+      "name": "B.Tech Computer Science",
+      "code": "BTCS",
+      "duration": "4 Years",
+      "discipline": { ... },
+      "studyLevel": { ... },
+      "programType": { ... },
+      "campus": { ... },
+      "department": { ... }
+    },
+    "tabs": [
+      "highlights",
+      "curriculum",
+      "career_opportunities",
+      ...
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.course && data.data.course.id) {
+      bru.setEnvVar("courseId", data.data.course.id);
+    }
+  }
+}

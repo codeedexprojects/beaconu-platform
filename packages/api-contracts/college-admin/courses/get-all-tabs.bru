@@ -1,0 +1,34 @@
+meta {
+  name: Get All Course Tabs
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns all tab data for a course (admin view).
+  Includes every tab with its current data, even if empty.
+
+  Requires: staff access token with academics.view or academics.manage.
+
+  Response shape:
+  {
+    "courseId": "CRS-1",
+    "courseName": "B.Tech Computer Science",
+    "tabs": {
+      "highlights": [...],
+      "curriculum": [...],
+      "course_structure": {...},
+      ...
+    }
+  }
+}
