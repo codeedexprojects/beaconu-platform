@@ -6,6 +6,34 @@ import {
   UpdateCounsellorStatusInput,
 } from "../validators/counselling.validator";
 
+/**
+ * `expertise`/`education` are normally explicit arrays in `profile_metadata`,
+ * but counsellors approved before those fields existed only have a
+ * comma-separated `specialization` string / a single `qualification`
+ * string — fall back to deriving arrays from those.
+ */
+function deriveExpertise(metadata: Record<string, unknown>): string[] {
+  if (Array.isArray(metadata.expertise)) return metadata.expertise;
+  if (typeof metadata.specialization === "string") {
+    return metadata.specialization
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function deriveEducation(metadata: Record<string, unknown>): string[] {
+  if (Array.isArray(metadata.education)) return metadata.education;
+  if (
+    typeof metadata.qualification === "string" &&
+    metadata.qualification.trim()
+  ) {
+    return [metadata.qualification.trim()];
+  }
+  return [];
+}
+
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
   const metadata = counsellor.profileMetadata ?? {};
@@ -23,8 +51,8 @@ function formatCounsellor(counsellor: any) {
     session_fee: Number(counsellor.sessionFee ?? 0.0),
     wallet_balance: Number(counsellor.wallet?.balance ?? 0.0),
     about: metadata.about ?? null,
-    expertise: metadata.expertise ?? [],
-    education: metadata.education ?? [],
+    expertise: deriveExpertise(metadata),
+    education: deriveEducation(metadata),
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,

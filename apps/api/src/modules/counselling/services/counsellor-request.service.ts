@@ -149,6 +149,7 @@ export class CounsellorRequestService {
             gender: existing.gender ?? undefined,
             city: existing.city ?? undefined,
             specialization: existing.specialization ?? undefined,
+            qualification: existing.qualification ?? undefined,
             license_number: existing.licenseNumber ?? undefined,
           },
           status: "active",
