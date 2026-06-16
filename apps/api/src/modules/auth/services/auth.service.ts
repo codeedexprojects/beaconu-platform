@@ -19,6 +19,7 @@ import { CounsellorRequestRepository } from "@/modules/counselling/repositories/
 import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
+  CounsellorLoginInput,
   LoginBlogAuthorInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
@@ -104,7 +105,7 @@ export class AuthService {
     };
   }
 
-  static async loginCounsellor(data: LoginInput) {
+  static async loginCounsellor(data: CounsellorLoginInput) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     const counsellor =
@@ -123,6 +124,12 @@ export class AuthService {
         );
       }
       throw new UnauthorizedError("Invalid credentials");
+    }
+
+    if (counsellor.counsellorType !== data.counsellor_type) {
+      throw new ForbiddenError(
+        `This account is registered as a ${counsellor.counsellorType} counsellor. Please use the correct login.`,
+      );
     }
 
     const isMatch = await CryptoUtils.compare(

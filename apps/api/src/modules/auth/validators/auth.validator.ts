@@ -83,12 +83,22 @@ export const registerBlogAuthorSchema = z
     path: ["confirm_password"],
   });
 
+export const counsellorLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6),
+  counsellor_type: z.enum(["academic", "mindcare"], {
+    error: "counsellor_type must be 'academic' or 'mindcare'",
+  }),
+  fcm_token: z.string().trim().optional(),
+});
+
 export const loginBlogAuthorSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type CounsellorLoginInput = z.infer<typeof counsellorLoginSchema>;
 export type StaffLoginInput = z.infer<typeof staffLoginSchema>;
 export type PlatformLoginInput = z.infer<typeof platformLoginSchema>;
 export type RegisterCounsellorInput = z.infer<typeof registerCounsellorSchema>;
