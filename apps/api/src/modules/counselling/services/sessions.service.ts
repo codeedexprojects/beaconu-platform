@@ -51,6 +51,17 @@ function formatTimeOnly(
   return date.toISOString().slice(11, 16);
 }
 
+function formatTime12h(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  const h = date.getUTCHours();
+  const m = date.getUTCMinutes();
+  const period = h < 12 ? "AM" : "PM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  const minute = m.toString().padStart(2, "0");
+  return `${hour}:${minute} ${period}`;
+}
+
 /**
  * Combines a `@db.Date` value and a `@db.Time` value into a timezone-naive
  * ISO datetime (no "Z"/offset) so Google Calendar interprets it using the
@@ -768,7 +779,7 @@ export class SessionService {
       const fullSession = await SessionRepository.findSessionById(session.id);
       const studentName = fullSession?.student?.fullName ?? "A student";
       const dateStr = session.scheduledDate.toISOString().slice(0, 10);
-      const timeStr = formatTimeOnly(session.startTime);
+      const timeStr = formatTime12h(session.startTime);
 
       await PushService.sendToUser(session.counsellorId, "counsellor", {
         title: "New session booked",
@@ -962,7 +973,39 @@ export class SessionService {
       await deleteMeetEvent(session.googleEventId);
     }
 
+    if (actor.userType === "student") {
+      await this.notifyCounsellorOfCancellation(session);
+    }
+
     return formatSession(await SessionRepository.findSessionById(sessionId));
+  }
+
+  /**
+   * Best-effort: notifies the counsellor when a student cancels a booked session.
+   */
+  private static async notifyCounsellorOfCancellation(session: {
+    id: string;
+    counsellorId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    student: { fullName: string } | null;
+  }): Promise<void> {
+    try {
+      const studentName = session.student?.fullName ?? "A student";
+      const dateStr = session.scheduledDate.toISOString().slice(0, 10);
+      const timeStr = formatTime12h(session.startTime);
+
+      await PushService.sendToUser(session.counsellorId, "counsellor", {
+        title: "Session cancelled",
+        body: `${studentName} cancelled their session on ${dateStr} at ${timeStr}`,
+        data: { type: "session_cancelled", sessionId: session.id },
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to notify counsellor of session cancellation",
+      );
+    }
   }
 
   static async rescheduleSession(
@@ -1030,7 +1073,40 @@ export class SessionService {
       );
     }
 
+    if (actor.userType === "counsellor") {
+      await this.notifyStudentOfReschedule(session, newSlot);
+    }
+
     return formatSession(await SessionRepository.findSessionById(sessionId));
+  }
+
+  /**
+   * Best-effort: notifies the student when a counsellor reschedules their session.
+   */
+  private static async notifyStudentOfReschedule(
+    session: {
+      id: string;
+      studentId: string;
+      counsellor: { fullName: string } | null;
+    },
+    newSlot: { availableDate: Date; startTime: Date },
+  ): Promise<void> {
+    try {
+      const counsellorName = session.counsellor?.fullName ?? "Your counsellor";
+      const dateStr = newSlot.availableDate.toISOString().slice(0, 10);
+      const timeStr = formatTime12h(newSlot.startTime);
+
+      await PushService.sendToUser(session.studentId, "student", {
+        title: "Session rescheduled",
+        body: `${counsellorName} rescheduled your session to ${dateStr} at ${timeStr}`,
+        data: { type: "session_rescheduled", sessionId: session.id },
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to notify student of session reschedule",
+      );
+    }
   }
 
   static async updateMeeting(
@@ -1185,5 +1261,70 @@ export class SessionService {
         input.rating_feedback,
       ),
     );
+  }
+
+  /**
+   * Scans today's booked sessions and sends a 10-minute reminder push to
+   * both the counsellor and the student for sessions starting in 9–11 min.
+   * Redis deduplicates so each session only gets one reminder regardless of
+   * how many times the job fires in that window.
+   * Returns the number of sessions reminded.
+   */
+  /** Removes past unbooked slots so they don't inflate stats or waste storage. */
+  static async cleanupExpiredSlots(): Promise<number> {
+    const now = new Date();
+    const todayIST = new Date(now.getTime() + IST_OFFSET_MS);
+    const todayDateOnly = parseDateOnly(todayIST.toISOString().slice(0, 10));
+    const { count } =
+      await SessionRepository.deleteExpiredUnbookedSlots(todayDateOnly);
+    return count;
+  }
+
+  static async sendSessionReminders(): Promise<number> {
+    const now = new Date();
+    const redis = getRedisClient();
+
+    const sessions = await SessionRepository.findBookedSessionsToday(now);
+
+    let count = 0;
+    for (const session of sessions) {
+      const startInstant = istWallTimeToInstant(
+        session.scheduledDate,
+        session.startTime,
+      );
+      const msUntilStart = startInstant.getTime() - now.getTime();
+      const NINE_MIN = 9 * 60 * 1000;
+      const ELEVEN_MIN = 11 * 60 * 1000;
+
+      if (msUntilStart < NINE_MIN || msUntilStart > ELEVEN_MIN) continue;
+
+      const redisKey = `counselling:reminder-sent:${session.id}`;
+      const alreadySent = await redis.get(redisKey);
+      if (alreadySent) continue;
+
+      // Mark before sending — best effort, prevents double-fire even if push throws
+      await redis.set(redisKey, "1", "EX", 24 * 60 * 60);
+
+      const timeStr = formatTime12h(session.startTime);
+      const counsellorName = session.counsellor?.fullName ?? "your counsellor";
+      const studentName = session.student?.fullName ?? "your student";
+
+      await Promise.allSettled([
+        PushService.sendToUser(session.counsellorId, "counsellor", {
+          title: "Session starting soon",
+          body: `Your session with ${studentName} starts in 10 minutes at ${timeStr}`,
+          data: { type: "session_reminder", sessionId: session.id },
+        }),
+        PushService.sendToUser(session.studentId, "student", {
+          title: "Session starting soon",
+          body: `Your session with ${counsellorName} starts in 10 minutes at ${timeStr}`,
+          data: { type: "session_reminder", sessionId: session.id },
+        }),
+      ]);
+
+      count++;
+    }
+
+    return count;
   }
 }

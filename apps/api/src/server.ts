@@ -7,6 +7,14 @@ import {
   startSessionAutoCompleteJob,
   stopSessionAutoCompleteJob,
 } from "@/modules/counselling/jobs/session-auto-complete.job";
+import {
+  startSessionReminderJob,
+  stopSessionReminderJob,
+} from "@/modules/counselling/jobs/session-reminder.job";
+import {
+  startSlotCleanupJob,
+  stopSlotCleanupJob,
+} from "@/modules/counselling/jobs/slot-cleanup.job";
 
 async function startServer(): Promise<void> {
   try {
@@ -27,6 +35,26 @@ async function startServer(): Promise<void> {
       );
     }
 
+    try {
+      await startSessionReminderJob();
+      logger.info("Session reminder job scheduled");
+    } catch (error) {
+      logger.error(
+        { error },
+        "Failed to schedule session reminder job — continuing startup",
+      );
+    }
+
+    try {
+      await startSlotCleanupJob();
+      logger.info("Slot cleanup job scheduled");
+    } catch (error) {
+      logger.error(
+        { error },
+        "Failed to schedule slot cleanup job — continuing startup",
+      );
+    }
+
     const server = app.listen(env.PORT, () => {
       logger.info(
         { port: env.PORT, env: env.NODE_ENV },
@@ -38,6 +66,8 @@ async function startServer(): Promise<void> {
       logger.info({ signal }, "Graceful shutdown initiated");
       server.close(async () => {
         await stopSessionAutoCompleteJob();
+        await stopSessionReminderJob();
+        await stopSlotCleanupJob();
         await disconnectRedis();
         await prisma.$disconnect();
         logger.info("Server shut down cleanly");

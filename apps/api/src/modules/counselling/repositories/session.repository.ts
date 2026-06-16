@@ -833,6 +833,35 @@ export class SessionRepository {
     });
   }
 
+  /**
+   * Booked sessions scheduled on today's IST date — candidates for the
+   * 10-minute reminder job. Caller filters by start-time window and uses
+   * Redis to deduplicate already-sent reminders.
+   */
+  static async findBookedSessionsToday(nowUtc: Date) {
+    const todayIST = new Date(nowUtc.getTime() + 5.5 * 60 * 60 * 1000);
+    const todayDateOnly = new Date(
+      Date.UTC(
+        todayIST.getUTCFullYear(),
+        todayIST.getUTCMonth(),
+        todayIST.getUTCDate(),
+      ),
+    );
+
+    return prisma.counsellingSession.findMany({
+      where: { status: "booked", scheduledDate: todayDateOnly },
+      select: {
+        id: true,
+        scheduledDate: true,
+        startTime: true,
+        counsellorId: true,
+        studentId: true,
+        student: { select: { fullName: true } },
+        counsellor: { select: { fullName: true } },
+      },
+    });
+  }
+
   /** Bulk-marks sessions as completed (used by the auto-complete job). */
   static async markSessionsCompleted(ids: string[]) {
     if (ids.length === 0) return { count: 0 };
@@ -870,5 +899,16 @@ export class SessionRepository {
     ]);
 
     return { sessions, total };
+  }
+
+  /**
+   * Hard-deletes unbooked slots whose availableDate is strictly before
+   * `beforeDate` (IST `@db.Date` value). Safe to hard-delete because
+   * isBooked=false guarantees no CounsellingSession references these rows.
+   */
+  static async deleteExpiredUnbookedSlots(beforeDate: Date) {
+    return prisma.counsellorAvailability.deleteMany({
+      where: { isBooked: false, availableDate: { lt: beforeDate } },
+    });
   }
 }
