@@ -4,6 +4,9 @@ import { commonSchemas } from "@/shared/validators";
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
+  blink_role: z
+    .enum(["associate_admin", "associate_employee", "campus_ambassador"])
+    .optional(),
   agency_reg_number: z.string().trim().optional(),
   fcm_token: z.string().trim().optional(),
 });
