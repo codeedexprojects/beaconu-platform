@@ -68,7 +68,7 @@ export const bankDetailsSchema = z.object({
 
 export const withdrawalSchema = z.object({
   amount: z
-    .number({ invalid_type_error: "Amount must be a number" })
+    .number({ error: "Amount must be a number" })
     .positive("Amount must be greater than zero"),
   description: z.string().max(255).optional(),
 });
