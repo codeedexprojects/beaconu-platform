@@ -1,0 +1,31 @@
+meta {
+  name: List Languages
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/languages?page=1&limit=20
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+docs {
+  Returns a paginated list of languages.
+  No authentication required.
+
+  Query params:
+  - search (optional): filter by language name (case-insensitive substring match)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response: { code: string, name: string }[]
+  Meta: { total, page, limit, hasNext }
+
+  Data source: static JSON — no DB query.
+}
