@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { commonSchemas } from "@/shared/validators";
 
-const uuidRegex =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 export const registerAssociateEmployeeSchema = z
   .object({
     full_name: z.string().min(1),
@@ -12,13 +9,7 @@ export const registerAssociateEmployeeSchema = z
     associate_parent_id: z
       .string()
       .trim()
-      .refine(
-        (value) =>
-          !value.includes("{{") &&
-          !value.includes("}}") &&
-          uuidRegex.test(value),
-        { message: "Invalid UUID for associate_parent_id" },
-      ),
+      .min(1, "associate_parent_id is required"),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
   })

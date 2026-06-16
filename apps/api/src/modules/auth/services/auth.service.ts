@@ -62,6 +62,19 @@ export class AuthService {
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
 
+    if (data.blink_role && blinkUser.blinkRole.slug !== data.blink_role) {
+      const roleLabels: Record<string, string> = {
+        associate_admin: "an associate admin",
+        associate_employee: "an associate employee",
+        campus_ambassador: "a campus ambassador",
+      };
+      const actual =
+        roleLabels[blinkUser.blinkRole.slug] ?? blinkUser.blinkRole.slug;
+      throw new ForbiddenError(
+        `This account is registered as ${actual}. Please use the correct login.`,
+      );
+    }
+
     if (blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_ADMIN) {
       if (
         !data.agency_reg_number ||
@@ -95,7 +108,16 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: blinkUser.id,
       userType,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        blinkUser.id,
+        userType,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateBlinkLastLogin(blinkUser.id);
 
@@ -161,6 +183,14 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        counsellor.id,
+        USER_TYPES.COUNSELLOR,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateCounsellorLastLogin(counsellor.id);
 
@@ -559,6 +589,13 @@ export class AuthService {
         userType: USER_TYPES.STUDENT,
         deviceInfo: fcmToken ? { fcmToken } : undefined,
       });
+      if (fcmToken) {
+        await AuthRepository.clearFcmTokensExcept(
+          student.id,
+          USER_TYPES.STUDENT,
+          session.sessionId,
+        );
+      }
       const accessToken = JwtUtils.generateAccessToken({
         userId: student.id,
         userType: USER_TYPES.STUDENT,
@@ -615,6 +652,13 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,
       userType: USER_TYPES.STUDENT,
@@ -669,6 +713,14 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: fcmToken ? { fcmToken } : undefined,
     });
+
+    if (fcmToken) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
 
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,

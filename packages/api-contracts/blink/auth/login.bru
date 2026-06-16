@@ -18,7 +18,9 @@ body:json {
   {
     "email": "john@agency.com",
     "password": "Password@123",
-    "agency_reg_number": "REG-8214"
+    "blink_role": "associate_admin",
+    "agency_reg_number": "REG-8214",
+    "fcm_token": "optional-firebase-token"
   }
 }
 
@@ -38,6 +40,15 @@ docs {
   Authenticates any Blink App user — associate admin, associate employee, or campus ambassador.
   No authentication required.
 
+  Body fields:
+    email            — required
+    password         — required (min 6 chars)
+    blink_role       — optional enum: associate_admin | associate_employee | campus_ambassador
+                       When provided, validated against the account's actual role (403 if mismatch).
+    agency_reg_number — required for associate_admin accounts
+    fcm_token        — optional Firebase Cloud Messaging token for push notifications.
+                       Stored in the session. Clears duplicate FCM tokens on other sessions.
+
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   The JWT userType field distinguishes the role: blink_associate | blink_employee | blink_ambassador.
 
@@ -45,6 +56,9 @@ docs {
   - pending_approval: employee → "pending approval by agency admin"; admin → "pending platform approval"
   - rejected: role-specific message directing to agency admin or support
   - suspended / inactive: role-specific message directing to agency admin or support
+
+  Role mismatch (403): if blink_role does not match the account's actual role, returns
+  "This account is registered as <actual role>. Please use the correct login."
 
   Table: blink_users
 }
