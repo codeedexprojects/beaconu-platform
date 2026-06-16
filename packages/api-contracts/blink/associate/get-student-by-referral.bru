@@ -1,0 +1,35 @@
+meta {
+  name: Get Student by Referral
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/referrals/{{referralId}}/student
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("studentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Returns the student's admission profile and referral/commission status for a specific referral.
+  Requires: associate admin access token (blink_associate userType).
+
+  Only accessible if the referral belongs to one of the admin's employees.
+  Returns 404 if referralId is invalid or belongs to a different admin's team.
+
+  Tables: referrals, students, commissions
+}

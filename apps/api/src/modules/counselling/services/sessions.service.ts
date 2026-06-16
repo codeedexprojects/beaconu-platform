@@ -975,9 +975,39 @@ export class SessionService {
 
     if (actor.userType === "student") {
       await this.notifyCounsellorOfCancellation(session);
+    } else {
+      await this.notifyStudentOfCancellation(session);
     }
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
+  }
+
+  /**
+   * Best-effort: notifies the student when a counsellor cancels their session.
+   */
+  private static async notifyStudentOfCancellation(session: {
+    id: string;
+    studentId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    counsellor: { fullName: string } | null;
+  }): Promise<void> {
+    try {
+      const counsellorName = session.counsellor?.fullName ?? "Your counsellor";
+      const dateStr = session.scheduledDate.toISOString().slice(0, 10);
+      const timeStr = formatTime12h(session.startTime);
+
+      await PushService.sendToUser(session.studentId, "student", {
+        title: "Session cancelled",
+        body: `${counsellorName} cancelled your session on ${dateStr} at ${timeStr}`,
+        data: { type: "session_cancelled", sessionId: session.id },
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to notify student of session cancellation",
+      );
+    }
   }
 
   /**

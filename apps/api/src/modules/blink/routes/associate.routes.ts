@@ -5,6 +5,12 @@ import { validate } from "@/shared/middleware/validate";
 import {
   registerAssociateEmployeeSchema,
   updateEmployeeStatusSchema,
+  referralListQuerySchema,
+  bankDetailsSchema,
+  withdrawalSchema,
+  walletTransactionQuerySchema,
+  serviceChargeQuerySchema,
+  updateServiceChargeSchema,
 } from "../validators/blink.validator";
 import { AssociateAdminController } from "../controllers/associate-admin.controller";
 import { USER_TYPES } from "@/shared/constants";
@@ -35,12 +41,80 @@ router.get(
   authorizeUserType("blink_associate"),
   AssociateAdminController.listPendingEmployees,
 );
+router.get(
+  "/employees/:employeeId/performance",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.getEmployeePerformance,
+);
 router.patch(
   "/employees/:employeeId/status",
   authenticate,
   authorizeUserType("blink_associate"),
   validate(updateEmployeeStatusSchema),
   AssociateAdminController.updateEmployeeStatus,
+);
+
+router.get(
+  "/referrals",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(referralListQuerySchema, "query"),
+  AssociateAdminController.listReferrals,
+);
+
+router.get(
+  "/referrals/:referralId/student",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.getStudentByReferral,
+);
+
+router.get(
+  "/wallet",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.getWallet,
+);
+
+router.get(
+  "/wallet/transactions",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(walletTransactionQuerySchema, "query"),
+  AssociateAdminController.getWalletTransactions,
+);
+
+router.put(
+  "/wallet/bank-details",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(bankDetailsSchema),
+  AssociateAdminController.updateBankDetails,
+);
+
+router.post(
+  "/wallet/withdraw",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(withdrawalSchema),
+  AssociateAdminController.requestWithdrawal,
+);
+
+router.get(
+  "/service-charges",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(serviceChargeQuerySchema, "query"),
+  AssociateAdminController.listServiceCharges,
+);
+
+router.patch(
+  "/service-charges/:id",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(updateServiceChargeSchema),
+  AssociateAdminController.updateServiceCharge,
 );
 
 export default router;
