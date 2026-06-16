@@ -63,6 +63,7 @@ export class CourseTabsRepository {
         intakeCapacity: true,
         studyMode: true,
         status: true,
+        metadata: true,
         ...TAB_FIELDS_SELECT,
         ...COURSE_DETAIL_INCLUDE,
       },
@@ -135,8 +136,88 @@ export class CourseTabsRepository {
         eligibility: true,
         intakeCapacity: true,
         studyMode: true,
+        metadata: true,
         ...TAB_FIELDS_SELECT,
         ...COURSE_DETAIL_INCLUDE,
+      },
+    });
+  }
+
+  static async findCourseMetadata(courseId: string, collegeId: string) {
+    return prisma.course.findFirst({
+      where: { id: courseId, collegeId, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        metadata: true,
+      },
+    });
+  }
+
+  static async findPublicCourseMetadataByIdAndSlug(
+    courseId: string,
+    collegeSlug: string,
+  ) {
+    return prisma.course.findFirst({
+      where: {
+        id: courseId,
+        status: "active",
+        college: { slug: collegeSlug, status: "active" },
+      },
+      select: {
+        id: true,
+        name: true,
+        metadata: true,
+      },
+    });
+  }
+
+  static async updateCourseSetupTabData(
+    courseId: string,
+    collegeId: string,
+    tabName: string,
+    data: unknown,
+  ) {
+    const existing = await prisma.course.findFirst({
+      where: { id: courseId, collegeId, status: "active" },
+      select: { id: true, metadata: true },
+    });
+    if (!existing) return null;
+
+    const currentMetadata =
+      existing.metadata && typeof existing.metadata === "object"
+        ? (existing.metadata as Record<string, unknown>)
+        : {};
+
+    const currentTabData =
+      currentMetadata.tabData && typeof currentMetadata.tabData === "object"
+        ? (currentMetadata.tabData as Record<string, unknown>)
+        : {};
+
+    const currentTabs = Array.isArray(currentMetadata.tabs)
+      ? (currentMetadata.tabs as string[])
+      : [];
+
+    const tabs = currentTabs.includes(tabName)
+      ? currentTabs
+      : [...currentTabs, tabName];
+
+    const metadata = {
+      ...currentMetadata,
+      tabs,
+      tabData: {
+        ...currentTabData,
+        [tabName]: data,
+      },
+    };
+
+    return prisma.course.update({
+      where: { id: courseId },
+      data: { metadata: metadata as any },
+      select: {
+        id: true,
+        name: true,
+        metadata: true,
       },
     });
   }

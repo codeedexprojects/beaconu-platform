@@ -1,5 +1,22 @@
 import { z } from "zod";
 
+export const COURSE_SETUP_TAB_IDS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+] as const;
+
 // ── Tab Name → Prisma Field Mapping ──────────────────────────────────────────
 
 export const TAB_FIELD_MAP: Record<string, string> = {
@@ -24,7 +41,10 @@ export const TAB_FIELD_MAP: Record<string, string> = {
   demographics: "demographics",
 } as const;
 
-export const VALID_TAB_NAMES = Object.keys(TAB_FIELD_MAP);
+export const VALID_TAB_NAMES = [
+  ...Object.keys(TAB_FIELD_MAP),
+  ...COURSE_SETUP_TAB_IDS,
+];
 
 // ── Param Schemas ────────────────────────────────────────────────────────────
 

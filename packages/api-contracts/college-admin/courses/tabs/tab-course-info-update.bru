@@ -1,0 +1,117 @@
+meta {
+  name: Tab - Course Info (Update)
+  type: http
+  seq: 15
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/course_info
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "course_info",
+      "course_name": "MBA Digital Transformation",
+      "admissions": [
+        { "label": "Admissions 2025", "status": "open" },
+        { "label": "Admissions 2026", "status": "upcoming" }
+      ],
+      "admission_status": {
+        "tag": "Admissions Open",
+        "seat_availability_percent": 90,
+        "urgency_label": "Limited seats available for current intake"
+      },
+      "overview": {
+        "duration": "24 months",
+        "study_mode": "Regular",
+        "academic_cycle": "Semester",
+        "credits": 102,
+        "gender_accepted": "Co-ed",
+        "course_category": "Self Financing"
+      },
+      "program_highlights": [
+        { "stat": "2.7x", "description": "AI activity growth in India" }
+      ],
+      "course_accolades": [
+        { "tag": "Rank", "title": "MAHE Rank 3", "image": "" }
+      ],
+      "key_dates": [
+        { "label": "Application Start", "date": "10th June 2024", "tag": "" }
+      ],
+      "curriculum": {
+        "brochure_link": "",
+        "semesters": [
+          { "semester": 1, "subjects": [] },
+          { "semester": 2, "subjects": [] }
+        ]
+      },
+      "course_structure": [
+        { "label": "Disciplinary Major", "credits": 60 }
+      ],
+      "total_credits": 102,
+      "value_added_courses": [
+        { "name": "Cyber Security", "delivery_mode": "MOOC Courses", "credits": 3 }
+      ],
+      "career_opportunities": [
+        { "role": "Data Scientist", "salary_range": "Rs8L - Rs25L PA" }
+      ],
+      "higher_education": {
+        "global_certifications": [
+          { "name": "Project Management Professional (PMP)" }
+        ],
+        "postgraduation": [
+          { "name": "PhD in Management Studies" }
+        ]
+      },
+      "flexible_exit_options": [
+        { "after_years": 1, "credential": "Post Graduate Diploma in Management" }
+      ],
+      "class_timings": [
+        { "day": "Monday", "timing": "09:00 AM - 04:30 PM" }
+      ],
+      "industry_tools": [
+        { "name": "Tableau", "icon": "" }
+      ],
+      "lab_facilities": [
+        { "name": "AI/ML Research Lab" }
+      ],
+      "classroom_facilities": [
+        { "name": "Smart Interactive Boards" }
+      ],
+      "bonus_certification": {
+        "name": "Tally Prime Certification",
+        "note": "Included with Finance specialization at no extra cost",
+        "certificate_link": ""
+      },
+      "featured_alumni": [
+        {
+          "name": "Amit Verma",
+          "designation": "Chief MGR (E-Banking)",
+          "image": "",
+          "career_progression": [
+            { "year": 2018, "milestone": "Completed graduation and explored career options" }
+          ]
+        }
+      ],
+      "faqs": [
+        { "question": "What is the eligibility for this MBA?", "answer": "" }
+      ],
+      "student_forum": {
+        "admission_team_contact": "",
+        "ex_student_chat": ""
+      }
+    }
+  }
+}
+
+docs {
+  Updates course_info tab with a dynamic JSON object.
+  Data shape is flexible and not hardcoded by API validation.
+}

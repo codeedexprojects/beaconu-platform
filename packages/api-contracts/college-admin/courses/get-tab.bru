@@ -19,17 +19,23 @@ docs {
 
   Requires: staff access token with academics.view or academics.manage.
 
-  Valid tab names:
-  highlights, curriculum, course_structure, value_added_courses,
-  career_opportunities, higher_education_certifications,
-  flexible_exit_options, class_timings, industry_tools,
-  lab_facilities, room_facilities, featured_alumni, faqs,
-  exam_policy, entrance_exam_eligibility, eligibility_criteria,
-  accreditations, key_dates, demographics
+  Create-course assigns setup tabs under `tabs`:
+    course_info, admission_policy, placements, fees, financial_aid,
+    student_housing, exam_policy, faculty, review, library,
+    clubs_associations, alliance, other_courses_offered, demo_graphics
+
+  College-only static tabs remain under college profile sections:
+    college_overview, student_code_of_conduct, happenings,
+    institutions_across_world, commute
+
+  Valid tab names for this endpoint:
+  course_info, admission_policy, placements, fees, financial_aid,
+  student_housing, exam_policy, faculty, review, library,
+  clubs_associations, alliance, other_courses_offered, demo_graphics
 
   Response shape:
   {
-    "tabName": "curriculum",
-    "data": [...]
+    "tabName": "course_info",
+    "data": { ... }
   }
 }

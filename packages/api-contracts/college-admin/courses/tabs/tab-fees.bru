@@ -1,0 +1,15 @@
+meta {
+  name: Tab - Fees
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/fees
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

@@ -1,9 +1,12 @@
 import { NotFoundError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
 import {
+  COURSE_SETUP_TAB_IDS,
   TAB_FIELD_MAP,
   VALID_TAB_NAMES,
 } from "../validators/course-tabs.validator";
+
+const DEFAULT_SETUP_TABS = [...COURSE_SETUP_TAB_IDS];
 
 function isNonEmptyTabData(value: unknown): boolean {
   if (value === null || value === undefined) return false;
@@ -20,6 +23,39 @@ function mapTabNameToField(tabName: string): string {
     );
   }
   return field;
+}
+
+function isSetupTabName(tabName: string): boolean {
+  return DEFAULT_SETUP_TABS.includes(tabName as any);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function getCourseSetupTabsFromMetadata(metadata: unknown): string[] {
+  const record = asRecord(metadata);
+  const tabs = Array.isArray(record.tabs)
+    ? record.tabs.filter((v): v is string => typeof v === "string")
+    : [];
+
+  const validTabs = tabs.filter((tab) =>
+    DEFAULT_SETUP_TABS.includes(tab as any),
+  );
+  return validTabs.length > 0
+    ? Array.from(new Set(validTabs))
+    : DEFAULT_SETUP_TABS;
+}
+
+function getSetupTabDataFromMetadata(
+  metadata: unknown,
+  tabName: string,
+): unknown {
+  const record = asRecord(metadata);
+  const tabData = asRecord(record.tabData);
+  return tabData[tabName] ?? {};
 }
 
 function buildTabsObject(course: Record<string, unknown>) {
@@ -62,13 +98,12 @@ export class CourseTabsService {
    * Get all tab data for a course (admin view — includes empty tabs).
    */
   static async getCourseTabsForAdmin(courseId: string, collegeId: string) {
-    const course = await CourseTabsRepository.findCourseWithTabs(
+    const course = await CourseTabsRepository.findCourseMetadata(
       courseId,
       collegeId,
     );
     if (!course) throw new NotFoundError("Course not found");
-
-    const tabs = buildTabsObject(course as unknown as Record<string, unknown>);
+    const tabs = getCourseSetupTabsFromMetadata(course.metadata);
 
     return {
       courseId: course.id,
@@ -85,6 +120,19 @@ export class CourseTabsService {
     collegeId: string,
     tabName: string,
   ) {
+    if (isSetupTabName(tabName)) {
+      const course = await CourseTabsRepository.findCourseMetadata(
+        courseId,
+        collegeId,
+      );
+      if (!course) throw new NotFoundError("Course not found");
+
+      return {
+        tabName,
+        data: getSetupTabDataFromMetadata(course.metadata, tabName),
+      };
+    }
+
     const prismaField = mapTabNameToField(tabName);
 
     const course = await CourseTabsRepository.findCourseTabField(
@@ -111,6 +159,21 @@ export class CourseTabsService {
     tabName: string,
     data: unknown,
   ) {
+    if (isSetupTabName(tabName)) {
+      const updated = await CourseTabsRepository.updateCourseSetupTabData(
+        courseId,
+        collegeId,
+        tabName,
+        data,
+      );
+      if (!updated) throw new NotFoundError("Course not found");
+
+      return {
+        tabName,
+        data: getSetupTabDataFromMetadata(updated.metadata, tabName),
+      };
+    }
+
     const prismaField = mapTabNameToField(tabName);
 
     const updated = await CourseTabsRepository.updateCourseTab(
@@ -134,41 +197,19 @@ export class CourseTabsService {
    * Only lists tabs that have non-empty data.
    */
   static async getPublicCourseDetail(courseId: string, collegeSlug: string) {
-    const course = await CourseTabsRepository.findPublicCourseByIdAndSlug(
-      courseId,
-      collegeSlug,
-    );
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
     if (!course) throw new NotFoundError("Course not found");
-
-    const courseRecord = course as unknown as Record<string, unknown>;
-    const tabs = getAvailableTabs(courseRecord);
-
-    // Strip tab JSON fields from the course object — only return metadata + relations
-    const {
-      highlights: _1,
-      curriculum: _2,
-      courseStructure: _3,
-      valueAddedCourses: _4,
-      careerOpportunities: _5,
-      higherEducationCertifications: _6,
-      flexibleExitOptions: _7,
-      classTimings: _8,
-      industryTools: _9,
-      labFacilities: _10,
-      roomFacilities: _11,
-      featuredAlumni: _12,
-      faqs: _13,
-      examPolicy: _14,
-      entranceExamEligibility: _15,
-      eligibilityCriteria: _16,
-      accreditations: _17,
-      keyDates: _18,
-      demographics: _19,
-      ...courseMeta
-    } = course;
+    const tabs = getCourseSetupTabsFromMetadata(course.metadata);
 
     return {
-      course: courseMeta,
+      course: {
+        id: course.id,
+        name: course.name,
+      },
       tabs,
     };
   }
@@ -181,6 +222,20 @@ export class CourseTabsService {
     collegeSlug: string,
     tabName: string,
   ) {
+    if (isSetupTabName(tabName)) {
+      const course =
+        await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+          courseId,
+          collegeSlug,
+        );
+      if (!course) throw new NotFoundError("Course not found");
+
+      return {
+        tabName,
+        data: getSetupTabDataFromMetadata(course.metadata, tabName),
+      };
+    }
+
     const prismaField = mapTabNameToField(tabName);
 
     const course = await CourseTabsRepository.findPublicCourseTabField(

@@ -85,6 +85,8 @@ export interface CreateCourseInput {
   duration?: string | null;
   eligibility?: string | null;
   campusId?: string | null;
+  tabs?: string[];
+  tabData?: Record<string, unknown>;
 }
 
 export interface SubmitRegistrationResponse {
