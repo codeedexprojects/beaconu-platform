@@ -4,7 +4,16 @@ import { prisma } from "./index";
 async function seed() {
   const roles = [
     { name: "Associate Admin", slug: "associate_admin", isSystemRole: true },
-    { name: "Associate", slug: "associate", isSystemRole: true },
+    {
+      name: "Associate Employee",
+      slug: "associate_employee",
+      isSystemRole: true,
+    },
+    {
+      name: "Campus Ambassador",
+      slug: "campus_ambassador",
+      isSystemRole: true,
+    },
   ];
 
   for (const role of roles) {
