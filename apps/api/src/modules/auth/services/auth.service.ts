@@ -72,7 +72,22 @@ export class AuthService {
     }
 
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
-      throw new ForbiddenError(`Account is ${blinkUser.status}`);
+      const isEmployee =
+        blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_EMPLOYEE;
+      const contact = isEmployee ? "your agency admin" : "support";
+
+      const statusMessages: Record<string, string> = {
+        [ACCOUNT_STATUS.PENDING_APPROVAL]: isEmployee
+          ? "Your account is pending approval by your agency admin."
+          : "Your account is pending platform approval. You will be notified once approved.",
+        [ACCOUNT_STATUS.REJECTED]: `Your account was not approved. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.SUSPENDED]: `Your account has been suspended. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.INACTIVE]: `Your account has been deactivated. Please contact ${contact}.`,
+      };
+
+      throw new ForbiddenError(
+        statusMessages[blinkUser.status] ?? `Account is ${blinkUser.status}.`,
+      );
     }
 
     const userType = getBlinkUserType(blinkUser.blinkRole.slug);

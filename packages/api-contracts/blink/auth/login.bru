@@ -41,5 +41,10 @@ docs {
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   The JWT userType field distinguishes the role: blink_associate | blink_employee | blink_ambassador.
 
+  Status gate (403): only accounts with status=active can log in.
+  - pending_approval: employee → "pending approval by agency admin"; admin → "pending platform approval"
+  - rejected: role-specific message directing to agency admin or support
+  - suspended / inactive: role-specific message directing to agency admin or support
+
   Table: blink_users
 }

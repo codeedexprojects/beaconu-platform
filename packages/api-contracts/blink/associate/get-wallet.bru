@@ -1,0 +1,34 @@
+meta {
+  name: Get Wallet
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/wallet
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("blinkWalletId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Returns the authenticated associate admin's wallet: balance, totalEarned, totalWithdrawn, and bank details.
+  Requires: associate admin access token (blink_associate userType).
+
+  If no wallet exists yet (no commissions credited), returns zeroed balances with bankDetails: null.
+
+  Table: blink_wallets
+}

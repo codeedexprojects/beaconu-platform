@@ -1,0 +1,38 @@
+meta {
+  name: Update Bank Details
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/api/v1/blink/associate/wallet/bank-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "accountHolderName": "John Agency",
+    "accountNumber": "123456789012",
+    "ifsc": "SBIN0001234",
+    "bankName": "State Bank of India"
+  }
+}
+
+docs {
+  Updates the bank account details for the authenticated associate admin's wallet.
+  Requires: associate admin access token (blink_associate userType).
+
+  Validation:
+    accountNumber — 9 to 18 digits
+    ifsc         — format: 4 uppercase letters + 0 + 6 alphanumeric (e.g. SBIN0001234)
+
+  Returns 404 if the wallet does not exist yet (no commissions credited).
+
+  Table: blink_wallets (bankDetails JSON column)
+}

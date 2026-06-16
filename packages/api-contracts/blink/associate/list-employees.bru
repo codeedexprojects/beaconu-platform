@@ -15,10 +15,21 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("employeeId", data.data[0].id);
+    }
+  }
+}
+
 docs {
-  Returns all employees under the authenticated associate admin.
+  Returns all employees under the authenticated associate admin, ranked by confirmed referral count.
   Requires: associate admin access token (blink_associate userType).
 
-  Only returns employees where associateParentId = req.userId.
-  Table: blink_users (role: associate_employee)
+  Each item includes: rank, totalReferrals, confirmedCount, commissionEarned (credited only).
+  Sorted by confirmedCount DESC — rank 1 is the top performer.
+
+  Tables: blink_users, referrals, commissions
 }

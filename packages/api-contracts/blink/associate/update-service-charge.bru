@@ -1,0 +1,47 @@
+meta {
+  name: Update Service Charge
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/associate/service-charges/{{serviceChargeId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "grossAmount": 50000,
+    "gstPercentage": 18,
+    "termsAndConditions": "Commission paid within 30 days of student enrollment.",
+    "isActive": true
+  }
+}
+
+docs {
+  Updates a service charge config by ID.
+  Requires: associate admin access token (blink_associate userType).
+
+  At least one field must be provided (validation error otherwise).
+
+  Updatable fields:
+    grossAmount        — positive number
+    gstPercentage      — 0–100
+    termsAndConditions — free text
+    isActive           — boolean
+
+  When grossAmount or gstPercentage changes, gstAmount and netPayout are
+  automatically recomputed:
+    gstAmount = grossAmount * gstPercentage / 100
+    netPayout = grossAmount - gstAmount
+
+  Returns 404 if serviceChargeId does not exist.
+
+  Table: service_charge_configs
+}
