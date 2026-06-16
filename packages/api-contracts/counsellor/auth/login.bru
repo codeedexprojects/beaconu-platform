@@ -18,6 +18,7 @@ body:json {
   {
     "email": "meera+1@counsellor.com",
     "password": "Password@123",
+    "counsellor_type": "academic",
     "fcm_token": ""
   }
 }
@@ -40,6 +41,10 @@ docs {
 
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   JWT userType: counsellor
+
+  Required `counsellor_type`: must be "academic" or "mindcare" and must
+  match the counsellor's registered type. A mindcare counsellor cannot
+  log in via the academic login and vice versa — returns 403 if mismatch.
 
   Optional `fcm_token`: if provided, stored on the new session's
   deviceInfo.fcmToken so push notifications (e.g. "New session booked")
