@@ -184,7 +184,12 @@ export class UniversityPlatformAdminController {
 
   static async listAll(req: Request, res: Response): Promise<void> {
     const query = universitySchemas.listQuery.parse(req.query);
-    const universities = await UniversityQuery.listAll(query);
+    const result = await UniversityQuery.listAll(query);
+    const universities = Array.isArray(result)
+      ? result
+      : result
+        ? [result]
+        : [];
     res
       .status(200)
       .json(ApiResponse.success("Universities fetched", universities));
@@ -193,7 +198,9 @@ export class UniversityPlatformAdminController {
   static async getById(req: Request, res: Response): Promise<void> {
     const { id } = universitySchemas.idParam.parse(req.params);
     const university = await UniversityQuery.getById(id);
-    res.status(200).json(ApiResponse.success("University fetched", university));
+    res
+      .status(200)
+      .json(ApiResponse.success("University fetched", [university]));
   }
 
   static async create(req: Request, res: Response): Promise<void> {

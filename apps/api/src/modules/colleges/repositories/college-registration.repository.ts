@@ -160,6 +160,41 @@ export class CollegeRegistrationRepository {
     collegeId: string,
     data: UpdateCollegeProfileData,
   ) {
+    const registrationMetaPatch: Record<string, unknown> = {};
+
+    if (data.leadId !== undefined) {
+      registrationMetaPatch.leadId = data.leadId;
+    }
+
+    if (data.addressFromLead !== undefined) {
+      registrationMetaPatch.addressFromLead = data.addressFromLead;
+    }
+
+    if (data.registrationTabs !== undefined) {
+      registrationMetaPatch.registrationTabs = data.registrationTabs;
+    }
+
+    const hasRegistrationMetaPatch =
+      Object.keys(registrationMetaPatch).length > 0;
+
+    const incomingSettings = isRecord(data.settings)
+      ? { ...(data.settings as Record<string, unknown>) }
+      : {};
+
+    const existingRegistrationMeta = isRecord(incomingSettings.registrationMeta)
+      ? (incomingSettings.registrationMeta as Record<string, unknown>)
+      : {};
+
+    const mergedSettings = hasRegistrationMetaPatch
+      ? {
+          ...incomingSettings,
+          registrationMeta: {
+            ...existingRegistrationMeta,
+            ...registrationMetaPatch,
+          },
+        }
+      : data.settings;
+
     const payload: Record<string, unknown> = {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.code !== undefined ? { code: data.code } : {}),
@@ -176,10 +211,6 @@ export class CollegeRegistrationRepository {
               data.coverImageUrl === "" ? null : data.coverImageUrl,
           }
         : {}),
-      ...(data.leadId !== undefined ? { leadId: data.leadId } : {}),
-      ...(data.addressFromLead !== undefined
-        ? { addressFromLead: data.addressFromLead }
-        : {}),
       ...(data.address !== undefined ? { address: data.address } : {}),
       ...(data.city !== undefined ? { city: data.city } : {}),
       ...(data.district !== undefined ? { district: data.district } : {}),
@@ -191,13 +222,10 @@ export class CollegeRegistrationRepository {
               data.requestedGroupCode === "" ? null : data.requestedGroupCode,
           }
         : {}),
-      ...(data.registrationTabs !== undefined
-        ? { registrationTabs: data.registrationTabs }
-        : {}),
       ...(data.profileSections !== undefined
         ? { profileSections: data.profileSections }
         : {}),
-      ...(data.settings !== undefined ? { settings: data.settings } : {}),
+      ...(mergedSettings !== undefined ? { settings: mergedSettings } : {}),
     };
 
     return prisma.college.update({

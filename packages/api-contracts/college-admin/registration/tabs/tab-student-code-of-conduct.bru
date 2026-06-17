@@ -1,0 +1,19 @@
+meta {
+  name: Tab - Student Code Of Conduct
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/student_code_of_conduct
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches only the `student_code_of_conduct` section.
+}
