@@ -25,7 +25,10 @@ function parseEntries(json: string): VideoEntry[] {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter((v): v is VideoEntry => typeof v === "object" && v !== null)
+      .filter(
+        (v): v is Record<string, unknown> =>
+          typeof v === "object" && v !== null,
+      )
       .map((v) => ({
         title: typeof v.title === "string" ? v.title : "",
         url: typeof v.url === "string" ? v.url : "",
