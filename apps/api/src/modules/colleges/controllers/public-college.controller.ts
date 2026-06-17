@@ -173,6 +173,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+const TAB_LABELS: Record<string, string> = {
+  college_overview: "College Overview",
+  course_info: "Course Info",
+  admission_policy: "Admission Policy",
+  placements: "Placements",
+  fees: "Fees",
+  financial_aid: "Financial Aid",
+  student_housing: "Student Housing",
+  exam_policy: "Exam Policy",
+  faculty: "Faculty",
+  review: "Review",
+  commute: "Commute",
+  library: "Library",
+  clubs_associations: "Club & Associations",
+  student_code_of_conduct: "Student Code of Conduct",
+  happenings: "Happenings",
+  institutions_across_world: "Institutions Across the World",
+  alliance: "Alliance",
+  other_courses_offered: "Other Courses Offered",
+  demo_graphics: "Demographics",
+};
+
 function toIdStyleTabName(value: string) {
   return value
     .trim()
@@ -181,36 +203,45 @@ function toIdStyleTabName(value: string) {
     .toLowerCase();
 }
 
-function buildTabIdList(profileSections: Record<string, unknown>) {
-  const tabIds = Object.entries(profileSections).reduce(
-    (acc, [tabKey, tabValue]) => {
-      if (
-        isRecord(tabValue) &&
-        typeof tabValue.enabled === "boolean" &&
-        !tabValue.enabled
-      ) {
-        return acc;
-      }
-
-      const tabIdRaw =
-        isRecord(tabValue) &&
-        typeof tabValue.id === "string" &&
-        tabValue.id.trim() !== ""
-          ? tabValue.id
-          : tabKey;
-
-      const tabId = toIdStyleTabName(tabIdRaw);
-
-      if (tabId !== "") {
-        acc.push(tabId);
-      }
-
-      return acc;
-    },
-    [] as string[],
+function toTabDisplayName(tabId: string): string {
+  return (
+    TAB_LABELS[tabId] ??
+    tabId
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
   );
+}
 
-  return Array.from(new Set(tabIds));
+function buildTabList(profileSections: Record<string, unknown>) {
+  const seen = new Set<string>();
+  const tabs: { id: string; name: string }[] = [];
+
+  for (const [tabKey, tabValue] of Object.entries(profileSections)) {
+    if (
+      isRecord(tabValue) &&
+      typeof tabValue.enabled === "boolean" &&
+      !tabValue.enabled
+    ) {
+      continue;
+    }
+
+    const tabIdRaw =
+      isRecord(tabValue) &&
+      typeof tabValue.id === "string" &&
+      tabValue.id.trim() !== ""
+        ? tabValue.id
+        : tabKey;
+
+    const tabId = toIdStyleTabName(tabIdRaw);
+
+    if (tabId !== "" && !seen.has(tabId)) {
+      seen.add(tabId);
+      tabs.push({ id: tabId, name: toTabDisplayName(tabId) });
+    }
+  }
+
+  return tabs;
 }
 
 function buildPublicProfileResponse(college: any) {
@@ -227,7 +258,7 @@ function buildPublicProfileResponse(college: any) {
   const profileSections = isRecord(college.profileSections)
     ? (college.profileSections as Record<string, unknown>)
     : {};
-  const tabs = buildTabIdList(profileSections);
+  const tabs = buildTabList(profileSections);
 
   const { settings: _s, blinkUsers: _bu, _count, ...collegeDetails } = college;
 
@@ -337,6 +368,9 @@ export class PublicCollegeController {
             id: true,
             name: true,
             logoUrl: true,
+            universityType: {
+              select: { id: true, name: true, slug: true },
+            },
           },
         },
         campuses: {
@@ -459,7 +493,7 @@ export class PublicCollegeController {
 
     const profileSections =
       (college.profileSections as Record<string, unknown> | null) || {};
-    const tabListing = buildTabIdList(profileSections);
+    const tabListing = buildTabList(profileSections);
 
     const { profileSections: _profileSections, ...collegeMeta } =
       college as any;

@@ -1,26 +1,50 @@
 meta {
   name: Get College By Slug
   type: http
-  seq: 1
+  seq: 3
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges/by-slug/:slug
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}
   body: none
   auth: none
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.collegeDetails && data.data.collegeDetails.id) {
+      bru.setEnvVar("collegeId", data.data.collegeDetails.id);
+    }
+  }
+}
+
 docs {
   Returns full public details for a college by its subdomain slug.
+  Same response shape as Get College By Id.
 
-  Response includes: university info, active campuses, active courses
-  (with discipline/stream/studyLevel/programType), institution group
-  membership, related sister colleges, `collegeDetails.profileSections`,
-  and top-level `tabs`.
+  Response shape:
+  {
+    "collegeDetails": {
+      "id": "CLG-1",
+      "name": "...",
+      "slug": "...",
+      "logoUrl": "...",
+      "coverImageUrl": "...",
+      "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { ... } },
+      "campuses": [...],
+      "courses": [...],
+      "profileSections": { ... }
+    },
+    "tabs": [
+      { "id": "college_overview", "name": "College Overview" },
+      { "id": "placements", "name": "Placements" }
+    ],
+    "totalCourses": 5,
+    "instituteType": "...",
+    "campusAmbassadors": [...]
+  }
 
-  Note: `settings` is excluded from the response.
-  `profileSections` is included under `collegeDetails.profileSections`.
-  `tabs` is a flat array of enabled section IDs in id-style format
-  (snake_case). If a section id is missing, the section key is used.
-  To get individual profile sections, use the Get College Section endpoint.
+  `tabs` contains only enabled college-level static tabs as { id, name } — not course tabs.
+  Sets collegeId env var from the response for downstream requests.
 }

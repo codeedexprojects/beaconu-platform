@@ -20,6 +20,18 @@ query {
   ~district: Bangalore
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("collegeId", data.data[0].id);
+    }
+    if (data.data && data.data[0] && data.data[0].slug) {
+      bru.setEnvVar("collegeSlug", data.data[0].slug);
+    }
+  }
+}
+
 docs {
   Returns a lightweight list of active colleges with optional taxonomy and location filters.
 
@@ -32,15 +44,12 @@ docs {
   - state: Filter by state name (case-insensitive, e.g. "Karnataka")
   - district: Filter by district/city name (case-insensitive, e.g. "Bangalore")
 
-  State and district values must match the country-state-city dataset used
-  in the college-admin profile form — free-text values are not accepted there.
-
   Response includes per college:
   - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
     state, city, district, address, pinCode, status, createdAt, updatedAt
-  - university: { id, name, logoUrl }
+  - university: { id, name, logoUrl, universityType: { id, name, slug } }
   - campuses: main campus only [{ city, state }]
 
-  Note: profileSections and settings are NOT included in the list response.
-  Use Get College By Id or Get College Summary for full details.
+  Note: tabs and profileSections are NOT included in the list response.
+  Use Get College By Id for college details with tab listing.
 }

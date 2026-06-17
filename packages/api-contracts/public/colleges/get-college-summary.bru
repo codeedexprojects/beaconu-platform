@@ -1,48 +1,72 @@
 meta {
-  name: Get College Summary
+  name: Get College Tabs (with Course)
   type: http
-  seq: 6
+  seq: 5
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}/summary?universityId=&streamId=&disciplineId=&studyLevelId=&programTypeId=
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}/summary
   body: none
   auth: none
 }
 
 query {
-  ~collegeId: 12345678-1234-1234-1234-123456789012
-  ~universityId: 12345678-1234-1234-1234-123456789011
-  ~streamId: 12345678-1234-1234-1234-123456789013
-  ~disciplineId: 12345678-1234-1234-1234-123456789014
-  ~studyLevelId: 12345678-1234-1234-1234-123456789015
-  ~programTypeId: 12345678-1234-1234-1234-123456789016
+  ~universityId:
+  ~streamId:
+  ~disciplineId:
+  ~studyLevelId:
+  ~programTypeId:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.course && data.data.course.id) {
+      bru.setEnvVar("courseId", data.data.course.id);
+    }
+  }
 }
 
 docs {
-  Returns a lightweight college summary with logo, cover image, location, and a single matching active course.
-  Filters by universityId and course taxonomy filters (streamId, disciplineId, studyLevelId, programTypeId) when provided.
+  Returns college static tabs alongside a matching course. Use this to get the college-level
+  tab listing in context with a specific course (e.g. for a college detail page).
+
+  Query parameters (all optional):
+  - universityId: Filter college by university UUID
+  - streamId: Filter matched course by stream UUID
+  - disciplineId: Filter matched course by discipline UUID
+  - studyLevelId: Filter matched course by study level UUID
+  - programTypeId: Filter matched course by program type UUID
 
   Response shape:
-  ```json
   {
-    "data": {
-      "college": {
-        "id": "CLG-1",
-        "name": "...",
-        "slug": "...",
-        "logoUrl": "...",
-        "coverImageUrl": "...",
-        "location": { "address": "...", "city": "...", "state": "...", "district": "...", "pinCode": "..." },
-        "university": { "id": "...", "name": "...", "universityType": { ... } }
-      },
-      "course": { "id": "...", "name": "...", "discipline": { ... }, ... },
-      "tabListing": ["college_overview", "course_info", "placements", ...]
-    }
+    "college": {
+      "id": "CLG-1",
+      "name": "...",
+      "slug": "...",
+      "logoUrl": "...",
+      "coverImageUrl": "...",
+      "location": { "address": "...", "city": "...", "state": "...", "district": "...", "pinCode": "..." },
+      "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { "id": "...", "name": "...", "slug": "..." } }
+    },
+    "course": {
+      "id": "CRS-1",
+      "name": "B.Tech Computer Science",
+      "code": "BTCS",
+      "duration": "4 Years",
+      "discipline": { ... },
+      "studyLevel": { ... },
+      "programType": { ... },
+      "campus": { ... }
+    },
+    "tabListing": [
+      { "id": "college_overview", "name": "College Overview" },
+      { "id": "placements", "name": "Placements" },
+      { "id": "fees", "name": "Fees" }
+    ]
   }
-  ```
 
-  - `tabListing` is a flat array of enabled profile section IDs in id-style format (snake_case).
-    If a section id is missing, the section key is used.
-    Disabled sections are excluded.
+  `tabListing` contains only the enabled college-level static tabs as { id, name } objects.
+  Course-level tabs (highlights, curriculum, etc.) are NOT included here.
+  Sets courseId env var for use in downstream course requests.
 }

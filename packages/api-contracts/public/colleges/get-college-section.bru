@@ -1,7 +1,7 @@
 meta {
   name: Get College Section
   type: http
-  seq: 5
+  seq: 4
 }
 
 get {
@@ -10,22 +10,30 @@ get {
   auth: none
 }
 
-params:query {
-  collegeId: 027a4a1a-742a-4f9a-ae13-994f1f4afd9b
-  ~sectionName: course_info
-}
-
 vars:pre-request {
-  sectionName: course_info
+  sectionName: college_overview
 }
 
 docs {
-  Returns a single profile section for a college by sectionName.
-  The response includes sectionName, sectionKey and section data.
-  Supported sectionName values:
+  Returns the content of a single college-level static tab by its section ID.
+
+  Path params:
+  - collegeId: College UUID (set via list-colleges or get-by-id scripts)
+  - sectionName: One of the static tab IDs returned in the `tabs` array from Get College By Id
+
+  Supported sectionName values (college-level static tabs only):
   college_overview, course_info, admission_policy, placements, fees,
   financial_aid, student_housing, exam_policy, faculty, review, commute,
   library, clubs_associations, student_code_of_conduct, happenings,
-  institutions_across_world, alliance, other_courses_offered,
-  demo_graphics.
+  institutions_across_world, alliance, other_courses_offered, demo_graphics
+
+  Response:
+  {
+    "sectionName": "college_overview",
+    "sectionId": "college_overview",
+    "sectionKey": "college_overview",
+    "data": { ... section content ... }
+  }
+
+  Returns 404 if the section does not exist or is disabled for this college.
 }

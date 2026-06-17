@@ -146,7 +146,7 @@ export interface PublicCollegeSummary {
     };
   };
   course: PublicCourse;
-  tabListing: string[];
+  tabListing: { id: string; name: string }[];
 }
 
 function buildQueryString(query: PublicCollegeSummaryQuery) {
