@@ -22,6 +22,7 @@ export const collegeOnboardingSchemas = {
     status: z.enum(["pending", "approved", "rejected"]),
     review_remarks: z.string().trim().optional(),
     enableInstitutionGroup: z.boolean().optional(),
+    universityId: z.string().uuid().optional(),
   }),
 
   list: z.object({

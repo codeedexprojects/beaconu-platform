@@ -111,6 +111,8 @@ type UniversityMetadataForm = {
       district: string;
       state: string;
       pincode: string;
+      affiliated_colleges: string;
+      autonomous_colleges: string;
     };
     disciplineStreamIds: string[];
     videosJson: string;
@@ -217,6 +219,8 @@ const EMPTY_METADATA_FORM: UniversityMetadataForm = {
       district: "",
       state: "",
       pincode: "",
+      affiliated_colleges: "",
+      autonomous_colleges: "",
     },
     disciplineStreamIds: [],
     videosJson: "[]",
@@ -301,6 +305,8 @@ function toMetadataForm(
         district: asString(details.district),
         state: asString(details.state),
         pincode: asString(details.pincode),
+        affiliated_colleges: asString(details.affiliated_colleges),
+        autonomous_colleges: asString(details.autonomous_colleges),
       },
       disciplineStreamIds: extractDisciplineStreamIds(overview.discipline),
       videosJson: JSON.stringify(normalizeToArray(overview.videos), null, 2),
@@ -384,6 +390,10 @@ function buildStructuredMetadata(
         district: form.overview.university_details.district,
         state: form.overview.university_details.state,
         pincode: form.overview.university_details.pincode,
+        affiliated_colleges:
+          form.overview.university_details.affiliated_colleges,
+        autonomous_colleges:
+          form.overview.university_details.autonomous_colleges,
       },
       discipline: selectedStreams,
       videos: parseJsonArray(form.overview.videosJson, "Videos"),
@@ -1277,11 +1287,53 @@ export default function UniversitiesPage() {
                         }
                         placeholder="Pincode"
                       />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={
+                          createMetadataForm.overview.university_details
+                            .affiliated_colleges
+                        }
+                        onChange={(e) =>
+                          setCreateMetadataForm((prev) => ({
+                            ...prev,
+                            overview: {
+                              ...prev.overview,
+                              university_details: {
+                                ...prev.overview.university_details,
+                                affiliated_colleges: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                        placeholder="Affiliated colleges count"
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={
+                          createMetadataForm.overview.university_details
+                            .autonomous_colleges
+                        }
+                        onChange={(e) =>
+                          setCreateMetadataForm((prev) => ({
+                            ...prev,
+                            overview: {
+                              ...prev.overview,
+                              university_details: {
+                                ...prev.overview.university_details,
+                                autonomous_colleges: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                        placeholder="Autonomous colleges count"
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Disciple (Streams)</Label>
+                    <Label>Find Academic Offerings</Label>
                     <div className="space-y-2 rounded-md border border-input bg-background p-3">
                       <p className="text-xs text-muted-foreground">
                         Select one or more streams for this university.
@@ -2023,11 +2075,53 @@ export default function UniversitiesPage() {
                         }
                         placeholder="Pincode"
                       />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={
+                          editMetadataForm.overview.university_details
+                            .affiliated_colleges
+                        }
+                        onChange={(e) =>
+                          setEditMetadataForm((prev) => ({
+                            ...prev,
+                            overview: {
+                              ...prev.overview,
+                              university_details: {
+                                ...prev.overview.university_details,
+                                affiliated_colleges: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                        placeholder="Affiliated colleges count"
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={
+                          editMetadataForm.overview.university_details
+                            .autonomous_colleges
+                        }
+                        onChange={(e) =>
+                          setEditMetadataForm((prev) => ({
+                            ...prev,
+                            overview: {
+                              ...prev.overview,
+                              university_details: {
+                                ...prev.overview.university_details,
+                                autonomous_colleges: e.target.value,
+                              },
+                            },
+                          }))
+                        }
+                        placeholder="Autonomous colleges count"
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Disciple (Streams)</Label>
+                    <Label>Find Academic Offerings</Label>
                     <div className="space-y-2 rounded-md border border-input bg-background p-3">
                       <p className="text-xs text-muted-foreground">
                         Select one or more streams for this university.
