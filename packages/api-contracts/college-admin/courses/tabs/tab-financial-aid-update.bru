@@ -1,0 +1,87 @@
+meta {
+  name: Tab - Financial Aid (Update)
+  type: http
+  seq: 19
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/financial_aid
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "financial_aid",
+      "merit_scholarship": {
+        "title": "Merit Scholarship",
+        "calculator": {
+          "port_of_entry_options": [],
+          "rank_range_options": []
+        },
+        "terms_and_conditions": [
+          "Students can avail 25% of scholarship based on the entered rank/score.",
+          "Applicable only for the first year. Subsequent years require CGPA 8.0+.",
+          "Offered on a first-come, first-serve basis subject to seat availability."
+        ],
+        "final_summary": {
+          "max_scholarship": "Rs1,50,000",
+          "net_payable_fees": "Rs2,45,000"
+        }
+      },
+      "financial_concessions": {
+        "total_types": 4,
+        "items": [
+          {
+            "name": "Defence personnel",
+            "discount_percent": 20,
+            "details": {
+              "eligibility_criteria": [],
+              "scholarship_amount": "",
+              "net_payable": ""
+            }
+          },
+          {
+            "name": "Divyaang (PwD)",
+            "discount_percent": 20,
+            "details": {
+              "eligibility_criteria": [],
+              "scholarship_amount": "",
+              "net_payable": ""
+            }
+          },
+          {
+            "name": "Alumni",
+            "discount_percent": 15,
+            "details": {
+              "eligibility_criteria": [
+                "Must have completed a full-time degree program.",
+                "Valid alumni association membership card required."
+              ],
+              "scholarship_amount": "Rs75,000",
+              "net_payable": "Rs3,20,000"
+            }
+          },
+          {
+            "name": "Upfront Fees Concession",
+            "discount_percent": 5,
+            "details": {
+              "eligibility_criteria": [],
+              "scholarship_amount": "",
+              "net_payable": ""
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
+docs {
+  Updates financial_aid tab with dynamic JSON data.
+}

@@ -1,4 +1,5 @@
 import { NotFoundError, ConflictError } from "@/shared/errors";
+import { prisma } from "@beaconu/db";
 import { CollegeRegistrationRepository } from "../repositories/college-registration.repository";
 import {
   UpdateCollegeProfileData,
@@ -72,6 +73,102 @@ export class CollegeRegistrationService {
     return this.isRecord(college.profileSections)
       ? (college.profileSections as Record<string, unknown>)
       : {};
+  }
+
+  private static async buildDynamicCommuteSection(collegeId: string) {
+    const routes = await prisma.commuteRoute.findMany({
+      where: { collegeId },
+      include: {
+        stops: {
+          orderBy: { stopOrder: "asc" },
+        },
+        buses: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      id: "commute",
+      enabled: true,
+      title: "Commute",
+      routes,
+      route_count: routes.length,
+    };
+  }
+
+  private static async buildDynamicInstitutionsSection(collegeId: string) {
+    const membership =
+      await InstitutionGroupService.getMyGroupMembership(collegeId);
+
+    if (!membership) {
+      return {
+        id: "institutions_across_world",
+        enabled: true,
+        title: "Institution Across the World",
+        institutions: [],
+        group: null,
+      };
+    }
+
+    const group =
+      membership.type === "owner"
+        ? membership.group
+        : membership.membership.group;
+
+    const institutions = (group.members ?? []).map((member) => ({
+      id: member.college.id,
+      name: member.college.name,
+      slug: member.college.slug,
+      code: member.college.code,
+      city: member.college.city,
+      state: member.college.state,
+      logoUrl: member.college.logoUrl,
+      role: member.role,
+      joinedAt: member.joinedAt,
+      joinedVia: member.joinedVia,
+    }));
+
+    return {
+      id: "institutions_across_world",
+      enabled: true,
+      title: "Institution Across the World",
+      institutions,
+      group: {
+        id: group.id,
+        name: group.name,
+        groupCode: group.groupCode,
+        status: group.status,
+      },
+    };
+  }
+
+  private static async hydrateRegistrationSections(
+    collegeId: string,
+    sections: Record<string, unknown>,
+  ) {
+    const [commuteSection, institutionsSection] = await Promise.all([
+      this.buildDynamicCommuteSection(collegeId),
+      this.buildDynamicInstitutionsSection(collegeId),
+    ]);
+
+    return {
+      ...sections,
+      commute: {
+        ...(this.isRecord(sections.commute)
+          ? (sections.commute as Record<string, unknown>)
+          : {}),
+        ...commuteSection,
+      },
+      institutions_across_world: {
+        ...(this.isRecord(sections.institutions_across_world)
+          ? (sections.institutions_across_world as Record<string, unknown>)
+          : {}),
+        ...institutionsSection,
+      },
+    };
   }
 
   private static asText(value: unknown) {
@@ -287,7 +384,8 @@ export class CollegeRegistrationService {
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
 
-    return this.getProfileSectionsRecord(college);
+    const sections = this.getProfileSectionsRecord(college);
+    return this.hydrateRegistrationSections(collegeId, sections);
   }
 
   static async updateProfile(

@@ -1,0 +1,72 @@
+meta {
+  name: Tab - Review (Update)
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/review
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "review",
+      "rating_summary": {
+        "average_rating": 4.5,
+        "total_reviews": 2909,
+        "rating_breakdown": [
+          { "emoji": "😍", "count": 1000 },
+          { "emoji": "😁", "count": 500 },
+          { "emoji": "🙂", "count": 256 },
+          { "emoji": "😐", "count": 102 },
+          { "emoji": "😠", "count": 23 }
+        ]
+      },
+      "review_categories": [
+        { "label": "Faculty & Course", "count": null },
+        { "label": "Campus Life", "count": 44 }
+      ],
+      "reviews": [
+        {
+          "reviewer_name": "Anonymous",
+          "avatar": "",
+          "date": "October 10, 2025",
+          "rating": null,
+          "category": "",
+          "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+        },
+        {
+          "reviewer_name": "Anonymous",
+          "avatar": "",
+          "date": "October 10, 2025",
+          "rating": null,
+          "category": "",
+          "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+        },
+        {
+          "reviewer_name": "Anonymous",
+          "avatar": "",
+          "date": "October 10, 2025",
+          "rating": null,
+          "category": "",
+          "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+        }
+      ],
+      "pagination": {
+        "has_more": true,
+        "load_more_label": "Load more"
+      }
+    }
+  }
+}
+
+docs {
+  Updates review tab with dynamic JSON data.
+}

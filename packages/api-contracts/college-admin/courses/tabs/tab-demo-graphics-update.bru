@@ -1,0 +1,74 @@
+meta {
+  name: Tab - Demo Graphics (Update)
+  type: http
+  seq: 24
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/demo_graphics
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "demo_graphics",
+      "age_distribution": {
+        "description": "Students age groups across all years",
+        "data": [
+          { "range": "18 - 22 years", "percent": 64 },
+          { "range": "23 - 26 years", "percent": 22 },
+          { "range": "27 - 30 years", "percent": 10 },
+          { "range": "30+ years", "percent": 4 }
+        ]
+      },
+      "gender_diversity": [
+        { "label": "Male", "percent": 60 },
+        { "label": "Female", "percent": 38 },
+        { "label": "Others", "percent": 2 }
+      ],
+      "work_experience": [
+        {
+          "label": "Freshers",
+          "percent": 45,
+          "description": "Directly after undergrad"
+        },
+        {
+          "label": "1 - 3 Years",
+          "percent": 35,
+          "description": "Junior professionals"
+        },
+        {
+          "label": "4+ Years",
+          "percent": 20,
+          "description": "Senior/Leadership roles"
+        }
+      ],
+      "international_presence": [
+        { "country": "India", "percent": 42, "flag": "" },
+        { "country": "UAE", "percent": 18, "flag": "" },
+        { "country": "China", "percent": 12, "flag": "🇨🇳" },
+        { "country": "United Kingdom", "percent": 8, "flag": "🇬🇧" },
+        { "country": "Germany", "percent": 6, "flag": "🇩🇪" },
+        { "country": "Canada", "percent": 5, "flag": "🇨🇦" }
+      ],
+      "national_presence": [
+        { "state": "Kerala", "percent": 42, "flag": "" },
+        { "state": "Tamil Nadu", "percent": 18, "flag": "" },
+        { "state": "China", "percent": 12, "flag": "🇨🇳" },
+        { "state": "United Kingdom", "percent": 8, "flag": "🇬🇧" },
+        { "state": "Germany", "percent": 6, "flag": "🇩🇪" },
+        { "state": "Canada", "percent": 5, "flag": "🇨🇦" }
+      ]
+    }
+  }
+}
+
+docs {
+  Updates demo_graphics tab with dynamic JSON data.
+}

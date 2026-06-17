@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const REGISTRATION_TAB_IDS = [
+  "student_code_of_conduct",
+  "happenings",
+  "institutions_across_world",
+  "commute",
+  "college_overview",
+] as const;
+
 export const COURSE_CREATE_TAB_IDS = [
   "course_info",
   "admission_policy",
@@ -28,6 +36,18 @@ const courseCreateTabsSchema = z
   )
   .transform((tabs) => Array.from(new Set(tabs)));
 
+const registrationTabsSchema = z
+  .array(z.string().trim().min(1))
+  .min(1, "At least one registration tab is required")
+  .refine(
+    (tabs) => tabs.every((tab) => REGISTRATION_TAB_IDS.includes(tab as any)),
+    {
+      message: `Invalid tab in registration. Valid values: ${REGISTRATION_TAB_IDS.join(", ")}`,
+    },
+  )
+  .transform((tabs) => Array.from(new Set(tabs)))
+  .optional();
+
 const courseCreateTabDataSchema = z
   .object({
     course_info: z.unknown().optional(),
@@ -47,6 +67,16 @@ const courseCreateTabDataSchema = z
   })
   .partial();
 
+const registrationTabDataSchema = z
+  .object({
+    student_code_of_conduct: z.unknown().optional(),
+    happenings: z.unknown().optional(),
+    institutions_across_world: z.unknown().optional(),
+    commute: z.unknown().optional(),
+    college_overview: z.unknown().optional(),
+  })
+  .partial();
+
 // ── College Profile ──────────────────────────────────────────────────────────
 export const updateCollegeProfileSchema = z.object({
   name: z.string().trim().min(2).max(255).optional(),
@@ -55,12 +85,15 @@ export const updateCollegeProfileSchema = z.object({
   domain: z.string().trim().max(255).optional().nullable(),
   logoUrl: z.string().url().or(z.literal("")).optional().nullable(),
   coverImageUrl: z.string().url().or(z.literal("")).optional().nullable(),
+  leadId: z.string().optional().nullable(),
+  addressFromLead: z.boolean().optional(),
   address: z.string().trim().optional().nullable(),
   city: z.string().trim().max(100).optional().nullable(),
   district: z.string().trim().max(100).optional().nullable(),
   state: z.string().trim().max(100).optional().nullable(),
   pinCode: z.string().trim().max(10).optional().nullable(),
   requestedGroupCode: z.string().trim().max(30).optional().nullable(),
+  registrationTabs: registrationTabsSchema,
   profileSections: z.record(z.string(), z.unknown()).optional(),
   settings: z.record(z.string(), z.unknown()).optional(),
 });

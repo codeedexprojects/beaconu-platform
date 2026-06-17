@@ -1,0 +1,137 @@
+meta {
+  name: Tab - Fees (Update)
+  type: http
+  seq: 18
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/fees
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "fees",
+      "fee_structure_pdf": {
+        "label": "Detailed breakdown PDF",
+        "size": "2.4 MB",
+        "url": ""
+      },
+      "filters": {
+        "quota_categories": ["Merit Quota"],
+        "genders": ["Boys", "Girls"]
+      },
+      "fee_details": [
+        {
+          "quota": "Merit Quota",
+          "gender": "Boys",
+          "tuition_fees": [
+            { "year": "1st Year", "amount": "Rs 1,25,276" },
+            { "year": "2nd Year", "amount": "Rs 1,25,276" },
+            { "year": "3rd Year", "amount": "Rs 1,25,276" },
+            { "year": "4th Year", "amount": "Rs 1,25,276" }
+          ],
+          "one_time_payable_fees": [
+            { "label": "Application Fees", "amount": "Rs 1,500" },
+            { "label": "Admission Fees", "amount": "Rs 15,000" }
+          ],
+          "additional_fees": [
+            { "label": "Examination Fees", "amount": "Rs 3,500" },
+            { "label": "Library Fees", "amount": "Rs 1,200" },
+            { "label": "Lab Fees", "amount": "Rs 2,800" },
+            { "label": "Sports Fees", "amount": "Rs 1,500" }
+          ],
+          "deadlines_and_installments": [
+            {
+              "label": "1st Installment (Booking)",
+              "due": "Within 10 Days",
+              "amount": "Rs 25,000"
+            },
+            {
+              "label": "2nd Installment",
+              "due": "Before Classes Start",
+              "amount": "Rs 54,638"
+            },
+            {
+              "label": "Final Installment",
+              "due": "After 60 Days",
+              "amount": "Rs 54,638"
+            }
+          ],
+          "fees_summary": {
+            "full_course_fee": "INR 1,48,750",
+            "booking_amount": "INR 6,198"
+          }
+        },
+        {
+          "quota": "Merit Quota",
+          "gender": "Girls",
+          "tuition_fees": [
+            { "year": "1st Year", "amount": "Rs 1,25,276" },
+            { "year": "2nd Year", "amount": "Rs 1,25,276" },
+            { "year": "3rd Year", "amount": "Rs 1,25,276" },
+            { "year": "4th Year", "amount": "Rs 1,25,276" }
+          ],
+          "one_time_payable_fees": [
+            { "label": "Application Fees", "amount": "Rs 1,500" },
+            { "label": "Admission Fees", "amount": "Rs 15,000" }
+          ],
+          "additional_fees": [
+            { "label": "Examination Fees", "amount": "Rs 3,500" },
+            { "label": "Library Fees", "amount": "Rs 1,200" },
+            { "label": "Lab Fees", "amount": "Rs 2,800" },
+            { "label": "Sports Fees", "amount": "Rs 1,500" }
+          ],
+          "deadlines_and_installments": [
+            {
+              "label": "1st Installment (Booking)",
+              "due": "Within 10 Days",
+              "amount": "Rs 25,000"
+            },
+            {
+              "label": "2nd Installment",
+              "due": "Before Classes Start",
+              "amount": "Rs 54,638"
+            },
+            {
+              "label": "Final Installment",
+              "due": "After 60 Days",
+              "amount": "Rs 54,638"
+            }
+          ],
+          "fees_summary": {
+            "full_course_fee": "INR 1,48,750",
+            "booking_amount": "INR 6,198"
+          }
+        }
+      ],
+      "whats_included": [
+        "Tuition Fees",
+        "Library Access",
+        "Lab Materials",
+        "Basic Medical Aid"
+      ],
+      "whats_excluded": [
+        "Uniform Dress",
+        "University Exam Fees",
+        "Transportation",
+        "Convocation Fee"
+      ],
+      "refund_policy": [
+        "Booking amount refundable within limited time",
+        "Processing charges may apply",
+        "Refund processed within 7-10 working days"
+      ]
+    }
+  }
+}
+
+docs {
+  Updates fees tab with dynamic JSON data.
+}
