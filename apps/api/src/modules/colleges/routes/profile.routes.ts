@@ -27,6 +27,13 @@ router.get(
   CollegeRegistrationController.getProfileSections,
 );
 
+router.get(
+  "/profile/sections/:tabId",
+  ...staffAuth,
+  authorizeAny("profile.view", "profile.edit"),
+  CollegeRegistrationController.getProfileSection,
+);
+
 router.patch(
   "/profile",
   ...staffWriteAuth,

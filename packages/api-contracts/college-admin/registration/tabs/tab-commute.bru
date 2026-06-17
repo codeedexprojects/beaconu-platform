@@ -1,0 +1,19 @@
+meta {
+  name: Tab - Commute
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/commute
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches only the `commute` section.
+}

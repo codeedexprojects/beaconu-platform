@@ -1,0 +1,33 @@
+meta {
+  name: Set Registration Tabs
+  type: http
+  seq: 0
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "registrationTabs": [
+      "student_code_of_conduct",
+      "happenings",
+      "institutions_across_world",
+      "commute",
+      "college_overview"
+    ]
+  }
+}
+
+docs {
+  Sends the registration tabs list into the profile API.
+
+  API: PATCH /api/v1/college-admin/profile
+}

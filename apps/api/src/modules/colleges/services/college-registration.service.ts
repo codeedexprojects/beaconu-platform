@@ -388,6 +388,20 @@ export class CollegeRegistrationService {
     return this.hydrateRegistrationSections(collegeId, sections);
   }
 
+  static async getProfileSection(collegeId: string, tabId: string) {
+    const sections = (await this.getProfileSections(collegeId)) as Record<
+      string,
+      unknown
+    >;
+    const section = sections[tabId];
+
+    if (!section) {
+      throw new NotFoundError("College profile section not found");
+    }
+
+    return section;
+  }
+
   static async updateProfile(
     collegeId: string,
     data: UpdateCollegeProfileData,

@@ -43,12 +43,29 @@ function parseTimeOnly(value: string): Date {
 }
 
 /** Formats a `@db.Time` value (stored as a Date) as "HH:MM". */
-function formatTimeOnly(
-  value: Date | string | null | undefined,
-): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toISOString().slice(11, 16);
+function formatTimeOnly(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(11, 16);
+  }
+
+  if (typeof value === "string") {
+    if (/^\d{2}:\d{2}/.test(value)) {
+      return value.slice(0, 5);
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(11, 16);
+    }
+
+    return value;
+  }
+
+  return null;
 }
 
 function formatTime12h(value: Date | string | null | undefined): string {

@@ -48,6 +48,8 @@ export class UniversityPublicController {
   static async getById(req: Request, res: Response): Promise<void> {
     const { id } = universitySchemas.idParam.parse(req.params);
     const university = await UniversityQuery.getActiveById(id);
-    res.status(200).json(ApiResponse.success("University fetched", university));
+    res
+      .status(200)
+      .json(ApiResponse.success("University fetched", [university]));
   }
 }

@@ -28,7 +28,8 @@ export function authenticate(
     req.permissions = payload.permissions;
     req.counsellorType = payload.counsellorType;
     next();
-  } catch {
+  } catch (error) {
+    console.error("JWT Verification Error:", error);
     next(new UnauthorizedError("Invalid or expired token"));
   }
 }

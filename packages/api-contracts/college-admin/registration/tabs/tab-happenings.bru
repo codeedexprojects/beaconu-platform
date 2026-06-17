@@ -1,0 +1,19 @@
+meta {
+  name: Tab - Happenings
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/happenings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches only the `happenings` section.
+}
