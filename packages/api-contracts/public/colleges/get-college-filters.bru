@@ -1,7 +1,7 @@
 meta {
   name: Get College Filters
   type: http
-  seq: 8
+  seq: 6
 }
 
 get {
@@ -15,13 +15,14 @@ query {
 }
 
 docs {
-  Returns filter options for college listings.
-  Includes distinct states from active colleges.
+  Returns filter options for the college listing page.
   No authentication required.
 
   Query Parameters:
-  - search: Filter states by name (optional), e.g. "Karn" → ["Karnataka"]
+  - search: Filter states by name prefix (optional), e.g. "Karn" → ["Karnataka"]
 
   Response:
-  - states: ["Karnataka", "Maharashtra", ...]
+  {
+    "states": ["Karnataka", "Maharashtra", ...]
+  }
 }

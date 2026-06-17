@@ -1,7 +1,7 @@
 meta {
   name: Get College By Id
   type: http
-  seq: 4
+  seq: 2
 }
 
 get {
@@ -13,14 +13,39 @@ get {
 docs {
   Returns full public details for a college by its ID.
 
-  Response includes: university info, active campuses, active courses
-  (with discipline/stream/studyLevel/programType), institution group
-  membership, related sister colleges, `collegeDetails.profileSections`,
-  and top-level `tabs`.
+  Response shape:
+  {
+    "collegeDetails": {
+      "id": "CLG-1",
+      "name": "...",
+      "slug": "...",
+      "logoUrl": "...",
+      "coverImageUrl": "...",
+      "address": "...",
+      "city": "...",
+      "state": "...",
+      "district": "...",
+      "pinCode": "...",
+      "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { "id": "...", "name": "...", "slug": "..." } },
+      "campuses": [...],
+      "courses": [...],
+      "profileSections": { ... }
+    },
+    "tabs": [
+      { "id": "college_overview", "name": "College Overview" },
+      { "id": "course_info", "name": "Course Info" },
+      { "id": "placements", "name": "Placements" }
+    ],
+    "totalCourses": 5,
+    "instituteType": "...",
+    "campusAmbassadors": [...]
+  }
 
-  `tabs` is a flat array of enabled section IDs in id-style format
-  (snake_case). If a section id is missing, the section key is used.
+  `tabs` is an array of enabled college-level static sections only — { id, name } objects.
+  These are tabs under the college profile (e.g. college_overview, placements, fees)
+  and do NOT include course-level tabs (highlights, curriculum, etc.).
+  Disabled sections are excluded.
 
   Note: `settings` is excluded from the response.
-  To get individual profile sections, use the Get College Section endpoint.
+  To fetch the content of a specific tab, use the Get College Section endpoint.
 }
