@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "@/shared/middleware/authenticate";
-import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
+import { authorizeUserType } from "@/shared/middleware/authorize";
 import { validate } from "@/shared/middleware/validate";
 import {
   registerAssociateEmployeeSchema,
@@ -13,7 +13,6 @@ import {
   updateServiceChargeSchema,
 } from "../validators/blink.validator";
 import { AssociateAdminController } from "../controllers/associate-admin.controller";
-import { USER_TYPES } from "@/shared/constants";
 
 const router: Router = Router();
 

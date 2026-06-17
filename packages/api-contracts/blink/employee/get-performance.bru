@@ -1,0 +1,30 @@
+meta {
+  name: Get Own Performance
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/performance
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns the performance summary for the currently authenticated associate employee.
+  Requires: blink_employee access token.
+
+  Response includes:
+    referrals.total          — total referrals created by this employee
+    referrals.byStatus       — breakdown: registered | confirmed | rejected | dropped_out
+    referrals.conversionRate — confirmed / total (4 decimal places, 0 if no referrals)
+    commission.earned        — sum of credited commissions (INR)
+    commission.pending       — sum of pending commissions (INR)
+
+  Tables: blink_users, referrals, commissions
+}

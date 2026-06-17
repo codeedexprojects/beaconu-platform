@@ -1,0 +1,32 @@
+meta {
+  name: Get Profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/profile
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("employeeId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Returns the profile of the currently authenticated associate employee.
+  Requires: blink_employee access token.
+
+  Table: blink_users
+}

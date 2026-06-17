@@ -1,0 +1,31 @@
+meta {
+  name: List Countries
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/countries?page=1&limit=300
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 300
+  search:
+}
+
+docs {
+  Returns a paginated list of countries.
+  No authentication required.
+
+  Query params:
+  - search (optional): filter by country name (case-insensitive substring match)
+  - page (default: 1)
+  - limit (default: 300, max: 300)
+
+  Response: { code: string, name: string, dialCode: string }[]
+  Meta: { total, page, limit, hasNext }
+
+  Data source: static JSON — no DB query.
+}

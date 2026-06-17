@@ -5,7 +5,10 @@ import type {
   EmployeeWithRanking,
   ServiceChargeItem,
 } from "@beaconu/types";
-import type { ServiceChargeQuery } from "../validators/blink.validator";
+import type {
+  ServiceChargeQuery,
+  CollegeListQuery,
+} from "../validators/blink.validator";
 
 export class BlinkQuery {
   static async listReferralsByAdmin(
@@ -17,6 +20,96 @@ export class BlinkQuery {
 
     const where = {
       blinkUser: { associateParentId: adminId },
+      ...(status ? { status } : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.referral.count({ where }),
+      prisma.referral.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          student: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarUrl: true,
+            },
+          },
+          blinkUser: {
+            select: { id: true, fullName: true, email: true },
+          },
+          referralCode: {
+            include: {
+              college: { select: { id: true, name: true } },
+              course: { select: { id: true, name: true } },
+            },
+          },
+          commission: {
+            select: { id: true, netPayout: true, status: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      referrals: rows.map((r) => ({
+        id: r.id,
+        student: {
+          id: r.student.id,
+          fullName: r.student.fullName,
+          email: r.student.email ?? null,
+          phoneNumber: r.student.phoneNumber ?? null,
+          avatarUrl: r.student.avatarUrl ?? null,
+        },
+        employee: {
+          id: r.blinkUser.id,
+          fullName: r.blinkUser.fullName,
+          email: r.blinkUser.email,
+        },
+        college: {
+          id: r.referralCode.college.id,
+          name: r.referralCode.college.name,
+        },
+        course: r.referralCode.course
+          ? {
+              id: r.referralCode.course.id,
+              name: r.referralCode.course.name,
+            }
+          : null,
+        status: r.status,
+        commission: r.commission
+          ? {
+              id: r.commission.id,
+              netPayout: Number(r.commission.netPayout),
+              status: r.commission.status,
+            }
+          : null,
+        createdAt: r.createdAt.toISOString(),
+        statusUpdatedAt: r.statusUpdatedAt?.toISOString() ?? null,
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        hasNext: skip + limit < total,
+      },
+    };
+  }
+
+  static async listReferralsByEmployee(
+    employeeId: string,
+    filters: { status?: string; page: number; limit: number },
+  ): Promise<{ referrals: ReferralListItem[]; meta: PaginationMeta }> {
+    const { status, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      blinkUserId: employeeId,
       ...(status ? { status } : {}),
     };
 
@@ -140,6 +233,229 @@ export class BlinkQuery {
       confirmedCount: item.confirmedCount,
       commissionEarned: item.commissionEarned,
     }));
+  }
+
+  static async listCollegesForEmployee(filters: CollegeListQuery) {
+    const { search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      status: "active",
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { city: { contains: search, mode: "insensitive" as const } },
+              { state: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.college.count({ where }),
+      prisma.college.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          code: true,
+          logoUrl: true,
+          city: true,
+          state: true,
+          university: {
+            select: { id: true, name: true, logoUrl: true },
+          },
+          _count: { select: { courses: { where: { status: "active" } } } },
+        },
+      }),
+    ]);
+
+    return {
+      colleges: rows.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        code: c.code,
+        logoUrl: c.logoUrl ?? null,
+        city: c.city ?? null,
+        state: c.state ?? null,
+        university: c.university
+          ? {
+              id: c.university.id,
+              name: c.university.name,
+              logoUrl: c.university.logoUrl ?? null,
+            }
+          : null,
+        totalCourses: c._count.courses,
+      })),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  static async listCoursesForEmployee(collegeId: string) {
+    const college = await prisma.college.findUnique({
+      where: { id: collegeId },
+      select: { id: true, name: true },
+    });
+    if (!college) return null;
+
+    const courses = await prisma.course.findMany({
+      where: { collegeId, status: "active" },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        duration: true,
+        studyMode: true,
+        intakeCapacity: true,
+        eligibility: true,
+        discipline: {
+          select: {
+            id: true,
+            name: true,
+            stream: { select: { id: true, name: true } },
+          },
+        },
+        studyLevel: { select: { id: true, name: true } },
+        programType: { select: { id: true, name: true } },
+      },
+    });
+
+    return { college: { id: college.id, name: college.name }, courses };
+  }
+
+  static async getCourseDetailForEmployee(collegeId: string, courseId: string) {
+    const course = await prisma.course.findFirst({
+      where: { id: courseId, collegeId, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        duration: true,
+        eligibility: true,
+        intakeCapacity: true,
+        studyMode: true,
+        highlights: true,
+        curriculum: true,
+        careerOpportunities: true,
+        eligibilityCriteria: true,
+        faqs: true,
+        discipline: {
+          select: {
+            id: true,
+            name: true,
+            stream: { select: { id: true, name: true } },
+          },
+        },
+        studyLevel: { select: { id: true, name: true } },
+        programType: { select: { id: true, name: true } },
+        campus: {
+          select: { id: true, name: true, city: true, state: true },
+        },
+        quotas: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            quotaName: true,
+            seats: true,
+            tuitionFeeOverride: true,
+          },
+        },
+        feeStructures: {
+          where: { isActive: true },
+          orderBy: [{ academicYear: "desc" }, { feeCategory: "asc" }],
+          select: {
+            id: true,
+            academicYear: true,
+            feeCategory: true,
+            amount: true,
+            yearOrSemester: true,
+            instalmentAllowed: true,
+            instalmentConfig: true,
+            gender: true,
+            oneTimeFees: true,
+            additionalFees: true,
+            whatsIncluded: true,
+            whatsExcluded: true,
+            feePdfUrl: true,
+          },
+        },
+        serviceChargeConfigs: {
+          where: { isActive: true },
+          orderBy: { academicYear: "desc" },
+          select: {
+            id: true,
+            academicYear: true,
+            studentCategory: true,
+            grossAmount: true,
+            gstPercentage: true,
+            gstAmount: true,
+            netPayout: true,
+            termsAndConditions: true,
+          },
+        },
+      },
+    });
+
+    if (!course) return null;
+
+    return {
+      id: course.id,
+      name: course.name,
+      code: course.code,
+      duration: course.duration ?? null,
+      eligibility: course.eligibility ?? null,
+      intakeCapacity: course.intakeCapacity ?? null,
+      studyMode: course.studyMode,
+      discipline: course.discipline,
+      studyLevel: course.studyLevel,
+      programType: course.programType,
+      campus: course.campus ?? null,
+      highlights: course.highlights,
+      curriculum: course.curriculum,
+      careerOpportunities: course.careerOpportunities,
+      eligibilityCriteria: course.eligibilityCriteria,
+      faqs: course.faqs,
+      quotas: course.quotas.map((q) => ({
+        id: q.id,
+        quotaName: q.quotaName,
+        seats: q.seats,
+        tuitionFeeOverride: q.tuitionFeeOverride
+          ? Number(q.tuitionFeeOverride)
+          : null,
+      })),
+      feeStructures: course.feeStructures.map((f) => ({
+        id: f.id,
+        academicYear: f.academicYear,
+        feeCategory: f.feeCategory,
+        amount: Number(f.amount),
+        yearOrSemester: f.yearOrSemester ?? null,
+        instalmentAllowed: f.instalmentAllowed,
+        instalmentConfig: f.instalmentConfig,
+        gender: f.gender ?? null,
+        oneTimeFees: f.oneTimeFees,
+        additionalFees: f.additionalFees,
+        whatsIncluded: f.whatsIncluded,
+        whatsExcluded: f.whatsExcluded,
+        feePdfUrl: f.feePdfUrl ?? null,
+      })),
+      commissions: course.serviceChargeConfigs.map((s) => ({
+        id: s.id,
+        academicYear: s.academicYear,
+        studentCategory: s.studentCategory,
+        grossAmount: Number(s.grossAmount),
+        gstPercentage: Number(s.gstPercentage),
+        gstAmount: Number(s.gstAmount),
+        netPayout: Number(s.netPayout),
+        termsAndConditions: s.termsAndConditions ?? null,
+      })),
+    };
   }
 
   static async listServiceCharges(

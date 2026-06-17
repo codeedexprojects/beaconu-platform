@@ -175,6 +175,7 @@ export class BlinkService {
       fullName: user.fullName,
       phoneNumber: user.phoneNumber,
       agencyName: user.agencyName,
+      associateParentId: user.associateParentId,
       collegeId: user.collegeId,
       roleSlug: user.blinkRole.slug,
       status: user.status,
@@ -222,10 +223,76 @@ export class BlinkService {
     };
   }
 
+  static async getOwnPerformance(employeeId: string) {
+    const employee = await BlinkRepository.findOwnPerformanceData(employeeId);
+    if (!employee) throw new NotFoundError("User not found");
+
+    const { referrals, commissions } = employee;
+    const total = referrals.length;
+    const byStatus = {
+      registered: referrals.filter((r) => r.status === "registered").length,
+      confirmed: referrals.filter((r) => r.status === "confirmed").length,
+      rejected: referrals.filter((r) => r.status === "rejected").length,
+      dropped_out: referrals.filter((r) => r.status === "dropped_out").length,
+    };
+    const commissionEarned = commissions
+      .filter((c) => c.status === "credited")
+      .reduce((sum, c) => sum + Number(c.netPayout), 0);
+    const commissionPending = commissions
+      .filter((c) => c.status === "pending")
+      .reduce((sum, c) => sum + Number(c.netPayout), 0);
+
+    return {
+      referrals: {
+        total,
+        byStatus,
+        conversionRate:
+          total > 0 ? Number((byStatus.confirmed / total).toFixed(4)) : 0,
+      },
+      commission: {
+        earned: commissionEarned,
+        pending: commissionPending,
+      },
+    };
+  }
+
   static async getStudentByReferral(adminId: string, referralId: string) {
     const row = await BlinkRepository.findReferralWithStudentForAdmin(
       referralId,
       adminId,
+    );
+    if (!row) throw new NotFoundError("Referral not found");
+
+    return {
+      id: row.student.id,
+      fullName: row.student.fullName,
+      email: row.student.email ?? null,
+      phoneNumber: row.student.phoneNumber ?? null,
+      avatarUrl: row.student.avatarUrl ?? null,
+      status: row.student.status,
+      createdAt: row.student.createdAt.toISOString(),
+      referral: {
+        id: row.id,
+        status: row.status,
+        commission: row.commission
+          ? {
+              id: row.commission.id,
+              netPayout: Number(row.commission.netPayout),
+              status: row.commission.status,
+            }
+          : null,
+        createdAt: row.createdAt.toISOString(),
+      },
+    };
+  }
+
+  static async getStudentByReferralForEmployee(
+    employeeId: string,
+    referralId: string,
+  ) {
+    const row = await BlinkRepository.findReferralWithStudentForEmployee(
+      referralId,
+      employeeId,
     );
     if (!row) throw new NotFoundError("Referral not found");
 
