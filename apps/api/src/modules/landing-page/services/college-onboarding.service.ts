@@ -193,6 +193,7 @@ export class CollegeOnboardingService {
         contactName: existing.contactPersonName,
         city: existing.city ?? null,
         state: existing.state ?? null,
+        universityId: data.universityId ?? null,
         onboardingRequestId: id,
       });
 

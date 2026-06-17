@@ -148,6 +148,7 @@ export default function CollegeLeadsPage() {
     status: string;
     review_remarks?: string;
     enableInstitutionGroup?: boolean;
+    universityId?: string;
   }) => {
     if (!selectedLead) return;
     updateStatus(
@@ -156,6 +157,7 @@ export default function CollegeLeadsPage() {
         status: data.status,
         review_remarks: data.review_remarks,
         enableInstitutionGroup: data.enableInstitutionGroup,
+        universityId: data.universityId || undefined,
       },
       {
         onSuccess: (response) => {

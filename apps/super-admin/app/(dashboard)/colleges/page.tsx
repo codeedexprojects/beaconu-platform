@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Building2,
@@ -17,7 +18,7 @@ import {
   Copy,
   Network,
 } from "lucide-react";
-import Link from "next/link";
+
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -389,6 +390,7 @@ function InstitutionGroupModal({
 // ── Main Page ───────────────────────────────────────────────────────────
 
 export default function CollegesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -537,7 +539,11 @@ export default function CollegesPage() {
                     const link = getCollegeLink(college.slug);
                     const cleanLinkDisplay = link.replace(/^https?:\/\//, "");
                     return (
-                      <TableRow key={college.id}>
+                      <TableRow
+                        key={college.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => router.push(`/colleges/${college.id}`)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {college.logoUrl ? (
@@ -623,26 +629,16 @@ export default function CollegesPage() {
                           </Badge>
                         </TableCell>
 
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs gap-1"
-                              asChild
-                            >
-                              <Link href={`/colleges/${college.id}`}>View</Link>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs gap-1"
-                              onClick={() => setSelectedCollege(college)}
-                            >
-                              <Network className="h-3 w-3" />
-                              Group
-                            </Button>
-                          </div>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs gap-1"
+                            onClick={() => setSelectedCollege(college)}
+                          >
+                            <Network className="h-3 w-3" />
+                            Group
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

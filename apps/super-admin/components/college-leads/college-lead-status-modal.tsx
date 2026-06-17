@@ -3,16 +3,18 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ChevronsUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CollegeLead } from "@/lib/services/college-leads.service";
+import { useUniversities } from "@/hooks/use-universities";
 
 const updateStatusSchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
   review_remarks: z.string().optional(),
   enableInstitutionGroup: z.boolean().optional(),
+  universityId: z.string().optional(),
 });
 
 type UpdateStatusFormData = z.infer<typeof updateStatusSchema>;
@@ -38,14 +40,21 @@ export function CollegeLeadStatusModal({
       status: lead?.status || "pending",
       review_remarks: lead?.reviewRemarks || "",
       enableInstitutionGroup: false,
+      universityId: undefined,
     },
   });
+
+  const { data: universities, isLoading: loadingUniversities } =
+    useUniversities({ status: "active" });
 
   if (!isOpen || !lead) return null;
 
   const handleSubmit = (data: UpdateStatusFormData) => {
     onSubmit(data);
   };
+
+  const isApproved = form.watch("status") === "approved";
+  const isNewApproval = isApproved && !lead.createdCollegeId;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -68,6 +77,7 @@ export function CollegeLeadStatusModal({
               </p>
             </div>
 
+            {/* Status toggle */}
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="flex gap-2">
@@ -95,6 +105,40 @@ export function CollegeLeadStatusModal({
               )}
             </div>
 
+            {/* Affiliated University — only shown when approving a new lead */}
+            {isNewApproval && (
+              <div className="space-y-2">
+                <Label htmlFor="university-select">
+                  Affiliated University{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <div className="relative">
+                  <ChevronsUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <select
+                    id="university-select"
+                    {...form.register("universityId")}
+                    disabled={loadingUniversities}
+                    className="w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  >
+                    <option value="">
+                      {loadingUniversities
+                        ? "Loading universities..."
+                        : "— Select university (optional) —"}
+                    </option>
+                    {universities?.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  The provisioned college will be linked to this university.
+                </p>
+              </div>
+            )}
+
+            {/* Review Remarks */}
             <div className="space-y-2">
               <Label htmlFor="review-remarks">Review Remarks</Label>
               <textarea
@@ -111,7 +155,8 @@ export function CollegeLeadStatusModal({
               )}
             </div>
 
-            {form.watch("status") === "approved" && !lead.createdCollegeId && (
+            {/* Enable institution group */}
+            {isNewApproval && (
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/20">
                 <div className="space-y-0.5">
                   <Label

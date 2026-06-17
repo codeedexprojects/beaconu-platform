@@ -121,6 +121,7 @@ export const collegeLeadsService = {
     status: string,
     review_remarks?: string,
     enableInstitutionGroup?: boolean,
+    universityId?: string,
   ) =>
     api.patch<UpdateStatusResponse>(
       `/api/v1/admin/college-leads/${id}/status`,
@@ -128,6 +129,7 @@ export const collegeLeadsService = {
         status,
         review_remarks,
         enableInstitutionGroup,
+        universityId,
       },
     ),
 };

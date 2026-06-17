@@ -46,17 +46,20 @@ export function useUpdateCollegeLeadStatus() {
       status,
       review_remarks,
       enableInstitutionGroup,
+      universityId,
     }: {
       id: string;
       status: string;
       review_remarks?: string;
       enableInstitutionGroup?: boolean;
+      universityId?: string;
     }) =>
       collegeLeadsService.updateStatus(
         id,
         status,
         review_remarks,
         enableInstitutionGroup,
+        universityId,
       ),
 
     onError: (error) => {
