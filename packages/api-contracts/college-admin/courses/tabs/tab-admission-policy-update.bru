@@ -1,0 +1,105 @@
+meta {
+  name: Tab - Admission Policy (Update)
+  type: http
+  seq: 16
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/admission_policy
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "eligibility_criteria": {
+        "student_types": ["Indian Students", "Foreign Students"],
+        "by_student_type": [
+          {
+            "student_type": "Indian Students",
+            "criteria_by_quota": [
+              {
+                "quota": "Government Quota",
+                "blog_link": "",
+                "criteria": [
+                  {
+                    "label": "Educational Qualification",
+                    "description": "Candidates must have completed 10+2 from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                  },
+                  {
+                    "label": "Age Requirement",
+                    "description": "Minimum 17 years of age as of 31st December. No upper age limit."
+                  },
+                  {
+                    "label": "Academic Grades (10+2)",
+                    "description": "Minimum 50% marks in aggregate in 10+2 / 10+3 from a recognized board."
+                  },
+                  {
+                    "label": "Entrance Grades",
+                    "description": "Must secure a valid rank in NEET/CET with a minimum percentile of 50th (40th for SC/ST/OBC categories)."
+                  }
+                ]
+              },
+              {
+                "quota": "Management Quota",
+                "blog_link": "",
+                "criteria": [
+                  {
+                    "label": "Educational Qualification",
+                    "description": ""
+                  }
+                ]
+              },
+              {
+                "quota": "NRI Quota",
+                "blog_link": "",
+                "criteria": [
+                  {
+                    "label": "Educational Qualification",
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "student_type": "Foreign Students",
+            "criteria_by_quota": [
+              {
+                "quota": "NRI Quota",
+                "blog_link": "",
+                "criteria": [
+                  {
+                    "label": "Educational Qualification",
+                    "description": ""
+                  },
+                  {
+                    "label": "Age Requirement",
+                    "description": ""
+                  },
+                  {
+                    "label": "Valid Passport & Visa",
+                    "description": ""
+                  },
+                  {
+                    "label": "English Proficiency",
+                    "description": ""
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+
+docs {
+  Updates admission_policy tab with dynamic JSON data.
+}

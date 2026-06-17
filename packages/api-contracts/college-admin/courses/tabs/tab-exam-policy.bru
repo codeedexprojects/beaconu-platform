@@ -1,0 +1,15 @@
+meta {
+  name: Tab - Exam Policy
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/exam_policy
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

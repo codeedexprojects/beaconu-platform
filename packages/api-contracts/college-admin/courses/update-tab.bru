@@ -16,18 +16,58 @@ auth:bearer {
 
 body:json {
   {
-    "data": [
-      {
-        "semester": 1,
-        "subjects": ["Mathematics I", "Physics I", "Chemistry", "Engineering Drawing"],
-        "specializations": []
+    "data": {
+      "tab": "course_info",
+      "course_name": "MBA Digital Transformation",
+      "admissions": [
+        { "label": "Admissions 2025", "status": "open" },
+        { "label": "Admissions 2026", "status": "upcoming" }
+      ],
+      "admission_status": {
+        "tag": "Admissions Open",
+        "seat_availability_percent": 90,
+        "urgency_label": "Limited seats available for current intake"
       },
-      {
-        "semester": 2,
-        "subjects": ["Mathematics II", "Physics II", "Programming in C", "Workshop Practice"],
-        "specializations": []
+      "overview": {
+        "duration": "24 months",
+        "study_mode": "Regular",
+        "academic_cycle": "Semester",
+        "credits": 102,
+        "gender_accepted": "Co-ed",
+        "course_category": "Self Financing"
+      },
+      "program_highlights": [],
+      "course_accolades": [],
+      "key_dates": [],
+      "curriculum": {
+        "brochure_link": "",
+        "semesters": []
+      },
+      "course_structure": [],
+      "total_credits": 102,
+      "value_added_courses": [],
+      "career_opportunities": [],
+      "higher_education": {
+        "global_certifications": [],
+        "postgraduation": []
+      },
+      "flexible_exit_options": [],
+      "class_timings": [],
+      "industry_tools": [],
+      "lab_facilities": [],
+      "classroom_facilities": [],
+      "bonus_certification": {
+        "name": "",
+        "note": "",
+        "certificate_link": ""
+      },
+      "featured_alumni": [],
+      "faqs": [],
+      "student_forum": {
+        "admission_team_contact": "",
+        "ex_student_chat": ""
       }
-    ]
+    }
   }
 }
 
@@ -37,20 +77,26 @@ docs {
 
   Requires: staff access token with academics.manage permission.
 
-  Valid tab names:
-  highlights, curriculum, course_structure, value_added_courses,
-  career_opportunities, higher_education_certifications,
-  flexible_exit_options, class_timings, industry_tools,
-  lab_facilities, room_facilities, featured_alumni, faqs,
-  exam_policy, entrance_exam_eligibility, eligibility_criteria,
-  accreditations, key_dates, demographics
+  Create-course assigns setup tabs under `tabs`:
+    course_info, admission_policy, placements, fees, financial_aid,
+    student_housing, exam_policy, faculty, review, library,
+    clubs_associations, alliance, other_courses_offered, demo_graphics
 
-  Note: The example body shows curriculum tab data. Adjust the
-  data structure based on the tab being updated.
+  College-only static tabs remain under college profile sections:
+    college_overview, student_code_of_conduct, happenings,
+    institutions_across_world, commute
+
+  Valid tab names:
+  course_info, admission_policy, placements, fees, financial_aid,
+  student_housing, exam_policy, faculty, review, library,
+  clubs_associations, alliance, other_courses_offered, demo_graphics
+
+  Note: `data` is fully dynamic JSON. It is not fixed to one schema.
+  You can send object/array/primitive based on each tab's needs.
 
   Response shape:
   {
-    "tabName": "curriculum",
-    "data": [...]
+    "tabName": "course_info",
+    "data": { ... }
   }
 }

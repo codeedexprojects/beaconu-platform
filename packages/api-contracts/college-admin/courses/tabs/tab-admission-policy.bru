@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Admission Policy
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/admission_policy
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `admission_policy` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-admission-policy-update.bru`
+}

@@ -7,6 +7,23 @@ import {
   UpdateCourseData,
 } from "../validators/college-registration.validator";
 
+const DEFAULT_COURSE_CREATE_TABS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+] as const;
+
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -286,6 +303,16 @@ export class CollegeRegistrationRepository {
   }
 
   static async createCourse(collegeId: string, data: CreateCourseData) {
+    const payloadTabData =
+      data.tabData && typeof data.tabData === "object"
+        ? (data.tabData as Record<string, unknown>)
+        : {};
+    const tabDataKeys = Object.keys(payloadTabData);
+    const baseTabs = Array.isArray(data.tabs)
+      ? data.tabs
+      : DEFAULT_COURSE_CREATE_TABS;
+    const tabs = Array.from(new Set([...baseTabs, ...tabDataKeys]));
+
     return prisma.course.create({
       data: {
         collegeId,
@@ -299,6 +326,29 @@ export class CollegeRegistrationRepository {
         eligibility: data.eligibility,
         intakeCapacity: data.intakeCapacity,
         studyMode: data.studyMode,
+        metadata: {
+          tabs,
+          tabData: payloadTabData,
+        },
+        highlights: [],
+        curriculum: [],
+        courseStructure: {},
+        valueAddedCourses: [],
+        careerOpportunities: [],
+        higherEducationCertifications: {},
+        flexibleExitOptions: [],
+        classTimings: {},
+        industryTools: [],
+        labFacilities: [],
+        roomFacilities: [],
+        featuredAlumni: [],
+        faqs: [],
+        examPolicy: {},
+        entranceExamEligibility: [],
+        eligibilityCriteria: {},
+        accreditations: [],
+        keyDates: [],
+        demographics: {},
         status: "active",
       },
       include: this.COURSE_RELATIONS_INCLUDE_NO_CAMPUS,

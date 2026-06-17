@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Placements
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/placements
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `placements` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-placements-update.bru`
+}

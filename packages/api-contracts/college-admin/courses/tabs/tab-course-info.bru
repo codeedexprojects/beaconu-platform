@@ -1,0 +1,35 @@
+meta {
+  name: Tab - Course Info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/course_info
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `course_info` tab for a specific course.
+
+  This tab returns the full JSON object stored for `course_info`.
+  Data shape is dynamic and may contain nested arrays/objects.
+
+  Response shape:
+  {
+    "tabName": "course_info",
+    "data": {
+      "course_name": "MBA Digital Transformation",
+      "admissions": [],
+      "overview": {},
+      "program_highlights": [],
+      "curriculum": {},
+      "career_opportunities": []
+    }
+  }
+}

@@ -1,0 +1,140 @@
+meta {
+  name: Tab - Placements (Update)
+  type: http
+  seq: 17
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/placements
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "placements",
+      "report": {
+        "year": 2024,
+        "download_link": ""
+      },
+      "stats": [
+        { "label": "Average Package", "value": "4.2 LPA" },
+        { "label": "Highest Package", "value": "14.2 LPA" },
+        { "label": "Placement Rate", "value": "94%" },
+        { "label": "Lowest Package", "value": "3.5 LPA" },
+        { "label": "Companies Visited", "value": "120+" },
+        { "label": "Students Placed", "value": "450+" }
+      ],
+      "placement_trends": {
+        "label": "Last 5 Years",
+        "yoy_growth": "+12.5%",
+        "data": [
+          { "year": 2020, "avg_package": null },
+          { "year": 2021, "avg_package": null },
+          { "year": 2022, "avg_package": null },
+          { "year": 2023, "avg_package": null },
+          { "year": 2024, "avg_package": null }
+        ]
+      },
+      "industry_salary_report": [
+        {
+          "industry": "BFSI",
+          "full_name": "Banking & Finance",
+          "students_placed": 155,
+          "avg_package": "Rs8.2 L",
+          "max_package": "Rs12 LPA"
+        },
+        {
+          "industry": "FMCG",
+          "full_name": "Retail & Goods",
+          "students_placed": 98,
+          "avg_package": "Rs7.5 L",
+          "max_package": "Rs10 LPA"
+        },
+        {
+          "industry": "Consulting",
+          "full_name": "Mgmt Consulting",
+          "students_placed": 81,
+          "avg_package": "Rs9.1 L",
+          "max_package": "Rs14.5 LPA"
+        }
+      ],
+      "notable_offers": [
+        {
+          "company": "Deloitte",
+          "company_logo": "",
+          "tag": "Highest",
+          "domain": "Consulting",
+          "offers": [
+            { "package": "14.5 LPA", "role": "Senior Analyst Role" },
+            { "package": "12.0 LPA", "role": "Manager Role" }
+          ]
+        }
+      ],
+      "company_statistics": [
+        {
+          "company": "Deloitte",
+          "company_logo": "",
+          "students": 145,
+          "avg_package": "Rs9.2 L",
+          "max_package": "Rs14.5 L"
+        },
+        {
+          "company": "Accenture",
+          "company_logo": "",
+          "students": 210,
+          "avg_package": "Rs7.8 L",
+          "max_package": "Rs11.2 L"
+        },
+        {
+          "company": "TCS",
+          "company_logo": "",
+          "students": 340,
+          "avg_package": "Rs6.5 L",
+          "max_package": "Rs9.0 L"
+        }
+      ],
+      "student_success": [
+        {
+          "name": "Rohan Mehta",
+          "company": "Deloitte",
+          "avatar": "",
+          "quote": "The placement support helped me secure a role at a top firm. Best decision ever!",
+          "media": {
+            "type": "youtube",
+            "url": ""
+          }
+        },
+        {
+          "name": "Priya S.",
+          "company": "HDFC",
+          "avatar": "",
+          "quote": "I never thought I'd get such a high package. The mock interviews were key.",
+          "media": {
+            "type": "link",
+            "url": ""
+          }
+        },
+        {
+          "name": "Example with no media",
+          "company": "TCS",
+          "avatar": "",
+          "quote": "Great experience overall.",
+          "media": {
+            "type": "none",
+            "url": null
+          }
+        }
+      ]
+    }
+  }
+}
+
+docs {
+  Updates placements tab with dynamic JSON data.
+}

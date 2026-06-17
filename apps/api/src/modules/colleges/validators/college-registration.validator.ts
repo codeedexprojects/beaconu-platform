@@ -1,5 +1,52 @@
 import { z } from "zod";
 
+export const COURSE_CREATE_TAB_IDS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+] as const;
+
+const courseCreateTabsSchema = z
+  .array(z.string().trim().min(1))
+  .min(1, "At least one course tab is required")
+  .refine(
+    (tabs) => tabs.every((tab) => COURSE_CREATE_TAB_IDS.includes(tab as any)),
+    {
+      message: `Invalid tab in tabs. Valid values: ${COURSE_CREATE_TAB_IDS.join(", ")}`,
+    },
+  )
+  .transform((tabs) => Array.from(new Set(tabs)));
+
+const courseCreateTabDataSchema = z
+  .object({
+    course_info: z.unknown().optional(),
+    admission_policy: z.unknown().optional(),
+    placements: z.unknown().optional(),
+    fees: z.unknown().optional(),
+    financial_aid: z.unknown().optional(),
+    student_housing: z.unknown().optional(),
+    exam_policy: z.unknown().optional(),
+    faculty: z.unknown().optional(),
+    review: z.unknown().optional(),
+    library: z.unknown().optional(),
+    clubs_associations: z.unknown().optional(),
+    alliance: z.unknown().optional(),
+    other_courses_offered: z.unknown().optional(),
+    demo_graphics: z.unknown().optional(),
+  })
+  .partial();
+
 // ── College Profile ──────────────────────────────────────────────────────────
 export const updateCollegeProfileSchema = z.object({
   name: z.string().trim().min(2).max(255).optional(),
@@ -56,6 +103,8 @@ export const createCourseSchema = z.object({
   eligibility: z.string().trim().optional().nullable(),
   intakeCapacity: z.number().int().positive().optional().nullable(),
   studyMode: z.enum(["full_time", "part_time", "online"]).default("full_time"),
+  tabs: courseCreateTabsSchema.optional(),
+  tabData: courseCreateTabDataSchema.optional(),
 });
 
 export const updateCourseSchema = createCourseSchema.partial();
