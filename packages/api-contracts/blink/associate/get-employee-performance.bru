@@ -1,0 +1,32 @@
+meta {
+  name: Get Employee Performance
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/employees/{{employeeId}}/performance
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns detailed performance report for a specific employee under the authenticated associate admin.
+  Requires: associate admin access token (blink_associate userType).
+
+  Returns 404 if the employee does not exist or does not belong to this admin's team.
+
+  Response includes:
+    referrals.total          — total referrals created by this employee
+    referrals.byStatus       — breakdown: registered | confirmed | rejected | dropped_out
+    referrals.conversionRate — confirmed / total (4 decimal places, 0 if no referrals)
+    commission.earned        — sum of credited commissions (INR)
+    commission.pending       — sum of pending commissions (INR)
+
+  Tables: blink_users, referrals, commissions
+}

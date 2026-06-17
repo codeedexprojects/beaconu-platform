@@ -19,6 +19,7 @@ import { CounsellorRequestRepository } from "@/modules/counselling/repositories/
 import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
+  CounsellorLoginInput,
   LoginBlogAuthorInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
@@ -61,6 +62,19 @@ export class AuthService {
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
 
+    if (data.blink_role && blinkUser.blinkRole.slug !== data.blink_role) {
+      const roleLabels: Record<string, string> = {
+        associate_admin: "an associate admin",
+        associate_employee: "an associate employee",
+        campus_ambassador: "a campus ambassador",
+      };
+      const actual =
+        roleLabels[blinkUser.blinkRole.slug] ?? blinkUser.blinkRole.slug;
+      throw new ForbiddenError(
+        `This account is registered as ${actual}. Please use the correct login.`,
+      );
+    }
+
     if (blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_ADMIN) {
       if (
         !data.agency_reg_number ||
@@ -71,7 +85,22 @@ export class AuthService {
     }
 
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
-      throw new ForbiddenError(`Account is ${blinkUser.status}`);
+      const isEmployee =
+        blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_EMPLOYEE;
+      const contact = isEmployee ? "your agency admin" : "support";
+
+      const statusMessages: Record<string, string> = {
+        [ACCOUNT_STATUS.PENDING_APPROVAL]: isEmployee
+          ? "Your account is pending approval by your agency admin."
+          : "Your account is pending platform approval. You will be notified once approved.",
+        [ACCOUNT_STATUS.REJECTED]: `Your account was not approved. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.SUSPENDED]: `Your account has been suspended. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.INACTIVE]: `Your account has been deactivated. Please contact ${contact}.`,
+      };
+
+      throw new ForbiddenError(
+        statusMessages[blinkUser.status] ?? `Account is ${blinkUser.status}.`,
+      );
     }
 
     const userType = getBlinkUserType(blinkUser.blinkRole.slug);
@@ -79,7 +108,16 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: blinkUser.id,
       userType,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        blinkUser.id,
+        userType,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateBlinkLastLogin(blinkUser.id);
 
@@ -104,7 +142,7 @@ export class AuthService {
     };
   }
 
-  static async loginCounsellor(data: LoginInput) {
+  static async loginCounsellor(data: CounsellorLoginInput) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     const counsellor =
@@ -125,6 +163,12 @@ export class AuthService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
+    if (counsellor.counsellorType !== data.counsellor_type) {
+      throw new ForbiddenError(
+        `This account is registered as a ${counsellor.counsellorType} counsellor. Please use the correct login.`,
+      );
+    }
+
     const isMatch = await CryptoUtils.compare(
       data.password,
       counsellor.passwordHash,
@@ -139,6 +183,14 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        counsellor.id,
+        USER_TYPES.COUNSELLOR,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateCounsellorLastLogin(counsellor.id);
 
@@ -537,6 +589,13 @@ export class AuthService {
         userType: USER_TYPES.STUDENT,
         deviceInfo: fcmToken ? { fcmToken } : undefined,
       });
+      if (fcmToken) {
+        await AuthRepository.clearFcmTokensExcept(
+          student.id,
+          USER_TYPES.STUDENT,
+          session.sessionId,
+        );
+      }
       const accessToken = JwtUtils.generateAccessToken({
         userId: student.id,
         userType: USER_TYPES.STUDENT,
@@ -593,6 +652,13 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,
       userType: USER_TYPES.STUDENT,
@@ -647,6 +713,14 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: fcmToken ? { fcmToken } : undefined,
     });
+
+    if (fcmToken) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
 
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,

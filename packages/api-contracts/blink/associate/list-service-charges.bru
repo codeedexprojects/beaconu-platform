@@ -1,0 +1,50 @@
+meta {
+  name: List Service Charges
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/service-charges
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  ~collegeId: {{collegeId}}
+  ~courseId: {{courseId}}
+  ~academicYear: 2024-25
+  ~isActive: true
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("serviceChargeId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns service charge configs visible to the authenticated associate admin.
+  Requires: associate admin access token (blink_associate userType).
+
+  Defaults to isActive=true. Pass isActive=false to include inactive configs.
+
+  Query params (all optional):
+    collegeId    — filter by college
+    courseId     — filter by course
+    academicYear — filter by year (e.g. 2024-25)
+    isActive     — boolean, defaults to true
+
+  Each item includes gross amount, GST percentage, GST amount, net payout, and terms.
+  Sorted by college ASC, then academicYear DESC.
+
+  Table: service_charge_configs
+}

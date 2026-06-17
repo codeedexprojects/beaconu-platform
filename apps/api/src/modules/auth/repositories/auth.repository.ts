@@ -109,6 +109,26 @@ export class AuthRepository {
     });
   }
 
+  /**
+   * Clears the FCM token from all OTHER active sessions for this user so only
+   * the newly created session receives push notifications.
+   */
+  static async clearFcmTokensExcept(
+    userId: string,
+    userType: string,
+    currentSessionId: string,
+  ) {
+    await prisma.userSession.updateMany({
+      where: {
+        userId,
+        userType,
+        isActive: true,
+        id: { not: currentSessionId },
+      },
+      data: { deviceInfo: {} },
+    });
+  }
+
   // Blink user lookups
   static async findBlinkUserByEmail(email: string) {
     return prisma.blinkUser.findUnique({

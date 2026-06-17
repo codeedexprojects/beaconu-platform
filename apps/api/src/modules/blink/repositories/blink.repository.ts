@@ -85,6 +85,138 @@ export class BlinkRepository {
     return prisma.blinkRole.findUnique({ where: { slug } });
   }
 
+  static async findReferralWithStudentForAdmin(
+    referralId: string,
+    adminId: string,
+  ) {
+    return prisma.referral.findFirst({
+      where: {
+        id: referralId,
+        blinkUser: { associateParentId: adminId },
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phoneNumber: true,
+            avatarUrl: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+        commission: {
+          select: { id: true, netPayout: true, status: true },
+        },
+      },
+    });
+  }
+
+  static async findServiceChargeById(id: string) {
+    return prisma.serviceChargeConfig.findUnique({ where: { id } });
+  }
+
+  static async updateServiceCharge(
+    id: string,
+    data: {
+      grossAmount?: number;
+      gstPercentage?: number;
+      gstAmount?: number;
+      netPayout?: number;
+      termsAndConditions?: string;
+      isActive?: boolean;
+    },
+  ) {
+    return prisma.serviceChargeConfig.update({
+      where: { id },
+      data,
+      include: {
+        college: { select: { id: true, name: true } },
+        course: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  static async findEmployeePerformanceData(
+    employeeId: string,
+    adminId: string,
+  ) {
+    return prisma.blinkUser.findFirst({
+      where: { id: employeeId, associateParentId: adminId },
+      include: {
+        blinkRole: { select: { slug: true } },
+        referrals: { select: { id: true, status: true } },
+        commissions: { select: { netPayout: true, status: true } },
+      },
+    });
+  }
+
+  static async getWalletByUserId(blinkUserId: string) {
+    return prisma.blinkWallet.findUnique({ where: { blinkUserId } });
+  }
+
+  static async getWalletTransactions(
+    blinkUserId: string,
+    skip: number,
+    take: number,
+  ) {
+    const [total, transactions] = await Promise.all([
+      prisma.blinkWalletTransaction.count({ where: { blinkUserId } }),
+      prisma.blinkWalletTransaction.findMany({
+        where: { blinkUserId },
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          description: true,
+          withdrawalStatus: true,
+          balanceAfter: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+    return { total, transactions };
+  }
+
+  static async updateBankDetails(blinkUserId: string, bankDetails: object) {
+    return prisma.blinkWallet.update({
+      where: { blinkUserId },
+      data: { bankDetails },
+    });
+  }
+
+  static async processWithdrawal(
+    blinkUserId: string,
+    amount: number,
+    description: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const wallet = await tx.blinkWallet.update({
+        where: { blinkUserId },
+        data: {
+          balance: { decrement: amount },
+          totalWithdrawn: { increment: amount },
+        },
+      });
+      const transaction = await tx.blinkWalletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          blinkUserId,
+          type: "debit",
+          amount,
+          description,
+          withdrawalStatus: "pending",
+          balanceAfter: wallet.balance,
+        },
+      });
+      return { wallet, transaction };
+    });
+  }
+
   static async findAmbassadorsByCollege(collegeId: string) {
     return prisma.blinkUser.findMany({
       where: {

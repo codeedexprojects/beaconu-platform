@@ -975,9 +975,63 @@ export class SessionService {
 
     if (actor.userType === "student") {
       await this.notifyCounsellorOfCancellation(session);
+    } else {
+      await this.notifyStudentOfCancellation(session);
     }
 
     return formatSession(await SessionRepository.findSessionById(sessionId));
+  }
+
+  /**
+   * Best-effort: notifies the student when a counsellor cancels their session.
+   */
+  private static async notifyStudentOfCancellation(session: {
+    id: string;
+    studentId: string;
+    scheduledDate: Date;
+    startTime: Date;
+    counsellor: { fullName: string } | null;
+  }): Promise<void> {
+    logger.info(
+      {
+        sessionId: session.id,
+        studentId: session.studentId,
+        module: "counselling",
+        action: "NOTIFY_STUDENT_CANCELLATION_START",
+      },
+      "Sending cancellation notification to student",
+    );
+    try {
+      const counsellorName = session.counsellor?.fullName ?? "Your counsellor";
+      const dateStr = session.scheduledDate.toISOString().slice(0, 10);
+      const timeStr = formatTime12h(session.startTime);
+
+      const result = await PushService.sendToUser(
+        session.studentId,
+        "student",
+        {
+          title: "Session cancelled",
+          body: `${counsellorName} cancelled your session on ${dateStr} at ${timeStr}`,
+          data: { type: "session_cancelled", sessionId: session.id },
+        },
+      );
+
+      logger.info(
+        {
+          sessionId: session.id,
+          studentId: session.studentId,
+          ...result,
+          module: "counselling",
+          action: "NOTIFY_STUDENT_CANCELLATION_DONE",
+        },
+        "Cancellation notification result",
+      );
+    } catch (error) {
+      logger.error(
+        { err: error, sessionId: session.id },
+        "Failed to notify student of session cancellation",
+      );
+    }
   }
 
   /**

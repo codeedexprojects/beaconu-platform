@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validate } from "@/shared/middleware/validate";
 import {
-  loginSchema,
+  counsellorLoginSchema,
   registerCounsellorSchema,
 } from "../validators/auth.validator";
 import { CounsellorAuthController } from "../controllers/counsellor-auth.controller";
@@ -13,7 +13,11 @@ router.post(
   validate(registerCounsellorSchema),
   CounsellorAuthController.register,
 );
-router.post("/login", validate(loginSchema), CounsellorAuthController.login);
+router.post(
+  "/login",
+  validate(counsellorLoginSchema),
+  CounsellorAuthController.login,
+);
 router.post("/refresh-token", CounsellorAuthController.refresh);
 router.post("/logout", CounsellorAuthController.logout);
 
