@@ -107,6 +107,14 @@ export const updateServiceChargeSchema = z
   });
 
 export type ServiceChargeQuery = z.infer<typeof serviceChargeQuerySchema>;
+
+export const collegeListQuerySchema = z.object({
+  search: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type CollegeListQuery = z.infer<typeof collegeListQuerySchema>;
 export type UpdateServiceChargeInput = z.infer<
   typeof updateServiceChargeSchema
 >;

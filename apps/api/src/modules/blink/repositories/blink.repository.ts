@@ -113,6 +113,31 @@ export class BlinkRepository {
     });
   }
 
+  static async findReferralWithStudentForEmployee(
+    referralId: string,
+    employeeId: string,
+  ) {
+    return prisma.referral.findFirst({
+      where: { id: referralId, blinkUserId: employeeId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phoneNumber: true,
+            avatarUrl: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+        commission: {
+          select: { id: true, netPayout: true, status: true },
+        },
+      },
+    });
+  }
+
   static async findServiceChargeById(id: string) {
     return prisma.serviceChargeConfig.findUnique({ where: { id } });
   }
@@ -144,6 +169,17 @@ export class BlinkRepository {
   ) {
     return prisma.blinkUser.findFirst({
       where: { id: employeeId, associateParentId: adminId },
+      include: {
+        blinkRole: { select: { slug: true } },
+        referrals: { select: { id: true, status: true } },
+        commissions: { select: { netPayout: true, status: true } },
+      },
+    });
+  }
+
+  static async findOwnPerformanceData(employeeId: string) {
+    return prisma.blinkUser.findUnique({
+      where: { id: employeeId },
       include: {
         blinkRole: { select: { slug: true } },
         referrals: { select: { id: true, status: true } },

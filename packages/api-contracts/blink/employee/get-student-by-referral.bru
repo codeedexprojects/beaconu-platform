@@ -1,0 +1,28 @@
+meta {
+  name: Get Student by Referral
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/referrals/{{referralId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns the student profile for a specific referral owned by the authenticated employee.
+  Requires: blink_employee access token.
+
+  Returns 404 if the referral does not exist or does not belong to this employee.
+
+  Response includes student details (name, email, phone, status) and referral
+  metadata (status, commission earned).
+
+  Tables: referrals, students, commissions
+}
