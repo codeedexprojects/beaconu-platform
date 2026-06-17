@@ -53,16 +53,16 @@ const navSections: NavSection[] = [
         permission: "colleges.view",
       },
       {
-        href: "/universities",
-        label: "Universities",
-        icon: GraduationCap,
-        permission: "universities.view",
-      },
-      {
         href: "/university-types",
         label: "University Types",
         icon: GraduationCap,
         permission: "university-types.view",
+      },
+      {
+        href: "/universities",
+        label: "Universities",
+        icon: GraduationCap,
+        permission: "universities.view",
       },
       {
         href: "/academic-masters",

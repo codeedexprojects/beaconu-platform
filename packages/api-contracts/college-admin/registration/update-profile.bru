@@ -1,5 +1,5 @@
 meta {
-  name: Update College Profile
+  name: Update College Registration Profile
   type: http
   seq: 3
 }
@@ -18,527 +18,233 @@ body:json {
   {
     "name": "Beacon Institute of Technology",
     "code": "BIT-101",
+    "leadId": "LEAD-2026-001",
+    "addressFromLead": true,
     "address": "123 Tech Campus Road",
     "city": "Bangalore",
     "state": "Karnataka",
     "district": "Bangalore Urban",
     "pinCode": "560001",
+    "registrationTabs": [
+      "student_code_of_conduct",
+      "happenings",
+      "institutions_across_world",
+      "commute",
+      "college_overview"
+    ],
     "profileSections": {
-      "college_overview": {
-        "id": "college_overview",
-        "enabled": true,
-        "description": "Practice-driven learning with strong outcomes.",
-        "accreditation_and_affiliation": [
-          {
-            "body": "NIRF",
-            "rank": "MAHE Rank 3",
-            "logo": "nirf",
-            "recognitions": "India's top #131/200 universities in 2024"
-          },
-          {
-            "body": "Outlook ICARE Ranking 2024",
-            "rank": "MAHE Rank 3",
-            "logo": "outlook",
-            "recognitions": "India's top #131/200 universities in 2024"
-          }
-        ],
-        "amenities": ["Library", "Hostel Facility", "AC Classrooms"],
-        "inside_campus_facilities": [
-          {
-            "name": "Central Library",
-            "description": "Digital archives and quiet study zones",
-            "image": "https://example.com/library.jpg"
-          }
-        ],
-        "nearby_access": {
-          "transit": [
-            {
-              "type": "Bus",
-              "name": "Main Gate Stop",
-              "distance": "0.4 km"
-            }
-          ],
-          "essentials": [
-            {
-              "type": "ATM",
-              "name": "SBI ATM",
-              "distance": "0.3 km"
-            }
-          ],
-          "utilities": [
-            {
-              "type": "Bank",
-              "name": "State Bank of India",
-              "distance": "0.6 km"
-            }
-          ]
-        },
-        "campus_reels": [
-          {
-            "title": "Student Life",
-            "link": "https://example.com/reels/student-life"
-          }
-        ]
-      },
-      "course_info": {
-        "id": "course_info",
-        "enabled": true,
-        "course_name": "BBA",
-        "data": {
-          "course_name": "BBA",
-          "admissions": [
-            {
-              "year": "Admissions 2026",
-              "status": "Open",
-              "placement_rate": "42",
-              "seats_note": "Few seats left",
-              "basic_details": {
-                "duration": "3 Years",
-                "study_mode": "Full Time",
-                "academic_cycle": "Semester",
-                "total_credits": 128,
-                "gender_accepted": "All",
-                "course_category": "UG"
-              }
-            }
-          ],
-          "program_highlights": [
-            "Hands-on lab sessions"
-          ],
-          "course_accolades": [
-            {
-              "body": "Top Recruiters",
-              "rank": "120+",
-              "image": "https://example.com/images/recruiters.png"
-            }
-          ],
-          "key_dates": {
-            "application_start": "2026-05-01",
-            "application_close": {
-              "date": "2026-07-31",
-              "urgency": "Closing Soon"
-            },
-            "class_commencement": {
-              "date": "2026-08-20",
-              "note": "Reporting starts one week before classes"
-            }
-          },
-          "value_added_course": {
-            "name": "Business Analytics Foundation",
-            "credits": 3,
-            "delivery_mode": "Full Time",
-            "course_type": "Add-on"
-          },
-          "higher_education_and_certifications": [
-            {
-              "title": "Global Certifications",
-              "description": [
-                "CFA Level 1",
-                "NISM Research Analyst"
-              ]
-            },
-            {
-              "title": "Postgraduation",
-              "description": [
-                "MBA in Finance",
-                "PGDM in Marketing"
-              ]
-            }
-          ],
-          "bonus_certification": [
-            {
-              "name": "Corporate Readiness Badge",
-              "note": "Granted on completion of internship module",
-              "certificate_details_available": true,
-              "details_page": "https://example.com/certifications/corporate-readiness"
-            }
-          ],
-          "featured_alumni": [
-            {
-              "name": "Riya Mehta",
-              "designation": "Marketing Manager",
-              "career_progression": [
-                {
-                  "year": 2020,
-                  "milestone": "Joined as Management Trainee"
-                },
-                {
-                  "year": 2023,
-                  "milestone": "Moved to Marketing Manager role"
-                }
-              ]
-            }
-          ],
-          "faqs": [
-            {
-              "title": "Do I need an entrance exam score?",
-              "description": "A valid score is preferred for merit seats, while management seats may have alternate criteria."
-            },
-            {
-              "title": "Can I apply online?",
-              "description": "Yes, applications can be submitted online through the admissions portal."
-            }
-          ]
-        }
-      },
-      "admission_policy": {
-        "id": "admission_policy",
-        "enabled": true,
-        "eligibility_criteria": {
-          "applicant_type_tabs": [
-            {
-              "id": "indian",
-              "label": "Indian Students",
-              "quota_categories": [
-                {
-                  "id": "government_quota",
-                  "label": "Government Quota",
-                  "criteria": [
-                    {
-                      "id": "educational_qualification",
-                      "label": "Educational Qualification",
-                      "description": "Candidates must have completed 10+2 (Intermediate/Senior Secondary Education) from a recognized board, or 10+3 diploma from a recognized national or state institute."
-                    }
-                  ]
-                },
-                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
-                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
-                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
-                { "id": "sports", "label": "Sports", "criteria": [] }
-              ]
-            },
-            {
-              "id": "foreign",
-              "label": "Foreign Students",
-              "quota_categories": [
-                { "id": "government_quota", "label": "Government Quota", "criteria": [] },
-                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
-                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
-                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
-                { "id": "sports", "label": "Sports", "criteria": [] }
-              ]
-            }
-          ],
-          "default_applicant_type": "indian",
-          "default_quota": "government_quota",
-          "cta": {
-            "label": "Check Eligibility",
-            "action": "check_eligibility"
-          }
-        }
-      },
-      "placements": {
-        "id": "placements",
-        "enabled": true,
-        "report": {
-          "label": "Download Full Placement Report 2024",
-          "action": "download_placement_report_2024"
-        },
-        "summary_stats": [
-          { "id": "average_package", "label": "Average Package", "value": 4.2, "unit": "LPA" },
-          { "id": "highest_package", "label": "Highest Package", "value": 14.2, "unit": "LPA" },
-          { "id": "placement_rate", "label": "Placement Rate", "value": 94, "unit": "%" },
-          { "id": "lowest_package", "label": "Lowest Package", "value": 3.5, "unit": "LPA" },
-          { "id": "companies_visited", "label": "Companies Visited", "value": "120+", "unit": null },
-          { "id": "students_placed", "label": "Students Placed", "value": "450+", "unit": null }
-        ],
-        "placement_trends": {
-          "label": "Placement Trends",
-          "period": "Last 5 Years",
-          "years": [2020, 2021, 2022, 2023],
-          "avg_package_growth_yoy": "+12.5%"
-        },
-        "industry_salary_report": {
-          "label": "Industry & Salary Report",
-          "columns": ["Industry", "Placed", "Avg Pkg"],
-          "industries": [
-            {
-              "id": "bfsi",
-              "name": "BFSI",
-              "sub_label": "Banking & Finance",
-              "students_placed": 155,
-              "avg_package": "₹8.2 L",
-              "max_package": "12 LPA"
-            },
-            {
-              "id": "fmcg",
-              "name": "FMCG",
-              "sub_label": "Retail & Goods",
-              "students_placed": 98,
-              "avg_package": "₹7.5 L",
-              "max_package": "10 LPA"
-            },
-            {
-              "id": "consulting",
-              "name": "Consulting",
-              "sub_label": "Mgmt Consulting",
-              "students_placed": 81,
-              "avg_package": "₹9.1 L",
-              "max_package": "14.5 LPA"
-            }
-          ],
-          "cta": {
-            "label": "View All Industries",
-            "action": "view_all_industries"
-          }
-        },
-        "notable_offers": {
-          "label": "Notable Offers",
-          "cta": {
-            "label": "View All",
-            "action": "view_all_notable_offers"
-          },
-          "featured": [
-            {
-              "company": "Deloitte",
-              "tag": "Highest",
-              "industry": "Consulting",
-              "offers": [
-                { "role": "Senior Analyst Role", "package": 14.5, "unit": "LPA", "type": "Package Offered" },
-                { "role": "Manager Role", "package": 12.0, "unit": "LPA", "type": "Package Offered" }
-              ]
-            }
-          ]
-        },
-        "all_company_statistics": {
-          "label": "All Company Statistics",
-          "columns": ["Company Name", "Avg Pkg", "Max Pkg"],
-          "companies": [
-            { "id": "deloitte", "name": "Deloitte", "students": 145, "avg_package": "₹9.2 L", "max_package": "₹14.5 L" },
-            { "id": "accenture", "name": "Accenture", "students": 210, "avg_package": "₹7.8 L", "max_package": "₹11.2 L" },
-            { "id": "tcs", "name": "TCS", "students": 340, "avg_package": "₹6.5 L", "max_package": "₹9.0 L" }
-          ]
-        },
-        "student_success": [
-          {
-            "name": "Rohan Mehta",
-            "placed_at": "Deloitte",
-            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!"
-          },
-          {
-            "name": "Priya S.",
-            "placed_at": "HDFC",
-            "quote": "I never thought I'd get such a high package. The mock interviews were key."
-          }
-        ]
-      },
-      "fees": {
-        "id": "fees",
-        "enabled": true,
-        "filters": {
-          "quota_category": {
-            "label": "Quota Category",
-            "default": "General",
-            "options": ["General", "Management", "NRI"]
-          },
-          "gender": {
-            "label": "Gender",
-            "default": "Male",
-            "options": ["Male", "Female"]
-          }
-        },
-        "inclusions": {
-          "whats_included": [
-            "Tuition",
-            "Library Access"
-          ],
-          "whats_excluded": [
-            "Hostel",
-            "Transport"
-          ]
-        },
-        "download": {
-          "label": "Download Fee Structure",
-          "file_label": "BBA Fee Structure 2026",
-          "file_size": "2.4 MB",
-          "file_type": "PDF",
-          "action": "download"
-        },
-        "fee_structures": [
-          {
-            "gender": "Male",
-            "quota_category": "General",
-            "fees_summary": {
-              "full_course_fee": 370000,
-              "booking_amount": 50000,
-              "currency": "INR"
-            },
-            "tuition_fees": [
-              { "year": "1st Year", "amount": 185000 },
-              { "year": "2nd Year", "amount": 185000 }
-            ],
-            "one_time_payable_fees": [
-              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
-              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
-            ],
-            "additional_fees": [
-              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
-              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
-            ],
-            "tuitionFeesSummary": "₹1,85,000 per year"
-          },
-          {
-            "gender": "Female",
-            "quota_category": "General",
-            "fees_summary": {
-              "full_course_fee": 350000,
-              "booking_amount": 50000,
-              "currency": "INR"
-            },
-            "tuition_fees": [
-              { "year": "1st Year", "amount": 175000 },
-              { "year": "2nd Year", "amount": 175000 }
-            ],
-            "one_time_payable_fees": [
-              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
-              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
-            ],
-            "additional_fees": [
-              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
-              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
-            ],
-            "tuitionFeesSummary": "₹1,75,000 per year"
-          }
-        ],
-        "refund_policy": [
-          "100% refund before classes start",
-          "50% refund within first 15 days"
-        ],
-        "deadlines_and_installments": [
-          {
-            "id": "installment_1",
-            "label": "Installment 1",
-            "deadline": "2026-07-15",
-            "amount": 100000
-          },
-          {
-            "id": "installment_2",
-            "label": "Installment 2",
-            "deadline": "2026-11-15",
-            "amount": 85000
-          }
-        ]
-      },
-      "financial_aid": {
-        "id": "financial_aid",
-        "enabled": true,
-        "meritScholarship": {
-          "title": "Academic Excellence Scholarship",
-          "description": "Scholarship support for high academic performance."
-        }
-      },
-      "student_housing": {
-        "id": "student_housing",
-        "enabled": true,
-        "summary": "Separate hostels with wardens and amenities."
-      },
-      "exam_policy": {
-        "id": "exam_policy",
-        "enabled": true,
-        "grading_scale": [
-          {
-            "percentage": "90-100",
-            "grade": "A+",
-            "gradePoint": "10"
-          }
-        ]
-      },
-      "faculty": {
-        "id": "faculty",
-        "enabled": true,
-        "summary": "Faculty profile and specialization highlights."
-      },
-      "review": {
-        "id": "review",
-        "enabled": true,
-        "ratingDistribution": [{ "emoji": "5", "count": 120 }],
-        "categoryRatings": [{ "category": "Campus", "rating": 4.5 }],
-        "reviews": [
-          {
-            "reviewerName": "Riya",
-            "reviewDate": "2026-03-20",
-            "reviewText": "Supportive peers and quality labs."
-          }
-        ]
-      },
-      "commute": {
-        "id": "commute",
-        "enabled": true,
-        "summary": "Campus is connected through bus and metro routes."
-      },
-      "library": {
-        "id": "library",
-        "enabled": true,
-        "availableResources": [
-          {
-            "resourceType": "Books",
-            "count": 25000
-          }
-        ]
-      },
-      "clubs_associations": {
-        "id": "clubs_associations",
-        "enabled": true,
-        "summary": "Student clubs for innovation and leadership.",
-        "items": [
-          {
-            "clubName": "Robotics Club",
-            "description": "Build and compete in inter-college events."
-          }
-        ]
-      },
       "student_code_of_conduct": {
         "id": "student_code_of_conduct",
         "enabled": true,
-        "title": "Student Code of Conduct",
-        "description": "Guidelines for behavior, attendance, and discipline."
+        "tab": "student_code_of_conduct",
+        "section_title": "General Rules of Discipline",
+        "rules": [
+          {
+            "number": 1,
+            "rule": "Always carry the Identity Card with you while in college or the hospital."
+          },
+          {
+            "number": 2,
+            "rule": "Attend the classes and clinical postings on time."
+          },
+          {
+            "number": 3,
+            "rule": "Wear the college uniform (if prescribed) neatly and properly."
+          },
+          {
+            "number": 4,
+            "rule": "Maintain silence and discipline in the library, classrooms, and corridors."
+          },
+          {
+            "number": 5,
+            "rule": "Use of mobile phones is strictly prohibited in classrooms, laboratories, and library."
+          },
+          {
+            "number": 6,
+            "rule": "Respect the faculty, staff, and fellow students. Ragging is a punishable offense."
+          },
+          {
+            "number": 7,
+            "rule": "Keep the campus clean. Do not litter."
+          },
+          {
+            "number": 8,
+            "rule": "Any damage to college property will be recovered from the student concerned."
+          },
+          {
+            "number": 9,
+            "rule": "Prior permission is required for leave of absence."
+          }
+        ]
       },
       "happenings": {
         "id": "happenings",
         "enabled": true,
-        "summary": "Latest workshops, fests, and announcements.",
-        "items": [
+        "title": "Happenings",
+        "filters": {
+          "categories": ["Certification"]
+        },
+        "happenings": [
           {
-            "title": "Hackathon Week",
-            "description": "Campus-wide coding challenge.",
-            "date": "2026-09-15"
+            "category": "Certification",
+            "date": "Oct 12, 2023",
+            "title": "Professor Ratna awarded international certification in Quantum Research",
+            "description": "The University of Cambridge has formally recognized Dr. Ratna's groundbreaking work...",
+            "image": "",
+            "link": ""
           }
         ]
       },
       "institutions_across_world": {
         "id": "institutions_across_world",
         "enabled": true,
-        "summary": "Partner institutions and global touchpoints."
+        "title": "Institution Across the World",
+        "institutions": []
       },
-      "alliance": {
-        "id": "alliance",
+      "commute": {
+        "id": "commute",
         "enabled": true,
-        "summary": "Academic alliances and collaboration details."
+        "title": "Commute",
+        "nearby": {
+          "transit": [],
+          "essentials": [],
+          "utilities": []
+        }
       },
-      "other_courses_offered": {
-        "id": "other_courses_offered",
+      "college_overview": {
+        "id": "college_overview",
         "enabled": true,
-        "summary": "Certificate and skill-based short courses."
-      },
-      "demo_graphics": {
-        "id": "demo_graphics",
-        "enabled": true,
-        "summary": "Visual demo assets for course and campus pages."
+        "name": "University of Hyderabad",
+        "alt_name": "Hyderabad Central University",
+        "location_name": "Gachibowli, Hyderabad",
+        "type": "Public",
+        "established": 2000,
+        "navigation_tabs": ["Overview", "Governance"],
+        "about": "The University of Hyderabad (UoH), also known as Hyderabad Central University, is a top-ranking public research university in India. Known for its academic excellence, vibrant campus life, and focus on postgraduate education and research, UoH is recognized by UGC and accredited with an 'A' grade by NAAC.",
+        "accolades": [
+          {
+            "tag": "Rank",
+            "title": "MAHE Rank 3",
+            "image": ""
+          },
+          {
+            "tag": "University",
+            "title": "India's top #131/200 universities in 2024",
+            "image": ""
+          }
+        ],
+        "university_details": [
+          { "label": "Established year", "value": "2000" },
+          { "label": "Nature of University", "value": "Public" },
+          { "label": "Type of University", "value": "State University" },
+          { "label": "District", "value": "Hyderabad" },
+          { "label": "State", "value": "Telangana" },
+          { "label": "Pincode", "value": "500046" },
+          { "label": "Affiliated colleges", "value": "45" },
+          { "label": "Autonomous colleges", "value": "12" }
+        ],
+        "amenities": [
+          { "label": "Wifi", "icon": "" },
+          { "label": "Pool", "icon": "" },
+          { "label": "Library", "icon": "" }
+        ],
+        "inside_campus_facilities": [
+          { "label": "Subway", "icon": "" },
+          { "label": "Indian Post", "icon": "" },
+          { "label": "Food Court", "icon": "" },
+          { "label": "Postal Service", "icon": "" }
+        ],
+        "location": {
+          "address": "",
+          "latitude": null,
+          "longitude": null,
+          "map_link": ""
+        },
+        "nearby_access": [
+          {
+            "category": "Transit",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Essentials",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Utility",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Hospital",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "School",
+            "items": [
+              { "name": "KLAY Prep Schools and DayCare", "distance": "6.9 km" },
+              { "name": "VIBGYOR High School", "distance": "0.1 km" }
+            ]
+          }
+        ],
+        "campus_ambassadors": [
+          {
+            "name": "Arshal Mathew",
+            "course": "BSC NURSING",
+            "district": "PALAKAD",
+            "state": "KERALA",
+            "image": "",
+            "message_link": ""
+          }
+        ],
+        "social": [],
+        "campus_reels": [
+          {
+            "title": "Welcome to Vydehi Institute",
+            "duration": "1 min 12 secs",
+            "date": "29th March",
+            "video": "",
+            "type": "youtube"
+          },
+          {
+            "title": "All About Campus Life",
+            "duration": "2 min 45 secs",
+            "date": "1st April",
+            "video": "",
+            "type": "mp4"
+          }
+        ]
       }
     }
   }
 }
 
 docs {
-  Updates college profile during onboarding/registration flow.
+  Registration update should capture core college details and college-level tab setup only.
 
-  Notes:
-  - Use `profileSections` for tab payloads.
-  - Include all setup tab keys:
-    `college_overview`, `course_info`, `admission_policy`, `placements`,
-    `fees`, `financial_aid`, `student_housing`, `exam_policy`, `faculty`,
-    `review`, `commute`, `library`, `clubs_associations`,
-    `student_code_of_conduct`, `happenings`, `institutions_across_world`,
-    `alliance`, `other_courses_offered`, `demo_graphics`.
-  - For single or multiple items, always send arrays for list fields.
+  Registration tabs list (college section):
+  - student_code_of_conduct
+  - happenings
+  - institutions_across_world
+  - commute
+  - college_overview
+
+  Use campuses endpoints to create and manage campuses.
+  Use courses endpoints to create courses and course tabs.
+
+  Dynamic fetch notes for registration sections:
+  - `commute` in GET /api/v1/college-admin/profile/sections is sourced from
+    GET /api/v1/college-admin/commute.
+  - `institutions_across_world` in GET /api/v1/college-admin/profile/sections
+    is sourced from institution group membership data.
 }

@@ -1,0 +1,118 @@
+meta {
+  name: Tab - Alliance (Update)
+  type: http
+  seq: 23
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/alliance
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "alliance",
+      "search_placeholder": "Search alliances or partners",
+      "alliances": [
+        {
+          "id": "baby-memorial-hospital",
+          "name": "Baby Memorial Hospital",
+          "tag": "Own Hospital",
+          "logo": "",
+          "cover_image": "",
+          "short_description": "Baby Memorial Hospital (BMH) is a multi-specialty, tertiary care corporate hospital in Kozhikode, Kerala.",
+          "details": {
+            "category": "Industrial Collaboration",
+            "full_name": "Baby Memorial Hospital (BMH)",
+            "logo": "",
+            "cover_image": "",
+            "about": "The alliance with Baby Memorial Hospital (BMH) represents a significant milestone in bridging the gap between academic theory and clinical practice. Established to foster excellence in healthcare education, this partnership provides our students with unparalleled access to world-class medical facilities and mentorship.",
+            "collaboration_impact": "Through this strategic collaboration, students gain hands-on experience in advanced diagnostic procedures and patient care. The initiative also supports faculty exchange programs, enhancing the curriculum with real-world medical insights.",
+            "key_focus_areas": [
+              "Clinical Rotations for Nursing Students",
+              "Joint Biomedical Research",
+              "Internship Opportunities",
+              "Continuing Medical Education (CME) Seminars"
+            ],
+            "legal_documents": [
+              {
+                "title": "Memorandum of Understanding (MoU)",
+                "size": "2.4 MB",
+                "type": "PDF",
+                "url": ""
+              },
+              {
+                "title": "Partnership Agreement",
+                "size": "1.8 MB",
+                "type": "PDF",
+                "url": ""
+              }
+            ],
+            "alliance_activities": {
+              "happenings_link": "",
+              "activities": [
+                { "title": "Clinical Training Session", "image": "" },
+                { "title": "Joint Research Lab", "image": "" },
+                { "title": "Community Outreach", "image": "" }
+              ]
+            }
+          }
+        },
+        {
+          "id": "sia-india",
+          "name": "SIA India",
+          "tag": "Industrial Collaboration",
+          "logo": "",
+          "cover_image": "",
+          "short_description": "The Satellite Industry Association of India (SIA-India) is a non-profit association of Indian and global satellite industry players.",
+          "details": {
+            "category": "Industrial Collaboration",
+            "full_name": "Satellite Industry Association of India",
+            "logo": "",
+            "cover_image": "",
+            "about": "",
+            "collaboration_impact": "",
+            "key_focus_areas": [],
+            "legal_documents": [],
+            "alliance_activities": {
+              "happenings_link": "",
+              "activities": []
+            }
+          }
+        },
+        {
+          "id": "nid",
+          "name": "National Institute of Design",
+          "tag": "Academic & Research",
+          "logo": "",
+          "cover_image": "",
+          "short_description": "A premier institute for design education and research. This collaboration enables student exchange programs and joint workshops.",
+          "details": {
+            "category": "Academic & Research",
+            "full_name": "National Institute of Design",
+            "logo": "",
+            "cover_image": "",
+            "about": "",
+            "collaboration_impact": "",
+            "key_focus_areas": [],
+            "legal_documents": [],
+            "alliance_activities": {
+              "happenings_link": "",
+              "activities": []
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+docs {
+  Updates alliance tab with dynamic JSON data.
+}

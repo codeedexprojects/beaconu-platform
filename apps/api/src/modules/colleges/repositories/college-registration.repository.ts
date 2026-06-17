@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import {
   UpdateCollegeProfileData,
   CreateCampusData,
@@ -176,6 +176,10 @@ export class CollegeRegistrationRepository {
               data.coverImageUrl === "" ? null : data.coverImageUrl,
           }
         : {}),
+      ...(data.leadId !== undefined ? { leadId: data.leadId } : {}),
+      ...(data.addressFromLead !== undefined
+        ? { addressFromLead: data.addressFromLead }
+        : {}),
       ...(data.address !== undefined ? { address: data.address } : {}),
       ...(data.city !== undefined ? { city: data.city } : {}),
       ...(data.district !== undefined ? { district: data.district } : {}),
@@ -186,6 +190,9 @@ export class CollegeRegistrationRepository {
             requestedGroupCode:
               data.requestedGroupCode === "" ? null : data.requestedGroupCode,
           }
+        : {}),
+      ...(data.registrationTabs !== undefined
+        ? { registrationTabs: data.registrationTabs }
         : {}),
       ...(data.profileSections !== undefined
         ? { profileSections: data.profileSections }
@@ -328,7 +335,7 @@ export class CollegeRegistrationRepository {
         studyMode: data.studyMode,
         metadata: {
           tabs,
-          tabData: payloadTabData,
+          tabData: payloadTabData as Prisma.InputJsonValue,
         },
         highlights: [],
         curriculum: [],

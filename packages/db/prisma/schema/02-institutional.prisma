@@ -94,6 +94,8 @@ model College {
   domain             String?  @db.VarChar(255)
   logoUrl            String?  @map("logo_url") @db.Text
   coverImageUrl      String?  @map("cover_image_url") @db.Text
+  leadId             String?  @map("lead_id") @db.VarChar(100)
+  addressFromLead    Boolean  @default(false) @map("address_from_lead")
   state              String?  @db.VarChar(100)
   city               String?  @db.VarChar(100)
   district           String?  @db.VarChar(100)
@@ -101,6 +103,7 @@ model College {
   pinCode            String?  @map("pin_code") @db.VarChar(10)
   status             String   @default("active") @db.VarChar(20)
   requestedGroupCode String?  @map("requested_group_code") @db.VarChar(30)
+  registrationTabs   Json     @default("[]") @map("registration_tabs")
   profileSections    Json     @default("{}") @map("profile_sections")
   settings           Json     @default("{}")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
