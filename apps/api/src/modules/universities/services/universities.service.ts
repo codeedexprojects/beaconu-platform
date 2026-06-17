@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "@/shared/errors";
+import { BadRequestError, ConflictError, NotFoundError } from "@/shared/errors";
 import { UniversityRepository } from "../repositories/universities.repository";
 import { UniversityTypeRepository } from "../repositories/university-types.repository";
 import {
@@ -53,9 +53,18 @@ export class UniversityService {
     const existing = await UniversityRepository.findById(id);
     if (!existing) throw new NotFoundError("University not found");
 
-    if (data.university_type_id) {
+    const requestedUniversityTypeId =
+      data.university_type_id !== undefined
+        ? data.university_type_id.trim()
+        : undefined;
+
+    if (requestedUniversityTypeId !== undefined) {
+      if (!requestedUniversityTypeId) {
+        throw new BadRequestError("University type is required");
+      }
+
       const existingType = await UniversityTypeRepository.findById(
-        data.university_type_id,
+        requestedUniversityTypeId,
       );
       if (!existingType) throw new NotFoundError("University type not found");
     }
@@ -69,8 +78,8 @@ export class UniversityService {
     const metadata = buildUniversityMetadata(data);
 
     return UniversityRepository.updateById(id, {
-      ...(data.university_type_id !== undefined
-        ? { universityTypeId: data.university_type_id }
+      ...(requestedUniversityTypeId !== undefined
+        ? { universityTypeId: requestedUniversityTypeId }
         : {}),
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.slug !== undefined ? { slug: data.slug } : {}),

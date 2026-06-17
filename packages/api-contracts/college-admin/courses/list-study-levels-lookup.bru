@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/study-levels
+  url: {{baseUrl}}/api/v1/college-admin/lookups/study-levels
   body: none
   auth: bearer
 }
@@ -19,4 +19,14 @@ docs {
   Used to populate study level dropdown during course setup.
 
   Requires: staff access token.
+  Saves `studyLevelId` from first result to env.
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("studyLevelId", data.data[0].id);
+    }
+  }
 }
