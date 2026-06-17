@@ -3,7 +3,6 @@ import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
-import { PublicCollegeQuery } from "../queries/public-college.query";
 
 const PUBLIC_COLLEGE_INCLUDES = {
   university: {
@@ -100,67 +99,6 @@ const PUBLIC_COLLEGE_INCLUDES = {
           },
         },
       },
-    },
-  },
-} as const;
-
-const PUBLIC_COLLEGE_SUMMARY_SELECT = {
-  id: true,
-  name: true,
-  slug: true,
-  code: true,
-  logoUrl: true,
-  coverImageUrl: true,
-  domain: true,
-  address: true,
-  city: true,
-  state: true,
-  district: true,
-  pinCode: true,
-  profileSections: true,
-  university: {
-    select: {
-      id: true,
-      name: true,
-      logoUrl: true,
-      universityType: {
-        select: { id: true, name: true, slug: true },
-      },
-    },
-  },
-} as const;
-
-const PUBLIC_COURSE_SUMMARY_SELECT = {
-  id: true,
-  name: true,
-  code: true,
-  duration: true,
-  eligibility: true,
-  intakeCapacity: true,
-  studyMode: true,
-  discipline: {
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      stream: {
-        select: { id: true, name: true, slug: true },
-      },
-    },
-  },
-  studyLevel: {
-    select: { id: true, name: true, slug: true },
-  },
-  programType: {
-    select: { id: true, name: true, slug: true },
-  },
-  campus: {
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      city: true,
-      state: true,
     },
   },
 } as const;
@@ -298,14 +236,6 @@ function findSectionByIdentifier(
 }
 
 export class PublicCollegeController {
-  static async getFilters(req: Request, res: Response) {
-    const { search } = publicCollegeSchemas.filtersQuery.parse(req.query);
-    const result = await PublicCollegeQuery.getFilters(search);
-    res
-      .status(200)
-      .json(ApiResponse.success("College filters fetched", result));
-  }
-
   static async getColleges(req: Request, res: Response) {
     const {
       universityId,
@@ -447,71 +377,6 @@ export class PublicCollegeController {
         sectionId: sectionIdentifier,
         sectionKey: matchedSection.sectionKey,
         data: matchedSection.section,
-      }),
-    );
-  }
-
-  static async getCollegeSummary(req: Request, res: Response) {
-    const { collegeId } = publicCollegeSchemas.collegeIdParam.parse(req.params);
-    const filters = publicCollegeSchemas.summaryQuery.parse(req.query);
-
-    const college = await prisma.college.findFirst({
-      where: {
-        id: collegeId,
-        status: "active",
-        ...(filters.universityId ? { universityId: filters.universityId } : {}),
-      },
-      select: PUBLIC_COLLEGE_SUMMARY_SELECT,
-    });
-
-    if (!college) {
-      throw new NotFoundError("College not found");
-    }
-
-    const courseWhere: any = {
-      collegeId,
-      status: "active",
-      ...(!filters.disciplineId && filters.streamId
-        ? { discipline: { streamId: filters.streamId } }
-        : {}),
-      ...(filters.disciplineId ? { disciplineId: filters.disciplineId } : {}),
-      ...(filters.studyLevelId ? { studyLevelId: filters.studyLevelId } : {}),
-      ...(filters.programTypeId
-        ? { programTypeId: filters.programTypeId }
-        : {}),
-    };
-
-    const course = await prisma.course.findFirst({
-      where: courseWhere,
-      select: PUBLIC_COURSE_SUMMARY_SELECT,
-      orderBy: { createdAt: "asc" },
-    });
-
-    if (!course) {
-      throw new NotFoundError("Course not found");
-    }
-
-    const profileSections =
-      (college.profileSections as Record<string, unknown> | null) || {};
-    const tabListing = buildTabList(profileSections);
-
-    const { profileSections: _profileSections, ...collegeMeta } =
-      college as any;
-
-    return res.status(200).json(
-      ApiResponse.success("College summary fetched successfully", {
-        college: {
-          ...collegeMeta,
-          location: {
-            address: college.address,
-            city: college.city,
-            state: college.state,
-            district: college.district,
-            pinCode: college.pinCode,
-          },
-        },
-        course,
-        tabListing,
       }),
     );
   }

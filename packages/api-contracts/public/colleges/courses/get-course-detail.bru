@@ -1,0 +1,40 @@
+meta {
+  name: Get Course Detail (with Tabs)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns course summary alongside the list of available tabs for that course.
+  Only tabs that have non-empty data are included in the tabs array.
+
+  Path params:
+  - collegeSlug: College subdomain slug
+  - courseId: Course ID (set via list-courses script)
+
+  Response shape:
+  {
+    "course": {
+      "id": "CRS-1",
+      "name": "B.Tech Computer Science"
+    },
+    "tabs": [
+      "course_info",
+      "admission_policy",
+      "placements",
+      "fees",
+      "highlights",
+      "curriculum"
+    ]
+  }
+
+  `tabs` contains only setup tabs that have been configured and content tabs
+  that have non-empty data. Use a tab name from this list as the :tabName
+  parameter in the Get Course Tab request.
+}
