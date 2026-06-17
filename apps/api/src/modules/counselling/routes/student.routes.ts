@@ -76,14 +76,6 @@ router.post(
 );
 
 router.get(
-  "/sessions",
-  authenticate,
-  authorizeUserType("student"),
-  validate(listSessionsQuerySchema, "query"),
-  StudentSessionController.listSessions,
-);
-
-router.get(
   "/sessions/booked",
   authenticate,
   authorizeUserType("student"),
@@ -97,14 +89,6 @@ router.get(
   authorizeUserType("student"),
   validate(listSessionsQuerySchema, "query"),
   StudentSessionController.listCompletedSessions,
-);
-
-router.get(
-  "/sessions/:id",
-  authenticate,
-  authorizeUserType("student"),
-  validate(sessionIdParamsSchema, "params"),
-  StudentSessionController.getSession,
 );
 
 router.patch(

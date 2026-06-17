@@ -40,11 +40,12 @@ export class SessionRepository {
 
   /** Convert page/limit → Prisma skip/take */
   private static paginate({ page = 1, limit = 20 }: PaginationOptions) {
-    const p = Number(page) || 1;
-    const l = Number(limit) || 20;
+    const normalizedPage = Math.max(1, Number(page) || 1);
+    const normalizedLimit = Math.max(1, Number(limit) || 20);
+
     return {
-      skip: (p - 1) * l,
-      take: l,
+      skip: (normalizedPage - 1) * normalizedLimit,
+      take: normalizedLimit,
     };
   }
 
