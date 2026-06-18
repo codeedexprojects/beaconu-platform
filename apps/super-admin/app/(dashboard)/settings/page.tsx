@@ -40,7 +40,7 @@ import {
 } from "@/hooks/use-platform-config";
 
 const systemConfigSchema = z.object({
-  gstPercentage: z.coerce
+  meetingGstPercentage: z.coerce
     .number()
     .min(0, "Must be ≥ 0")
     .max(100, "Must be ≤ 100"),
@@ -64,13 +64,16 @@ function SystemConfigurationSection() {
 
   const form = useForm<SystemConfigInput>({
     resolver: zodResolver(systemConfigSchema),
-    defaultValues: { gstPercentage: 0, counsellorMinWithdrawalAmount: 0 },
+    defaultValues: {
+      meetingGstPercentage: 0,
+      counsellorMinWithdrawalAmount: 0,
+    },
   });
 
   useEffect(() => {
     if (data) {
       form.reset({
-        gstPercentage: data.gstPercentage,
+        meetingGstPercentage: data.meetingGstPercentage,
         counsellorMinWithdrawalAmount: data.counsellorMinWithdrawalAmount,
       });
     }
@@ -118,23 +121,30 @@ function SystemConfigurationSection() {
       <CardHeader>
         <CardTitle className="text-lg">System Configuration</CardTitle>
         <CardDescription>
-          Platform-wide values used across Blink commissions and counsellor
-          payouts
+          Platform-wide values used for counselling session payouts. Other
+          payment flows (e.g. Blink referral commissions) apply their own
+          independent GST percentage.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="gstPercentage">GST Percentage (%)</Label>
+            <Label htmlFor="meetingGstPercentage">
+              Meeting GST Percentage (%)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Applied to counselling session fee payments — charged when a
+              student books a session and a meeting link is generated.
+            </p>
             <Input
-              id="gstPercentage"
+              id="meetingGstPercentage"
               type="number"
               step="0.01"
-              {...form.register("gstPercentage")}
+              {...form.register("meetingGstPercentage")}
             />
-            {form.formState.errors.gstPercentage && (
+            {form.formState.errors.meetingGstPercentage && (
               <p className="text-sm text-destructive">
-                {form.formState.errors.gstPercentage.message}
+                {form.formState.errors.meetingGstPercentage.message}
               </p>
             )}
           </div>

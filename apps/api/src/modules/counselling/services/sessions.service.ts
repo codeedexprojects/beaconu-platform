@@ -642,6 +642,24 @@ export class SessionService {
     return Number(counsellor?.sessionFee ?? 0.0);
   }
 
+  /**
+   * Adds the platform's configured meeting GST on top of the session fee.
+   * The GST portion is charged to the student but never credited to the
+   * counsellor's wallet — only `fee` is credited at booking time.
+   */
+  private static async resolveFeeWithGst(fee: number): Promise<{
+    fee: number;
+    gstPercentage: number;
+    gstAmount: number;
+    totalAmount: number;
+  }> {
+    const config = await PlatformConfigService.getConfig();
+    const gstPercentage = config.meetingGstPercentage;
+    const gstAmount = Math.round(fee * gstPercentage) / 100;
+    const totalAmount = Math.round((fee + gstAmount) * 100) / 100;
+    return { fee, gstPercentage, gstAmount, totalAmount };
+  }
+
   private static capturedPaymentKey(
     availabilityId: string,
     studentId: string,
@@ -717,8 +735,11 @@ export class SessionService {
       throw new BadRequestError("Payment gateway is not configured");
     }
 
+    const { gstPercentage, gstAmount, totalAmount } =
+      await this.resolveFeeWithGst(fee);
+
     const order = await getRazorpay().orders.create({
-      amount: Math.round(fee * 100),
+      amount: Math.round(totalAmount * 100),
       currency: "INR",
       // Razorpay caps receipt at 40 chars — use the slot's last 8 chars + a timestamp.
       receipt: `CNS-${slot.id.slice(-8)}-${Date.now()}`,
@@ -734,6 +755,9 @@ export class SessionService {
       amount: order.amount,
       currency: order.currency,
       fee,
+      gst_percentage: gstPercentage,
+      gst_amount: gstAmount,
+      total_amount: totalAmount,
     };
   }
 
@@ -752,6 +776,7 @@ export class SessionService {
     let transactionId: string | undefined;
 
     if (finalFee > 0) {
+      const { totalAmount } = await this.resolveFeeWithGst(finalFee);
       const paidPayment = await this.consumeCapturedPayment(slot.id, studentId);
 
       if (!paidPayment) {
@@ -760,7 +785,7 @@ export class SessionService {
         );
       }
 
-      if (paidPayment.amount !== Math.round(finalFee * 100)) {
+      if (paidPayment.amount !== Math.round(totalAmount * 100)) {
         throw new BadRequestError("Payment amount mismatch");
       }
 

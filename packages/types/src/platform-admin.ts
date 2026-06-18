@@ -1,5 +1,5 @@
 export interface PlatformConfig {
-  gstPercentage: number;
+  meetingGstPercentage: number;
   counsellorMinWithdrawalAmount: number;
   updatedByAdminId: string | null;
   updatedAt: string;

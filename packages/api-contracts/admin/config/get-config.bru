@@ -21,11 +21,15 @@ docs {
 
   Response:
   {
-    gstPercentage: number,
+    meetingGstPercentage: number,   // GST applied to counselling session fee payments only
     counsellorMinWithdrawalAmount: number,
     updatedByAdminId: string | null,
     updatedAt: string
   }
+
+  Note: other payment flows (e.g. Blink referral commissions) use their own
+  independent per-course GST percentage (service_charge_configs.gst_percentage)
+  — unaffected by this config.
 
   Table: platform_configs (single row, id = 'default')
 }

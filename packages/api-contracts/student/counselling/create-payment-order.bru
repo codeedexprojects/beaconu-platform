@@ -43,7 +43,23 @@ script:post-response {
 }
 
 docs {
-  Creates a Razorpay order for booking a counselling slot.
+  Creates a Razorpay order for booking a counselling slot. The order amount
+  includes the platform's configured meeting GST on top of the session fee
+  (GET/PATCH /api/v1/admin/config → meetingGstPercentage). The GST portion
+  is charged to the student but is never credited to the counsellor's
+  wallet — only the base `fee` is credited at booking time.
+
+  Response (payment_required: true):
+  {
+    payment_required: true,
+    order_id: string,
+    amount: number,        // paise, fee + GST — what Razorpay Checkout charges
+    currency: "INR",
+    fee: number,            // counsellor's session fee, GST-exclusive
+    gst_percentage: number,
+    gst_amount: number,
+    total_amount: number    // fee + gst_amount, rupees
+  }
 
   ## Flow
   1. Call this endpoint with `availability_id`.
@@ -58,5 +74,6 @@ docs {
      the order as paid server-side (keyed by availability_id + student_id
      from the order notes).
   5. Call Book Session with just `availability_id` — it checks the
-     paid marker set by the webhook.
+     paid marker set by the webhook. The amount validated against the
+     captured payment is fee + GST, matching what was charged here.
 }
