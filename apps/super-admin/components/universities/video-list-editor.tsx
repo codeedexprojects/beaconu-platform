@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VideoUpload } from "@/components/ui/video-upload";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface VideoEntry {
   title: string;
   url: string;
+  thumbnail: string;
 }
 
 interface VideoListEditorProps {
@@ -23,10 +25,19 @@ function parseEntries(json: string): VideoEntry[] {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter((v): v is VideoEntry => typeof v === "object" && v !== null)
+      .filter(
+        (v): v is Record<string, unknown> =>
+          typeof v === "object" && v !== null,
+      )
       .map((v) => ({
         title: typeof v.title === "string" ? v.title : "",
         url: typeof v.url === "string" ? v.url : "",
+        thumbnail:
+          typeof v.thumbnail === "string"
+            ? v.thumbnail
+            : typeof v.thumbnail_url === "string"
+              ? v.thumbnail_url
+              : "",
       }));
   } catch {
     return [];
@@ -41,11 +52,24 @@ export function VideoListEditor({
   const entries = useMemo(() => parseEntries(value), [value]);
 
   function update(next: VideoEntry[]) {
-    onChange(JSON.stringify(next, null, 2));
+    const normalized = next.map((entry) => ({
+      title: entry.title,
+      url: entry.url,
+      thumbnail_url: entry.thumbnail,
+    }));
+    onChange(JSON.stringify(normalized, null, 2));
   }
 
+  function isEntryComplete(entry: VideoEntry) {
+    return Boolean(entry.url.trim() && entry.thumbnail.trim());
+  }
+
+  const canAddEntry =
+    entries.length === 0 || isEntryComplete(entries[entries.length - 1]);
+
   function addEntry() {
-    update([...entries, { title: "", url: "" }]);
+    if (!canAddEntry) return;
+    update([...entries, { title: "", url: "", thumbnail: "" }]);
   }
 
   function removeEntry(index: number) {
@@ -67,6 +91,7 @@ export function VideoListEditor({
             size="sm"
             onClick={addEntry}
             className="gap-1.5"
+            disabled={!canAddEntry}
           >
             <Plus className="h-3.5 w-3.5" />
             Add Video
@@ -119,9 +144,23 @@ export function VideoListEditor({
                 context="university-videos"
                 disabled={disabled}
               />
+
+              <ImageUpload
+                label="Thumbnail"
+                value={entry.thumbnail}
+                onChange={(url) => updateEntry(i, "thumbnail", url)}
+                context="university-video-thumbnails"
+                disabled={disabled}
+              />
             </div>
           ))}
         </div>
+      )}
+
+      {!canAddEntry && !disabled && (
+        <p className="text-xs text-muted-foreground">
+          Fill video URL and thumbnail before adding the next video.
+        </p>
       )}
     </div>
   );

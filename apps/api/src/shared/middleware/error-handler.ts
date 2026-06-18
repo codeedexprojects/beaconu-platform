@@ -6,6 +6,21 @@ import { z } from "zod";
 import getPrismaErrorMessage from "../utils/getPrismaErrorMessage";
 import { Prisma } from "@beaconu/db";
 
+type JsonBodyParseError = SyntaxError & {
+  status?: number;
+  type?: string;
+  body?: unknown;
+};
+
+function isJsonBodyParseError(error: Error): error is JsonBodyParseError {
+  const candidate = error as JsonBodyParseError;
+  return (
+    error instanceof SyntaxError &&
+    (candidate.status === 400 || candidate.type === "entity.parse.failed") &&
+    Object.prototype.hasOwnProperty.call(candidate, "body")
+  );
+}
+
 /**
  * Global Error Handler Middleware
  * Standardizes all errors into the enterprise response format.
@@ -16,9 +31,24 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
+  if (isJsonBodyParseError(error)) {
+    const apiError = new ApiError(
+      400,
+      error.message,
+      ErrorCode.VALIDATION_ERROR,
+      [{ path: "body", message: "Invalid JSON payload" }],
+    );
+
+    res.status(400).json(apiError.toJSON());
+    return;
+  }
+
   // Handle Prisma Errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const userMessage = getPrismaErrorMessage(error.code);
+    const userMessage = getPrismaErrorMessage(
+      error.code,
+      error.meta as { field_name?: string } | undefined,
+    );
     res.status(400).json({ message: userMessage });
     return;
   }

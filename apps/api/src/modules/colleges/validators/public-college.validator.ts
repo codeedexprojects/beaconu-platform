@@ -13,14 +13,6 @@ const sectionIdentifierParam = z
   .min(1, "section identifier is required");
 
 export const publicCollegeSchemas = {
-  filtersQuery: z.object({
-    search: z.string().trim().optional(),
-  }),
-
-  collegeIdParam: z.object({
-    collegeId: z.string(),
-  }),
-
   sectionParam: z.object({
     collegeId: z.string(),
     sectionName: sectionIdentifierParam,
@@ -43,19 +35,7 @@ export const publicCollegeSchemas = {
       .optional()
       .transform((v) => v || undefined),
   }),
-
-  summaryQuery: z.object({
-    universityId: optionalUuidFromQuery,
-    streamId: optionalUuidFromQuery,
-    disciplineId: optionalUuidFromQuery,
-    studyLevelId: optionalUuidFromQuery,
-    programTypeId: optionalUuidFromQuery,
-  }),
 };
-
-export type PublicCollegeSummaryQuery = z.output<
-  typeof publicCollegeSchemas.summaryQuery
->;
 
 export type PublicCollegeListQuery = z.output<
   typeof publicCollegeSchemas.listQuery

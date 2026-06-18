@@ -18,14 +18,14 @@ body:json {
   {
     "name": "Bachelor of Technology in Computer Science",
     "code": "BTECH-CSE",
-    "disciplineId": "discipline_uuid_here",
-    "studyLevelId": "study_level_uuid_here",
-    "programTypeId": "program_type_uuid_here",
+    "disciplineId": "{{disciplineId}}",
+    "studyLevelId": "{{studyLevelId}}",
+    "programTypeId": "{{programTypeId}}",
     "studyMode": "full_time",
     "intakeCapacity": 120,
     "duration": "4 years",
     "eligibility": "10+2 with Physics, Chemistry and Mathematics",
-    "campusId": "campus_uuid_here",
+    "campusId": "{{campusId}}",
     "tabs": [
       "course_info",
       "admission_policy",
@@ -1039,6 +1039,12 @@ docs {
   Creates a course and assigns course setup tabs in `tabs`.
   You can also send per-tab initial content in `tabData`.
   Example: `tabData.course_info` for first-tab details during create.
+
+  Before running this request, run these lookup requests once:
+    - list-streams-lookup (sets `disciplineId`)
+    - list-study-levels-lookup (sets `studyLevelId`)
+    - list-program-types-lookup (sets `programTypeId`)
+    - create-campus or list-campuses (sets `campusId`)
 
   Course tabs for create flow (14):
     course_info, admission_policy, placements, fees, financial_aid,

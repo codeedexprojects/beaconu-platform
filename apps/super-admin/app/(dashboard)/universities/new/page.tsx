@@ -63,10 +63,16 @@ type UniversityGovernanceForm = {
   };
 };
 
+type UniversityAccoladeForm = {
+  image: string;
+  description: string;
+  subdescription: string;
+};
+
 type UniversityMetadataForm = {
   overview: {
     description: string;
-    accolades: { image: string; description: string; subdescription: string };
+    accolades: UniversityAccoladeForm[];
     university_details: {
       est_date: string;
       nature_of_university: string;
@@ -84,6 +90,22 @@ type UniversityMetadataForm = {
 
 function createEmptyMember(): GovernanceMemberForm {
   return { userPhotoUrl: "", name: "", designation: "", description: "" };
+}
+
+function createEmptyAccolade(): UniversityAccoladeForm {
+  return { image: "", description: "", subdescription: "" };
+}
+
+function isAccoladeComplete(accolade: UniversityAccoladeForm): boolean {
+  return Boolean(
+    accolade.image.trim() &&
+    accolade.description.trim() &&
+    accolade.subdescription.trim(),
+  );
+}
+
+function isMemberComplete(member: GovernanceMemberForm): boolean {
+  return Boolean(member.name.trim() && member.designation.trim());
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -121,18 +143,13 @@ function buildStructuredMetadata(
   return {
     overview: {
       description: form.overview.description,
-      accolades:
-        form.overview.accolades.image ||
-        form.overview.accolades.description ||
-        form.overview.accolades.subdescription
-          ? [
-              {
-                image_url: form.overview.accolades.image,
-                description: form.overview.accolades.description,
-                subdescription: form.overview.accolades.subdescription,
-              },
-            ]
-          : [],
+      accolades: form.overview.accolades
+        .filter(isAccoladeComplete)
+        .map((accolade) => ({
+          image_url: accolade.image,
+          description: accolade.description,
+          subdescription: accolade.subdescription,
+        })),
       university_details: form.overview.university_details,
       discipline: selectedStreams,
       videos: parseJsonArray(form.overview.videosJson, "Videos"),
@@ -173,7 +190,7 @@ const EMPTY_CREATE_FORM: CreateUniversityInput = {
 const EMPTY_METADATA: UniversityMetadataForm = {
   overview: {
     description: "",
-    accolades: { image: "", description: "", subdescription: "" },
+    accolades: [createEmptyAccolade()],
     university_details: {
       est_date: "",
       nature_of_university: "",
@@ -241,6 +258,16 @@ export default function NewUniversityPage() {
   };
 
   const addMember = (council: "academic_council" | "management_council") => {
+    const lastMember =
+      governanceForm[council].members[
+        governanceForm[council].members.length - 1
+      ];
+    if (lastMember && !isMemberComplete(lastMember)) {
+      toast.error(
+        "Fill current member name and designation before adding next",
+      );
+      return;
+    }
     setGovernanceForm((prev) => ({
       ...prev,
       [council]: {
@@ -278,6 +305,36 @@ export default function NewUniversityPage() {
         members: prev[council].members.filter((_, i) => i !== index),
       },
     }));
+  };
+
+  const addAccolade = () => {
+    const accolades = metadataForm.overview.accolades;
+    const lastAccolade = accolades[accolades.length - 1];
+    if (lastAccolade && !isAccoladeComplete(lastAccolade)) {
+      toast.error("Fill current accolade before adding next");
+      return;
+    }
+
+    setMetadataForm((prev) => ({
+      ...prev,
+      overview: {
+        ...prev.overview,
+        accolades: [...prev.overview.accolades, createEmptyAccolade()],
+      },
+    }));
+  };
+
+  const removeAccolade = (index: number) => {
+    setMetadataForm((prev) => {
+      const next = prev.overview.accolades.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        overview: {
+          ...prev.overview,
+          accolades: next.length > 0 ? next : [createEmptyAccolade()],
+        },
+      };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -584,56 +641,108 @@ export default function NewUniversityPage() {
                   </div>
 
                   <div className="rounded-md border p-4 space-y-3">
-                    <Label className="text-sm font-medium">Accolades</Label>
-                    <div className="grid grid-cols-1 gap-3">
-                      <Input
-                        value={metadataForm.overview.accolades.image}
-                        onChange={(e) =>
-                          setMetadataForm((prev) => ({
-                            ...prev,
-                            overview: {
-                              ...prev.overview,
-                              accolades: {
-                                ...prev.overview.accolades,
-                                image: e.target.value,
-                              },
-                            },
-                          }))
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Accolades</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={addAccolade}
+                        disabled={
+                          !isAccoladeComplete(
+                            metadataForm.overview.accolades[
+                              metadataForm.overview.accolades.length - 1
+                            ],
+                          )
                         }
-                        placeholder="Accolades image URL"
-                      />
-                      <Input
-                        value={metadataForm.overview.accolades.description}
-                        onChange={(e) =>
-                          setMetadataForm((prev) => ({
-                            ...prev,
-                            overview: {
-                              ...prev.overview,
-                              accolades: {
-                                ...prev.overview.accolades,
-                                description: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                        placeholder="Accolades description"
-                      />
-                      <Input
-                        value={metadataForm.overview.accolades.subdescription}
-                        onChange={(e) =>
-                          setMetadataForm((prev) => ({
-                            ...prev,
-                            overview: {
-                              ...prev.overview,
-                              accolades: {
-                                ...prev.overview.accolades,
-                                subdescription: e.target.value,
-                              },
-                            },
-                          }))
-                        }
-                        placeholder="Accolades subdescription"
-                      />
+                      >
+                        <PlusCircle className="h-3.5 w-3.5" /> Add accolade
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {metadataForm.overview.accolades.map(
+                        (accolade, index) => (
+                          <div
+                            key={`accolade-${index}`}
+                            className="grid gap-2 md:grid-cols-3 xl:grid-cols-5"
+                          >
+                            <Input
+                              value={accolade.image}
+                              onChange={(e) =>
+                                setMetadataForm((prev) => ({
+                                  ...prev,
+                                  overview: {
+                                    ...prev.overview,
+                                    accolades: prev.overview.accolades.map(
+                                      (item, i) =>
+                                        i === index
+                                          ? { ...item, image: e.target.value }
+                                          : item,
+                                    ),
+                                  },
+                                }))
+                              }
+                              placeholder="Accolades image URL"
+                            />
+                            <Input
+                              value={accolade.description}
+                              onChange={(e) =>
+                                setMetadataForm((prev) => ({
+                                  ...prev,
+                                  overview: {
+                                    ...prev.overview,
+                                    accolades: prev.overview.accolades.map(
+                                      (item, i) =>
+                                        i === index
+                                          ? {
+                                              ...item,
+                                              description: e.target.value,
+                                            }
+                                          : item,
+                                    ),
+                                  },
+                                }))
+                              }
+                              placeholder="Accolades description"
+                            />
+                            <Input
+                              value={accolade.subdescription}
+                              onChange={(e) =>
+                                setMetadataForm((prev) => ({
+                                  ...prev,
+                                  overview: {
+                                    ...prev.overview,
+                                    accolades: prev.overview.accolades.map(
+                                      (item, i) =>
+                                        i === index
+                                          ? {
+                                              ...item,
+                                              subdescription: e.target.value,
+                                            }
+                                          : item,
+                                    ),
+                                  },
+                                }))
+                              }
+                              placeholder="Accolades subdescription"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="justify-self-start"
+                              disabled={
+                                metadataForm.overview.accolades.length === 1
+                              }
+                              onClick={() => removeAccolade(index)}
+                            >
+                              <MinusCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
 
@@ -647,8 +756,6 @@ export default function NewUniversityPage() {
                           ["est_date", "Established date"],
                           ["nature_of_university", "Nature of university"],
                           ["type_of_university", "Type of university"],
-                          ["district", "District"],
-                          ["state", "State"],
                           ["pincode", "Pincode"],
                         ] as const
                       ).map(([key, placeholder]) => (

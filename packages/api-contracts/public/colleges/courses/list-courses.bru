@@ -1,0 +1,50 @@
+meta {
+  name: List Courses
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses
+  body: none
+  auth: none
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("courseId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns all active courses for a college identified by its slug.
+
+  Path params:
+  - collegeSlug: College subdomain slug (set via list-colleges or get-by-slug scripts)
+
+  Response shape (array):
+  [
+    {
+      "id": "CRS-1",
+      "name": "B.Tech Computer Science",
+      "code": "BTCS",
+      "duration": "4 Years",
+      "eligibility": "...",
+      "intakeCapacity": 120,
+      "studyMode": "full_time",
+      "discipline": {
+        "id": "...",
+        "name": "Computer Science",
+        "slug": "computer-science",
+        "stream": { "id": "...", "name": "Engineering", "slug": "engineering" }
+      },
+      "studyLevel": { "id": "...", "name": "Undergraduate", "slug": "undergraduate" },
+      "programType": { "id": "...", "name": "B.Tech", "slug": "btech" }
+    }
+  ]
+
+  Sets courseId env var from the first result for downstream requests.
+}

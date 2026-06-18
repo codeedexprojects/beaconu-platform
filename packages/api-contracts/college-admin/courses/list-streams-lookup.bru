@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/streams
+  url: {{baseUrl}}/api/v1/college-admin/lookups/streams
   body: none
   auth: bearer
 }
@@ -19,4 +19,19 @@ docs {
   Used to populate stream dropdown during course setup.
 
   Requires: staff access token.
+  Saves `disciplineId` from the first stream discipline (if present).
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    const firstDiscipline =
+      data?.data?.[0]?.disciplines?.[0] && data.data[0].disciplines[0].id
+        ? data.data[0].disciplines[0].id
+        : null;
+
+    if (firstDiscipline) {
+      bru.setEnvVar("disciplineId", firstDiscipline);
+    }
+  }
 }
