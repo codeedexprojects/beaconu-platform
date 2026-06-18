@@ -128,6 +128,32 @@ export interface CounsellorWallet {
   transactions: CounsellorWalletTransaction[];
 }
 
+export interface CounsellorWithdrawalRequest {
+  id: string;
+  counsellor: {
+    id: string;
+    full_name: string;
+    email: string;
+    counsellor_code: string | null;
+  };
+  amount: number;
+  withdrawal_status: string | null;
+  bank_details: {
+    account_holder_name: string;
+    account_number: string;
+    ifsc: string;
+    bank_name: string;
+  };
+  review_remarks: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateWithdrawalStatusInput {
+  status: "approved" | "rejected";
+  remarks?: string;
+}
+
 export interface CounsellorRecentSession {
   id: string;
   status: CounsellingSessionStatus;

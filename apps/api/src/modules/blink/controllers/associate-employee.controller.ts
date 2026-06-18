@@ -24,9 +24,11 @@ export class AssociateEmployeeController {
   }
 
   static async listReferrals(req: Request, res: Response) {
-    const { status, page, limit } = req.query as unknown as ReferralListQuery;
+    const { status, search, page, limit } =
+      req.query as unknown as ReferralListQuery;
     const result = await BlinkQuery.listReferralsByEmployee(req.userId!, {
       status,
+      search,
       page,
       limit,
     });

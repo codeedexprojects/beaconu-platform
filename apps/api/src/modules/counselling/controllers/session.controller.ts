@@ -9,6 +9,7 @@ import {
   ListSlotsQueryInput,
   ListWalletTransactionsQueryInput,
   CreatePaymentOrderInput,
+  RequestWithdrawalInput,
 } from "../validators/sessions.validator";
 
 export class CounsellorSessionController {
@@ -106,6 +107,21 @@ export class CounsellorSessionController {
     return res
       .status(200)
       .json(ApiResponse.success("Wallet retrieved", wallet));
+  }
+
+  static async requestWithdrawal(req: Request, res: Response) {
+    const result = await SessionService.requestWithdrawal(
+      req.userId!,
+      req.body as RequestWithdrawalInput,
+    );
+    return res
+      .status(201)
+      .json(
+        ApiResponse.success(
+          "Withdrawal request submitted successfully",
+          result,
+        ),
+      );
   }
 }
 

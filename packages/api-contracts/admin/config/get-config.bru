@@ -1,0 +1,31 @@
+meta {
+  name: Get Platform Config
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/config
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns the platform-wide config singleton.
+  Requires: platform admin access token + permission "platform.settings.view".
+
+  Response:
+  {
+    gstPercentage: number,
+    counsellorMinWithdrawalAmount: number,
+    updatedByAdminId: string | null,
+    updatedAt: string
+  }
+
+  Table: platform_configs (single row, id = 'default')
+}

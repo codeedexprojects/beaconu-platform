@@ -3,24 +3,77 @@ import type {
   ReferralListItem,
   PaginationMeta,
   EmployeeWithRanking,
+  EmployeeListItem,
   ServiceChargeItem,
+  AssociateDashboardSummary,
 } from "@beaconu/types";
 import type {
   ServiceChargeQuery,
   CollegeListQuery,
+  EmployeeListQuery,
 } from "../validators/blink.validator";
 
 export class BlinkQuery {
+  static async getDashboardSummary(
+    adminId: string,
+    filters: { from?: Date; to?: Date },
+  ): Promise<AssociateDashboardSummary> {
+    const { from, to } = filters;
+    const dateRange =
+      from || to
+        ? { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) }
+        : undefined;
+
+    const rows = await prisma.referral.groupBy({
+      by: ["status"],
+      where: {
+        blinkUser: { associateParentId: adminId },
+        ...(dateRange ? { createdAt: dateRange } : {}),
+      },
+      _count: { _all: true },
+    });
+
+    const counts = rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row.status] = row._count._all;
+      return acc;
+    }, {});
+
+    return {
+      applicationSubmitted: counts["registered"] ?? 0,
+      admissionConfirmed: counts["confirmed"] ?? 0,
+      applicationRejected: counts["rejected"] ?? 0,
+      droppedOut: counts["dropped_out"] ?? 0,
+    };
+  }
+
   static async listReferralsByAdmin(
     adminId: string,
-    filters: { status?: string; page: number; limit: number },
+    filters: { status?: string; search?: string; page: number; limit: number },
   ): Promise<{ referrals: ReferralListItem[]; meta: PaginationMeta }> {
-    const { status, page, limit } = filters;
+    const { status, search, page, limit } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       blinkUser: { associateParentId: adminId },
       ...(status ? { status } : {}),
+      ...(search
+        ? {
+            student: {
+              OR: [
+                {
+                  fullName: { contains: search, mode: "insensitive" as const },
+                },
+                { email: { contains: search, mode: "insensitive" as const } },
+                {
+                  phoneNumber: {
+                    contains: search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              ],
+            },
+          }
+        : {}),
     };
 
     const [total, rows] = await Promise.all([
@@ -103,14 +156,32 @@ export class BlinkQuery {
 
   static async listReferralsByEmployee(
     employeeId: string,
-    filters: { status?: string; page: number; limit: number },
+    filters: { status?: string; search?: string; page: number; limit: number },
   ): Promise<{ referrals: ReferralListItem[]; meta: PaginationMeta }> {
-    const { status, page, limit } = filters;
+    const { status, search, page, limit } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       blinkUserId: employeeId,
       ...(status ? { status } : {}),
+      ...(search
+        ? {
+            student: {
+              OR: [
+                {
+                  fullName: { contains: search, mode: "insensitive" as const },
+                },
+                { email: { contains: search, mode: "insensitive" as const } },
+                {
+                  phoneNumber: {
+                    contains: search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              ],
+            },
+          }
+        : {}),
     };
 
     const [total, rows] = await Promise.all([
@@ -193,14 +264,27 @@ export class BlinkQuery {
 
   static async listEmployeesWithRankings(
     adminId: string,
-  ): Promise<EmployeeWithRanking[]> {
+    filters: { from?: Date; to?: Date; page: number; limit: number },
+  ): Promise<{ employees: EmployeeWithRanking[]; meta: PaginationMeta }> {
+    const { from, to, page, limit } = filters;
+    const dateRange =
+      from || to
+        ? { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) }
+        : undefined;
+
     const employees = await prisma.blinkUser.findMany({
       where: { associateParentId: adminId },
       include: {
         blinkRole: { select: { slug: true } },
-        referrals: { select: { id: true, status: true } },
+        referrals: {
+          where: dateRange ? { createdAt: dateRange } : undefined,
+          select: { id: true, status: true },
+        },
         commissions: {
-          where: { status: "credited" },
+          where: {
+            status: "credited",
+            ...(dateRange ? { createdAt: dateRange } : {}),
+          },
           select: { netPayout: true },
         },
       },
@@ -220,7 +304,7 @@ export class BlinkQuery {
 
     withStats.sort((a, b) => b.confirmedCount - a.confirmedCount);
 
-    return withStats.map((item, idx) => ({
+    const ranked = withStats.map((item, idx) => ({
       id: item.employee.id,
       fullName: item.employee.fullName,
       email: item.employee.email,
@@ -233,6 +317,71 @@ export class BlinkQuery {
       confirmedCount: item.confirmedCount,
       commissionEarned: item.commissionEarned,
     }));
+
+    const total = ranked.length;
+    const skip = (page - 1) * limit;
+
+    return {
+      employees: ranked.slice(skip, skip + limit),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  static async listEmployeesPlain(
+    adminId: string,
+    filters: EmployeeListQuery,
+  ): Promise<{
+    employees: EmployeeListItem[];
+    meta: PaginationMeta & { activeCount: number };
+  }> {
+    const { status, search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      associateParentId: adminId,
+      ...(status ? { status } : {}),
+      ...(search
+        ? {
+            OR: [
+              { fullName: { contains: search, mode: "insensitive" as const } },
+              { id: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, activeCount, rows] = await Promise.all([
+      prisma.blinkUser.count({ where }),
+      prisma.blinkUser.count({
+        where: { associateParentId: adminId, status: "active" },
+      }),
+      prisma.blinkUser.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: { blinkRole: { select: { slug: true } } },
+      }),
+    ]);
+
+    return {
+      employees: rows.map((e) => ({
+        id: e.id,
+        fullName: e.fullName,
+        email: e.email,
+        phoneNumber: e.phoneNumber ?? null,
+        status: e.status,
+        roleSlug: e.blinkRole.slug,
+        createdAt: e.createdAt.toISOString(),
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        hasNext: skip + limit < total,
+        activeCount,
+      },
+    };
   }
 
   static async listCollegesForEmployee(filters: CollegeListQuery) {

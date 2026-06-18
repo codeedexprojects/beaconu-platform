@@ -38,10 +38,48 @@ export const updateEmployeeStatusSchema = z.object({
   status: z.enum(["active", "inactive", "suspended", "rejected"]),
 });
 
+export const employeeRankingQuerySchema = z
+  .object({
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .refine((d) => !d.from || !d.to || d.from <= d.to, {
+    message: "`from` must be before or equal to `to`",
+    path: ["from"],
+  });
+
+export type EmployeeRankingQuery = z.infer<typeof employeeRankingQuerySchema>;
+
+export const dashboardSummaryQuerySchema = z
+  .object({
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+  })
+  .refine((d) => !d.from || !d.to || d.from <= d.to, {
+    message: "`from` must be before or equal to `to`",
+    path: ["from"],
+  });
+
+export type DashboardSummaryQuery = z.infer<typeof dashboardSummaryQuerySchema>;
+
+export const employeeListQuerySchema = z.object({
+  status: z
+    .enum(["active", "inactive", "suspended", "rejected", "pending_approval"])
+    .optional(),
+  search: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type EmployeeListQuery = z.infer<typeof employeeListQuerySchema>;
+
 export const referralListQuerySchema = z.object({
   status: z
     .enum(["registered", "rejected", "confirmed", "dropped_out"])
     .optional(),
+  search: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

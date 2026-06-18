@@ -120,12 +120,16 @@ model CounsellorWalletTransaction {
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
   bankDetails      Json     @default("{}") @map("bank_details")
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
+  reviewedBy       String?  @map("reviewed_by")
+  reviewRemarks    String?  @map("review_remarks") @db.Text
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   wallet     CounsellorWallet    @relation(fields: [walletId], references: [id])
   counsellor Counsellor          @relation(fields: [counsellorId], references: [id])
   session    CounsellingSession? @relation(fields: [sessionId], references: [id])
+  reviewer   PlatformAdmin?      @relation(fields: [reviewedBy], references: [id])
 
   @@index([walletId], name: "idx_wtxn_wallet")
   @@index([counsellorId], name: "idx_wtxn_counsellor")
