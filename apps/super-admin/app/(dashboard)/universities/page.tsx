@@ -162,7 +162,7 @@ export default function UniversitiesPage() {
                             variant="secondary"
                             className="text-[10px] font-medium"
                           >
-                            {university.universityType.name}
+                            {university.universityType?.name || "Not set"}
                           </Badge>
                         </TableCell>
                         <TableCell>

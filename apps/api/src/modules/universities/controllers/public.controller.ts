@@ -5,6 +5,36 @@ import { academicTaxonomySchemas } from "../validators/academic-taxonomy.validat
 import { UniversityQuery } from "../queries/universities.query";
 import { AcademicTaxonomyQuery } from "../queries/academic-taxonomy.query";
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function normalizeOverviewStreams(metadata: unknown): Record<string, unknown> {
+  if (!isRecord(metadata)) return {};
+  const next = { ...metadata };
+  if (!isRecord(next.overview)) return next;
+
+  const overview = { ...next.overview };
+  if (!Array.isArray(overview.streams) && Array.isArray(overview.discipline)) {
+    overview.streams = overview.discipline;
+  }
+  if ("discipline" in overview) {
+    delete overview.discipline;
+  }
+
+  next.overview = overview;
+  return next;
+}
+
+function normalizeUniversityResponse<T extends { metadata?: unknown }>(
+  university: T,
+): T {
+  return {
+    ...university,
+    metadata: normalizeOverviewStreams(university.metadata),
+  };
+}
+
 export class UniversityPublicController {
   static async listTypes(_req: Request, res: Response): Promise<void> {
     const result = await UniversityQuery.getFilters();
@@ -40,14 +70,22 @@ export class UniversityPublicController {
   static async listAll(req: Request, res: Response): Promise<void> {
     const query = universitySchemas.listQuery.parse(req.query);
     const universities = await UniversityQuery.listActive(query);
+    const normalized = universities.map(normalizeUniversityResponse);
     res
       .status(200)
-      .json(ApiResponse.success("Universities fetched", universities));
+      .json(ApiResponse.success("Universities fetched", normalized));
   }
 
   static async getById(req: Request, res: Response): Promise<void> {
     const { id } = universitySchemas.idParam.parse(req.params);
     const university = await UniversityQuery.getActiveById(id);
-    res.status(200).json(ApiResponse.success("University fetched", university));
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "University fetched",
+          normalizeUniversityResponse(university),
+        ),
+      );
   }
 }

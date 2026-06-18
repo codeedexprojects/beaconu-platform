@@ -28,6 +28,8 @@ export interface CollegeProfile {
   totalCourses?: number;
   instituteType?: string | null;
   campusAmbassadors?: any[];
+  leadId?: string | null;
+  addressFromLead?: boolean;
 }
 
 export interface Campus {
@@ -63,6 +65,9 @@ export interface UpdateCollegeProfileInput {
   coverImageUrl?: string | null;
   requestedGroupCode?: string | null;
   profileSections?: Record<string, any>;
+  registrationTabs?: string[];
+  leadId?: string | null;
+  addressFromLead?: boolean;
 }
 
 export interface CreateCampusInput {
@@ -157,6 +162,38 @@ export async function createCollegeCourse(
   data: CreateCourseInput,
 ): Promise<Course> {
   return api.post<Course>("/api/v1/college-admin/courses", data);
+}
+
+export async function updateCollegeCourse(
+  id: string,
+  data: Partial<CreateCourseInput>,
+): Promise<Course> {
+  return api.patch<Course>(`/api/v1/college-admin/courses/${id}`, data);
+}
+
+export async function deleteCollegeCourse(id: string): Promise<void> {
+  return api.delete(`/api/v1/college-admin/courses/${id}`);
+}
+
+export async function getCourseTabs(
+  id: string,
+): Promise<{ tabs: string[]; tabData: Record<string, any> }> {
+  const response = await api.get<{
+    tabs: string[];
+    tabData: Record<string, any>;
+  }>(`/api/v1/college-admin/courses/${id}/tabs`);
+  return response;
+}
+
+export async function updateCourseTab(
+  courseId: string,
+  tabName: string,
+  data: { data: any },
+): Promise<any> {
+  return api.patch<any>(
+    `/api/v1/college-admin/courses/${courseId}/tabs/${tabName}`,
+    data,
+  );
 }
 
 export async function submitCollegeRegistration(): Promise<SubmitRegistrationResponse> {

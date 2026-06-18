@@ -26,8 +26,15 @@ export const universitiesService = {
     );
   },
 
-  getById: (id: string) =>
-    api.get<University>(`/api/v1/admin/universities/${id}`),
+  getById: async (id: string) => {
+    const data = await api.get<University | University[]>(
+      `/api/v1/admin/universities/${id}`,
+    );
+    if (Array.isArray(data)) {
+      return data[0] as University;
+    }
+    return data;
+  },
 
   create: (data: CreateUniversityInput) =>
     api.post<University>("/api/v1/admin/universities", data),

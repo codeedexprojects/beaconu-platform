@@ -225,6 +225,9 @@ export class CollegeRegistrationRepository {
       ...(data.profileSections !== undefined
         ? { profileSections: data.profileSections }
         : {}),
+      ...(data.registrationTabs !== undefined
+        ? { registrationTabs: data.registrationTabs }
+        : {}),
       ...(mergedSettings !== undefined ? { settings: mergedSettings } : {}),
     };
 

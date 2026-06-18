@@ -198,9 +198,7 @@ export class UniversityPlatformAdminController {
   static async getById(req: Request, res: Response): Promise<void> {
     const { id } = universitySchemas.idParam.parse(req.params);
     const university = await UniversityQuery.getById(id);
-    res
-      .status(200)
-      .json(ApiResponse.success("University fetched", [university]));
+    res.status(200).json(ApiResponse.success("University fetched", university));
   }
 
   static async create(req: Request, res: Response): Promise<void> {

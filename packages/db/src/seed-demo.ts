@@ -19,12 +19,278 @@ const ADMIN_EMAIL = "admin@vydehi.edu.in";
 const ADMIN_PASSWORD = "Admin@123";
 const ADMIN_NAME = "Dr. Rajiv Menon";
 
+const REGISTRATION_TAB_IDS = [
+  "student_code_of_conduct",
+  "happenings",
+  "institutions_across_world",
+  "commute",
+  "college_overview",
+] as const;
+
+const COURSE_SETUP_TAB_IDS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+] as const;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10);
+}
+
+function buildCourseSetupTabData(course: {
+  name: string;
+  code: string;
+  duration: string;
+  intakeCapacity: number;
+  studyMode: "full_time" | "part_time" | "online";
+  metadata: Record<string, unknown>;
+}) {
+  const totalFee =
+    typeof course.metadata.totalFee === "string"
+      ? course.metadata.totalFee
+      : "Contact admissions";
+
+  const highlights = Array.isArray(course.metadata.highlights)
+    ? course.metadata.highlights
+    : [
+        `${course.name} with industry-integrated learning`,
+        "Practical labs and mentorship support",
+        "Career-oriented curriculum",
+      ];
+
+  return {
+    course_info: {
+      id: "course_info",
+      enabled: true,
+      course_name: course.name,
+      admissions: [
+        {
+          year: "2024-25",
+          status: "Open",
+          placement_rate: "92%",
+          seats_note: `${course.intakeCapacity} seats`,
+          basic_details: {
+            duration: course.duration,
+            study_mode: course.studyMode,
+            academic_cycle: "Semester",
+            total_credits: 120,
+            gender_accepted: "Co-Ed",
+            course_category: "Professional",
+          },
+        },
+      ],
+      program_highlights: highlights,
+      course_accolades: [
+        {
+          title: "Outcome-focused curriculum",
+          body: "Designed with updated industry and academic benchmarks",
+        },
+      ],
+      key_dates: {
+        application_start: "2024-06-15",
+        application_close: { date: "2024-08-15", urgency: "Limited seats" },
+        class_commencement: { date: "2024-09-02", note: "Orientation week" },
+      },
+      curriculum: {
+        brochure_upload: "",
+        brochure_available: false,
+        semesters: [],
+        course_structure: { total_credits: 120, breakdown: [] },
+      },
+      value_added_course: {
+        name: "Professional Communication",
+        delivery_mode: "Hybrid",
+        course_type: "Certificate",
+        credits: 2,
+      },
+      career_opportunities: [
+        "Research Associate",
+        "Operations Executive",
+        "Domain Specialist",
+      ],
+      higher_education_and_certifications: [
+        "Postgraduate Studies",
+        "Industry Certifications",
+      ],
+      flexible_exit_options: [],
+      class_timings: {
+        mode: "Weekday",
+        schedule: ["09:30 AM - 01:30 PM", "02:30 PM - 04:30 PM"],
+      },
+      industry_tools: ["MS Excel", "Power BI", "Python"],
+      lab_facilities: ["Computer Lab", "Simulation Lab"],
+      classroom_facilities: ["Smart Classrooms", "Projector-enabled rooms"],
+      bonus_certification: {
+        name: "Industry Readiness Workshop",
+        note: "Conducted with sector experts",
+        certificate_details_available: true,
+      },
+      featured_alumni: [],
+      faqs: [],
+      student_forum: {
+        description: "Active student clubs and peer mentorship",
+        cta: "Join student communities",
+      },
+    },
+    admission_policy: {
+      id: "admission_policy",
+      enabled: true,
+      policySummary:
+        "Admissions are merit-based with category-wise seat distribution as per regulations.",
+      eligibility_criteria: {
+        applicant_type_tabs: [],
+        default_applicant_type: "indian",
+      },
+    },
+    placements: {
+      id: "placements",
+      enabled: true,
+      placementReportUrl: "",
+      growthSummary: "Steady year-on-year placement and internship growth",
+    },
+    fees: {
+      id: "fees",
+      enabled: true,
+      tuitionFeesSummary: `Approx total fee: ${totalFee}`,
+    },
+    financial_aid: {
+      id: "financial_aid",
+      enabled: true,
+      meritScholarship: {
+        title: "Merit Scholarship",
+        description: "Scholarships available for top-performing applicants",
+      },
+      scholarshipCalculator: {
+        enabled: true,
+        inputs: { portOfEntry: [], rankRanges: [] },
+        termsAndConditions: [],
+        summary: { maxScholarship: "Up to 25%", netPayableFees: totalFee },
+      },
+      financialConcessions: [],
+      upfrontFeeConcession: { discount: "", details: "" },
+    },
+    student_housing: {
+      id: "student_housing",
+      enabled: true,
+      summary: "On-campus and nearby verified hostel options available",
+    },
+    exam_policy: {
+      id: "exam_policy",
+      enabled: true,
+      course_with_practical: {
+        marksDistribution: {
+          theory: 50,
+          practical: 20,
+          internal: 30,
+          total: 100,
+        },
+        isaTheory: [],
+        isaPractical: [],
+        esaTheory: [],
+        esaPractical: [],
+        summary: {
+          title: "Balanced assessment",
+          description: "Theory, practical, and internal marks considered",
+        },
+        duration: "3 Hours",
+      },
+      course_without_practical: {
+        marksDistribution: { theory: 75, internal: 25, total: 100 },
+        internalAssessment: [],
+        attendancePolicy: [],
+        externalExamPattern: [],
+        summary: {
+          title: "Theory-centric",
+          description: "Internal + external",
+        },
+        duration: "3 Hours",
+      },
+      standalone_practical: {
+        marksDistribution: { internal: 30, esa: 70, total: 100 },
+        internalEvaluation: [],
+        externalEvaluation: [],
+        summary: {
+          title: "Practical-only modules",
+          description: "Hands-on focus",
+        },
+      },
+      ojt: { assessmentCriteria: [], totalMarks: 100 },
+      internship: { evaluationComponents: [], totalMarks: 100 },
+      grading_scale: [],
+      academic_policies: [],
+    },
+    faculty: {
+      id: "faculty",
+      enabled: true,
+      summary: "Experienced faculty with academic and industry backgrounds",
+      members: [],
+    },
+    review: {
+      id: "review",
+      enabled: true,
+      overallRating: { rating: 4.3, totalReviews: 128 },
+      ratingDistribution: [],
+      categoryRatings: [],
+      reviews: [],
+      pagination: {
+        loadMoreEnabled: true,
+        page: 1,
+        pageSize: 10,
+        hasMore: true,
+      },
+    },
+    library: {
+      id: "library",
+      enabled: true,
+      libraryInfo: {
+        libraryName: "Central Learning Resource Centre",
+        areaSqFeet: 18000,
+        totalSeats: 250,
+        totalVolumes: 42000,
+        researchCabins: 20,
+      },
+      availableResources: [],
+      libraryHours: [],
+      facilities: [],
+    },
+    clubs_associations: {
+      id: "clubs_associations",
+      enabled: true,
+      summary: "Student clubs for innovation, culture, and community",
+      items: [],
+    },
+    alliance: {
+      id: "alliance",
+      enabled: true,
+      summary: "Active collaborations with healthcare and industry partners",
+      items: [],
+    },
+    other_courses_offered: {
+      id: "other_courses_offered",
+      enabled: true,
+      summary: "Multiple UG, PG, diploma, and certificate options available",
+    },
+    demo_graphics: {
+      id: "demo_graphics",
+      enabled: true,
+      summary: "Interactive charts and info cards can be configured here",
+    },
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,11 +322,34 @@ async function seedUniversityTypes() {
 
   const results: Record<string, string> = {};
   for (const t of types) {
-    const row = await prisma.universityType.upsert({
+    const bySlug = await prisma.universityType.findUnique({
       where: { slug: t.slug },
-      update: { name: t.name, sortOrder: t.sortOrder },
-      create: t,
     });
+
+    const row = bySlug
+      ? await prisma.universityType.update({
+          where: { id: bySlug.id },
+          data: { name: t.name, sortOrder: t.sortOrder, isActive: true },
+        })
+      : await prisma.universityType
+          .findUnique({ where: { name: t.name } })
+          .then((existingByName) => {
+            if (existingByName) {
+              return prisma.universityType.update({
+                where: { id: existingByName.id },
+                data: { sortOrder: t.sortOrder, isActive: true },
+              });
+            }
+
+            return prisma.universityType.create({
+              data: {
+                name: t.name,
+                slug: t.slug,
+                sortOrder: t.sortOrder,
+              },
+            });
+          });
+
     results[t.slug] = row.id;
   }
   console.log("✓ University types seeded");
@@ -174,11 +463,28 @@ async function seedStreamsAndDisciplines() {
   const disciplineIds: Record<string, string> = {};
 
   for (const s of streamDefs) {
-    const stream = await prisma.stream.upsert({
-      where: { slug: s.slug },
-      update: { name: s.name, sortOrder: s.sortOrder },
-      create: { name: s.name, slug: s.slug, sortOrder: s.sortOrder },
-    });
+    const bySlug = await prisma.stream.findUnique({ where: { slug: s.slug } });
+
+    const stream = bySlug
+      ? await prisma.stream.update({
+          where: { id: bySlug.id },
+          data: { name: s.name, sortOrder: s.sortOrder, isActive: true },
+        })
+      : await prisma.stream
+          .findUnique({ where: { name: s.name } })
+          .then((existingByName) => {
+            if (existingByName) {
+              return prisma.stream.update({
+                where: { id: existingByName.id },
+                data: { sortOrder: s.sortOrder, isActive: true },
+              });
+            }
+
+            return prisma.stream.create({
+              data: { name: s.name, slug: s.slug, sortOrder: s.sortOrder },
+            });
+          });
+
     streamIds[s.slug] = stream.id;
 
     for (const d of s.disciplines) {
@@ -207,11 +513,28 @@ async function seedStudyLevels() {
 
   const ids: Record<string, string> = {};
   for (const l of levels) {
-    const row = await prisma.studyLevel.upsert({
+    const bySlug = await prisma.studyLevel.findUnique({
       where: { slug: l.slug },
-      update: { name: l.name, sortOrder: l.sortOrder },
-      create: l,
     });
+
+    const row = bySlug
+      ? await prisma.studyLevel.update({
+          where: { id: bySlug.id },
+          data: { name: l.name, sortOrder: l.sortOrder, isActive: true },
+        })
+      : await prisma.studyLevel
+          .findUnique({ where: { name: l.name } })
+          .then((existingByName) => {
+            if (existingByName) {
+              return prisma.studyLevel.update({
+                where: { id: existingByName.id },
+                data: { sortOrder: l.sortOrder, isActive: true },
+              });
+            }
+
+            return prisma.studyLevel.create({ data: l });
+          });
+
     ids[l.slug] = row.id;
   }
   console.log("✓ Study levels seeded");
@@ -229,11 +552,28 @@ async function seedProgramTypes() {
 
   const ids: Record<string, string> = {};
   for (const t of types) {
-    const row = await prisma.programType.upsert({
+    const bySlug = await prisma.programType.findUnique({
       where: { slug: t.slug },
-      update: { name: t.name, sortOrder: t.sortOrder },
-      create: t,
     });
+
+    const row = bySlug
+      ? await prisma.programType.update({
+          where: { id: bySlug.id },
+          data: { name: t.name, sortOrder: t.sortOrder, isActive: true },
+        })
+      : await prisma.programType
+          .findUnique({ where: { name: t.name } })
+          .then((existingByName) => {
+            if (existingByName) {
+              return prisma.programType.update({
+                where: { id: existingByName.id },
+                data: { sortOrder: t.sortOrder, isActive: true },
+              });
+            }
+
+            return prisma.programType.create({ data: t });
+          });
+
     ids[t.slug] = row.id;
   }
   console.log("✓ Program types seeded");
@@ -905,6 +1245,76 @@ async function seedCollege(universityId: string) {
       "Student Achievements",
       "Faculty Achievements",
     ],
+    college_overview: {
+      id: "college_overview",
+      enabled: true,
+      description:
+        "Premier multidisciplinary institution with modern infrastructure and strong student outcomes.",
+      instution_details: {
+        estd: "2000",
+        gender: "Co-Ed",
+        average_student_count: "1,500+",
+        campus_size: "65 Acres",
+        Student_from_outside: "35%",
+      },
+      location: {
+        map_link: "",
+      },
+      connect: {
+        linkedin: "https://linkedin.com",
+        instagram: "https://instagram.com",
+        twitter: "",
+        website: "https://vydehi.edu.in",
+      },
+    },
+    student_code_of_conduct: {
+      id: "student_code_of_conduct",
+      enabled: true,
+      title: "Student Code of Conduct",
+      disciplineRules: [
+        "Carry your college ID card at all times.",
+        "Maintain minimum attendance as per policy.",
+        "Ragging and harassment are strictly prohibited.",
+      ],
+    },
+    happenings: {
+      id: "happenings",
+      enabled: true,
+      summary:
+        "Campus updates across academics, student life, and achievements",
+      items: [
+        {
+          title: "Research Innovation Week",
+          category: "College News",
+          date: "2024-08-15",
+        },
+        {
+          title: "Inter-College Cultural Fest",
+          category: "Student Achievements",
+          date: "2024-09-05",
+        },
+      ],
+    },
+    institutions_across_world: {
+      id: "institutions_across_world",
+      enabled: true,
+      summary: "Partner campuses and associated institutions across regions",
+      institutions: [
+        {
+          location: "Mangaluru",
+          name: "Nitte Meenakshi Institute of Technology",
+        },
+        {
+          location: "Bengaluru – Yelahanka",
+          name: "Nitte School of Fashion Technology & Interior Design",
+        },
+      ],
+    },
+    commute: {
+      id: "commute",
+      enabled: true,
+      summary: "Daily transport routes available from major city zones",
+    },
   };
 
   const college = await prisma.college.upsert({
@@ -919,6 +1329,11 @@ async function seedCollege(universityId: string) {
       address: "82, EPIP Area, Whitefield, Bengaluru, Karnataka 560066",
       pinCode: "560066",
       profileSections,
+      settings: {
+        registrationMeta: {
+          registrationTabs: [...REGISTRATION_TAB_IDS],
+        },
+      },
     },
     create: {
       slug: COLLEGE_SLUG,
@@ -931,6 +1346,11 @@ async function seedCollege(universityId: string) {
       address: "82, EPIP Area, Whitefield, Bengaluru, Karnataka 560066",
       pinCode: "560066",
       profileSections,
+      settings: {
+        registrationMeta: {
+          registrationTabs: [...REGISTRATION_TAB_IDS],
+        },
+      },
     },
   });
 
@@ -1240,6 +1660,28 @@ async function seedCourses(
       continue;
     }
 
+    const setupTabData = buildCourseSetupTabData({
+      name: c.name,
+      code: c.code,
+      duration: c.duration,
+      intakeCapacity: c.intakeCapacity,
+      studyMode: c.studyMode,
+      metadata: c.metadata,
+    });
+
+    const metadataWithTabs = {
+      ...c.metadata,
+      tabs: [...COURSE_SETUP_TAB_IDS],
+      tabData: setupTabData,
+    };
+
+    const highlights = Array.isArray(c.metadata.highlights)
+      ? c.metadata.highlights
+      : [
+          `${c.name} with practical-first pedagogy`,
+          "Mentored projects and internships",
+        ];
+
     const course = await prisma.course.upsert({
       where: { uq_course_code_college: { collegeId, code: c.code } },
       update: {
@@ -1251,7 +1693,52 @@ async function seedCourses(
         duration: c.duration,
         intakeCapacity: c.intakeCapacity,
         studyMode: c.studyMode,
-        metadata: c.metadata,
+        metadata: metadataWithTabs,
+        highlights,
+        curriculum: [],
+        courseStructure: {
+          totalCredits: 120,
+          mode: "CBCS",
+        },
+        valueAddedCourses: [
+          {
+            name: "Communication Skills",
+            credits: 2,
+            deliveryMode: "Workshop",
+          },
+        ],
+        careerOpportunities: [
+          { role: "Analyst", salaryRange: "4-8 LPA" },
+          { role: "Specialist", salaryRange: "6-12 LPA" },
+        ],
+        higherEducationCertifications: {
+          global: ["Certification Tracks"],
+          postGraduation: ["Advanced Degree Options"],
+        },
+        flexibleExitOptions: [],
+        classTimings: {
+          weekdays: {
+            start: "09:30",
+            end: "16:30",
+            status: "regular",
+          },
+        },
+        industryTools: ["Excel", "Python", "Power BI"],
+        labFacilities: ["Simulation Lab", "Computer Lab"],
+        roomFacilities: ["Smart Classrooms", "Seminar Halls"],
+        featuredAlumni: [],
+        faqs: [],
+        examPolicy: {
+          model: "Continuous + End Semester",
+          attendanceRequired: 75,
+        },
+        entranceExamEligibility: [],
+        eligibilityCriteria: {
+          minimum: "As per governing body guidelines",
+        },
+        accreditations: ["NAAC"],
+        keyDates: [],
+        demographics: {},
       },
       create: {
         collegeId,
@@ -1265,7 +1752,52 @@ async function seedCourses(
         intakeCapacity: c.intakeCapacity,
         studyMode: c.studyMode,
         status: "active",
-        metadata: c.metadata,
+        metadata: metadataWithTabs,
+        highlights,
+        curriculum: [],
+        courseStructure: {
+          totalCredits: 120,
+          mode: "CBCS",
+        },
+        valueAddedCourses: [
+          {
+            name: "Communication Skills",
+            credits: 2,
+            deliveryMode: "Workshop",
+          },
+        ],
+        careerOpportunities: [
+          { role: "Analyst", salaryRange: "4-8 LPA" },
+          { role: "Specialist", salaryRange: "6-12 LPA" },
+        ],
+        higherEducationCertifications: {
+          global: ["Certification Tracks"],
+          postGraduation: ["Advanced Degree Options"],
+        },
+        flexibleExitOptions: [],
+        classTimings: {
+          weekdays: {
+            start: "09:30",
+            end: "16:30",
+            status: "regular",
+          },
+        },
+        industryTools: ["Excel", "Python", "Power BI"],
+        labFacilities: ["Simulation Lab", "Computer Lab"],
+        roomFacilities: ["Smart Classrooms", "Seminar Halls"],
+        featuredAlumni: [],
+        faqs: [],
+        examPolicy: {
+          model: "Continuous + End Semester",
+          attendanceRequired: 75,
+        },
+        entranceExamEligibility: [],
+        eligibilityCriteria: {
+          minimum: "As per governing body guidelines",
+        },
+        accreditations: ["NAAC"],
+        keyDates: [],
+        demographics: {},
       },
     });
 

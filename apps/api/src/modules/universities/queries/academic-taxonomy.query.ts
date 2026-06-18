@@ -62,17 +62,66 @@ function getPublicFields(filters: ListQuery) {
   return { university_id, discipline_id };
 }
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function extractUniversityStreamIds(metadata: unknown): string[] {
+  if (!isRecord(metadata)) return [];
+  const overview = isRecord(metadata.overview) ? metadata.overview : undefined;
+  if (!overview) return [];
+
+  const raw = Array.isArray(overview.streams)
+    ? overview.streams
+    : Array.isArray(overview.discipline)
+      ? overview.discipline
+      : [];
+
+  return Array.from(
+    new Set(
+      raw
+        .map((item) => {
+          if (typeof item === "string") return item.trim();
+          if (!isRecord(item)) return "";
+          const candidate =
+            (typeof item.id === "string" && item.id) ||
+            (typeof item.streamId === "string" && item.streamId) ||
+            (typeof item.stream_id === "string" && item.stream_id) ||
+            "";
+          return candidate.trim();
+        })
+        .filter((id) => id.length > 0),
+    ),
+  );
+}
+
 export class AcademicTaxonomyQuery {
   static async listStreams(filters: ListQuery) {
     const isActive = resolveIsActive(filters);
     const { university_id, discipline_id } = getPublicFields(filters);
     const whereClause: any = isActive !== undefined ? { isActive } : {};
+    let selectedUniversityStreamIds: string[] = [];
+
+    if (university_id) {
+      const university = await prisma.university.findUnique({
+        where: { id: university_id },
+        select: { metadata: true },
+      });
+      selectedUniversityStreamIds = extractUniversityStreamIds(
+        university?.metadata,
+      );
+    }
 
     if (filters.search) {
       whereClause.name = { contains: filters.search, mode: "insensitive" };
     }
 
-    if (university_id || discipline_id) {
+    if (selectedUniversityStreamIds.length > 0) {
+      whereClause.id = { in: selectedUniversityStreamIds };
+      if (discipline_id) {
+        whereClause.disciplines = { some: { id: discipline_id } };
+      }
+    } else if (university_id || discipline_id) {
       const disciplineWhere: any = {};
       if (discipline_id) disciplineWhere.id = discipline_id;
       if (university_id) {
@@ -112,6 +161,17 @@ export class AcademicTaxonomyQuery {
     const isActive = resolveIsActive(filters);
     const { university_id } = getPublicFields(filters);
     const whereClause: any = isActive !== undefined ? { isActive } : {};
+    let selectedUniversityStreamIds: string[] = [];
+
+    if (university_id) {
+      const university = await prisma.university.findUnique({
+        where: { id: university_id },
+        select: { metadata: true },
+      });
+      selectedUniversityStreamIds = extractUniversityStreamIds(
+        university?.metadata,
+      );
+    }
 
     if (filters.search) {
       whereClause.name = { contains: filters.search, mode: "insensitive" };
@@ -121,7 +181,17 @@ export class AcademicTaxonomyQuery {
       whereClause.streamId = filters.stream_id;
     }
 
-    if (university_id) {
+    if (selectedUniversityStreamIds.length > 0) {
+      if (filters.stream_id) {
+        whereClause.streamId = selectedUniversityStreamIds.includes(
+          filters.stream_id,
+        )
+          ? filters.stream_id
+          : "__none__";
+      } else {
+        whereClause.streamId = { in: selectedUniversityStreamIds };
+      }
+    } else if (university_id) {
       whereClause.courses = {
         some: {
           status: "active",

@@ -4,6 +4,7 @@ import { ListUniversitiesQuery } from "../validators/universities.validator";
 
 const UNIVERSITY_WITH_TYPE_SELECT = {
   id: true,
+  universityTypeId: true,
   name: true,
   slug: true,
   state: true,
