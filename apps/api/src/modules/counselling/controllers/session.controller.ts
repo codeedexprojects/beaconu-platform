@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { SessionService } from "../services/sessions.service";
+import { RefundService } from "../services/refund.service";
 import {
   ListAvailableSlotsQueryInput,
   ListCounsellorRatingsQueryInput,
@@ -11,6 +12,10 @@ import {
   CreatePaymentOrderInput,
   RequestWithdrawalInput,
 } from "../validators/sessions.validator";
+import type {
+  RequestRefundInput,
+  ListMyRefundRequestsQueryInput,
+} from "../validators/refund.validator";
 
 export class CounsellorSessionController {
   static async addSlot(req: Request, res: Response) {
@@ -272,5 +277,35 @@ export class StudentSessionController {
     return res
       .status(200)
       .json(ApiResponse.success("Session rated successfully", session));
+  }
+
+  static async requestRefund(req: Request, res: Response) {
+    const result = await RefundService.requestRefund(
+      req.userId!,
+      req.params.id as string,
+      req.body as RequestRefundInput,
+    );
+    return res
+      .status(201)
+      .json(
+        ApiResponse.success("Refund request submitted successfully", result),
+      );
+  }
+
+  static async listMyRefundRequests(req: Request, res: Response) {
+    const query = req.query as unknown as ListMyRefundRequestsQueryInput;
+    const result = await RefundService.listMyRefundRequests(req.userId!, {
+      page: query.page,
+      limit: query.limit,
+    });
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Refund requests retrieved",
+          result.data,
+          result.meta,
+        ),
+      );
   }
 }

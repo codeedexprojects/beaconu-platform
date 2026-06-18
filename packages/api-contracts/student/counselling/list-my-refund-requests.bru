@@ -1,0 +1,29 @@
+meta {
+  name: List My Refund Requests
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/refund-requests?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Lists the authenticated student's own counselling refund requests,
+  newest first.
+  Requires: student access token.
+
+  Each item includes status (pending | approved | rejected), amount,
+  the session it's tied to, and review_remarks if reviewed.
+}

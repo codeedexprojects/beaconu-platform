@@ -19,4 +19,18 @@ router.post(
   StudentUploadController.verifyAvatar,
 );
 
+router.post(
+  "/refund-proof/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignRefundProof,
+);
+
+router.post(
+  "/refund-proof/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyRefundProof,
+);
+
 export default router;

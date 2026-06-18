@@ -53,6 +53,8 @@ function formatCounsellor(counsellor: any) {
     about: metadata.about ?? null,
     expertise: deriveExpertise(metadata),
     education: deriveEducation(metadata),
+    upi_id: counsellor.upiId ?? null,
+    bank_details: counsellor.bankDetails ?? {},
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -94,6 +96,10 @@ export class CounsellingService {
         : {}),
       ...(data.session_fee !== undefined
         ? { sessionFee: data.session_fee }
+        : {}),
+      ...(data.upi_id !== undefined ? { upiId: data.upi_id } : {}),
+      ...(data.bank_details !== undefined
+        ? { bankDetails: data.bank_details as Prisma.InputJsonValue }
         : {}),
       ...(Object.keys(metadataUpdate).length > 0
         ? {

@@ -72,6 +72,13 @@ export interface ListCounsellingSessionsQuery {
 
 export type CounsellorStatus = "active" | "inactive" | "pending_verification";
 
+export interface CounsellorBankDetails {
+  account_holder_name: string;
+  account_number: string;
+  ifsc: string;
+  bank_name: string;
+}
+
 export interface Counsellor {
   id: string;
   counsellor_code: string | null;
@@ -84,6 +91,8 @@ export interface Counsellor {
   rating: number;
   known_languages: string | null;
   session_fee: number;
+  upi_id: string | null;
+  bank_details: Partial<CounsellorBankDetails>;
   profile_metadata: unknown;
   last_login_at: string | null;
   created_at: string;
@@ -113,6 +122,7 @@ export interface CounsellorWalletTransaction {
   description: string | null;
   session_id: string | null;
   withdrawal_status: string | null;
+  payout_details?: unknown;
   balance_after: number;
   created_at: string;
 }
@@ -138,18 +148,58 @@ export interface CounsellorWithdrawalRequest {
   };
   amount: number;
   withdrawal_status: string | null;
-  bank_details: {
-    account_holder_name: string;
-    account_number: string;
-    ifsc: string;
-    bank_name: string;
-  };
+  payout_details:
+    | { method: "upi"; upi_id: string }
+    | ({ method: "bank" } & CounsellorBankDetails);
   review_remarks: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface UpdateWithdrawalStatusInput {
+  status: "approved" | "rejected";
+  remarks?: string;
+}
+
+export type RefundRequestStatus = "pending" | "approved" | "rejected";
+
+export interface CounsellingRefundRequest {
+  id: string;
+  session_id: string;
+  amount: number;
+  upi_id: string;
+  reason: string;
+  proof_url: string | null;
+  status: RefundRequestStatus;
+  review_remarks: string | null;
+  student?: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  counsellor?: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  session?: {
+    id: string;
+    scheduled_date: string;
+    start_time: string;
+    end_time: string;
+    counsellor_name?: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RequestRefundInput {
+  upi_id: string;
+  reason: string;
+  proof_url?: string;
+}
+
+export interface UpdateRefundStatusInput {
   status: "approved" | "rejected";
   remarks?: string;
 }

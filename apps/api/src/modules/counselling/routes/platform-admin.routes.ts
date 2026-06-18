@@ -7,6 +7,10 @@ import {
   listWithdrawalRequestsQuerySchema,
   updateWithdrawalStatusSchema,
 } from "../validators/sessions.validator";
+import {
+  listRefundRequestsQuerySchema,
+  updateRefundStatusSchema,
+} from "../validators/refund.validator";
 import { CounsellingPlatformAdminController } from "../controllers/platform-admin.controller";
 
 const router: Router = Router();
@@ -34,6 +38,23 @@ router.patch(
   authorize("counsellors.manage"),
   validate(updateWithdrawalStatusSchema),
   CounsellingPlatformAdminController.updateWithdrawalStatus,
+);
+
+router.get(
+  "/refund-requests",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.view"),
+  validate(listRefundRequestsQuerySchema, "query"),
+  CounsellingPlatformAdminController.listRefundRequests,
+);
+router.patch(
+  "/refund-requests/:id/status",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.manage"),
+  validate(updateRefundStatusSchema),
+  CounsellingPlatformAdminController.updateRefundStatus,
 );
 
 router.get(
