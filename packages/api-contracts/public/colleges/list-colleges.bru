@@ -16,6 +16,7 @@ query {
   ~disciplineId:
   ~studyLevelId:
   ~programTypeId:
+  ~sortBy: popularity
   ~state: Karnataka
   ~district: Bangalore
 }
@@ -41,6 +42,11 @@ docs {
   - disciplineId: Filter by discipline UUID
   - studyLevelId: Filter by study level UUID
   - programTypeId: Filter by program type UUID
+  - sortBy: Sort colleges by one of:
+    - popularity
+    - fees_high_to_low
+    - fees_low_to_high
+    (aliases `sort` and `filter` are also accepted)
   - state: Filter by state name (case-insensitive, e.g. "Karnataka")
   - district: Filter by district/city name (case-insensitive, e.g. "Bangalore")
 
@@ -48,7 +54,8 @@ docs {
   - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
     state, city, district, address, pinCode, status, createdAt, updatedAt
   - university: { id, name, logoUrl, universityType: { id, name, slug } }
-  - campuses: main campus only [{ city, state }]
+  - campuses: full active campus list [{ id, collegeId, name, address, city, state,
+    pinCode, latitude, longitude, isMainCampus, status, createdAt, updatedAt }]
 
   Note: tabs and profileSections are NOT included in the list response.
   Use Get College By Id for college details with tab listing.

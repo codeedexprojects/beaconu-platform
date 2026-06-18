@@ -5,17 +5,18 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/universities/streams?page=1&limit=10&search=&university_id=&discipline_id=
+  url: {{baseUrl}}/api/v1/public/universities/streams?page=1&limit=10&search=&university_id=UNV-2
   body: none
   auth: none
 }
 
-query {
+params:query {
   page: 1
   limit: 10
+  search: 
+  university_id: UNV-2
+  ~discipline_id: 
   ~search: Engineering
-  ~university_id: 9e74953e-5efa-403c-b190-1fcecf504930
-  ~discipline_id: 68cf8336-b1e0-49c8-892e-cdca46d8f9f5
 }
 
 docs {

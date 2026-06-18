@@ -28,16 +28,6 @@ const PUBLIC_COLLEGE_INCLUDES = {
       isMainCampus: true,
     },
   },
-  courses: {
-    where: { status: "active" },
-    include: {
-      discipline: {
-        include: { stream: true },
-      },
-      studyLevel: true,
-      programType: true,
-    },
-  },
   blinkUsers: {
     select: {
       id: true,
@@ -198,7 +188,13 @@ function buildPublicProfileResponse(college: any) {
     : {};
   const tabs = buildTabList(profileSections);
 
-  const { settings: _s, blinkUsers: _bu, _count, ...collegeDetails } = college;
+  const {
+    settings: _s,
+    blinkUsers: _bu,
+    _count,
+    registrationTabs: _rt,
+    ...collegeDetails
+  } = college;
 
   return {
     collegeDetails: {
@@ -243,9 +239,16 @@ export class PublicCollegeController {
       disciplineId,
       studyLevelId,
       programTypeId,
+      sortBy,
+      sort,
+      filter,
       state,
       district,
     } = publicCollegeSchemas.listQuery.parse(req.query);
+
+    const sortOption = sortBy ?? sort ?? filter;
+    const isFeeSort =
+      sortOption === "fees_high_to_low" || sortOption === "fees_low_to_high";
 
     const filters: any = { status: "active" };
 
@@ -274,7 +277,7 @@ export class PublicCollegeController {
       };
     }
 
-    const colleges = await prisma.college.findMany({
+    let colleges = (await prisma.college.findMany({
       where: filters,
       select: {
         id: true,
@@ -304,13 +307,76 @@ export class PublicCollegeController {
           },
         },
         campuses: {
-          where: { isMainCampus: true, status: "active" },
-          take: 1,
-          select: { city: true, state: true },
+          where: { status: "active" },
+          orderBy: [{ isMainCampus: "desc" }, { name: "asc" }],
+          select: {
+            id: true,
+            collegeId: true,
+            name: true,
+            address: true,
+            city: true,
+            state: true,
+            pinCode: true,
+            latitude: true,
+            longitude: true,
+            isMainCampus: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         },
+        ...(isFeeSort
+          ? {
+              feeStructures: {
+                where: { isActive: true },
+                select: { amount: true },
+              },
+            }
+          : {}),
       },
-      orderBy: { name: "asc" },
-    });
+      orderBy:
+        sortOption === "popularity"
+          ? [{ avgRating: "desc" }, { reviewCount: "desc" }, { name: "asc" }]
+          : { name: "asc" },
+    })) as any[];
+
+    if (isFeeSort) {
+      const direction = sortOption === "fees_high_to_low" ? "desc" : "asc";
+
+      const getMinActiveFee = (college: any) => {
+        const structures = Array.isArray(college.feeStructures)
+          ? college.feeStructures
+          : [];
+
+        if (structures.length === 0) return null;
+
+        const amounts = structures
+          .map((fs: any) => Number(fs.amount))
+          .filter((value: number) => Number.isFinite(value));
+
+        if (amounts.length === 0) return null;
+
+        return Math.min(...amounts);
+      };
+
+      colleges = colleges
+        .sort((a, b) => {
+          const aFee = getMinActiveFee(a);
+          const bFee = getMinActiveFee(b);
+
+          if (aFee === null && bFee === null)
+            return a.name.localeCompare(b.name);
+          if (aFee === null) return 1;
+          if (bFee === null) return -1;
+
+          const delta = direction === "desc" ? bFee - aFee : aFee - bFee;
+
+          if (delta !== 0) return delta;
+
+          return a.name.localeCompare(b.name);
+        })
+        .map(({ feeStructures: _feeStructures, ...college }) => college);
+    }
 
     return res
       .status(200)
@@ -422,8 +488,26 @@ export class PublicCollegeController {
       },
     });
 
+    const mappedCourses = courses.map((course: any) => {
+      const rawMeta =
+        course.metadata && typeof course.metadata === "object"
+          ? (course.metadata as Record<string, unknown>)
+          : {};
+      const tabStrings: string[] = Array.isArray(rawMeta.tabs)
+        ? (rawMeta.tabs as unknown[]).filter(
+            (v): v is string => typeof v === "string",
+          )
+        : [];
+      const tabs = tabStrings.map((id) => ({
+        id,
+        name: toTabDisplayName(id),
+      }));
+      const { tabData: _td, tabs: _ts, ...restMeta } = rawMeta;
+      return { ...course, metadata: { ...restMeta, tabs } };
+    });
+
     return res
       .status(200)
-      .json(ApiResponse.success("Courses fetched successfully", courses));
+      .json(ApiResponse.success("Courses fetched successfully", mappedCourses));
   }
 }
