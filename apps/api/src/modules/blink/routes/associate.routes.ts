@@ -11,6 +11,9 @@ import {
   walletTransactionQuerySchema,
   serviceChargeQuerySchema,
   updateServiceChargeSchema,
+  employeeRankingQuerySchema,
+  employeeListQuerySchema,
+  dashboardSummaryQuerySchema,
 } from "../validators/blink.validator";
 import { AssociateAdminController } from "../controllers/associate-admin.controller";
 
@@ -23,6 +26,14 @@ router.post(
 );
 
 router.get(
+  "/dashboard/summary",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(dashboardSummaryQuerySchema, "query"),
+  AssociateAdminController.getDashboardSummary,
+);
+
+router.get(
   "/profile",
   authenticate,
   authorizeUserType("blink_associate"),
@@ -32,7 +43,15 @@ router.get(
   "/employees",
   authenticate,
   authorizeUserType("blink_associate"),
+  validate(employeeListQuerySchema, "query"),
   AssociateAdminController.listEmployees,
+);
+router.get(
+  "/employees/leaderboard",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(employeeRankingQuerySchema, "query"),
+  AssociateAdminController.listEmployeeLeaderboard,
 );
 router.get(
   "/employees/pending",

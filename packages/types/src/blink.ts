@@ -1,5 +1,12 @@
 import type { PaginationMeta } from "./api";
 
+export interface AssociateDashboardSummary {
+  applicationSubmitted: number;
+  admissionConfirmed: number;
+  applicationRejected: number;
+  droppedOut: number;
+}
+
 export interface ServiceChargeItem {
   id: string;
   college: { id: string; name: string };
@@ -102,6 +109,16 @@ export interface EmployeeWithRanking {
   totalReferrals: number;
   confirmedCount: number;
   commissionEarned: number;
+}
+
+export interface EmployeeListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  status: string;
+  roleSlug: string;
+  createdAt: string;
 }
 
 export interface EmployeePerformance {

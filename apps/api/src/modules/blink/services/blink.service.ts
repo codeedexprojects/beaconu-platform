@@ -167,7 +167,10 @@ export class BlinkService {
   }
 
   static async getProfile(userId: string) {
-    const user = await BlinkRepository.findById(userId);
+    const [user, wallet] = await Promise.all([
+      BlinkRepository.findById(userId),
+      BlinkRepository.getWalletByUserId(userId),
+    ]);
     if (!user) throw new NotFoundError("User not found");
     return {
       id: user.id,
@@ -179,6 +182,7 @@ export class BlinkService {
       collegeId: user.collegeId,
       roleSlug: user.blinkRole.slug,
       status: user.status,
+      walletBalance: wallet ? Number(wallet.balance) : 0,
     };
   }
 

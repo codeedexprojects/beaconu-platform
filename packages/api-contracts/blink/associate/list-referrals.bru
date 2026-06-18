@@ -17,6 +17,7 @@ headers {
 
 params:query {
   ~status: registered
+  ~search:
   ~page: 1
   ~limit: 20
 }
@@ -36,6 +37,7 @@ docs {
 
   Query params:
     status  (optional) — filter by referral status: registered | rejected | confirmed | dropped_out
+    search  (optional) — matches student full name, email, or phone (case-insensitive)
     page    (optional, default 1)
     limit   (optional, default 20, max 100)
 
