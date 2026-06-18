@@ -4,7 +4,7 @@
 
 model PlatformConfig {
   id                             String   @id @default("default") @db.VarChar(20)
-  gstPercentage                  Decimal  @default(18.00) @map("gst_percentage") @db.Decimal(5, 2)
+  meetingGstPercentage           Decimal  @default(18.00) @map("meeting_gst_percentage") @db.Decimal(5, 2)
   counsellorMinWithdrawalAmount  Decimal  @default(500.00) @map("counsellor_min_withdrawal_amount") @db.Decimal(10, 2)
   updatedByAdminId               String?  @map("updated_by_admin_id")
   createdAt                      DateTime @default(now()) @map("created_at") @db.Timestamptz

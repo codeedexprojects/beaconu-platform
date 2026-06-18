@@ -10,7 +10,10 @@ export class PlatformConfigRepository {
   }
 
   static async update(
-    data: { gstPercentage?: number; counsellorMinWithdrawalAmount?: number },
+    data: {
+      meetingGstPercentage?: number;
+      counsellorMinWithdrawalAmount?: number;
+    },
     updatedByAdminId: string,
   ) {
     return prisma.platformConfig.update({

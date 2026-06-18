@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const updatePlatformConfigSchema = z
   .object({
-    gstPercentage: z
+    meetingGstPercentage: z
       .number()
-      .min(0, "gstPercentage must be ≥ 0")
-      .max(100, "gstPercentage must be ≤ 100")
+      .min(0, "meetingGstPercentage must be ≥ 0")
+      .max(100, "meetingGstPercentage must be ≤ 100")
       .optional(),
     counsellorMinWithdrawalAmount: z
       .number()
