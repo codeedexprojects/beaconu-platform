@@ -1,3 +1,10 @@
+export interface PlatformConfig {
+  gstPercentage: number;
+  counsellorMinWithdrawalAmount: number;
+  updatedByAdminId: string | null;
+  updatedAt: string;
+}
+
 export interface PlatformRole {
   id: string;
   name: string;

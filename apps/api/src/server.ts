@@ -4,17 +4,9 @@ import { getRedisClient, disconnectRedis } from "@/shared/lib/redis";
 import { prisma } from "@beaconu/db";
 import { logger } from "@/shared/lib/logger";
 import {
-  startSessionAutoCompleteJob,
-  stopSessionAutoCompleteJob,
-} from "@/modules/counselling/jobs/session-auto-complete.job";
-import {
-  startSessionReminderJob,
-  stopSessionReminderJob,
-} from "@/modules/counselling/jobs/session-reminder.job";
-import {
-  startSlotCleanupJob,
-  stopSlotCleanupJob,
-} from "@/modules/counselling/jobs/slot-cleanup.job";
+  startBackgroundJobs,
+  stopBackgroundJobs,
+} from "@/shared/lib/background-jobs";
 
 async function startServer(): Promise<void> {
   try {
@@ -25,35 +17,7 @@ async function startServer(): Promise<void> {
     await prisma.$connect();
     logger.info("Database connected successfully");
 
-    try {
-      await startSessionAutoCompleteJob();
-      logger.info("Session auto-complete job scheduled");
-    } catch (error) {
-      logger.error(
-        { error },
-        "Failed to schedule session auto-complete job — continuing startup",
-      );
-    }
-
-    try {
-      await startSessionReminderJob();
-      logger.info("Session reminder job scheduled");
-    } catch (error) {
-      logger.error(
-        { error },
-        "Failed to schedule session reminder job — continuing startup",
-      );
-    }
-
-    try {
-      await startSlotCleanupJob();
-      logger.info("Slot cleanup job scheduled");
-    } catch (error) {
-      logger.error(
-        { error },
-        "Failed to schedule slot cleanup job — continuing startup",
-      );
-    }
+    await startBackgroundJobs();
 
     const server = app.listen(env.PORT, () => {
       logger.info(
@@ -65,9 +29,7 @@ async function startServer(): Promise<void> {
     const shutdown = async (signal: string): Promise<void> => {
       logger.info({ signal }, "Graceful shutdown initiated");
       server.close(async () => {
-        await stopSessionAutoCompleteJob();
-        await stopSessionReminderJob();
-        await stopSlotCleanupJob();
+        await stopBackgroundJobs();
         await disconnectRedis();
         await prisma.$disconnect();
         logger.info("Server shut down cleanly");
@@ -82,7 +44,7 @@ async function startServer(): Promise<void> {
     process.exit(1);
   }
 }
-// #test
+
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
   startServer().catch((error) => {
     console.error("Unhandled server startup error:", error);

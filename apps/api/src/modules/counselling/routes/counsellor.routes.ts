@@ -14,6 +14,7 @@ import {
   listSessionsQuerySchema,
   listSlotsQuerySchema,
   listWalletTransactionsQuerySchema,
+  requestWithdrawalSchema,
   rescheduleSessionSchema,
   sessionIdParamsSchema,
   updateMeetingSchema,
@@ -111,6 +112,15 @@ router.get(
   authorizeCounsellorType("academic"),
   validate(listWalletTransactionsQuerySchema, "query"),
   CounsellorSessionController.getWallet,
+);
+
+router.post(
+  "/wallet/withdraw",
+  authenticate,
+  authorizeUserType("counsellor"),
+  authorizeCounsellorType("academic"),
+  validate(requestWithdrawalSchema),
+  CounsellorSessionController.requestWithdrawal,
 );
 
 export default router;

@@ -1,0 +1,47 @@
+meta {
+  name: Request Withdrawal
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/counsellor/wallet/withdraw
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "amount": 1000,
+    "bank_details": {
+      "account_holder_name": "John Doe",
+      "account_number": "123456789012",
+      "ifsc": "SBIN0001234",
+      "bank_name": "State Bank of India"
+    }
+  }
+}
+
+docs {
+  Submits a withdrawal request. Balance is decremented immediately and the
+  transaction is created with withdrawal_status = "pending", awaiting
+  super admin review.
+  Requires: counsellor access token (academic counsellors only).
+
+  Validation:
+  - amount must be ≤ current wallet balance
+  - amount must be ≥ platform config `counsellorMinWithdrawalAmount`
+    (see GET /api/v1/admin/config)
+
+  Response: { transaction_id, amount, withdrawal_status, balance_after }
+
+  Tables: counsellor_wallets, counsellor_wallet_transactions
+}

@@ -3,7 +3,9 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ValidationError,
 } from "@/shared/errors";
+import { PlatformConfigService } from "@/modules/platform-config/services/platform-config.service";
 import { PaginationHelper } from "@/shared/responses/pagination";
 import { getRazorpay, isRazorpayReady } from "@/shared/lib/razorpay";
 import { getRedisClient } from "@/shared/lib/redis";
@@ -32,6 +34,9 @@ import {
   RescheduleSessionInput,
   UpdateMeetingInput,
   RateSessionInput,
+  RequestWithdrawalInput,
+  ListWithdrawalRequestsQueryInput,
+  UpdateWithdrawalStatusInput,
 } from "../validators/sessions.validator";
 
 function parseDateOnly(value: string): Date {
@@ -1299,6 +1304,110 @@ export class SessionService {
         query.page,
         query.limit,
       ),
+    };
+  }
+
+  static async requestWithdrawal(
+    counsellorId: string,
+    data: RequestWithdrawalInput,
+  ) {
+    await SessionRepository.findOrCreateWallet(counsellorId);
+
+    const config = await PlatformConfigService.getConfig();
+    if (data.amount < config.counsellorMinWithdrawalAmount) {
+      throw new ValidationError(
+        `Minimum withdrawal amount is ₹${config.counsellorMinWithdrawalAmount.toFixed(2)}`,
+      );
+    }
+
+    const bankDetails = {
+      account_holder_name: data.bank_details.account_holder_name,
+      account_number: data.bank_details.account_number,
+      ifsc: data.bank_details.ifsc,
+      bank_name: data.bank_details.bank_name,
+    };
+
+    const result = await SessionRepository.requestWithdrawal(
+      counsellorId,
+      data.amount,
+      bankDetails,
+      "Withdrawal request",
+    );
+
+    return {
+      transaction_id: result.transaction.id,
+      amount: Number(result.transaction.amount),
+      withdrawal_status: result.transaction.withdrawalStatus,
+      balance_after: Number(result.wallet.balance),
+    };
+  }
+
+  static async listWithdrawalRequests(query: ListWithdrawalRequestsQueryInput) {
+    const { status, page, limit } = query;
+    const { rows, total } = await SessionRepository.listWithdrawalRequests(
+      { status },
+      { page, limit },
+    );
+
+    return {
+      requests: rows.map((r) => ({
+        id: r.id,
+        counsellor: {
+          id: r.counsellor.id,
+          full_name: r.counsellor.fullName,
+          email: r.counsellor.email,
+          counsellor_code: r.counsellor.counsellorCode,
+        },
+        amount: Number(r.amount),
+        withdrawal_status: r.withdrawalStatus,
+        bank_details: r.bankDetails,
+        review_remarks: r.reviewRemarks,
+        created_at: r.createdAt,
+        updated_at: r.updatedAt,
+      })),
+      meta: PaginationHelper.createMeta(total, page, limit),
+    };
+  }
+
+  static async updateWithdrawalStatus(
+    transactionId: string,
+    data: UpdateWithdrawalStatusInput,
+    adminId: string,
+  ) {
+    const transaction =
+      await SessionRepository.findWithdrawalTransactionById(transactionId);
+    if (!transaction || transaction.withdrawalStatus === null) {
+      throw new NotFoundError("Withdrawal request not found");
+    }
+    if (transaction.withdrawalStatus !== "pending") {
+      throw new ConflictError(
+        "This withdrawal request has already been reviewed",
+      );
+    }
+
+    const amount = Number(transaction.amount);
+    const updated =
+      data.status === "approved"
+        ? await SessionRepository.approveWithdrawal(
+            transactionId,
+            transaction.counsellorId,
+            amount,
+            adminId,
+            data.remarks,
+          )
+        : await SessionRepository.rejectWithdrawal(
+            transactionId,
+            transaction.counsellorId,
+            amount,
+            adminId,
+            data.remarks,
+          );
+
+    return {
+      id: updated.id,
+      withdrawal_status: updated.withdrawalStatus,
+      review_remarks: updated.reviewRemarks,
+      updated_at: updated.updatedAt,
     };
   }
 

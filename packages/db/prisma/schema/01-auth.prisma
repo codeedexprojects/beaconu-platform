@@ -85,6 +85,8 @@ model PlatformAdmin {
   platformRole              PlatformRole?              @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
   collegeOnboardingRequests CollegeOnboardingRequest[]
   counsellorRegistrationRequests CounsellorRegistrationRequest[]
+  platformConfigUpdates    PlatformConfig[]
+  counsellorWithdrawalReviews    CounsellorWalletTransaction[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")

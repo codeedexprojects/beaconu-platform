@@ -22,6 +22,7 @@ import {
   Layers,
   Landmark,
   PlayCircle,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -97,6 +98,12 @@ const navSections: NavSection[] = [
         href: "/counsellors",
         label: "Counsellors",
         icon: HeartHandshake,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/counsellors/withdrawals",
+        label: "Withdrawal Requests",
+        icon: Wallet,
         permission: "counsellors.view",
       },
     ],
@@ -213,8 +220,25 @@ const navSections: NavSection[] = [
   },
 ];
 
+function getActiveHref(pathname: string): string | null {
+  let best: string | null = null;
+  for (const section of navSections) {
+    for (const item of section.items) {
+      const matches =
+        item.href === "/"
+          ? pathname === "/"
+          : pathname === item.href || pathname.startsWith(item.href + "/");
+      if (matches && (best === null || item.href.length > best.length)) {
+        best = item.href;
+      }
+    }
+  }
+  return best;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const activeHref = getActiveHref(pathname);
 
   return (
     <aside className="flex h-screen w-72 flex-col bg-sidebar border-r border-sidebar-border shrink-0">
@@ -246,11 +270,7 @@ export function Sidebar() {
                 </p>
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
-                    const isActive =
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname === item.href ||
-                          pathname.startsWith(item.href + "/");
+                    const isActive = item.href === activeHref;
                     return (
                       <li key={item.href}>
                         <Link

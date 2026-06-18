@@ -201,3 +201,37 @@ export const rateSessionSchema = z.object({
 });
 
 export type RateSessionInput = z.infer<typeof rateSessionSchema>;
+
+export const requestWithdrawalSchema = z.object({
+  amount: z
+    .number({ error: "Amount must be a number" })
+    .positive("Amount must be greater than zero"),
+  bank_details: z.object({
+    account_holder_name: z.string().min(1, "Account holder name is required"),
+    account_number: z
+      .string()
+      .regex(/^\d{9,18}$/, "Account number must be 9–18 digits"),
+    ifsc: z
+      .string()
+      .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code (e.g. SBIN0001234)"),
+    bank_name: z.string().min(1, "Bank name is required"),
+  }),
+});
+export type RequestWithdrawalInput = z.infer<typeof requestWithdrawalSchema>;
+
+export const listWithdrawalRequestsQuerySchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+export type ListWithdrawalRequestsQueryInput = z.infer<
+  typeof listWithdrawalRequestsQuerySchema
+>;
+
+export const updateWithdrawalStatusSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  remarks: z.string().max(500).optional(),
+});
+export type UpdateWithdrawalStatusInput = z.infer<
+  typeof updateWithdrawalStatusSchema
+>;

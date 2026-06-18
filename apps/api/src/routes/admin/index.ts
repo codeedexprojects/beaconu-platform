@@ -20,6 +20,7 @@ import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-gu
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
 import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
 import eventAdminRoutes from "@/modules/events/routes/platform-admin.routes";
+import platformConfigRoutes from "@/modules/platform-config/routes/platform-admin.routes";
 
 const router: Router = Router();
 
@@ -44,5 +45,6 @@ router.use("/communities", platformAdminCommunityRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/uploads", platformAdminUploadRoutes);
 router.use("/events", eventAdminRoutes);
+router.use("/config", platformConfigRoutes);
 
 export default router;
