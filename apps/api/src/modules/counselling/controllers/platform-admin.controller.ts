@@ -4,6 +4,10 @@ import { CounsellingService } from "../services/counselling.service";
 import { SessionService } from "../services/sessions.service";
 import { CounsellorRequestService } from "../services/counsellor-request.service";
 import { counsellorRequestSchemas } from "../validators/counsellor-request.validator";
+import type {
+  ListWithdrawalRequestsQueryInput,
+  UpdateWithdrawalStatusInput,
+} from "../validators/sessions.validator";
 
 export class CounsellingPlatformAdminController {
   static async listAll(req: Request, res: Response) {
@@ -90,5 +94,33 @@ export class CounsellingPlatformAdminController {
           result,
         ),
       );
+  }
+
+  // GET /api/v1/admin/counsellors/withdrawals
+  static async listWithdrawalRequests(req: Request, res: Response) {
+    const result = await SessionService.listWithdrawalRequests(
+      req.query as unknown as ListWithdrawalRequestsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Withdrawal requests retrieved",
+          result.requests,
+          result.meta,
+        ),
+      );
+  }
+
+  // PATCH /api/v1/admin/counsellors/withdrawals/:id/status
+  static async updateWithdrawalStatus(req: Request, res: Response) {
+    const result = await SessionService.updateWithdrawalStatus(
+      req.params["id"] as string,
+      req.body as UpdateWithdrawalStatusInput,
+      req.userId as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Withdrawal request status updated", result));
   }
 }

@@ -55,4 +55,9 @@ export const QUERY_KEYS = {
   counsellors: (params?: object) =>
     params ? ["counsellors", params] : (["counsellors"] as const),
   counsellorDetail: (id: string) => ["counsellors", id, "detail"] as const,
+  platformConfig: ["platform-config"] as const,
+  withdrawalRequests: (params?: object) =>
+    params
+      ? ["withdrawal-requests", params]
+      : (["withdrawal-requests"] as const),
 } as const;

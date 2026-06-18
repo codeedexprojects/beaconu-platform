@@ -774,6 +774,143 @@ export class SessionRepository {
   }
 
   /**
+   * Request a withdrawal: decrements balance immediately and records a
+   * pending withdrawal transaction. Balance is refunded if rejected later.
+   */
+  static async requestWithdrawal(
+    counsellorId: string,
+    amount: number,
+    bankDetails: Record<string, string>,
+    description: string,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.counsellorWallet.findUniqueOrThrow({
+        where: { counsellorId },
+      });
+
+      if (Number(current.balance) < amount) {
+        throw new ConflictError(
+          `Insufficient wallet balance. Available: ${current.balance}`,
+        );
+      }
+
+      await tx.counsellorWallet.update({
+        where: { counsellorId },
+        data: { balance: { decrement: amount } },
+      });
+
+      const wallet = await tx.counsellorWallet.findUniqueOrThrow({
+        where: { counsellorId },
+      });
+
+      const transaction = await tx.counsellorWalletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          counsellorId,
+          type: "debit",
+          amount,
+          description,
+          withdrawalStatus: "pending",
+          bankDetails,
+          balanceAfter: wallet.balance,
+        },
+      });
+
+      return { wallet, transaction };
+    });
+  }
+
+  static async listWithdrawalRequests(
+    filters: { status?: string },
+    pagination: PaginationOptions = {},
+  ) {
+    const where: Prisma.CounsellorWalletTransactionWhereInput = {
+      type: "debit",
+      withdrawalStatus: filters.status ?? { not: null },
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.counsellorWalletTransaction.count({ where }),
+      prisma.counsellorWalletTransaction.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: {
+          counsellor: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              counsellorCode: true,
+            },
+          },
+        },
+        ...this.paginate(pagination),
+      }),
+    ]);
+
+    return { rows, total };
+  }
+
+  static async findWithdrawalTransactionById(id: string) {
+    return prisma.counsellorWalletTransaction.findUnique({
+      where: { id },
+      include: {
+        counsellor: {
+          select: { id: true, fullName: true, email: true },
+        },
+      },
+    });
+  }
+
+  static async approveWithdrawal(
+    transactionId: string,
+    counsellorId: string,
+    amount: number,
+    adminId: string,
+    remarks: string | undefined,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      await tx.counsellorWallet.update({
+        where: { counsellorId },
+        data: { totalWithdrawn: { increment: amount } },
+      });
+
+      return tx.counsellorWalletTransaction.update({
+        where: { id: transactionId },
+        data: {
+          withdrawalStatus: "approved",
+          reviewedBy: adminId,
+          reviewRemarks: remarks,
+        },
+      });
+    });
+  }
+
+  static async rejectWithdrawal(
+    transactionId: string,
+    counsellorId: string,
+    amount: number,
+    adminId: string,
+    remarks: string | undefined,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      await tx.counsellorWallet.update({
+        where: { counsellorId },
+        data: { balance: { increment: amount } },
+      });
+
+      return tx.counsellorWalletTransaction.update({
+        where: { id: transactionId },
+        data: {
+          withdrawalStatus: "rejected",
+          reviewedBy: adminId,
+          reviewRemarks: remarks,
+        },
+      });
+    });
+  }
+
+  /**
    * Rates a counselling session and updates the counsellor's average rating.
    * Runs in a transaction to guarantee data consistency.
    */

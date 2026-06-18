@@ -1,0 +1,51 @@
+import { logger } from "@/shared/lib/logger";
+import {
+  startSessionAutoCompleteJob,
+  stopSessionAutoCompleteJob,
+} from "@/modules/counselling/jobs/session-auto-complete.job";
+import {
+  startSessionReminderJob,
+  stopSessionReminderJob,
+} from "@/modules/counselling/jobs/session-reminder.job";
+import {
+  startSlotCleanupJob,
+  stopSlotCleanupJob,
+} from "@/modules/counselling/jobs/slot-cleanup.job";
+
+const JOBS = [
+  {
+    name: "Session auto-complete",
+    start: startSessionAutoCompleteJob,
+    stop: stopSessionAutoCompleteJob,
+  },
+  {
+    name: "Session reminder",
+    start: startSessionReminderJob,
+    stop: stopSessionReminderJob,
+  },
+  {
+    name: "Slot cleanup",
+    start: startSlotCleanupJob,
+    stop: stopSlotCleanupJob,
+  },
+];
+
+export async function startBackgroundJobs(): Promise<void> {
+  for (const job of JOBS) {
+    try {
+      await job.start();
+      logger.info(`${job.name} job scheduled`);
+    } catch (error) {
+      logger.error(
+        { error },
+        `Failed to schedule ${job.name} job — continuing startup`,
+      );
+    }
+  }
+}
+
+export async function stopBackgroundJobs(): Promise<void> {
+  for (const job of JOBS) {
+    await job.stop();
+  }
+}

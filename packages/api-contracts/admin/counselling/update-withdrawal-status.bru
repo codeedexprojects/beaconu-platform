@@ -1,0 +1,45 @@
+meta {
+  name: Update Withdrawal Status
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/counsellors/withdrawals/{{withdrawalRequestId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "approved",
+    "remarks": "Verified bank details and processed payout manually"
+  }
+}
+
+docs {
+  Approves or rejects a pending counsellor withdrawal request.
+  Requires: platform admin access token + permission "counsellors.manage".
+
+  Body:
+  - status: approved | rejected
+  - remarks (optional, max 500 chars)
+
+  Behavior:
+  - approved: increments counsellor_wallets.total_withdrawn by the amount.
+    No balance change (balance was already decremented when requested).
+    The actual bank transfer happens manually outside the system.
+  - rejected: refunds the amount back to counsellor_wallets.balance.
+
+  Returns 404 if the request doesn't exist, 409 if it has already been reviewed.
+
+  Tables: counsellor_wallet_transactions, counsellor_wallets
+}

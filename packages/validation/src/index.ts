@@ -7,3 +7,4 @@ export * from "./platform-admins";
 export * from "./auth";
 export * from "./institution-groups";
 export * from "./starter-guide";
+export * from "./platform-config";
