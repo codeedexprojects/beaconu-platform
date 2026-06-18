@@ -13,6 +13,8 @@ const COUNSELLOR_SELECT = {
   knownLanguages: true,
   sessionFee: true,
   profileMetadata: true,
+  upiId: true,
+  bankDetails: true,
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
@@ -121,6 +123,8 @@ export class CounsellingRepository {
       knownLanguages?: string;
       sessionFee?: number;
       profileMetadata?: Prisma.InputJsonValue;
+      upiId?: string;
+      bankDetails?: Prisma.InputJsonValue;
     },
   ) {
     return prisma.counsellor.update({

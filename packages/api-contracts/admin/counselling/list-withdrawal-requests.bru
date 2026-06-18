@@ -39,8 +39,14 @@ docs {
   - page (default: 1)
   - limit (default: 20, max: 100)
 
-  Each item includes counsellor snippet, amount, bank_details submitted at
-  request time, and review_remarks (if reviewed).
+  Each item includes counsellor snippet (id, full_name, email,
+  counsellor_code), amount, payout_details snapshotted at request time
+  ({ method: "upi", upi_id } or { method: "bank", account_holder_name,
+  account_number, ifsc, bank_name }), and review_remarks (if reviewed).
+
+  For full counsellor profile info + live wallet balance (for an admin
+  detail view), call GET /api/v1/admin/counsellors/:id/detail using
+  counsellor.id from this response.
 
   Tables: counsellor_wallet_transactions, counsellors
 }

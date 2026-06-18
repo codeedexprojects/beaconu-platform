@@ -102,7 +102,7 @@ const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
  * values) to the actual UTC instant it represents, so it can be compared
  * against `new Date()`.
  */
-function istWallTimeToInstant(date: Date, time: Date): Date {
+export function istWallTimeToInstant(date: Date, time: Date): Date {
   const naiveISO = toISODateTime(date, time);
   return new Date(new Date(`${naiveISO}.000Z`).getTime() - IST_OFFSET_MS);
 }
@@ -175,6 +175,8 @@ function formatCounsellor(counsellor: any) {
     about: metadata.about ?? null,
     expertise: deriveExpertise(metadata),
     education: deriveEducation(metadata),
+    upi_id: counsellor.upiId ?? null,
+    bank_details: counsellor.bankDetails ?? {},
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -245,7 +247,7 @@ function formatWallet(wallet: any) {
           session_id: txn.sessionId,
           student_name: txn.session?.student?.fullName ?? null,
           withdrawal_status: txn.withdrawalStatus,
-          bank_details: txn.bankDetails,
+          payout_details: txn.payoutDetails,
           balance_after: Number(txn.balanceAfter ?? 0),
           created_at: txn.createdAt,
         }))
@@ -642,6 +644,24 @@ export class SessionService {
     return Number(counsellor?.sessionFee ?? 0.0);
   }
 
+  /**
+   * Adds the platform's configured meeting GST on top of the session fee.
+   * The GST portion is charged to the student but never credited to the
+   * counsellor's wallet — only `fee` is credited at booking time.
+   */
+  private static async resolveFeeWithGst(fee: number): Promise<{
+    fee: number;
+    gstPercentage: number;
+    gstAmount: number;
+    totalAmount: number;
+  }> {
+    const config = await PlatformConfigService.getConfig();
+    const gstPercentage = config.meetingGstPercentage;
+    const gstAmount = Math.round(fee * gstPercentage) / 100;
+    const totalAmount = Math.round((fee + gstAmount) * 100) / 100;
+    return { fee, gstPercentage, gstAmount, totalAmount };
+  }
+
   private static capturedPaymentKey(
     availabilityId: string,
     studentId: string,
@@ -717,8 +737,11 @@ export class SessionService {
       throw new BadRequestError("Payment gateway is not configured");
     }
 
+    const { gstPercentage, gstAmount, totalAmount } =
+      await this.resolveFeeWithGst(fee);
+
     const order = await getRazorpay().orders.create({
-      amount: Math.round(fee * 100),
+      amount: Math.round(totalAmount * 100),
       currency: "INR",
       // Razorpay caps receipt at 40 chars — use the slot's last 8 chars + a timestamp.
       receipt: `CNS-${slot.id.slice(-8)}-${Date.now()}`,
@@ -734,6 +757,9 @@ export class SessionService {
       amount: order.amount,
       currency: order.currency,
       fee,
+      gst_percentage: gstPercentage,
+      gst_amount: gstAmount,
+      total_amount: totalAmount,
     };
   }
 
@@ -752,6 +778,7 @@ export class SessionService {
     let transactionId: string | undefined;
 
     if (finalFee > 0) {
+      const { totalAmount } = await this.resolveFeeWithGst(finalFee);
       const paidPayment = await this.consumeCapturedPayment(slot.id, studentId);
 
       if (!paidPayment) {
@@ -760,7 +787,7 @@ export class SessionService {
         );
       }
 
-      if (paidPayment.amount !== Math.round(finalFee * 100)) {
+      if (paidPayment.amount !== Math.round(totalAmount * 100)) {
         throw new BadRequestError("Payment amount mismatch");
       }
 
@@ -975,6 +1002,17 @@ export class SessionService {
 
     if (session.status === "completed") {
       throw new BadRequestError("Completed sessions cannot be cancelled");
+    }
+
+    const sessionStart = istWallTimeToInstant(
+      session.scheduledDate,
+      session.startTime,
+    );
+    const minutesUntilStart = (sessionStart.getTime() - Date.now()) / 60000;
+    if (minutesUntilStart < 30) {
+      throw new BadRequestError(
+        "Sessions can only be cancelled at least 30 minutes before the scheduled start time",
+      );
     }
 
     const refundAmount =
@@ -1320,17 +1358,35 @@ export class SessionService {
       );
     }
 
-    const bankDetails = {
-      account_holder_name: data.bank_details.account_holder_name,
-      account_number: data.bank_details.account_number,
-      ifsc: data.bank_details.ifsc,
-      bank_name: data.bank_details.bank_name,
-    };
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    const bankDetails = (counsellor?.bankDetails ?? {}) as Record<
+      string,
+      string
+    >;
+    const hasBankDetails = Boolean(
+      bankDetails.account_holder_name &&
+      bankDetails.account_number &&
+      bankDetails.ifsc &&
+      bankDetails.bank_name,
+    );
+    const hasUpiId = Boolean(counsellor?.upiId);
+
+    if (!hasUpiId && !hasBankDetails) {
+      throw new ValidationError(
+        "Add a UPI ID or bank details to your profile before requesting a withdrawal",
+      );
+    }
+
+    // Prefer UPI when both are set — snapshot whichever method is used so
+    // later profile edits don't change the payout details of past requests.
+    const payoutDetails: Record<string, string> = hasUpiId
+      ? { method: "upi", upi_id: counsellor!.upiId as string }
+      : { method: "bank", ...bankDetails };
 
     const result = await SessionRepository.requestWithdrawal(
       counsellorId,
       data.amount,
-      bankDetails,
+      payoutDetails,
       "Withdrawal request",
     );
 
@@ -1360,7 +1416,7 @@ export class SessionService {
         },
         amount: Number(r.amount),
         withdrawal_status: r.withdrawalStatus,
-        bank_details: r.bankDetails,
+        payout_details: r.payoutDetails,
         review_remarks: r.reviewRemarks,
         created_at: r.createdAt,
         updated_at: r.updatedAt,

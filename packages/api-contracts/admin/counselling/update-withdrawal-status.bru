@@ -21,7 +21,7 @@ headers {
 body:json {
   {
     "status": "approved",
-    "remarks": "Verified bank details and processed payout manually"
+    "remarks": "Verified payout details and processed payout manually"
   }
 }
 
@@ -36,7 +36,8 @@ docs {
   Behavior:
   - approved: increments counsellor_wallets.total_withdrawn by the amount.
     No balance change (balance was already decremented when requested).
-    The actual bank transfer happens manually outside the system.
+    The actual payout (bank transfer or UPI) happens manually outside the
+    system, using the transaction's payout_details snapshot.
   - rejected: refunds the amount back to counsellor_wallets.balance.
 
   Returns 404 if the request doesn't exist, 409 if it has already been reviewed.

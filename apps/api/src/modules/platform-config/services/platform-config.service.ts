@@ -5,7 +5,7 @@ export class PlatformConfigService {
   static async getConfig() {
     const config = await PlatformConfigRepository.get();
     return {
-      gstPercentage: Number(config.gstPercentage),
+      meetingGstPercentage: Number(config.meetingGstPercentage),
       counsellorMinWithdrawalAmount: Number(
         config.counsellorMinWithdrawalAmount,
       ),
@@ -17,7 +17,7 @@ export class PlatformConfigService {
   static async updateConfig(data: UpdatePlatformConfigInput, adminId: string) {
     const updated = await PlatformConfigRepository.update(data, adminId);
     return {
-      gstPercentage: Number(updated.gstPercentage),
+      meetingGstPercentage: Number(updated.meetingGstPercentage),
       counsellorMinWithdrawalAmount: Number(
         updated.counsellorMinWithdrawalAmount,
       ),

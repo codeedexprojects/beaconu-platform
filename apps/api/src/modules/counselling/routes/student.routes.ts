@@ -15,6 +15,10 @@ import {
   sessionIdParamsSchema,
   rateSessionSchema,
 } from "../validators/sessions.validator";
+import {
+  requestRefundSchema,
+  listMyRefundRequestsQuerySchema,
+} from "../validators/refund.validator";
 import { StudentSessionController } from "../controllers/session.controller";
 
 const router: Router = Router();
@@ -116,6 +120,23 @@ router.post(
   validate(sessionIdParamsSchema, "params"),
   validate(rateSessionSchema),
   StudentSessionController.rateSession,
+);
+
+router.post(
+  "/sessions/:id/refund-request",
+  authenticate,
+  authorizeUserType("student"),
+  validate(sessionIdParamsSchema, "params"),
+  validate(requestRefundSchema),
+  StudentSessionController.requestRefund,
+);
+
+router.get(
+  "/refund-requests",
+  authenticate,
+  authorizeUserType("student"),
+  validate(listMyRefundRequestsQuerySchema, "query"),
+  StudentSessionController.listMyRefundRequests,
 );
 
 export default router;

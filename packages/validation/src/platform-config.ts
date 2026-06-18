@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const updatePlatformConfigSchema = z
   .object({
-    gstPercentage: z.coerce.number().min(0).max(100).optional(),
+    meetingGstPercentage: z.coerce.number().min(0).max(100).optional(),
     counsellorMinWithdrawalAmount: z.coerce.number().positive().optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
