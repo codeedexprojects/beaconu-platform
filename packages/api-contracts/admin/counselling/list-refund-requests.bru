@@ -1,0 +1,50 @@
+meta {
+  name: List Refund Requests
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/refund-requests?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("refundRequestId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns counselling refund requests for super admin review.
+  Requires: platform admin access token + permission "counsellors.view".
+
+  Query params:
+  - status (optional): pending | approved | rejected — defaults to all
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Each item includes full student + counsellor snippets (id, full_name,
+  email), amount, upi_id, reason, proof_url, the related session
+  (scheduled_date, start_time, end_time), and review_remarks (if reviewed).
+
+  For full counsellor profile info + live wallet balance, call
+  GET /api/v1/admin/counsellors/:id/detail using counsellor.id from this
+  response.
+
+  Tables: counselling_refund_requests, students, counsellors, counselling_sessions
+}

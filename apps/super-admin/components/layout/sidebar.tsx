@@ -23,6 +23,7 @@ import {
   Landmark,
   PlayCircle,
   Wallet,
+  ReceiptIndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -104,6 +105,12 @@ const navSections: NavSection[] = [
         href: "/counsellors/withdrawals",
         label: "Withdrawal Requests",
         icon: Wallet,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/counsellors/refund-requests",
+        label: "Refund Requests",
+        icon: ReceiptIndianRupee,
         permission: "counsellors.view",
       },
     ],

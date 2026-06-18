@@ -60,4 +60,6 @@ export const QUERY_KEYS = {
     params
       ? ["withdrawal-requests", params]
       : (["withdrawal-requests"] as const),
+  refundRequests: (params?: object) =>
+    params ? ["refund-requests", params] : (["refund-requests"] as const),
 } as const;

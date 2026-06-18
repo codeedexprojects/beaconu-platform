@@ -448,7 +448,7 @@ export class SessionRepository {
             description: "Session booking payment",
             sessionId: session.id,
             balanceAfter: wallet.balance,
-            bankDetails: {},
+            payoutDetails: {},
           },
         });
       }
@@ -509,7 +509,7 @@ export class SessionRepository {
               description: `Refund for cancelled session: ${params.sessionId}`,
               sessionId: params.sessionId,
               balanceAfter: updatedWallet.balance,
-              bankDetails: {},
+              payoutDetails: {},
             },
           });
         }
@@ -655,7 +655,7 @@ export class SessionRepository {
           description,
           sessionId,
           balanceAfter: wallet.balance,
-          bankDetails: {},
+          payoutDetails: {},
         },
       });
 
@@ -680,7 +680,7 @@ export class SessionRepository {
       });
 
       if (Number(current.balance) < amount) {
-        throw new Error(
+        throw new ConflictError(
           `Insufficient wallet balance. Available: ${current.balance}, Requested: ${amount}`,
         );
       }
@@ -701,12 +701,12 @@ export class SessionRepository {
         data: {
           walletId: wallet.id,
           counsellorId,
-          type: "debit", // ← was "refund" — fixed
+          type: "debit",
           amount,
           description,
           sessionId,
           balanceAfter: wallet.balance,
-          bankDetails: {},
+          payoutDetails: {},
         },
       });
 
@@ -780,7 +780,7 @@ export class SessionRepository {
   static async requestWithdrawal(
     counsellorId: string,
     amount: number,
-    bankDetails: Record<string, string>,
+    payoutDetails: Record<string, string>,
     description: string,
   ) {
     return prisma.$transaction(async (tx) => {
@@ -811,7 +811,7 @@ export class SessionRepository {
           amount,
           description,
           withdrawalStatus: "pending",
-          bankDetails,
+          payoutDetails,
           balanceAfter: wallet.balance,
         },
       });

@@ -21,7 +21,14 @@ body:json {
     "phone_number": "+919876543210",
     "about": "I help students navigate college admissions with 8+ years of experience.",
     "expertise": ["Career Counselling", "Study Abroad", "Course Selection"],
-    "education": ["M.A. Psychology - Delhi University", "B.Ed - Mumbai University"]
+    "education": ["M.A. Psychology - Delhi University", "B.Ed - Mumbai University"],
+    "upi_id": "counsellor@upi",
+    "bank_details": {
+      "account_holder_name": "John Doe",
+      "account_number": "123456789012",
+      "ifsc": "SBIN0001234",
+      "bank_name": "State Bank of India"
+    }
   }
 }
 
@@ -35,4 +42,11 @@ docs {
   - about, expertise, education are stored in profile_metadata (JSON) and
     are merged with existing metadata (each field replaces its own key only).
   - expertise / education are arrays of strings.
+  - upi_id (optional): UPI VPA format, e.g. name@bank.
+  - bank_details (optional): if provided, all four sub-fields are required
+    (account_holder_name, account_number, ifsc, bank_name). Replaces the
+    stored bank_details entirely — not merged field-by-field.
+  - At least one of upi_id / bank_details must be set on the profile before
+    the counsellor can request a wallet withdrawal
+    (POST /api/v1/counsellor/wallet/withdraw).
 }

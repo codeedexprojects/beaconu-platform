@@ -1,0 +1,35 @@
+meta {
+  name: Upload Refund Proof to S3 (PUT)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{refundProofUploadUrl}}
+  body: file
+  auth: none
+}
+
+headers {
+  Content-Type: image/jpeg
+}
+
+body:file {
+  @file:
+}
+
+docs {
+  Step 2 of 3 — PUT the proof file directly to S3 using the pre-signed URL.
+
+  IMPORTANT:
+  - auth must be "none" — the presigned URL already contains AWS credentials in its query params.
+  - Content-Type must exactly match what was sent to the presign endpoint.
+  - Do NOT paste the URL manually — {{refundProofUploadUrl}} is captured automatically by
+    presign-refund-proof.bru.
+
+  Setup:
+  1. Run presign-refund-proof first — it sets {{refundProofUploadUrl}} in the environment
+  2. Click the body field and select your file
+  3. Run this request — expect HTTP 200 (no body) from S3
+  4. Run verify-refund-proof to confirm and get the permanent URL
+}

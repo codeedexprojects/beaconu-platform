@@ -206,16 +206,6 @@ export const requestWithdrawalSchema = z.object({
   amount: z
     .number({ error: "Amount must be a number" })
     .positive("Amount must be greater than zero"),
-  bank_details: z.object({
-    account_holder_name: z.string().min(1, "Account holder name is required"),
-    account_number: z
-      .string()
-      .regex(/^\d{9,18}$/, "Account number must be 9–18 digits"),
-    ifsc: z
-      .string()
-      .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code (e.g. SBIN0001234)"),
-    bank_name: z.string().min(1, "Bank name is required"),
-  }),
 });
 export type RequestWithdrawalInput = z.infer<typeof requestWithdrawalSchema>;
 

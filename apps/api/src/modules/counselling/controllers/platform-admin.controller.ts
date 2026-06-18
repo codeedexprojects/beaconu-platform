@@ -2,12 +2,17 @@ import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { CounsellingService } from "../services/counselling.service";
 import { SessionService } from "../services/sessions.service";
+import { RefundService } from "../services/refund.service";
 import { CounsellorRequestService } from "../services/counsellor-request.service";
 import { counsellorRequestSchemas } from "../validators/counsellor-request.validator";
 import type {
   ListWithdrawalRequestsQueryInput,
   UpdateWithdrawalStatusInput,
 } from "../validators/sessions.validator";
+import type {
+  ListRefundRequestsQueryInput,
+  UpdateRefundStatusInput,
+} from "../validators/refund.validator";
 
 export class CounsellingPlatformAdminController {
   static async listAll(req: Request, res: Response) {
@@ -122,5 +127,33 @@ export class CounsellingPlatformAdminController {
     return res
       .status(200)
       .json(ApiResponse.success("Withdrawal request status updated", result));
+  }
+
+  // GET /api/v1/admin/counsellors/refund-requests
+  static async listRefundRequests(req: Request, res: Response) {
+    const result = await RefundService.listAllForAdmin(
+      req.query as unknown as ListRefundRequestsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Refund requests retrieved",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  // PATCH /api/v1/admin/counsellors/refund-requests/:id/status
+  static async updateRefundStatus(req: Request, res: Response) {
+    const result = await RefundService.updateStatus(
+      req.params["id"] as string,
+      req.body as UpdateRefundStatusInput,
+      req.userId as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Refund request status updated", result));
   }
 }

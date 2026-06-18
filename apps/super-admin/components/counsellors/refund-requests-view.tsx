@@ -10,8 +10,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Hash,
   Eye,
+  ExternalLink,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,42 +30,11 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useWithdrawalRequests,
-  useUpdateWithdrawalStatus,
-} from "@/hooks/use-withdrawal-requests";
-import { WithdrawalRequestDetailDialog } from "./withdrawal-request-detail-dialog";
-import type { CounsellorWithdrawalRequest } from "@beaconu/types";
-
-function PayoutSummary({
-  payout,
-}: {
-  payout: CounsellorWithdrawalRequest["payout_details"];
-}) {
-  if (!payout || !payout.method) {
-    return <span className="text-xs text-muted-foreground">Not set</span>;
-  }
-  if (payout.method === "upi") {
-    return (
-      <div className="text-xs space-y-0.5">
-        <Badge variant="outline" className="font-mono">
-          UPI
-        </Badge>
-        <p className="font-mono text-foreground">{payout.upi_id}</p>
-      </div>
-    );
-  }
-  return (
-    <div className="text-xs text-muted-foreground space-y-0.5">
-      <p className="font-medium text-foreground">
-        {payout.account_holder_name}
-      </p>
-      <p>{payout.bank_name}</p>
-      <p className="font-mono">
-        {payout.account_number} · {payout.ifsc}
-      </p>
-    </div>
-  );
-}
+  useRefundRequests,
+  useUpdateRefundStatus,
+} from "@/hooks/use-refund-requests";
+import { RefundRequestDetailDialog } from "./refund-request-detail-dialog";
+import type { CounsellingRefundRequest } from "@beaconu/types";
 
 const STATUS_FILTERS = ["", "pending", "approved", "rejected"] as const;
 
@@ -82,19 +51,19 @@ const STATUS_CONFIG: Record<
   rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
 };
 
-export function WithdrawalRequestsView() {
+export function RefundRequestsView() {
   const [statusFilter, setStatusFilter] = useState<
     "" | "pending" | "approved" | "rejected"
   >("pending");
   const [remarksById, setRemarksById] = useState<Record<string, string>>({});
   const [selectedRequest, setSelectedRequest] =
-    useState<CounsellorWithdrawalRequest | null>(null);
+    useState<CounsellingRefundRequest | null>(null);
 
-  const { data, isLoading, refetch } = useWithdrawalRequests({
+  const { data, isLoading, refetch } = useRefundRequests({
     status: statusFilter || undefined,
   });
   const requests = data?.data ?? [];
-  const statusMutation = useUpdateWithdrawalStatus();
+  const statusMutation = useUpdateRefundStatus();
 
   function handleStatusUpdate(id: string, status: "approved" | "rejected") {
     statusMutation.mutate(
@@ -103,8 +72,8 @@ export function WithdrawalRequestsView() {
         onSuccess: () => {
           toast.success(
             status === "approved"
-              ? "Withdrawal request approved"
-              : "Withdrawal request rejected",
+              ? "Refund request approved"
+              : "Refund request rejected",
           );
         },
       },
@@ -114,8 +83,8 @@ export function WithdrawalRequestsView() {
   return (
     <div className="flex flex-col min-h-full">
       <Header
-        title="Withdrawal Requests"
-        description="Review and approve counsellor wallet withdrawal requests"
+        title="Refund Requests"
+        description="Review and process student counselling session refund requests"
       >
         <Button
           variant="outline"
@@ -152,9 +121,10 @@ export function WithdrawalRequestsView() {
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
+                  <TableHead>Student</TableHead>
                   <TableHead>Counsellor</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>Payout Details</TableHead>
+                  <TableHead>UPI ID</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date Requested</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -165,13 +135,16 @@ export function WithdrawalRequestsView() {
                   Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell>
-                        <Skeleton className="h-12 w-[220px]" />
+                        <Skeleton className="h-12 w-[200px]" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-[100px]" />
+                        <Skeleton className="h-4 w-[140px]" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-[160px]" />
+                        <Skeleton className="h-4 w-[80px]" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-[120px]" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-5 w-20 rounded-full" />
@@ -187,42 +160,36 @@ export function WithdrawalRequestsView() {
                 ) : requests.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No withdrawal requests found.
+                      No refund requests found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   requests.map((req) => {
-                    const sc = STATUS_CONFIG[req.withdrawal_status ?? ""];
-                    const isPending = req.withdrawal_status === "pending";
+                    const sc = STATUS_CONFIG[req.status];
+                    const isPending = req.status === "pending";
                     return (
                       <TableRow
                         key={req.id}
                         className="group hover:bg-muted/30 transition-colors"
                       >
                         <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg flex items-center justify-center font-bold bg-violet-100 text-violet-700">
-                              {req.counsellor.full_name.charAt(0)}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-sm">
-                                {req.counsellor.full_name}
-                              </span>
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <Mail className="h-3 w-3" />
-                                {req.counsellor.email}
-                              </div>
-                              {req.counsellor.counsellor_code && (
-                                <div className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-                                  <Hash className="h-3 w-3" />
-                                  {req.counsellor.counsellor_code}
-                                </div>
-                              )}
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-sm">
+                              {req.student?.full_name ?? "—"}
+                            </span>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Mail className="h-3 w-3" />
+                              {req.student?.email}
                             </div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">
+                            {req.counsellor?.full_name ?? "—"}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <span className="font-semibold text-sm">
@@ -230,7 +197,19 @@ export function WithdrawalRequestsView() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <PayoutSummary payout={req.payout_details} />
+                          <span className="font-mono text-xs">
+                            {req.upi_id}
+                          </span>
+                          {req.proof_url && (
+                            <a
+                              href={req.proof_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-[10px] text-primary mt-0.5"
+                            >
+                              Proof <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
                         </TableCell>
                         <TableCell>
                           {sc && (
@@ -284,7 +263,7 @@ export function WithdrawalRequestsView() {
                                     disabled={statusMutation.isPending}
                                   >
                                     <Check className="h-4 w-4 mr-1" />
-                                    Approve
+                                    Proceed Refund
                                   </Button>
                                   <Button
                                     variant="outline"
@@ -313,7 +292,7 @@ export function WithdrawalRequestsView() {
         </Card>
       </div>
 
-      <WithdrawalRequestDetailDialog
+      <RefundRequestDetailDialog
         request={selectedRequest}
         onClose={() => setSelectedRequest(null)}
       />

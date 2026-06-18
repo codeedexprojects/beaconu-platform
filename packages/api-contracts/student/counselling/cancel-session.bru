@@ -36,4 +36,10 @@ script:pre-request {
 docs {
   Cancels a counselling session for logged-in student.
   Requires: student access token.
+
+  Validation: must be cancelled at least 30 minutes before the session's
+  scheduled start time (scheduled_date + start_time, IST). Returns 400
+  "Sessions can only be cancelled at least 30 minutes before the scheduled
+  start time" if attempted within that window or after the session has
+  started.
 }

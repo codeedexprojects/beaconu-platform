@@ -55,6 +55,7 @@ model Student {
   studentFeeLedgers       StudentFeeLedger[]
   paymentReceipts         PaymentReceipt[]
   refunds                 Refund[]
+  counsellingRefundRequests CounsellingRefundRequest[]
 
   @@unique([phoneCountryCode, phoneNumber], name: "uq_students_phone")
   @@index([email], name: "idx_students_email")
@@ -87,6 +88,7 @@ model PlatformAdmin {
   counsellorRegistrationRequests CounsellorRegistrationRequest[]
   platformConfigUpdates    PlatformConfig[]
   counsellorWithdrawalReviews    CounsellorWalletTransaction[]
+  counsellingRefundReviews    CounsellingRefundRequest[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")
@@ -305,6 +307,8 @@ model Counsellor {
   knownLanguages  String?   @map("known_languages") @db.VarChar(255)
   sessionFee      Decimal   @default(0.0) @db.Decimal(10, 2) @map("session_fee")
   profileMetadata Json      @default("{}") @map("profile_metadata")
+  upiId           String?   @map("upi_id") @db.VarChar(100)
+  bankDetails     Json      @default("{}") @map("bank_details")
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -314,6 +318,7 @@ model Counsellor {
   sessions                     CounsellingSession[]
   wallet                       CounsellorWallet?
   counsellorWalletTransactions CounsellorWalletTransaction[]
+  refundRequests               CounsellingRefundRequest[]
 
   @@index([counsellorType], name: "idx_counsellors_type")
   @@index([status], name: "idx_counsellors_status")

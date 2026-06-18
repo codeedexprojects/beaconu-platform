@@ -62,6 +62,7 @@ model CounsellingSession {
   availability CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
   reschedules  SessionReschedule[]
   walletTxns   CounsellorWalletTransaction[]
+  refundRequests CounsellingRefundRequest[]
 
   @@index([studentId], name: "idx_sessions_student")
   @@index([counsellorId], name: "idx_sessions_counsellor")
@@ -118,7 +119,7 @@ model CounsellorWalletTransaction {
   description      String?  @db.VarChar(255)
   sessionId        String?  @map("session_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
-  bankDetails      Json     @default("{}") @map("bank_details")
+  payoutDetails    Json     @default("{}") @map("payout_details")
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
   reviewedBy       String?  @map("reviewed_by")
   reviewRemarks    String?  @map("review_remarks") @db.Text
@@ -136,6 +137,34 @@ model CounsellorWalletTransaction {
   @@index([type], name: "idx_wtxn_type")
   @@index([createdAt], name: "idx_wtxn_created")
   @@map("counsellor_wallet_transactions")
+}
+
+model CounsellingRefundRequest {
+  id            String    @id @default(dbgenerated("('CRQ-'::text || (nextval('counselling_refund_request_seq'::regclass))::text)")) @db.Text
+  sessionId     String    @map("session_id")
+  studentId     String    @map("student_id")
+  counsellorId  String    @map("counsellor_id")
+  amount        Decimal   @db.Decimal(10, 2)
+  upiId         String    @map("upi_id") @db.VarChar(100)
+  reason        String    @db.Text
+  proofUrl      String?   @map("proof_url") @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  reviewedBy    String?   @map("reviewed_by")
+  reviewRemarks String?   @map("review_remarks") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  session    CounsellingSession @relation(fields: [sessionId], references: [id])
+  student    Student            @relation(fields: [studentId], references: [id])
+  counsellor Counsellor         @relation(fields: [counsellorId], references: [id])
+  reviewer   PlatformAdmin?     @relation(fields: [reviewedBy], references: [id])
+
+  @@index([sessionId], name: "idx_refund_req_session")
+  @@index([studentId], name: "idx_refund_req_student")
+  @@index([counsellorId], name: "idx_refund_req_counsellor")
+  @@index([status], name: "idx_refund_req_status")
+  @@map("counselling_refund_requests")
 }
 
 model CounsellorRegistrationRequest {

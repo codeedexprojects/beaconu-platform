@@ -20,13 +20,7 @@ headers {
 
 body:json {
   {
-    "amount": 1000,
-    "bank_details": {
-      "account_holder_name": "John Doe",
-      "account_number": "123456789012",
-      "ifsc": "SBIN0001234",
-      "bank_name": "State Bank of India"
-    }
+    "amount": 1000
   }
 }
 
@@ -40,8 +34,16 @@ docs {
   - amount must be ≤ current wallet balance
   - amount must be ≥ platform config `counsellorMinWithdrawalAmount`
     (see GET /api/v1/admin/config)
+  - the counsellor's profile must have upi_id and/or bank_details set
+    (PATCH /api/v1/counsellor/profile) — otherwise 400
+    "Add a UPI ID or bank details to your profile before requesting a
+    withdrawal"
+
+  Payout details are no longer sent per-request — they're read from the
+  counsellor's profile and snapshotted onto the transaction (UPI preferred
+  if both are set) so later profile edits don't change past requests.
 
   Response: { transaction_id, amount, withdrawal_status, balance_after }
 
-  Tables: counsellor_wallets, counsellor_wallet_transactions
+  Tables: counsellor_wallets, counsellor_wallet_transactions, counsellors
 }
