@@ -1,0 +1,41 @@
+meta {
+  name: Verify Avatar Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/uploads/avatar/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{uploadKey}}"
+  }
+}
+
+docs {
+  Step 2 of 2 — Confirm the avatar was successfully uploaded to S3.
+
+  Returns a short-lived signed view URL and a permanent public URL.
+  There is currently no PATCH /blink/profile endpoint to persist avatarUrl —
+  store the permanentUrl on the client until that endpoint exists.
+
+  Body:
+  - key (required): the S3 key returned by presign-avatar
+
+  Response:
+  - verified: true
+  - permanentUrl: permanent public S3 URL
+  - viewUrl: signed URL valid for 1 hour (for immediate display)
+}

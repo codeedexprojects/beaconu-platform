@@ -6,9 +6,25 @@ import type {
   ReferralListQuery,
   WalletTransactionQuery,
   ServiceChargeQuery,
+  EmployeeRankingQuery,
+  EmployeeListQuery,
+  DashboardSummaryQuery,
 } from "../validators/blink.validator";
 
 export class AssociateAdminController {
+  static async getDashboardSummary(req: Request, res: Response) {
+    const { from, to } = req.query as unknown as DashboardSummaryQuery;
+    const result = await BlinkQuery.getDashboardSummary(req.userId!, {
+      from,
+      to,
+    });
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Dashboard summary fetched successfully", result),
+      );
+  }
+
   static async registerEmployee(req: Request, res: Response) {
     const result = await BlinkService.registerAssociateEmployee(req.body);
     return res
@@ -24,10 +40,43 @@ export class AssociateAdminController {
   }
 
   static async listEmployees(req: Request, res: Response) {
-    const result = await BlinkQuery.listEmployeesWithRankings(req.userId!);
+    const { status, search, page, limit } =
+      req.query as unknown as EmployeeListQuery;
+    const result = await BlinkQuery.listEmployeesPlain(req.userId!, {
+      status,
+      search,
+      page,
+      limit,
+    });
     return res
       .status(200)
-      .json(ApiResponse.success("Employees fetched successfully", result));
+      .json(
+        ApiResponse.success(
+          "Employees fetched successfully",
+          result.employees,
+          result.meta,
+        ),
+      );
+  }
+
+  static async listEmployeeLeaderboard(req: Request, res: Response) {
+    const { from, to, page, limit } =
+      req.query as unknown as EmployeeRankingQuery;
+    const result = await BlinkQuery.listEmployeesWithRankings(req.userId!, {
+      from,
+      to,
+      page,
+      limit,
+    });
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Employee leaderboard fetched successfully",
+          result.employees,
+          result.meta,
+        ),
+      );
   }
 
   static async getEmployeePerformance(req: Request, res: Response) {
@@ -70,9 +119,11 @@ export class AssociateAdminController {
   }
 
   static async listReferrals(req: Request, res: Response) {
-    const { status, page, limit } = req.query as unknown as ReferralListQuery;
+    const { status, search, page, limit } =
+      req.query as unknown as ReferralListQuery;
     const result = await BlinkQuery.listReferralsByAdmin(req.userId!, {
       status,
+      search,
       page,
       limit,
     });
