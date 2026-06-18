@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useUniversity } from "@/hooks/use-universities";
+import { useUniversityType } from "@/hooks/use-university-types";
 import type { University } from "@beaconu/types";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -75,6 +76,25 @@ function asArr(v: unknown): unknown[] {
   return Array.isArray(v) ? v : [];
 }
 
+function getUniversityTypeName(
+  university: University,
+  fallbackTypeName?: string,
+): string {
+  if (
+    university.universityType &&
+    typeof university.universityType.name === "string" &&
+    university.universityType.name.trim().length > 0
+  ) {
+    return university.universityType.name;
+  }
+
+  if (fallbackTypeName && fallbackTypeName.trim().length > 0) {
+    return fallbackTypeName;
+  }
+
+  return "Not set";
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -91,8 +111,10 @@ function getOverview(university: University) {
   const details = isRecord(overview.university_details)
     ? overview.university_details
     : {};
-  const accolades = isRecord(overview.accolades) ? overview.accolades : {};
-  const streams = asArr(overview.discipline).filter(isRecord);
+  const accolades = asArr(overview.accolades).filter(isRecord);
+  const streams = asArr(overview.streams ?? overview.discipline).filter(
+    isRecord,
+  );
   const videos = asArr(overview.videos).filter(isRecord);
 
   return {
@@ -105,11 +127,7 @@ function getOverview(university: University) {
       state: asStr(details.state),
       pincode: asStr(details.pincode),
     },
-    accolades: {
-      image: asStr(accolades.image),
-      description: asStr(accolades.description),
-      subdescription: asStr(accolades.subdescription),
-    },
+    accolades,
     streams,
     videos,
   };
@@ -120,15 +138,28 @@ function getGovernance(university: University) {
   const gov = isRecord(meta?.governance) ? meta.governance : {};
 
   function parseCouncil(raw: unknown) {
-    if (!isRecord(raw)) return { description: "", members: [] };
-    const members = asArr(raw.members)
-      .filter(isRecord)
-      .map((m) => ({
+    if (Array.isArray(raw)) {
+      const members = raw.filter(isRecord).map((m) => ({
         userPhotoUrl: asStr(m.userPhotoUrl),
         name: asStr(m.name),
         designation: asStr(m.designation),
         description: asStr(m.description),
       }));
+      return { description: "", members };
+    }
+
+    if (!isRecord(raw)) return { description: "", members: [] };
+    const membersSource = Array.isArray(raw.members)
+      ? raw.members
+      : Array.isArray(raw)
+        ? raw
+        : [];
+    const members = membersSource.filter(isRecord).map((m) => ({
+      userPhotoUrl: asStr(m.userPhotoUrl),
+      name: asStr(m.name),
+      designation: asStr(m.designation),
+      description: asStr(m.description),
+    }));
     return { description: asStr(raw.description), members };
   }
 
@@ -283,6 +314,11 @@ export default function UniversityDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   const { data: university, isLoading, error } = useUniversity(id);
+  const resolvedUniversityTypeId =
+    university?.universityType?.id ?? university?.universityTypeId ?? "";
+  const { data: resolvedUniversityType } = useUniversityType(
+    resolvedUniversityTypeId,
+  );
 
   // ── Loading ────────────────────────────────────────────────────────────
 
@@ -363,7 +399,10 @@ export default function UniversityDetailPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Badge variant="secondary" className="text-xs">
-                {university.universityType.name}
+                {getUniversityTypeName(
+                  university,
+                  resolvedUniversityType?.name,
+                )}
               </Badge>
               {(university.city || university.state) && (
                 <span className="flex items-center gap-1">
@@ -398,7 +437,10 @@ export default function UniversityDetailPage() {
                 <InfoRow
                   icon={<Building2 className="h-4 w-4" />}
                   label="University Type"
-                  value={university.universityType.name}
+                  value={getUniversityTypeName(
+                    university,
+                    resolvedUniversityType?.name,
+                  )}
                 />
                 {university.accreditation && (
                   <InfoRow
@@ -513,33 +555,41 @@ export default function UniversityDetailPage() {
             )}
 
             {/* Accolades */}
-            {(overview.accolades.description ||
-              overview.accolades.subdescription ||
-              overview.accolades.image) && (
+            {overview.accolades.length > 0 && (
               <SectionCard title="Accolades">
-                <div className="flex items-start gap-4">
-                  {overview.accolades.image && (
-                    <img
-                      src={overview.accolades.image}
-                      alt="Accolades"
-                      className="h-16 w-16 object-contain rounded border shrink-0"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  )}
-                  <div className="space-y-1">
-                    {overview.accolades.description && (
-                      <p className="text-sm font-medium">
-                        {overview.accolades.description}
-                      </p>
-                    )}
-                    {overview.accolades.subdescription && (
-                      <p className="text-xs text-muted-foreground">
-                        {overview.accolades.subdescription}
-                      </p>
-                    )}
-                  </div>
+                <div className="space-y-3">
+                  {overview.accolades.map((accolade, idx) => {
+                    const image =
+                      asStr(accolade.image_url) || asStr(accolade.image);
+                    const description = asStr(accolade.description);
+                    const subdescription = asStr(accolade.subdescription);
+                    if (!image && !description && !subdescription) return null;
+                    return (
+                      <div key={idx} className="flex items-start gap-4">
+                        {image && (
+                          <img
+                            src={image}
+                            alt="Accolade"
+                            className="h-16 w-16 object-contain rounded border shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        )}
+                        <div className="space-y-1">
+                          {description && (
+                            <p className="text-sm font-medium">{description}</p>
+                          )}
+                          {subdescription && (
+                            <p className="text-xs text-muted-foreground">
+                              {subdescription}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </SectionCard>
             )}

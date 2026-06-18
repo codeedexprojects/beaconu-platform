@@ -26,9 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UpdateUniversityInput } from "@/lib/services/universities.service";
-import { useUniversities, useUpdateUniversity } from "@/hooks/use-universities";
+import { useUniversity, useUpdateUniversity } from "@/hooks/use-universities";
 import { useAllActiveStreams } from "@/hooks/use-academic-taxonomy";
-import { useUniversityTypes } from "@/hooks/use-university-types";
+import {
+  useUniversityType,
+  useUniversityTypes,
+} from "@/hooks/use-university-types";
 
 // ── types ────────────────────────────────────────────────────────────────────
 type GovernanceMemberForm = {
@@ -71,7 +74,7 @@ type UniversityMetadataForm = {
       affiliated_colleges: string;
       autonomous_colleges: string;
     };
-    disciplineStreamIds: string[];
+    streamIds: string[];
     videosJson: string;
   };
 };
@@ -207,8 +210,9 @@ function toMetadataForm(
         affiliated_colleges: asStr(det.affiliated_colleges),
         autonomous_colleges: asStr(det.autonomous_colleges),
       },
-      disciplineStreamIds: extractStreamIds(
-        (ov as Record<string, unknown>).discipline,
+      streamIds: extractStreamIds(
+        (ov as Record<string, unknown>).streams ??
+          (ov as Record<string, unknown>).discipline,
       ),
       videosJson: JSON.stringify(
         toArr((ov as Record<string, unknown>).videos),
@@ -242,7 +246,7 @@ function buildMetadata(
   streams: Array<{ id: string; name: string; slug: string }>,
 ) {
   const streamMap = new Map(streams.map((s) => [s.id, s]));
-  const discipline = form.overview.disciplineStreamIds
+  const streamsPayload = form.overview.streamIds
     .map((id) => streamMap.get(id))
     .filter((s): s is { id: string; name: string; slug: string } => Boolean(s))
     .map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
@@ -267,7 +271,7 @@ function buildMetadata(
           subdescription: accolade.subdescription,
         })),
       university_details: form.overview.university_details,
-      discipline,
+      streams: streamsPayload,
       videos,
     },
   };
@@ -280,8 +284,14 @@ function buildGovernance(form: UniversityGovernanceForm) {
     m.designation.trim() ||
     m.description.trim();
   return {
-    academic_council: form.academic_council.members.filter(hasContent),
-    management_council: form.management_council.members.filter(hasContent),
+    academic_council: {
+      description: form.academic_council.description,
+      members: form.academic_council.members.filter(hasContent),
+    },
+    management_council: {
+      description: form.management_council.description,
+      members: form.management_council.members.filter(hasContent),
+    },
     organizational_organogram: form.organizational_organogram,
   };
 }
@@ -300,7 +310,7 @@ const EMPTY_META: UniversityMetadataForm = {
       affiliated_colleges: "",
       autonomous_colleges: "",
     },
-    disciplineStreamIds: [],
+    streamIds: [],
     videosJson: "[]",
   },
 };
@@ -314,12 +324,15 @@ const EMPTY_GOV: UniversityGovernanceForm = {
 export default function EditUniversityPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const { data: universities = [] } = useUniversities();
+  const { data: university, isLoading } = useUniversity(params.id);
   const { data: universityTypes = [] } = useUniversityTypes();
+  const resolvedUniversityTypeId =
+    university?.universityType?.id ?? university?.universityTypeId ?? "";
+  const { data: currentUniversityType } = useUniversityType(
+    resolvedUniversityTypeId,
+  );
   const { data: streams = [] } = useAllActiveStreams();
   const updateMutation = useUpdateUniversity();
-
-  const university = universities.find((u) => u.id === params.id);
 
   const [form, setForm] = useState<UpdateUniversityInput>({});
   const [metaForm, setMetaForm] = useState<UniversityMetadataForm>(EMPTY_META);
@@ -328,11 +341,32 @@ export default function EditUniversityPage() {
     "overview",
   );
 
+  // Debug logging to diagnose type fetching
+  useEffect(() => {
+    console.log("🔍 University Type Debug Info:", {
+      hasUniversity: !!university,
+      universityTypeId: university?.universityTypeId,
+      universityTypeRelation: university?.universityType,
+      resolvedTypeId: resolvedUniversityTypeId,
+      isFetching: !!resolvedUniversityTypeId && !currentUniversityType,
+      currentUniversityType,
+      universityTypesCount: universityTypes.length,
+      formTypeId: form.university_type_id,
+    });
+  }, [
+    university,
+    currentUniversityType,
+    universityTypes,
+    resolvedUniversityTypeId,
+    form.university_type_id,
+  ]);
+
   useEffect(() => {
     if (!university) return;
     const meta = university.metadata;
     setForm({
-      university_type_id: university.universityType.id,
+      university_type_id:
+        university.universityType?.id ?? university.universityTypeId ?? "",
       name: university.name,
       slug: university.slug,
       state: university.state ?? "",
@@ -346,6 +380,32 @@ export default function EditUniversityPage() {
     setGovForm(toGovernanceForm(meta));
   }, [university]);
 
+  // Sync fetched university type back to form if not already set
+  useEffect(() => {
+    if (currentUniversityType && !form.university_type_id) {
+      setForm((prev) => ({
+        ...prev,
+        university_type_id: currentUniversityType.id,
+      }));
+    }
+  }, [currentUniversityType, form.university_type_id]);
+
+  const universityTypeOptions = useMemo(() => {
+    const options = [...universityTypes];
+
+    // Add fetched current type if not already in list
+    if (currentUniversityType) {
+      const exists = options.some((t) => t.id === currentUniversityType.id);
+      if (!exists) {
+        options.unshift(currentUniversityType);
+      }
+    }
+
+    // If form has a type ID that's not in options, it will still show as selected
+    // because Select component just checks value equality
+    return options;
+  }, [universityTypes, currentUniversityType]);
+
   const activeStreams = useMemo(
     () =>
       streams
@@ -357,12 +417,12 @@ export default function EditUniversityPage() {
 
   const toggleStream = (id: string) => {
     setMetaForm((prev) => {
-      const ids = prev.overview.disciplineStreamIds;
+      const ids = prev.overview.streamIds;
       return {
         ...prev,
         overview: {
           ...prev.overview,
-          disciplineStreamIds: ids.includes(id)
+          streamIds: ids.includes(id)
             ? ids.filter((x) => x !== id)
             : [...ids, id],
         },
@@ -546,7 +606,26 @@ export default function EditUniversityPage() {
     </div>
   );
 
-  if (!university && universities.length > 0) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <Header title="Edit University" description="Loading university...">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => router.push("/universities")}
+          >
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+        </Header>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!university) {
     return (
       <div className="flex flex-col min-h-full">
         <Header title="Edit University" description="University not found">
@@ -604,7 +683,7 @@ export default function EditUniversityPage() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-type">University Type</Label>
                   <Select
-                    value={form.university_type_id}
+                    value={form.university_type_id || undefined}
                     onValueChange={(v) =>
                       setForm((prev) => ({ ...prev, university_type_id: v }))
                     }
@@ -613,7 +692,7 @@ export default function EditUniversityPage() {
                       <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {universityTypes.map((t) => (
+                      {universityTypeOptions.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.name}
                         </SelectItem>
@@ -936,9 +1015,7 @@ export default function EditUniversityPage() {
                       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
                         {activeStreams.map((stream) => {
                           const isSelected =
-                            metaForm.overview.disciplineStreamIds.includes(
-                              stream.id,
-                            );
+                            metaForm.overview.streamIds.includes(stream.id);
                           return (
                             <button
                               key={stream.id}

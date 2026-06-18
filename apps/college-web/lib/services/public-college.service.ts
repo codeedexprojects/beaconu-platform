@@ -111,6 +111,41 @@ export interface PublicCollege {
       }[];
     };
   } | null;
+  tabs?: { id: string; name: string }[];
+  totalCourses?: number;
+  instituteType?: string | null;
+}
+
+type PublicCollegeApiResponse =
+  | PublicCollege
+  | {
+      collegeDetails: PublicCollege;
+      tabs?: { id: string; name: string }[];
+      totalCourses?: number;
+      instituteType?: string | null;
+      campusAmbassadors?: PublicCollege["campusAmbassadors"];
+    };
+
+function normalizeCollegePayload(
+  payload: PublicCollegeApiResponse,
+): PublicCollege {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "collegeDetails" in payload &&
+    payload.collegeDetails
+  ) {
+    return {
+      ...payload.collegeDetails,
+      tabs: payload.tabs,
+      totalCourses: payload.totalCourses,
+      instituteType: payload.instituteType,
+      campusAmbassadors:
+        payload.campusAmbassadors ?? payload.collegeDetails.campusAmbassadors,
+    };
+  }
+
+  return payload as PublicCollege;
 }
 
 export interface PublicCollegeSectionResponse {
@@ -163,8 +198,12 @@ function buildQueryString(query: PublicCollegeSummaryQuery) {
 }
 
 export const publicCollegeService = {
-  getBySlug: (slug: string) =>
-    publicFetch<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`),
+  getBySlug: async (slug: string) => {
+    const payload = await publicFetch<PublicCollegeApiResponse>(
+      `/api/v1/public/colleges/by-slug/${slug}`,
+    );
+    return normalizeCollegePayload(payload);
+  },
 
   getSection: (collegeId: string, sectionName: string) =>
     publicFetch<PublicCollegeSectionResponse>(

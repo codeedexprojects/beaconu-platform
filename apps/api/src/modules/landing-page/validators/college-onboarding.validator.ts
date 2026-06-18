@@ -22,7 +22,22 @@ export const collegeOnboardingSchemas = {
     status: z.enum(["pending", "approved", "rejected"]),
     review_remarks: z.string().trim().optional(),
     enableInstitutionGroup: z.boolean().optional(),
-    universityId: z.string().uuid().optional(),
+    universityId: z
+      .preprocess(
+        (value) => {
+          if (value === undefined || value === null) return undefined;
+          if (typeof value !== "string") return value;
+          const trimmed = value.trim();
+          return trimmed === "" ? undefined : trimmed;
+        },
+        z
+          .string()
+          .regex(
+            /^(UNV-\d+|[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
+            "Invalid universityId",
+          ),
+      )
+      .optional(),
   }),
 
   list: z.object({

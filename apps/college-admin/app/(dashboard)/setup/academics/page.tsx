@@ -1,11 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
-import { Loader2, ArrowRight, ArrowLeft, Plus, BookOpen } from "lucide-react";
+import {
+  Loader2,
+  ArrowRight,
+  ArrowLeft,
+  Plus,
+  BookOpen,
+  GraduationCap,
+  Briefcase,
+  Users,
+  Compass,
+  FileText,
+  Save,
+  X,
+  Building,
+  Award,
+  Globe,
+  Star,
+  Layers,
+  DollarSign,
+  Trash2,
+  Sparkles,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +40,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -29,8 +52,11 @@ import {
 import {
   useCollegeCampuses,
   useCollegeCourses,
-  useCollegeProfile,
   useCreateCollegeCourse,
+  useUpdateCollegeCourse,
+  useDeleteCollegeCourse,
+  useCourseTabs,
+  useUpdateCourseTab,
 } from "@/hooks/use-colleges";
 import {
   useProgramTypes,
@@ -38,6 +64,102 @@ import {
   useStudyLevels,
 } from "@/hooks/use-lookups";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
+
+// 14 course-specific tabs plus the basic configuration tab
+const COURSE_TABS = [
+  {
+    id: "basic",
+    label: "Basic Details",
+    icon: BookOpen,
+    desc: "Primary course settings, stream, mode, and eligibility",
+  },
+  {
+    id: "course_info",
+    label: "Course Info",
+    icon: Compass,
+    desc: "Key highlights, timings, exit options, and labs",
+  },
+  {
+    id: "admission_policy",
+    label: "Admission Policy",
+    icon: GraduationCap,
+    desc: "Intake capacities, seat matrix, and entrance exams",
+  },
+  {
+    id: "placements",
+    label: "Placements",
+    icon: Briefcase,
+    desc: "Salary package stats and top hiring recruiters",
+  },
+  {
+    id: "fees",
+    label: "Fees & Dues",
+    icon: DollarSign,
+    desc: "Tuition, one-time fees, and semester structures",
+  },
+  {
+    id: "financial_aid",
+    label: "Financial Aid",
+    icon: Award,
+    desc: "Merit scholarships and upfront concessions",
+  },
+  {
+    id: "student_housing",
+    label: "Student Housing",
+    icon: Building,
+    desc: "Hostel rooms, mess details, and housing rules",
+  },
+  {
+    id: "exam_policy",
+    label: "Exam Policy",
+    icon: FileText,
+    desc: "Internal/External marks weights and grading rules",
+  },
+  {
+    id: "faculty",
+    label: "Faculty Directory",
+    icon: Users,
+    desc: "Professors, designations, and academic experience",
+  },
+  {
+    id: "review",
+    label: "Student Reviews",
+    icon: Star,
+    desc: "Average rating score and student feedback comments",
+  },
+  {
+    id: "library",
+    label: "Library Assets",
+    icon: BookOpen,
+    desc: "Book volumes, digital journals, and library details",
+  },
+  {
+    id: "clubs_associations",
+    label: "Clubs & Groups",
+    icon: Sparkles,
+    desc: "Student societies, associations, and clubs",
+  },
+  {
+    id: "alliance",
+    label: "Alliances & Ties",
+    icon: Globe,
+    desc: "Industrial and global academic partnerships",
+  },
+  {
+    id: "other_courses_offered",
+    label: "Other Options",
+    icon: Layers,
+    desc: "Alternate pathways and related course linkages",
+  },
+  {
+    id: "demo_graphics",
+    label: "Demographics",
+    icon: Users,
+    desc: "Gender ratio, state diversity, and stats",
+  },
+] as const;
+
+type CourseTabId = (typeof COURSE_TABS)[number]["id"];
 
 const courseSchema = z.object({
   name: z.string().min(2, "Course name is required"),
@@ -52,25 +174,10 @@ const courseSchema = z.object({
   studyLevelId: z.string().min(1, "Study level is required"),
   programTypeId: z.string().min(1, "Program type is required"),
   studyMode: z.string().min(1, "Study mode is required"),
-  intakeCapacity: z.coerce
-    .number()
-    .min(1, "Capacity must be at least 1")
-    .max(10000, "Capacity cannot exceed 10000")
-    .optional()
-    .or(z.literal("")),
-  duration: z
-    .string()
-    .min(2, "Duration must be at least 2 characters")
-    .max(50, "Duration cannot exceed 50 characters")
-    .optional()
-    .or(z.literal("")),
-  eligibility: z
-    .string()
-    .min(2, "Eligibility must be at least 2 characters")
-    .max(200, "Eligibility cannot exceed 200 characters")
-    .optional()
-    .or(z.literal("")),
   campusId: z.string().optional().or(z.literal("")),
+  duration: z.string().optional().nullable(),
+  intakeCapacity: z.coerce.number().optional().nullable(),
+  eligibility: z.string().optional().nullable(),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
@@ -81,16 +188,33 @@ export default function SetupAcademicsPage() {
     typeof window === "undefined"
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
+
+  const [editingCourse, setEditingCourse] = useState<any | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [activeTab, setActiveTab] = useState<CourseTabId>("basic");
 
   const { data: courses = [], isLoading: isLoadingCourses } =
     useCollegeCourses();
-  const { data: profile } = useCollegeProfile();
   const { data: streams = [] } = useStreams();
   const { data: studyLevels = [] } = useStudyLevels();
   const { data: programTypes = [] } = useProgramTypes();
   const { data: campuses = [] } = useCollegeCampuses();
-  const { mutate: createCourse, isPending } = useCreateCollegeCourse();
+
+  const { mutate: createCourse, isPending: isCreating } =
+    useCreateCollegeCourse();
+  const { mutate: updateCourse, isPending: isUpdating } =
+    useUpdateCollegeCourse();
+  const { mutate: deleteCourse } = useDeleteCollegeCourse();
+
+  // Tab Data hooks for the currently selected course (if editing)
+  const { data: tabDataResponse, isLoading: isLoadingTabs } = useCourseTabs(
+    editingCourse?.id,
+    !!editingCourse?.id,
+  );
+  const { mutate: updateTab, isPending: isUpdatingTab } = useUpdateCourseTab();
+
+  // Tab State - local JSON fields representing active tab data edits
+  const [localTabState, setLocalTabState] = useState<any>({});
 
   const {
     register,
@@ -104,47 +228,137 @@ export default function SetupAcademicsPage() {
     defaultValues: { studyMode: "full_time" },
   });
 
-  const onSubmit = (data: CourseFormData) => {
-    createCourse(
+  // Sync basic details when editing
+  useEffect(() => {
+    if (editingCourse) {
+      reset({
+        name: editingCourse.name || "",
+        code: editingCourse.code || "",
+        disciplineId: editingCourse.disciplineId || "",
+        studyLevelId: editingCourse.studyLevelId || "",
+        programTypeId: editingCourse.programTypeId || "",
+        studyMode: editingCourse.studyMode || "full_time",
+        campusId: editingCourse.campusId || "",
+        duration: editingCourse.duration || "",
+        intakeCapacity: editingCourse.intakeCapacity || null,
+        eligibility: editingCourse.eligibility || "",
+      });
+    } else {
+      reset({
+        studyMode: "full_time",
+      });
+    }
+  }, [editingCourse, reset]);
+
+  // Sync tab state when server response changes
+  useEffect(() => {
+    if (tabDataResponse?.tabData) {
+      setLocalTabState(tabDataResponse.tabData);
+    } else {
+      setLocalTabState({});
+    }
+  }, [tabDataResponse]);
+
+  const handleBasicSubmit = (data: CourseFormData) => {
+    if (editingCourse) {
+      updateCourse(
+        {
+          id: editingCourse.id,
+          data: {
+            name: data.name,
+            code: data.code,
+            disciplineId: data.disciplineId,
+            studyLevelId: data.studyLevelId,
+            programTypeId: data.programTypeId,
+            studyMode: data.studyMode,
+            campusId: data.campusId || null,
+            duration: data.duration || null,
+            intakeCapacity: data.intakeCapacity || null,
+            eligibility: data.eligibility || null,
+          },
+        },
+        {
+          onSuccess: (updated) => {
+            toast.success("Course basic details updated!");
+            setEditingCourse(updated);
+          },
+        },
+      );
+    } else {
+      createCourse(
+        {
+          name: data.name,
+          code: data.code,
+          disciplineId: data.disciplineId,
+          studyLevelId: data.studyLevelId,
+          programTypeId: data.programTypeId,
+          studyMode: data.studyMode,
+          campusId: data.campusId || null,
+          duration: data.duration || null,
+          intakeCapacity: data.intakeCapacity || null,
+          eligibility: data.eligibility || null,
+          tabData: {},
+        },
+        {
+          onSuccess: (created) => {
+            toast.success("Course entry created! Now configure course tabs.");
+            setEditingCourse(created);
+            setActiveTab("course_info");
+          },
+        },
+      );
+    }
+  };
+
+  const saveActiveTab = () => {
+    if (!editingCourse?.id) return;
+
+    const tabPayload = localTabState[activeTab] || {};
+
+    updateTab(
       {
-        ...data,
-        intakeCapacity: data.intakeCapacity || null,
-        duration: data.duration || null,
-        eligibility: data.eligibility || null,
-        campusId: data.campusId || null,
+        courseId: editingCourse.id,
+        tabName: activeTab,
+        data: tabPayload,
       },
       {
         onSuccess: () => {
-          toast.success("Course added successfully");
-          setIsAdding(false);
-          reset();
+          toast.success(
+            `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
+          );
         },
       },
     );
   };
 
-  const hasCourses = courses.length > 0;
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this program?")) {
+      deleteCourse(id, {
+        onSuccess: () => {
+          toast.success("Course deleted successfully");
+        },
+      });
+    }
+  };
 
-  const configuredCourseName =
-    ((profile?.profileSections?.course_info as any)?.course_name as string) ||
-    "";
-  const configuredAdmissionDetails =
-    ((profile?.profileSections?.course_info as any)?.admissions?.[0]
-      ?.basic_details as
-      | {
-          duration?: string;
-          study_mode?: string;
-          academic_cycle?: string;
-          total_credits?: number;
-          course_category?: string;
-        }
-      | undefined) || undefined;
-
-  // Flatten streams to get all disciplines
   const disciplines = streams.flatMap((s) => {
     if (!Array.isArray(s.disciplines)) return [];
     return s.disciplines.map((d) => ({ ...d, streamName: s.name }));
   });
+
+  const getActiveTabPayload = () => {
+    return localTabState[activeTab] || {};
+  };
+
+  const updateActiveTabPayload = (updates: any) => {
+    setLocalTabState((prev: any) => ({
+      ...prev,
+      [activeTab]: {
+        ...(prev[activeTab] || {}),
+        ...updates,
+      },
+    }));
+  };
 
   if (isLoadingCourses) {
     return (
@@ -154,363 +368,1409 @@ export default function SetupAcademicsPage() {
     );
   }
 
+  const isEditingOrAdding = isAdding || editingCourse !== null;
+
   return (
-    <div className="space-y-6">
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b">
-          <div>
-            <CardTitle>Academic Programs</CardTitle>
-            <CardDescription>
-              Add the courses and programs offered by your institution.
-            </CardDescription>
-          </div>
-          {!isAdding && (
-            <Button onClick={() => setIsAdding(true)} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Course
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="pt-6">
-          {hasCourses && !isAdding && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto pb-16">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/60">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
+            Academic Programs
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Configure courses, eligibility constraints, placement rates, and
+            housing.
+          </p>
+        </div>
+        {!isEditingOrAdding && (
+          <Button
+            onClick={() => {
+              setIsAdding(true);
+              setActiveTab("basic");
+            }}
+            size="lg"
+            className="shadow-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add New Course
+          </Button>
+        )}
+      </div>
+
+      {/* COURSE LIST VIEW */}
+      {!isEditingOrAdding && (
+        <>
+          {courses.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {courses.map((course) => (
-                <Card key={course.id} className="overflow-hidden">
-                  <div className="p-4 bg-muted/30">
-                    <h4 className="font-semibold text-sm mb-1">
-                      {course.name}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {course.code}
-                    </p>
-                    <div className="space-y-1.5 text-xs text-muted-foreground">
-                      <p>• {course.studyLevel?.name}</p>
-                      <p>• {course.discipline?.name}</p>
-                      <p>• {course.programType?.name}</p>
-                      {course.campus && <p>• Campus: {course.campus.name}</p>}
-                      {configuredCourseName &&
-                        configuredCourseName.trim() === course.name.trim() && (
-                          <>
-                            <p className="pt-1 font-medium text-foreground/90">
-                              Course Info Details
-                            </p>
-                            {configuredAdmissionDetails?.duration && (
-                              <p>
-                                • Duration:{" "}
-                                {configuredAdmissionDetails.duration}
-                              </p>
-                            )}
-                            {configuredAdmissionDetails?.study_mode && (
-                              <p>
-                                • Study Mode:{" "}
-                                {configuredAdmissionDetails.study_mode}
-                              </p>
-                            )}
-                            {configuredAdmissionDetails?.academic_cycle && (
-                              <p>
-                                • Academic Cycle:{" "}
-                                {configuredAdmissionDetails.academic_cycle}
-                              </p>
-                            )}
-                            {configuredAdmissionDetails?.total_credits !=
-                              null && (
-                              <p>
-                                • Credits:{" "}
-                                {configuredAdmissionDetails.total_credits}
-                              </p>
-                            )}
-                            {configuredAdmissionDetails?.course_category && (
-                              <p>
-                                • Category:{" "}
-                                {configuredAdmissionDetails.course_category}
-                              </p>
-                            )}
-                          </>
-                        )}
+                <Card
+                  key={course.id}
+                  className="group overflow-hidden border border-border/80 bg-card/60 backdrop-blur-md transition-all hover:shadow-lg hover:border-indigo-400/40"
+                >
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <BookOpen className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                        {course.code}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-lg mb-1 line-clamp-1">
+                        {course.name}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Study Mode: {course.studyMode?.replace("_", " ")}
+                      </p>
+                    </div>
+                    <div className="space-y-2 text-xs text-muted-foreground pt-2 border-t">
+                      <p className="flex items-center gap-2">
+                        <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />{" "}
+                        {course.studyLevel?.name}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <Layers className="h-3.5 w-3.5 text-muted-foreground" />{" "}
+                        {course.discipline?.name}
+                      </p>
+                      {course.campus && (
+                        <p className="text-indigo-600 font-semibold mt-2">
+                          Campus: {course.campus.name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 pt-4 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingCourse(course);
+                          setActiveTab("basic");
+                        }}
+                      >
+                        Edit Details
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(course.id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </Card>
               ))}
             </div>
+          ) : (
+            <Card className="border-dashed bg-muted/5 py-12">
+              <CardContent className="flex flex-col items-center justify-center text-center">
+                <div className="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center mb-6">
+                  <BookOpen className="h-8 w-8 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight mb-2">
+                  No programs configured
+                </h3>
+                <p className="text-muted-foreground max-w-sm mb-6 text-sm">
+                  Start building your academic catalog by configuring your first
+                  course offering.
+                </p>
+                <Button
+                  onClick={() => setIsAdding(true)}
+                  size="lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                >
+                  <Plus className="h-5 w-5 mr-2" /> Add First Course
+                </Button>
+              </CardContent>
+            </Card>
           )}
+        </>
+      )}
 
-          {!hasCourses && !isAdding && (
-            <div className="text-center py-12">
-              <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                <BookOpen className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium">No courses added</h3>
-              <p className="text-muted-foreground mt-2 mb-6">
-                Add the academic programs available at your college.
-              </p>
-              <Button onClick={() => setIsAdding(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Course
-              </Button>
-            </div>
-          )}
+      {/* EDITING / ADDING WORKSPACE */}
+      {isEditingOrAdding && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* TAB SIDEBAR */}
+          <aside className="lg:col-span-3 space-y-2">
+            {COURSE_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              const isDisabled = !editingCourse && tab.id !== "basic";
 
-          {isAdding && (
-            <form
-              onSubmit={handleSubmit(onSubmit, () => {
-                toast.error("Please fix the errors before saving");
-              })}
-              className="space-y-4 bg-muted/20 p-6 rounded-xl border"
-            >
-              <h4 className="font-medium flex items-center gap-2 mb-4">
-                <BookOpen className="h-4 w-4 text-primary" />
-                New Course Details
-              </h4>
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                  }}
+                  className={`w-full flex flex-col items-start gap-1 p-4 rounded-xl text-left transition-all border ${
+                    isActive
+                      ? "bg-indigo-600/5 border-indigo-600/30 text-indigo-900 shadow-sm font-semibold ring-1 ring-indigo-500/20"
+                      : isDisabled
+                        ? "opacity-50 cursor-not-allowed border-transparent text-muted-foreground"
+                        : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-muted-foreground"}`}
+                    />
+                    <span className="text-sm font-bold">{tab.label}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground/80 line-clamp-1 pl-8">
+                    {tab.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </aside>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="name">Course Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g. Bachelor of Technology in Computer Science"
-                    aria-invalid={!!errors.name}
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="code">Course Code</Label>
-                  <Input
-                    id="code"
-                    placeholder="e.g. BTECH-CS"
-                    aria-invalid={!!errors.code}
-                    {...register("code")}
-                  />
-                  {errors.code && (
-                    <p className="text-sm text-destructive">
-                      {errors.code.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Discipline</Label>
-                  <Select
-                    onValueChange={(val) => {
-                      setValue("disciplineId", val);
-                      void trigger("disciplineId");
-                    }}
+          {/* EDIT WORKSPACE */}
+          <main className="lg:col-span-9 space-y-6">
+            {/* 1. BASIC DETAILS FORM */}
+            {activeTab === "basic" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-indigo-500" /> Basic
+                    Details
+                  </CardTitle>
+                  <CardDescription>
+                    Primary properties of this academic program.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form
+                    onSubmit={handleSubmit(handleBasicSubmit)}
+                    className="space-y-6"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select discipline" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {disciplines.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.name} ({d.streamName})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.disciplineId && (
-                    <p className="text-sm text-destructive">
-                      {errors.disciplineId.message}
-                    </p>
-                  )}
-                </div>
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label
+                          htmlFor="name"
+                          className="font-semibold text-foreground"
+                        >
+                          Course Name *
+                        </Label>
+                        <Input
+                          id="name"
+                          placeholder="e.g. B.Tech Computer Science"
+                          {...register("name")}
+                        />
+                        {errors.name && (
+                          <p className="text-xs text-destructive">
+                            {errors.name.message}
+                          </p>
+                        )}
+                      </div>
 
-                <div className="space-y-2">
-                  <Label>Study Level</Label>
-                  <Select
-                    onValueChange={(val) => {
-                      setValue("studyLevelId", val);
-                      void trigger("studyLevelId");
-                    }}
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="code"
+                          className="font-semibold text-foreground"
+                        >
+                          Course Code *
+                        </Label>
+                        <Input
+                          id="code"
+                          placeholder="e.g. BTECH-CS"
+                          className="uppercase"
+                          {...register("code")}
+                        />
+                        {errors.code && (
+                          <p className="text-xs text-destructive">
+                            {errors.code.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-foreground">
+                          Discipline *
+                        </Label>
+                        <Select
+                          onValueChange={(val) => {
+                            setValue("disciplineId", val);
+                            trigger("disciplineId");
+                          }}
+                          defaultValue={editingCourse?.disciplineId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select discipline" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {disciplines.map((d) => (
+                              <SelectItem key={d.id} value={d.id}>
+                                {d.name} ({d.streamName})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.disciplineId && (
+                          <p className="text-xs text-destructive">
+                            {errors.disciplineId.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-foreground">
+                          Study Level *
+                        </Label>
+                        <Select
+                          onValueChange={(val) => {
+                            setValue("studyLevelId", val);
+                            trigger("studyLevelId");
+                          }}
+                          defaultValue={editingCourse?.studyLevelId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {studyLevels.map((l) => (
+                              <SelectItem key={l.id} value={l.id}>
+                                {l.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.studyLevelId && (
+                          <p className="text-xs text-destructive">
+                            {errors.studyLevelId.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-foreground">
+                          Program Type *
+                        </Label>
+                        <Select
+                          onValueChange={(val) => {
+                            setValue("programTypeId", val);
+                            trigger("programTypeId");
+                          }}
+                          defaultValue={editingCourse?.programTypeId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {programTypes.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.programTypeId && (
+                          <p className="text-xs text-destructive">
+                            {errors.programTypeId.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-foreground">
+                          Campus
+                        </Label>
+                        <Select
+                          onValueChange={(val) => {
+                            setValue("campusId", val);
+                            trigger("campusId");
+                          }}
+                          defaultValue={editingCourse?.campusId || ""}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select campus" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {campuses.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name} {c.isMainCampus && "(Main)"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-foreground">
+                          Study Mode *
+                        </Label>
+                        <Select
+                          onValueChange={(val) => {
+                            setValue("studyMode", val);
+                            trigger("studyMode");
+                          }}
+                          defaultValue={editingCourse?.studyMode || "full_time"}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="full_time">Full Time</SelectItem>
+                            <SelectItem value="part_time">Part Time</SelectItem>
+                            <SelectItem value="online">Online</SelectItem>
+                            <SelectItem value="distance">Distance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="duration"
+                          className="font-semibold text-foreground"
+                        >
+                          Duration
+                        </Label>
+                        <Input
+                          id="duration"
+                          placeholder="e.g. 4 Years"
+                          {...register("duration")}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="intakeCapacity"
+                          className="font-semibold text-foreground"
+                        >
+                          Intake Capacity
+                        </Label>
+                        <Input
+                          id="intakeCapacity"
+                          type="number"
+                          placeholder="e.g. 60"
+                          {...register("intakeCapacity")}
+                        />
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label
+                          htmlFor="eligibility"
+                          className="font-semibold text-foreground"
+                        >
+                          Eligibility Criteria Text
+                        </Label>
+                        <Textarea
+                          id="eligibility"
+                          placeholder="e.g. 10+2 with 50% marks in PCM..."
+                          rows={3}
+                          {...register("eligibility")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingCourse(null);
+                          setIsAdding(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isCreating || isUpdating}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                      >
+                        {(isCreating || isUpdating) && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Save & Continue
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* TAB CONFIGURE FORM (14 JSON TABS) */}
+            {activeTab !== "basic" && editingCourse && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      {COURSE_TABS.find((t) => t.id === activeTab)?.label}
+                    </CardTitle>
+                    <CardDescription>
+                      Configure tab data for &apos;{editingCourse.name}&apos;.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={saveActiveTab}
+                    disabled={isUpdatingTab}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {studyLevels.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.studyLevelId && (
-                    <p className="text-sm text-destructive">
-                      {errors.studyLevelId.message}
-                    </p>
-                  )}
-                </div>
+                    {isUpdatingTab ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save Tab
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6 min-h-[300px]">
+                  {isLoadingTabs ? (
+                    <div className="flex h-48 items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <>
+                      {/* COURSE INFO TAB */}
+                      {activeTab === "course_info" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Program Description</Label>
+                            <Textarea
+                              rows={3}
+                              placeholder="Overview description..."
+                              value={getActiveTabPayload().about || ""}
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  about: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
 
-                <div className="space-y-2">
-                  <Label>Program Type</Label>
-                  <Select
-                    onValueChange={(val) => {
-                      setValue("programTypeId", val);
-                      void trigger("programTypeId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {programTypes.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.programTypeId && (
-                    <p className="text-sm text-destructive">
-                      {errors.programTypeId.message}
-                    </p>
-                  )}
-                </div>
+                          {/* Highlights */}
+                          <div className="space-y-3">
+                            <Label className="block font-bold">
+                              Highlights
+                            </Label>
+                            {(
+                              getActiveTabPayload().program_highlights || []
+                            ).map((h: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex gap-2 items-center"
+                              >
+                                <Input
+                                  placeholder="Tag (e.g. NBA Accreditated)"
+                                  value={h.tag || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload()
+                                        .program_highlights || []),
+                                    ];
+                                    next[idx].tag = e.target.value;
+                                    updateActiveTabPayload({
+                                      program_highlights: next,
+                                    });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Headline Title"
+                                  value={h.title || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload()
+                                        .program_highlights || []),
+                                    ];
+                                    next[idx].title = e.target.value;
+                                    updateActiveTabPayload({
+                                      program_highlights: next,
+                                    });
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = (
+                                      getActiveTabPayload()
+                                        .program_highlights || []
+                                    ).filter((_: any, i: number) => i !== idx);
+                                    updateActiveTabPayload({
+                                      program_highlights: next,
+                                    });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload()
+                                    .program_highlights || []),
+                                  { tag: "", title: "" },
+                                ];
+                                updateActiveTabPayload({
+                                  program_highlights: next,
+                                });
+                              }}
+                            >
+                              Add Highlight
+                            </Button>
+                          </div>
+                        </div>
+                      )}
 
-                <div className="space-y-2">
-                  <Label>Campus</Label>
-                  <Select
-                    onValueChange={(val) => {
-                      setValue("campusId", val);
-                      void trigger("campusId");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select campus" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {campuses.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name} {c.isMainCampus && "(Main)"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.campusId && (
-                    <p className="text-sm text-destructive">
-                      {errors.campusId.message}
-                    </p>
-                  )}
-                </div>
+                      {/* ADMISSION POLICY */}
+                      {activeTab === "admission_policy" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Admission Policy Summary</Label>
+                            <Textarea
+                              rows={3}
+                              placeholder="Describe the overall admission flow..."
+                              value={getActiveTabPayload().policySummary || ""}
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  policySummary: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
 
-                <div className="space-y-2">
-                  <Label>Study Mode</Label>
-                  <Select
-                    onValueChange={(val) => {
-                      setValue("studyMode", val);
-                      void trigger("studyMode");
-                    }}
-                    defaultValue="full_time"
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full_time">Full Time</SelectItem>
-                      <SelectItem value="part_time">Part Time</SelectItem>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="distance">Distance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.studyMode && (
-                    <p className="text-sm text-destructive">
-                      {errors.studyMode.message}
-                    </p>
-                  )}
-                </div>
+                          <div className="grid gap-4 md:grid-cols-2 pt-4 border-t">
+                            <div className="space-y-1">
+                              <Label>
+                                National Level Entrance exams accepted
+                              </Label>
+                              <Input
+                                placeholder="JEE Main, NEET"
+                                value={
+                                  getActiveTabPayload().entranceExams?.nationalLevel?.join(
+                                    ", ",
+                                  ) || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    entranceExams: {
+                                      ...(getActiveTabPayload().entranceExams ||
+                                        {}),
+                                      nationalLevel: e.target.value
+                                        .split(",")
+                                        .map((s) => s.trim())
+                                        .filter(Boolean),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>State Level Entrance exams accepted</Label>
+                              <Input
+                                placeholder="KCET, MHT-CET"
+                                value={
+                                  getActiveTabPayload().entranceExams?.stateLevel?.join(
+                                    ", ",
+                                  ) || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    entranceExams: {
+                                      ...(getActiveTabPayload().entranceExams ||
+                                        {}),
+                                      stateLevel: e.target.value
+                                        .split(",")
+                                        .map((s) => s.trim())
+                                        .filter(Boolean),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration</Label>
-                  <Input
-                    id="duration"
-                    placeholder="e.g. 4 Years"
-                    aria-invalid={!!errors.duration}
-                    {...register("duration")}
-                  />
-                  {errors.duration && (
-                    <p className="text-sm text-destructive">
-                      {errors.duration.message}
-                    </p>
-                  )}
-                </div>
+                      {/* PLACEMENTS */}
+                      {activeTab === "placements" && (
+                        <div className="space-y-4">
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="space-y-1">
+                              <Label>Average Salary Package</Label>
+                              <Input
+                                placeholder="e.g. 7.5 LPA"
+                                value={
+                                  getActiveTabPayload().placement_stats
+                                    ?.averagePackage || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    placement_stats: {
+                                      ...(getActiveTabPayload()
+                                        .placement_stats || {}),
+                                      averagePackage: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Highest Salary Package</Label>
+                              <Input
+                                placeholder="e.g. 45 LPA"
+                                value={
+                                  getActiveTabPayload().placement_stats
+                                    ?.highestPackage || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    placement_stats: {
+                                      ...(getActiveTabPayload()
+                                        .placement_stats || {}),
+                                      highestPackage: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Placement Percentage</Label>
+                              <Input
+                                placeholder="e.g. 96%"
+                                value={
+                                  getActiveTabPayload().placement_stats
+                                    ?.placementPercentage || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    placement_stats: {
+                                      ...(getActiveTabPayload()
+                                        .placement_stats || {}),
+                                      placementPercentage: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="eligibility">Eligibility</Label>
-                  <Input
-                    id="eligibility"
-                    placeholder="e.g. 10+2 with PCM"
-                    aria-invalid={!!errors.eligibility}
-                    {...register("eligibility")}
-                  />
-                  {errors.eligibility && (
-                    <p className="text-sm text-destructive">
-                      {errors.eligibility.message}
-                    </p>
-                  )}
-                </div>
+                          <div className="space-y-2 pt-4 border-t">
+                            <Label>Placement Growth Summary Description</Label>
+                            <Textarea
+                              placeholder="Highlight top recruiting companies and statistics growth..."
+                              value={getActiveTabPayload().growthSummary || ""}
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  growthSummary: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="intakeCapacity">Intake Capacity</Label>
-                  <Input
-                    id="intakeCapacity"
-                    type="number"
-                    aria-invalid={!!errors.intakeCapacity}
-                    {...register("intakeCapacity")}
-                  />
-                  {errors.intakeCapacity && (
-                    <p className="text-sm text-destructive">
-                      {errors.intakeCapacity.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+                      {/* FEES */}
+                      {activeTab === "fees" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Annual/Semester Tuition Fees Details</Label>
+                            <Textarea
+                              placeholder="Highlight tuition fees and deposit details..."
+                              value={
+                                getActiveTabPayload().tuitionFeesSummary || ""
+                              }
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  tuitionFeesSummary: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                {hasCourses && (
+                          <div className="space-y-3 pt-4 border-t">
+                            <Label className="block font-bold">
+                              One-Time / Extra Admission Fees
+                            </Label>
+                            {(getActiveTabPayload().one_time_fees || []).map(
+                              (f: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-2 items-center"
+                                >
+                                  <Input
+                                    placeholder="Fee Name (e.g. Security Deposit)"
+                                    value={f.name || ""}
+                                    onChange={(e) => {
+                                      const next = [
+                                        ...(getActiveTabPayload()
+                                          .one_time_fees || []),
+                                      ];
+                                      next[idx].name = e.target.value;
+                                      updateActiveTabPayload({
+                                        one_time_fees: next,
+                                      });
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Amount (e.g. 10,000)"
+                                    value={f.amount || ""}
+                                    onChange={(e) => {
+                                      const next = [
+                                        ...(getActiveTabPayload()
+                                          .one_time_fees || []),
+                                      ];
+                                      next[idx].amount = e.target.value;
+                                      updateActiveTabPayload({
+                                        one_time_fees: next,
+                                      });
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const next = (
+                                        getActiveTabPayload().one_time_fees ||
+                                        []
+                                      ).filter(
+                                        (_: any, i: number) => i !== idx,
+                                      );
+                                      updateActiveTabPayload({
+                                        one_time_fees: next,
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              ),
+                            )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload().one_time_fees ||
+                                    []),
+                                  { name: "", amount: "" },
+                                ];
+                                updateActiveTabPayload({ one_time_fees: next });
+                              }}
+                            >
+                              Add One-time Fee
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FINANCIAL AID */}
+                      {activeTab === "financial_aid" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Merit Scholarship criteria</Label>
+                            <Textarea
+                              placeholder="Eligibility criteria based on scores/ranks..."
+                              value={
+                                getActiveTabPayload().meritScholarship
+                                  ?.description || ""
+                              }
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  meritScholarship: {
+                                    title: "Merit Scholarship",
+                                    description: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2 pt-4 border-t">
+                            <div className="space-y-1">
+                              <Label>Upfront Fee Discount Concession</Label>
+                              <Input
+                                placeholder="e.g. 10% upfront payment discount"
+                                value={
+                                  getActiveTabPayload().upfrontFeeConcession
+                                    ?.discount || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    upfrontFeeConcession: {
+                                      discount: e.target.value,
+                                      details:
+                                        "For paying annual fee in single lump-sum",
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STUDENT HOUSING */}
+                      {activeTab === "student_housing" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Hostel & Housing Summary</Label>
+                            <Textarea
+                              placeholder="Describe AC/Non-AC hostel rooms, food facilities..."
+                              value={getActiveTabPayload().summary || ""}
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  summary: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* EXAM POLICY */}
+                      {activeTab === "exam_policy" && (
+                        <div className="space-y-4">
+                          <Label className="block font-bold">
+                            Marks Evaluation Rules
+                          </Label>
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1">
+                              <Label>Internal Assessment (Weight %)</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 40"
+                                value={
+                                  getActiveTabPayload().course_with_practical
+                                    ?.internalMarks || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    course_with_practical: {
+                                      ...(getActiveTabPayload()
+                                        .course_with_practical || {}),
+                                      internalMarks: Number(e.target.value),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Semester Exams (Weight %)</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 60"
+                                value={
+                                  getActiveTabPayload().course_with_practical
+                                    ?.externalMarks || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    course_with_practical: {
+                                      ...(getActiveTabPayload()
+                                        .course_with_practical || {}),
+                                      externalMarks: Number(e.target.value),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FACULTY */}
+                      {activeTab === "faculty" && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Label className="block font-bold">
+                              Faculty Members
+                            </Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload().list || []),
+                                  { name: "", designation: "", experience: "" },
+                                ];
+                                updateActiveTabPayload({ list: next });
+                              }}
+                            >
+                              Add Faculty
+                            </Button>
+                          </div>
+                          {(getActiveTabPayload().list || []).map(
+                            (f: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex gap-2 items-center border p-3 rounded-lg bg-muted/10"
+                              >
+                                <Input
+                                  placeholder="Faculty Name"
+                                  value={f.name || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().list || []),
+                                    ];
+                                    next[idx].name = e.target.value;
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Designation (e.g. HOD CS)"
+                                  value={f.designation || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().list || []),
+                                    ];
+                                    next[idx].designation = e.target.value;
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Experience (e.g. 12 Years)"
+                                  value={f.experience || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().list || []),
+                                    ];
+                                    next[idx].experience = e.target.value;
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = (
+                                      getActiveTabPayload().list || []
+                                    ).filter((_: any, i: number) => i !== idx);
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
+
+                      {/* REVIEWS */}
+                      {activeTab === "review" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>
+                              Overall Student Satisfaction Rating (1-5)
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder="e.g. 4.5"
+                              value={getActiveTabPayload().overallRating || ""}
+                              onChange={(e) =>
+                                updateActiveTabPayload({
+                                  overallRating: Number(e.target.value),
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* LIBRARY */}
+                      {activeTab === "library" && (
+                        <div className="space-y-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1">
+                              <Label>Library Area (Sq Feet)</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 12000"
+                                value={getActiveTabPayload().areaSqFeet || ""}
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    areaSqFeet: Number(e.target.value),
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Total Seat Capacity</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 300"
+                                value={getActiveTabPayload().totalSeats || ""}
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    totalSeats: Number(e.target.value),
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CLUBS */}
+                      {activeTab === "clubs_associations" && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Label className="block font-bold">
+                              Clubs & Associations
+                            </Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload().clubs || []),
+                                  { name: "", description: "" },
+                                ];
+                                updateActiveTabPayload({ clubs: next });
+                              }}
+                            >
+                              Add Club
+                            </Button>
+                          </div>
+                          {(getActiveTabPayload().clubs || []).map(
+                            (c: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex gap-2 items-center border p-3 rounded-lg bg-muted/10"
+                              >
+                                <Input
+                                  placeholder="Club Name"
+                                  value={c.name || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().clubs || []),
+                                    ];
+                                    next[idx].name = e.target.value;
+                                    updateActiveTabPayload({ clubs: next });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Short description..."
+                                  value={c.description || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().clubs || []),
+                                    ];
+                                    next[idx].description = e.target.value;
+                                    updateActiveTabPayload({ clubs: next });
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = (
+                                      getActiveTabPayload().clubs || []
+                                    ).filter((_: any, i: number) => i !== idx);
+                                    updateActiveTabPayload({ clubs: next });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
+
+                      {/* ALLIANCES */}
+                      {activeTab === "alliance" && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Label className="block font-bold">
+                              Industrial & International Partnerships
+                            </Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload().alliances || []),
+                                  { partnerName: "", type: "Industrial" },
+                                ];
+                                updateActiveTabPayload({ alliances: next });
+                              }}
+                            >
+                              Add Alliance
+                            </Button>
+                          </div>
+                          {(getActiveTabPayload().alliances || []).map(
+                            (a: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex gap-2 items-center border p-3 rounded-lg bg-muted/10"
+                              >
+                                <Input
+                                  placeholder="Partner Company/Uni"
+                                  value={a.partnerName || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().alliances ||
+                                        []),
+                                    ];
+                                    next[idx].partnerName = e.target.value;
+                                    updateActiveTabPayload({ alliances: next });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Alliance Type"
+                                  value={a.type || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().alliances ||
+                                        []),
+                                    ];
+                                    next[idx].type = e.target.value;
+                                    updateActiveTabPayload({ alliances: next });
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = (
+                                      getActiveTabPayload().alliances || []
+                                    ).filter((_: any, i: number) => i !== idx);
+                                    updateActiveTabPayload({ alliances: next });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
+
+                      {/* OTHER COURSES */}
+                      {activeTab === "other_courses_offered" && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Label className="block font-bold">
+                              Related Pathways / Courses
+                            </Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const next = [
+                                  ...(getActiveTabPayload().list || []),
+                                  { courseName: "", duration: "" },
+                                ];
+                                updateActiveTabPayload({ list: next });
+                              }}
+                            >
+                              Add Course Lineage
+                            </Button>
+                          </div>
+                          {(getActiveTabPayload().list || []).map(
+                            (c: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex gap-2 items-center border p-3 rounded-lg bg-muted/10"
+                              >
+                                <Input
+                                  placeholder="Course Name"
+                                  value={c.courseName || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().list || []),
+                                    ];
+                                    next[idx].courseName = e.target.value;
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                />
+                                <Input
+                                  placeholder="Duration"
+                                  value={c.duration || ""}
+                                  onChange={(e) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().list || []),
+                                    ];
+                                    next[idx].duration = e.target.value;
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = (
+                                      getActiveTabPayload().list || []
+                                    ).filter((_: any, i: number) => i !== idx);
+                                    updateActiveTabPayload({ list: next });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
+
+                      {/* DEMOGRAPHICS */}
+                      {activeTab === "demo_graphics" && (
+                        <div className="space-y-4">
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="space-y-1">
+                              <Label>Male Students Ratio %</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 60"
+                                value={
+                                  getActiveTabPayload().stats?.maleRatio || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    stats: {
+                                      ...(getActiveTabPayload().stats || {}),
+                                      maleRatio: Number(e.target.value),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Female Students Ratio %</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 40"
+                                value={
+                                  getActiveTabPayload().stats?.femaleRatio || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    stats: {
+                                      ...(getActiveTabPayload().stats || {}),
+                                      femaleRatio: Number(e.target.value),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Out-of-State Ratio %</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 25"
+                                value={
+                                  getActiveTabPayload().stats
+                                    ?.outOfStateRatio || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    stats: {
+                                      ...(getActiveTabPayload().stats || {}),
+                                      outOfStateRatio: Number(e.target.value),
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+
+                {/* BOTTOM TAB TOGGLE NAV */}
+                <div className="flex justify-between items-center p-6 border-t bg-muted/10">
                   <Button
                     type="button"
-                    variant="ghost"
-                    onClick={() => setIsAdding(false)}
+                    variant="outline"
+                    onClick={() => {
+                      const idx = COURSE_TABS.findIndex(
+                        (t) => t.id === activeTab,
+                      );
+                      if (idx > 0) setActiveTab(COURSE_TABS[idx - 1].id);
+                    }}
                   >
-                    Cancel
+                    Back Tab
                   </Button>
-                )}
-                <Button type="submit" disabled={isPending}>
-                  {isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Save Course
-                </Button>
-              </div>
-            </form>
-          )}
+                  <Button
+                    type="button"
+                    className="bg-zinc-800 hover:bg-zinc-900 text-white font-semibold"
+                    onClick={() => {
+                      const idx = COURSE_TABS.findIndex(
+                        (t) => t.id === activeTab,
+                      );
+                      if (idx < COURSE_TABS.length - 1) {
+                        setActiveTab(COURSE_TABS[idx + 1].id);
+                      } else {
+                        setEditingCourse(null);
+                        setIsAdding(false);
+                      }
+                    }}
+                  >
+                    Next Tab
+                  </Button>
+                </div>
+              </Card>
+            )}
 
-          <div className="flex justify-between pt-8 border-t mt-8">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                router.push(getPortalPath(collegeSlug, "/setup/campuses"))
-              }
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button
-              onClick={() =>
-                router.push(getPortalPath(collegeSlug, "/setup/review"))
-              }
-            >
-              Continue
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            {/* EXIT WORKSPACE BAR */}
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  setEditingCourse(null);
+                  setIsAdding(false);
+                }}
+              >
+                Back to Programs List
+              </Button>
+            </div>
+          </main>
+        </div>
+      )}
+
+      {/* BOTTOM WIDE ACTIONS */}
+      {!isEditingOrAdding && (
+        <div className="flex justify-between pt-8 border-t mt-8">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() =>
+              router.push(getPortalPath(collegeSlug, "/setup/campuses"))
+            }
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Campuses
+          </Button>
+          <Button
+            size="lg"
+            className="shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+            onClick={() =>
+              router.push(getPortalPath(collegeSlug, "/setup/review"))
+            }
+          >
+            Continue to Review
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

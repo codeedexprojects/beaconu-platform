@@ -83,7 +83,7 @@ type UniversityMetadataForm = {
       affiliated_colleges: string;
       autonomous_colleges: string;
     };
-    disciplineStreamIds: string[];
+    streamIds: string[];
     videosJson: string;
   };
 };
@@ -135,7 +135,7 @@ function buildStructuredMetadata(
   availableStreams: Array<{ id: string; name: string; slug: string }>,
 ): Record<string, unknown> {
   const streamMap = new Map(availableStreams.map((s) => [s.id, s]));
-  const selectedStreams = form.overview.disciplineStreamIds
+  const selectedStreams = form.overview.streamIds
     .map((id) => streamMap.get(id))
     .filter((s): s is { id: string; name: string; slug: string } => Boolean(s))
     .map((s) => ({ id: s.id, name: s.name, slug: s.slug }));
@@ -151,7 +151,7 @@ function buildStructuredMetadata(
           subdescription: accolade.subdescription,
         })),
       university_details: form.overview.university_details,
-      discipline: selectedStreams,
+      streams: selectedStreams,
       videos: parseJsonArray(form.overview.videosJson, "Videos"),
     },
   };
@@ -166,8 +166,14 @@ function buildStructuredGovernance(
     m.designation.trim() ||
     m.description.trim();
   return {
-    academic_council: form.academic_council.members.filter(hasContent),
-    management_council: form.management_council.members.filter(hasContent),
+    academic_council: {
+      description: form.academic_council.description,
+      members: form.academic_council.members.filter(hasContent),
+    },
+    management_council: {
+      description: form.management_council.description,
+      members: form.management_council.members.filter(hasContent),
+    },
     organizational_organogram: form.organizational_organogram,
   };
 }
@@ -201,7 +207,7 @@ const EMPTY_METADATA: UniversityMetadataForm = {
       affiliated_colleges: "",
       autonomous_colleges: "",
     },
-    disciplineStreamIds: [],
+    streamIds: [],
     videosJson: "[]",
   },
 };
@@ -244,12 +250,12 @@ export default function NewUniversityPage() {
 
   const toggleStream = (id: string) => {
     setMetadataForm((prev) => {
-      const ids = prev.overview.disciplineStreamIds;
+      const ids = prev.overview.streamIds;
       return {
         ...prev,
         overview: {
           ...prev.overview,
-          disciplineStreamIds: ids.includes(id)
+          streamIds: ids.includes(id)
             ? ids.filter((x) => x !== id)
             : [...ids, id],
         },
@@ -836,7 +842,7 @@ export default function NewUniversityPage() {
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
                           {activeStreams.map((stream) => {
                             const isSelected =
-                              metadataForm.overview.disciplineStreamIds.includes(
+                              metadataForm.overview.streamIds.includes(
                                 stream.id,
                               );
                             return (
