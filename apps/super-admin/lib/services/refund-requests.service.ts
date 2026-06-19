@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, type Paginated } from "@/lib/api";
 import type {
   CounsellingRefundRequest,
   UpdateRefundStatusInput,
@@ -17,11 +17,6 @@ export interface RefundRequestFilters {
   limit?: number;
 }
 
-export interface RefundRequestsListResponse {
-  data: CounsellingRefundRequest[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-}
-
 function buildQuery(filters: RefundRequestFilters): string {
   const params = new URLSearchParams();
   if (filters.status) params.set("status", filters.status);
@@ -33,8 +28,8 @@ function buildQuery(filters: RefundRequestFilters): string {
 
 export async function getRefundRequests(
   filters: RefundRequestFilters = {},
-): Promise<RefundRequestsListResponse> {
-  return api.get<RefundRequestsListResponse>(
+): Promise<Paginated<CounsellingRefundRequest>> {
+  return api.getPaginated<CounsellingRefundRequest>(
     `/api/v1/admin/counsellors/refund-requests${buildQuery(filters)}`,
   );
 }

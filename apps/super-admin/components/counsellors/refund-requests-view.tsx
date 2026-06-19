@@ -12,6 +12,7 @@ import {
   XCircle,
   Eye,
   ExternalLink,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ import {
   useUpdateRefundStatus,
 } from "@/hooks/use-refund-requests";
 import { RefundRequestDetailDialog } from "./refund-request-detail-dialog";
+import { getErrorMessage } from "@/lib/api";
 import type { CounsellingRefundRequest } from "@beaconu/types";
 
 const STATUS_FILTERS = ["", "pending", "approved", "rejected"] as const;
@@ -59,7 +61,7 @@ export function RefundRequestsView() {
   const [selectedRequest, setSelectedRequest] =
     useState<CounsellingRefundRequest | null>(null);
 
-  const { data, isLoading, refetch } = useRefundRequests({
+  const { data, isLoading, error, refetch } = useRefundRequests({
     status: statusFilter || undefined,
   });
   const requests = data?.data ?? [];
@@ -157,6 +159,17 @@ export function RefundRequestsView() {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center gap-1 text-destructive">
+                        <AlertTriangle className="h-5 w-5" />
+                        <span className="text-sm">
+                          {getErrorMessage(error)}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ) : requests.length === 0 ? (
                   <TableRow>
                     <TableCell
