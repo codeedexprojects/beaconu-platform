@@ -35,4 +35,13 @@ docs {
   ## Optional filters
   - date: YYYY-MM-DD (exact scheduled date)
   - search: counsellor name/email, booking reason, session type/mode
+
+  ## Response shape (each item)
+  Each session includes "payment_status" ("pending" | "paid" | "refunded"),
+  "transaction_id", and "refund_status" ("pending" | "approved" | "rejected" | null).
+  refund_status reflects the most recent refund request for that session
+  (null if the student never requested a refund). If a refund is approved,
+  payment_status also flips to "refunded".
+
+  Table: counselling_sessions, counselling_refund_requests
 }
