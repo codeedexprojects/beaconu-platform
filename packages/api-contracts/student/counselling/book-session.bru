@@ -55,6 +55,15 @@ docs {
   - session_type    : required, "career" | "academic" | "personal" | "mental_health"
   - booking_reason  : optional, max 500 chars
 
+  ## Booking cutoff
+  A slot can only be booked at least 10 minutes before its scheduled
+  start time. E.g. for a 4:00 PM slot, booking is allowed up to and
+  including 3:50 PM; attempting at 3:55 PM returns 400 "Sessions can
+  only be booked at least 10 minutes before the scheduled start time".
+  If the slot's start time has already passed entirely (e.g. booking a
+  4:00 PM slot at 4:30 PM), it returns 400 "This slot's scheduled time
+  has already passed" instead.
+
   ## Fee logic (no need to pass session_fee)
   Fee is taken automatically from the slot's session_fee.
   Falls back to counsellor's default fee if slot has no fee set.

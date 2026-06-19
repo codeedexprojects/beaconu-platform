@@ -98,14 +98,14 @@ export class AuthRepository {
   static async invalidateSession(refreshToken: string) {
     await prisma.userSession.updateMany({
       where: { refreshToken, isActive: true },
-      data: { isActive: false },
+      data: { isActive: false, deviceInfo: {} },
     });
   }
 
   static async invalidateAllUserSessions(userId: string, userType: string) {
     await prisma.userSession.updateMany({
       where: { userId, userType, isActive: true },
-      data: { isActive: false },
+      data: { isActive: false, deviceInfo: {} },
     });
   }
 

@@ -21,6 +21,15 @@ export class RefundRepository {
     });
   }
 
+  static async findBySessionIds(sessionIds: string[]) {
+    if (sessionIds.length === 0) return [];
+    return prisma.counsellingRefundRequest.findMany({
+      where: { sessionId: { in: sessionIds } },
+      orderBy: { createdAt: "desc" },
+      select: { sessionId: true, status: true },
+    });
+  }
+
   static async create(data: {
     sessionId: string;
     studentId: string;

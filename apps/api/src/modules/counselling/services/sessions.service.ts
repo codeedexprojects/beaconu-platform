@@ -19,6 +19,7 @@ import {
 import { PushService } from "@/modules/notifications/services/push.service";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
+import { RefundRepository } from "../repositories/refund.repository";
 import {
   AddSlotInput,
   BookSessionInput,
@@ -765,6 +766,19 @@ export class SessionService {
       throw new ConflictError("This slot is already booked");
     }
 
+    const slotStart = istWallTimeToInstant(slot.availableDate, slot.startTime);
+    const minutesUntilStart = (slotStart.getTime() - Date.now()) / 60000;
+    if (minutesUntilStart < 0) {
+      throw new BadRequestError(
+        "This slot's scheduled time has already passed",
+      );
+    }
+    if (minutesUntilStart < 10) {
+      throw new BadRequestError(
+        "Sessions can only be booked at least 10 minutes before the scheduled start time",
+      );
+    }
+
     const finalFee = await this.resolveSlotFee(slot);
     let transactionId: string | undefined;
 
@@ -928,7 +942,25 @@ export class SessionService {
         limit: query.limit,
       },
     );
-    return sessions.map(formatSession);
+
+    if (status !== "completed") {
+      return sessions.map(formatSession);
+    }
+
+    const refundRequests = await RefundRepository.findBySessionIds(
+      sessions.map((session) => session.id),
+    );
+    const latestRefundStatusBySessionId = new Map<string, string>();
+    for (const r of refundRequests) {
+      if (!latestRefundStatusBySessionId.has(r.sessionId)) {
+        latestRefundStatusBySessionId.set(r.sessionId, r.status);
+      }
+    }
+
+    return sessions.map((session) => ({
+      ...formatSession(session),
+      refund_status: latestRefundStatusBySessionId.get(session.id) ?? null,
+    }));
   }
 
   static async listCounsellorSessions(
