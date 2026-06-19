@@ -40,6 +40,11 @@ import {
   useCollegeProfile,
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
+import {
+  getDefaultCollegeOverviewAmenities,
+  mergeCollegeOverviewAmenities,
+  resolveCollegeAmenityIcon,
+} from "@beaconu/utils";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
@@ -140,6 +145,9 @@ export default function SetupProfilePage() {
   useEffect(() => {
     if (profile) {
       const commuteSection = (profile.profileSections?.commute as any) || {};
+      const existingOverview =
+        (profile.profileSections?.college_overview as Record<string, any>) ||
+        undefined;
 
       reset({
         name: profile.name || "",
@@ -212,7 +220,7 @@ export default function SetupProfilePage() {
                 : [],
             },
           },
-          college_overview: profile.profileSections?.college_overview || {
+          college_overview: existingOverview || {
             id: "college_overview",
             enabled: true,
             name: profile.name || "",
@@ -232,8 +240,13 @@ export default function SetupProfilePage() {
               { label: "District", value: profile.district || "" },
               { label: "State", value: profile.state || "" },
               { label: "Pincode", value: profile.pinCode || "" },
+              { label: "Total Courses", value: "" },
+              { label: "Gender", value: "Co-Ed" },
+              { label: "Campus Size", value: "" },
+              { label: "Avg Student Count", value: "" },
+              { label: "Students Outside State", value: "" },
             ],
-            amenities: [],
+            amenities: getDefaultCollegeOverviewAmenities(),
             inside_campus_facilities: [],
             location: {
               address: profile.address || "",
@@ -248,8 +261,13 @@ export default function SetupProfilePage() {
           },
         },
       });
+
+      setValue(
+        "profileSections.college_overview.amenities",
+        mergeCollegeOverviewAmenities(existingOverview?.amenities),
+      );
     }
-  }, [profile, reset]);
+  }, [profile, reset, setValue]);
 
   // Form watch variables for nested arrays/objects
   const rules = watch("profileSections.student_code_of_conduct.rules") || [];
@@ -266,6 +284,8 @@ export default function SetupProfilePage() {
     watch("profileSections.college_overview.amenities") || [];
   const overviewFacilities =
     watch("profileSections.college_overview.inside_campus_facilities") || [];
+  const overviewSocialLinks =
+    watch("profileSections.college_overview.social") || [];
   const overviewReels =
     watch("profileSections.college_overview.campus_reels") || [];
   const overviewAmbassadors =
@@ -903,43 +923,95 @@ export default function SetupProfilePage() {
                         <Plus className="h-4 w-4 mr-2" /> Add Amenity
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Global amenities are prefilled for every college. Add new
+                      amenities below and upload custom icons for extra rows
+                      when needed.
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {overviewAmenities.map((item: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="flex gap-2 items-center border p-2 rounded-lg bg-muted/10"
-                        >
-                          <Input
-                            placeholder="Amenity Label"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.amenities.${idx}.label`,
-                            )}
-                          />
-                          <Input
-                            placeholder="Icon Key"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.amenities.${idx}.icon`,
-                            )}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setValue(
-                                "profileSections.college_overview.amenities",
-                                overviewAmenities.filter(
-                                  (_: any, i: number) => i !== idx,
-                                ),
-                              );
-                            }}
+                      {overviewAmenities.map((item: any, idx: number) => {
+                        const amenityLabel = item?.label || "Amenity";
+                        const amenityIcon = resolveCollegeAmenityIcon(
+                          item?.icon,
+                          amenityLabel,
+                        );
+
+                        return (
+                          <div
+                            key={idx}
+                            className="space-y-2 border p-3 rounded-lg bg-muted/10"
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2">
+                              {amenityIcon ? (
+                                <img
+                                  src={amenityIcon}
+                                  alt={amenityLabel}
+                                  className="h-9 w-9 rounded-md object-contain"
+                                />
+                              ) : (
+                                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
+                                  Logo
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {amenityLabel}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {item?.icon ||
+                                    "Upload a custom icon or use the default global logo"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                placeholder="Amenity Label"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.amenities.${idx}.label`,
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.college_overview.amenities",
+                                    overviewAmenities.filter(
+                                      (_: any, i: number) => i !== idx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="Custom image URL or keep the global logo"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.amenities.${idx}.icon`,
+                              )}
+                            />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.college_overview.amenities.${idx}.icon`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.college_overview.amenities.${idx}.icon`,
+                                  `college-overview/amenities-${idx}`,
+                                )
+                              }
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -956,7 +1028,10 @@ export default function SetupProfilePage() {
                         onClick={() => {
                           setValue(
                             "profileSections.college_overview.inside_campus_facilities",
-                            [...overviewFacilities, { label: "", icon: "" }],
+                            [
+                              ...overviewFacilities,
+                              { label: "", subtitle: "", icon: "" },
+                            ],
                           );
                         }}
                       >
@@ -977,6 +1052,13 @@ export default function SetupProfilePage() {
                             )}
                           />
                           <Input
+                            placeholder="Subtitle"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.inside_campus_facilities.${idx}.subtitle`,
+                            )}
+                          />
+                          <Input
                             placeholder="Icon Url / Key"
                             className="h-9"
                             {...register(
@@ -991,6 +1073,73 @@ export default function SetupProfilePage() {
                               setValue(
                                 "profileSections.college_overview.inside_campus_facilities",
                                 overviewFacilities.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Social Links
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.college_overview.social", [
+                            ...overviewSocialLinks,
+                            { platform: "", icon: "", url: "" },
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Social Link
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      {overviewSocialLinks.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="grid gap-2 rounded-lg border bg-muted/10 p-3 md:grid-cols-[1fr_1fr_2fr_auto]"
+                        >
+                          <Input
+                            placeholder="Platform"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.platform`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Icon"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.icon`,
+                            )}
+                          />
+                          <Input
+                            placeholder="https://example.com/profile"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.url`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.social",
+                                overviewSocialLinks.filter(
                                   (_: any, i: number) => i !== idx,
                                 ),
                               );
@@ -1303,6 +1452,7 @@ export default function SetupProfilePage() {
                                 duration: "",
                                 date: "",
                                 video: "",
+                                thumbnail: "",
                                 type: "youtube",
                               },
                             ],
@@ -1344,6 +1494,26 @@ export default function SetupProfilePage() {
                             className="h-9"
                             {...register(
                               `profileSections.college_overview.campus_reels.${idx}.duration`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Date</Label>
+                          <Input
+                            placeholder="29th March"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.date`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Thumbnail</Label>
+                          <Input
+                            placeholder="Thumbnail image URL"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.thumbnail`,
                             )}
                           />
                         </div>
