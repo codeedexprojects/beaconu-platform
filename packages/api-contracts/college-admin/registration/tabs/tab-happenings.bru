@@ -24,8 +24,46 @@ docs {
   - category: filter to a single category
   - categories: optional comma-separated or repeated category filter
 
-  Response data includes:
-  - happenings: paginated list of happenings
-  - pagination: standard pagination meta
-  - filters: applied filters plus stored section filters
+  Response shape:
+  {
+    "sectionName": "happenings",
+    "sectionId": "happenings",
+    "sectionKey": "happenings",
+    "data": {
+      "id": "happenings",
+      "title": "Happenings",
+      "enabled": true,
+      "filters": {
+        "title": "Filter Happenings",
+        "subtitle": "Select categories to display",
+        "categories": [
+          {
+            "label": "Certification",
+            "value": "certification",
+            "selected": true
+          }
+        ]
+      },
+      "happenings": [
+        {
+          "id": "happening_001",
+          "date": "2023-10-12",
+          "link": "",
+          "image": "",
+          "title": "Professor Ratna awarded international certification in Quantum Research",
+          "category": "Certification",
+          "description": "...",
+          "share_enabled": true
+        }
+      ],
+      "pagination": {
+        "current_page": 1,
+        "per_page": 10,
+        "total_items": 1,
+        "total_pages": 1,
+        "has_next_page": false,
+        "has_previous_page": false
+      }
+    }
+  }
 }
