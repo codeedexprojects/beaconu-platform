@@ -78,27 +78,7 @@ export default function DashboardLayout({
   if (!hasHydrated || !isAuthenticated) return <></>;
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-white text-[#1e293b]">
-      {/* Background ambient glowing blobs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#fafafa]">
-        {/* Top-right glowing blob */}
-        <div className="absolute -top-[20%] -right-[10%] h-[600px] w-[600px] rounded-full bg-primary/5 blur-[130px] animate-pulse duration-[8000ms]" />
-        {/* Left middle glowing blob */}
-        <div className="absolute top-[20%] -left-[10%] h-[700px] w-[700px] rounded-full bg-[#ffedd5]/25 blur-[150px]" />
-        {/* Bottom-right glowing blob */}
-        <div className="absolute -bottom-[20%] right-[20%] h-[500px] w-[500px] rounded-full bg-[#f0fdf4]/30 blur-[120px]" />
-      </div>
-
-      {/* Subtle Dot-grid texture overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, #0f172a 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }}
-      />
-
+    <div className="relative flex h-screen overflow-hidden bg-cream text-navy-dark">
       {/* Main dashboard content container */}
       <div className="relative z-10 flex h-full w-full overflow-hidden">
         <Sidebar />

@@ -26,7 +26,10 @@ const updateProfileSchema = z.object({
 
   date_of_birth: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "date_of_birth must be an ISO date string (YYYY-MM-DD)")
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "date_of_birth must be an ISO date string (YYYY-MM-DD)",
+    )
     .optional()
     .nullable(),
 

@@ -17,6 +17,27 @@ const config: Config = {
     },
     extend: {
       colors: {
+        navy: {
+          DEFAULT: "#0F172A",
+          dark: "#1A1A2E",
+        },
+        gold: {
+          DEFAULT: "#B6904F",
+          pale: "#FBEFD6",
+        },
+        cream: {
+          DEFAULT: "#FDFBF7",
+        },
+        lavender: {
+          DEFAULT: "#C4C4F7",
+        },
+        gray: {
+          label: "#6B7280",
+          sidebar: "#8B93A7",
+        },
+        success: {
+          DEFAULT: "#22C55E",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -65,7 +86,8 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", ...fontFamily.sans],
+        sans: ["var(--font-inter)", "Inter", ...fontFamily.sans],
+        serif: ["Playfair Display", "Lora", "serif"],
       },
       keyframes: {
         "accordion-down": {

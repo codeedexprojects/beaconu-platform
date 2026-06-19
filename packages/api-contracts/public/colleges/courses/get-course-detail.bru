@@ -11,8 +11,13 @@ get {
 }
 
 docs {
-  Returns course summary alongside the list of available tabs for that course.
-  Only tabs that have non-empty data are included in the tabs array.
+  Returns the complete public course detail payload.
+  The response data now includes flattened top-level fields used by the portal UI
+  such as admission_batches, quick_info, tabs, highlights, curriculum,
+  courseStructure, valueAddedCourses, careerOpportunities,
+  higherEducationCertifications, flexibleExitOptions, classTimings,
+  industryTools, labFacilities, roomFacilities, featuredAlumni, faqs,
+  studentForum and certifications.
 
   Path params:
   - collegeSlug: College subdomain slug
@@ -20,21 +25,22 @@ docs {
 
   Response shape:
   {
-    "course": {
-      "id": "CRS-1",
-      "name": "B.Tech Computer Science"
-    },
+    "id": "CRS-1",
+    "name": "B.Tech Computer Science",
+    "admission_batches": [],
+    "quick_info": [],
     "tabs": [
       "course_info",
       "admission_policy",
-      "placements",
-      "fees",
-      "highlights",
-      "curriculum"
-    ]
+      "placements"
+    ],
+    "highlights": {},
+    "curriculum": {},
+    "courseStructure": {},
+    "studentForum": {},
+    "certifications": {}
   }
 
-  `tabs` contains only setup tabs that have been configured and content tabs
-  that have non-empty data. Use a tab name from this list as the :tabName
-  parameter in the Get Course Tab request.
+  `tabs` contains setup tabs configured for the course. Use a tab name from
+  this list as the :tabName parameter in the Get Course Tab request.
 }

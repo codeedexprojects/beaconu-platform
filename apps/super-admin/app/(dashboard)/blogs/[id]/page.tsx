@@ -21,7 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useAdminBlog, useApproveBlog, useRejectBlog, useUnpublishBlog } from "@/hooks/use-blogs";
+import {
+  useAdminBlog,
+  useApproveBlog,
+  useRejectBlog,
+  useUnpublishBlog,
+} from "@/hooks/use-blogs";
 import { cn } from "@/lib/utils";
 
 const STATUS_VARIANT: Record<string, { badge: string; label: string }> = {
