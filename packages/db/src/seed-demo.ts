@@ -2259,18 +2259,68 @@ async function seedCommuteRoutes(collegeId: string) {
     {
       name: "Route 12 – HSR Layout",
       description: "Via BTM Layout, Madivala",
+      isVerified: true,
+      conductPolicy: [
+        {
+          title: "Mandatory Identification",
+          description:
+            "Students must carry their valid college ID and transport pass at all times. Inspection may occur at any point during the journey.",
+        },
+        {
+          title: "Seat Policy",
+          description:
+            'Seats are not pre-assigned. Occupancy is on a strictly first-come, first-served basis. "Saving" seats for friends is prohibited.',
+        },
+        {
+          title: "Discipline & Safety",
+          description:
+            "Any form of ragging, vandalism, or disruptive behavior will lead to immediate suspension of transport privileges and disciplinary action.",
+        },
+        {
+          title: "Punctuality",
+          description:
+            "Buses adhere to a strict schedule. Students are advised to be at their designated pickup point 5 minutes prior to the scheduled time.",
+        },
+      ],
       stops: [
         {
-          stopName: "HSR Layout BDA",
-          landmark: "Complex Main Gate",
+          stopName: "HSR Layout BDA Complex",
+          landmark: "Main Gate",
+          morningTime: new Date("1970-01-01T06:45:00+05:30"),
+          eveningTime: new Date("1970-01-01T18:15:00+05:30"),
+          isPickupPoint: true,
           stopOrder: 0,
         },
-        { stopName: "Agara Junction", landmark: null, stopOrder: 1 },
-        { stopName: "Silk Board", landmark: null, stopOrder: 2 },
-        { stopName: "BTM Water Tank", landmark: null, stopOrder: 3 },
+        {
+          stopName: "Agara Junction",
+          landmark: null,
+          morningTime: new Date("1970-01-01T06:55:00+05:30"),
+          eveningTime: new Date("1970-01-01T18:05:00+05:30"),
+          isPickupPoint: true,
+          stopOrder: 1,
+        },
+        {
+          stopName: "Silk Board",
+          landmark: null,
+          morningTime: new Date("1970-01-01T07:05:00+05:30"),
+          eveningTime: new Date("1970-01-01T17:55:00+05:30"),
+          isPickupPoint: true,
+          stopOrder: 2,
+        },
+        {
+          stopName: "BTM Water Tank",
+          landmark: null,
+          morningTime: new Date("1970-01-01T07:28:00+05:30"),
+          eveningTime: new Date("1970-01-01T17:40:00+05:30"),
+          isPickupPoint: true,
+          stopOrder: 3,
+        },
         {
           stopName: "College Campus",
           landmark: "Main Block Entrance",
+          morningTime: new Date("1970-01-01T08:10:00+05:30"),
+          eveningTime: new Date("1970-01-01T16:30:00+05:30"),
+          isPickupPoint: true,
           stopOrder: 4,
         },
       ],
@@ -2283,22 +2333,39 @@ async function seedCommuteRoutes(collegeId: string) {
           driverName: "Ravi Kumar",
           driverPhone: "9988776655",
           monthlyFee: 2083,
+          paymentStructureNotes:
+            "Payable as a one-time annual payment or in two semester-wise installments of ₹12,500 each.",
+          busModel: "Tata Marcopolo (AC)",
         },
       ],
     },
     {
       name: "Route 12B – HSR Express",
       description: "Via 27th Main, Agara",
+      isVerified: true,
       stops: [
         {
           stopName: "HSR Layout 27th Main",
           landmark: "Agara Lake",
+          morningTime: new Date("1970-01-01T07:00:00+05:30"),
+          eveningTime: new Date("1970-01-01T18:30:00+05:30"),
+          isPickupPoint: true,
           stopOrder: 0,
         },
-        { stopName: "Forum Mall", landmark: "Koramangala", stopOrder: 1 },
+        {
+          stopName: "Forum Mall",
+          landmark: "Koramangala",
+          morningTime: new Date("1970-01-01T07:30:00+05:30"),
+          eveningTime: new Date("1970-01-01T17:45:00+05:30"),
+          isPickupPoint: true,
+          stopOrder: 1,
+        },
         {
           stopName: "College Campus",
           landmark: "Main Block Entrance",
+          morningTime: new Date("1970-01-01T08:15:00+05:30"),
+          eveningTime: new Date("1970-01-01T16:45:00+05:30"),
+          isPickupPoint: true,
           stopOrder: 2,
         },
       ],
@@ -2311,6 +2378,8 @@ async function seedCommuteRoutes(collegeId: string) {
           driverName: "Suresh B",
           driverPhone: "9977665544",
           monthlyFee: 1800,
+          paymentStructureNotes: "",
+          busModel: "",
         },
       ],
     },
@@ -2363,22 +2432,27 @@ async function seedCommuteRoutes(collegeId: string) {
           name: r.name,
           description: r.description,
           isActive: true,
+          isVerified: r.isVerified ?? false,
+          conductPolicy: r.conductPolicy ?? [],
         },
       });
       routeId = route.id;
     }
 
     await prisma.commuteRouteStop.createMany({
-      data: r.stops.map((s) => ({
+      data: r.stops.map((s: any) => ({
         routeId,
         stopName: s.stopName,
         landmark: s.landmark,
+        morningTime: s.morningTime ?? null,
+        eveningTime: s.eveningTime ?? null,
+        isPickupPoint: s.isPickupPoint ?? true,
         stopOrder: s.stopOrder,
       })),
     });
 
     await prisma.commuteBus.createMany({
-      data: r.buses.map((b) => ({
+      data: r.buses.map((b: any) => ({
         routeId,
         busNumber: b.busNumber,
         busName: b.busName,
@@ -2388,6 +2462,8 @@ async function seedCommuteRoutes(collegeId: string) {
         driverName: b.driverName,
         driverPhone: b.driverPhone,
         monthlyFee: b.monthlyFee,
+        paymentStructureNotes: b.paymentStructureNotes ?? null,
+        busModel: b.busModel ?? null,
         isActive: true,
       })),
     });

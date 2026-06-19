@@ -104,11 +104,81 @@ body:json {
       "commute": {
         "id": "commute",
         "enabled": true,
+        "tab": "commute",
         "title": "Commute",
-        "nearby": {
-          "transit": [],
-          "essentials": [],
-          "utilities": []
+        "pickup_points": ["HSR Layout"],
+        "selected_pickup_point": "HSR Layout",
+        "routes": [
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12 - HSR Layout",
+            "via": "Via BTM Layout, Madivala",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "6:45 AM - 8:10 AM" },
+              { "label": "Evening", "time": "4:30 PM - 6:15 PM" }
+            ],
+            "transport_fee": {
+              "amount": "₹25,000 / Year",
+              "payment_structure": "Payable as a one-time annual payment or in two semester-wise installments of ₹12,500 each."
+            },
+            "bus_information": {
+              "registration_number": "KA-01-F-4829",
+              "seats": 42,
+              "model": "Tata Marcopolo (AC)"
+            },
+            "morning_pickup_points": [
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:45 AM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:55 AM" },
+              { "point": "Silk Board", "landmark": "", "time": "7:05 AM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "7:28 AM" },
+              { "point": "College Campus", "landmark": "Main Block Entrance", "time": "8:10 AM" }
+            ],
+            "evening_dropoff_points": [
+              { "point": "College Campus", "landmark": "Bus Bay Area", "time": "4:30 PM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "5:40 PM" },
+              { "point": "Silk Board", "landmark": "", "time": "5:55 PM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:05 PM" },
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:15 PM" }
+            ]
+          },
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12B - HSR Express",
+            "via": "Via 27th Main, Agara",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "7:00 AM - 8:15 AM" },
+              { "label": "Evening", "time": "4:45 PM - 6:30 PM" }
+            ],
+            "transport_fee": { "amount": "", "payment_structure": "" },
+            "bus_information": { "registration_number": "", "seats": null, "model": "" },
+            "morning_pickup_points": [],
+            "evening_dropoff_points": []
+          }
+        ],
+        "rules_and_code_of_conduct": {
+          "title": "Rules & Code of Conduct",
+          "subtitle": "Detailed guidelines for student commuters",
+          "intro": "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+          "rules": [
+            {
+              "title": "Mandatory Identification",
+              "description": "Students must carry their valid college ID and transport pass at all times. Inspection may occur at any point during the journey."
+            },
+            {
+              "title": "Seat Policy",
+              "description": "Seats are not pre-assigned. Occupancy is on a strictly first-come, first-served basis. \"Saving\" seats for friends is prohibited."
+            },
+            {
+              "title": "Discipline & Safety",
+              "description": "Any form of ragging, vandalism, or disruptive behavior will lead to immediate suspension of transport privileges and disciplinary action."
+            },
+            {
+              "title": "Punctuality",
+              "description": "Buses adhere to a strict schedule. Students are advised to be at their designated pickup point 5 minutes prior to the scheduled time."
+            }
+          ]
         }
       },
       "college_overview": {
