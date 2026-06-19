@@ -12,6 +12,7 @@ import {
   XCircle,
   Hash,
   Eye,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ import {
   useUpdateWithdrawalStatus,
 } from "@/hooks/use-withdrawal-requests";
 import { WithdrawalRequestDetailDialog } from "./withdrawal-request-detail-dialog";
+import { getErrorMessage } from "@/lib/api";
 import type { CounsellorWithdrawalRequest } from "@beaconu/types";
 
 function PayoutSummary({
@@ -90,7 +92,7 @@ export function WithdrawalRequestsView() {
   const [selectedRequest, setSelectedRequest] =
     useState<CounsellorWithdrawalRequest | null>(null);
 
-  const { data, isLoading, refetch } = useWithdrawalRequests({
+  const { data, isLoading, error, refetch } = useWithdrawalRequests({
     status: statusFilter || undefined,
   });
   const requests = data?.data ?? [];
@@ -184,6 +186,17 @@ export function WithdrawalRequestsView() {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center gap-1 text-destructive">
+                        <AlertTriangle className="h-5 w-5" />
+                        <span className="text-sm">
+                          {getErrorMessage(error)}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ) : requests.length === 0 ? (
                   <TableRow>
                     <TableCell

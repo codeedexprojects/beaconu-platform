@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, type Paginated } from "@/lib/api";
 import type {
   CounsellorWithdrawalRequest,
   UpdateWithdrawalStatusInput,
@@ -17,11 +17,6 @@ export interface WithdrawalRequestFilters {
   limit?: number;
 }
 
-export interface WithdrawalRequestsListResponse {
-  data: CounsellorWithdrawalRequest[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-}
-
 function buildQuery(filters: WithdrawalRequestFilters): string {
   const params = new URLSearchParams();
   if (filters.status) params.set("status", filters.status);
@@ -33,8 +28,8 @@ function buildQuery(filters: WithdrawalRequestFilters): string {
 
 export async function getWithdrawalRequests(
   filters: WithdrawalRequestFilters = {},
-): Promise<WithdrawalRequestsListResponse> {
-  return api.get<WithdrawalRequestsListResponse>(
+): Promise<Paginated<CounsellorWithdrawalRequest>> {
+  return api.getPaginated<CounsellorWithdrawalRequest>(
     `/api/v1/admin/counsellors/withdrawals${buildQuery(filters)}`,
   );
 }
