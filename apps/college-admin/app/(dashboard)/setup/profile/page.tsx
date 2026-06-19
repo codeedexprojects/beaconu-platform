@@ -42,6 +42,7 @@ import {
 } from "@/hooks/use-colleges";
 import {
   getDefaultCollegeOverviewAmenities,
+  isFixedCollegeAmenity,
   mergeCollegeOverviewAmenities,
   resolveCollegeAmenityIcon,
 } from "@beaconu/utils";
@@ -925,9 +926,8 @@ export default function SetupProfilePage() {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Global amenities are prefilled for every college. Add new
-                      amenities below and upload custom icons for extra rows
-                      when needed.
+                      Wi-Fi and other default amenities use fixed logos. For
+                      newly added amenities, you can upload a custom logo.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {overviewAmenities.map((item: any, idx: number) => {
@@ -935,6 +935,10 @@ export default function SetupProfilePage() {
                         const amenityIcon = resolveCollegeAmenityIcon(
                           item?.icon,
                           amenityLabel,
+                        );
+                        const isFixedAmenity = isFixedCollegeAmenity(
+                          amenityLabel,
+                          item?.icon,
                         );
 
                         return (
@@ -959,8 +963,9 @@ export default function SetupProfilePage() {
                                   {amenityLabel}
                                 </p>
                                 <p className="text-xs text-muted-foreground truncate">
-                                  {item?.icon ||
-                                    "Upload a custom icon or use the default global logo"}
+                                  {isFixedAmenity
+                                    ? "Fixed global logo"
+                                    : "Upload a custom logo"}
                                 </p>
                               </div>
                             </div>
@@ -988,28 +993,23 @@ export default function SetupProfilePage() {
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
-                            <Input
-                              placeholder="Custom image URL or keep the global logo"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.amenities.${idx}.icon`,
-                              )}
-                            />
-                            <Input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                              disabled={
-                                uploadingField ===
-                                `profileSections.college_overview.amenities.${idx}.icon`
-                              }
-                              onChange={(e) =>
-                                handleImageUpload(
-                                  e.target.files?.[0] ?? null,
-                                  `profileSections.college_overview.amenities.${idx}.icon`,
-                                  `college-overview/amenities-${idx}`,
-                                )
-                              }
-                            />
+                            {!isFixedAmenity && (
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.amenities.${idx}.icon`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.amenities.${idx}.icon`,
+                                    `college-overview/amenities-${idx}`,
+                                  )
+                                }
+                              />
+                            )}
                           </div>
                         );
                       })}

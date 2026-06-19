@@ -134,3 +134,16 @@ export const resolveCollegeAmenityIcon = (
     defaultIconKey.slice(AMENITY_ICON_KEY_PREFIX.length)
   ];
 };
+
+export const isFixedCollegeAmenity = (
+  label?: string | null,
+  icon?: string | null,
+) => {
+  const rawIcon = typeof icon === "string" ? icon.trim() : "";
+  if (rawIcon.startsWith(AMENITY_ICON_KEY_PREFIX)) {
+    return true;
+  }
+
+  const amenityKey = normalizeAmenityKey(label || "");
+  return Boolean(DEFAULT_COLLEGE_AMENITY_LABEL_TO_KEY[amenityKey]);
+};
