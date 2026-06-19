@@ -15,7 +15,11 @@ headers {
 }
 
 docs {
-  Full counsellor detail view for the platform admin panel.
+  Counsellor detail view for the platform admin panel: profile, stats,
+  and wallet balance only. Slots, sessions, and wallet transactions are
+  fetched separately via their own paginated endpoints (see List
+  Counsellor Slots, List Counsellor Sessions, List Counsellor Wallet
+  Transactions in this folder).
   Requires: super admin access token + counsellors.view permission.
 
   ## Response shape
@@ -27,23 +31,8 @@ docs {
       "payments": { "paid_sessions_count": number, "total_payment_received": number }
     },
     "wallet": {
-      "balance": number,
-      "total_earned": number,
-      "total_withdrawn": number,
-      "transactions": [ ...last 20 wallet transactions ]
-    },
-    "slots": {
-      "available": [ ...up to 50 unbooked availability slots ],
-      "booked": [ ...up to 50 booked availability slots ]
-    },
-    "recent_sessions": [
-      {
-        "id", "status", "session_mode", "session_type",
-        "scheduled_date", "start_time", "end_time",
-        "session_fee", "payment_status", "transaction_id",
-        "student": { "id", "full_name", "avatar_url", "email" }
-      }
-      ... up to 20, most recent first
-    ]
+      "id", "counsellor_id", "balance", "total_earned", "total_withdrawn",
+      "created_at", "updated_at"
+    }
   }
 }

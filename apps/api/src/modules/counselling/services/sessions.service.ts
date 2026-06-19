@@ -27,6 +27,7 @@ import {
   CreatePaymentOrderInput,
   ListAvailableSlotsQueryInput,
   ListCounsellorRatingsQueryInput,
+  ListCounsellorSlotsQueryInput,
   ListCounsellorsQueryInput,
   ListSessionsQueryInput,
   ListSlotsQueryInput,
@@ -439,43 +440,18 @@ export class SessionService {
   }
 
   /**
-   * Full counsellor detail view for the platform admin panel:
-   * profile, slot/session stats, wallet, and recent slot/session lists.
+   * Counsellor detail view for the platform admin panel: profile,
+   * slot/session stats, and wallet balance. Slots, sessions, and wallet
+   * transactions are fetched separately via their own paginated endpoints.
    */
   static async getCounsellorDetailForAdmin(counsellorId: string) {
     const counsellor = await CounsellingRepository.findById(counsellorId);
     if (!counsellor) throw new NotFoundError("Counsellor not found");
 
-    const fee = Number(counsellor.sessionFee ?? 0.0);
-
-    const [
-      slotStats,
-      sessionStats,
-      wallet,
-      availableSlots,
-      bookedSlots,
-      sessions,
-    ] = await Promise.all([
+    const [slotStats, sessionStats, wallet] = await Promise.all([
       SessionRepository.getSlotStats(counsellorId),
       SessionRepository.getSessionStats(counsellorId),
-      SessionRepository.getWallet(counsellorId),
-      SessionRepository.listSlotsByCounsellor(
-        counsellorId,
-        undefined,
-        { limit: 50 },
-        false,
-      ),
-      SessionRepository.listSlotsByCounsellor(
-        counsellorId,
-        undefined,
-        { limit: 50 },
-        true,
-      ),
-      SessionRepository.listSessionsByCounsellor(
-        counsellorId,
-        {},
-        { limit: 20 },
-      ).then((r) => r.sessions),
+      SessionRepository.findOrCreateWallet(counsellorId),
     ]);
 
     return {
@@ -494,27 +470,42 @@ export class SessionService {
         },
       },
       wallet: formatWallet(wallet),
-      slots: {
-        available: availableSlots.map((slot) =>
-          formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
-        ),
-        booked: bookedSlots.map((slot) =>
-          formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
-        ),
-      },
-      recent_sessions: sessions.map((session) => ({
-        id: session.id,
-        status: session.status,
-        session_mode: session.sessionMode,
-        session_type: session.sessionType,
-        scheduled_date: session.scheduledDate,
-        start_time: session.startTime,
-        end_time: session.endTime,
-        session_fee: session.sessionFee ? Number(session.sessionFee) : null,
-        payment_status: session.paymentStatus,
-        transaction_id: session.transactionId,
-        student: formatStudent(session.student),
-      })),
+    };
+  }
+
+  /** Paginated slot list for a counsellor, for the platform admin panel. */
+  static async listCounsellorSlotsForAdmin(
+    counsellorId: string,
+    query: ListCounsellorSlotsQueryInput,
+  ) {
+    const fromDate = query.from_date
+      ? parseDateOnly(query.from_date)
+      : undefined;
+    const isBooked = query.status === "booked";
+
+    const counsellor = await CounsellingRepository.findById(counsellorId);
+    if (!counsellor) throw new NotFoundError("Counsellor not found");
+    const fee = Number(counsellor.sessionFee ?? 0.0);
+
+    const [slots, total] = await Promise.all([
+      SessionRepository.listSlotsByCounsellor(
+        counsellorId,
+        fromDate,
+        { page: query.page, limit: query.limit },
+        isBooked,
+      ),
+      SessionRepository.countSlotsByCounsellor(
+        counsellorId,
+        isBooked,
+        fromDate,
+      ),
+    ]);
+
+    return {
+      data: slots.map((slot) =>
+        formatSlot({ ...slot, sessionFee: slot.sessionFee ?? fee }),
+      ),
+      meta: PaginationHelper.createMeta(total, query.page, query.limit),
     };
   }
 

@@ -55,6 +55,22 @@ export const QUERY_KEYS = {
   counsellors: (params?: object) =>
     params ? ["counsellors", params] : (["counsellors"] as const),
   counsellorDetail: (id: string) => ["counsellors", id, "detail"] as const,
+  counsellorWalletTransactions: (id: string, params?: object) =>
+    params
+      ? (["counsellors", id, "wallet-transactions", params] as const)
+      : (["counsellors", id, "wallet-transactions"] as const),
+  counsellorSlots: (
+    id: string,
+    status: "available" | "booked",
+    params?: object,
+  ) =>
+    params
+      ? (["counsellors", id, "slots", status, params] as const)
+      : (["counsellors", id, "slots", status] as const),
+  counsellorSessions: (id: string, params?: object) =>
+    params
+      ? (["counsellors", id, "sessions", params] as const)
+      : (["counsellors", id, "sessions"] as const),
   platformConfig: ["platform-config"] as const,
   withdrawalRequests: (params?: object) =>
     params

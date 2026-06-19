@@ -1,0 +1,45 @@
+meta {
+  name: List Counsellor Slots
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}/slots?status=available&page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  status: available
+  page: 1
+  limit: 20
+  from_date:
+}
+
+docs {
+  Paginated availability slots for a counsellor (platform admin detail
+  view). Replaces the static top-50 `slots.available` / `slots.booked`
+  arrays that used to be embedded in GET /:id/detail.
+  Requires: super admin access token + counsellors.view permission.
+
+  Query params:
+  - status (required): available | booked
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+  - from_date (optional, YYYY-MM-DD)
+
+  ## Response shape
+  {
+    "success": true,
+    "data": [ { "id", "available_date", "start_time", "end_time",
+      "session_duration_mins", "is_booked", "session_fee", "meeting_url", "meeting_id" } ],
+    "meta": { "page", "limit", "total", "totalPages", "hasNextPage", "hasPreviousPage" }
+  }
+
+  Table: counsellor_availability
+}

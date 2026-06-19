@@ -1,0 +1,49 @@
+meta {
+  name: List Counsellor Wallet Transactions
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}/wallet-transactions?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  type:
+  date:
+  from_date:
+  to_date:
+}
+
+docs {
+  Paginated wallet transactions for a counsellor (platform admin detail
+  view). Replaces the unbounded `wallet.transactions` array that used to
+  be embedded in GET /:id/detail.
+  Requires: super admin access token + counsellors.view permission.
+
+  Query params:
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+  - type (optional): credit | debit
+  - date / from_date / to_date (optional, YYYY-MM-DD)
+
+  ## Response shape
+  {
+    "id", "counsellor_id", "balance", "total_earned", "total_withdrawn",
+    "created_at", "updated_at",
+    "transactions": [ { "id", "type", "amount", "description", "session_id",
+      "student_name", "withdrawal_status", "payout_details", "balance_after",
+      "created_at" } ],
+    "transactions_meta": { "page", "limit", "total", "totalPages", "hasNextPage", "hasPreviousPage" }
+  }
+
+  Table: counsellor_wallet_transactions
+}

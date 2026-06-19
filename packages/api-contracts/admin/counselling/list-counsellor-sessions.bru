@@ -1,0 +1,51 @@
+meta {
+  name: List Counsellor Sessions
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/{{counsellorId}}/sessions?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  date:
+  from_date:
+  to_date:
+  status:
+  search:
+}
+
+docs {
+  Paginated session list for a counsellor (platform admin detail view).
+  Replaces the static top-20 `recent_sessions` array that used to be
+  embedded in GET /:id/detail.
+  Requires: super admin access token + counsellors.view permission.
+
+  Query params:
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+  - date / from_date / to_date (optional, YYYY-MM-DD)
+  - status (optional): booked | completed | cancelled
+  - search (optional): matches booking_reason, session_type, session_mode,
+    status, or student name/email
+
+  ## Response shape
+  {
+    "success": true,
+    "data": [ { "id", "status", "session_mode", "session_type", "scheduled_date",
+      "start_time", "end_time", "booking_reason", "meeting_url", "meeting_id",
+      "session_fee", "payment_status", "transaction_id", "student": { "id", "full_name", "avatar_url", "email" } } ],
+    "meta": { "page", "limit", "total", "totalPages", "hasNextPage", "hasPreviousPage" }
+  }
+
+  Table: counselling_sessions
+}

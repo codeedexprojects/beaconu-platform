@@ -135,7 +135,15 @@ export interface CounsellorWallet {
   total_withdrawn: number;
   created_at: string;
   updated_at: string;
-  transactions: CounsellorWalletTransaction[];
+  transactions?: CounsellorWalletTransaction[];
+  transactions_meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface CounsellorWithdrawalRequest {
@@ -236,6 +244,4 @@ export interface CounsellorDetail {
     payments: { paid_sessions_count: number; total_payment_received: number };
   };
   wallet: CounsellorWallet | null;
-  slots: { available: CounsellorSlot[]; booked: CounsellorSlot[] };
-  recent_sessions: CounsellorRecentSession[];
 }
