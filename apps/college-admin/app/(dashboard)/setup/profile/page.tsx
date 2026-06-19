@@ -148,6 +148,50 @@ export default function SetupProfilePage() {
       const existingOverview =
         (profile.profileSections?.college_overview as Record<string, any>) ||
         undefined;
+      const mergedAmenities = mergeCollegeOverviewAmenities(
+        existingOverview?.amenities,
+      );
+      const collegeOverviewSection = existingOverview
+        ? { ...existingOverview, amenities: mergedAmenities }
+        : {
+            id: "college_overview",
+            enabled: true,
+            name: profile.name || "",
+            alt_name: "",
+            location_name: profile.city
+              ? `${profile.city}, ${profile.state}`
+              : "",
+            type: "Public",
+            established: 2000,
+            navigation_tabs: ["Overview", "Governance"],
+            about: "",
+            accolades: [],
+            university_details: [
+              { label: "Established year", value: "2000" },
+              { label: "Nature of University", value: "Public" },
+              { label: "Type of University", value: "State University" },
+              { label: "District", value: profile.district || "" },
+              { label: "State", value: profile.state || "" },
+              { label: "Pincode", value: profile.pinCode || "" },
+              { label: "Total Courses", value: "" },
+              { label: "Gender", value: "Co-Ed" },
+              { label: "Campus Size", value: "" },
+              { label: "Avg Student Count", value: "" },
+              { label: "Students Outside State", value: "" },
+            ],
+            amenities: mergedAmenities,
+            inside_campus_facilities: [],
+            location: {
+              address: profile.address || "",
+              latitude: null,
+              longitude: null,
+              map_link: "",
+            },
+            nearby_access: [],
+            campus_ambassadors: [],
+            social: [],
+            campus_reels: [],
+          };
 
       reset({
         name: profile.name || "",
@@ -220,54 +264,11 @@ export default function SetupProfilePage() {
                 : [],
             },
           },
-          college_overview: existingOverview || {
-            id: "college_overview",
-            enabled: true,
-            name: profile.name || "",
-            alt_name: "",
-            location_name: profile.city
-              ? `${profile.city}, ${profile.state}`
-              : "",
-            type: "Public",
-            established: 2000,
-            navigation_tabs: ["Overview", "Governance"],
-            about: "",
-            accolades: [],
-            university_details: [
-              { label: "Established year", value: "2000" },
-              { label: "Nature of University", value: "Public" },
-              { label: "Type of University", value: "State University" },
-              { label: "District", value: profile.district || "" },
-              { label: "State", value: profile.state || "" },
-              { label: "Pincode", value: profile.pinCode || "" },
-              { label: "Total Courses", value: "" },
-              { label: "Gender", value: "Co-Ed" },
-              { label: "Campus Size", value: "" },
-              { label: "Avg Student Count", value: "" },
-              { label: "Students Outside State", value: "" },
-            ],
-            amenities: getDefaultCollegeOverviewAmenities(),
-            inside_campus_facilities: [],
-            location: {
-              address: profile.address || "",
-              latitude: null,
-              longitude: null,
-              map_link: "",
-            },
-            nearby_access: [],
-            campus_ambassadors: [],
-            social: [],
-            campus_reels: [],
-          },
+          college_overview: collegeOverviewSection,
         },
       });
-
-      setValue(
-        "profileSections.college_overview.amenities",
-        mergeCollegeOverviewAmenities(existingOverview?.amenities),
-      );
     }
-  }, [profile, reset, setValue]);
+  }, [profile, reset]);
 
   // Form watch variables for nested arrays/objects
   const rules = watch("profileSections.student_code_of_conduct.rules") || [];
