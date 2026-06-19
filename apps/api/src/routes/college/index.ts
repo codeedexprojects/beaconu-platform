@@ -5,6 +5,7 @@ import collegeAdminCommunityRoutes from "@/modules/community/routes/college-admi
 import collegeAdminRoutes from "@/modules/colleges/routes/college-admin.routes";
 import { collegeInstitutionGroupRouter } from "@/modules/colleges/routes/institution-group.routes";
 import collegeAdminBlinkRoutes from "@/modules/blink/routes/college-admin.routes";
+import collegeAdminUploadRoutes from "@/modules/upload/routes/college-admin.routes";
 
 const router: Router = Router();
 
@@ -13,5 +14,6 @@ router.use("/", collegeAdminRoutes);
 router.use("/communities", collegeAdminCommunityRoutes);
 router.use("/institution-group", collegeInstitutionGroupRouter);
 router.use("/ambassadors", collegeAdminBlinkRoutes);
+router.use("/uploads", collegeAdminUploadRoutes);
 
 export default router;

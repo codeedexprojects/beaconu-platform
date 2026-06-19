@@ -40,6 +40,7 @@ import {
   useCollegeProfile,
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 // Tab metadata
@@ -116,6 +117,7 @@ export default function SetupProfilePage() {
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
   const [activeTab, setActiveTab] = useState<ProfileTabId>("basic");
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
 
@@ -137,6 +139,8 @@ export default function SetupProfilePage() {
 
   useEffect(() => {
     if (profile) {
+      const commuteSection = (profile.profileSections?.commute as any) || {};
+
       reset({
         name: profile.name || "",
         code: profile.code || "",
@@ -179,11 +183,34 @@ export default function SetupProfilePage() {
             title: "Institution Across the World",
             institutions: [],
           },
-          commute: profile.profileSections?.commute || {
+          commute: {
             id: "commute",
             enabled: true,
-            title: "Commute",
-            nearby: { transit: [], essentials: [], utilities: [] },
+            tab: "commute",
+            title: commuteSection.title || "Commute",
+            pickup_points: Array.isArray(commuteSection.pickup_points)
+              ? commuteSection.pickup_points
+              : [],
+            selected_pickup_point: commuteSection.selected_pickup_point || "",
+            routes: Array.isArray(commuteSection.routes)
+              ? commuteSection.routes
+              : [],
+            rules_and_code_of_conduct: {
+              title:
+                commuteSection.rules_and_code_of_conduct?.title ||
+                "Rules & Code of Conduct",
+              subtitle:
+                commuteSection.rules_and_code_of_conduct?.subtitle ||
+                "Detailed guidelines for student commuters",
+              intro:
+                commuteSection.rules_and_code_of_conduct?.intro ||
+                "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+              rules: Array.isArray(
+                commuteSection.rules_and_code_of_conduct?.rules,
+              )
+                ? commuteSection.rules_and_code_of_conduct.rules
+                : [],
+            },
           },
           college_overview: profile.profileSections?.college_overview || {
             id: "college_overview",
@@ -246,12 +273,40 @@ export default function SetupProfilePage() {
   const overviewNearbyAccess =
     watch("profileSections.college_overview.nearby_access") || [];
 
-  // Commute nearby arrays
-  const commuteTransit = watch("profileSections.commute.nearby.transit") || [];
-  const commuteEssentials =
-    watch("profileSections.commute.nearby.essentials") || [];
-  const commuteUtilities =
-    watch("profileSections.commute.nearby.utilities") || [];
+  // Commute arrays
+  const commutePickupPoints =
+    watch("profileSections.commute.pickup_points") || [];
+  const commuteRoutes = watch("profileSections.commute.routes") || [];
+  const commuteRules =
+    watch("profileSections.commute.rules_and_code_of_conduct.rules") || [];
+
+  const createEmptyCommuteStop = () => ({
+    point: "",
+    landmark: "",
+    time: "",
+  });
+
+  const createEmptyCommuteRoute = () => ({
+    pickup_point: "",
+    route_name: "",
+    via: "",
+    status: "UNVERIFIED",
+    timings: [
+      { label: "Morning", time: "" },
+      { label: "Evening", time: "" },
+    ],
+    transport_fee: {
+      amount: "",
+      payment_structure: "",
+    },
+    bus_information: {
+      registration_number: "",
+      seats: null,
+      model: "",
+    },
+    morning_pickup_points: [],
+    evening_dropoff_points: [],
+  });
 
   const onSubmit = (data: ProfileFormData) => {
     updateProfile(
@@ -283,6 +338,28 @@ export default function SetupProfilePage() {
         },
       },
     );
+  };
+
+  const handleImageUpload = async (
+    file: File | null,
+    fieldPath: string,
+    context: string,
+  ) => {
+    if (!file) return;
+
+    try {
+      setUploadingField(fieldPath);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      setValue(fieldPath as any, permanentUrl, {
+        shouldDirty: true,
+      });
+      toast.success("File uploaded to S3");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   if (isLoading) {
@@ -528,6 +605,18 @@ export default function SetupProfilePage() {
                         placeholder="https://example.com/logo.png"
                         {...register("logoUrl")}
                       />
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingField === "logoUrl"}
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "logoUrl",
+                            "registration/logo",
+                          )
+                        }
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -541,6 +630,18 @@ export default function SetupProfilePage() {
                         id="coverImageUrl"
                         placeholder="https://example.com/cover.png"
                         {...register("coverImageUrl")}
+                      />
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingField === "coverImageUrl"}
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "coverImageUrl",
+                            "registration/cover",
+                          )
+                        }
                       />
                     </div>
 
@@ -683,6 +784,22 @@ export default function SetupProfilePage() {
                               {...register(
                                 `profileSections.college_overview.accolades.${idx}.image`,
                               )}
+                            />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="max-w-[220px]"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.college_overview.accolades.${idx}.image`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.college_overview.accolades.${idx}.image`,
+                                  `college-overview/accolades-${idx}`,
+                                )
+                              }
                             />
                             <Button
                               type="button"
@@ -1115,6 +1232,21 @@ export default function SetupProfilePage() {
                                 `profileSections.college_overview.campus_ambassadors.${idx}.image`,
                               )}
                             />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.college_overview.campus_ambassadors.${idx}.image`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.college_overview.campus_ambassadors.${idx}.image`,
+                                  `college-overview/ambassadors-${idx}`,
+                                )
+                              }
+                            />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">
@@ -1478,6 +1610,21 @@ export default function SetupProfilePage() {
                                     `profileSections.happenings.happenings.${idx}.image`,
                                   )}
                                 />
+                                <Input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  disabled={
+                                    uploadingField ===
+                                    `profileSections.happenings.happenings.${idx}.image`
+                                  }
+                                  onChange={(e) =>
+                                    handleImageUpload(
+                                      e.target.files?.[0] ?? null,
+                                      `profileSections.happenings.happenings.${idx}.image`,
+                                      `happenings/items-${idx}`,
+                                    )
+                                  }
+                                />
                               </div>
                               <div className="space-y-1">
                                 <Label className="text-xs">
@@ -1583,6 +1730,22 @@ export default function SetupProfilePage() {
                                 `profileSections.institutions_across_world.institutions.${idx}.logo`,
                               )}
                             />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="max-w-[220px]"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.institutions_across_world.institutions.${idx}.logo`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.institutions_across_world.institutions.${idx}.logo`,
+                                  `institutions/logos-${idx}`,
+                                )
+                              }
+                            />
                             <Button
                               type="button"
                               variant="ghost"
@@ -1617,57 +1780,69 @@ export default function SetupProfilePage() {
                     Accessibility
                   </CardTitle>
                   <CardDescription>
-                    Map out nearby transit links, local essential service
-                    points, and utilities.
+                    Configure pickup points, route timings, bus details, and
+                    commuter conduct policy.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="commuteTitle" className="font-semibold">
-                      Section Title
-                    </Label>
-                    <Input
-                      id="commuteTitle"
-                      placeholder="Commute"
-                      {...register("profileSections.commute.title")}
-                    />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="commuteTitle" className="font-semibold">
+                        Section Title
+                      </Label>
+                      <Input
+                        id="commuteTitle"
+                        placeholder="Commute"
+                        {...register("profileSections.commute.title")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold">
+                        Selected Pickup Point
+                      </Label>
+                      <Input
+                        placeholder="HSR Layout"
+                        {...register(
+                          "profileSections.commute.selected_pickup_point",
+                        )}
+                      />
+                    </div>
                   </div>
 
-                  {/* Transit Mappings */}
+                  {/* Pickup points */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Transit & Transport Hubs
+                        Pickup Points
                       </h4>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setValue("profileSections.commute.nearby.transit", [
-                            ...commuteTransit,
-                            { name: "", distance: "" },
+                          setValue("profileSections.commute.pickup_points", [
+                            ...commutePickupPoints,
+                            "",
                           ]);
                         }}
                       >
-                        <Plus className="h-4 w-4 mr-2" /> Add Hub
+                        <Plus className="h-4 w-4 mr-2" /> Add Pickup Point
                       </Button>
                     </div>
-                    {commuteTransit.map((item: any, idx: number) => (
+                    {commutePickupPoints.map((item: string, idx: number) => (
                       <div key={idx} className="flex gap-2 items-center pl-2">
                         <Input
-                          placeholder="Station / Stop (e.g. Bangalore Central Railway)"
+                          placeholder="Pickup point name"
                           className="h-9 flex-1"
-                          {...register(
-                            `profileSections.commute.nearby.transit.${idx}.name`,
-                          )}
-                        />
-                        <Input
-                          placeholder="Distance (e.g. 5 km)"
-                          className="h-9 max-w-[150px]"
-                          {...register(
-                            `profileSections.commute.nearby.transit.${idx}.distance`,
-                          )}
+                          value={item || ""}
+                          onChange={(e) => {
+                            const next = [...commutePickupPoints];
+                            next[idx] = e.target.value;
+                            setValue(
+                              "profileSections.commute.pickup_points",
+                              next,
+                            );
+                          }}
                         />
                         <Button
                           type="button"
@@ -1675,8 +1850,8 @@ export default function SetupProfilePage() {
                           size="icon"
                           onClick={() => {
                             setValue(
-                              "profileSections.commute.nearby.transit",
-                              commuteTransit.filter(
+                              "profileSections.commute.pickup_points",
+                              commutePickupPoints.filter(
                                 (_: any, i: number) => i !== idx,
                               ),
                             );
@@ -1688,114 +1863,487 @@ export default function SetupProfilePage() {
                     ))}
                   </div>
 
-                  {/* Essentials Mappings */}
+                  {/* Routes */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Essentials & Conveniences (e.g. Banks, Hospitals)
+                        Routes
                       </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.commute.routes", [
+                            ...commuteRoutes,
+                            createEmptyCommuteRoute(),
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Route
+                      </Button>
+                    </div>
+                    {commuteRoutes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground border border-dashed rounded-lg p-4">
+                        No commute route configured yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {commuteRoutes.map((route: any, routeIdx: number) => (
+                          <div
+                            key={routeIdx}
+                            className="border rounded-xl p-4 space-y-4 bg-muted/15"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <h5 className="font-semibold text-indigo-900">
+                                Route #{routeIdx + 1}
+                              </h5>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.commute.routes",
+                                    commuteRoutes.filter(
+                                      (_: any, i: number) => i !== routeIdx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Remove Route
+                              </Button>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Pickup Point</Label>
+                                <Input
+                                  placeholder="HSR Layout"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.pickup_point`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Route Name</Label>
+                                <Input
+                                  placeholder="Route 12 - HSR Layout"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.route_name`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Via</Label>
+                                <Input
+                                  placeholder="Via BTM Layout, Madivala"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.via`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Status</Label>
+                                <select
+                                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.status`,
+                                  )}
+                                >
+                                  <option value="VERIFIED">VERIFIED</option>
+                                  <option value="UNVERIFIED">UNVERIFIED</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Morning Timing Window
+                                </Label>
+                                <Input
+                                  placeholder="6:45 AM - 8:10 AM"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.timings.0.time`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Evening Timing Window
+                                </Label>
+                                <Input
+                                  placeholder="4:30 PM - 6:15 PM"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.timings.1.time`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Transport Fee Amount
+                                </Label>
+                                <Input
+                                  placeholder="₹25,000 / Year"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.transport_fee.amount`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Payment Structure
+                                </Label>
+                                <Input
+                                  placeholder="Installment details"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.transport_fee.payment_structure`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Bus Registration
+                                </Label>
+                                <Input
+                                  placeholder="KA-01-F-4829"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.registration_number`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Seats</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="42"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.seats`,
+                                    { valueAsNumber: true },
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Model</Label>
+                                <Input
+                                  placeholder="Tata Marcopolo (AC)"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.model`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2 border-t border-border/40">
+                              <div className="flex items-center justify-between">
+                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                  Morning Pickup Points
+                                </h6>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const next = [...commuteRoutes];
+                                    const current =
+                                      next[routeIdx]?.morning_pickup_points ||
+                                      [];
+                                    next[routeIdx] = {
+                                      ...next[routeIdx],
+                                      morning_pickup_points: [
+                                        ...current,
+                                        createEmptyCommuteStop(),
+                                      ],
+                                    };
+                                    setValue(
+                                      "profileSections.commute.routes",
+                                      next,
+                                    );
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                                  Morning Stop
+                                </Button>
+                              </div>
+                              {(route.morning_pickup_points || []).map(
+                                (stop: any, stopIdx: number) => (
+                                  <div
+                                    key={stopIdx}
+                                    className="grid gap-2 md:grid-cols-3"
+                                  >
+                                    <Input
+                                      placeholder="Point"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.point`,
+                                      )}
+                                    />
+                                    <Input
+                                      placeholder="Landmark"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.landmark`,
+                                      )}
+                                    />
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Time"
+                                        {...register(
+                                          `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.time`,
+                                        )}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = [...commuteRoutes];
+                                          const current =
+                                            next[routeIdx]
+                                              ?.morning_pickup_points || [];
+                                          next[routeIdx] = {
+                                            ...next[routeIdx],
+                                            morning_pickup_points:
+                                              current.filter(
+                                                (_: any, i: number) =>
+                                                  i !== stopIdx,
+                                              ),
+                                          };
+                                          setValue(
+                                            "profileSections.commute.routes",
+                                            next,
+                                          );
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+
+                            <div className="space-y-3 pt-2 border-t border-border/40">
+                              <div className="flex items-center justify-between">
+                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                  Evening Dropoff Points
+                                </h6>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const next = [...commuteRoutes];
+                                    const current =
+                                      next[routeIdx]?.evening_dropoff_points ||
+                                      [];
+                                    next[routeIdx] = {
+                                      ...next[routeIdx],
+                                      evening_dropoff_points: [
+                                        ...current,
+                                        createEmptyCommuteStop(),
+                                      ],
+                                    };
+                                    setValue(
+                                      "profileSections.commute.routes",
+                                      next,
+                                    );
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                                  Evening Stop
+                                </Button>
+                              </div>
+                              {(route.evening_dropoff_points || []).map(
+                                (stop: any, stopIdx: number) => (
+                                  <div
+                                    key={stopIdx}
+                                    className="grid gap-2 md:grid-cols-3"
+                                  >
+                                    <Input
+                                      placeholder="Point"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.point`,
+                                      )}
+                                    />
+                                    <Input
+                                      placeholder="Landmark"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.landmark`,
+                                      )}
+                                    />
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Time"
+                                        {...register(
+                                          `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.time`,
+                                        )}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = [...commuteRoutes];
+                                          const current =
+                                            next[routeIdx]
+                                              ?.evening_dropoff_points || [];
+                                          next[routeIdx] = {
+                                            ...next[routeIdx],
+                                            evening_dropoff_points:
+                                              current.filter(
+                                                (_: any, i: number) =>
+                                                  i !== stopIdx,
+                                              ),
+                                          };
+                                          setValue(
+                                            "profileSections.commute.routes",
+                                            next,
+                                          );
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rules and code of conduct */}
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      Rules & Code Of Conduct
+                    </h4>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Title</Label>
+                        <Input
+                          placeholder="Rules & Code of Conduct"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.title",
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Subtitle</Label>
+                        <Input
+                          placeholder="Detailed guidelines for student commuters"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.subtitle",
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Intro</Label>
+                        <Textarea
+                          rows={2}
+                          placeholder="Intro text shown above rules"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.intro",
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label className="font-semibold">Rule Items</Label>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => {
                           setValue(
-                            "profileSections.commute.nearby.essentials",
-                            [...commuteEssentials, { name: "", distance: "" }],
+                            "profileSections.commute.rules_and_code_of_conduct.rules",
+                            [
+                              ...commuteRules,
+                              {
+                                title: "",
+                                description: "",
+                              },
+                            ],
                           );
                         }}
                       >
-                        <Plus className="h-4 w-4 mr-2" /> Add Point
+                        <Plus className="h-4 w-4 mr-2" /> Add Rule
                       </Button>
                     </div>
-                    {commuteEssentials.map((item: any, idx: number) => (
-                      <div key={idx} className="flex gap-2 items-center pl-2">
-                        <Input
-                          placeholder="Essential Spot (e.g. SBI Bank ATM)"
-                          className="h-9 flex-1"
+
+                    {commuteRules.map((rule: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="border rounded-lg p-3 bg-muted/10 space-y-2"
+                      >
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            placeholder="Rule title"
+                            {...register(
+                              `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.title`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.commute.rules_and_code_of_conduct.rules",
+                                commuteRules.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          rows={2}
+                          placeholder="Rule description"
                           {...register(
-                            `profileSections.commute.nearby.essentials.${idx}.name`,
+                            `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.description`,
                           )}
                         />
-                        <Input
-                          placeholder="Distance (e.g. 1.2 km)"
-                          className="h-9 max-w-[150px]"
-                          {...register(
-                            `profileSections.commute.nearby.essentials.${idx}.distance`,
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setValue(
-                              "profileSections.commute.nearby.essentials",
-                              commuteEssentials.filter(
-                                (_: any, i: number) => i !== idx,
-                              ),
-                            );
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
                       </div>
                     ))}
                   </div>
 
-                  {/* Utilities Mappings */}
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Utilities & Outlets (e.g. Food Court, Stationery)
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setValue("profileSections.commute.nearby.utilities", [
-                            ...commuteUtilities,
-                            { name: "", distance: "" },
-                          ]);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Utility
-                      </Button>
-                    </div>
-                    {commuteUtilities.map((item: any, idx: number) => (
-                      <div key={idx} className="flex gap-2 items-center pl-2">
-                        <Input
-                          placeholder="Utility Service (e.g. Stationery Store)"
-                          className="h-9 flex-1"
-                          {...register(
-                            `profileSections.commute.nearby.utilities.${idx}.name`,
-                          )}
-                        />
-                        <Input
-                          placeholder="Distance (e.g. 0.5 km)"
-                          className="h-9 max-w-[150px]"
-                          {...register(
-                            `profileSections.commute.nearby.utilities.${idx}.distance`,
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setValue(
-                              "profileSections.commute.nearby.utilities",
-                              commuteUtilities.filter(
-                                (_: any, i: number) => i !== idx,
-                              ),
-                            );
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
+                  {/* Raw payload helper */}
+                  <div className="space-y-2 pt-4 border-t border-border/40">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Commute Payload (Preview)
+                    </Label>
+                    <Textarea
+                      rows={10}
+                      value={JSON.stringify(
+                        {
+                          tab: "commute",
+                          pickup_points: commutePickupPoints,
+                          selected_pickup_point: watch(
+                            "profileSections.commute.selected_pickup_point",
+                          ),
+                          routes: commuteRoutes,
+                          rules_and_code_of_conduct: watch(
+                            "profileSections.commute.rules_and_code_of_conduct",
+                          ),
+                        },
+                        null,
+                        2,
+                      )}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
                   </div>
                 </CardContent>
               </Card>

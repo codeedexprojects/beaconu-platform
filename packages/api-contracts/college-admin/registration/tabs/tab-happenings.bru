@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/college-admin/profile/sections/happenings
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/happenings?page=1&limit=10&search=certification&category=Certification
   body: none
   auth: bearer
 }
@@ -16,4 +16,16 @@ auth:bearer {
 
 docs {
   Fetches only the `happenings` section.
+
+  Query params:
+  - page: 1-based page number, defaults to 1
+  - limit: items per page, defaults to 10, max 100
+  - search: case-insensitive search against title, description, category, and date
+  - category: filter to a single category
+  - categories: optional comma-separated or repeated category filter
+
+  Response data includes:
+  - happenings: paginated list of happenings
+  - pagination: standard pagination meta
+  - filters: applied filters plus stored section filters
 }

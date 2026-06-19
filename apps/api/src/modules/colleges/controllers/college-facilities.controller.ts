@@ -124,11 +124,23 @@ export class CollegeFacilitiesController {
     const schema = z.object({
       name: z.string().trim().min(2).max(255),
       description: z.string().optional().nullable(),
+      isVerified: z.boolean().optional(),
+      conductPolicy: z
+        .array(
+          z.object({
+            title: z.string().trim().min(1),
+            description: z.string().trim().min(1),
+          }),
+        )
+        .optional(),
       stops: z
         .array(
           z.object({
             stopName: z.string().trim().min(2),
             landmark: z.string().optional().nullable(),
+            morningTime: z.coerce.date().optional().nullable(),
+            eveningTime: z.coerce.date().optional().nullable(),
+            isPickupPoint: z.boolean().optional(),
             stopOrder: z.number().int().nonnegative(),
           }),
         )
@@ -142,6 +154,8 @@ export class CollegeFacilitiesController {
             driverName: z.string().optional().nullable(),
             driverPhone: z.string().optional().nullable(),
             monthlyFee: z.number().positive().optional(),
+            busModel: z.string().optional().nullable(),
+            paymentStructureNotes: z.string().optional().nullable(),
           }),
         )
         .optional(),
@@ -156,6 +170,8 @@ export class CollegeFacilitiesController {
           name: body.name,
           description: body.description || null,
           isActive: true,
+          isVerified: body.isVerified || false,
+          conductPolicy: body.conductPolicy || [],
         },
       });
 
@@ -165,6 +181,9 @@ export class CollegeFacilitiesController {
             routeId: route.id,
             stopName: stop.stopName,
             landmark: stop.landmark || null,
+            morningTime: stop.morningTime || null,
+            eveningTime: stop.eveningTime || null,
+            isPickupPoint: stop.isPickupPoint ?? true,
             stopOrder: stop.stopOrder,
           })),
         });
@@ -181,6 +200,8 @@ export class CollegeFacilitiesController {
             driverName: bus.driverName || null,
             driverPhone: bus.driverPhone || null,
             monthlyFee: bus.monthlyFee || 0,
+            busModel: bus.busModel || null,
+            paymentStructureNotes: bus.paymentStructureNotes || null,
             isActive: true,
           })),
         });

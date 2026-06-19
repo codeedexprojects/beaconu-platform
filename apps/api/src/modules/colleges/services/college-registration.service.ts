@@ -1,5 +1,6 @@
 import { NotFoundError, ConflictError } from "@/shared/errors";
 import { prisma } from "@beaconu/db";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { CollegeRegistrationRepository } from "../repositories/college-registration.repository";
 import {
   UpdateCollegeProfileData,
@@ -12,8 +13,101 @@ import {
 import { InstitutionGroupService } from "./institution-group.service";
 
 export class CollegeRegistrationService {
+  private static readonly DEFAULT_HAPPENINGS_LIMIT = 10;
+
   private static isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
+  }
+
+  private static asString(value: unknown) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  private static normalizeStringList(value: unknown) {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.asString(item)).filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return [] as string[];
+  }
+
+  private static filterHappeningsSection(
+    section: Record<string, unknown>,
+    query?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      category?: string;
+      categories?: string | string[];
+    },
+  ) {
+    const happenings = Array.isArray(section.happenings)
+      ? section.happenings.filter((item): item is Record<string, unknown> =>
+          this.isRecord(item),
+        )
+      : [];
+
+    const requestedCategories = Array.from(
+      new Set(
+        this.normalizeStringList(query?.categories).concat(
+          this.normalizeStringList(query?.category),
+        ),
+      ),
+    );
+
+    const searchTerm = this.asString(query?.search).toLowerCase();
+
+    const filteredHappenings = happenings.filter((item) => {
+      const itemCategory = this.asString(item.category);
+
+      if (
+        requestedCategories.length > 0 &&
+        !requestedCategories.some(
+          (category) => category.toLowerCase() === itemCategory.toLowerCase(),
+        )
+      ) {
+        return false;
+      }
+
+      if (!searchTerm) return true;
+
+      const searchableText = [
+        item.title,
+        item.description,
+        item.category,
+        item.date,
+      ]
+        .map((value) => this.asString(value).toLowerCase())
+        .join(" ");
+
+      return searchableText.includes(searchTerm);
+    });
+
+    const page = Math.max(1, query?.page ?? 1);
+    const limit = Math.max(1, query?.limit ?? this.DEFAULT_HAPPENINGS_LIMIT);
+    const total = filteredHappenings.length;
+    const start = (page - 1) * limit;
+    const paginatedHappenings = filteredHappenings.slice(start, start + limit);
+
+    return {
+      ...section,
+      happenings: paginatedHappenings,
+      pagination: PaginationHelper.createMeta(total, page, limit),
+      filters: {
+        ...(this.isRecord(section.filters)
+          ? (section.filters as Record<string, unknown>)
+          : {}),
+        categories: requestedCategories,
+        search: this.asString(query?.search),
+      },
+    };
   }
 
   private static buildTabIdList(profileSections: Record<string, unknown>) {
@@ -90,11 +184,141 @@ export class CollegeRegistrationService {
       orderBy: { createdAt: "desc" },
     });
 
+    const formatTime = (value: Date | null | undefined) => {
+      if (!value) return "";
+      return value.toLocaleTimeString("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      });
+    };
+
+    const buildTimingWindow = (
+      stops: Array<{ morningTime: Date | null; eveningTime: Date | null }>,
+      key: "morningTime" | "eveningTime",
+    ) => {
+      const points = stops
+        .map((stop) => stop[key])
+        .filter((time): time is Date => Boolean(time));
+
+      if (points.length === 0) return "";
+
+      const first = points[0];
+      const last = points[points.length - 1];
+      return `${formatTime(first)} - ${formatTime(last)}`;
+    };
+
+    const pickupPoints = Array.from(
+      new Set(
+        routes
+          .map((route) => {
+            const firstPickupStop =
+              route.stops.find((stop) => stop.isPickupPoint) ?? route.stops[0];
+            return firstPickupStop?.stopName?.trim() || "";
+          })
+          .filter(Boolean),
+      ),
+    );
+
+    const selectedPickupPoint = pickupPoints[0] || "";
+
+    const formattedRoutes = routes.map((route) => {
+      const firstPickupStop =
+        route.stops.find((stop) => stop.isPickupPoint) ?? route.stops[0];
+      const primaryBus = route.buses[0];
+      const annualFee = primaryBus?.monthlyFee
+        ? Number(primaryBus.monthlyFee) * 12
+        : 0;
+
+      const conductRules = Array.isArray(route.conductPolicy)
+        ? route.conductPolicy
+            .map((item) => {
+              if (!this.isRecord(item)) return null;
+              const title = this.asText(item.title);
+              const description = this.asText(item.description);
+              if (!title && !description) return null;
+              return { title, description };
+            })
+            .filter(
+              (
+                item,
+              ): item is {
+                title: string;
+                description: string;
+              } => Boolean(item),
+            )
+        : [];
+
+      return {
+        pickup_point: firstPickupStop?.stopName || selectedPickupPoint,
+        route_name: route.name,
+        via: route.description || "",
+        status: route.isVerified ? "VERIFIED" : "UNVERIFIED",
+        timings: [
+          {
+            label: "Morning",
+            time: buildTimingWindow(route.stops, "morningTime"),
+          },
+          {
+            label: "Evening",
+            time: buildTimingWindow(route.stops, "eveningTime"),
+          },
+        ],
+        transport_fee: {
+          amount:
+            annualFee > 0 ? `₹${annualFee.toLocaleString("en-IN")} / Year` : "",
+          payment_structure: primaryBus?.paymentStructureNotes || "",
+        },
+        bus_information: {
+          registration_number: primaryBus?.busNumber || "",
+          seats: primaryBus?.totalSeats ?? null,
+          model: primaryBus?.busModel || primaryBus?.busName || "",
+        },
+        morning_pickup_points: route.stops
+          .filter((stop) => stop.isPickupPoint)
+          .map((stop) => ({
+            point: stop.stopName,
+            landmark: stop.landmark || "",
+            time: formatTime(stop.morningTime),
+          })),
+        evening_dropoff_points: [...route.stops].reverse().map((stop) => ({
+          point: stop.stopName,
+          landmark: stop.landmark || "",
+          time: formatTime(stop.eveningTime),
+        })),
+        rules_and_code_of_conduct: {
+          title: "Rules & Code of Conduct",
+          subtitle: "Detailed guidelines for student commuters",
+          intro:
+            "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+          rules: conductRules,
+        },
+      };
+    });
+
+    const sharedRules =
+      formattedRoutes[0]?.rules_and_code_of_conduct?.rules?.length > 0
+        ? formattedRoutes[0].rules_and_code_of_conduct.rules
+        : [];
+
     return {
       id: "commute",
       enabled: true,
       title: "Commute",
-      routes,
+      tab: "commute",
+      pickup_points: pickupPoints,
+      selected_pickup_point: selectedPickupPoint,
+      routes: formattedRoutes.map(
+        ({ rules_and_code_of_conduct, ...route }) => route,
+      ),
+      rules_and_code_of_conduct: {
+        title: "Rules & Code of Conduct",
+        subtitle: "Detailed guidelines for student commuters",
+        intro:
+          "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+        rules: sharedRules,
+      },
       route_count: routes.length,
     };
   }
@@ -388,7 +612,17 @@ export class CollegeRegistrationService {
     return this.hydrateRegistrationSections(collegeId, sections);
   }
 
-  static async getProfileSection(collegeId: string, tabId: string) {
+  static async getProfileSection(
+    collegeId: string,
+    tabId: string,
+    query?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      category?: string;
+      categories?: string | string[];
+    },
+  ) {
     const sections = (await this.getProfileSections(collegeId)) as Record<
       string,
       unknown
@@ -397,6 +631,10 @@ export class CollegeRegistrationService {
 
     if (!section) {
       throw new NotFoundError("College profile section not found");
+    }
+
+    if (tabId === "happenings" && this.isRecord(section)) {
+      return this.filterHappeningsSection(section, query);
     }
 
     return section;

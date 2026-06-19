@@ -99,6 +99,18 @@ export interface SubmitRegistrationResponse {
   status: string;
 }
 
+export interface CollegeAdminUploadPresignResponse {
+  uploadUrl: string;
+  key: string;
+  expiresIn: number;
+}
+
+export interface CollegeAdminUploadVerifyResponse {
+  verified: boolean;
+  permanentUrl: string;
+  viewUrl: string;
+}
+
 type CollegeProfileSections = Record<string, any>;
 
 async function getCollegeProfileSections(): Promise<CollegeProfileSections> {
@@ -202,6 +214,68 @@ export async function submitCollegeRegistration(): Promise<SubmitRegistrationRes
   );
 }
 
+export async function presignCollegeAdminUpload(input: {
+  mimeType: string;
+  fileSizeBytes: number;
+  context: string;
+}): Promise<CollegeAdminUploadPresignResponse> {
+  return api.post<CollegeAdminUploadPresignResponse>(
+    "/api/v1/college-admin/uploads/presign",
+    input,
+  );
+}
+
+export async function verifyCollegeAdminUpload(
+  key: string,
+): Promise<CollegeAdminUploadVerifyResponse> {
+  return api.post<CollegeAdminUploadVerifyResponse>(
+    "/api/v1/college-admin/uploads/verify",
+    { key },
+  );
+}
+
+export async function uploadCollegeAdminFile(
+  file: File,
+  context: string,
+): Promise<string> {
+  if (!file.type) {
+    throw new Error("Selected file has no MIME type");
+  }
+
+  const presigned = await presignCollegeAdminUpload({
+    mimeType: file.type,
+    fileSizeBytes: file.size,
+    context,
+  });
+
+  let uploadResponse: Response;
+  try {
+    uploadResponse = await fetch(presigned.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Upload blocked by S3 CORS (preflight failed). Configure bucket CORS to allow PUT/GET/HEAD from your college-admin origin.",
+      );
+    }
+    throw error;
+  }
+
+  if (!uploadResponse.ok) {
+    throw new Error(
+      `Failed to upload file to storage (HTTP ${uploadResponse.status})`,
+    );
+  }
+
+  const verified = await verifyCollegeAdminUpload(presigned.key);
+  return verified.permanentUrl;
+}
+
 // ── Roles & Staff Directory Services ──
 export type {
   CollegePermissionDto,
@@ -297,6 +371,9 @@ export interface CommuteStopDto {
   id: string;
   stopName: string;
   landmark: string | null;
+  morningTime?: string | null;
+  eveningTime?: string | null;
+  isPickupPoint?: boolean;
   stopOrder: number;
 }
 
@@ -304,11 +381,13 @@ export interface CommuteBusDto {
   id: string;
   busNumber: string;
   busName: string | null;
+  busModel?: string | null;
   totalSeats: number;
   availableSeats: number;
   driverName: string | null;
   driverPhone: string | null;
   monthlyFee: number;
+  paymentStructureNotes?: string | null;
 }
 
 export interface CommuteRouteDto {
@@ -316,6 +395,8 @@ export interface CommuteRouteDto {
   name: string;
   description: string | null;
   isActive: boolean;
+  isVerified?: boolean;
+  conductPolicy?: { title: string; description: string }[];
   stops: CommuteStopDto[];
   buses: CommuteBusDto[];
 }

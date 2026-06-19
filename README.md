@@ -136,6 +136,10 @@ See [docs/backend-rules.md](docs/backend-rules.md) before adding any module.
 | `PORT`                    | API server port                     | `4000`                                          | No (default: 4000)        |
 | `NODE_ENV`                | Runtime environment                 | `development`                                   | No (default: development) |
 
+If presigned S3 uploads fail in browser with `OPTIONS 403`, apply bucket CORS:
+
+- See `docs/api/s3-upload-cors-fix.md`
+
 ## Available Scripts
 
 | Script                   | Description                                 |
