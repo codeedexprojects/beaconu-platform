@@ -67,13 +67,104 @@ const courseCreateTabDataSchema = z
   })
   .partial();
 
+const optionalTextSchema = z.string().trim().optional();
+const optionalNullableTextSchema = z.string().trim().optional().nullable();
+const optionalUrlSchema = z.string().trim().url().or(z.literal("")).optional();
+
+const collegeOverviewStatSchema = z.object({
+  label: optionalTextSchema,
+  value: optionalTextSchema,
+});
+
+const collegeOverviewBadgeSchema = z.object({
+  tag: optionalTextSchema,
+  title: optionalTextSchema,
+  image: optionalUrlSchema,
+});
+
+const collegeOverviewAmenitySchema = z.object({
+  label: optionalTextSchema,
+  icon: optionalTextSchema,
+});
+
+const collegeOverviewFacilitySchema = z.object({
+  label: optionalTextSchema,
+  subtitle: optionalTextSchema,
+  icon: optionalTextSchema,
+  image: optionalUrlSchema,
+});
+
+const collegeOverviewLocationSchema = z.object({
+  address: optionalNullableTextSchema,
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  map_link: optionalUrlSchema,
+});
+
+const collegeOverviewNearbyAccessItemSchema = z.object({
+  name: optionalTextSchema,
+  distance: optionalTextSchema,
+});
+
+const collegeOverviewNearbyAccessGroupSchema = z.object({
+  category: optionalTextSchema,
+  items: z.array(collegeOverviewNearbyAccessItemSchema).optional(),
+});
+
+const collegeOverviewAmbassadorSchema = z.object({
+  name: optionalTextSchema,
+  course: optionalTextSchema,
+  district: optionalTextSchema,
+  state: optionalTextSchema,
+  image: optionalUrlSchema,
+  message_link: optionalUrlSchema,
+});
+
+const collegeOverviewSocialSchema = z.object({
+  platform: optionalTextSchema,
+  icon: optionalTextSchema,
+  url: optionalUrlSchema,
+});
+
+const collegeOverviewReelSchema = z.object({
+  title: optionalTextSchema,
+  duration: optionalTextSchema,
+  date: optionalTextSchema,
+  video: optionalUrlSchema,
+  thumbnail: optionalUrlSchema,
+  type: z.enum(["youtube", "mp4"]).optional(),
+});
+
+const collegeOverviewSectionSchema = z
+  .object({
+    id: optionalTextSchema,
+    enabled: z.boolean().optional(),
+    name: optionalTextSchema,
+    alt_name: optionalTextSchema,
+    location_name: optionalTextSchema,
+    type: optionalTextSchema,
+    established: z.number().int().positive().optional().nullable(),
+    navigation_tabs: z.array(z.string().trim().min(1)).optional(),
+    about: optionalTextSchema,
+    accolades: z.array(collegeOverviewBadgeSchema).optional(),
+    university_details: z.array(collegeOverviewStatSchema).optional(),
+    amenities: z.array(collegeOverviewAmenitySchema).optional(),
+    inside_campus_facilities: z.array(collegeOverviewFacilitySchema).optional(),
+    location: collegeOverviewLocationSchema.optional(),
+    nearby_access: z.array(collegeOverviewNearbyAccessGroupSchema).optional(),
+    campus_ambassadors: z.array(collegeOverviewAmbassadorSchema).optional(),
+    social: z.array(collegeOverviewSocialSchema).optional(),
+    campus_reels: z.array(collegeOverviewReelSchema).optional(),
+  })
+  .passthrough();
+
 const registrationTabDataSchema = z
   .object({
     student_code_of_conduct: z.unknown().optional(),
     happenings: z.unknown().optional(),
     institutions_across_world: z.unknown().optional(),
     commute: z.unknown().optional(),
-    college_overview: z.unknown().optional(),
+    college_overview: collegeOverviewSectionSchema.optional(),
   })
   .partial();
 
@@ -94,7 +185,7 @@ export const updateCollegeProfileSchema = z.object({
   pinCode: z.string().trim().max(10).optional().nullable(),
   requestedGroupCode: z.string().trim().max(30).optional().nullable(),
   registrationTabs: registrationTabsSchema,
-  profileSections: z.record(z.string(), z.unknown()).optional(),
+  profileSections: registrationTabDataSchema.optional(),
   settings: z.record(z.string(), z.unknown()).optional(),
 });
 

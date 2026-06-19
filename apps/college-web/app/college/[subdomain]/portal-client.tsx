@@ -26,6 +26,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  mergeCollegeOverviewAmenities,
+  resolveCollegeAmenityIcon,
+} from "@beaconu/utils";
 import type { PublicCollege } from "@/lib/services/public-college.service";
 
 interface PortalClientProps {
@@ -62,21 +66,72 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
     : Array.isArray(accreditation?.rankings)
       ? accreditation.rankings
       : [];
-  const institutionDetails =
-    overview.institution_details || overview.instution_details || {};
-  const amenities = overview.amenities || overview.aminities || [];
+  const detailList = Array.isArray(overview.university_details)
+    ? overview.university_details
+    : [];
+  const normalizedDetailMap = detailList.reduce(
+    (acc: Record<string, string>, item: any) => {
+      const key = String(item?.label || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_");
+      const value = String(item?.value || "").trim();
+
+      if (key && value) {
+        acc[key] = value;
+      }
+
+      return acc;
+    },
+    {},
+  );
+  const institutionDetails = overview.institution_details ||
+    overview.instution_details || {
+      established_year: normalizedDetailMap.established_year,
+      gender: normalizedDetailMap.gender,
+      gender_accepted: normalizedDetailMap.gender,
+      campus_size: normalizedDetailMap.campus_size,
+      average_student_count:
+        normalizedDetailMap.avg_student_count ||
+        normalizedDetailMap.average_student_count,
+      outside_state_students: normalizedDetailMap.students_outside_state,
+      total_courses: normalizedDetailMap.total_courses,
+    };
+  const amenities = mergeCollegeOverviewAmenities(
+    overview.amenities || overview.aminities,
+  );
   const insideCampusFacilities = overview.inside_campus_facilities || [];
-  const nearbyAccess = overview.nearby_access || {};
+  const nearbyAccess = Array.isArray(overview.nearby_access)
+    ? overview.nearby_access.reduce(
+        (acc: Record<string, any[]>, group: any) => {
+          const key = String(group?.category || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_");
+
+          if (key) {
+            acc[key] = Array.isArray(group?.items) ? group.items : [];
+          }
+
+          return acc;
+        },
+        {},
+      )
+    : overview.nearby_access || {};
   const utilityAccess = nearbyAccess.utilities || nearbyAccess.utility || [];
   const campusReels = overview.campus || overview.campus_reels || [];
   const connectLinks =
-    overview.connectwithus?.links ||
-    [
-      { platform: "LinkedIn", url: overview.connect?.linkedin },
-      { platform: "Instagram", url: overview.connect?.instagram },
-      { platform: "Twitter", url: overview.connect?.twitter },
-      { platform: "Website", url: overview.connect?.website },
-    ].filter((item) => !!item.url);
+    (Array.isArray(overview.social) ? overview.social : []).filter(
+      (item: any) => !!item?.url,
+    ).length > 0
+      ? overview.social
+      : overview.connectwithus?.links ||
+        [
+          { platform: "LinkedIn", url: overview.connect?.linkedin },
+          { platform: "Instagram", url: overview.connect?.instagram },
+          { platform: "Twitter", url: overview.connect?.twitter },
+          { platform: "Website", url: overview.connect?.website },
+        ].filter((item) => !!item.url);
   const ambassadors =
     overview.campusambassidors || college.campusAmbassadors || [];
 
@@ -347,16 +402,35 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                 <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
                   <h3 className="text-lg font-bold">Campus Amenities</h3>
                   <div className="flex flex-wrap gap-2">
-                    {amenities.map((amenity: string, idx: number) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="px-3 py-1.5 text-sm font-semibold rounded-lg"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-primary shrink-0" />
-                        {amenity}
-                      </Badge>
-                    ))}
+                    {amenities.map((amenity: any, idx: number) => {
+                      const amenityLabel =
+                        typeof amenity === "string"
+                          ? amenity
+                          : amenity?.label || "Amenity";
+                      const amenityIcon = resolveCollegeAmenityIcon(
+                        typeof amenity === "string" ? "" : amenity?.icon,
+                        amenityLabel,
+                      );
+
+                      return (
+                        <Badge
+                          key={idx}
+                          variant="secondary"
+                          className="px-3 py-1.5 text-sm font-semibold rounded-lg"
+                        >
+                          {amenityIcon ? (
+                            <img
+                              src={amenityIcon}
+                              alt={amenityLabel}
+                              className="h-4 w-4 mr-1.5 shrink-0 rounded-sm object-contain"
+                            />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-primary shrink-0" />
+                          )}
+                          {amenityLabel}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -429,14 +503,18 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
                     {insideCampusFacilities.map((item: any, idx: number) => (
                       <Card key={idx}>
                         <CardContent className="p-4 space-y-2">
-                          <p className="font-semibold text-sm">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.description}
+                          <p className="font-semibold text-sm">
+                            {item.label || item.name}
                           </p>
-                          {item.image && (
+                          {(item.subtitle || item.description) && (
+                            <p className="text-xs text-muted-foreground">
+                              {item.subtitle || item.description}
+                            </p>
+                          )}
+                          {(item.image || item.icon) && (
                             <img
-                              src={item.image}
-                              alt={item.name || "Campus facility"}
+                              src={item.image || item.icon}
+                              alt={item.label || item.name || "Campus facility"}
                               className="h-28 w-full rounded-md object-cover"
                             />
                           )}
@@ -473,16 +551,30 @@ export function CollegePortalTabs({ college }: PortalClientProps) {
               {campusReels.length > 0 && (
                 <section className="bg-background border rounded-xl p-6 shadow-sm space-y-4">
                   <h3 className="text-lg font-bold">Campus Reels</h3>
-                  <div className="space-y-2">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     {campusReels.map((item: any, idx: number) => (
                       <a
                         key={idx}
-                        href={item.link || "#"}
+                        href={item.video || item.link || "#"}
                         target="_blank"
                         rel="noreferrer"
                         className="block rounded-lg border p-3 text-sm hover:bg-muted/40"
                       >
-                        {item.title || "Campus Short Video"}
+                        {item.thumbnail && (
+                          <img
+                            src={item.thumbnail}
+                            alt={item.title || "Campus Short Video"}
+                            className="mb-3 h-36 w-full rounded-md object-cover"
+                          />
+                        )}
+                        <p className="font-semibold">
+                          {item.title || "Campus Short Video"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {[item.date, item.duration]
+                            .filter(Boolean)
+                            .join(" • ")}
+                        </p>
                       </a>
                     ))}
                   </div>

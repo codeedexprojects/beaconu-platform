@@ -16,4 +16,56 @@ auth:bearer {
 
 docs {
   Fetches only the `commute` section.
+
+  Response shape:
+  {
+    "sectionName": "commute",
+    "sectionId": "commute",
+    "sectionKey": "commute",
+    "data": {
+      "id": "commute",
+      "title": "Commute",
+      "enabled": true,
+      "routes": [
+        {
+          "route_name": "HSR Layout",
+          "details": [
+            {
+              "id": "route_12",
+              "name": "Route 12 - HSR Layout",
+              "icon": "https://cdn.iconsdb.example.com/icons/bus-route-orange.png",
+              "via": "Via BTM Layout, Madivala",
+              "verified": true,
+              "timings": {
+                "morning": {
+                  "label": "MORNING",
+                  "icon": "https://cdn.iconsdb.example.com/icons/sun-orange.png",
+                  "start_time": "6:45 AM",
+                  "end_time": "8:10 AM"
+                },
+                "evening": {
+                  "label": "EVENING",
+                  "icon": "https://cdn.iconsdb.example.com/icons/moon-purple.png",
+                  "start_time": "4:30 PM",
+                  "end_time": "6:15 PM"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "rules_and_code_of_conduct": {
+        "title": "Rules & Code of Conduct",
+        "subtitle": "Detailed guidelines for student commuters",
+        "icon": "https://cdn.iconsdb.example.com/icons/gavel-orange.png",
+        "intro": "...",
+        "rules": [
+          {
+            "heading": "Mandatory Identification",
+            "description": "Students must carry their valid college ID and transport pass at all times."
+          }
+        ]
+      }
+    }
+  }
 }
