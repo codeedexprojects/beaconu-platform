@@ -4,6 +4,9 @@ import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
 import { validate } from "@/shared/middleware/validate";
 import { updateCounsellorStatusSchema } from "../validators/counselling.validator";
 import {
+  listCounsellorSlotsQuerySchema,
+  listSessionsQuerySchema,
+  listWalletTransactionsQuerySchema,
   listWithdrawalRequestsQuerySchema,
   updateWithdrawalStatusSchema,
 } from "../validators/sessions.validator";
@@ -63,6 +66,30 @@ router.get(
   authorizeUserType("platform_admin"),
   authorize("counsellors.view"),
   CounsellingPlatformAdminController.getDetail,
+);
+router.get(
+  "/:id/wallet-transactions",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.view"),
+  validate(listWalletTransactionsQuerySchema, "query"),
+  CounsellingPlatformAdminController.getWalletTransactions,
+);
+router.get(
+  "/:id/slots",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.view"),
+  validate(listCounsellorSlotsQuerySchema, "query"),
+  CounsellingPlatformAdminController.getSlots,
+);
+router.get(
+  "/:id/sessions",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("counsellors.view"),
+  validate(listSessionsQuerySchema, "query"),
+  CounsellingPlatformAdminController.getSessions,
 );
 router.get(
   "/:id",

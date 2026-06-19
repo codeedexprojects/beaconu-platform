@@ -351,7 +351,7 @@ export default function EventsPage() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={!meta.hasNext}
+                disabled={!meta.hasNextPage}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Next

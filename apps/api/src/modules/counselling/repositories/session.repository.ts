@@ -113,6 +113,20 @@ export class SessionRepository {
     });
   }
 
+  static async countSlotsByCounsellor(
+    counsellorId: string,
+    isBooked?: boolean,
+    fromDate?: Date,
+  ) {
+    return prisma.counsellorAvailability.count({
+      where: {
+        counsellorId,
+        ...(fromDate ? { availableDate: { gte: fromDate } } : {}),
+        ...(isBooked !== undefined ? { isBooked } : {}),
+      },
+    });
+  }
+
   static async getSlotStats(counsellorId: string) {
     const [total, available, booked] = await Promise.all([
       prisma.counsellorAvailability.count({ where: { counsellorId } }),

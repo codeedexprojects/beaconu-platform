@@ -6,6 +6,9 @@ import { RefundService } from "../services/refund.service";
 import { CounsellorRequestService } from "../services/counsellor-request.service";
 import { counsellorRequestSchemas } from "../validators/counsellor-request.validator";
 import type {
+  ListCounsellorSlotsQueryInput,
+  ListSessionsQueryInput,
+  ListWalletTransactionsQueryInput,
   ListWithdrawalRequestsQueryInput,
   UpdateWithdrawalStatusInput,
 } from "../validators/sessions.validator";
@@ -42,6 +45,39 @@ export class CounsellingPlatformAdminController {
     return res
       .status(200)
       .json(ApiResponse.success("Counsellor detail retrieved", detail));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/wallet-transactions
+  static async getWalletTransactions(req: Request, res: Response) {
+    const wallet = await SessionService.getWallet(
+      req.params["id"] as string,
+      req.query as unknown as ListWalletTransactionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Wallet transactions retrieved", wallet));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/slots
+  static async getSlots(req: Request, res: Response) {
+    const { data, meta } = await SessionService.listCounsellorSlotsForAdmin(
+      req.params["id"] as string,
+      req.query as unknown as ListCounsellorSlotsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Slots retrieved", data, meta));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/sessions
+  static async getSessions(req: Request, res: Response) {
+    const { data, meta } = await SessionService.listCounsellorSessions(
+      req.params["id"] as string,
+      req.query as unknown as ListSessionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Sessions retrieved", data, meta));
   }
 
   static async updateStatus(req: Request, res: Response) {
