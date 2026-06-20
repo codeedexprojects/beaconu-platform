@@ -681,9 +681,24 @@ export class CollegeRegistrationService {
       await CollegeRegistrationRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
     const normalizedData = this.normalizeProfileSectionsPayload(data);
+    const existingProfileSections = this.isRecord(college.profileSections)
+      ? (college.profileSections as Record<string, unknown>)
+      : {};
+    const mergedProfileSections = this.isRecord(normalizedData.profileSections)
+      ? {
+          ...existingProfileSections,
+          ...(normalizedData.profileSections as Record<string, unknown>),
+        }
+      : undefined;
+
     await CollegeRegistrationRepository.updateCollegeProfile(
       collegeId,
-      normalizedData,
+      mergedProfileSections
+        ? {
+            ...normalizedData,
+            profileSections: mergedProfileSections,
+          }
+        : normalizedData,
     );
 
     const updatedCollege =
