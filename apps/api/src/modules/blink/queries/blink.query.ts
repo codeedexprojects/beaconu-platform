@@ -11,6 +11,7 @@ import type {
   ServiceChargeQuery,
   CollegeListQuery,
   UniversityListQuery,
+  StreamListQuery,
   EmployeeListQuery,
 } from "../validators/blink.validator";
 
@@ -480,6 +481,56 @@ export class BlinkQuery {
         name: u.name,
         slug: u.slug,
         logoUrl: u.logoUrl ?? null,
+      })),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  /** Streams with their disciplines nested — pagination applies to streams only. */
+  static async listStreamsWithDisciplinesForEmployee(filters: StreamListQuery) {
+    const { search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      isActive: true,
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.stream.count({ where }),
+      prisma.stream.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logoUrl: true,
+          disciplines: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+            select: { id: true, name: true, slug: true, logoUrl: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      streams: rows.map((s) => ({
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+        logoUrl: s.logoUrl ?? null,
+        disciplines: s.disciplines.map((d) => ({
+          id: d.id,
+          name: d.name,
+          slug: d.slug,
+          logoUrl: d.logoUrl ?? null,
+        })),
       })),
       meta: { total, page, limit, hasNext: skip + limit < total },
     };
