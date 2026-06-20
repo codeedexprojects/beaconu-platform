@@ -1,0 +1,42 @@
+meta {
+  name: Tab - Institutions Across World (Save)
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "profileSections": {
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "title": "Institution Across the World",
+        "institutions": []
+      }
+    }
+  }
+}
+
+docs {
+  Saves institutions_across_world tab payload using PATCH /api/v1/college-admin/profile.
+
+  Important:
+  - This request writes `profileSections` as provided.
+  - If your college already has other section data, merge current `profileSections`
+    from GET /api/v1/college-admin/profile first, then replace only
+    `institutions_across_world`.
+
+  Note:
+  - GET /api/v1/college-admin/profile/sections returns this section from
+    institution-group membership data.
+}

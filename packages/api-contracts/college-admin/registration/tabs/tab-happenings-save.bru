@@ -1,0 +1,49 @@
+meta {
+  name: Tab - Happenings (Save)
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "profileSections": {
+      "happenings": {
+        "id": "happenings",
+        "enabled": true,
+        "title": "Happenings",
+        "filters": {
+          "categories": ["Certification", "Workshop"]
+        },
+        "happenings": [
+          {
+            "category": "Certification",
+            "date": "Oct 12, 2023",
+            "title": "Professor Ratna awarded international certification in Quantum Research",
+            "description": "The University of Cambridge has formally recognized Dr. Ratna's groundbreaking work.",
+            "image": "",
+            "link": ""
+          }
+        ]
+      }
+    }
+  }
+}
+
+docs {
+  Saves happenings tab payload using PATCH /api/v1/college-admin/profile.
+
+  Important:
+  - This request writes `profileSections` as provided.
+  - If your college already has other section data, merge current `profileSections`
+    from GET /api/v1/college-admin/profile first, then replace only `happenings`.
+}
