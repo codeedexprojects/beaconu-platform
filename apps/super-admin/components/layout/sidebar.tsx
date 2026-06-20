@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
 import {
   LayoutDashboard,
   Building2,
@@ -247,18 +250,34 @@ export function Sidebar() {
   const pathname = usePathname();
   const activeHref = getActiveHref(pathname);
 
+  const admin = useAuthStore((state) => state.admin);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+
+  const initials =
+    admin?.fullName
+      ?.split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "A";
+
+  function handleLogout() {
+    clearAuth();
+    window.location.assign("/login");
+  }
+
   return (
-    <aside className="flex h-screen w-72 flex-col bg-sidebar border-r border-sidebar-border shrink-0">
+    <aside className="flex h-screen w-72 flex-col bg-navy border-r border-transparent shrink-0">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/30">
-          <span className="text-sm font-bold text-white">B</span>
+      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-navy-dark/50">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+          <span className="text-sm font-bold text-navy-dark font-serif">B</span>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-bold text-white tracking-wide">
+          <span className="text-lg font-bold text-white font-serif tracking-wide">
             BeaconU
           </span>
-          <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-widest">
+          <span className="text-[10px] text-gray-sidebar uppercase tracking-widest mt-1">
             Super Admin
           </span>
         </div>
@@ -272,7 +291,7 @@ export function Sidebar() {
 
             return (
               <div key={section.label}>
-                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
+                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-sidebar">
                   {section.label}
                 </p>
                 <ul className="space-y-0.5">
@@ -283,10 +302,10 @@ export function Sidebar() {
                         <Link
                           href={item.href}
                           className={cn(
-                            "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]",
+                            "group flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-out",
                             isActive
-                              ? "bg-gradient-to-r from-primary to-rose-700 text-white shadow-[0_4px_12px_rgba(179,27,77,0.25)] border border-primary/20"
-                              : "text-sidebar-foreground hover:bg-slate-100 hover:text-slate-900 border border-transparent",
+                              ? "bg-gold text-white"
+                              : "text-gray-sidebar hover:bg-navy-dark hover:text-white border border-transparent",
                           )}
                         >
                           <item.icon
@@ -294,7 +313,7 @@ export function Sidebar() {
                               "h-4 w-4 shrink-0 transition-colors duration-200",
                               isActive
                                 ? "text-white"
-                                : "text-sidebar-foreground/60 group-hover:text-slate-900",
+                                : "text-gray-sidebar group-hover:text-white",
                             )}
                           />
                           <span className="truncate">{item.label}</span>
@@ -311,6 +330,33 @@ export function Sidebar() {
           })}
         </nav>
       </ScrollArea>
+
+      {/* User Profile Footer */}
+      <div className="p-4 border-t border-navy-dark/50">
+        <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-navy-dark">
+          <Avatar className="h-9 w-9 border border-navy-dark">
+            <AvatarImage src={admin?.avatarUrl} />
+            <AvatarFallback className="bg-navy-dark text-white text-xs">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 flex flex-col">
+            <span className="text-sm font-medium text-white truncate">
+              {admin?.fullName}
+            </span>
+            <span className="text-[11px] text-gray-sidebar truncate">
+              {admin?.email}
+            </span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="p-1.5 text-gray-sidebar hover:text-white rounded-md hover:bg-navy transition-colors"
+            title="Log out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 }

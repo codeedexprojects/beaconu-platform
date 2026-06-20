@@ -9,7 +9,9 @@ export class NewsAlertsPublicController {
     const result = await NewsAlertQuery.listPublished(filters);
     res
       .status(200)
-      .json(ApiResponse.success("News alerts fetched", result.data, result.meta));
+      .json(
+        ApiResponse.success("News alerts fetched", result.data, result.meta),
+      );
   }
 
   static async getBySlug(req: Request, res: Response): Promise<void> {
