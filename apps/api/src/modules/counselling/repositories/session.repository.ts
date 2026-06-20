@@ -1055,12 +1055,19 @@ export class SessionRepository {
 
   /**
    * Hard-deletes unbooked slots whose availableDate is strictly before
-   * `beforeDate` (IST `@db.Date` value). Safe to hard-delete because
-   * isBooked=false guarantees no CounsellingSession references these rows.
+   * `beforeDate` (IST `@db.Date` value). isBooked=false alone isn't enough
+   * to guarantee no CounsellingSession references a slot — a cancelled
+   * session frees its slot (isBooked=false) but keeps its availabilityId
+   * FK pointing at it for history, so we also exclude slots with any
+   * related session at all.
    */
   static async deleteExpiredUnbookedSlots(beforeDate: Date) {
     return prisma.counsellorAvailability.deleteMany({
-      where: { isBooked: false, availableDate: { lt: beforeDate } },
+      where: {
+        isBooked: false,
+        availableDate: { lt: beforeDate },
+        sessions: { none: {} },
+      },
     });
   }
 }
