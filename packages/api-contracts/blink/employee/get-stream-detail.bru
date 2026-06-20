@@ -1,0 +1,44 @@
+meta {
+  name: Get Stream Detail
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/streams/{{blinkStreamId}}?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+docs {
+  Returns basic details for a single active stream, plus a paginated list
+  of its active disciplines, for the authenticated associate employee.
+  Requires: blink_employee access token.
+
+  Query params (apply to the disciplines list only):
+  - search (optional): filter disciplines by name (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response shape:
+  {
+    "stream": { "id", "name", "slug", "logoUrl" },
+    "disciplines": [ { "id", "name", "slug", "logoUrl" } ]
+  }
+  meta: { total, page, limit, hasNext } — for the disciplines list
+
+  Returns 404 "Stream not found" if the stream doesn't exist or is inactive.
+
+  Tables: streams, disciplines
+}

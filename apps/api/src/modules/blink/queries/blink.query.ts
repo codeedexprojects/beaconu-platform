@@ -1,4 +1,5 @@
 import { prisma } from "@beaconu/db";
+import { NotFoundError } from "@/shared/errors";
 import type {
   ReferralListItem,
   PaginationMeta,
@@ -486,7 +487,94 @@ export class BlinkQuery {
     };
   }
 
-  /** Streams with their disciplines nested — pagination applies to streams only. */
+  /** University basic details + paginated active colleges under it. */
+  static async getUniversityDetailForEmployee(
+    universityId: string,
+    filters: CollegeListQuery,
+  ) {
+    const university = await prisma.university.findFirst({
+      where: { id: universityId, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        state: true,
+        city: true,
+        accreditation: true,
+        universityType: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+    });
+
+    if (!university) {
+      throw new NotFoundError("University not found");
+    }
+
+    const { search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      universityId,
+      status: "active",
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.college.count({ where }),
+      prisma.college.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          code: true,
+          logoUrl: true,
+          city: true,
+          state: true,
+          _count: { select: { courses: { where: { status: "active" } } } },
+        },
+      }),
+    ]);
+
+    return {
+      university: {
+        id: university.id,
+        name: university.name,
+        slug: university.slug,
+        logoUrl: university.logoUrl ?? null,
+        state: university.state ?? null,
+        city: university.city ?? null,
+        accreditation: university.accreditation ?? null,
+        universityType: university.universityType
+          ? {
+              id: university.universityType.id,
+              name: university.universityType.name,
+              slug: university.universityType.slug,
+            }
+          : null,
+      },
+      colleges: rows.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        code: c.code,
+        logoUrl: c.logoUrl ?? null,
+        city: c.city ?? null,
+        state: c.state ?? null,
+        totalCourses: c._count.courses,
+      })),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  /** Streams with their discipline count — pagination applies to streams only. */
   static async listStreamsWithDisciplinesForEmployee(filters: StreamListQuery) {
     const { search, page, limit } = filters;
     const skip = (page - 1) * limit;
@@ -510,10 +598,8 @@ export class BlinkQuery {
           name: true,
           slug: true,
           logoUrl: true,
-          disciplines: {
-            where: { isActive: true },
-            orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-            select: { id: true, name: true, slug: true, logoUrl: true },
+          _count: {
+            select: { disciplines: { where: { isActive: true } } },
           },
         },
       }),
@@ -525,12 +611,60 @@ export class BlinkQuery {
         name: s.name,
         slug: s.slug,
         logoUrl: s.logoUrl ?? null,
-        disciplines: s.disciplines.map((d) => ({
-          id: d.id,
-          name: d.name,
-          slug: d.slug,
-          logoUrl: d.logoUrl ?? null,
-        })),
+        discipline_count: s._count.disciplines,
+      })),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  /** Stream basic details + paginated active disciplines under it. */
+  static async getStreamDetailForEmployee(
+    streamId: string,
+    filters: StreamListQuery,
+  ) {
+    const stream = await prisma.stream.findFirst({
+      where: { id: streamId, isActive: true },
+      select: { id: true, name: true, slug: true, logoUrl: true },
+    });
+
+    if (!stream) {
+      throw new NotFoundError("Stream not found");
+    }
+
+    const { search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      streamId,
+      isActive: true,
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.discipline.count({ where }),
+      prisma.discipline.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, slug: true, logoUrl: true },
+      }),
+    ]);
+
+    return {
+      stream: {
+        id: stream.id,
+        name: stream.name,
+        slug: stream.slug,
+        logoUrl: stream.logoUrl ?? null,
+      },
+      disciplines: rows.map((d) => ({
+        id: d.id,
+        name: d.name,
+        slug: d.slug,
+        logoUrl: d.logoUrl ?? null,
       })),
       meta: { total, page, limit, hasNext: skip + limit < total },
     };
