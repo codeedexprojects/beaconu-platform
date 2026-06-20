@@ -178,16 +178,6 @@ function buildTabList(profileSections: Record<string, unknown>) {
 }
 
 function buildPublicProfileResponse(college: any) {
-  const totalCourses = college._count?.courses ?? 0;
-  const instituteType = college.university?.universityType?.name ?? null;
-  const campusAmbassadors = (college.blinkUsers ?? []).map((u: any) => ({
-    id: u.id,
-    fullName: u.fullName,
-    email: u.email,
-    avatarUrl: u.avatarUrl,
-    phoneNumber: u.phoneNumber,
-  }));
-
   const profileSections = isRecord(college.profileSections)
     ? (college.profileSections as Record<string, unknown>)
     : {};
@@ -198,18 +188,13 @@ function buildPublicProfileResponse(college: any) {
     blinkUsers: _bu,
     _count,
     registrationTabs: _rt,
+    profileSections: _ps,
     ...collegeDetails
   } = college;
 
   return {
-    collegeDetails: {
-      ...collegeDetails,
-      profileSections,
-    },
+    collegeDetails,
     tabs,
-    totalCourses,
-    instituteType,
-    campusAmbassadors,
   };
 }
 

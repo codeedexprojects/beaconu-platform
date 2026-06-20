@@ -27,18 +27,13 @@ docs {
       "district": "...",
       "pinCode": "...",
       "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { "id": "...", "name": "...", "slug": "..." } },
-      "campuses": [...],
-      "courses": [...],
-      "profileSections": { ... }
+      "campuses": [...]
     },
     "tabs": [
       { "id": "college_overview", "name": "College Overview" },
       { "id": "course_info", "name": "Course Info" },
       { "id": "placements", "name": "Placements" }
-    ],
-    "totalCourses": 5,
-    "instituteType": "...",
-    "campusAmbassadors": [...]
+    ]
   }
 
   `tabs` is an array of enabled college-level static sections only — { id, name } objects.
@@ -47,5 +42,7 @@ docs {
   Disabled sections are excluded.
 
   Note: `settings` is excluded from the response.
+  Note: `profileSections` is excluded from the response; use the Get College Section
+  endpoint to fetch a specific tab's content.
   To fetch the content of a specific tab, use the Get College Section endpoint.
 }

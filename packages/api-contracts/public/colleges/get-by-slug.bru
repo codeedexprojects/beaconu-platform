@@ -32,19 +32,15 @@ docs {
       "logoUrl": "...",
       "coverImageUrl": "...",
       "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { ... } },
-      "campuses": [...],
-      "courses": [...],
-      "profileSections": { ... }
+      "campuses": [...]
     },
     "tabs": [
       { "id": "college_overview", "name": "College Overview" },
       { "id": "placements", "name": "Placements" }
-    ],
-    "totalCourses": 5,
-    "instituteType": "...",
-    "campusAmbassadors": [...]
+    ]
   }
 
   `tabs` contains only enabled college-level static tabs as { id, name } — not course tabs.
+  `profileSections` is excluded from the response; use the section endpoint for content.
   Sets collegeId env var from the response for downstream requests.
 }
