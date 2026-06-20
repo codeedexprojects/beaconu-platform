@@ -143,7 +143,7 @@ function toTabDisplayName(tabId: string): string {
 
 function buildTabList(profileSections: Record<string, unknown>) {
   const seen = new Set<string>();
-  const tabs: { id: string; name: string }[] = [];
+  const tabs: { sl: number; id: string; name: string }[] = [];
 
   for (const [tabKey, tabValue] of Object.entries(profileSections)) {
     if (
@@ -165,7 +165,11 @@ function buildTabList(profileSections: Record<string, unknown>) {
 
     if (tabId !== "" && !seen.has(tabId)) {
       seen.add(tabId);
-      tabs.push({ id: tabId, name: toTabDisplayName(tabId) });
+      tabs.push({
+        sl: tabs.length + 1,
+        id: tabId,
+        name: toTabDisplayName(tabId),
+      });
     }
   }
 
