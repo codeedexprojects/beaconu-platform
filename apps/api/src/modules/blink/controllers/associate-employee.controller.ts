@@ -86,6 +86,25 @@ export class AssociateEmployeeController {
       );
   }
 
+  static async getUniversityDetail(req: Request, res: Response) {
+    const universityId = req.params["universityId"] as string;
+    const filters = req.query as unknown as CollegeListQuery;
+    const result = await BlinkQuery.getUniversityDetailForEmployee(
+      universityId,
+      filters,
+    );
+    return res.status(200).json(
+      ApiResponse.success(
+        "University fetched successfully",
+        {
+          university: result.university,
+          colleges: result.colleges,
+        },
+        result.meta,
+      ),
+    );
+  }
+
   static async listStreams(req: Request, res: Response) {
     const filters = req.query as unknown as StreamListQuery;
     const result =
@@ -99,6 +118,25 @@ export class AssociateEmployeeController {
           result.meta,
         ),
       );
+  }
+
+  static async getStreamDetail(req: Request, res: Response) {
+    const streamId = req.params["streamId"] as string;
+    const filters = req.query as unknown as StreamListQuery;
+    const result = await BlinkQuery.getStreamDetailForEmployee(
+      streamId,
+      filters,
+    );
+    return res.status(200).json(
+      ApiResponse.success(
+        "Stream fetched successfully",
+        {
+          stream: result.stream,
+          disciplines: result.disciplines,
+        },
+        result.meta,
+      ),
+    );
   }
 
   static async listCoursesByCollege(req: Request, res: Response) {

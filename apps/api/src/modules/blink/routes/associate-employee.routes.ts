@@ -5,6 +5,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   referralListQuerySchema,
   universityListQuerySchema,
+  collegeListQuerySchema,
   streamListQuerySchema,
 } from "../validators/blink.validator";
 import { AssociateEmployeeController } from "../controllers/associate-employee.controller";
@@ -49,11 +50,27 @@ router.get(
 );
 
 router.get(
+  "/universities/:universityId",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(collegeListQuerySchema, "query"),
+  AssociateEmployeeController.getUniversityDetail,
+);
+
+router.get(
   "/streams",
   authenticate,
   authorizeUserType("blink_employee"),
   validate(streamListQuerySchema, "query"),
   AssociateEmployeeController.listStreams,
+);
+
+router.get(
+  "/streams/:streamId",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(streamListQuerySchema, "query"),
+  AssociateEmployeeController.getStreamDetail,
 );
 
 export default router;
