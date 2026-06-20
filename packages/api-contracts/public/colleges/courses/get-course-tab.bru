@@ -11,34 +11,34 @@ get {
 }
 
 vars:pre-request {
-  tabName: highlights
+  tabName: fees
 }
 
 docs {
   Returns the content of a single course tab by its tab name.
-
+  
   Path params:
   - collegeSlug: College subdomain slug
   - courseId: Course ID (set via list-courses script)
   - tabName: Tab identifier from the tabs array returned by Get Course Detail
-
+  
   Setup tabs (stored in course metadata):
     course_info, admission_policy, placements, fees, financial_aid,
     student_housing, exam_policy, faculty, review, library,
     clubs_associations, alliance, other_courses_offered, demo_graphics
-
+  
   Content tabs (stored as dedicated course fields):
     highlights, curriculum, course_structure, value_added_courses,
     career_opportunities, higher_education_certifications, flexible_exit_options,
     class_timings, industry_tools, lab_facilities, room_facilities,
     featured_alumni, faqs, entrance_exam_eligibility, eligibility_criteria,
     accreditations, key_dates, demographics
-
+  
   Response shape:
   {
     "tabName": "highlights",
     "data": { ... tab-specific content ... }
   }
-
+  
   Returns 404 if the tab name is invalid or the course is not found.
 }

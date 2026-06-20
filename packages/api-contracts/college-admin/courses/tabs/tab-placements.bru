@@ -17,6 +17,25 @@ auth:bearer {
 docs {
   Fetches the `placements` tab for a specific course.
 
+  Response shape:
+  {
+    "sectionName": "placements",
+    "sectionId": "placements",
+    "sectionKey": "placements",
+    "data": {
+      "id": "placements",
+      "title": "Placements",
+      "enabled": true,
+      "download_report": { ... },
+      "summary_stats": [ ... ],
+      "placement_trends": { ... },
+      "industry_salary_report": { ... },
+      "notable_offers": { ... },
+      "all_company_statistics": { ... },
+      "student_success": { ... }
+    }
+  }
+
   To update this tab, use:
   `tabs/tab-placements-update.bru`
 }

@@ -230,7 +230,9 @@ export class CourseTabsService {
       if (!course) throw new NotFoundError("Course not found");
 
       return {
-        tabName,
+        sectionName: tabName,
+        sectionId: tabName,
+        sectionKey: tabName,
         data: getSetupTabDataFromMetadata(course.metadata, tabName),
       };
     }
@@ -245,7 +247,9 @@ export class CourseTabsService {
     if (!course) throw new NotFoundError("Course not found");
 
     return {
-      tabName,
+      sectionName: tabName,
+      sectionId: tabName,
+      sectionKey: tabName,
       data:
         (course as Record<string, unknown>)[prismaField] ??
         getDefaultForTab(tabName),
@@ -386,7 +390,9 @@ export class CourseTabsService {
       if (!course) throw new NotFoundError("Course not found");
 
       return {
-        tabName,
+        sectionName: tabName,
+        sectionId: tabName,
+        sectionKey: tabName,
         data: getSetupTabDataFromMetadata(course.metadata, tabName),
       };
     }
@@ -401,7 +407,9 @@ export class CourseTabsService {
     if (!course) throw new NotFoundError("Course not found");
 
     return {
-      tabName,
+      sectionName: tabName,
+      sectionId: tabName,
+      sectionKey: tabName,
       data:
         (course as Record<string, unknown>)[prismaField] ??
         getDefaultForTab(tabName),

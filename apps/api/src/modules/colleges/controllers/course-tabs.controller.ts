@@ -37,7 +37,9 @@ export class CourseTabsController {
     const result = await CourseTabsService.getCourseTab(id, collegeId, tabName);
     return res
       .status(200)
-      .json(ApiResponse.success("Course tab fetched", result));
+      .json(
+        ApiResponse.success("College section fetched successfully", result),
+      );
   }
 
   /**
@@ -94,6 +96,8 @@ export class CourseTabsController {
     );
     return res
       .status(200)
-      .json(ApiResponse.success("Course tab fetched", result));
+      .json(
+        ApiResponse.success("College section fetched successfully", result),
+      );
   }
 }
