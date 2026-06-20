@@ -17,124 +17,166 @@ auth:bearer {
 body:json {
   {
     "data": {
-      "tab": "placements",
-      "report": {
-        "year": 2024,
-        "download_link": ""
+      "id": "placements",
+      "title": "Placements",
+      "enabled": true,
+
+      "download_report": {
+        "label": "Download Full Placement Report 2024",
+        "icon": "",
+        "url": ""
       },
-      "stats": [
-        { "label": "Average Package", "value": "4.2 LPA" },
-        { "label": "Highest Package", "value": "14.2 LPA" },
-        { "label": "Placement Rate", "value": "94%" },
-        { "label": "Lowest Package", "value": "3.5 LPA" },
-        { "label": "Companies Visited", "value": "120+" },
-        { "label": "Students Placed", "value": "450+" }
+
+      "summary_stats": [
+        { "icon": "", "icon_bg_color": "#FF6B00", "label": "Average Package", "value": "4.2", "unit": "LPA" },
+        { "icon": "", "icon_bg_color": "#FF6B00", "label": "Highest Package", "value": "14.2", "unit": "LPA" },
+        { "icon": "", "icon_bg_color": "", "label": "Placement Rate", "value": "94", "unit": "%" },
+        { "icon": "", "icon_bg_color": "", "label": "Lowest Package", "value": "3.5", "unit": "LPA" },
+        { "icon": "", "icon_bg_color": "", "label": "Companies Visited", "value": "120", "unit": "+" },
+        { "icon": "", "icon_bg_color": "", "label": "Students Placed", "value": "450", "unit": "+" }
       ],
+
       "placement_trends": {
-        "label": "Last 5 Years",
-        "yoy_growth": "+12.5%",
-        "data": [
-          { "year": 2020, "avg_package": null },
-          { "year": 2021, "avg_package": null },
-          { "year": 2022, "avg_package": null },
-          { "year": 2023, "avg_package": null },
-          { "year": 2024, "avg_package": null }
+        "title": "Placement Trends",
+        "duration_filter": "Last 5 Years",
+        "data_points": [
+          { "year": "2020", "avg_package": 2.8, "highlighted": false },
+          { "year": "2021", "avg_package": 3.2, "highlighted": false },
+          { "year": "2022", "avg_package": 3.7, "highlighted": false },
+          { "year": "2023", "avg_package": 4.2, "highlighted": true }
+        ],
+        "footer": {
+          "label": "Avg Package Growth",
+          "value": "+12.5% YoY",
+          "value_color": "green"
+        }
+      },
+
+      "industry_salary_report": {
+        "title": "Industry & Salary Report",
+        "rows": [
+          {
+            "industry": "BFSI",
+            "subtitle": "Banking & Finance",
+            "students_placed": 155,
+            "avg_package": "8.2 L",
+            "max_package": "12 LPA",
+            "progress_percentage": 65
+          },
+          {
+            "industry": "FMCG",
+            "subtitle": "Retail & Goods",
+            "students_placed": 98,
+            "avg_package": "7.5 L",
+            "max_package": "10 LPA",
+            "progress_percentage": 45
+          },
+          {
+            "industry": "Consulting",
+            "subtitle": "Mgmt Consulting",
+            "students_placed": 81,
+            "avg_package": "9.1 L",
+            "max_package": "14.5 LPA",
+            "progress_percentage": 38
+          }
         ]
       },
-      "industry_salary_report": [
-        {
-          "industry": "BFSI",
-          "full_name": "Banking & Finance",
-          "students_placed": 155,
-          "avg_package": "Rs8.2 L",
-          "max_package": "Rs12 LPA"
-        },
-        {
-          "industry": "FMCG",
-          "full_name": "Retail & Goods",
-          "students_placed": 98,
-          "avg_package": "Rs7.5 L",
-          "max_package": "Rs10 LPA"
-        },
-        {
-          "industry": "Consulting",
-          "full_name": "Mgmt Consulting",
-          "students_placed": 81,
-          "avg_package": "Rs9.1 L",
-          "max_package": "Rs14.5 LPA"
-        }
-      ],
-      "notable_offers": [
-        {
-          "company": "Deloitte",
-          "company_logo": "",
-          "tag": "Highest",
-          "domain": "Consulting",
-          "offers": [
-            { "package": "14.5 LPA", "role": "Senior Analyst Role" },
-            { "package": "12.0 LPA", "role": "Manager Role" }
-          ]
-        }
-      ],
-      "company_statistics": [
-        {
-          "company": "Deloitte",
-          "company_logo": "",
-          "students": 145,
-          "avg_package": "Rs9.2 L",
-          "max_package": "Rs14.5 L"
-        },
-        {
-          "company": "Accenture",
-          "company_logo": "",
-          "students": 210,
-          "avg_package": "Rs7.8 L",
-          "max_package": "Rs11.2 L"
-        },
-        {
-          "company": "TCS",
-          "company_logo": "",
-          "students": 340,
-          "avg_package": "Rs6.5 L",
-          "max_package": "Rs9.0 L"
-        }
-      ],
-      "student_success": [
-        {
-          "name": "Rohan Mehta",
-          "company": "Deloitte",
-          "avatar": "",
-          "quote": "The placement support helped me secure a role at a top firm. Best decision ever!",
-          "media": {
+
+      "notable_offers": {
+        "title": "Notable Offers",
+        "items": [
+          {
+            "id": "offer_1",
+            "company_name": "Deloitte",
+            "company_initial": "D",
+            "company_logo": "",
+            "category": "Consulting",
+            "badge": "HIGHEST",
+            "badge_color": "orange",
+            "package_label": "Package Offered",
+            "package": "14.5",
+            "unit": "LPA",
+            "role": "Senior Analyst Role"
+          },
+          {
+            "id": "offer_2",
+            "company_name": "TCS",
+            "company_initial": "T",
+            "company_logo": "",
+            "category": "IT Services",
+            "badge": "",
+            "badge_color": "",
+            "package_label": "Package Offered",
+            "package": "12.0",
+            "unit": "LPA",
+            "role": "Systems Engineer"
+          }
+        ]
+      },
+
+      "all_company_statistics": {
+        "title": "All Company Statistics",
+        "rows": [
+          {
+            "company_name": "Deloitte",
+            "company_initial": "D",
+            "company_logo": "",
+            "logo_bg_color": "#000000",
+            "students_placed": 145,
+            "avg_package": "9.2 L",
+            "max_package": "14.5 L",
+            "progress_percentage": 70
+          },
+          {
+            "company_name": "Accenture",
+            "company_initial": "A",
+            "company_logo": "",
+            "logo_bg_color": "#A100FF",
+            "students_placed": 210,
+            "avg_package": "7.8 L",
+            "max_package": "11.2 L",
+            "progress_percentage": 55
+          },
+          {
+            "company_name": "TCS",
+            "company_initial": "T",
+            "company_logo": "",
+            "logo_bg_color": "#E2231A",
+            "students_placed": 340,
+            "avg_package": "6.5 L",
+            "max_package": "9.0 L",
+            "progress_percentage": 48
+          }
+        ]
+      },
+
+      "student_success": {
+        "title": "Student Success",
+        "items": [
+          {
+            "type": "mp4",
+            "thumbnail": "",
+            "video_url": "",
+            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!",
+            "student_name": "Rohan Mehta",
+            "student_avatar": "",
+            "placed_at": "Deloitte"
+          },
+          {
             "type": "youtube",
-            "url": ""
+            "thumbnail": "",
+            "video_url": "",
+            "quote": "I never expected such a great package. The faculty mentorship was key.",
+            "student_name": "Priya Nair",
+            "student_avatar": "",
+            "placed_at": "Accenture"
           }
-        },
-        {
-          "name": "Priya S.",
-          "company": "HDFC",
-          "avatar": "",
-          "quote": "I never thought I'd get such a high package. The mock interviews were key.",
-          "media": {
-            "type": "link",
-            "url": ""
-          }
-        },
-        {
-          "name": "Example with no media",
-          "company": "TCS",
-          "avatar": "",
-          "quote": "Great experience overall.",
-          "media": {
-            "type": "none",
-            "url": null
-          }
-        }
-      ]
+        ]
+      }
     }
   }
 }
 
 docs {
-  Updates placements tab with dynamic JSON data.
+  Updates the placements tab with the full section data.
 }
