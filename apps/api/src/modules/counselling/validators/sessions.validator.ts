@@ -29,18 +29,27 @@ export const addSlotSchema = z.object({
   session_fee: z.coerce.number().min(0).optional(),
 });
 
-export const listSlotsQuerySchema = z.object({
-  from_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
-    .optional(),
-  to_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
-    .optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
+export const listSlotsQuerySchema = z
+  .object({
+    from_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+    to_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .refine(
+    (data) =>
+      !data.from_date || !data.to_date || data.from_date <= data.to_date,
+    {
+      message: "from_date must be before or equal to to_date",
+      path: ["to_date"],
+    },
+  );
 
 export const listSessionsQuerySchema = z.object({
   date: z.preprocess(

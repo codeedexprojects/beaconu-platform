@@ -5,6 +5,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   referralListQuerySchema,
   universityListQuerySchema,
+  streamListQuerySchema,
 } from "../validators/blink.validator";
 import { AssociateEmployeeController } from "../controllers/associate-employee.controller";
 
@@ -45,6 +46,14 @@ router.get(
   authorizeUserType("blink_employee"),
   validate(universityListQuerySchema, "query"),
   AssociateEmployeeController.listUniversities,
+);
+
+router.get(
+  "/streams",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(streamListQuerySchema, "query"),
+  AssociateEmployeeController.listStreams,
 );
 
 export default router;

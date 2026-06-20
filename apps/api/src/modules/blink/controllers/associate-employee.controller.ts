@@ -7,6 +7,7 @@ import type {
   ReferralListQuery,
   CollegeListQuery,
   UniversityListQuery,
+  StreamListQuery,
 } from "../validators/blink.validator";
 
 export class AssociateEmployeeController {
@@ -80,6 +81,21 @@ export class AssociateEmployeeController {
         ApiResponse.success(
           "Universities fetched successfully",
           result.universities,
+          result.meta,
+        ),
+      );
+  }
+
+  static async listStreams(req: Request, res: Response) {
+    const filters = req.query as unknown as StreamListQuery;
+    const result =
+      await BlinkQuery.listStreamsWithDisciplinesForEmployee(filters);
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Streams fetched successfully",
+          result.streams,
           result.meta,
         ),
       );

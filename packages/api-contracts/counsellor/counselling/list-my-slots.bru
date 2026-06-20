@@ -27,7 +27,9 @@ docs {
 
   Query params:
   - from_date / to_date: filter slots within a date range (YYYY-MM-DD),
-    both optional, applied to available_date
+    both optional, applied to available_date. If both are set, from_date
+    must be ≤ to_date — otherwise 422 "from_date must be before or equal
+    to to_date".
   - page, limit: pagination
 
   ## Response structure
