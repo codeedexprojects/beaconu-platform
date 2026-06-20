@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 import {
   useCollegeProfile,
@@ -276,6 +277,9 @@ export default function SetupProfilePage() {
   const happeningsList = watch("profileSections.happenings.happenings") || [];
   const globalInstitutions =
     watch("profileSections.institutions_across_world.institutions") || [];
+  const globalInstitutionsGroup = watch(
+    "profileSections.institutions_across_world.group",
+  );
 
   // Overview arrays
   const overviewAccolades =
@@ -1827,117 +1831,183 @@ export default function SetupProfilePage() {
                     Across the World
                   </CardTitle>
                   <CardDescription>
-                    Configure global collaborations, student exchange programs,
-                    or dual degree colleges.
+                    {globalInstitutionsGroup
+                      ? "This college is part of an institution group — the institutions below are computed live from that group, not editable here."
+                      : "Configure global collaborations, student exchange programs, or dual degree colleges."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="globalTitle" className="font-semibold">
-                      Section Title
-                    </Label>
-                    <Input
-                      id="globalTitle"
-                      placeholder="Institution Across the World"
-                      {...register(
-                        "profileSections.institutions_across_world.title",
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <div className="flex items-center justify-between">
-                      <Label className="font-bold">
-                        Affiliated Institutions
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setValue(
-                            "profileSections.institutions_across_world.institutions",
-                            [
-                              ...globalInstitutions,
-                              { name: "", country: "", logo: "" },
-                            ],
-                          );
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Partner
-                      </Button>
-                    </div>
-
-                    {globalInstitutions.length === 0 ? (
-                      <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5">
-                        No global institutions configured. Add a partner to
-                        highlight international footprint.
+                  {globalInstitutionsGroup ? (
+                    <div className="space-y-4">
+                      <div className="rounded-lg border bg-primary/5 p-4 space-y-1">
+                        <p className="text-sm font-semibold">
+                          {globalInstitutionsGroup.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {globalInstitutionsGroup.groupCode}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {globalInstitutions.map((inst: any, idx: number) => (
+
+                      <div className="space-y-2.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Institutions ({globalInstitutions.length})
+                        </Label>
+                        {globalInstitutions.map((inst: any) => (
                           <div
-                            key={idx}
-                            className="flex gap-3 items-center border p-3 rounded-lg bg-muted/10"
+                            key={inst.id}
+                            className="flex items-center justify-between rounded-lg border bg-background/40 px-3 py-2 text-sm"
                           >
-                            <Input
-                              placeholder="Institution Name"
-                              className="flex-1"
-                              {...register(
-                                `profileSections.institutions_across_world.institutions.${idx}.name`,
+                            <div className="flex items-center gap-2">
+                              {inst.logoUrl ? (
+                                <img
+                                  src={inst.logoUrl}
+                                  alt={inst.name}
+                                  className="h-6 w-6 rounded object-cover"
+                                />
+                              ) : (
+                                <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
+                                  <Building className="h-3 w-3 text-muted-foreground" />
+                                </div>
                               )}
-                            />
-                            <Input
-                              placeholder="Country / Region"
-                              className="flex-1"
-                              {...register(
-                                `profileSections.institutions_across_world.institutions.${idx}.country`,
-                              )}
-                            />
-                            <Input
-                              placeholder="Logo URL"
-                              className="flex-1"
-                              {...register(
-                                `profileSections.institutions_across_world.institutions.${idx}.logo`,
-                              )}
-                            />
-                            <Input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              className="max-w-[220px]"
-                              disabled={
-                                uploadingField ===
-                                `profileSections.institutions_across_world.institutions.${idx}.logo`
-                              }
-                              onChange={(e) =>
-                                handleImageUpload(
-                                  e.target.files?.[0] ?? null,
-                                  `profileSections.institutions_across_world.institutions.${idx}.logo`,
-                                  `institutions/logos-${idx}`,
-                                )
-                              }
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => {
-                                setValue(
-                                  "profileSections.institutions_across_world.institutions",
-                                  globalInstitutions.filter(
-                                    (_: any, i: number) => i !== idx,
-                                  ),
-                                );
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-medium leading-none">
+                                    {inst.name}
+                                  </p>
+                                  {inst.selected && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px]"
+                                    >
+                                      Your College
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {[inst.city, inst.state]
+                                    .filter(Boolean)
+                                    .join(", ") || "—"}
+                                  {inst.selected &&
+                                    ` · ${inst.departments?.length ?? 0} department(s)`}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="globalTitle" className="font-semibold">
+                          Section Title
+                        </Label>
+                        <Input
+                          id="globalTitle"
+                          placeholder="Institution Across the World"
+                          {...register(
+                            "profileSections.institutions_across_world.title",
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-border/40">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-bold">
+                            Affiliated Institutions
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.institutions_across_world.institutions",
+                                [
+                                  ...globalInstitutions,
+                                  { name: "", country: "", logo: "" },
+                                ],
+                              );
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add Partner
+                          </Button>
+                        </div>
+
+                        {globalInstitutions.length === 0 ? (
+                          <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5">
+                            No global institutions configured. Add a partner to
+                            highlight international footprint.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {globalInstitutions.map(
+                              (inst: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-3 items-center border p-3 rounded-lg bg-muted/10"
+                                >
+                                  <Input
+                                    placeholder="Institution Name"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.name`,
+                                    )}
+                                  />
+                                  <Input
+                                    placeholder="Country / Region"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.country`,
+                                    )}
+                                  />
+                                  <Input
+                                    placeholder="Logo URL"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.logo`,
+                                    )}
+                                  />
+                                  <Input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="max-w-[220px]"
+                                    disabled={
+                                      uploadingField ===
+                                      `profileSections.institutions_across_world.institutions.${idx}.logo`
+                                    }
+                                    onChange={(e) =>
+                                      handleImageUpload(
+                                        e.target.files?.[0] ?? null,
+                                        `profileSections.institutions_across_world.institutions.${idx}.logo`,
+                                        `institutions/logos-${idx}`,
+                                      )
+                                    }
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      setValue(
+                                        "profileSections.institutions_across_world.institutions",
+                                        globalInstitutions.filter(
+                                          (_: any, i: number) => i !== idx,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}

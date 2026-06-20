@@ -11,6 +11,7 @@ import {
   UpdateCourseData,
 } from "../validators/college-registration.validator";
 import { InstitutionGroupService } from "./institution-group.service";
+import { InstitutionDepartmentsQuery } from "../queries/institution-departments.query";
 
 export class CollegeRegistrationService {
   private static readonly DEFAULT_HAPPENINGS_LIMIT = 10;
@@ -323,7 +324,7 @@ export class CollegeRegistrationService {
     };
   }
 
-  private static async buildDynamicInstitutionsSection(collegeId: string) {
+  static async buildDynamicInstitutionsSection(collegeId: string) {
     const membership =
       await InstitutionGroupService.getMyGroupMembership(collegeId);
 
@@ -342,18 +343,50 @@ export class CollegeRegistrationService {
         ? membership.group
         : membership.membership.group;
 
-    const institutions = (group.members ?? []).map((member) => ({
-      id: member.college.id,
-      name: member.college.name,
-      slug: member.college.slug,
-      code: member.college.code,
-      city: member.college.city,
-      state: member.college.state,
-      logoUrl: member.college.logoUrl,
-      role: member.role,
-      joinedAt: member.joinedAt,
-      joinedVia: member.joinedVia,
-    }));
+    const institutions = await Promise.all(
+      (group.members ?? []).map(async (member) => {
+        const isViewedCollege = member.college.id === collegeId;
+
+        if (!isViewedCollege) {
+          return {
+            id: member.college.id,
+            name: member.college.name,
+            code: member.college.code,
+            slug: member.college.slug,
+            logoUrl: member.college.logoUrl,
+            city: member.college.city,
+            state: member.college.state,
+            country: "India",
+            role: "",
+            selected: false,
+            joinedAt: "",
+            joinedVia: "",
+            departments: [],
+          };
+        }
+
+        const departments =
+          await InstitutionDepartmentsQuery.getDepartmentsWithCoursesForCollege(
+            collegeId,
+          );
+
+        return {
+          id: member.college.id,
+          name: member.college.name,
+          code: member.college.code,
+          slug: member.college.slug,
+          logoUrl: member.college.logoUrl,
+          city: member.college.city,
+          state: member.college.state,
+          country: "India",
+          role: member.role,
+          selected: true,
+          joinedAt: member.joinedAt,
+          joinedVia: member.joinedVia,
+          departments,
+        };
+      }),
+    );
 
     return {
       id: "institutions_across_world",
