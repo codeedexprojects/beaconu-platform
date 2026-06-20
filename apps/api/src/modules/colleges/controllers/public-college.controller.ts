@@ -3,6 +3,7 @@ import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
+import { CollegeRegistrationService } from "../services/college-registration.service";
 
 const PUBLIC_COLLEGE_INCLUDES = {
   university: {
@@ -430,23 +431,46 @@ export class PublicCollegeController {
       sectionIdentifier,
     );
 
-    if (!matchedSection) {
+    // institutions_across_world is always-live (computed from institution
+    // group membership) — like `commute` on the college-admin read path, it
+    // exists even if the college never saved anything for this section.
+    const isInstitutionsAcrossWorld =
+      sectionIdentifier === "institutions_across_world";
+
+    if (!matchedSection && !isInstitutionsAcrossWorld) {
       throw new NotFoundError("Section not found");
     }
 
-    const sectionEnabled = (matchedSection.section as { enabled?: unknown })
-      .enabled;
+    if (matchedSection) {
+      const sectionEnabled = (matchedSection.section as { enabled?: unknown })
+        .enabled;
 
-    if (typeof sectionEnabled === "boolean" && !sectionEnabled) {
-      throw new NotFoundError("Section not found");
+      if (typeof sectionEnabled === "boolean" && !sectionEnabled) {
+        throw new NotFoundError("Section not found");
+      }
     }
+
+    let sectionData: unknown = matchedSection?.section;
+
+    if (isInstitutionsAcrossWorld) {
+      const dynamicSection =
+        await CollegeRegistrationService.buildDynamicInstitutionsSection(
+          collegeId,
+        );
+      sectionData = {
+        ...(isRecord(sectionData) ? sectionData : {}),
+        ...dynamicSection,
+      };
+    }
+
+    const sectionKey = matchedSection?.sectionKey ?? sectionIdentifier;
 
     return res.status(200).json(
       ApiResponse.success("College section fetched successfully", {
-        sectionName: matchedSection.sectionKey,
+        sectionName: sectionKey,
         sectionId: sectionIdentifier,
-        sectionKey: matchedSection.sectionKey,
-        data: matchedSection.section,
+        sectionKey,
+        data: sectionData,
       }),
     );
   }
