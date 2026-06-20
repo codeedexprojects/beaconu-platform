@@ -22,16 +22,55 @@ body:json {
         "enabled": true,
         "title": "Happenings",
         "filters": {
-          "categories": ["Certification", "Workshop"]
+          "title": "Filter Happenings",
+          "subtitle": "Select categories to display",
+          "categories": [
+            "Certification",
+            "Workshop",
+            "Seminar",
+            "Sports"
+          ]
         },
         "happenings": [
           {
+            "id": "happening_001",
             "category": "Certification",
             "date": "Oct 12, 2023",
             "title": "Professor Ratna awarded international certification in Quantum Research",
             "description": "The University of Cambridge has formally recognized Dr. Ratna's groundbreaking work.",
             "image": "",
-            "link": ""
+            "link": "",
+            "share_enabled": true
+          },
+          {
+            "id": "happening_002",
+            "category": "Workshop",
+            "date": "Nov 04, 2023",
+            "title": "Design Thinking bootcamp by industry mentors",
+            "description": "A two-day hands-on workshop on innovation methods and rapid prototyping.",
+            "image": "",
+            "link": "https://example.edu/workshops/design-thinking",
+            "share_enabled": true
+          },
+          {
+            "id": "happening_003",
+            "category": "Seminar",
+            "date": "Dec 18, 2023",
+            "title": "National seminar on AI in healthcare",
+            "description": "Experts from academia and hospitals discussed real-world AI deployment in diagnostics.",
+            "image": "",
+            "link": "https://example.edu/events/ai-healthcare",
+            "share_enabled": true
+          },
+          {
+            "id": "happening_004",
+            "category": "Sports",
+            "date": "Jan 11, 2024",
+            "title": "Inter-college athletics meet winners announced",
+            "description": "The college won 6 medals including gold in 400m relay and long jump.",
+            "image": "",
+            "link": "",
+            "share_enabled": false
           }
         ]
       }
