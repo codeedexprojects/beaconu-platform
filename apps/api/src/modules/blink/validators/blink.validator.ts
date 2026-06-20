@@ -153,6 +153,14 @@ export const collegeListQuerySchema = z.object({
 });
 
 export type CollegeListQuery = z.infer<typeof collegeListQuerySchema>;
+
+export const universityListQuerySchema = z.object({
+  search: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type UniversityListQuery = z.infer<typeof universityListQuerySchema>;
 export type UpdateServiceChargeInput = z.infer<
   typeof updateServiceChargeSchema
 >;

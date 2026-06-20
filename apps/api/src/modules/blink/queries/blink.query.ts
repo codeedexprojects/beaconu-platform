@@ -10,6 +10,7 @@ import type {
 import type {
   ServiceChargeQuery,
   CollegeListQuery,
+  UniversityListQuery,
   EmployeeListQuery,
 } from "../validators/blink.validator";
 
@@ -441,6 +442,44 @@ export class BlinkQuery {
             }
           : null,
         totalCourses: c._count.courses,
+      })),
+      meta: { total, page, limit, hasNext: skip + limit < total },
+    };
+  }
+
+  static async listUniversitiesForEmployee(filters: UniversityListQuery) {
+    const { search, page, limit } = filters;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      status: "active",
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [total, rows] = await Promise.all([
+      prisma.university.count({ where }),
+      prisma.university.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logoUrl: true,
+        },
+      }),
+    ]);
+
+    return {
+      universities: rows.map((u) => ({
+        id: u.id,
+        name: u.name,
+        slug: u.slug,
+        logoUrl: u.logoUrl ?? null,
       })),
       meta: { total, page, limit, hasNext: skip + limit < total },
     };

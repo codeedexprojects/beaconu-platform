@@ -6,6 +6,7 @@ import { BlinkQuery } from "../queries/blink.query";
 import type {
   ReferralListQuery,
   CollegeListQuery,
+  UniversityListQuery,
 } from "../validators/blink.validator";
 
 export class AssociateEmployeeController {
@@ -65,6 +66,20 @@ export class AssociateEmployeeController {
         ApiResponse.success(
           "Colleges fetched successfully",
           result.colleges,
+          result.meta,
+        ),
+      );
+  }
+
+  static async listUniversities(req: Request, res: Response) {
+    const filters = req.query as unknown as UniversityListQuery;
+    const result = await BlinkQuery.listUniversitiesForEmployee(filters);
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Universities fetched successfully",
+          result.universities,
           result.meta,
         ),
       );

@@ -64,13 +64,18 @@ docs {
   
   ## Response (always grouped by date)
   session_fee is the per-slot fee. Falls back to counsellor's default if omitted.
-<<<<<<< Updated upstream
 
   ## Google Meet
   Slots do NOT get a Meet link at creation time (time_slots[].meeting_url /
   meeting_id are always null here). The Calendar event + Meet link is
   created when a student books this slot for a video_call session
   (counsellor + student added as attendees) — see Book Session.
-=======
->>>>>>> Stashed changes
+
+  ## Validation
+  - start_time must be before end_time (per slot)
+  - available_date/available_dates + start_time must not be in the past
+    (IST wall-clock) — 400 "Cannot create a slot in the past: <date> <time>"
+    for any slot in the request, including bulk date × time combinations
+  - duplicate (counsellor, date, time) slot — 409 "A slot with this date and
+    time already exists"
 }
