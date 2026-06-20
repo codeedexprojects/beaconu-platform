@@ -386,6 +386,14 @@ export class SessionService {
         const startTime = parseTimeOnly(t.start_time);
         const endTime = parseTimeOnly(t.end_time);
         ensureStartBeforeEnd(startTime, endTime);
+
+        const slotStart = istWallTimeToInstant(availableDate, startTime);
+        if (slotStart.getTime() < Date.now()) {
+          throw new BadRequestError(
+            `Cannot create a slot in the past: ${dateStr} ${t.start_time}`,
+          );
+        }
+
         return {
           counsellorId,
           availableDate,
@@ -421,6 +429,7 @@ export class SessionService {
     const fromDate = query.from_date
       ? parseDateOnly(query.from_date)
       : undefined;
+    const toDate = query.to_date ? parseDateOnly(query.to_date) : undefined;
 
     const counsellor = await CounsellingRepository.findById(counsellorId);
     const fee = Number(counsellor?.sessionFee ?? 0.0);
@@ -428,6 +437,7 @@ export class SessionService {
     const slots = await SessionRepository.listSlotsByCounsellor(
       counsellorId,
       fromDate,
+      toDate,
       {
         page: query.page,
         limit: query.limit,
@@ -492,6 +502,7 @@ export class SessionService {
       SessionRepository.listSlotsByCounsellor(
         counsellorId,
         fromDate,
+        undefined,
         { page: query.page, limit: query.limit },
         isBooked,
       ),
@@ -1476,8 +1487,6 @@ export class SessionService {
           )
         : await SessionRepository.rejectWithdrawal(
             transactionId,
-            transaction.counsellorId,
-            amount,
             adminId,
             data.remarks,
           );

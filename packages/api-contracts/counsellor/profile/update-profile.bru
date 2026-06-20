@@ -49,4 +49,12 @@ docs {
   - At least one of upi_id / bank_details must be set on the profile before
     the counsellor can request a wallet withdrawal
     (POST /api/v1/counsellor/wallet/withdraw).
+
+  ## MindCare counsellors
+  session_fee, upi_id, and bank_details are academic-only (MindCare doesn't
+  take session payments — no wallet/withdrawal access either). Sending any
+  of these three fields when the counsellor's counsellor_type is "mindcare"
+  returns 422 "session_fee, upi_id, and bank_details are not applicable to
+  MindCare counsellors". GET /api/v1/counsellor/profile also returns null
+  for all three on a MindCare profile.
 }

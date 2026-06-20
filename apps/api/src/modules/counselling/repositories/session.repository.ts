@@ -99,13 +99,21 @@ export class SessionRepository {
   static async listSlotsByCounsellor(
     counsellorId: string,
     fromDate?: Date,
+    toDate?: Date,
     pagination: PaginationOptions = {},
     isBooked?: boolean,
   ) {
     return prisma.counsellorAvailability.findMany({
       where: {
         counsellorId,
-        ...(fromDate ? { availableDate: { gte: fromDate } } : {}),
+        ...(fromDate || toDate
+          ? {
+              availableDate: {
+                ...(fromDate ? { gte: fromDate } : {}),
+                ...(toDate ? { lte: toDate } : {}),
+              },
+            }
+          : {}),
         ...(isBooked !== undefined ? { isBooked } : {}),
       },
       orderBy: [{ availableDate: "asc" }, { startTime: "asc" }],
@@ -117,11 +125,19 @@ export class SessionRepository {
     counsellorId: string,
     isBooked?: boolean,
     fromDate?: Date,
+    toDate?: Date,
   ) {
     return prisma.counsellorAvailability.count({
       where: {
         counsellorId,
-        ...(fromDate ? { availableDate: { gte: fromDate } } : {}),
+        ...(fromDate || toDate
+          ? {
+              availableDate: {
+                ...(fromDate ? { gte: fromDate } : {}),
+                ...(toDate ? { lte: toDate } : {}),
+              },
+            }
+          : {}),
         ...(isBooked !== undefined ? { isBooked } : {}),
       },
     });
@@ -791,6 +807,13 @@ export class SessionRepository {
    * Request a withdrawal: decrements balance immediately and records a
    * pending withdrawal transaction. Balance is refunded if rejected later.
    */
+  /**
+   * Creates a pending withdrawal request without touching the wallet
+   * balance — the balance is only debited once an admin approves it
+   * (see `approveWithdrawal`). To avoid a counsellor overcommitting funds
+   * across multiple pending requests, "available" balance here is the
+   * wallet balance minus the total of all other pending withdrawals.
+   */
   static async requestWithdrawal(
     counsellorId: string,
     amount: number,
@@ -802,35 +825,33 @@ export class SessionRepository {
         where: { counsellorId },
       });
 
-      if (Number(current.balance) < amount) {
+      const pendingAgg = await tx.counsellorWalletTransaction.aggregate({
+        where: { counsellorId, withdrawalStatus: "pending" },
+        _sum: { amount: true },
+      });
+      const pendingTotal = Number(pendingAgg._sum.amount ?? 0);
+      const availableBalance = Number(current.balance) - pendingTotal;
+
+      if (availableBalance < amount) {
         throw new ConflictError(
-          `Insufficient wallet balance. Available: ${current.balance}`,
+          `Insufficient wallet balance. Available: ${availableBalance}`,
         );
       }
 
-      await tx.counsellorWallet.update({
-        where: { counsellorId },
-        data: { balance: { decrement: amount } },
-      });
-
-      const wallet = await tx.counsellorWallet.findUniqueOrThrow({
-        where: { counsellorId },
-      });
-
       const transaction = await tx.counsellorWalletTransaction.create({
         data: {
-          walletId: wallet.id,
+          walletId: current.id,
           counsellorId,
           type: "debit",
           amount,
           description,
           withdrawalStatus: "pending",
           payoutDetails,
-          balanceAfter: wallet.balance,
+          balanceAfter: current.balance,
         },
       });
 
-      return { wallet, transaction };
+      return { wallet: current, transaction };
     });
   }
 
@@ -876,6 +897,7 @@ export class SessionRepository {
     });
   }
 
+  /** Debits the wallet now that the withdrawal has actually been approved. */
   static async approveWithdrawal(
     transactionId: string,
     counsellorId: string,
@@ -884,9 +906,12 @@ export class SessionRepository {
     remarks: string | undefined,
   ) {
     return prisma.$transaction(async (tx) => {
-      await tx.counsellorWallet.update({
+      const wallet = await tx.counsellorWallet.update({
         where: { counsellorId },
-        data: { totalWithdrawn: { increment: amount } },
+        data: {
+          balance: { decrement: amount },
+          totalWithdrawn: { increment: amount },
+        },
       });
 
       return tx.counsellorWalletTransaction.update({
@@ -895,32 +920,25 @@ export class SessionRepository {
           withdrawalStatus: "approved",
           reviewedBy: adminId,
           reviewRemarks: remarks,
+          balanceAfter: wallet.balance,
         },
       });
     });
   }
 
+  /** No wallet change needed — balance was never debited for a pending request. */
   static async rejectWithdrawal(
     transactionId: string,
-    counsellorId: string,
-    amount: number,
     adminId: string,
     remarks: string | undefined,
   ) {
-    return prisma.$transaction(async (tx) => {
-      await tx.counsellorWallet.update({
-        where: { counsellorId },
-        data: { balance: { increment: amount } },
-      });
-
-      return tx.counsellorWalletTransaction.update({
-        where: { id: transactionId },
-        data: {
-          withdrawalStatus: "rejected",
-          reviewedBy: adminId,
-          reviewRemarks: remarks,
-        },
-      });
+    return prisma.counsellorWalletTransaction.update({
+      where: { id: transactionId },
+      data: {
+        withdrawalStatus: "rejected",
+        reviewedBy: adminId,
+        reviewRemarks: remarks,
+      },
     });
   }
 

@@ -1,5 +1,5 @@
 import { Prisma } from "@beaconu/db";
-import { NotFoundError } from "@/shared/errors";
+import { NotFoundError, ValidationError } from "@/shared/errors";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import {
   UpdateMyProfileInput,
@@ -37,6 +37,7 @@ function deriveEducation(metadata: Record<string, unknown>): string[] {
 function formatCounsellor(counsellor: any) {
   if (!counsellor) return counsellor;
   const metadata = counsellor.profileMetadata ?? {};
+  const isMindcare = counsellor.counsellorType === "mindcare";
   return {
     id: counsellor.id,
     counsellor_code: counsellor.counsellorCode ?? null,
@@ -48,13 +49,16 @@ function formatCounsellor(counsellor: any) {
     status: counsellor.status,
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
-    session_fee: Number(counsellor.sessionFee ?? 0.0),
-    wallet_balance: Number(counsellor.wallet?.balance ?? 0.0),
+    // MindCare doesn't take session payments — no wallet/withdrawal access.
+    session_fee: isMindcare ? null : Number(counsellor.sessionFee ?? 0.0),
+    wallet_balance: isMindcare
+      ? null
+      : Number(counsellor.wallet?.balance ?? 0.0),
     about: metadata.about ?? null,
     expertise: deriveExpertise(metadata),
     education: deriveEducation(metadata),
-    upi_id: counsellor.upiId ?? null,
-    bank_details: counsellor.bankDetails ?? {},
+    upi_id: isMindcare ? null : (counsellor.upiId ?? null),
+    bank_details: isMindcare ? null : (counsellor.bankDetails ?? {}),
     profile_metadata: counsellor.profileMetadata,
     last_login_at: counsellor.lastLoginAt,
     created_at: counsellor.createdAt,
@@ -72,6 +76,22 @@ export class CounsellingService {
   static async updateMyProfile(userId: string, data: UpdateMyProfileInput) {
     const counsellor = await CounsellingRepository.findById(userId);
     if (!counsellor) throw new NotFoundError("Counsellor not found");
+
+    // MindCare counsellors don't take session payments (no wallet/withdrawal
+    // access — see authorizeCounsellorType("academic") on /wallet routes),
+    // so payout/fee details are academic-only.
+    const resolvedType = data.counsellor_type ?? counsellor.counsellorType;
+    if (resolvedType === "mindcare") {
+      if (
+        data.session_fee !== undefined ||
+        data.upi_id !== undefined ||
+        data.bank_details !== undefined
+      ) {
+        throw new ValidationError(
+          "session_fee, upi_id, and bank_details are not applicable to MindCare counsellors",
+        );
+      }
+    }
 
     const existingMetadata = (counsellor.profileMetadata ?? {}) as Record<
       string,

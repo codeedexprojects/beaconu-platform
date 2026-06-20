@@ -25,13 +25,18 @@ body:json {
 }
 
 docs {
-  Submits a withdrawal request. Balance is decremented immediately and the
-  transaction is created with withdrawal_status = "pending", awaiting
-  super admin review.
+  Submits a withdrawal request. The wallet balance is NOT decremented at
+  this point — the transaction is created with withdrawal_status =
+  "pending" and the balance is only debited once a super admin approves it
+  (PATCH /api/v1/admin/counsellors/withdrawals/:id/status). If rejected,
+  no wallet change ever happens since nothing was debited.
   Requires: counsellor access token (academic counsellors only).
 
   Validation:
-  - amount must be ≤ current wallet balance
+  - amount must be ≤ "available" balance, i.e. current wallet balance
+    minus the total of all of this counsellor's other pending withdrawal
+    requests (prevents overcommitting funds across multiple pending
+    requests since none of them have actually debited the balance yet)
   - amount must be ≥ platform config `counsellorMinWithdrawalAmount`
     (see GET /api/v1/admin/config)
   - the counsellor's profile must have upi_id and/or bank_details set
@@ -44,6 +49,8 @@ docs {
   if both are set) so later profile edits don't change past requests.
 
   Response: { transaction_id, amount, withdrawal_status, balance_after }
+  balance_after reflects the unchanged wallet balance at request time —
+  it only drops once the request is approved.
 
   Tables: counsellor_wallets, counsellor_wallet_transactions, counsellors
 }

@@ -34,11 +34,13 @@ docs {
   - remarks (optional, max 500 chars)
 
   Behavior:
-  - approved: increments counsellor_wallets.total_withdrawn by the amount.
-    No balance change (balance was already decremented when requested).
-    The actual payout (bank transfer or UPI) happens manually outside the
+  - approved: decrements counsellor_wallets.balance by the amount AND
+    increments total_withdrawn by the amount (balance was untouched until
+    now — the request only reserved it logically, not in the DB). The
+    actual payout (bank transfer or UPI) happens manually outside the
     system, using the transaction's payout_details snapshot.
-  - rejected: refunds the amount back to counsellor_wallets.balance.
+  - rejected: no wallet change at all — balance was never decremented for
+    a pending request, so there's nothing to refund.
 
   Returns 404 if the request doesn't exist, 409 if it has already been reviewed.
 
