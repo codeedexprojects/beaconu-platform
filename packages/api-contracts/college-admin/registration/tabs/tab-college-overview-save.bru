@@ -1,0 +1,59 @@
+meta {
+  name: Tab - College Overview (Save)
+  type: http
+  seq: 11
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "profileSections": {
+      "college_overview": {
+        "id": "college_overview",
+        "enabled": true,
+        "name": "University of Hyderabad",
+        "alt_name": "Hyderabad Central University",
+        "location_name": "Gachibowli, Hyderabad",
+        "type": "Public",
+        "established": 2000,
+        "navigation_tabs": ["Overview", "Governance"],
+        "about": "The University of Hyderabad is a top-ranking public research university in India.",
+        "accolades": [],
+        "university_details": [],
+        "amenities": [
+          { "label": "Wi-Fi", "icon": "amenity:wifi" }
+        ],
+        "inside_campus_facilities": [],
+        "location": {
+          "address": "",
+          "latitude": null,
+          "longitude": null,
+          "map_link": ""
+        },
+        "nearby_access": [],
+        "campus_ambassadors": [],
+        "social": [],
+        "campus_reels": []
+      }
+    }
+  }
+}
+
+docs {
+  Saves college_overview tab payload using PATCH /api/v1/college-admin/profile.
+
+  Important:
+  - This request writes `profileSections` as provided.
+  - If your college already has other section data, merge current `profileSections`
+    from GET /api/v1/college-admin/profile first, then replace only
+    `college_overview`.
+}
