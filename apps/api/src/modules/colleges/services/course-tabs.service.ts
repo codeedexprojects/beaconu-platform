@@ -8,13 +8,6 @@ import {
 
 const DEFAULT_SETUP_TABS = [...COURSE_SETUP_TAB_IDS];
 
-function isNonEmptyTabData(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value as object).length > 0;
-  return true;
-}
-
 function mapTabNameToField(tabName: string): string {
   const field = TAB_FIELD_MAP[tabName];
   if (!field) {
@@ -376,6 +369,91 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
   };
 }
 
+function transformPublicExamPolicyTab(raw: Record<string, unknown>) {
+  const evaluationPatterns = Array.isArray(raw.evaluation_patterns)
+    ? (raw.evaluation_patterns as Record<string, unknown>[]).map((pattern) => {
+        const chart = asRecord(pattern.chart);
+        return {
+          ...pattern,
+          chart: {
+            total: asNumber(chart.total) || 100,
+            total_label: asText(chart.total_label) || "Total",
+            segments: Array.isArray(chart.segments) ? chart.segments : [],
+          },
+        };
+      })
+    : [];
+
+  const projRaw = asRecord(raw.projects_dissertation);
+  const mdb = asRecord(projRaw.marks_distribution_bar);
+  const projectsDissertation =
+    Object.keys(projRaw).length > 0
+      ? {
+          ...projRaw,
+          marks_distribution_bar: {
+            title: asText(mdb.title) || "Marks Distribution",
+            total_label: asText(mdb.total_label) || "Total: 100",
+            segments: Array.isArray(mdb.segments) ? mdb.segments : [],
+          },
+        }
+      : {};
+
+  const ojtRaw = asRecord(raw.ojt_evaluation);
+  const ojtEvaluation =
+    Object.keys(ojtRaw).length > 0
+      ? {
+          ...ojtRaw,
+          columns: Array.isArray(ojtRaw.columns)
+            ? ojtRaw.columns
+            : ["Criterion", "Marks"],
+        }
+      : {};
+
+  const internshipRaw = asRecord(raw.internship_evaluation);
+  const internshipEvaluation =
+    Object.keys(internshipRaw).length > 0
+      ? {
+          ...internshipRaw,
+          columns: Array.isArray(internshipRaw.columns)
+            ? internshipRaw.columns
+            : ["Component", "Marks"],
+        }
+      : {};
+
+  const gradingRaw = asRecord(raw.grading_scale);
+  const gradingScale =
+    Object.keys(gradingRaw).length > 0
+      ? {
+          ...gradingRaw,
+          columns: Array.isArray(gradingRaw.columns)
+            ? gradingRaw.columns
+            : ["Percentage of Marks", "Grade", "Grade Point"],
+        }
+      : {};
+
+  const bannerRaw = asRecord(raw.important_guidelines_banner);
+  const policies = Array.isArray(bannerRaw.academic_policies)
+    ? (bannerRaw.academic_policies as Record<string, unknown>[]).map((p) => ({
+        ...p,
+        read_more_cta: asText(p.read_more_cta) || "Read More",
+      }))
+    : [];
+  const importantGuidelinesBanner =
+    Object.keys(bannerRaw).length > 0
+      ? { ...bannerRaw, academic_policies: policies }
+      : {};
+
+  return {
+    tab: "exam_policy",
+    evaluation_patterns: evaluationPatterns,
+    projects_dissertation: projectsDissertation,
+    ojt_evaluation: ojtEvaluation,
+    internship_evaluation: internshipEvaluation,
+    grading_scale: gradingScale,
+    important_guidelines_banner: importantGuidelinesBanner,
+  };
+}
+
 function getDefaultForTab(tabSlug: string): unknown {
   // Object-type tabs
   const objectTabs = [
@@ -601,6 +679,15 @@ export class CourseTabsService {
           sectionId: tabName,
           sectionKey: tabName,
           data: transformPublicFinancialAidTab(asRecord(rawData)),
+        };
+      }
+
+      if (tabName === "exam_policy") {
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicExamPolicyTab(asRecord(rawData)),
         };
       }
 
