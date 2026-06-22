@@ -588,6 +588,71 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
   };
 }
 
+function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
+  const ageDistRaw = asRecord(raw.age_distribution);
+  const ageDistData = Array.isArray(ageDistRaw.data)
+    ? (ageDistRaw.data as Record<string, unknown>[])
+    : [];
+
+  const genderDiversity = Array.isArray(raw.gender_diversity)
+    ? (raw.gender_diversity as Record<string, unknown>[])
+    : [];
+
+  const workExp = Array.isArray(raw.work_experience)
+    ? (raw.work_experience as Record<string, unknown>[])
+    : [];
+
+  const intlPresence = Array.isArray(raw.international_presence)
+    ? (raw.international_presence as Record<string, unknown>[])
+    : [];
+
+  const natlPresence = Array.isArray(raw.national_presence)
+    ? (raw.national_presence as Record<string, unknown>[])
+    : [];
+
+  return {
+    tab: "demo_graphics",
+    age_distribution: {
+      items: ageDistData.map((item) => ({
+        label:
+          asText(item.label) || asText(item.range) || asText(item.age_range),
+        percent: asNumber(item.percent),
+      })),
+    },
+    gender_diversity: {
+      segments: genderDiversity.map((item) => ({
+        label: asText(item.label),
+        percent: asNumber(item.percent),
+      })),
+    },
+    work_experience: {
+      items: workExp.map((item) => ({
+        icon:
+          asText(item.icon) ||
+          "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+        label: asText(item.label),
+        subtitle: asText(item.description) || asText(item.subtitle),
+        percent: asNumber(item.percent),
+      })),
+    },
+    international_presence: {
+      items: intlPresence.map((item) => ({
+        flag:
+          asText(item.flag) ||
+          "https://cdn.flagicons.example.com/flags/default.png",
+        country: asText(item.country),
+        percent: asNumber(item.percent),
+      })),
+    },
+    national_presence: {
+      items: natlPresence.map((item) => ({
+        state: asText(item.state),
+        percent: asNumber(item.percent),
+      })),
+    },
+  };
+}
+
 export class CourseTabsService {
   // ── College-Admin Endpoints ──────────────────────────────────────────────
 
@@ -877,6 +942,16 @@ export class CourseTabsService {
           sectionId: tabName,
           sectionKey: tabName,
           data: transformed.data,
+        };
+      }
+
+      if (tabName === "demo_graphics") {
+        const transformed = transformPublicDemoGraphicsTab(asRecord(rawData));
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformed,
         };
       }
 
