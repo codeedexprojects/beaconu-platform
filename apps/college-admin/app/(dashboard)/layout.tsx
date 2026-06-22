@@ -242,7 +242,7 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-cream">
+    <div className="flex h-screen flex-col bg-cream">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar (Onboarding Wizard or Active console dashboard navigation) */}
         {!isPendingSetup ? (
@@ -500,7 +500,7 @@ export default function DashboardLayout({
           </div>
         )}
 
-        <main className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+        <main className="flex-1 flex flex-col overflow-y-auto">
           {/* Top Navbar */}
           <header className="sticky top-0 z-40 border-b border-border bg-cream/90 backdrop-blur-md">
             <div className="flex h-16 items-center justify-between px-6">

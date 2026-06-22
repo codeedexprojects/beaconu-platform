@@ -194,6 +194,8 @@ export default function SetupAcademicsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState<CourseTabId>("basic");
   const [courseInfoSubTab, setCourseInfoSubTab] = useState<string>("general");
+  const [examPolicySubTab, setExamPolicySubTab] = useState<string>("patterns");
+  const [examPolicyPatternIdx, setExamPolicyPatternIdx] = useState<number>(0);
   const [uploadingBrochure, setUploadingBrochure] = useState(false);
   const [uploadingAlumniIndex, setUploadingAlumniIndex] = useState<
     number | null
@@ -3944,51 +3946,2734 @@ export default function SetupAcademicsPage() {
                       {/* EXAM POLICY */}
                       {activeTab === "exam_policy" && (
                         <div className="space-y-4">
-                          <Label className="block font-bold">
-                            Marks Evaluation Rules
-                          </Label>
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-1">
-                              <Label>Internal Assessment (Weight %)</Label>
-                              <Input
-                                type="number"
-                                placeholder="e.g. 40"
-                                value={
-                                  getActiveTabPayload().course_with_practical
-                                    ?.internalMarks || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    course_with_practical: {
-                                      ...(getActiveTabPayload()
-                                        .course_with_practical || {}),
-                                      internalMarks: Number(e.target.value),
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label>Semester Exams (Weight %)</Label>
-                              <Input
-                                type="number"
-                                placeholder="e.g. 60"
-                                value={
-                                  getActiveTabPayload().course_with_practical
-                                    ?.externalMarks || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    course_with_practical: {
-                                      ...(getActiveTabPayload()
-                                        .course_with_practical || {}),
-                                      externalMarks: Number(e.target.value),
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
+                          {/* Sub-tab nav */}
+                          <div className="flex border-b overflow-x-auto scrollbar-none gap-2 pb-2">
+                            {[
+                              { id: "patterns", label: "Evaluation Patterns" },
+                              { id: "grading", label: "Grading Scale" },
+                              {
+                                id: "guidelines",
+                                label: "Academic Guidelines",
+                              },
+                              {
+                                id: "special",
+                                label: "Projects / OJT / Internship",
+                              },
+                            ].map((st) => (
+                              <button
+                                key={st.id}
+                                type="button"
+                                onClick={() => setExamPolicySubTab(st.id)}
+                                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 border ${
+                                  examPolicySubTab === st.id
+                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                              >
+                                {st.label}
+                              </button>
+                            ))}
                           </div>
+
+                          {/* EVALUATION PATTERNS */}
+                          {examPolicySubTab === "patterns" && (
+                            <div className="space-y-6">
+                              <div className="flex justify-between items-center">
+                                <Label className="font-bold">
+                                  Evaluation Patterns
+                                </Label>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const next = [
+                                      ...(getActiveTabPayload()
+                                        .evaluation_patterns || []),
+                                      {
+                                        pattern_type: "",
+                                        duration: "",
+                                        chart: { total: 100, segments: [] },
+                                        subtotals: [],
+                                        internal_assessment: [],
+                                        external_examination: [],
+                                        summary_cards: [],
+                                        exam_duration: {
+                                          label: "EXAM DURATION",
+                                          value: "",
+                                        },
+                                      },
+                                    ];
+                                    updateActiveTabPayload({
+                                      evaluation_patterns: next,
+                                    });
+                                    setExamPolicyPatternIdx(next.length - 1);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4 mr-1" /> Add Pattern
+                                </Button>
+                              </div>
+
+                              {(getActiveTabPayload().evaluation_patterns || [])
+                                .length > 0 && (
+                                <div className="flex gap-2 flex-wrap">
+                                  {(
+                                    getActiveTabPayload().evaluation_patterns ||
+                                    []
+                                  ).map((p: any, idx: number) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() =>
+                                        setExamPolicyPatternIdx(idx)
+                                      }
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                                        examPolicyPatternIdx === idx
+                                          ? "bg-indigo-600 text-white border-indigo-600"
+                                          : "border-border text-muted-foreground hover:bg-muted"
+                                      }`}
+                                    >
+                                      {p.pattern_type || `Pattern ${idx + 1}`}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {(() => {
+                                const patterns =
+                                  getActiveTabPayload().evaluation_patterns ||
+                                  [];
+                                const pi = examPolicyPatternIdx;
+                                if (pi >= patterns.length) return null;
+                                const pat = patterns[pi] || {};
+                                const updatePattern = (updates: any) => {
+                                  const next = [...patterns];
+                                  next[pi] = { ...next[pi], ...updates };
+                                  updateActiveTabPayload({
+                                    evaluation_patterns: next,
+                                  });
+                                };
+                                return (
+                                  <div className="space-y-6 border p-4 rounded-xl bg-muted/5">
+                                    {/* Pattern header */}
+                                    <div className="flex gap-4 items-start">
+                                      <div className="flex-1 grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Pattern Type
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Course with Practical"
+                                            value={pat.pattern_type || ""}
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                pattern_type: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Duration
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 2 + 3 Hrs"
+                                            value={pat.duration || ""}
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                duration: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Exam Duration Label
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. DURATION"
+                                            value={
+                                              pat.exam_duration?.label || ""
+                                            }
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                exam_duration: {
+                                                  ...(pat.exam_duration || {}),
+                                                  label: e.target.value,
+                                                },
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Exam Duration Value
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 2 + 3 Hrs"
+                                            value={
+                                              pat.exam_duration?.value || ""
+                                            }
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                exam_duration: {
+                                                  ...(pat.exam_duration || {}),
+                                                  value: e.target.value,
+                                                },
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = patterns.filter(
+                                            (_: any, i: number) => i !== pi,
+                                          );
+                                          updateActiveTabPayload({
+                                            evaluation_patterns: next,
+                                          });
+                                          setExamPolicyPatternIdx(
+                                            Math.max(0, pi - 1),
+                                          );
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+
+                                    {/* Chart Segments */}
+                                    <div className="border-t pt-4 space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="font-bold text-sm">
+                                          Chart Segments
+                                        </Label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const segs = [
+                                              ...(pat.chart?.segments || []),
+                                              {
+                                                label: "",
+                                                percent: 0,
+                                                color: "#FF6B00",
+                                              },
+                                            ];
+                                            updatePattern({
+                                              chart: {
+                                                ...(pat.chart || {
+                                                  total: 100,
+                                                }),
+                                                segments: segs,
+                                              },
+                                            });
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" /> Add
+                                          Segment
+                                        </Button>
+                                      </div>
+                                      {(pat.chart?.segments || []).map(
+                                        (seg: any, si: number) => (
+                                          <div
+                                            key={si}
+                                            className="flex gap-2 items-center"
+                                          >
+                                            <Input
+                                              placeholder="Label (e.g. Theory)"
+                                              value={seg.label || ""}
+                                              onChange={(e) => {
+                                                const segs = [
+                                                  ...(pat.chart?.segments ||
+                                                    []),
+                                                ];
+                                                segs[si] = {
+                                                  ...segs[si],
+                                                  label: e.target.value,
+                                                };
+                                                updatePattern({
+                                                  chart: {
+                                                    ...(pat.chart || {
+                                                      total: 100,
+                                                    }),
+                                                    segments: segs,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                            <Input
+                                              type="number"
+                                              placeholder="%"
+                                              className="w-20"
+                                              value={seg.percent ?? ""}
+                                              onChange={(e) => {
+                                                const segs = [
+                                                  ...(pat.chart?.segments ||
+                                                    []),
+                                                ];
+                                                segs[si] = {
+                                                  ...segs[si],
+                                                  percent: Number(
+                                                    e.target.value,
+                                                  ),
+                                                };
+                                                updatePattern({
+                                                  chart: {
+                                                    ...(pat.chart || {
+                                                      total: 100,
+                                                    }),
+                                                    segments: segs,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                            <Input
+                                              placeholder="#color"
+                                              className="w-32"
+                                              value={seg.color || ""}
+                                              onChange={(e) => {
+                                                const segs = [
+                                                  ...(pat.chart?.segments ||
+                                                    []),
+                                                ];
+                                                segs[si] = {
+                                                  ...segs[si],
+                                                  color: e.target.value,
+                                                };
+                                                updatePattern({
+                                                  chart: {
+                                                    ...(pat.chart || {
+                                                      total: 100,
+                                                    }),
+                                                    segments: segs,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() => {
+                                                const segs = (
+                                                  pat.chart?.segments || []
+                                                ).filter(
+                                                  (_: any, i: number) =>
+                                                    i !== si,
+                                                );
+                                                updatePattern({
+                                                  chart: {
+                                                    ...(pat.chart || {
+                                                      total: 100,
+                                                    }),
+                                                    segments: segs,
+                                                  },
+                                                });
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+
+                                    {/* Subtotals */}
+                                    <div className="border-t pt-4 space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="font-bold text-sm">
+                                          Subtotals
+                                        </Label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            updatePattern({
+                                              subtotals: [
+                                                ...(pat.subtotals || []),
+                                                { label: "", marks: 0 },
+                                              ],
+                                            })
+                                          }
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" /> Add
+                                          Subtotal
+                                        </Button>
+                                      </div>
+                                      {(pat.subtotals || []).map(
+                                        (st: any, si: number) => (
+                                          <div
+                                            key={si}
+                                            className="flex gap-2 items-center"
+                                          >
+                                            <Input
+                                              placeholder="Label (e.g. ISA Theory)"
+                                              value={st.label || ""}
+                                              onChange={(e) => {
+                                                const next = [
+                                                  ...(pat.subtotals || []),
+                                                ];
+                                                next[si] = {
+                                                  ...next[si],
+                                                  label: e.target.value,
+                                                };
+                                                updatePattern({
+                                                  subtotals: next,
+                                                });
+                                              }}
+                                            />
+                                            <Input
+                                              type="number"
+                                              placeholder="Marks"
+                                              className="w-24"
+                                              value={st.marks ?? ""}
+                                              onChange={(e) => {
+                                                const next = [
+                                                  ...(pat.subtotals || []),
+                                                ];
+                                                next[si] = {
+                                                  ...next[si],
+                                                  marks: Number(e.target.value),
+                                                };
+                                                updatePattern({
+                                                  subtotals: next,
+                                                });
+                                              }}
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                updatePattern({
+                                                  subtotals: (
+                                                    pat.subtotals || []
+                                                  ).filter(
+                                                    (_: any, i: number) =>
+                                                      i !== si,
+                                                  ),
+                                                })
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+
+                                    {/* Summary Cards */}
+                                    <div className="border-t pt-4 space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="font-bold text-sm">
+                                          Summary Cards
+                                        </Label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            updatePattern({
+                                              summary_cards: [
+                                                ...(pat.summary_cards || []),
+                                                { label: "", value: "" },
+                                              ],
+                                            })
+                                          }
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" /> Add
+                                          Card
+                                        </Button>
+                                      </div>
+                                      {(pat.summary_cards || []).map(
+                                        (sc: any, si: number) => (
+                                          <div
+                                            key={si}
+                                            className="flex gap-2 items-center"
+                                          >
+                                            <Input
+                                              placeholder="Label (e.g. ISA THEORY)"
+                                              value={sc.label || ""}
+                                              onChange={(e) => {
+                                                const next = [
+                                                  ...(pat.summary_cards || []),
+                                                ];
+                                                next[si] = {
+                                                  ...next[si],
+                                                  label: e.target.value,
+                                                };
+                                                updatePattern({
+                                                  summary_cards: next,
+                                                });
+                                              }}
+                                            />
+                                            <Input
+                                              placeholder="Value (e.g. 20 Marks)"
+                                              value={sc.value || ""}
+                                              onChange={(e) => {
+                                                const next = [
+                                                  ...(pat.summary_cards || []),
+                                                ];
+                                                next[si] = {
+                                                  ...next[si],
+                                                  value: e.target.value,
+                                                };
+                                                updatePattern({
+                                                  summary_cards: next,
+                                                });
+                                              }}
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                updatePattern({
+                                                  summary_cards: (
+                                                    pat.summary_cards || []
+                                                  ).filter(
+                                                    (_: any, i: number) =>
+                                                      i !== si,
+                                                  ),
+                                                })
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+
+                                    {/* Internal Assessment Sections */}
+                                    <div className="border-t pt-4 space-y-4">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="font-bold text-sm">
+                                          Internal Assessment (ISA) Sections
+                                        </Label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            updatePattern({
+                                              internal_assessment: [
+                                                ...(pat.internal_assessment ||
+                                                  []),
+                                                { section: "", components: [] },
+                                              ],
+                                            })
+                                          }
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" /> Add
+                                          Section
+                                        </Button>
+                                      </div>
+                                      {(pat.internal_assessment || []).map(
+                                        (ias: any, si: number) => (
+                                          <div
+                                            key={si}
+                                            className="border p-3 rounded-lg space-y-3 bg-muted/10"
+                                          >
+                                            <div className="flex gap-2 items-center">
+                                              <Input
+                                                placeholder="Section name (e.g. ISA - Theory)"
+                                                value={ias.section || ""}
+                                                onChange={(e) => {
+                                                  const next = [
+                                                    ...(pat.internal_assessment ||
+                                                      []),
+                                                  ];
+                                                  next[si] = {
+                                                    ...next[si],
+                                                    section: e.target.value,
+                                                  };
+                                                  updatePattern({
+                                                    internal_assessment: next,
+                                                  });
+                                                }}
+                                              />
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                  updatePattern({
+                                                    internal_assessment: (
+                                                      pat.internal_assessment ||
+                                                      []
+                                                    ).filter(
+                                                      (_: any, i: number) =>
+                                                        i !== si,
+                                                    ),
+                                                  })
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                              </Button>
+                                            </div>
+                                            <div className="pl-3 space-y-2">
+                                              <div className="flex justify-between items-center">
+                                                <Label className="text-xs text-muted-foreground">
+                                                  Components
+                                                </Label>
+                                                <Button
+                                                  type="button"
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    const sections = [
+                                                      ...(pat.internal_assessment ||
+                                                        []),
+                                                    ];
+                                                    sections[si] = {
+                                                      ...sections[si],
+                                                      components: [
+                                                        ...(sections[si]
+                                                          .components || []),
+                                                        {
+                                                          name: "",
+                                                          marks: 0,
+                                                          description: "",
+                                                          icon: "",
+                                                          sub_components: [],
+                                                        },
+                                                      ],
+                                                    };
+                                                    updatePattern({
+                                                      internal_assessment:
+                                                        sections,
+                                                    });
+                                                  }}
+                                                >
+                                                  <Plus className="h-3 w-3 mr-1" />{" "}
+                                                  Add Component
+                                                </Button>
+                                              </div>
+                                              {(ias.components || []).map(
+                                                (comp: any, ci: number) => (
+                                                  <div
+                                                    key={ci}
+                                                    className="border p-3 rounded-lg space-y-2 bg-white/50"
+                                                  >
+                                                    <div className="flex gap-2 items-center">
+                                                      <Input
+                                                        placeholder="Name (e.g. Test Papers)"
+                                                        value={comp.name || ""}
+                                                        onChange={(e) => {
+                                                          const sections = [
+                                                            ...(pat.internal_assessment ||
+                                                              []),
+                                                          ];
+                                                          const comps = [
+                                                            ...(sections[si]
+                                                              .components ||
+                                                              []),
+                                                          ];
+                                                          comps[ci] = {
+                                                            ...comps[ci],
+                                                            name: e.target
+                                                              .value,
+                                                          };
+                                                          sections[si] = {
+                                                            ...sections[si],
+                                                            components: comps,
+                                                          };
+                                                          updatePattern({
+                                                            internal_assessment:
+                                                              sections,
+                                                          });
+                                                        }}
+                                                      />
+                                                      <Input
+                                                        type="number"
+                                                        placeholder="Marks"
+                                                        className="w-20"
+                                                        value={comp.marks ?? ""}
+                                                        onChange={(e) => {
+                                                          const sections = [
+                                                            ...(pat.internal_assessment ||
+                                                              []),
+                                                          ];
+                                                          const comps = [
+                                                            ...(sections[si]
+                                                              .components ||
+                                                              []),
+                                                          ];
+                                                          comps[ci] = {
+                                                            ...comps[ci],
+                                                            marks: Number(
+                                                              e.target.value,
+                                                            ),
+                                                          };
+                                                          sections[si] = {
+                                                            ...sections[si],
+                                                            components: comps,
+                                                          };
+                                                          updatePattern({
+                                                            internal_assessment:
+                                                              sections,
+                                                          });
+                                                        }}
+                                                      />
+                                                      <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                          const sections = [
+                                                            ...(pat.internal_assessment ||
+                                                              []),
+                                                          ];
+                                                          sections[si] = {
+                                                            ...sections[si],
+                                                            components: (
+                                                              sections[si]
+                                                                .components ||
+                                                              []
+                                                            ).filter(
+                                                              (
+                                                                _: any,
+                                                                i: number,
+                                                              ) => i !== ci,
+                                                            ),
+                                                          };
+                                                          updatePattern({
+                                                            internal_assessment:
+                                                              sections,
+                                                          });
+                                                        }}
+                                                      >
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                    <Input
+                                                      placeholder="Description (optional)"
+                                                      value={
+                                                        comp.description || ""
+                                                      }
+                                                      onChange={(e) => {
+                                                        const sections = [
+                                                          ...(pat.internal_assessment ||
+                                                            []),
+                                                        ];
+                                                        const comps = [
+                                                          ...(sections[si]
+                                                            .components || []),
+                                                        ];
+                                                        comps[ci] = {
+                                                          ...comps[ci],
+                                                          description:
+                                                            e.target.value,
+                                                        };
+                                                        sections[si] = {
+                                                          ...sections[si],
+                                                          components: comps,
+                                                        };
+                                                        updatePattern({
+                                                          internal_assessment:
+                                                            sections,
+                                                        });
+                                                      }}
+                                                    />
+                                                    {/* Sub-components */}
+                                                    <div className="pl-3 space-y-1">
+                                                      <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-muted-foreground">
+                                                          Sub-components
+                                                        </span>
+                                                        <Button
+                                                          type="button"
+                                                          variant="ghost"
+                                                          size="sm"
+                                                          className="h-6 text-xs"
+                                                          onClick={() => {
+                                                            const sections = [
+                                                              ...(pat.internal_assessment ||
+                                                                []),
+                                                            ];
+                                                            const comps = [
+                                                              ...(sections[si]
+                                                                .components ||
+                                                                []),
+                                                            ];
+                                                            comps[ci] = {
+                                                              ...comps[ci],
+                                                              sub_components: [
+                                                                ...(comps[ci]
+                                                                  .sub_components ||
+                                                                  []),
+                                                                {
+                                                                  name: "",
+                                                                  marks: 0,
+                                                                },
+                                                              ],
+                                                            };
+                                                            sections[si] = {
+                                                              ...sections[si],
+                                                              components: comps,
+                                                            };
+                                                            updatePattern({
+                                                              internal_assessment:
+                                                                sections,
+                                                            });
+                                                          }}
+                                                        >
+                                                          <Plus className="h-3 w-3 mr-1" />{" "}
+                                                          Add
+                                                        </Button>
+                                                      </div>
+                                                      {(
+                                                        comp.sub_components ||
+                                                        []
+                                                      ).map(
+                                                        (
+                                                          sc: any,
+                                                          sci: number,
+                                                        ) => (
+                                                          <div
+                                                            key={sci}
+                                                            className="flex gap-2 items-center"
+                                                          >
+                                                            <Input
+                                                              placeholder="Sub-component name"
+                                                              className="h-7 text-xs"
+                                                              value={
+                                                                sc.name || ""
+                                                              }
+                                                              onChange={(e) => {
+                                                                const sections =
+                                                                  [
+                                                                    ...(pat.internal_assessment ||
+                                                                      []),
+                                                                  ];
+                                                                const comps = [
+                                                                  ...(sections[
+                                                                    si
+                                                                  ]
+                                                                    .components ||
+                                                                    []),
+                                                                ];
+                                                                const subs = [
+                                                                  ...(comps[ci]
+                                                                    .sub_components ||
+                                                                    []),
+                                                                ];
+                                                                subs[sci] = {
+                                                                  ...subs[sci],
+                                                                  name: e.target
+                                                                    .value,
+                                                                };
+                                                                comps[ci] = {
+                                                                  ...comps[ci],
+                                                                  sub_components:
+                                                                    subs,
+                                                                };
+                                                                sections[si] = {
+                                                                  ...sections[
+                                                                    si
+                                                                  ],
+                                                                  components:
+                                                                    comps,
+                                                                };
+                                                                updatePattern({
+                                                                  internal_assessment:
+                                                                    sections,
+                                                                });
+                                                              }}
+                                                            />
+                                                            <Input
+                                                              type="number"
+                                                              placeholder="Marks"
+                                                              className="w-16 h-7 text-xs"
+                                                              value={
+                                                                sc.marks ?? ""
+                                                              }
+                                                              onChange={(e) => {
+                                                                const sections =
+                                                                  [
+                                                                    ...(pat.internal_assessment ||
+                                                                      []),
+                                                                  ];
+                                                                const comps = [
+                                                                  ...(sections[
+                                                                    si
+                                                                  ]
+                                                                    .components ||
+                                                                    []),
+                                                                ];
+                                                                const subs = [
+                                                                  ...(comps[ci]
+                                                                    .sub_components ||
+                                                                    []),
+                                                                ];
+                                                                subs[sci] = {
+                                                                  ...subs[sci],
+                                                                  marks: Number(
+                                                                    e.target
+                                                                      .value,
+                                                                  ),
+                                                                };
+                                                                comps[ci] = {
+                                                                  ...comps[ci],
+                                                                  sub_components:
+                                                                    subs,
+                                                                };
+                                                                sections[si] = {
+                                                                  ...sections[
+                                                                    si
+                                                                  ],
+                                                                  components:
+                                                                    comps,
+                                                                };
+                                                                updatePattern({
+                                                                  internal_assessment:
+                                                                    sections,
+                                                                });
+                                                              }}
+                                                            />
+                                                            <Button
+                                                              type="button"
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              className="h-7 w-7"
+                                                              onClick={() => {
+                                                                const sections =
+                                                                  [
+                                                                    ...(pat.internal_assessment ||
+                                                                      []),
+                                                                  ];
+                                                                const comps = [
+                                                                  ...(sections[
+                                                                    si
+                                                                  ]
+                                                                    .components ||
+                                                                    []),
+                                                                ];
+                                                                comps[ci] = {
+                                                                  ...comps[ci],
+                                                                  sub_components:
+                                                                    (
+                                                                      comps[ci]
+                                                                        .sub_components ||
+                                                                      []
+                                                                    ).filter(
+                                                                      (
+                                                                        _: any,
+                                                                        i: number,
+                                                                      ) =>
+                                                                        i !==
+                                                                        sci,
+                                                                    ),
+                                                                };
+                                                                sections[si] = {
+                                                                  ...sections[
+                                                                    si
+                                                                  ],
+                                                                  components:
+                                                                    comps,
+                                                                };
+                                                                updatePattern({
+                                                                  internal_assessment:
+                                                                    sections,
+                                                                });
+                                                              }}
+                                                            >
+                                                              <X className="h-3 w-3 text-destructive" />
+                                                            </Button>
+                                                          </div>
+                                                        ),
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+
+                                    {/* External Examination Sections */}
+                                    <div className="border-t pt-4 space-y-4">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="font-bold text-sm">
+                                          External Examination (ESA) Sections
+                                        </Label>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            updatePattern({
+                                              external_examination: [
+                                                ...(pat.external_examination ||
+                                                  []),
+                                                {
+                                                  section: "",
+                                                  columns: [
+                                                    "Section",
+                                                    "Total Q",
+                                                    "Attempt",
+                                                    "Marks",
+                                                  ],
+                                                  rows: [],
+                                                },
+                                              ],
+                                            })
+                                          }
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" /> Add
+                                          Section
+                                        </Button>
+                                      </div>
+                                      {(pat.external_examination || []).map(
+                                        (ext: any, ei: number) => (
+                                          <div
+                                            key={ei}
+                                            className="border p-3 rounded-lg space-y-3 bg-muted/10"
+                                          >
+                                            <div className="flex gap-2 items-center">
+                                              <Input
+                                                placeholder="Section name (e.g. ESA - Theory)"
+                                                value={ext.section || ""}
+                                                onChange={(e) => {
+                                                  const next = [
+                                                    ...(pat.external_examination ||
+                                                      []),
+                                                  ];
+                                                  next[ei] = {
+                                                    ...next[ei],
+                                                    section: e.target.value,
+                                                  };
+                                                  updatePattern({
+                                                    external_examination: next,
+                                                  });
+                                                }}
+                                              />
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                  updatePattern({
+                                                    external_examination: (
+                                                      pat.external_examination ||
+                                                      []
+                                                    ).filter(
+                                                      (_: any, i: number) =>
+                                                        i !== ei,
+                                                    ),
+                                                  })
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                              </Button>
+                                            </div>
+                                            <Input
+                                              placeholder="Columns (comma-separated, e.g. Section, Total Q, Attempt, Marks)"
+                                              value={(ext.columns || []).join(
+                                                ", ",
+                                              )}
+                                              onChange={(e) => {
+                                                const next = [
+                                                  ...(pat.external_examination ||
+                                                    []),
+                                                ];
+                                                next[ei] = {
+                                                  ...next[ei],
+                                                  columns: e.target.value
+                                                    .split(",")
+                                                    .map((s: string) =>
+                                                      s.trim(),
+                                                    )
+                                                    .filter(Boolean),
+                                                };
+                                                updatePattern({
+                                                  external_examination: next,
+                                                });
+                                              }}
+                                            />
+                                            <div className="pl-2 space-y-2">
+                                              <div className="flex justify-between items-center">
+                                                <Label className="text-xs text-muted-foreground">
+                                                  Rows
+                                                </Label>
+                                                <Button
+                                                  type="button"
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    const next = [
+                                                      ...(pat.external_examination ||
+                                                        []),
+                                                    ];
+                                                    next[ei] = {
+                                                      ...next[ei],
+                                                      rows: [
+                                                        ...(next[ei].rows ||
+                                                          []),
+                                                        {
+                                                          section: "",
+                                                          subtitle: "",
+                                                          total_questions: 0,
+                                                          attempt: 0,
+                                                          marks: 0,
+                                                        },
+                                                      ],
+                                                    };
+                                                    updatePattern({
+                                                      external_examination:
+                                                        next,
+                                                    });
+                                                  }}
+                                                >
+                                                  <Plus className="h-3 w-3 mr-1" />{" "}
+                                                  Add Row
+                                                </Button>
+                                              </div>
+                                              {(ext.rows || []).map(
+                                                (row: any, ri: number) => (
+                                                  <div
+                                                    key={ri}
+                                                    className="flex gap-2 items-center flex-wrap"
+                                                  >
+                                                    <Input
+                                                      placeholder="Section (e.g. Section A)"
+                                                      className="flex-1 min-w-[120px]"
+                                                      value={row.section || ""}
+                                                      onChange={(e) => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        const rows = [
+                                                          ...(next[ei].rows ||
+                                                            []),
+                                                        ];
+                                                        rows[ri] = {
+                                                          ...rows[ri],
+                                                          section:
+                                                            e.target.value,
+                                                        };
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows,
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Input
+                                                      placeholder="Subtitle"
+                                                      className="flex-1 min-w-[100px]"
+                                                      value={row.subtitle || ""}
+                                                      onChange={(e) => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        const rows = [
+                                                          ...(next[ei].rows ||
+                                                            []),
+                                                        ];
+                                                        rows[ri] = {
+                                                          ...rows[ri],
+                                                          subtitle:
+                                                            e.target.value,
+                                                        };
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows,
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Input
+                                                      type="number"
+                                                      placeholder="Total Q"
+                                                      className="w-20"
+                                                      value={
+                                                        row.total_questions ??
+                                                        ""
+                                                      }
+                                                      onChange={(e) => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        const rows = [
+                                                          ...(next[ei].rows ||
+                                                            []),
+                                                        ];
+                                                        rows[ri] = {
+                                                          ...rows[ri],
+                                                          total_questions:
+                                                            Number(
+                                                              e.target.value,
+                                                            ),
+                                                        };
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows,
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Input
+                                                      type="number"
+                                                      placeholder="Attempt"
+                                                      className="w-20"
+                                                      value={row.attempt ?? ""}
+                                                      onChange={(e) => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        const rows = [
+                                                          ...(next[ei].rows ||
+                                                            []),
+                                                        ];
+                                                        rows[ri] = {
+                                                          ...rows[ri],
+                                                          attempt: Number(
+                                                            e.target.value,
+                                                          ),
+                                                        };
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows,
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Input
+                                                      type="number"
+                                                      placeholder="Marks"
+                                                      className="w-20"
+                                                      value={row.marks ?? ""}
+                                                      onChange={(e) => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        const rows = [
+                                                          ...(next[ei].rows ||
+                                                            []),
+                                                        ];
+                                                        rows[ri] = {
+                                                          ...rows[ri],
+                                                          marks: Number(
+                                                            e.target.value,
+                                                          ),
+                                                        };
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows,
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Button
+                                                      type="button"
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      onClick={() => {
+                                                        const next = [
+                                                          ...(pat.external_examination ||
+                                                            []),
+                                                        ];
+                                                        next[ei] = {
+                                                          ...next[ei],
+                                                          rows: (
+                                                            next[ei].rows || []
+                                                          ).filter(
+                                                            (
+                                                              _: any,
+                                                              i: number,
+                                                            ) => i !== ri,
+                                                          ),
+                                                        };
+                                                        updatePattern({
+                                                          external_examination:
+                                                            next,
+                                                        });
+                                                      }}
+                                                    >
+                                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {/* GRADING SCALE */}
+                          {examPolicySubTab === "grading" && (
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label>Grading Scale Title</Label>
+                                <Input
+                                  placeholder="e.g. Grading Scale"
+                                  value={
+                                    getActiveTabPayload().grading_scale
+                                      ?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      grading_scale: {
+                                        ...(getActiveTabPayload()
+                                          .grading_scale || {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <Label className="font-bold">
+                                    Grade Rows
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const rows = [
+                                        ...(getActiveTabPayload().grading_scale
+                                          ?.rows || []),
+                                        {
+                                          percentage_range: "",
+                                          grade: "",
+                                          grade_color: "green",
+                                          grade_point: 0,
+                                        },
+                                      ];
+                                      updateActiveTabPayload({
+                                        grading_scale: {
+                                          ...(getActiveTabPayload()
+                                            .grading_scale || {}),
+                                          rows,
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add Row
+                                  </Button>
+                                </div>
+                                {(
+                                  getActiveTabPayload().grading_scale?.rows ||
+                                  []
+                                ).map((row: any, ri: number) => (
+                                  <div
+                                    key={ri}
+                                    className="flex gap-2 items-center"
+                                  >
+                                    <Input
+                                      placeholder="Range (e.g. 90% - 100%)"
+                                      value={row.percentage_range || ""}
+                                      onChange={(e) => {
+                                        const rows = [
+                                          ...(getActiveTabPayload()
+                                            .grading_scale?.rows || []),
+                                        ];
+                                        rows[ri] = {
+                                          ...rows[ri],
+                                          percentage_range: e.target.value,
+                                        };
+                                        updateActiveTabPayload({
+                                          grading_scale: {
+                                            ...(getActiveTabPayload()
+                                              .grading_scale || {}),
+                                            rows,
+                                          },
+                                        });
+                                      }}
+                                    />
+                                    <Input
+                                      placeholder="Grade (e.g. O)"
+                                      className="w-20"
+                                      value={row.grade || ""}
+                                      onChange={(e) => {
+                                        const rows = [
+                                          ...(getActiveTabPayload()
+                                            .grading_scale?.rows || []),
+                                        ];
+                                        rows[ri] = {
+                                          ...rows[ri],
+                                          grade: e.target.value,
+                                        };
+                                        updateActiveTabPayload({
+                                          grading_scale: {
+                                            ...(getActiveTabPayload()
+                                              .grading_scale || {}),
+                                            rows,
+                                          },
+                                        });
+                                      }}
+                                    />
+                                    <Select
+                                      value={row.grade_color || "green"}
+                                      onValueChange={(val) => {
+                                        const rows = [
+                                          ...(getActiveTabPayload()
+                                            .grading_scale?.rows || []),
+                                        ];
+                                        rows[ri] = {
+                                          ...rows[ri],
+                                          grade_color: val,
+                                        };
+                                        updateActiveTabPayload({
+                                          grading_scale: {
+                                            ...(getActiveTabPayload()
+                                              .grading_scale || {}),
+                                            rows,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <SelectTrigger className="w-24">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="green">
+                                          Green
+                                        </SelectItem>
+                                        <SelectItem value="blue">
+                                          Blue
+                                        </SelectItem>
+                                        <SelectItem value="orange">
+                                          Orange
+                                        </SelectItem>
+                                        <SelectItem value="red">Red</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      type="number"
+                                      placeholder="Points"
+                                      className="w-20"
+                                      step="0.1"
+                                      value={row.grade_point ?? ""}
+                                      onChange={(e) => {
+                                        const rows = [
+                                          ...(getActiveTabPayload()
+                                            .grading_scale?.rows || []),
+                                        ];
+                                        rows[ri] = {
+                                          ...rows[ri],
+                                          grade_point: Number(e.target.value),
+                                        };
+                                        updateActiveTabPayload({
+                                          grading_scale: {
+                                            ...(getActiveTabPayload()
+                                              .grading_scale || {}),
+                                            rows,
+                                          },
+                                        });
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const rows = (
+                                          getActiveTabPayload().grading_scale
+                                            ?.rows || []
+                                        ).filter(
+                                          (_: any, i: number) => i !== ri,
+                                        );
+                                        updateActiveTabPayload({
+                                          grading_scale: {
+                                            ...(getActiveTabPayload()
+                                              .grading_scale || {}),
+                                            rows,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ACADEMIC GUIDELINES BANNER */}
+                          {examPolicySubTab === "guidelines" && (
+                            <div className="space-y-6">
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-1">
+                                  <Label>Banner Tag</Label>
+                                  <Input
+                                    placeholder="e.g. ACADEMIC POLICIES"
+                                    value={
+                                      getActiveTabPayload()
+                                        .important_guidelines_banner?.tag || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        important_guidelines_banner: {
+                                          ...(getActiveTabPayload()
+                                            .important_guidelines_banner || {}),
+                                          tag: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label>Background Style</Label>
+                                  <Input
+                                    placeholder="e.g. gradient_orange"
+                                    value={
+                                      getActiveTabPayload()
+                                        .important_guidelines_banner
+                                        ?.background_style || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        important_guidelines_banner: {
+                                          ...(getActiveTabPayload()
+                                            .important_guidelines_banner || {}),
+                                          background_style: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1 md:col-span-2">
+                                  <Label>Banner Title</Label>
+                                  <Input
+                                    placeholder="e.g. Important Guidelines"
+                                    value={
+                                      getActiveTabPayload()
+                                        .important_guidelines_banner?.title ||
+                                      ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        important_guidelines_banner: {
+                                          ...(getActiveTabPayload()
+                                            .important_guidelines_banner || {}),
+                                          title: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1 md:col-span-2">
+                                  <Label>Banner Description</Label>
+                                  <Textarea
+                                    rows={2}
+                                    placeholder="Brief description of the guidelines..."
+                                    value={
+                                      getActiveTabPayload()
+                                        .important_guidelines_banner
+                                        ?.description || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        important_guidelines_banner: {
+                                          ...(getActiveTabPayload()
+                                            .important_guidelines_banner || {}),
+                                          description: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-3 pt-4 border-t">
+                                <div className="flex justify-between items-center">
+                                  <Label className="font-bold">
+                                    Academic Policies
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const policies = [
+                                        ...(getActiveTabPayload()
+                                          .important_guidelines_banner
+                                          ?.academic_policies || []),
+                                        {
+                                          badge: "",
+                                          title: "",
+                                          description: "",
+                                          read_more_link: "",
+                                          icon: "",
+                                        },
+                                      ];
+                                      updateActiveTabPayload({
+                                        important_guidelines_banner: {
+                                          ...(getActiveTabPayload()
+                                            .important_guidelines_banner || {}),
+                                          academic_policies: policies,
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add Policy
+                                  </Button>
+                                </div>
+                                {(
+                                  getActiveTabPayload()
+                                    .important_guidelines_banner
+                                    ?.academic_policies || []
+                                ).map((policy: any, pi: number) => (
+                                  <div
+                                    key={pi}
+                                    className="border p-4 rounded-xl space-y-3 bg-muted/5"
+                                  >
+                                    <div className="flex gap-3 items-start">
+                                      <div className="flex-1 grid gap-3 md:grid-cols-2">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Badge Text
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Required: 75%"
+                                            value={policy.badge || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                badge: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Policy Title
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Minimum Attendance"
+                                            value={policy.title || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                title: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-1 md:col-span-2">
+                                          <Label className="text-xs">
+                                            Description
+                                          </Label>
+                                          <Textarea
+                                            rows={2}
+                                            placeholder="Policy description..."
+                                            value={policy.description || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                description: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Read More Link (optional)
+                                          </Label>
+                                          <Input
+                                            placeholder="https://..."
+                                            value={policy.read_more_link || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                read_more_link: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Icon URL (optional)
+                                          </Label>
+                                          <Input
+                                            placeholder="https://cdn.example.com/icon.png"
+                                            value={policy.icon || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                icon: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const policies = (
+                                            getActiveTabPayload()
+                                              .important_guidelines_banner
+                                              ?.academic_policies || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== pi,
+                                          );
+                                          updateActiveTabPayload({
+                                            important_guidelines_banner: {
+                                              ...(getActiveTabPayload()
+                                                .important_guidelines_banner ||
+                                                {}),
+                                              academic_policies: policies,
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* PROJECTS / OJT / INTERNSHIP */}
+                          {examPolicySubTab === "special" && (
+                            <div className="space-y-8">
+                              {/* Projects & Dissertation */}
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
+                                <h4 className="font-bold text-sm">
+                                  Projects & Dissertation
+                                </h4>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      Marks Distribution Segments
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const segs = [
+                                          ...(getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.marks_distribution_bar
+                                            ?.segments || []),
+                                          {
+                                            label: "",
+                                            percent: 0,
+                                            color: "#3B82F6",
+                                          },
+                                        ];
+                                        updateActiveTabPayload({
+                                          projects_dissertation: {
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation || {}),
+                                            marks_distribution_bar: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation
+                                                ?.marks_distribution_bar || {}),
+                                              segments: segs,
+                                            },
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                      Segment
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().projects_dissertation
+                                      ?.marks_distribution_bar?.segments || []
+                                  ).map((seg: any, si: number) => (
+                                    <div
+                                      key={si}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Label"
+                                        value={seg.label || ""}
+                                        onChange={(e) => {
+                                          const segs = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.marks_distribution_bar
+                                              ?.segments || []),
+                                          ];
+                                          segs[si] = {
+                                            ...segs[si],
+                                            label: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                segments: segs,
+                                              },
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="%"
+                                        className="w-20"
+                                        value={seg.percent ?? ""}
+                                        onChange={(e) => {
+                                          const segs = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.marks_distribution_bar
+                                              ?.segments || []),
+                                          ];
+                                          segs[si] = {
+                                            ...segs[si],
+                                            percent: Number(e.target.value),
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                segments: segs,
+                                              },
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        placeholder="#color"
+                                        className="w-28"
+                                        value={seg.color || ""}
+                                        onChange={(e) => {
+                                          const segs = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.marks_distribution_bar
+                                              ?.segments || []),
+                                          ];
+                                          segs[si] = {
+                                            ...segs[si],
+                                            color: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                segments: segs,
+                                              },
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const segs = (
+                                            getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.marks_distribution_bar
+                                              ?.segments || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== si,
+                                          );
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                segments: segs,
+                                              },
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="border-t pt-3 space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      Internal Assessment Components
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const comps = [
+                                          ...(getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.internal_assessment?.[0]
+                                            ?.components || []),
+                                          { name: "", marks: 0 },
+                                        ];
+                                        updateActiveTabPayload({
+                                          projects_dissertation: {
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation || {}),
+                                            internal_assessment: [
+                                              {
+                                                section:
+                                                  "Components of Internal Evaluation",
+                                                components: comps,
+                                              },
+                                            ],
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().projects_dissertation
+                                      ?.internal_assessment?.[0]?.components ||
+                                    []
+                                  ).map((comp: any, ci: number) => (
+                                    <div
+                                      key={ci}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Component name"
+                                        value={comp.name || ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.internal_assessment?.[0]
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            name: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              internal_assessment: [
+                                                {
+                                                  section:
+                                                    "Components of Internal Evaluation",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Marks"
+                                        className="w-20"
+                                        value={comp.marks ?? ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.internal_assessment?.[0]
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            marks: Number(e.target.value),
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              internal_assessment: [
+                                                {
+                                                  section:
+                                                    "Components of Internal Evaluation",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const comps = (
+                                            getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.internal_assessment?.[0]
+                                              ?.components || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== ci,
+                                          );
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              internal_assessment: [
+                                                {
+                                                  section:
+                                                    "Components of Internal Evaluation",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="border-t pt-3 space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      External Assessment Components
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const comps = [
+                                          ...(getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.external_examination?.[0]
+                                            ?.components || []),
+                                          { name: "", marks: 0 },
+                                        ];
+                                        updateActiveTabPayload({
+                                          projects_dissertation: {
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation || {}),
+                                            external_examination: [
+                                              {
+                                                section:
+                                                  "Components of External Assessment",
+                                                components: comps,
+                                              },
+                                            ],
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().projects_dissertation
+                                      ?.external_examination?.[0]?.components ||
+                                    []
+                                  ).map((comp: any, ci: number) => (
+                                    <div
+                                      key={ci}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Component name"
+                                        value={comp.name || ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.external_examination?.[0]
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            name: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              external_examination: [
+                                                {
+                                                  section:
+                                                    "Components of External Assessment",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Marks"
+                                        className="w-20"
+                                        value={comp.marks ?? ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.external_examination?.[0]
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            marks: Number(e.target.value),
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              external_examination: [
+                                                {
+                                                  section:
+                                                    "Components of External Assessment",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const comps = (
+                                            getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.external_examination?.[0]
+                                              ?.components || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== ci,
+                                          );
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              external_examination: [
+                                                {
+                                                  section:
+                                                    "Components of External Assessment",
+                                                  components: comps,
+                                                },
+                                              ],
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="border-t pt-3 space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      Summary Cards
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const cards = [
+                                          ...(getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.summary_cards || []),
+                                          { label: "", value: "" },
+                                        ];
+                                        updateActiveTabPayload({
+                                          projects_dissertation: {
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation || {}),
+                                            summary_cards: cards,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().projects_dissertation
+                                      ?.summary_cards || []
+                                  ).map((sc: any, si: number) => (
+                                    <div
+                                      key={si}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Label"
+                                        value={sc.label || ""}
+                                        onChange={(e) => {
+                                          const cards = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.summary_cards || []),
+                                          ];
+                                          cards[si] = {
+                                            ...cards[si],
+                                            label: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              summary_cards: cards,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        placeholder="Value (e.g. 30 Marks)"
+                                        value={sc.value || ""}
+                                        onChange={(e) => {
+                                          const cards = [
+                                            ...(getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.summary_cards || []),
+                                          ];
+                                          cards[si] = {
+                                            ...cards[si],
+                                            value: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              summary_cards: cards,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const cards = (
+                                            getActiveTabPayload()
+                                              .projects_dissertation
+                                              ?.summary_cards || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== si,
+                                          );
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              summary_cards: cards,
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* OJT Evaluation */}
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
+                                <h4 className="font-bold text-sm">
+                                  OJT Evaluation
+                                </h4>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Section Title
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. OJT ASSESSMENT CRITERIA"
+                                      value={
+                                        getActiveTabPayload().ojt_evaluation
+                                          ?.section_title || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          ojt_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation || {}),
+                                            section_title: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Total Summary Label
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. TOTAL ASSESSMENT"
+                                      value={
+                                        getActiveTabPayload().ojt_evaluation
+                                          ?.total_summary?.label || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          ojt_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation || {}),
+                                            total_summary: {
+                                              ...(getActiveTabPayload()
+                                                .ojt_evaluation
+                                                ?.total_summary || {}),
+                                              label: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Total Summary Value
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. 100 Marks"
+                                      value={
+                                        getActiveTabPayload().ojt_evaluation
+                                          ?.total_summary?.value || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          ojt_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation || {}),
+                                            total_summary: {
+                                              ...(getActiveTabPayload()
+                                                .ojt_evaluation
+                                                ?.total_summary || {}),
+                                              value: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      Criteria Components
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const comps = [
+                                          ...(getActiveTabPayload()
+                                            .ojt_evaluation?.components || []),
+                                          { name: "", marks: 0 },
+                                        ];
+                                        updateActiveTabPayload({
+                                          ojt_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation || {}),
+                                            components: comps,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().ojt_evaluation
+                                      ?.components || []
+                                  ).map((comp: any, ci: number) => (
+                                    <div
+                                      key={ci}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Criterion name"
+                                        value={comp.name || ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation?.components ||
+                                              []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            name: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            ojt_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .ojt_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Marks"
+                                        className="w-20"
+                                        value={comp.marks ?? ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation?.components ||
+                                              []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            marks: Number(e.target.value),
+                                          };
+                                          updateActiveTabPayload({
+                                            ojt_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .ojt_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const comps = (
+                                            getActiveTabPayload().ojt_evaluation
+                                              ?.components || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== ci,
+                                          );
+                                          updateActiveTabPayload({
+                                            ojt_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .ojt_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Internship Evaluation */}
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
+                                <h4 className="font-bold text-sm">
+                                  Internship Evaluation
+                                </h4>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Section Title
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. COMPONENTS OF INTERNSHIP EVALUATION"
+                                      value={
+                                        getActiveTabPayload()
+                                          .internship_evaluation
+                                          ?.section_title || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          internship_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation || {}),
+                                            section_title: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Total Summary Label
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. TOTAL EVALUATION"
+                                      value={
+                                        getActiveTabPayload()
+                                          .internship_evaluation?.total_summary
+                                          ?.label || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          internship_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation || {}),
+                                            total_summary: {
+                                              ...(getActiveTabPayload()
+                                                .internship_evaluation
+                                                ?.total_summary || {}),
+                                              label: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Total Summary Value
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. 100 Marks"
+                                      value={
+                                        getActiveTabPayload()
+                                          .internship_evaluation?.total_summary
+                                          ?.value || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          internship_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation || {}),
+                                            total_summary: {
+                                              ...(getActiveTabPayload()
+                                                .internship_evaluation
+                                                ?.total_summary || {}),
+                                              value: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-xs font-semibold">
+                                      Internship Components
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const comps = [
+                                          ...(getActiveTabPayload()
+                                            .internship_evaluation
+                                            ?.components || []),
+                                          { name: "", marks: 0 },
+                                        ];
+                                        updateActiveTabPayload({
+                                          internship_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation || {}),
+                                            components: comps,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    getActiveTabPayload().internship_evaluation
+                                      ?.components || []
+                                  ).map((comp: any, ci: number) => (
+                                    <div
+                                      key={ci}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Component name"
+                                        value={comp.name || ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            name: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            internship_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .internship_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Marks"
+                                        className="w-20"
+                                        value={comp.marks ?? ""}
+                                        onChange={(e) => {
+                                          const comps = [
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation
+                                              ?.components || []),
+                                          ];
+                                          comps[ci] = {
+                                            ...comps[ci],
+                                            marks: Number(e.target.value),
+                                          };
+                                          updateActiveTabPayload({
+                                            internship_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .internship_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const comps = (
+                                            getActiveTabPayload()
+                                              .internship_evaluation
+                                              ?.components || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== ci,
+                                          );
+                                          updateActiveTabPayload({
+                                            internship_evaluation: {
+                                              ...(getActiveTabPayload()
+                                                .internship_evaluation || {}),
+                                              components: comps,
+                                            },
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
