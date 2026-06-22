@@ -1,0 +1,21 @@
+meta {
+  name: Update Room Type
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/room-types/{{roomTypeId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "availableBeds": 12
+  }
+}

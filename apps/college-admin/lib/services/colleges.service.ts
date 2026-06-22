@@ -355,6 +355,60 @@ export interface HostelRoomTypeDto {
   securityDeposit: number;
 }
 
+export interface HostelWardenInfoDto {
+  name?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+}
+
+export interface HostelAmenityDto {
+  name: string;
+  icon?: string;
+}
+
+export interface HostelRuleDto {
+  title: string;
+  description: string;
+}
+
+export interface HostelNearbyEssentialDto {
+  type: string;
+  name: string;
+  distance: string;
+}
+
+export interface HostelLocationInfoDto {
+  address?: string;
+  nearbyEssentials?: HostelNearbyEssentialDto[];
+}
+
+export interface HostelMessPlanDto {
+  id: string;
+  name: string;
+  description: string | null;
+  mealsIncluded: string[];
+  priceMonthly: number;
+  duration: string;
+  isCompulsory: boolean;
+  dietaryOptions: string[];
+}
+
+export interface HostelAddonPlanItemDto {
+  label: string;
+  price: number;
+}
+
+export interface HostelAddonServiceDto {
+  id: string;
+  serviceType: string;
+  name: string;
+  description: string | null;
+  isOptional: boolean;
+  plans: HostelAddonPlanItemDto[];
+  notes: string | null;
+}
+
 export interface HostelDto {
   id: string;
   name: string;
@@ -364,7 +418,17 @@ export interface HostelDto {
   distanceFromCampus: string | null;
   description: string | null;
   totalBeds: number;
+  coverImageUrl?: string | null;
+  gallery?: string[];
+  avgRating?: number;
+  reviewCount?: number;
+  wardenInfo?: HostelWardenInfoDto;
+  amenities?: HostelAmenityDto[];
+  rules?: HostelRuleDto[];
+  locationInfo?: HostelLocationInfoDto;
   roomTypes: HostelRoomTypeDto[];
+  messPlans?: HostelMessPlanDto[];
+  addonServices?: HostelAddonServiceDto[];
 }
 
 export interface CommuteStopDto {
@@ -411,6 +475,107 @@ export async function createCollegeHostel(data: any): Promise<HostelDto> {
 
 export async function deleteCollegeHostel(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/hostels/${id}`);
+}
+
+export async function getCollegeHostelDetail(id: string): Promise<HostelDto> {
+  return api.get<HostelDto>(`/api/v1/college-admin/hostels/${id}`);
+}
+
+export async function updateCollegeHostel(
+  id: string,
+  data: any,
+): Promise<HostelDto> {
+  return api.patch<HostelDto>(`/api/v1/college-admin/hostels/${id}`, data);
+}
+
+export async function createHostelRoomType(
+  hostelId: string,
+  data: any,
+): Promise<HostelRoomTypeDto> {
+  return api.post<HostelRoomTypeDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/room-types`,
+    data,
+  );
+}
+
+export async function updateHostelRoomType(
+  hostelId: string,
+  id: string,
+  data: any,
+): Promise<HostelRoomTypeDto> {
+  return api.patch<HostelRoomTypeDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/room-types/${id}`,
+    data,
+  );
+}
+
+export async function deleteHostelRoomType(
+  hostelId: string,
+  id: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/hostels/${hostelId}/room-types/${id}`,
+  );
+}
+
+export async function createHostelMessPlan(
+  hostelId: string,
+  data: any,
+): Promise<HostelMessPlanDto> {
+  return api.post<HostelMessPlanDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/mess-plans`,
+    data,
+  );
+}
+
+export async function updateHostelMessPlan(
+  hostelId: string,
+  id: string,
+  data: any,
+): Promise<HostelMessPlanDto> {
+  return api.patch<HostelMessPlanDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/mess-plans/${id}`,
+    data,
+  );
+}
+
+export async function deleteHostelMessPlan(
+  hostelId: string,
+  id: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/hostels/${hostelId}/mess-plans/${id}`,
+  );
+}
+
+export async function createHostelAddonService(
+  hostelId: string,
+  data: any,
+): Promise<HostelAddonServiceDto> {
+  return api.post<HostelAddonServiceDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/addon-services`,
+    data,
+  );
+}
+
+export async function updateHostelAddonService(
+  hostelId: string,
+  id: string,
+  data: any,
+): Promise<HostelAddonServiceDto> {
+  return api.patch<HostelAddonServiceDto>(
+    `/api/v1/college-admin/hostels/${hostelId}/addon-services/${id}`,
+    data,
+  );
+}
+
+export async function deleteHostelAddonService(
+  hostelId: string,
+  id: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/hostels/${hostelId}/addon-services/${id}`,
+  );
 }
 
 export async function getCollegeCommuteRoutes(): Promise<CommuteRouteDto[]> {

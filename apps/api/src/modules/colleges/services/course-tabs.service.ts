@@ -1,5 +1,6 @@
 import { NotFoundError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
+import { HostelService } from "./hostel.service";
 import {
   COURSE_SETUP_TAB_IDS,
   TAB_FIELD_MAP,
@@ -258,7 +259,6 @@ function normalizeAmount(val: unknown): string {
 function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
   const meritRaw = asRecord(raw.merit_scholarship);
   const calcRaw = asRecord(meritRaw.calculator);
-  const summaryRaw = asRecord(meritRaw.final_summary);
   const tcRaw = meritRaw.terms_and_conditions;
 
   const merit_scholarship = {
@@ -287,19 +287,6 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
       title: "TERMS & CONDITIONS",
       icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
       items: Array.isArray(tcRaw) ? tcRaw : [],
-    },
-    final_summary: {
-      title: "FINAL SUMMARY",
-      max_scholarship: {
-        icon: "https://cdn.iconsdb.example.com/icons/star-purple.png",
-        label: "MAX SCHOLARSHIP",
-        amount: normalizeAmount(summaryRaw.max_scholarship),
-      },
-      net_payable_fees: {
-        icon: "https://cdn.iconsdb.example.com/icons/document-teal.png",
-        label: "NET PAYABLE FEES",
-        amount: normalizeAmount(summaryRaw.net_payable_fees),
-      },
     },
   };
 
@@ -454,6 +441,55 @@ function transformPublicExamPolicyTab(raw: Record<string, unknown>) {
   };
 }
 
+function transformPublicStudentHousingTab(
+  raw: Record<string, unknown>,
+  hostels: Array<{
+    id: string;
+    name: string;
+    hostelType: string;
+    isOnCampus: boolean;
+    distanceFromCampus: string | null;
+    totalBeds: number | null;
+    coverImageUrl: string | null;
+    roomTypes: Array<{
+      id: string;
+      name: string;
+      totalBeds: number;
+      availableBeds: number;
+      annualPlanPrice: unknown;
+      monthlyPlanPrice: unknown;
+    }>;
+  }>,
+) {
+  return {
+    tab: "student_housing",
+    summary: asText(raw.summary),
+    hostels: hostels.map((hostel) => ({
+      id: hostel.id,
+      name: hostel.name,
+      hostelType: hostel.hostelType,
+      isOnCampus: hostel.isOnCampus,
+      distanceFromCampus: hostel.distanceFromCampus,
+      totalBeds: hostel.totalBeds,
+      coverImageUrl: hostel.coverImageUrl,
+      roomTypes: hostel.roomTypes.map((roomType) => ({
+        id: roomType.id,
+        name: roomType.name,
+        totalBeds: roomType.totalBeds,
+        availableBeds: roomType.availableBeds,
+        annualPlanPrice:
+          roomType.annualPlanPrice != null
+            ? Number(roomType.annualPlanPrice)
+            : null,
+        monthlyPlanPrice:
+          roomType.monthlyPlanPrice != null
+            ? Number(roomType.monthlyPlanPrice)
+            : null,
+      })),
+    })),
+  };
+}
+
 function transformPublicLibraryTab(raw: Record<string, unknown>) {
   const libraries = Array.isArray(raw.libraries)
     ? (raw.libraries as Record<string, unknown>[]).map((lib) => {
@@ -558,6 +594,149 @@ function transformPublicClubsAssociationsTab(raw: Record<string, unknown>): {
 
   return {
     data: transformedClubs,
+  };
+}
+
+function transformPublicAllianceTab(raw: Record<string, unknown>): {
+  data: Record<string, unknown>[];
+} {
+  const alliances = Array.isArray(raw.alliances)
+    ? (raw.alliances as Record<string, unknown>[])
+    : [];
+
+  const categoryColorMap: Record<string, string> = {
+    "industrial collaboration": "blue",
+    "academic & research": "green",
+    "own hospital": "red",
+    government: "orange",
+  };
+
+  const transformedAlliances = alliances.map((alliance) => {
+    const details = asRecord(alliance.details);
+    const activitiesRaw = asRecord(
+      alliance.alliance_activities || details.alliance_activities,
+    );
+    const activities = Array.isArray(activitiesRaw.activities)
+      ? (activitiesRaw.activities as Record<string, unknown>[])
+      : [];
+    const legalDocs = Array.isArray(details.legal_documents)
+      ? (details.legal_documents as Record<string, unknown>[])
+      : [];
+
+    const category = asText(details.category) || asText(alliance.tag);
+    const categoryLower = category.toLowerCase();
+    const categoryColor = categoryColorMap[categoryLower] ?? "blue";
+
+    return {
+      id: asText(alliance.id),
+      name: asText(details.full_name) || asText(alliance.name),
+      category: category.toUpperCase(),
+      category_color: categoryColor,
+      cover_image: asText(alliance.cover_image || details.cover_image),
+      logo: asText(alliance.logo || details.logo),
+      about: {
+        description: asText(details.about),
+      },
+      collaboration_impact: {
+        description: asText(details.collaboration_impact),
+      },
+      key_focus_areas: {
+        items: Array.isArray(details.key_focus_areas)
+          ? (details.key_focus_areas as string[])
+          : [],
+      },
+      legal_and_documentation: {
+        items: legalDocs.map((doc) => ({
+          title: asText(doc.title),
+          size: asText(doc.size),
+          type: asText(doc.type),
+          download_icon:
+            "https://cdn.iconsdb.example.com/icons/download-gray.png",
+          url: asText(doc.url),
+        })),
+      },
+      alliance_activities: {
+        view_all_cta: {
+          label: "View Happenings",
+          link: asText(activitiesRaw.happenings_link),
+        },
+        items: activities.map((activity, index) => ({
+          id: asText(activity.id) || `activity_${index + 1}`,
+          title: asText(activity.title),
+          thumbnail: asText(activity.image || activity.thumbnail),
+          link: asText(activity.link),
+        })),
+      },
+    };
+  });
+
+  return {
+    data: transformedAlliances,
+  };
+}
+
+function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
+  const ageDistRaw = asRecord(raw.age_distribution);
+  const ageDistData = Array.isArray(ageDistRaw.data)
+    ? (ageDistRaw.data as Record<string, unknown>[])
+    : [];
+
+  const genderDiversity = Array.isArray(raw.gender_diversity)
+    ? (raw.gender_diversity as Record<string, unknown>[])
+    : [];
+
+  const workExp = Array.isArray(raw.work_experience)
+    ? (raw.work_experience as Record<string, unknown>[])
+    : [];
+
+  const intlPresence = Array.isArray(raw.international_presence)
+    ? (raw.international_presence as Record<string, unknown>[])
+    : [];
+
+  const natlPresence = Array.isArray(raw.national_presence)
+    ? (raw.national_presence as Record<string, unknown>[])
+    : [];
+
+  return {
+    tab: "demo_graphics",
+    age_distribution: {
+      items: ageDistData.map((item) => ({
+        label:
+          asText(item.label) || asText(item.range) || asText(item.age_range),
+        percent: asNumber(item.percent),
+      })),
+    },
+    gender_diversity: {
+      segments: genderDiversity.map((item) => ({
+        label: asText(item.label),
+        percent: asNumber(item.percent),
+      })),
+    },
+    work_experience: {
+      items: workExp.map((item) => ({
+        icon:
+          asText(item.icon) ||
+          "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+        label: asText(item.label),
+        subtitle: asText(item.description) || asText(item.subtitle),
+        percent: asNumber(item.percent),
+      })),
+    },
+    international_presence: {
+      items: intlPresence.map((item) => ({
+        flag:
+          asText(item.flag) ||
+          "https://cdn.flagicons.example.com/flags/default.png",
+        country: asText(item.country),
+        percent: asNumber(item.percent),
+      })),
+    },
+    national_presence: {
+      items: natlPresence.map((item) => ({
+        state: asText(item.state),
+        percent: asNumber(item.percent),
+      })),
+    },
   };
 }
 
@@ -813,6 +992,25 @@ export class CourseTabsService {
         return transformPublicFeeTab(asRecord(rawData));
       }
 
+      if (tabName === "student_housing") {
+        const raw = asRecord(rawData);
+        const hostelIds = Array.isArray(raw.hostelIds)
+          ? (raw.hostelIds as unknown[]).filter(
+              (id): id is string => typeof id === "string",
+            )
+          : [];
+        const hostels = await HostelService.getPublicHostelsByIds(
+          course.collegeId,
+          hostelIds,
+        );
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicStudentHousingTab(raw, hostels),
+        };
+      }
+
       if (tabName === "financial_aid") {
         return {
           sectionName: tabName,
@@ -853,6 +1051,26 @@ export class CourseTabsService {
           sectionId: tabName,
           sectionKey: tabName,
           data: transformed.data,
+        };
+      }
+
+      if (tabName === "alliance") {
+        const transformed = transformPublicAllianceTab(asRecord(rawData));
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformed.data,
+        };
+      }
+
+      if (tabName === "demo_graphics") {
+        const transformed = transformPublicDemoGraphicsTab(asRecord(rawData));
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformed,
         };
       }
 

@@ -4,6 +4,14 @@ import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError, BadRequestError } from "@/shared/errors";
 import { generateSlug } from "@/shared/utils";
+import { HostelService } from "../services/hostel.service";
+import {
+  createHostelSchema,
+  updateHostelSchema,
+  roomTypeSchema,
+  messPlanSchema,
+  addonServiceSchema,
+} from "../validators/hostel.validator";
 
 export class CollegeFacilitiesController {
   // ── Hostels Occupancy Inventory ────────────────────────────────────────────
@@ -12,36 +20,41 @@ export class CollegeFacilitiesController {
     const collegeId = req.collegeId!;
     const hostels = await prisma.hostel.findMany({
       where: { collegeId },
-      include: { roomTypes: true },
+      include: {
+        roomTypes: { where: { isActive: true } },
+        messPlans: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+        addonServices: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
+    const serialized = hostels.map((hostel) => ({
+      ...hostel,
+      avgRating: Number(hostel.avgRating),
+      roomTypes: hostel.roomTypes.map((rt) => ({
+        ...rt,
+        annualPlanPrice:
+          rt.annualPlanPrice != null ? Number(rt.annualPlanPrice) : null,
+        monthlyPlanPrice:
+          rt.monthlyPlanPrice != null ? Number(rt.monthlyPlanPrice) : null,
+        admissionFee: Number(rt.admissionFee),
+        securityDeposit: Number(rt.securityDeposit),
+      })),
+      messPlans: hostel.messPlans.map((mp) => ({
+        ...mp,
+        priceMonthly: Number(mp.priceMonthly),
+      })),
+    }));
     return res
       .status(200)
-      .json(ApiResponse.success("College hostels list fetched", hostels));
+      .json(ApiResponse.success("College hostels list fetched", serialized));
   }
 
   static async createHostel(req: Request, res: Response) {
     const collegeId = req.collegeId!;
-    const schema = z.object({
-      name: z.string().trim().min(2).max(255),
-      hostelType: z.enum(["boys", "girls", "co-ed"]),
-      isOnCampus: z.boolean().default(true),
-      distanceFromCampus: z.string().optional().nullable(),
-      description: z.string().optional().nullable(),
-      totalBeds: z.number().int().positive().optional().nullable(),
-      roomTypes: z
-        .array(
-          z.object({
-            name: z.string().trim().min(2),
-            totalBeds: z.number().int().positive(),
-            annualPlanPrice: z.number().positive().optional(),
-            securityDeposit: z.number().nonnegative().optional(),
-          }),
-        )
-        .optional(),
-    });
-
-    const body = schema.parse(req.body);
+    const body = createHostelSchema.parse(req.body);
     const slug = generateSlug(body.name);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -55,6 +68,11 @@ export class CollegeFacilitiesController {
           distanceFromCampus: body.distanceFromCampus || null,
           description: body.description || null,
           totalBeds: body.totalBeds || 0,
+          coverImageUrl: body.coverImageUrl || null,
+          wardenInfo: body.wardenInfo ?? {},
+          amenities: body.amenities ?? [],
+          rules: body.rules ?? [],
+          locationInfo: body.locationInfo ?? {},
           status: "active",
         },
       });
@@ -67,7 +85,39 @@ export class CollegeFacilitiesController {
             totalBeds: rt.totalBeds,
             availableBeds: rt.totalBeds,
             annualPlanPrice: rt.annualPlanPrice || 0,
+            monthlyPlanPrice: rt.monthlyPlanPrice || 0,
             securityDeposit: rt.securityDeposit || 0,
+            sortOrder: idx,
+          })),
+        });
+      }
+
+      if (body.messPlans && body.messPlans.length > 0) {
+        await tx.hostelMessPlan.createMany({
+          data: body.messPlans.map((mp, idx) => ({
+            hostelId: hostel.id,
+            name: mp.name,
+            description: mp.description || null,
+            mealsIncluded: mp.mealsIncluded,
+            priceMonthly: mp.priceMonthly,
+            duration: mp.duration,
+            isCompulsory: mp.isCompulsory,
+            dietaryOptions: mp.dietaryOptions,
+            sortOrder: idx,
+          })),
+        });
+      }
+
+      if (body.addonServices && body.addonServices.length > 0) {
+        await tx.hostelAddonService.createMany({
+          data: body.addonServices.map((service, idx) => ({
+            hostelId: hostel.id,
+            serviceType: service.serviceType,
+            name: service.name,
+            description: service.description || null,
+            isOptional: service.isOptional,
+            plans: service.plans,
+            notes: service.notes || null,
             sortOrder: idx,
           })),
         });
@@ -75,7 +125,7 @@ export class CollegeFacilitiesController {
 
       return tx.hostel.findUnique({
         where: { id: hostel.id },
-        include: { roomTypes: true },
+        include: { roomTypes: true, messPlans: true, addonServices: true },
       });
     });
 
@@ -103,6 +153,186 @@ export class CollegeFacilitiesController {
     return res
       .status(200)
       .json(ApiResponse.success("Hostel facility removed successfully", null));
+  }
+
+  static async getHostelDetail(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const hostel = await HostelService.getAdminHostelDetail(id, collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Hostel facility fetched", hostel));
+  }
+
+  static async updateHostel(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const body = updateHostelSchema.parse(req.body);
+    const hostel = await HostelService.updateHostel(id, collegeId, body);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Hostel facility updated", hostel));
+  }
+
+  static async createRoomType(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+
+    const body = roomTypeSchema.parse(req.body);
+    const roomType = await HostelService.createRoomType(hostelId, collegeId, {
+      ...body,
+      availableBeds: body.availableBeds ?? body.totalBeds,
+    });
+    return res
+      .status(201)
+      .json(ApiResponse.success("Room type added", roomType));
+  }
+
+  static async updateRoomType(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const body = roomTypeSchema.partial().parse(req.body);
+    const roomType = await HostelService.updateRoomType(
+      id,
+      hostelId,
+      collegeId,
+      body,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Room type updated", roomType));
+  }
+
+  static async deleteRoomType(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await HostelService.deleteRoomType(id, hostelId, collegeId);
+    return res.status(200).json(ApiResponse.success("Room type removed", null));
+  }
+
+  static async createMessPlan(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+
+    const body = messPlanSchema.parse(req.body);
+    const messPlan = await HostelService.createMessPlan(
+      hostelId,
+      collegeId,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Mess plan added", messPlan));
+  }
+
+  static async updateMessPlan(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const body = messPlanSchema.partial().parse(req.body);
+    const messPlan = await HostelService.updateMessPlan(
+      id,
+      hostelId,
+      collegeId,
+      body,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Mess plan updated", messPlan));
+  }
+
+  static async deleteMessPlan(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await HostelService.deleteMessPlan(id, hostelId, collegeId);
+    return res.status(200).json(ApiResponse.success("Mess plan removed", null));
+  }
+
+  static async createAddonService(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+
+    const body = addonServiceSchema.parse(req.body);
+    const addonService = await HostelService.createAddonService(
+      hostelId,
+      collegeId,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Addon service added", addonService));
+  }
+
+  static async updateAddonService(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const body = addonServiceSchema.partial().parse(req.body);
+    const addonService = await HostelService.updateAddonService(
+      id,
+      hostelId,
+      collegeId,
+      body,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Addon service updated", addonService));
+  }
+
+  static async deleteAddonService(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const hostelIdParam = req.params.hostelId;
+    const hostelId = Array.isArray(hostelIdParam)
+      ? hostelIdParam[0]
+      : hostelIdParam;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await HostelService.deleteAddonService(id, hostelId, collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Addon service removed", null));
   }
 
   // ── Commute transit routes ──────────────────────────────────────────────────

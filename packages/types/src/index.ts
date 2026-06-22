@@ -12,3 +12,4 @@ export * from "./starter-guide";
 export * from "./events";
 export * from "./counselling";
 export * from "./blink";
+export * from "./hostels";

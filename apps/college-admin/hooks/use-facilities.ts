@@ -6,6 +6,16 @@ import {
   getCollegeHostels,
   createCollegeHostel,
   deleteCollegeHostel,
+  updateCollegeHostel,
+  createHostelRoomType,
+  updateHostelRoomType,
+  deleteHostelRoomType,
+  createHostelMessPlan,
+  updateHostelMessPlan,
+  deleteHostelMessPlan,
+  createHostelAddonService,
+  updateHostelAddonService,
+  deleteHostelAddonService,
   getCollegeCommuteRoutes,
   createCollegeCommuteRoute,
   deleteCollegeCommuteRoute,
@@ -38,6 +48,177 @@ export function useDeleteCollegeHostel() {
 
   return useMutation({
     mutationFn: (id: string) => deleteCollegeHostel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateCollegeHostel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      updateCollegeHostel(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCreateHostelRoomType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, data }: { hostelId: string; data: any }) =>
+      createHostelRoomType(hostelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateHostelRoomType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      hostelId,
+      id,
+      data,
+    }: {
+      hostelId: string;
+      id: string;
+      data: any;
+    }) => updateHostelRoomType(hostelId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteHostelRoomType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, id }: { hostelId: string; id: string }) =>
+      deleteHostelRoomType(hostelId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCreateHostelMessPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, data }: { hostelId: string; data: any }) =>
+      createHostelMessPlan(hostelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateHostelMessPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      hostelId,
+      id,
+      data,
+    }: {
+      hostelId: string;
+      id: string;
+      data: any;
+    }) => updateHostelMessPlan(hostelId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteHostelMessPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, id }: { hostelId: string; id: string }) =>
+      deleteHostelMessPlan(hostelId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCreateHostelAddonService() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, data }: { hostelId: string; data: any }) =>
+      createHostelAddonService(hostelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateHostelAddonService() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      hostelId,
+      id,
+      data,
+    }: {
+      hostelId: string;
+      id: string;
+      data: any;
+    }) => updateHostelAddonService(hostelId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteHostelAddonService() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ hostelId, id }: { hostelId: string; id: string }) =>
+      deleteHostelAddonService(hostelId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.hostels });
     },

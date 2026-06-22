@@ -26,6 +26,10 @@ import {
   DollarSign,
   Trash2,
   Sparkles,
+  Check,
+  Calendar,
+  ShieldCheck,
+  Bed,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,9 +67,10 @@ import {
   useStreams,
   useStudyLevels,
 } from "@/hooks/use-lookups";
+import { useCollegeHostels } from "@/hooks/use-facilities";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
-// 14 course-specific tabs plus the basic configuration tab
+// 19 course-specific tabs plus the basic configuration tab
 const COURSE_TABS = [
   {
     id: "basic",
@@ -84,6 +89,12 @@ const COURSE_TABS = [
     label: "Admission Policy",
     icon: GraduationCap,
     desc: "Intake capacities, seat matrix, and entrance exams",
+  },
+  {
+    id: "eligibility_criteria",
+    label: "Eligibility Criteria",
+    icon: Check,
+    desc: "Candidate qualification rules and custom filtering options",
   },
   {
     id: "placements",
@@ -157,6 +168,30 @@ const COURSE_TABS = [
     icon: Users,
     desc: "Gender ratio, state diversity, and stats",
   },
+  {
+    id: "accreditations",
+    label: "Accreditations",
+    icon: Award,
+    desc: "Accreditations, ranking approvals, and year details",
+  },
+  {
+    id: "key_dates",
+    label: "Key Dates",
+    icon: Calendar,
+    desc: "Important calendar timelines, admissions, and exam dates",
+  },
+  {
+    id: "room_facilities",
+    label: "Room Facilities",
+    icon: Bed,
+    desc: "Hostel room standards, air conditioning, and storage",
+  },
+  {
+    id: "entrance_exam_eligibility",
+    label: "Exam Eligibility",
+    icon: ShieldCheck,
+    desc: "National/State entrance exams and qualification marks",
+  },
 ] as const;
 
 type CourseTabId = (typeof COURSE_TABS)[number]["id"];
@@ -209,6 +244,7 @@ export default function SetupAcademicsPage() {
   const { data: studyLevels = [] } = useStudyLevels();
   const { data: programTypes = [] } = useProgramTypes();
   const { data: campuses = [] } = useCollegeCampuses();
+  const { data: hostels = [] } = useCollegeHostels();
 
   const { mutate: createCourse, isPending: isCreating } =
     useCreateCollegeCourse();
@@ -538,14 +574,6 @@ export default function SetupAcademicsPage() {
       calculator: { ...(getMeritScholarship().calculator || {}), ...patch },
     });
 
-  const updateMeritFinalSummary = (patch: any) =>
-    updateMeritScholarship({
-      final_summary: {
-        ...(getMeritScholarship().final_summary || {}),
-        ...patch,
-      },
-    });
-
   const getConcessionItems = (): any[] =>
     getActiveTabPayload().financial_concessions?.items || [];
 
@@ -588,6 +616,48 @@ export default function SetupAcademicsPage() {
     updateConcessionItem(idx, {
       details: { ...(item?.details || {}), ...patch },
     });
+  };
+
+  // ── Generic List Helpers ──────────────────────────────────────────────────
+  const getTabList = (field: string): any[] => {
+    const payload = getActiveTabPayload();
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      return payload[parent]?.[child] || [];
+    }
+    return payload[field] || [];
+  };
+
+  const updateTabList = (field: string, next: any[]) => {
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      const parentObj = getActiveTabPayload()[parent] || {};
+      updateActiveTabPayload({
+        [parent]: {
+          ...parentObj,
+          [child]: next,
+        },
+      });
+    } else {
+      updateActiveTabPayload({ [field]: next });
+    }
+  };
+
+  const addTabListItem = (field: string, emptyItem: any) => {
+    updateTabList(field, [...getTabList(field), emptyItem]);
+  };
+
+  const removeTabListItem = (field: string, idx: number) => {
+    updateTabList(
+      field,
+      getTabList(field).filter((_, i) => i !== idx),
+    );
+  };
+
+  const updateTabListItem = (field: string, idx: number, patch: any) => {
+    const list = [...getTabList(field)];
+    list[idx] = { ...list[idx], ...patch };
+    updateTabList(field, list);
   };
 
   if (isLoadingCourses) {
@@ -2983,7 +3053,7 @@ export default function SetupAcademicsPage() {
 
                       {/* ADMISSION POLICY */}
                       {activeTab === "admission_policy" && (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                           <div className="space-y-2">
                             <Label>Admission Policy Summary</Label>
                             <Textarea
@@ -3048,84 +3118,1089 @@ export default function SetupAcademicsPage() {
                               />
                             </div>
                           </div>
+
+                          <div className="space-y-4 pt-4 border-t">
+                            <div className="space-y-1">
+                              <Label>Quota Options (Comma separated)</Label>
+                              <Input
+                                placeholder="e.g. Management Quota, Merit Quota, NRI Quota"
+                                value={
+                                  getActiveTabPayload().quota_options?.join(
+                                    ", ",
+                                  ) || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    quota_options: e.target.value
+                                      .split(",")
+                                      .map((s) => s.trim())
+                                      .filter(Boolean),
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Seat Matrix
+                                </CardTitle>
+                                <CardDescription>
+                                  Total and filled seats split by
+                                  quotas/categories.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("seat_matrix", {
+                                    quota: "",
+                                    total_seats: "",
+                                    filled_seats: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Seat Row
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("seat_matrix").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No seat matrix items defined yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("seat_matrix").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex gap-2 items-center"
+                                      >
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Quota / Category Name (e.g. Merit Quota)"
+                                          value={item.quota || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "seat_matrix",
+                                              idx,
+                                              { quota: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-32"
+                                          placeholder="Total Seats (e.g. 120)"
+                                          value={item.total_seats || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "seat_matrix",
+                                              idx,
+                                              { total_seats: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-32"
+                                          placeholder="Filled Seats (e.g. 102)"
+                                          value={item.filled_seats || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "seat_matrix",
+                                              idx,
+                                              { filled_seats: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removeTabListItem(
+                                              "seat_matrix",
+                                              idx,
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+
+                      {/* ELIGIBILITY CRITERIA */}
+                      {activeTab === "eligibility_criteria" && (
+                        <div className="space-y-6">
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Student Type Filter Options
+                                </CardTitle>
+                                <CardDescription>
+                                  Options shown in the student-type dropdown
+                                  (e.g. Domestic, NRI, International).
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem(
+                                    "student_type_filter.options",
+                                    {
+                                      value: "",
+                                      label: "",
+                                    },
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Option
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("student_type_filter.options")
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No student type options added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList(
+                                    "student_type_filter.options",
+                                  ).map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Value (e.g. domestic)"
+                                        value={item.value || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "student_type_filter.options",
+                                            idx,
+                                            { value: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Label (e.g. Domestic Student)"
+                                        value={item.label || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "student_type_filter.options",
+                                            idx,
+                                            { label: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem(
+                                            "student_type_filter.options",
+                                            idx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Quota Filter Options
+                                </CardTitle>
+                                <CardDescription>
+                                  Options shown in the quota-category dropdown
+                                  (e.g. General, Management, NRI).
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("quota_filter.options", {
+                                    value: "",
+                                    label: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Option
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("quota_filter.options").length ===
+                              0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No quota options added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("quota_filter.options").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex gap-2 items-center"
+                                      >
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Value (e.g. management_quota)"
+                                          value={item.value || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "quota_filter.options",
+                                              idx,
+                                              { value: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Label (e.g. Management Quota)"
+                                          value={item.label || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "quota_filter.options",
+                                              idx,
+                                              { label: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removeTabListItem(
+                                              "quota_filter.options",
+                                              idx,
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Eligibility Criteria
+                                </CardTitle>
+                                <CardDescription>
+                                  Qualification rules shown to students for this
+                                  course.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("criteria", {
+                                    heading: "",
+                                    description: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Criterion
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("criteria").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No eligibility criteria added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("criteria").map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
+                                    >
+                                      <div className="flex-1 space-y-2">
+                                        <Input
+                                          placeholder="Heading (e.g. Minimum Marks)"
+                                          value={item.heading || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("criteria", idx, {
+                                              heading: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        <Textarea
+                                          rows={2}
+                                          placeholder="Description (e.g. 60% aggregate in 10+2 with PCM)"
+                                          value={item.description || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("criteria", idx, {
+                                              description: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem("criteria", idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
 
                       {/* PLACEMENTS */}
                       {activeTab === "placements" && (
-                        <div className="space-y-4">
-                          <div className="grid gap-4 md:grid-cols-3">
-                            <div className="space-y-1">
-                              <Label>Average Salary Package</Label>
-                              <Input
-                                placeholder="e.g. 7.5 LPA"
-                                value={
-                                  getActiveTabPayload().placement_stats
-                                    ?.averagePackage || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    placement_stats: {
-                                      ...(getActiveTabPayload()
-                                        .placement_stats || {}),
-                                      averagePackage: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label>Highest Salary Package</Label>
-                              <Input
-                                placeholder="e.g. 45 LPA"
-                                value={
-                                  getActiveTabPayload().placement_stats
-                                    ?.highestPackage || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    placement_stats: {
-                                      ...(getActiveTabPayload()
-                                        .placement_stats || {}),
-                                      highestPackage: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label>Placement Percentage</Label>
-                              <Input
-                                placeholder="e.g. 96%"
-                                value={
-                                  getActiveTabPayload().placement_stats
-                                    ?.placementPercentage || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    placement_stats: {
-                                      ...(getActiveTabPayload()
-                                        .placement_stats || {}),
-                                      placementPercentage: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
+                        <div className="space-y-6">
+                          {/* Core Placement Stats Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950 flex items-center gap-2">
+                                <Briefcase className="h-5 w-5 text-indigo-600" />
+                                Core Placement Statistics
+                              </CardTitle>
+                              <CardDescription>
+                                Main placement achievements for quick display.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid gap-4 md:grid-cols-3">
+                                <div className="space-y-1">
+                                  <Label>Average Salary Package</Label>
+                                  <Input
+                                    placeholder="e.g. 7.5 LPA"
+                                    value={
+                                      getActiveTabPayload().placement_stats
+                                        ?.averagePackage || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        placement_stats: {
+                                          ...(getActiveTabPayload()
+                                            .placement_stats || {}),
+                                          averagePackage: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label>Highest Salary Package</Label>
+                                  <Input
+                                    placeholder="e.g. 45 LPA"
+                                    value={
+                                      getActiveTabPayload().placement_stats
+                                        ?.highestPackage || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        placement_stats: {
+                                          ...(getActiveTabPayload()
+                                            .placement_stats || {}),
+                                          highestPackage: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label>Placement Percentage</Label>
+                                  <Input
+                                    placeholder="e.g. 96%"
+                                    value={
+                                      getActiveTabPayload().placement_stats
+                                        ?.placementPercentage || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        placement_stats: {
+                                          ...(getActiveTabPayload()
+                                            .placement_stats || {}),
+                                          placementPercentage: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
 
-                          <div className="space-y-2 pt-4 border-t">
-                            <Label>Placement Growth Summary Description</Label>
-                            <Textarea
-                              placeholder="Highlight top recruiting companies and statistics growth..."
-                              value={getActiveTabPayload().growthSummary || ""}
-                              onChange={(e) =>
-                                updateActiveTabPayload({
-                                  growthSummary: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
+                              <div className="space-y-1 pt-2">
+                                <Label>
+                                  Placement Growth Summary Description
+                                </Label>
+                                <Textarea
+                                  placeholder="Highlight top recruiting companies and statistics growth..."
+                                  value={
+                                    getActiveTabPayload().growthSummary || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      growthSummary: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Custom Summary Stats Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Custom Summary Stats
+                                </CardTitle>
+                                <CardDescription>
+                                  Add extra placement data points (e.g. Median
+                                  Package, Total Recruiters).
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("summary_stats", {
+                                    label: "",
+                                    value: "",
+                                    unit: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Stat
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("summary_stats").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No custom stats added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("summary_stats").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex gap-2 items-center"
+                                      >
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Label (e.g. Total Recruiters)"
+                                          value={item.label || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "summary_stats",
+                                              idx,
+                                              { label: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-32"
+                                          placeholder="Value (e.g. 150+)"
+                                          value={item.value || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "summary_stats",
+                                              idx,
+                                              { value: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-24"
+                                          placeholder="Unit (e.g. Companies)"
+                                          value={item.unit || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "summary_stats",
+                                              idx,
+                                              { unit: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removeTabListItem(
+                                              "summary_stats",
+                                              idx,
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Placement Trends Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Placement Trends (Year-on-Year)
+                                </CardTitle>
+                                <CardDescription>
+                                  Average package growth trends over the years.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem(
+                                    "placement_trends.data_points",
+                                    {
+                                      year: "",
+                                      avg_package: "",
+                                    },
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Trend
+                                Point
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("placement_trends.data_points")
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No trend points added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList(
+                                    "placement_trends.data_points",
+                                  ).map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Year (e.g. 2025)"
+                                        value={item.year || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "placement_trends.data_points",
+                                            idx,
+                                            { year: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Avg Package (e.g. 8.2 LPA)"
+                                        value={item.avg_package || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "placement_trends.data_points",
+                                            idx,
+                                            { avg_package: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem(
+                                            "placement_trends.data_points",
+                                            idx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Industry Salary Report Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Industry Salary Report
+                                </CardTitle>
+                                <CardDescription>
+                                  Packages split by industry sectors.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem(
+                                    "industry_salary_report.rows",
+                                    {
+                                      industry: "",
+                                      avg_package: "",
+                                      top_package: "",
+                                    },
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Sector
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("industry_salary_report.rows")
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No sectors added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList(
+                                    "industry_salary_report.rows",
+                                  ).map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Industry (e.g. IT & Software)"
+                                        value={item.industry || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "industry_salary_report.rows",
+                                            idx,
+                                            { industry: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Avg Package (e.g. 7.8 LPA)"
+                                        value={item.avg_package || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "industry_salary_report.rows",
+                                            idx,
+                                            { avg_package: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Top Package (e.g. 24 LPA)"
+                                        value={item.top_package || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "industry_salary_report.rows",
+                                            idx,
+                                            { top_package: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem(
+                                            "industry_salary_report.rows",
+                                            idx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Recruiters Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Notable Recruiter Offers
+                                </CardTitle>
+                                <CardDescription>
+                                  Highlight top students hired with high
+                                  packages at top companies.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("notable_offers.items", {
+                                    company: "",
+                                    package: "",
+                                    logo: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Recruiter
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("notable_offers.items").length ===
+                              0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No notable offers added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("notable_offers.items").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex gap-2 items-center"
+                                      >
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Company name (e.g. Microsoft)"
+                                          value={item.company || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "notable_offers.items",
+                                              idx,
+                                              { company: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-48"
+                                          placeholder="Package (e.g. 42 LPA)"
+                                          value={item.package || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "notable_offers.items",
+                                              idx,
+                                              { package: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Logo URL (optional)"
+                                          value={item.logo || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "notable_offers.items",
+                                              idx,
+                                              { logo: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removeTabListItem(
+                                              "notable_offers.items",
+                                              idx,
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* All Company Statistics Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  All Recruiter Details
+                                </CardTitle>
+                                <CardDescription>
+                                  Full statistics of offers and packages by
+                                  company.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem(
+                                    "all_company_statistics.rows",
+                                    {
+                                      company: "",
+                                      offers: "",
+                                      avg_package: "",
+                                    },
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Recruiter
+                                Stat
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("all_company_statistics.rows")
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No company statistics added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList(
+                                    "all_company_statistics.rows",
+                                  ).map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Company (e.g. Accenture)"
+                                        value={item.company || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "all_company_statistics.rows",
+                                            idx,
+                                            { company: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="w-32"
+                                        placeholder="Offers Count (e.g. 45)"
+                                        value={item.offers || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "all_company_statistics.rows",
+                                            idx,
+                                            { offers: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        className="w-48"
+                                        placeholder="Avg Package (e.g. 6.5 LPA)"
+                                        value={item.avg_package || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem(
+                                            "all_company_statistics.rows",
+                                            idx,
+                                            { avg_package: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem(
+                                            "all_company_statistics.rows",
+                                            idx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Student Success Card */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Student Success Stories
+                                </CardTitle>
+                                <CardDescription>
+                                  List individual stellar placements of
+                                  students.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("student_success.items", {
+                                    name: "",
+                                    company: "",
+                                    package: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Success
+                                Story
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("student_success.items").length ===
+                              0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No student success stories added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("student_success.items").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex gap-2 items-center"
+                                      >
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Student Name (e.g. Rahul Sharma)"
+                                          value={item.name || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "student_success.items",
+                                              idx,
+                                              { name: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Placed Company (e.g. Google)"
+                                          value={item.company || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "student_success.items",
+                                              idx,
+                                              { company: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Input
+                                          className="w-48"
+                                          placeholder="Package (e.g. 32 LPA)"
+                                          value={item.package || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem(
+                                              "student_success.items",
+                                              idx,
+                                              { package: e.target.value },
+                                            )
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removeTabListItem(
+                                              "student_success.items",
+                                              idx,
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Placement Report PDF Link */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950">
+                                Placement Report PDF
+                              </CardTitle>
+                              <CardDescription>
+                                Document URL for the full placement audit
+                                report.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-1">
+                                <Label>Placement Report PDF URL</Label>
+                                <Input
+                                  placeholder="https://example.com/placement-report.pdf"
+                                  value={
+                                    getActiveTabPayload().download_report
+                                      ?.url || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      download_report: {
+                                        ...(getActiveTabPayload()
+                                          .download_report || {}),
+                                        url: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
 
@@ -3648,39 +4723,6 @@ export default function SetupAcademicsPage() {
                               />
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2 pt-2 border-t">
-                              <div className="space-y-1">
-                                <Label>Max Scholarship</Label>
-                                <Input
-                                  placeholder="e.g. Rs1,50,000"
-                                  value={
-                                    getMeritScholarship().final_summary
-                                      ?.max_scholarship || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateMeritFinalSummary({
-                                      max_scholarship: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label>Net Payable Fees</Label>
-                                <Input
-                                  placeholder="e.g. Rs2,45,000"
-                                  value={
-                                    getMeritScholarship().final_summary
-                                      ?.net_payable_fees || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateMeritFinalSummary({
-                                      net_payable_fees: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-                            </div>
-
                             {(
                               [
                                 {
@@ -3928,7 +4970,7 @@ export default function SetupAcademicsPage() {
 
                       {/* STUDENT HOUSING */}
                       {activeTab === "student_housing" && (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                           <div className="space-y-2">
                             <Label>Hostel & Housing Summary</Label>
                             <Textarea
@@ -3941,6 +4983,131 @@ export default function SetupAcademicsPage() {
                               }
                             />
                           </div>
+
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950">
+                                Linked Hostels
+                              </CardTitle>
+                              <CardDescription>
+                                Select which of the college&apos;s hostels apply
+                                to students of this course.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {hostels.length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No hostels added yet &mdash; add one under
+                                  Setup &rarr; Hostels first.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {hostels.map((hostel) => {
+                                    const linkedIds: string[] =
+                                      getActiveTabPayload().hostelIds || [];
+                                    const isLinked = linkedIds.includes(
+                                      hostel.id,
+                                    );
+                                    return (
+                                      <label
+                                        key={hostel.id}
+                                        className="flex items-center gap-3 border p-3 rounded-lg bg-muted/5 cursor-pointer"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          className="h-4 w-4"
+                                          checked={isLinked}
+                                          onChange={() => {
+                                            const next = isLinked
+                                              ? linkedIds.filter(
+                                                  (id) => id !== hostel.id,
+                                                )
+                                              : [...linkedIds, hostel.id];
+                                            updateActiveTabPayload({
+                                              hostelIds: next,
+                                            });
+                                          }}
+                                        />
+                                        <div className="flex-1">
+                                          <p className="text-sm font-semibold">
+                                            {hostel.name}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {hostel.hostelType} &middot;{" "}
+                                            {hostel.totalBeds} beds
+                                          </p>
+                                        </div>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950">
+                                Currently Linked
+                              </CardTitle>
+                              <CardDescription>
+                                Hostels currently shown on this course&apos;s
+                                Student Housing tab.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {(getActiveTabPayload().hostelIds || [])
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No hostels linked yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {(getActiveTabPayload().hostelIds || []).map(
+                                    (hostelId: string) => {
+                                      const hostel = hostels.find(
+                                        (h) => h.id === hostelId,
+                                      );
+                                      if (!hostel) return null;
+                                      return (
+                                        <div
+                                          key={hostelId}
+                                          className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
+                                        >
+                                          <div>
+                                            <p className="text-sm font-semibold">
+                                              {hostel.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {hostel.hostelType} &middot;{" "}
+                                              {hostel.totalBeds} beds
+                                            </p>
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                              const linkedIds: string[] =
+                                                getActiveTabPayload()
+                                                  .hostelIds || [];
+                                              updateActiveTabPayload({
+                                                hostelIds: linkedIds.filter(
+                                                  (id) => id !== hostelId,
+                                                ),
+                                              });
+                                            }}
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
 
@@ -7925,6 +9092,368 @@ export default function SetupAcademicsPage() {
                               />
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* ACCREDITATIONS */}
+                      {activeTab === "accreditations" && (
+                        <div className="space-y-6">
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Accreditations & Approvals
+                                </CardTitle>
+                                <CardDescription>
+                                  Ranking bodies, accreditation grades, and
+                                  approval years for this course.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("items", {
+                                    name: "",
+                                    year: "",
+                                    description: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add
+                                Accreditation
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("items").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No accreditations added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("items").map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
+                                    >
+                                      <div className="flex-1 space-y-2">
+                                        <div className="flex gap-2">
+                                          <Input
+                                            className="flex-1"
+                                            placeholder="Name (e.g. NAAC A++)"
+                                            value={item.name || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem("items", idx, {
+                                                name: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Input
+                                            className="w-32"
+                                            placeholder="Year (e.g. 2023)"
+                                            value={item.year || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem("items", idx, {
+                                                year: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <Textarea
+                                          rows={2}
+                                          placeholder="Description (optional)"
+                                          value={item.description || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("items", idx, {
+                                              description: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem("items", idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+
+                      {/* KEY DATES */}
+                      {activeTab === "key_dates" && (
+                        <div className="space-y-6">
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Key Dates
+                                </CardTitle>
+                                <CardDescription>
+                                  Important admissions and exam timelines for
+                                  this course.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("items", {
+                                    label: "",
+                                    date: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Date
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("items").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No key dates added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("items").map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Label (e.g. Application Deadline)"
+                                        value={item.label || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem("items", idx, {
+                                            label: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <Input
+                                        className="w-48"
+                                        placeholder="Date (e.g. 15 July 2026)"
+                                        value={item.date || ""}
+                                        onChange={(e) =>
+                                          updateTabListItem("items", idx, {
+                                            date: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem("items", idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+
+                      {/* ROOM FACILITIES */}
+                      {activeTab === "room_facilities" && (
+                        <div className="space-y-6">
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Room Facilities
+                                </CardTitle>
+                                <CardDescription>
+                                  Hostel room standards, amenities, and storage
+                                  details for this course&apos;s students.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("items", {
+                                    label: "",
+                                    description: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Facility
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("items").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No room facilities added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("items").map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
+                                    >
+                                      <div className="flex-1 space-y-2">
+                                        <Input
+                                          placeholder="Label (e.g. Air Conditioning)"
+                                          value={item.label || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("items", idx, {
+                                              label: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        <Textarea
+                                          rows={2}
+                                          placeholder="Description (e.g. Available in all premium rooms)"
+                                          value={item.description || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("items", idx, {
+                                              description: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem("items", idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+
+                      {/* ENTRANCE EXAM ELIGIBILITY */}
+                      {activeTab === "entrance_exam_eligibility" && (
+                        <div className="space-y-6">
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Entrance Exam Eligibility
+                                </CardTitle>
+                                <CardDescription>
+                                  National/state entrance exams accepted and the
+                                  qualifying marks required.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("exams", {
+                                    name: "",
+                                    level: "",
+                                    min_qualifying_marks: "",
+                                    description: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Exam
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {getTabList("exams").length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No entrance exams added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("exams").map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
+                                    >
+                                      <div className="flex-1 space-y-2">
+                                        <div className="flex gap-2">
+                                          <Input
+                                            className="flex-1"
+                                            placeholder="Exam Name (e.g. JEE Main)"
+                                            value={item.name || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem("exams", idx, {
+                                                name: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Input
+                                            className="w-40"
+                                            placeholder="Level (National/State)"
+                                            value={item.level || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem("exams", idx, {
+                                                level: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Input
+                                            className="w-48"
+                                            placeholder="Min Qualifying Marks (e.g. 60%ile)"
+                                            value={
+                                              item.min_qualifying_marks || ""
+                                            }
+                                            onChange={(e) =>
+                                              updateTabListItem("exams", idx, {
+                                                min_qualifying_marks:
+                                                  e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <Textarea
+                                          rows={2}
+                                          placeholder="Description (optional)"
+                                          value={item.description || ""}
+                                          onChange={(e) =>
+                                            updateTabListItem("exams", idx, {
+                                              description: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem("exams", idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
                     </>
