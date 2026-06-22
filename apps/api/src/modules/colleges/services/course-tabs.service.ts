@@ -527,6 +527,96 @@ function transformPublicFacultyTab(raw: unknown): unknown[] {
   return [];
 }
 
+function transformPublicReviewTab(raw: Record<string, unknown>) {
+  // Overall rating
+  const overallRaw = asRecord(raw.overallRating);
+  const averageRating =
+    asNumber(overallRaw.rating) || asNumber(raw.average_rating);
+  const totalReviews =
+    asNumber(overallRaw.totalReviews) || asNumber(raw.total_reviews);
+
+  // Rating breakdown (emoji buckets)
+  const ratingDistribution = Array.isArray(raw.ratingDistribution)
+    ? (raw.ratingDistribution as Record<string, unknown>[])
+    : Array.isArray(raw.rating_breakdown)
+      ? (raw.rating_breakdown as Record<string, unknown>[])
+      : [];
+  const ratingBreakdownItems = ratingDistribution.map((item) => ({
+    emoji: asText(item.emoji),
+    count: asNumber(item.count),
+  }));
+
+  // Category ratings
+  const categoryRatings = Array.isArray(raw.categoryRatings)
+    ? (raw.categoryRatings as Record<string, unknown>[])
+    : Array.isArray(raw.review_categories)
+      ? (raw.review_categories as Record<string, unknown>[])
+      : [];
+  const categoryIcons: Record<string, string> = {
+    "Faculty & Course":
+      "https://cdn.iconsdb.example.com/icons/book-faculty-orange.png",
+    "Campus Life":
+      "https://cdn.iconsdb.example.com/icons/graduation-cap-orange.png",
+    Infrastructure: "https://cdn.iconsdb.example.com/icons/building-orange.png",
+    Placements: "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+  };
+  const categoryRatingItems = categoryRatings.map((item) => {
+    const label = asText(item.label) || asText(item.name);
+    return {
+      icon:
+        asText(item.icon) ||
+        categoryIcons[label] ||
+        "https://cdn.iconsdb.example.com/icons/star-orange.png",
+      label,
+      rating: asNumber(item.rating) || asNumber(item.average_rating) || 4,
+    };
+  });
+
+  // Recent reviews (first page, up to 10)
+  const reviews = Array.isArray(raw.reviews)
+    ? (raw.reviews as Record<string, unknown>[])
+    : [];
+  const recentReviewItems = reviews.slice(0, 10).map((r, idx) => ({
+    id: asText(r.id) || `review_${String(idx + 1).padStart(3, "0")}`,
+    reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
+    reviewer_avatar:
+      asText(r.avatar) ||
+      asText(r.reviewer_avatar) ||
+      "https://cdn.iconsdb.example.com/icons/avatar-placeholder-orange.png",
+    date: asText(r.date),
+    rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
+    comment: asText(r.comment),
+  }));
+
+  const paginationRaw = asRecord(raw.pagination);
+  const hasMore =
+    typeof paginationRaw.hasMore === "boolean"
+      ? paginationRaw.hasMore
+      : reviews.length >= 10;
+
+  return {
+    tab: "review",
+    overall_rating: {
+      average: averageRating,
+      total_reviews: totalReviews,
+    },
+    rating_breakdown: {
+      items: ratingBreakdownItems,
+    },
+    category_ratings: {
+      items: categoryRatingItems,
+    },
+    recent_reviews: {
+      title: "Reviews",
+      items: recentReviewItems,
+      load_more_cta: {
+        label: asText(paginationRaw.loadMoreLabel) || "Load more",
+      },
+    },
+    has_more: hasMore,
+  };
+}
+
 function getDefaultForTab(tabSlug: string): unknown {
   // Object-type tabs
   const objectTabs = [
@@ -1074,6 +1164,15 @@ export class CourseTabsService {
         };
       }
 
+      if (tabName === "review") {
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicReviewTab(asRecord(rawData)),
+        };
+      }
+
       return {
         sectionName: tabName,
         sectionId: tabName,
@@ -1098,6 +1197,67 @@ export class CourseTabsService {
       data:
         (course as Record<string, unknown>)[prismaField] ??
         getDefaultForTab(tabName),
+    };
+  }
+
+  /**
+   * Paginated list of reviews for a course (public).
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/reviews
+   */
+  static async listPublicCourseReviews(
+    courseId: string,
+    collegeSlug: string,
+    page: number,
+    perPage: number,
+  ) {
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const rawData = getSetupTabDataFromMetadata(course.metadata, "review");
+    const raw = asRecord(rawData);
+    const allReviews = Array.isArray(raw.reviews)
+      ? (raw.reviews as Record<string, unknown>[])
+      : [];
+
+    const overallRaw = asRecord(raw.overallRating);
+    const totalItems =
+      asNumber(overallRaw.totalReviews) ||
+      asNumber(raw.total_reviews) ||
+      allReviews.length;
+    const averageRating =
+      asNumber(overallRaw.rating) || asNumber(raw.average_rating);
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    const pageSlice = allReviews.slice(start, end);
+
+    const reviews = pageSlice.map((r, idx) => ({
+      id: asText(r.id) || `review_${String(start + idx + 1).padStart(3, "0")}`,
+      reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
+      reviewer_avatar:
+        asText(r.avatar) ||
+        asText(r.reviewer_avatar) ||
+        "https://cdn.iconsdb.example.com/icons/avatar-placeholder-orange.png",
+      date: asText(r.date),
+      rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
+      comment: asText(r.comment),
+    }));
+
+    return {
+      reviews,
+      pagination: {
+        current_page: page,
+        per_page: perPage,
+        total_items: totalItems,
+        total_pages: totalPages,
+        has_next_page: page < totalPages,
+        has_previous_page: page > 1,
+      },
     };
   }
 }
