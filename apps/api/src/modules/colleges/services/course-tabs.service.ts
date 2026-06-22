@@ -160,14 +160,6 @@ function getSetupTabDataFromMetadata(
   return tabData[tabName] ?? {};
 }
 
-function buildTabsObject(course: Record<string, unknown>) {
-  const tabs: Record<string, unknown> = {};
-  for (const [tabSlug, prismaField] of Object.entries(TAB_FIELD_MAP)) {
-    tabs[tabSlug] = course[prismaField] ?? getDefaultForTab(tabSlug);
-  }
-  return tabs;
-}
-
 function transformPublicFeeTab(raw: Record<string, unknown>) {
   const feeDetails = Array.isArray(raw.fee_details)
     ? (raw.fee_details as Record<string, unknown>[]).map((detail) => {
@@ -398,17 +390,6 @@ function getDefaultForTab(tabSlug: string): unknown {
   return [];
 }
 
-function getAvailableTabs(course: Record<string, unknown>): string[] {
-  const available: string[] = [];
-  for (const [tabSlug, prismaField] of Object.entries(TAB_FIELD_MAP)) {
-    const value = course[prismaField];
-    if (isNonEmptyTabData(value)) {
-      available.push(tabSlug);
-    }
-  }
-  return available;
-}
-
 export class CourseTabsService {
   // ── College-Admin Endpoints ──────────────────────────────────────────────
 
@@ -422,11 +403,14 @@ export class CourseTabsService {
     );
     if (!course) throw new NotFoundError("Course not found");
     const tabs = getCourseSetupTabsFromMetadata(course.metadata);
+    const record = asRecord(course.metadata);
+    const tabData = asRecord(record.tabData);
 
     return {
       courseId: course.id,
       courseName: course.name,
       tabs,
+      tabData,
     };
   }
 
