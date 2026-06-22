@@ -99,6 +99,8 @@ export class CourseTabsController {
     let message = "Course tab fetched";
     if (tabName === "clubs_associations") {
       message = "Club detail fetched successfully";
+    } else if (tabName === "alliance") {
+      message = "Alliance detail fetched successfully";
     }
 
     return res.status(200).json(ApiResponse.success(message, result));
