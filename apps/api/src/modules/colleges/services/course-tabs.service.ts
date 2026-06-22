@@ -468,6 +468,62 @@ function getDefaultForTab(tabSlug: string): unknown {
   return [];
 }
 
+function transformPublicClubsAssociationsTab(raw: Record<string, unknown>): {
+  data: Record<string, unknown>[];
+} {
+  const clubs = Array.isArray(raw.clubs)
+    ? (raw.clubs as Record<string, unknown>[])
+    : [];
+
+  const transformedClubs = clubs.map((club) => {
+    const details = asRecord(club.details);
+    const recentEvents = asRecord(club.recent_events || details.recent_events);
+    const events = Array.isArray(recentEvents.events)
+      ? (recentEvents.events as Record<string, unknown>[])
+      : [];
+
+    return {
+      id: asText(club.id),
+      name:
+        asText(details.full_name) ||
+        asText(club.name) ||
+        asText(club.short_name),
+      category: (
+        asText(club.category) || asText(details.category)
+      ).toUpperCase(),
+      cover_image: asText(club.cover_image || details.cover_image),
+      logo: asText(club.logo || details.logo),
+      about: {
+        description: asText(details.about),
+      },
+      mission: {
+        description: asText(details.mission),
+      },
+      key_activities: {
+        items: Array.isArray(details.key_activities)
+          ? (details.key_activities as string[])
+          : [],
+      },
+      recent_events: {
+        view_all_cta: {
+          label: "View Happenings",
+          link: asText(recentEvents.happenings_link),
+        },
+        items: events.map((event, index) => ({
+          id: asText(event.id) || `event_${index + 1}`,
+          title: asText(event.title),
+          thumbnail: asText(event.image || event.thumbnail),
+          link: asText(event.link),
+        })),
+      },
+    };
+  });
+
+  return {
+    data: transformedClubs,
+  };
+}
+
 export class CourseTabsService {
   // ── College-Admin Endpoints ──────────────────────────────────────────────
 
@@ -735,6 +791,18 @@ export class CourseTabsService {
           sectionId: tabName,
           sectionKey: tabName,
           data: transformPublicExamPolicyTab(asRecord(rawData)),
+        };
+      }
+
+      if (tabName === "clubs_associations") {
+        const transformed = transformPublicClubsAssociationsTab(
+          asRecord(rawData),
+        );
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformed.data,
         };
       }
 
