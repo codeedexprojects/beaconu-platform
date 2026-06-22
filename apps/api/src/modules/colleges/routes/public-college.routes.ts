@@ -16,6 +16,10 @@ router.get(
   CourseTabsController.getPublicCourseTab,
 );
 router.get(
+  "/by-slug/:slug/courses/:courseId/eligibility-criteria",
+  CourseTabsController.getPublicEligibilityCriteria,
+);
+router.get(
   "/by-slug/:slug/courses/:courseId",
   CourseTabsController.getPublicCourseDetail,
 );
