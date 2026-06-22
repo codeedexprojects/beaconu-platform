@@ -83,6 +83,17 @@ export const eligibilityCriteriaQuerySchema = z.object({
   quota_category: z.string().trim().optional(),
 });
 
+export const reviewsQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+});
+
 // ── Update Body Schema ───────────────────────────────────────────────────────
 
 export const updateCourseTabSchema = z.object({

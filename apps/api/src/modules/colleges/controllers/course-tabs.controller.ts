@@ -8,6 +8,7 @@ import {
   publicCourseDetailParamSchema,
   updateCourseTabSchema,
   eligibilityCriteriaQuerySchema,
+  reviewsQuerySchema,
 } from "../validators/course-tabs.validator";
 
 export class CourseTabsController {
@@ -129,5 +130,23 @@ export class CourseTabsController {
           result,
         ),
       );
+  }
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/reviews
+   * Paginated list of reviews for a course (public).
+   */
+  static async listPublicCourseReviews(req: Request, res: Response) {
+    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
+    const { page, per_page } = reviewsQuerySchema.parse(req.query);
+
+    const result = await CourseTabsService.listPublicCourseReviews(
+      courseId,
+      slug,
+      page,
+      per_page,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Reviews fetched successfully", result));
   }
 }
