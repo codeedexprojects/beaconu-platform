@@ -1,0 +1,17 @@
+meta {
+  name: List College Hostels
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/hostels
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the active hostels for a college (summary fields only: id, name,
+  slug, hostelType, isOnCampus, distanceFromCampus, totalBeds, coverImageUrl,
+  avgRating, reviewCount). No auth required.
+}

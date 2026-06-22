@@ -17,13 +17,9 @@ headers {
 body:json {
   {
     "email": "meera+1@counsellor.com",
-<<<<<<< Updated upstream
     "password": "Password@123",
     "counsellor_type": "academic",
     "fcm_token": ""
-=======
-    "password": "Password@123"
->>>>>>> Stashed changes
   }
 }
 
@@ -45,7 +41,6 @@ docs {
   
   Returns an access token (15 min) and sets a refreshToken cookie (90 days).
   JWT userType: counsellor
-<<<<<<< Updated upstream
 
   Required `counsellor_type`: must be "academic" or "mindcare" and must
   match the counsellor's registered type. A mindcare counsellor cannot
@@ -55,8 +50,5 @@ docs {
   deviceInfo.fcmToken so push notifications (e.g. "New session booked")
   can be delivered to this device.
 
-=======
-  
->>>>>>> Stashed changes
   Table: counsellors
 }

@@ -1,0 +1,36 @@
+meta {
+  name: Create Mess Plan
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/mess-plans
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Standard Plan",
+    "description": "Full Board (Breakfast + Lunch + Dinner)",
+    "mealsIncluded": ["Breakfast", "Lunch", "Dinner"],
+    "priceMonthly": 4500,
+    "duration": "1 Month",
+    "isCompulsory": false,
+    "dietaryOptions": ["Veg", "Non-Veg"]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("messPlanId", data.data.id);
+    }
+  }
+}

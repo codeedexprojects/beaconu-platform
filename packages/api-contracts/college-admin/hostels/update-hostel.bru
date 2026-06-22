@@ -1,0 +1,44 @@
+meta {
+  name: Update Hostel
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "description": "Premium on-campus residence with mess and laundry included.",
+    "totalBeds": 260,
+    "wardenInfo": {
+      "name": "Mrs. Sarah Jenkins",
+      "phone": "9876512340",
+      "whatsapp": "9876512340",
+      "email": "hostel.warden@example.edu.in"
+    },
+    "amenities": [
+      { "name": "High Speed Wi-Fi", "icon": "wifi" },
+      { "name": "24x7 Security", "icon": "shield" }
+    ],
+    "rules": [
+      {
+        "title": "Curfew Time",
+        "description": "Entry curfew is strictly 9:30 PM."
+      }
+    ],
+    "locationInfo": {
+      "address": "Block C, South Campus Area",
+      "nearbyEssentials": [
+        { "type": "Hospital", "name": "Apollo Spectra", "distance": "3.0 km" }
+      ]
+    }
+  }
+}

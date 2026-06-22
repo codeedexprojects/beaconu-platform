@@ -1,0 +1,21 @@
+meta {
+  name: Update Addon Service
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/addon-services/{{addonServiceId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "notes": "Excludes dry cleaning and ironing."
+  }
+}

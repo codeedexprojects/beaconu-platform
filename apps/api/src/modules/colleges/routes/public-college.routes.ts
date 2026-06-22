@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PublicCollegeController } from "../controllers/public-college.controller";
 import { CourseTabsController } from "../controllers/course-tabs.controller";
+import { PublicHostelController } from "../controllers/public-hostel.controller";
 
 const router: Router = Router();
 
@@ -23,6 +24,13 @@ router.get(
   "/by-slug/:slug/courses/:courseId",
   CourseTabsController.getPublicCourseDetail,
 );
+
+// ── Hostels (public) ──────────────────────────────────────────────────────────
+router.get(
+  "/by-slug/:slug/hostels/:hostelId",
+  PublicHostelController.getPublicHostelDetail,
+);
+router.get("/by-slug/:slug/hostels", PublicHostelController.listPublicHostels);
 
 router.get("/:id", PublicCollegeController.getCollegeById);
 router.get("/by-slug/:slug", PublicCollegeController.getCollegeBySlug);

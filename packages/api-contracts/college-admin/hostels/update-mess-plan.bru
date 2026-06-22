@@ -1,0 +1,21 @@
+meta {
+  name: Update Mess Plan
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/mess-plans/{{messPlanId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "priceMonthly": 4800
+  }
+}

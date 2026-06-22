@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
@@ -79,6 +80,53 @@ export default function HostelsPage() {
   const [newRoomPrice, setNewRoomPrice] = useState("");
   const [newRoomDeposit, setNewRoomDeposit] = useState("");
 
+  // Warden info
+  const [wardenName, setWardenName] = useState("");
+  const [wardenPhone, setWardenPhone] = useState("");
+  const [wardenWhatsapp, setWardenWhatsapp] = useState("");
+  const [wardenEmail, setWardenEmail] = useState("");
+
+  // Amenities
+  const [amenities, setAmenities] = useState<{ name: string }[]>([]);
+  const [newAmenityName, setNewAmenityName] = useState("");
+
+  // Rules
+  const [rules, setRules] = useState<{ title: string; description: string }[]>(
+    [],
+  );
+  const [newRuleTitle, setNewRuleTitle] = useState("");
+  const [newRuleDesc, setNewRuleDesc] = useState("");
+
+  // Location
+  const [address, setAddress] = useState("");
+  const [nearbyEssentials, setNearbyEssentials] = useState<
+    { type: string; name: string; distance: string }[]
+  >([]);
+  const [newEssentialType, setNewEssentialType] = useState("");
+  const [newEssentialName, setNewEssentialName] = useState("");
+  const [newEssentialDistance, setNewEssentialDistance] = useState("");
+
+  // Mess plans
+  const [messPlans, setMessPlans] = useState<
+    { name: string; priceMonthly: number; mealsIncluded: string[] }[]
+  >([]);
+  const [newMealName, setNewMealName] = useState("");
+  const [newMealPrice, setNewMealPrice] = useState("");
+  const [newMealIncluded, setNewMealIncluded] = useState("");
+
+  // Addon services
+  const [addonServices, setAddonServices] = useState<
+    {
+      serviceType: string;
+      name: string;
+      plans: { label: string; price: number }[];
+    }[]
+  >([]);
+  const [newAddonType, setNewAddonType] = useState("laundry");
+  const [newAddonName, setNewAddonName] = useState("");
+  const [newAddonPlanLabel, setNewAddonPlanLabel] = useState("");
+  const [newAddonPlanPrice, setNewAddonPlanPrice] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -119,9 +167,104 @@ export default function HostelsPage() {
     }
   };
 
+  const addAmenity = () => {
+    if (!newAmenityName.trim()) return;
+    setAmenities([...amenities, { name: newAmenityName.trim() }]);
+    setNewAmenityName("");
+  };
+
+  const addRule = () => {
+    if (!newRuleTitle.trim() || !newRuleDesc.trim()) {
+      toast.error("Please fill in rule title and description");
+      return;
+    }
+    setRules([
+      ...rules,
+      { title: newRuleTitle.trim(), description: newRuleDesc.trim() },
+    ]);
+    setNewRuleTitle("");
+    setNewRuleDesc("");
+  };
+
+  const addNearbyEssential = () => {
+    if (!newEssentialType.trim() || !newEssentialName.trim()) {
+      toast.error("Please fill in essential type and name");
+      return;
+    }
+    setNearbyEssentials([
+      ...nearbyEssentials,
+      {
+        type: newEssentialType.trim(),
+        name: newEssentialName.trim(),
+        distance: newEssentialDistance.trim(),
+      },
+    ]);
+    setNewEssentialType("");
+    setNewEssentialName("");
+    setNewEssentialDistance("");
+  };
+
+  const addMessPlan = () => {
+    if (!newMealName.trim() || !newMealPrice.trim()) {
+      toast.error("Please fill in mess plan name and monthly price");
+      return;
+    }
+    setMessPlans([
+      ...messPlans,
+      {
+        name: newMealName.trim(),
+        priceMonthly: parseFloat(newMealPrice) || 0,
+        mealsIncluded: newMealIncluded
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      },
+    ]);
+    setNewMealName("");
+    setNewMealPrice("");
+    setNewMealIncluded("");
+  };
+
+  const addAddonService = () => {
+    if (
+      !newAddonName.trim() ||
+      !newAddonPlanLabel.trim() ||
+      !newAddonPlanPrice.trim()
+    ) {
+      toast.error("Please fill in service name and at least one plan");
+      return;
+    }
+    setAddonServices([
+      ...addonServices,
+      {
+        serviceType: newAddonType,
+        name: newAddonName.trim(),
+        plans: [
+          {
+            label: newAddonPlanLabel.trim(),
+            price: parseFloat(newAddonPlanPrice) || 0,
+          },
+        ],
+      },
+    ]);
+    setNewAddonName("");
+    setNewAddonPlanLabel("");
+    setNewAddonPlanPrice("");
+  };
+
   const handleOpenAdd = () => {
     if (!canManageHostels) return;
     setRoomTypes([]);
+    setAmenities([]);
+    setRules([]);
+    setAddress("");
+    setNearbyEssentials([]);
+    setMessPlans([]);
+    setAddonServices([]);
+    setWardenName("");
+    setWardenPhone("");
+    setWardenWhatsapp("");
+    setWardenEmail("");
     reset();
     setShowAddModal(true);
   };
@@ -144,7 +287,18 @@ export default function HostelsPage() {
   const onSubmit = (data: HostelFormData) => {
     const payload = {
       ...data,
-      roomTypes: roomTypes,
+      roomTypes,
+      messPlans,
+      addonServices,
+      wardenInfo: {
+        name: wardenName || undefined,
+        phone: wardenPhone || undefined,
+        whatsapp: wardenWhatsapp || undefined,
+        email: wardenEmail || undefined,
+      },
+      amenities,
+      rules,
+      locationInfo: { address: address || undefined, nearbyEssentials },
     };
 
     createHostel(payload, {
@@ -217,15 +371,22 @@ export default function HostelsPage() {
                     </span>
                   </CardDescription>
                 </div>
-                {canManageHostels ? (
-                  <button
-                    type="button"
-                    className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
-                    onClick={() => handleDelete(hostel.id, hostel.name)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
+                <div className="flex items-center gap-1">
+                  <Link href={`/hostels/${hostel.id}`}>
+                    <Button variant="outline" size="sm" className="h-8 text-xs">
+                      Manage
+                    </Button>
+                  </Link>
+                  {canManageHostels ? (
+                    <button
+                      type="button"
+                      className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
+                      onClick={() => handleDelete(hostel.id, hostel.name)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -497,6 +658,324 @@ export default function HostelsPage() {
                       onClick={addRoomType}
                     >
                       Configure Room Category
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Warden Info */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">Warden Info</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Name"
+                      className="h-8 text-xs"
+                      value={wardenName}
+                      onChange={(e) => setWardenName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Phone"
+                      className="h-8 text-xs"
+                      value={wardenPhone}
+                      onChange={(e) => setWardenPhone(e.target.value)}
+                    />
+                    <Input
+                      placeholder="WhatsApp"
+                      className="h-8 text-xs"
+                      value={wardenWhatsapp}
+                      onChange={(e) => setWardenWhatsapp(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Email"
+                      className="h-8 text-xs"
+                      value={wardenEmail}
+                      onChange={(e) => setWardenEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">Amenities</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {amenities.map((a, idx) => (
+                      <span
+                        key={idx}
+                        className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
+                      >
+                        {a.name}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAmenities(amenities.filter((_, i) => i !== idx))
+                          }
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Amenity (e.g. High Speed Wi-Fi)"
+                      className="h-8 text-xs"
+                      value={newAmenityName}
+                      onChange={(e) => setNewAmenityName(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={addAmenity}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Rules */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">Rules</Label>
+                  <div className="space-y-2">
+                    {rules.map((r, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-start p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                      >
+                        <div>
+                          <span className="font-bold">{r.title}</span>
+                          <p className="text-[10px] text-muted-foreground">
+                            {r.description}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRules(rules.filter((_, i) => i !== idx))
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Rule title (e.g. Curfew Time)"
+                      className="h-8 text-xs"
+                      value={newRuleTitle}
+                      onChange={(e) => setNewRuleTitle(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Description"
+                      className="h-8 text-xs"
+                      value={newRuleDesc}
+                      onChange={(e) => setNewRuleDesc(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={addRule}
+                  >
+                    Add Rule
+                  </Button>
+                </div>
+
+                {/* Location */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">Location</Label>
+                  <Input
+                    placeholder="Address"
+                    className="h-8 text-xs"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                  <div className="space-y-2">
+                    {nearbyEssentials.map((ne, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                      >
+                        <span>
+                          {ne.type}: {ne.name} ({ne.distance})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNearbyEssentials(
+                              nearbyEssentials.filter((_, i) => i !== idx),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Input
+                      placeholder="Type (e.g. Hospital)"
+                      className="h-8 text-xs"
+                      value={newEssentialType}
+                      onChange={(e) => setNewEssentialType(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Name"
+                      className="h-8 text-xs"
+                      value={newEssentialName}
+                      onChange={(e) => setNewEssentialName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Distance (e.g. 3.0 km)"
+                      className="h-8 text-xs"
+                      value={newEssentialDistance}
+                      onChange={(e) => setNewEssentialDistance(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={addNearbyEssential}
+                  >
+                    Add Nearby Essential
+                  </Button>
+                </div>
+
+                {/* Mess Plans */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">Mess Plans</Label>
+                  <div className="space-y-2">
+                    {messPlans.map((mp, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                      >
+                        <span>
+                          {mp.name} &middot; {mp.mealsIncluded.join(", ")}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-blue-600 font-bold">
+                            ${mp.priceMonthly}/mo
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMessPlans(
+                                messPlans.filter((_, i) => i !== idx),
+                              )
+                            }
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
+                    <Input
+                      placeholder="Plan name (e.g. Standard Plan)"
+                      className="h-8 text-xs sm:col-span-2"
+                      value={newMealName}
+                      onChange={(e) => setNewMealName(e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Monthly Price ($)"
+                      className="h-8 text-xs"
+                      value={newMealPrice}
+                      onChange={(e) => setNewMealPrice(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Meals included (comma separated)"
+                      className="h-8 text-xs"
+                      value={newMealIncluded}
+                      onChange={(e) => setNewMealIncluded(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="sm:col-span-2 h-8 text-xs"
+                      onClick={addMessPlan}
+                    >
+                      Add Mess Plan
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Addon Services */}
+                <div className="border-t pt-4 border-border/40 space-y-2">
+                  <Label className="text-sm font-semibold">
+                    Addon Services (Laundry / Gym / Parking)
+                  </Label>
+                  <div className="space-y-2">
+                    {addonServices.map((service, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                      >
+                        <span>
+                          [{service.serviceType}] {service.name} &middot;{" "}
+                          {service.plans
+                            .map((p) => `${p.label}: $${p.price}`)
+                            .join(", ")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAddonServices(
+                              addonServices.filter((_, i) => i !== idx),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
+                    <select
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                      value={newAddonType}
+                      onChange={(e) => setNewAddonType(e.target.value)}
+                    >
+                      <option value="laundry">Laundry</option>
+                      <option value="gym">Gym</option>
+                      <option value="parking">Parking</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <Input
+                      placeholder="Service name (e.g. Laundry Charges)"
+                      className="h-8 text-xs"
+                      value={newAddonName}
+                      onChange={(e) => setNewAddonName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Plan label (e.g. Monthly)"
+                      className="h-8 text-xs"
+                      value={newAddonPlanLabel}
+                      onChange={(e) => setNewAddonPlanLabel(e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      className="h-8 text-xs"
+                      value={newAddonPlanPrice}
+                      onChange={(e) => setNewAddonPlanPrice(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="sm:col-span-2 h-8 text-xs"
+                      onClick={addAddonService}
+                    >
+                      Add Addon Service
                     </Button>
                   </div>
                 </div>

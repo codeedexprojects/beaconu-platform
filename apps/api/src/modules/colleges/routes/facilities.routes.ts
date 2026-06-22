@@ -35,6 +35,83 @@ router.delete(
   CollegeFacilitiesController.deleteHostel,
 );
 
+router.get(
+  "/hostels/:id",
+  ...staffAuth,
+  authorizeAny("hostel.view", "hostel.manage"),
+  CollegeFacilitiesController.getHostelDetail,
+);
+
+router.patch(
+  "/hostels/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.updateHostel,
+);
+
+router.post(
+  "/hostels/:hostelId/room-types",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.createRoomType,
+);
+
+router.patch(
+  "/hostels/:hostelId/room-types/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.updateRoomType,
+);
+
+router.delete(
+  "/hostels/:hostelId/room-types/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.deleteRoomType,
+);
+
+router.post(
+  "/hostels/:hostelId/mess-plans",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.createMessPlan,
+);
+
+router.patch(
+  "/hostels/:hostelId/mess-plans/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.updateMessPlan,
+);
+
+router.delete(
+  "/hostels/:hostelId/mess-plans/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.deleteMessPlan,
+);
+
+router.post(
+  "/hostels/:hostelId/addon-services",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.createAddonService,
+);
+
+router.patch(
+  "/hostels/:hostelId/addon-services/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.updateAddonService,
+);
+
+router.delete(
+  "/hostels/:hostelId/addon-services/:id",
+  ...staffWriteAuth,
+  authorize("hostel.manage"),
+  CollegeFacilitiesController.deleteAddonService,
+);
+
 // ── Commute / Bus Fleet ───────────────────────────────────────────────────────
 router.get(
   "/commute",

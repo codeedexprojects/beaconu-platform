@@ -1,0 +1,15 @@
+meta {
+  name: Delete Mess Plan
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/mess-plans/{{messPlanId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
