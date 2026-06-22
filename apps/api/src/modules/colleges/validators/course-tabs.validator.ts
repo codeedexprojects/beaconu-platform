@@ -78,6 +78,11 @@ export const publicCourseDetailParamSchema = z.object({
   courseId: z.string().min(1, "Course ID is required"),
 });
 
+export const eligibilityCriteriaQuerySchema = z.object({
+  student_type: z.string().trim().optional(),
+  quota_category: z.string().trim().optional(),
+});
+
 // ── Update Body Schema ───────────────────────────────────────────────────────
 
 export const updateCourseTabSchema = z.object({
@@ -93,3 +98,6 @@ export type PublicCourseDetailParam = z.infer<
   typeof publicCourseDetailParamSchema
 >;
 export type UpdateCourseTabData = z.infer<typeof updateCourseTabSchema>;
+export type EligibilityCriteriaQuery = z.infer<
+  typeof eligibilityCriteriaQuerySchema
+>;

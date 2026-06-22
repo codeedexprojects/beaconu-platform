@@ -590,6 +590,53 @@ export class CourseTabsService {
   }
 
   /**
+   * Get eligibility criteria for a course with filter state echoed back
+   * (public). The stored JSON is display-ready (options, criteria, CTAs);
+   * this just resolves `filters_applied` from the query string, falling
+   * back to each filter's first option when not provided.
+   */
+  static async getPublicEligibilityCriteria(
+    courseId: string,
+    collegeSlug: string,
+    query: { student_type?: string; quota_category?: string },
+  ) {
+    const course = await CourseTabsRepository.findPublicCourseTabField(
+      courseId,
+      collegeSlug,
+      "eligibilityCriteria",
+    );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const stored = asRecord(
+      (course as Record<string, unknown>).eligibilityCriteria,
+    );
+
+    const studentTypeOptions = Array.isArray(
+      asRecord(stored.student_type_filter).options,
+    )
+      ? (asRecord(stored.student_type_filter).options as unknown[])
+      : [];
+    const quotaOptions = Array.isArray(asRecord(stored.quota_filter).options)
+      ? (asRecord(stored.quota_filter).options as unknown[])
+      : [];
+
+    const defaultStudentType =
+      studentTypeOptions.length > 0
+        ? asText(asRecord(studentTypeOptions[0]).value)
+        : "";
+    const defaultQuotaCategory =
+      quotaOptions.length > 0 ? asText(asRecord(quotaOptions[0]).value) : "";
+
+    return {
+      ...stored,
+      filters_applied: {
+        student_type: query.student_type || defaultStudentType,
+        quota_category: query.quota_category || defaultQuotaCategory,
+      },
+    };
+  }
+
+  /**
    * Get a single tab's data (public).
    */
   static async getPublicCourseTab(

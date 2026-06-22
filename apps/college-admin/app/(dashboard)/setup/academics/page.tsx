@@ -198,6 +198,7 @@ export default function SetupAcademicsPage() {
   const [uploadingAlumniIndex, setUploadingAlumniIndex] = useState<
     number | null
   >(null);
+  const [uploadingFeePdf, setUploadingFeePdf] = useState(false);
 
   const { data: courses = [], isLoading: isLoadingCourses } =
     useCollegeCourses();
@@ -409,6 +410,181 @@ export default function SetupAcademicsPage() {
     } finally {
       setUploadingAlumniIndex(null);
     }
+  };
+
+  // ── Fees tab helpers ──────────────────────────────────────────────────────
+  // Raw shape only — no icons/titles here. The public API
+  // (transformPublicFeeTab in course-tabs.service.ts) decorates this at
+  // read time, so the form only needs to capture the substance.
+  const getFeeDetails = (): any[] => getActiveTabPayload().fee_details || [];
+
+  const updateFeeDetails = (next: any[]) =>
+    updateActiveTabPayload({ fee_details: next });
+
+  const updateFeeDetail = (idx: number, patch: any) => {
+    const next = [...getFeeDetails()];
+    next[idx] = { ...next[idx], ...patch };
+    updateFeeDetails(next);
+  };
+
+  const addFeeDetail = () => {
+    updateFeeDetails([
+      ...getFeeDetails(),
+      {
+        quota: "",
+        gender: "",
+        tuition_fees: [],
+        additional_fees: [],
+        one_time_payable_fees: [],
+        deadlines_and_installments: [],
+        fees_summary: { full_course_fee: "", booking_amount: "" },
+      },
+    ]);
+  };
+
+  const removeFeeDetail = (idx: number) => {
+    updateFeeDetails(getFeeDetails().filter((_, i) => i !== idx));
+  };
+
+  const updateFeeDetailListItem = (
+    detailIdx: number,
+    field:
+      | "tuition_fees"
+      | "additional_fees"
+      | "one_time_payable_fees"
+      | "deadlines_and_installments",
+    itemIdx: number,
+    patch: any,
+  ) => {
+    const list = [...(getFeeDetails()[detailIdx]?.[field] || [])];
+    list[itemIdx] = { ...list[itemIdx], ...patch };
+    updateFeeDetail(detailIdx, { [field]: list });
+  };
+
+  const addFeeDetailListItem = (
+    detailIdx: number,
+    field:
+      | "tuition_fees"
+      | "additional_fees"
+      | "one_time_payable_fees"
+      | "deadlines_and_installments",
+    emptyItem: any,
+  ) => {
+    const list = [...(getFeeDetails()[detailIdx]?.[field] || []), emptyItem];
+    updateFeeDetail(detailIdx, { [field]: list });
+  };
+
+  const removeFeeDetailListItem = (
+    detailIdx: number,
+    field:
+      | "tuition_fees"
+      | "additional_fees"
+      | "one_time_payable_fees"
+      | "deadlines_and_installments",
+    itemIdx: number,
+  ) => {
+    const list = (getFeeDetails()[detailIdx]?.[field] || []).filter(
+      (_: any, i: number) => i !== itemIdx,
+    );
+    updateFeeDetail(detailIdx, { [field]: list });
+  };
+
+  const updateFeeStringList = (
+    field: "whats_included" | "whats_excluded" | "refund_policy",
+    next: string[],
+  ) => updateActiveTabPayload({ [field]: next });
+
+  const handleFeePdfUpload = async (file: File | null) => {
+    if (!file) return;
+
+    try {
+      setUploadingFeePdf(true);
+      const permanentUrl = await uploadCollegeAdminFile(
+        file,
+        `courses/${editingCourse?.id || "draft"}/fee-structure-pdf`,
+      );
+      updateActiveTabPayload({
+        fee_structure_pdf: {
+          ...(getActiveTabPayload().fee_structure_pdf || {}),
+          url: permanentUrl,
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        },
+      });
+      toast.success("Fee structure PDF uploaded to S3");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingFeePdf(false);
+    }
+  };
+
+  // ── Financial Aid tab helpers ─────────────────────────────────────────────
+  // Same idea as fees: raw shape only — transformPublicFinancialAidTab in
+  // course-tabs.service.ts adds icons/titles/labels at read time.
+  const getMeritScholarship = (): any =>
+    getActiveTabPayload().merit_scholarship || {};
+
+  const updateMeritScholarship = (patch: any) =>
+    updateActiveTabPayload({
+      merit_scholarship: { ...getMeritScholarship(), ...patch },
+    });
+
+  const updateMeritCalculator = (patch: any) =>
+    updateMeritScholarship({
+      calculator: { ...(getMeritScholarship().calculator || {}), ...patch },
+    });
+
+  const updateMeritFinalSummary = (patch: any) =>
+    updateMeritScholarship({
+      final_summary: {
+        ...(getMeritScholarship().final_summary || {}),
+        ...patch,
+      },
+    });
+
+  const getConcessionItems = (): any[] =>
+    getActiveTabPayload().financial_concessions?.items || [];
+
+  const updateConcessionItems = (next: any[]) =>
+    updateActiveTabPayload({
+      financial_concessions: {
+        ...(getActiveTabPayload().financial_concessions || {}),
+        items: next,
+        total_types: next.length,
+      },
+    });
+
+  const updateConcessionItem = (idx: number, patch: any) => {
+    const next = [...getConcessionItems()];
+    next[idx] = { ...next[idx], ...patch };
+    updateConcessionItems(next);
+  };
+
+  const addConcessionItem = () => {
+    updateConcessionItems([
+      ...getConcessionItems(),
+      {
+        name: "",
+        discount_percent: 0,
+        details: {
+          eligibility_criteria: [],
+          scholarship_amount: "",
+          net_payable: "",
+        },
+      },
+    ]);
+  };
+
+  const removeConcessionItem = (idx: number) => {
+    updateConcessionItems(getConcessionItems().filter((_, i) => i !== idx));
+  };
+
+  const updateConcessionDetails = (idx: number, patch: any) => {
+    const item = getConcessionItems()[idx];
+    updateConcessionItem(idx, {
+      details: { ...(item?.details || {}), ...patch },
+    });
   };
 
   if (isLoadingCourses) {
@@ -2952,142 +3128,797 @@ export default function SetupAcademicsPage() {
 
                       {/* FEES */}
                       {activeTab === "fees" && (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Annual/Semester Tuition Fees Details</Label>
-                            <Textarea
-                              placeholder="Highlight tuition fees and deposit details..."
+                        <div className="space-y-6">
+                          <div className="space-y-1">
+                            <Label>Fee Structure PDF</Label>
+                            <Input
+                              placeholder="https://example.com/fee-structure.pdf"
                               value={
-                                getActiveTabPayload().tuitionFeesSummary || ""
+                                getActiveTabPayload().fee_structure_pdf?.url ||
+                                ""
                               }
                               onChange={(e) =>
                                 updateActiveTabPayload({
-                                  tuitionFeesSummary: e.target.value,
+                                  fee_structure_pdf: {
+                                    ...(getActiveTabPayload()
+                                      .fee_structure_pdf || {}),
+                                    url: e.target.value,
+                                  },
                                 })
+                              }
+                            />
+                            <Input
+                              type="file"
+                              accept="application/pdf"
+                              disabled={uploadingFeePdf}
+                              onChange={(e) =>
+                                handleFeePdfUpload(e.target.files?.[0] ?? null)
                               }
                             />
                           </div>
 
-                          <div className="space-y-3 pt-4 border-t">
-                            <Label className="block font-bold">
-                              One-Time / Extra Admission Fees
-                            </Label>
-                            {(getActiveTabPayload().one_time_fees || []).map(
-                              (f: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="flex gap-2 items-center"
+                          {getFeeDetails().map((detail, dIdx) => (
+                            <div
+                              key={dIdx}
+                              className="space-y-4 rounded-md border p-4"
+                            >
+                              <div className="flex items-center justify-between">
+                                <Label className="font-bold">
+                                  Fee Detail #{dIdx + 1}
+                                </Label>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeFeeDetail(dIdx)}
                                 >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <div className="space-y-1">
+                                  <Label>Quota</Label>
                                   <Input
-                                    placeholder="Fee Name (e.g. Security Deposit)"
-                                    value={f.name || ""}
-                                    onChange={(e) => {
-                                      const next = [
-                                        ...(getActiveTabPayload()
-                                          .one_time_fees || []),
-                                      ];
-                                      next[idx].name = e.target.value;
-                                      updateActiveTabPayload({
-                                        one_time_fees: next,
-                                      });
-                                    }}
+                                    placeholder="e.g. Merit Quota"
+                                    value={detail.quota || ""}
+                                    onChange={(e) =>
+                                      updateFeeDetail(dIdx, {
+                                        quota: e.target.value,
+                                      })
+                                    }
                                   />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label>Gender</Label>
                                   <Input
-                                    placeholder="Amount (e.g. 10,000)"
-                                    value={f.amount || ""}
-                                    onChange={(e) => {
-                                      const next = [
-                                        ...(getActiveTabPayload()
-                                          .one_time_fees || []),
-                                      ];
-                                      next[idx].amount = e.target.value;
-                                      updateActiveTabPayload({
-                                        one_time_fees: next,
-                                      });
-                                    }}
+                                    placeholder="e.g. Boys / Girls"
+                                    value={detail.gender || ""}
+                                    onChange={(e) =>
+                                      updateFeeDetail(dIdx, {
+                                        gender: e.target.value,
+                                      })
+                                    }
                                   />
+                                </div>
+                              </div>
+
+                              <div className="grid gap-3 md:grid-cols-2 pt-2 border-t">
+                                <div className="space-y-1">
+                                  <Label>Full Course Fee</Label>
+                                  <Input
+                                    placeholder="e.g. INR 1,48,750"
+                                    value={
+                                      detail.fees_summary?.full_course_fee || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateFeeDetail(dIdx, {
+                                        fees_summary: {
+                                          ...(detail.fees_summary || {}),
+                                          full_course_fee: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label>Booking Amount</Label>
+                                  <Input
+                                    placeholder="e.g. INR 6,198"
+                                    value={
+                                      detail.fees_summary?.booking_amount || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateFeeDetail(dIdx, {
+                                        fees_summary: {
+                                          ...(detail.fees_summary || {}),
+                                          booking_amount: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Tuition Fees (per year) */}
+                              <div className="space-y-2 pt-3 border-t">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-bold">
+                                    Tuition Fees (Per Year)
+                                  </Label>
                                   <Button
                                     type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      const next = (
-                                        getActiveTabPayload().one_time_fees ||
-                                        []
-                                      ).filter(
-                                        (_: any, i: number) => i !== idx,
-                                      );
-                                      updateActiveTabPayload({
-                                        one_time_fees: next,
-                                      });
-                                    }}
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      addFeeDetailListItem(
+                                        dIdx,
+                                        "tuition_fees",
+                                        { year: "", amount: "" },
+                                      )
+                                    }
                                   >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                    <Plus className="h-4 w-4 mr-1" /> Add Year
                                   </Button>
                                 </div>
-                              ),
-                            )}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const next = [
-                                  ...(getActiveTabPayload().one_time_fees ||
-                                    []),
-                                  { name: "", amount: "" },
-                                ];
-                                updateActiveTabPayload({ one_time_fees: next });
-                              }}
+                                {(detail.tuition_fees || []).map(
+                                  (row: any, rIdx: number) => (
+                                    <div
+                                      key={rIdx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="e.g. 1st Year"
+                                        value={row.year || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "tuition_fees",
+                                            rIdx,
+                                            { year: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        placeholder="e.g. Rs 1,25,276"
+                                        value={row.amount || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "tuition_fees",
+                                            rIdx,
+                                            { amount: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeFeeDetailListItem(
+                                            dIdx,
+                                            "tuition_fees",
+                                            rIdx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+
+                              {/* Additional Fees */}
+                              <div className="space-y-2 pt-3 border-t">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-bold">
+                                    Additional Fees
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      addFeeDetailListItem(
+                                        dIdx,
+                                        "additional_fees",
+                                        { label: "", amount: "" },
+                                      )
+                                    }
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add Fee
+                                  </Button>
+                                </div>
+                                {(detail.additional_fees || []).map(
+                                  (row: any, rIdx: number) => (
+                                    <div
+                                      key={rIdx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="e.g. Examination Fees"
+                                        value={row.label || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "additional_fees",
+                                            rIdx,
+                                            { label: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        placeholder="e.g. Rs 3,500"
+                                        value={row.amount || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "additional_fees",
+                                            rIdx,
+                                            { amount: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeFeeDetailListItem(
+                                            dIdx,
+                                            "additional_fees",
+                                            rIdx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+
+                              {/* One-time Payable Fees */}
+                              <div className="space-y-2 pt-3 border-t">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-bold">
+                                    One-Time Payable Fees
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      addFeeDetailListItem(
+                                        dIdx,
+                                        "one_time_payable_fees",
+                                        { label: "", amount: "" },
+                                      )
+                                    }
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add Fee
+                                  </Button>
+                                </div>
+                                {(detail.one_time_payable_fees || []).map(
+                                  (row: any, rIdx: number) => (
+                                    <div
+                                      key={rIdx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="e.g. Application Fees"
+                                        value={row.label || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "one_time_payable_fees",
+                                            rIdx,
+                                            { label: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        placeholder="e.g. Rs 1,500"
+                                        value={row.amount || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "one_time_payable_fees",
+                                            rIdx,
+                                            { amount: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeFeeDetailListItem(
+                                            dIdx,
+                                            "one_time_payable_fees",
+                                            rIdx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+
+                              {/* Deadlines & Installments */}
+                              <div className="space-y-2 pt-3 border-t">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-bold">
+                                    Deadlines & Installments
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      addFeeDetailListItem(
+                                        dIdx,
+                                        "deadlines_and_installments",
+                                        { due: "", label: "", amount: "" },
+                                      )
+                                    }
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add
+                                    Installment
+                                  </Button>
+                                </div>
+                                {(detail.deadlines_and_installments || []).map(
+                                  (row: any, rIdx: number) => (
+                                    <div
+                                      key={rIdx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Due (e.g. Within 10 Days)"
+                                        value={row.due || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "deadlines_and_installments",
+                                            rIdx,
+                                            { due: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        placeholder="Label (e.g. 1st Installment)"
+                                        value={row.label || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "deadlines_and_installments",
+                                            rIdx,
+                                            { label: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Input
+                                        placeholder="e.g. Rs 25,000"
+                                        value={row.amount || ""}
+                                        onChange={(e) =>
+                                          updateFeeDetailListItem(
+                                            dIdx,
+                                            "deadlines_and_installments",
+                                            rIdx,
+                                            { amount: e.target.value },
+                                          )
+                                        }
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeFeeDetailListItem(
+                                            dIdx,
+                                            "deadlines_and_installments",
+                                            rIdx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addFeeDetail}
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add Fee Detail
+                            (Quota + Gender)
+                          </Button>
+
+                          {(
+                            [
+                              {
+                                field: "whats_included" as const,
+                                label: "What's Included",
+                                placeholder: "e.g. Tuition Fees",
+                              },
+                              {
+                                field: "whats_excluded" as const,
+                                label: "What's Excluded",
+                                placeholder: "e.g. Uniform Dress",
+                              },
+                              {
+                                field: "refund_policy" as const,
+                                label: "Refund Policy",
+                                placeholder:
+                                  "e.g. Booking amount refundable within limited time",
+                              },
+                            ] as const
+                          ).map(({ field, label, placeholder }) => (
+                            <div
+                              key={field}
+                              className="space-y-2 pt-4 border-t"
                             >
-                              Add One-time Fee
-                            </Button>
-                          </div>
+                              <div className="flex items-center justify-between">
+                                <Label className="font-bold">{label}</Label>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    updateFeeStringList(field, [
+                                      ...(getActiveTabPayload()[field] || []),
+                                      "",
+                                    ])
+                                  }
+                                >
+                                  <Plus className="h-4 w-4 mr-1" /> Add
+                                </Button>
+                              </div>
+                              {(getActiveTabPayload()[field] || []).map(
+                                (item: string, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="flex gap-2 items-center"
+                                  >
+                                    <Input
+                                      placeholder={placeholder}
+                                      value={item}
+                                      onChange={(e) => {
+                                        const next = [
+                                          ...(getActiveTabPayload()[field] ||
+                                            []),
+                                        ];
+                                        next[idx] = e.target.value;
+                                        updateFeeStringList(field, next);
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const next = (
+                                          getActiveTabPayload()[field] || []
+                                        ).filter(
+                                          (_: string, i: number) => i !== idx,
+                                        );
+                                        updateFeeStringList(field, next);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
 
                       {/* FINANCIAL AID */}
                       {activeTab === "financial_aid" && (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Merit Scholarship criteria</Label>
-                            <Textarea
-                              placeholder="Eligibility criteria based on scores/ranks..."
-                              value={
-                                getActiveTabPayload().meritScholarship
-                                  ?.description || ""
-                              }
-                              onChange={(e) =>
-                                updateActiveTabPayload({
-                                  meritScholarship: {
-                                    title: "Merit Scholarship",
-                                    description: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-2 pt-4 border-t">
+                        <div className="space-y-6">
+                          <div className="space-y-4 rounded-md border p-4">
+                            <Label className="font-bold">
+                              Merit Scholarship
+                            </Label>
                             <div className="space-y-1">
-                              <Label>Upfront Fee Discount Concession</Label>
+                              <Label>Title</Label>
                               <Input
-                                placeholder="e.g. 10% upfront payment discount"
-                                value={
-                                  getActiveTabPayload().upfrontFeeConcession
-                                    ?.discount || ""
-                                }
+                                placeholder="Merit Scholarship"
+                                value={getMeritScholarship().title || ""}
                                 onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    upfrontFeeConcession: {
-                                      discount: e.target.value,
-                                      details:
-                                        "For paying annual fee in single lump-sum",
-                                    },
+                                  updateMeritScholarship({
+                                    title: e.target.value,
                                   })
                                 }
                               />
                             </div>
+
+                            <div className="grid gap-4 md:grid-cols-2 pt-2 border-t">
+                              <div className="space-y-1">
+                                <Label>Max Scholarship</Label>
+                                <Input
+                                  placeholder="e.g. Rs1,50,000"
+                                  value={
+                                    getMeritScholarship().final_summary
+                                      ?.max_scholarship || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateMeritFinalSummary({
+                                      max_scholarship: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label>Net Payable Fees</Label>
+                                <Input
+                                  placeholder="e.g. Rs2,45,000"
+                                  value={
+                                    getMeritScholarship().final_summary
+                                      ?.net_payable_fees || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateMeritFinalSummary({
+                                      net_payable_fees: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            {(
+                              [
+                                {
+                                  path: "port_of_entry_options" as const,
+                                  label: "Port of Entry Options",
+                                  placeholder: "e.g. JEE Main",
+                                  scope: "calculator" as const,
+                                },
+                                {
+                                  path: "rank_range_options" as const,
+                                  label: "Rank Range Options",
+                                  placeholder: "e.g. 1 - 1000",
+                                  scope: "calculator" as const,
+                                },
+                                {
+                                  path: "terms_and_conditions" as const,
+                                  label: "Terms & Conditions",
+                                  placeholder:
+                                    "e.g. Offered on first-come, first-serve basis",
+                                  scope: "root" as const,
+                                },
+                              ] as const
+                            ).map(({ path, label, placeholder, scope }) => {
+                              const list: string[] =
+                                (scope === "calculator"
+                                  ? getMeritScholarship().calculator?.[path]
+                                  : getMeritScholarship()[path]) || [];
+                              const setList = (next: string[]) =>
+                                scope === "calculator"
+                                  ? updateMeritCalculator({ [path]: next })
+                                  : updateMeritScholarship({ [path]: next });
+
+                              return (
+                                <div
+                                  key={path}
+                                  className="space-y-2 pt-2 border-t"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <Label className="font-bold">{label}</Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setList([...list, ""])}
+                                    >
+                                      <Plus className="h-4 w-4 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {list.map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder={placeholder}
+                                        value={item}
+                                        onChange={(e) => {
+                                          const next = [...list];
+                                          next[idx] = e.target.value;
+                                          setList(next);
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          setList(
+                                            list.filter((_, i) => i !== idx),
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <Label className="font-bold">
+                                Financial Concessions
+                              </Label>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addConcessionItem}
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Concession
+                              </Button>
+                            </div>
+
+                            {getConcessionItems().map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="space-y-3 rounded-md border p-4"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-bold">
+                                    Concession #{idx + 1}
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeConcessionItem(idx)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  <div className="space-y-1">
+                                    <Label>Name</Label>
+                                    <Input
+                                      placeholder="e.g. Alumni"
+                                      value={item.name || ""}
+                                      onChange={(e) =>
+                                        updateConcessionItem(idx, {
+                                          name: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Discount Percent</Label>
+                                    <Input
+                                      type="number"
+                                      placeholder="e.g. 15"
+                                      value={item.discount_percent ?? ""}
+                                      onChange={(e) =>
+                                        updateConcessionItem(idx, {
+                                          discount_percent: Number(
+                                            e.target.value,
+                                          ),
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  <div className="space-y-1">
+                                    <Label>Scholarship Amount</Label>
+                                    <Input
+                                      placeholder="e.g. Rs75,000"
+                                      value={
+                                        item.details?.scholarship_amount || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateConcessionDetails(idx, {
+                                          scholarship_amount: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Net Payable</Label>
+                                    <Input
+                                      placeholder="e.g. Rs3,20,000"
+                                      value={item.details?.net_payable || ""}
+                                      onChange={(e) =>
+                                        updateConcessionDetails(idx, {
+                                          net_payable: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2 pt-2 border-t">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="font-bold">
+                                      Eligibility Criteria
+                                    </Label>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        updateConcessionDetails(idx, {
+                                          eligibility_criteria: [
+                                            ...(item.details
+                                              ?.eligibility_criteria || []),
+                                            "",
+                                          ],
+                                        })
+                                      }
+                                    >
+                                      <Plus className="h-4 w-4 mr-1" /> Add
+                                    </Button>
+                                  </div>
+                                  {(
+                                    item.details?.eligibility_criteria || []
+                                  ).map((criterion: string, cIdx: number) => (
+                                    <div
+                                      key={cIdx}
+                                      className="flex gap-2 items-center"
+                                    >
+                                      <Input
+                                        placeholder="e.g. Must have completed a full-time degree program."
+                                        value={criterion}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(item.details
+                                              ?.eligibility_criteria || []),
+                                          ];
+                                          next[cIdx] = e.target.value;
+                                          updateConcessionDetails(idx, {
+                                            eligibility_criteria: next,
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = (
+                                            item.details
+                                              ?.eligibility_criteria || []
+                                          ).filter(
+                                            (_: string, i: number) =>
+                                              i !== cIdx,
+                                          );
+                                          updateConcessionDetails(idx, {
+                                            eligibility_criteria: next,
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

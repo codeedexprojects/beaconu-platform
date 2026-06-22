@@ -7,6 +7,7 @@ import {
   publicCourseTabParamSchema,
   publicCourseDetailParamSchema,
   updateCourseTabSchema,
+  eligibilityCriteriaQuerySchema,
 } from "../validators/course-tabs.validator";
 
 export class CourseTabsController {
@@ -97,5 +98,30 @@ export class CourseTabsController {
     return res
       .status(200)
       .json(ApiResponse.success("Course tab fetched", result));
+  }
+
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/eligibility-criteria
+   * Returns eligibility criteria with filters_applied resolved from the
+   * query string (public view).
+   */
+  static async getPublicEligibilityCriteria(req: Request, res: Response) {
+    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
+    const { student_type, quota_category } =
+      eligibilityCriteriaQuerySchema.parse(req.query);
+
+    const result = await CourseTabsService.getPublicEligibilityCriteria(
+      courseId,
+      slug,
+      { student_type, quota_category },
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Eligibility criteria fetched successfully",
+          result,
+        ),
+      );
   }
 }
