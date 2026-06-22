@@ -167,6 +167,7 @@ export class CourseTabsRepository {
       select: {
         id: true,
         name: true,
+        collegeId: true,
         metadata: true,
       },
     });

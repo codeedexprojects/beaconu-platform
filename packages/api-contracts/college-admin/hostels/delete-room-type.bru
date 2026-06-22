@@ -1,0 +1,15 @@
+meta {
+  name: Delete Room Type
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/room-types/{{roomTypeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

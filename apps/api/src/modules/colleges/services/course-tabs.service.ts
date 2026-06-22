@@ -1,5 +1,6 @@
 import { NotFoundError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
+import { HostelService } from "./hostel.service";
 import {
   COURSE_SETUP_TAB_IDS,
   TAB_FIELD_MAP,
@@ -437,6 +438,55 @@ function transformPublicExamPolicyTab(raw: Record<string, unknown>) {
     internship_evaluation: internshipEvaluation,
     grading_scale: gradingScale,
     important_guidelines_banner: importantGuidelinesBanner,
+  };
+}
+
+function transformPublicStudentHousingTab(
+  raw: Record<string, unknown>,
+  hostels: Array<{
+    id: string;
+    name: string;
+    hostelType: string;
+    isOnCampus: boolean;
+    distanceFromCampus: string | null;
+    totalBeds: number | null;
+    coverImageUrl: string | null;
+    roomTypes: Array<{
+      id: string;
+      name: string;
+      totalBeds: number;
+      availableBeds: number;
+      annualPlanPrice: unknown;
+      monthlyPlanPrice: unknown;
+    }>;
+  }>,
+) {
+  return {
+    tab: "student_housing",
+    summary: asText(raw.summary),
+    hostels: hostels.map((hostel) => ({
+      id: hostel.id,
+      name: hostel.name,
+      hostelType: hostel.hostelType,
+      isOnCampus: hostel.isOnCampus,
+      distanceFromCampus: hostel.distanceFromCampus,
+      totalBeds: hostel.totalBeds,
+      coverImageUrl: hostel.coverImageUrl,
+      roomTypes: hostel.roomTypes.map((roomType) => ({
+        id: roomType.id,
+        name: roomType.name,
+        totalBeds: roomType.totalBeds,
+        availableBeds: roomType.availableBeds,
+        annualPlanPrice:
+          roomType.annualPlanPrice != null
+            ? Number(roomType.annualPlanPrice)
+            : null,
+        monthlyPlanPrice:
+          roomType.monthlyPlanPrice != null
+            ? Number(roomType.monthlyPlanPrice)
+            : null,
+      })),
+    })),
   };
 }
 
@@ -903,6 +953,25 @@ export class CourseTabsService {
 
       if (tabName === "fees") {
         return transformPublicFeeTab(asRecord(rawData));
+      }
+
+      if (tabName === "student_housing") {
+        const raw = asRecord(rawData);
+        const hostelIds = Array.isArray(raw.hostelIds)
+          ? (raw.hostelIds as unknown[]).filter(
+              (id): id is string => typeof id === "string",
+            )
+          : [];
+        const hostels = await HostelService.getPublicHostelsByIds(
+          course.collegeId,
+          hostelIds,
+        );
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicStudentHousingTab(raw, hostels),
+        };
       }
 
       if (tabName === "financial_aid") {
