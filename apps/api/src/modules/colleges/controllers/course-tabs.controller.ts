@@ -96,8 +96,6 @@ export class CourseTabsController {
     );
     return res
       .status(200)
-      .json(
-        ApiResponse.success("College section fetched successfully", result),
-      );
+      .json(ApiResponse.success("Course tab fetched", result));
   }
 }

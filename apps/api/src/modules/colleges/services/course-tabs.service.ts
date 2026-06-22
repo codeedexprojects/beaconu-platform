@@ -168,6 +168,222 @@ function buildTabsObject(course: Record<string, unknown>) {
   return tabs;
 }
 
+function transformPublicFeeTab(raw: Record<string, unknown>) {
+  const feeDetails = Array.isArray(raw.fee_details)
+    ? (raw.fee_details as Record<string, unknown>[]).map((detail) => {
+        const summary = asRecord(detail.fees_summary);
+        const tuitionRows = Array.isArray(detail.tuition_fees)
+          ? (detail.tuition_fees as Record<string, unknown>[]).map((r) => ({
+              year: asText(r.year),
+              amount: asText(r.amount).replace(/^Rs\s?/, "₹ "),
+            }))
+          : [];
+        const mapItems = (arr: unknown) =>
+          Array.isArray(arr)
+            ? (arr as Record<string, unknown>[]).map((i) => ({
+                label: asText(i.label),
+                amount: asText(i.amount).replace(/^Rs\s?/, "₹ "),
+              }))
+            : [];
+        const installments = Array.isArray(detail.deadlines_and_installments)
+          ? (
+              detail.deadlines_and_installments as Record<string, unknown>[]
+            ).map((i) => ({
+              due: asText(i.due).toUpperCase(),
+              label: asText(i.label),
+              amount: asText(i.amount).replace(/^Rs\s?/, "₹ "),
+            }))
+          : [];
+
+        return {
+          quota: asText(detail.quota),
+          gender: asText(detail.gender),
+          tuition_fees: {
+            title: "Tuition Amount",
+            rows: tuitionRows,
+          },
+          one_time_payable_fees: {
+            title: "One-time Payable Fees",
+            icon: "https://cdn.iconsdb.example.com/icons/wallet-orange.png",
+            items: mapItems(detail.one_time_payable_fees),
+          },
+          additional_fees: {
+            title: "Additional Fees",
+            icon: "https://cdn.iconsdb.example.com/icons/document-orange.png",
+            items: mapItems(detail.additional_fees),
+          },
+          deadlines_and_installments: {
+            title: "Deadlines & Installments",
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-orange.png",
+            items: installments,
+          },
+          fees_summary: {
+            title: "Fees Summary",
+            icon: "https://cdn.iconsdb.example.com/icons/document-text-orange.png",
+            full_course_fee: {
+              label: "Full course fee",
+              amount: asText(summary.full_course_fee),
+            },
+            booking_amount: {
+              label: "Booking Amount",
+              amount: asText(summary.booking_amount),
+            },
+          },
+        };
+      })
+    : [];
+
+  const pdfRaw = asRecord(raw.fee_structure_pdf);
+  const pdfSize = asText(pdfRaw.size);
+
+  return {
+    tab: "fees",
+    title: "Tuition Fees",
+    fee_structure_pdf: {
+      icon: "https://cdn.iconsdb.example.com/icons/pdf-document-red.png",
+      label: "Download Fee Structure",
+      subtitle: `Detailed breakdown PDF${pdfSize ? ` (${pdfSize})` : ""}`,
+      size: pdfSize,
+      download_icon: "https://cdn.iconsdb.example.com/icons/download-gray.png",
+      url: asText(pdfRaw.url),
+    },
+    fee_details: feeDetails,
+    whats_included: {
+      title: "WHAT'S INCLUDED",
+      icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
+      items: Array.isArray(raw.whats_included) ? raw.whats_included : [],
+    },
+    whats_excluded: {
+      title: "WHAT'S EXCLUDED",
+      icon: "https://cdn.iconsdb.example.com/icons/x-circle-red.png",
+      items: Array.isArray(raw.whats_excluded) ? raw.whats_excluded : [],
+    },
+    refund_policy: {
+      title: "Refund Policy",
+      icon: "https://cdn.iconsdb.example.com/icons/info-circle-gray.png",
+      items: Array.isArray(raw.refund_policy) ? raw.refund_policy : [],
+    },
+  };
+}
+
+function normalizeAmount(val: unknown): string {
+  return asText(val).replace(/^Rs\s?/, "₹");
+}
+
+function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
+  const meritRaw = asRecord(raw.merit_scholarship);
+  const calcRaw = asRecord(meritRaw.calculator);
+  const summaryRaw = asRecord(meritRaw.final_summary);
+  const tcRaw = meritRaw.terms_and_conditions;
+
+  const merit_scholarship = {
+    title: asText(meritRaw.title) || "Merit Scholarship",
+    calculator: {
+      title: "Scholarship Calculator",
+      icon: "https://cdn.iconsdb.example.com/icons/calculator-orange.png",
+      port_of_entry: {
+        icon: "https://cdn.iconsdb.example.com/icons/login-arrow-gray.png",
+        label: "Select Port of Entry",
+        selected: "",
+        options: Array.isArray(calcRaw.port_of_entry_options)
+          ? calcRaw.port_of_entry_options
+          : [],
+      },
+      rank_range: {
+        icon: "https://cdn.iconsdb.example.com/icons/bar-chart-gray.png",
+        label: "Select Rank Range",
+        selected: "",
+        options: Array.isArray(calcRaw.rank_range_options)
+          ? calcRaw.rank_range_options
+          : [],
+      },
+    },
+    terms_and_conditions: {
+      title: "TERMS & CONDITIONS",
+      icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
+      items: Array.isArray(tcRaw) ? tcRaw : [],
+    },
+    final_summary: {
+      title: "FINAL SUMMARY",
+      max_scholarship: {
+        icon: "https://cdn.iconsdb.example.com/icons/star-purple.png",
+        label: "MAX SCHOLARSHIP",
+        amount: normalizeAmount(summaryRaw.max_scholarship),
+      },
+      net_payable_fees: {
+        icon: "https://cdn.iconsdb.example.com/icons/document-teal.png",
+        label: "NET PAYABLE FEES",
+        amount: normalizeAmount(summaryRaw.net_payable_fees),
+      },
+    },
+  };
+
+  const concessionsRaw = asRecord(raw.financial_concessions);
+  const rawItems = Array.isArray(concessionsRaw.items)
+    ? (concessionsRaw.items as Record<string, unknown>[])
+    : [];
+
+  const concessionItems = rawItems.map((item) => {
+    const details = asRecord(item.details);
+    const criteria = Array.isArray(details.eligibility_criteria)
+      ? (details.eligibility_criteria as string[])
+      : [];
+    const scholarshipAmt = normalizeAmount(details.scholarship_amount);
+    const netPayableAmt = normalizeAmount(details.net_payable);
+    const hasDetails =
+      criteria.length > 0 || scholarshipAmt !== "₹" || netPayableAmt !== "₹";
+    const discountPct = asNumber(item.discount_percent);
+    const expanded = hasDetails;
+
+    return {
+      name: asText(item.name),
+      discount_percent: discountPct,
+      discount_label: `${discountPct}% OFF`,
+      accent_color: hasDetails ? "black" : "orange",
+      expanded,
+      details_cta: expanded
+        ? {
+            label: "SHOW LESS",
+            icon: "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
+          }
+        : {
+            label: "DETAILS",
+            icon: "https://cdn.iconsdb.example.com/icons/arrow-right-orange.png",
+          },
+      details: {
+        eligibility_criteria: {
+          title: "ELIGIBILITY CRITERIA",
+          items: criteria,
+        },
+        scholarship: {
+          icon: "https://cdn.iconsdb.example.com/icons/star-purple.png",
+          label: "SCHOLARSHIP",
+          amount: scholarshipAmt === "₹" ? "" : scholarshipAmt,
+        },
+        net_payable: {
+          icon: "https://cdn.iconsdb.example.com/icons/document-teal.png",
+          label: "NET PAYABLE",
+          amount: netPayableAmt === "₹" ? "" : netPayableAmt,
+        },
+      },
+    };
+  });
+
+  const totalTypes =
+    asNumber(concessionsRaw.total_types) || concessionItems.length;
+
+  return {
+    tab: "financial_aid",
+    merit_scholarship,
+    financial_concessions: {
+      title: "Financial Concessions",
+      total_types: totalTypes,
+      total_types_label: `${totalTypes} TYPES`,
+      items: concessionItems,
+    },
+  };
+}
+
 function getDefaultForTab(tabSlug: string): unknown {
   // Object-type tabs
   const objectTabs = [
@@ -389,11 +605,26 @@ export class CourseTabsService {
         );
       if (!course) throw new NotFoundError("Course not found");
 
+      const rawData = getSetupTabDataFromMetadata(course.metadata, tabName);
+
+      if (tabName === "fees") {
+        return transformPublicFeeTab(asRecord(rawData));
+      }
+
+      if (tabName === "financial_aid") {
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicFinancialAidTab(asRecord(rawData)),
+        };
+      }
+
       return {
         sectionName: tabName,
         sectionId: tabName,
         sectionKey: tabName,
-        data: getSetupTabDataFromMetadata(course.metadata, tabName),
+        data: rawData,
       };
     }
 
