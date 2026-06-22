@@ -490,6 +490,43 @@ function transformPublicStudentHousingTab(
   };
 }
 
+function transformPublicLibraryTab(raw: Record<string, unknown>) {
+  const libraries = Array.isArray(raw.libraries)
+    ? (raw.libraries as Record<string, unknown>[]).map((lib) => {
+        const ar = asRecord(lib.available_resources);
+        const lh = asRecord(lib.library_hours);
+        const fac = asRecord(lib.facilities);
+        return {
+          ...lib,
+          available_resources: {
+            title: asText(ar.title) || "Available Resources",
+            items: Array.isArray(ar.items) ? ar.items : [],
+          },
+          library_hours: {
+            title: asText(lh.title) || "Library Hours",
+            icon:
+              asText(lh.icon) ||
+              "https://cdn.iconsdb.example.com/icons/clock-orange.png",
+            days: Array.isArray(lh.days) ? lh.days : [],
+          },
+          facilities: {
+            title: asText(fac.title) || "Facilities",
+            items: Array.isArray(fac.items) ? fac.items : [],
+          },
+        };
+      })
+    : [];
+
+  return { tab: "library", libraries };
+}
+
+function transformPublicFacultyTab(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  const record = asRecord(raw);
+  if (Array.isArray(record.list)) return record.list as unknown[];
+  return [];
+}
+
 function getDefaultForTab(tabSlug: string): unknown {
   // Object-type tabs
   const objectTabs = [
@@ -990,6 +1027,19 @@ export class CourseTabsService {
           sectionKey: tabName,
           data: transformPublicExamPolicyTab(asRecord(rawData)),
         };
+      }
+
+      if (tabName === "library") {
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformPublicLibraryTab(asRecord(rawData)),
+        };
+      }
+
+      if (tabName === "faculty") {
+        return transformPublicFacultyTab(rawData);
       }
 
       if (tabName === "clubs_associations") {
