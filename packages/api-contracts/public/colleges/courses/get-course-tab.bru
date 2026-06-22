@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: fees
+  tabName: financial_aid
 }
 
 docs {
@@ -34,11 +34,99 @@ docs {
     featured_alumni, faqs, entrance_exam_eligibility, eligibility_criteria,
     accreditations, key_dates, demographics
   
-  Response shape:
-  {
-    "tabName": "highlights",
-    "data": { ... tab-specific content ... }
-  }
-  
   Returns 404 if the tab name is invalid or the course is not found.
+  
+  --- fees tab response shape ---
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "tab": "fees",
+      "title": "Tuition Fees",
+      "fee_structure_pdf": {
+        "icon": "...",
+        "label": "Download Fee Structure",
+        "subtitle": "Detailed breakdown PDF (2.4 MB)",
+        "size": "2.4 MB",
+        "download_icon": "...",
+        "url": "..."
+      },
+      "fee_details": [
+        {
+          "quota": "Merit Quota",
+          "gender": "Boys",
+          "tuition_fees": { "title": "Tuition Amount", "rows": [{ "year": "1st Year", "amount": "₹ 1,25,276" }] },
+          "one_time_payable_fees": { "title": "One-time Payable Fees", "icon": "...", "items": [{ "label": "...", "amount": "₹ ..." }] },
+          "additional_fees": { "title": "Additional Fees", "icon": "...", "items": [...] },
+          "deadlines_and_installments": { "title": "Deadlines & Installments", "icon": "...", "items": [{ "due": "WITHIN 10 DAYS", "label": "...", "amount": "₹ ..." }] },
+          "fees_summary": { "title": "Fees Summary", "icon": "...", "full_course_fee": { "label": "Full course fee", "amount": "INR ..." }, "booking_amount": { "label": "Booking Amount", "amount": "INR ..." } }
+        }
+      ],
+      "whats_included": { "title": "WHAT'S INCLUDED", "icon": "...", "items": ["Tuition Fees", ...] },
+      "whats_excluded": { "title": "WHAT'S EXCLUDED", "icon": "...", "items": ["Uniform Dress", ...] },
+      "refund_policy": { "title": "Refund Policy", "icon": "...", "items": ["Booking amount refundable within limited time", ...] }
+    }
+  }
+
+  --- financial_aid tab response shape ---
+  {
+    "success": true,
+    "message": "College section fetched successfully",
+    "data": {
+      "sectionName": "financial_aid",
+      "sectionId": "financial_aid",
+      "sectionKey": "financial_aid",
+      "data": {
+        "tab": "financial_aid",
+        "merit_scholarship": {
+          "title": "Merit Scholarship",
+          "calculator": {
+            "title": "Scholarship Calculator",
+            "icon": "...",
+            "port_of_entry": { "icon": "...", "label": "Select Port of Entry", "selected": "", "options": ["JEE Main", ...] },
+            "rank_range": { "icon": "...", "label": "Select Rank Range", "selected": "", "options": ["1 - 1000", ...] }
+          },
+          "terms_and_conditions": { "title": "TERMS & CONDITIONS", "icon": "...", "items": ["Students can avail 25%...", ...] },
+          "final_summary": {
+            "title": "FINAL SUMMARY",
+            "max_scholarship": { "icon": "...", "label": "MAX SCHOLARSHIP", "amount": "₹1,50,000" },
+            "net_payable_fees": { "icon": "...", "label": "NET PAYABLE FEES", "amount": "₹2,45,000" }
+          }
+        },
+        "financial_concessions": {
+          "title": "Financial Concessions",
+          "total_types": 4,
+          "total_types_label": "4 TYPES",
+          "items": [
+            {
+              "name": "Alumni",
+              "discount_percent": 15,
+              "discount_label": "15% OFF",
+              "accent_color": "black",
+              "expanded": true,
+              "details_cta": { "label": "SHOW LESS", "icon": "..." },
+              "details": {
+                "eligibility_criteria": { "title": "ELIGIBILITY CRITERIA", "items": ["Must have completed...", ...] },
+                "scholarship": { "icon": "...", "label": "SCHOLARSHIP", "amount": "₹75,000" },
+                "net_payable": { "icon": "...", "label": "NET PAYABLE", "amount": "₹3,20,000" }
+              }
+            },
+            {
+              "name": "Defence personnel",
+              "discount_percent": 20,
+              "discount_label": "20% OFF",
+              "accent_color": "orange",
+              "expanded": false,
+              "details_cta": { "label": "DETAILS", "icon": "..." },
+              "details": {
+                "eligibility_criteria": { "title": "ELIGIBILITY CRITERIA", "items": [] },
+                "scholarship": { "icon": "...", "label": "SCHOLARSHIP", "amount": "" },
+                "net_payable": { "icon": "...", "label": "NET PAYABLE", "amount": "" }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
 }

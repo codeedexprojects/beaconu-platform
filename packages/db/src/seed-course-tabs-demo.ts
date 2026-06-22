@@ -41,6 +41,277 @@ async function main() {
     },
   };
 
+  const feesTabData = {
+    tab: "fees",
+    filters: {
+      genders: ["Boys", "Girls"],
+      quota_categories: ["Merit Quota", "Management Quota"],
+    },
+    fee_details: [
+      {
+        quota: "Merit Quota",
+        gender: "Boys",
+        fees_summary: {
+          booking_amount: "INR 6,198",
+          full_course_fee: "INR 1,48,750",
+        },
+        tuition_fees: [
+          { year: "1st Year", amount: "Rs 1,25,276" },
+          { year: "2nd Year", amount: "Rs 1,25,276" },
+          { year: "3rd Year", amount: "Rs 1,25,276" },
+          { year: "4th Year", amount: "Rs 1,25,276" },
+        ],
+        additional_fees: [
+          { label: "Examination Fees", amount: "Rs 3,500" },
+          { label: "Library Fees", amount: "Rs 1,200" },
+          { label: "Lab Fees", amount: "Rs 2,800" },
+          { label: "Sports Fees", amount: "Rs 1,500" },
+        ],
+        one_time_payable_fees: [
+          { label: "Application Fees", amount: "Rs 1,500" },
+          { label: "Admission Fees", amount: "Rs 15,000" },
+        ],
+        deadlines_and_installments: [
+          {
+            due: "Within 10 Days",
+            label: "1st Installment (Booking)",
+            amount: "Rs 25,000",
+          },
+          {
+            due: "Before Classes Start",
+            label: "2nd Installment",
+            amount: "Rs 54,638",
+          },
+          {
+            due: "After 60 Days",
+            label: "Final Installment",
+            amount: "Rs 54,638",
+          },
+        ],
+      },
+      {
+        quota: "Merit Quota",
+        gender: "Girls",
+        fees_summary: {
+          booking_amount: "INR 6,198",
+          full_course_fee: "INR 1,48,750",
+        },
+        tuition_fees: [
+          { year: "1st Year", amount: "Rs 1,25,276" },
+          { year: "2nd Year", amount: "Rs 1,25,276" },
+          { year: "3rd Year", amount: "Rs 1,25,276" },
+          { year: "4th Year", amount: "Rs 1,25,276" },
+        ],
+        additional_fees: [
+          { label: "Examination Fees", amount: "Rs 3,500" },
+          { label: "Library Fees", amount: "Rs 1,200" },
+          { label: "Lab Fees", amount: "Rs 2,800" },
+          { label: "Sports Fees", amount: "Rs 1,500" },
+        ],
+        one_time_payable_fees: [
+          { label: "Application Fees", amount: "Rs 1,500" },
+          { label: "Admission Fees", amount: "Rs 15,000" },
+        ],
+        deadlines_and_installments: [
+          {
+            due: "Within 10 Days",
+            label: "1st Installment (Booking)",
+            amount: "Rs 25,000",
+          },
+          {
+            due: "Before Classes Start",
+            label: "2nd Installment",
+            amount: "Rs 54,638",
+          },
+          {
+            due: "After 60 Days",
+            label: "Final Installment",
+            amount: "Rs 54,638",
+          },
+        ],
+      },
+      {
+        quota: "Management Quota",
+        gender: "Boys",
+        fees_summary: {
+          booking_amount: "INR 10,000",
+          full_course_fee: "INR 2,10,000",
+        },
+        tuition_fees: [
+          { year: "1st Year", amount: "Rs 1,75,000" },
+          { year: "2nd Year", amount: "Rs 1,75,000" },
+          { year: "3rd Year", amount: "Rs 1,75,000" },
+          { year: "4th Year", amount: "Rs 1,75,000" },
+        ],
+        additional_fees: [
+          { label: "Examination Fees", amount: "Rs 3,500" },
+          { label: "Library Fees", amount: "Rs 1,200" },
+          { label: "Lab Fees", amount: "Rs 2,800" },
+          { label: "Sports Fees", amount: "Rs 1,500" },
+        ],
+        one_time_payable_fees: [
+          { label: "Application Fees", amount: "Rs 2,000" },
+          { label: "Admission Fees", amount: "Rs 25,000" },
+        ],
+        deadlines_and_installments: [
+          {
+            due: "Within 10 Days",
+            label: "1st Installment (Booking)",
+            amount: "Rs 40,000",
+          },
+          {
+            due: "Before Classes Start",
+            label: "2nd Installment",
+            amount: "Rs 85,000",
+          },
+          {
+            due: "After 60 Days",
+            label: "Final Installment",
+            amount: "Rs 85,000",
+          },
+        ],
+      },
+      {
+        quota: "Management Quota",
+        gender: "Girls",
+        fees_summary: {
+          booking_amount: "INR 10,000",
+          full_course_fee: "INR 2,10,000",
+        },
+        tuition_fees: [
+          { year: "1st Year", amount: "Rs 1,75,000" },
+          { year: "2nd Year", amount: "Rs 1,75,000" },
+          { year: "3rd Year", amount: "Rs 1,75,000" },
+          { year: "4th Year", amount: "Rs 1,75,000" },
+        ],
+        additional_fees: [
+          { label: "Examination Fees", amount: "Rs 3,500" },
+          { label: "Library Fees", amount: "Rs 1,200" },
+          { label: "Lab Fees", amount: "Rs 2,800" },
+          { label: "Sports Fees", amount: "Rs 1,500" },
+        ],
+        one_time_payable_fees: [
+          { label: "Application Fees", amount: "Rs 2,000" },
+          { label: "Admission Fees", amount: "Rs 25,000" },
+        ],
+        deadlines_and_installments: [
+          {
+            due: "Within 10 Days",
+            label: "1st Installment (Booking)",
+            amount: "Rs 40,000",
+          },
+          {
+            due: "Before Classes Start",
+            label: "2nd Installment",
+            amount: "Rs 85,000",
+          },
+          {
+            due: "After 60 Days",
+            label: "Final Installment",
+            amount: "Rs 85,000",
+          },
+        ],
+      },
+    ],
+    whats_included: [
+      "Tuition Fees",
+      "Library Access",
+      "Lab Materials",
+      "Basic Medical Aid",
+    ],
+    whats_excluded: [
+      "Uniform Dress",
+      "University Exam Fees",
+      "Transportation",
+      "Convocation Fee",
+    ],
+    refund_policy: [
+      "Booking amount refundable within limited time",
+      "Processing charges may apply",
+      "Refund processed within 7-10 working days",
+    ],
+    fee_structure_pdf: {
+      url: "https://cdn.feereports.example.com/fee-structure-2025.pdf",
+      size: "2.4 MB",
+      label: "Detailed breakdown PDF",
+    },
+  };
+
+  const financialAidTabData = {
+    tab: "financial_aid",
+    merit_scholarship: {
+      title: "Merit Scholarship",
+      calculator: {
+        rank_range_options: [
+          "1 - 1000",
+          "1001 - 5000",
+          "5001 - 10000",
+          "10001 - 25000",
+          "25001 - 50000",
+        ],
+        port_of_entry_options: [
+          "JEE Main",
+          "KEAM",
+          "State Merit",
+          "Management Quota",
+        ],
+      },
+      final_summary: {
+        max_scholarship: "Rs1,50,000",
+        net_payable_fees: "Rs2,45,000",
+      },
+      terms_and_conditions: [
+        "Students can avail 25% of scholarship based on the entered rank/score.",
+        "Applicable only for the first year. Subsequent years require CGPA 8.0+.",
+        "Offered on a first-come, first-serve basis subject to seat availability.",
+      ],
+    },
+    financial_concessions: {
+      total_types: 4,
+      items: [
+        {
+          name: "Defence personnel",
+          discount_percent: 20,
+          details: {
+            net_payable: "",
+            scholarship_amount: "",
+            eligibility_criteria: [],
+          },
+        },
+        {
+          name: "Divyaang (PwD)",
+          discount_percent: 20,
+          details: {
+            net_payable: "",
+            scholarship_amount: "",
+            eligibility_criteria: [],
+          },
+        },
+        {
+          name: "Alumni",
+          discount_percent: 15,
+          details: {
+            net_payable: "Rs3,20,000",
+            scholarship_amount: "Rs75,000",
+            eligibility_criteria: [
+              "Must have completed a full-time degree program.",
+              "Valid alumni association membership card required.",
+            ],
+          },
+        },
+        {
+          name: "Upfront Fees Concession",
+          discount_percent: 5,
+          details: {
+            net_payable: "",
+            scholarship_amount: "",
+            eligibility_criteria: [],
+          },
+        },
+      ],
+    },
+  };
+
   await prisma.course.update({
     where: { id: courseId },
     data: {
@@ -49,6 +320,8 @@ async function main() {
         tabData: {
           ...tabData,
           course_info: updatedCourseInfo,
+          fees: feesTabData,
+          financial_aid: financialAidTabData,
         },
       } as any,
       highlights: [
@@ -155,7 +428,7 @@ async function main() {
   });
 
   console.log(
-    `Done — course detail tabs for ${courseId} (${course.name}) are now fully populated.`,
+    `Done — course detail tabs (fees + financial_aid) for ${courseId} (${course.name}) are now fully populated.`,
   );
 }
 
