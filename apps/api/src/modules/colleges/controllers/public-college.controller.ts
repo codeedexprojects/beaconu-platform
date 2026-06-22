@@ -4,13 +4,16 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
 import { CollegeRegistrationService } from "../services/college-registration.service";
-import { COURSE_SETUP_TAB_IDS } from "../validators/course-tabs.validator";
-
-// placements is valid at both college level and course level, so it is excluded
-// from this set to allow it to appear in college profile tabs.
-const COURSE_ONLY_TAB_IDS = new Set<string>(
-  COURSE_SETUP_TAB_IDS.filter((id) => id !== "placements"),
-);
+// Exhaustive list of valid college-level tab IDs.
+// Only these IDs will appear in the public college tabs array.
+// Course-level tabs (fees, faculty, etc.) are implicitly excluded.
+const VALID_COLLEGE_TAB_IDS = new Set([
+  "commute",
+  "happenings",
+  "college_overview",
+  "student_code_of_conduct",
+  "institutions_across_world",
+]);
 
 const PUBLIC_COLLEGE_INCLUDES = {
   university: {
@@ -171,7 +174,7 @@ function buildTabList(profileSections: Record<string, unknown>) {
 
     const tabId = toIdStyleTabName(tabIdRaw);
 
-    if (tabId !== "" && !seen.has(tabId) && !COURSE_ONLY_TAB_IDS.has(tabId)) {
+    if (VALID_COLLEGE_TAB_IDS.has(tabId) && !seen.has(tabId)) {
       seen.add(tabId);
       tabs.push({
         sl: tabs.length + 1,

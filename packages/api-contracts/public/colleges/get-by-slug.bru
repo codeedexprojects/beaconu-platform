@@ -36,11 +36,15 @@ docs {
     },
     "tabs": [
       { "id": "college_overview", "name": "College Overview" },
-      { "id": "placements", "name": "Placements" }
+      { "id": "commute", "name": "Commute" },
+      { "id": "happenings", "name": "Happenings" },
+      { "id": "student_code_of_conduct", "name": "Student Code of Conduct" },
+      { "id": "institutions_across_world", "name": "Institutions Across the World" }
     ]
   }
 
   `tabs` contains only enabled college-level static tabs as { id, name } — not course tabs.
+  `placements` is available via course tab APIs, not this college details tabs list.
   `profileSections` is excluded from the response; use the section endpoint for content.
   Sets collegeId env var from the response for downstream requests.
 }
