@@ -271,14 +271,306 @@ function buildCourseSetupTabData(course: {
     clubs_associations: {
       id: "clubs_associations",
       enabled: true,
-      summary: "Student clubs for innovation, culture, and community",
-      items: [],
+      clubs: [
+        {
+          id: "club_nss",
+          name: "NSS",
+          category: "Service",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "National Service Scheme",
+            category: "Service",
+            about:
+              "The National Service Scheme (NSS) is an Indian government-sponsored public service program conducted by the Ministry of Youth Affairs and Sports. Our college chapter is dedicated to fostering social responsibility and community engagement among students.",
+            mission:
+              "Not Me But You — the motto of NSS reflects democratic living and the need for selfless service. We identify community needs and involve students in problem-solving.",
+            key_activities: [
+              "Blood Donation Camps",
+              "Tree Plantation Drives",
+              "Rural Development Projects",
+              "Health & Hygiene Awareness",
+            ],
+            cover_image: "",
+            logo: "",
+          },
+          recent_events: {
+            happenings_link: "",
+            events: [
+              {
+                id: "event_1",
+                title: "Annual Blood Donation Camp",
+                thumbnail: "",
+                link: "",
+              },
+              {
+                id: "event_2",
+                title: "Tree Plantation Drive 2024",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+        {
+          id: "club_ieee",
+          name: "IEEE",
+          category: "Technical",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "IEEE Student Branch",
+            category: "Technical",
+            about:
+              "The IEEE Student Branch promotes technology, innovation, and professional development. Members participate in global IEEE events, workshops, and competitions that sharpen technical acumen.",
+            mission:
+              "To advance technology for the benefit of humanity by nurturing student talent through hands-on learning and industry exposure.",
+            key_activities: [
+              "Technical Workshops",
+              "Hackathons",
+              "Industry Guest Lectures",
+              "Paper Presentation Contests",
+            ],
+            cover_image: "",
+            logo: "",
+          },
+          recent_events: {
+            happenings_link: "",
+            events: [
+              {
+                id: "event_1",
+                title: "IEEE Tech Fest 2024",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+        {
+          id: "club_cultural",
+          name: "Kalakaar",
+          category: "Cultural",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "Kalakaar Cultural Club",
+            category: "Cultural",
+            about:
+              "Kalakaar is the premier cultural club celebrating art, music, dance, and drama. The club organises the annual cultural fest and provides a platform for students to showcase their creative talents.",
+            mission:
+              "To preserve and promote diverse art forms while giving every student a stage to express creativity and build confidence.",
+            key_activities: [
+              "Annual Cultural Fest",
+              "Inter-College Dance Competition",
+              "Nukkad Natak (Street Plays)",
+              "Music & Photography Workshops",
+            ],
+            cover_image: "",
+            logo: "",
+          },
+          recent_events: {
+            happenings_link: "",
+            events: [
+              {
+                id: "event_1",
+                title: "Tarang Annual Cultural Fest",
+                thumbnail: "",
+                link: "",
+              },
+              {
+                id: "event_2",
+                title: "Independence Day Celebration",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+        {
+          id: "club_sports",
+          name: "Sports Council",
+          category: "Sports",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "College Sports Council",
+            category: "Sports",
+            about:
+              "The Sports Council coordinates all sporting activities on campus, encouraging physical fitness and competitive spirit. It manages inter-department and inter-college tournaments throughout the year.",
+            mission:
+              "To build a healthy and competitive campus community by promoting sportsmanship, teamwork, and physical well-being.",
+            key_activities: [
+              "Annual Sports Meet",
+              "Inter-Department Cricket & Football Tournaments",
+              "Yoga & Fitness Workshops",
+              "State-Level Participation Support",
+            ],
+            cover_image: "",
+            logo: "",
+          },
+          recent_events: {
+            happenings_link: "",
+            events: [
+              {
+                id: "event_1",
+                title: "Annual Sports Day 2024",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+      ],
     },
     alliance: {
       id: "alliance",
       enabled: true,
-      summary: "Active collaborations with healthcare and industry partners",
-      items: [],
+      alliances: [
+        {
+          id: "alliance_bmh",
+          name: "Baby Memorial Hospital",
+          tag: "Own Hospital",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "Baby Memorial Hospital",
+            category: "Own Hospital",
+            about:
+              "Baby Memorial Hospital (BMH) is a multi-specialty, tertiary care corporate hospital in Kozhikode, Kerala. This alliance provides our students with direct clinical exposure in a world-class medical setting.",
+            collaboration_impact:
+              "Through this strategic collaboration, students gain hands-on experience in advanced diagnostic procedures and patient care. The initiative also supports faculty exchange programs, enhancing the curriculum with real-world medical insights.",
+            key_focus_areas: [
+              "Clinical Rotations for Nursing Students",
+              "Joint Biomedical Research",
+              "Internship Opportunities",
+              "Continuing Medical Education (CME) Seminars",
+            ],
+            cover_image: "",
+            logo: "",
+            legal_documents: [
+              {
+                title: "Memorandum of Understanding",
+                size: "2.4 MB",
+                type: "PDF",
+                url: "",
+              },
+              {
+                title: "Partnership Agreement",
+                size: "1.8 MB",
+                type: "PDF",
+                url: "",
+              },
+            ],
+          },
+          alliance_activities: {
+            happenings_link: "",
+            activities: [
+              {
+                id: "activity_1",
+                title: "CME Workshop on Advanced Diagnostics",
+                thumbnail: "",
+                link: "",
+              },
+              {
+                id: "activity_2",
+                title: "Joint Research Symposium 2024",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+        {
+          id: "alliance_siaindia",
+          name: "SIA-India",
+          tag: "Industrial Collaboration",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "Satellite Industry Association of India",
+            category: "Industrial Collaboration",
+            about:
+              "SIA-India is a non-profit association of Indian and global satellite industry players. This partnership bridges academia and the satellite technology sector for our engineering students.",
+            collaboration_impact:
+              "Students gain exposure to cutting-edge satellite and aerospace technologies through internships, live projects, and industry mentorship programs facilitated by SIA-India member companies.",
+            key_focus_areas: [
+              "Research Collaboration",
+              "Student Internships",
+              "Industry Exposure Programs",
+              "Technology Seminars",
+            ],
+            cover_image: "",
+            logo: "",
+            legal_documents: [
+              {
+                title: "MOU Document",
+                size: "1.2 MB",
+                type: "PDF",
+                url: "",
+              },
+            ],
+          },
+          alliance_activities: {
+            happenings_link: "",
+            activities: [
+              {
+                id: "activity_1",
+                title: "Satellite Technology Expo Visit",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+        {
+          id: "alliance_nid",
+          name: "National Institute of Design",
+          tag: "Academic & Research",
+          cover_image: "",
+          logo: "",
+          details: {
+            full_name: "National Institute of Design",
+            category: "Academic & Research",
+            about:
+              "A premier institute for design education and research in India. This collaboration enables student and faculty exchange programs, joint workshops, and collaborative research projects.",
+            collaboration_impact:
+              "The partnership enhances cross-disciplinary learning by exposing students to design thinking methodologies, thereby improving problem-solving and innovation skills applicable across all domains.",
+            key_focus_areas: [
+              "Student Exchange Programs",
+              "Joint Design Workshops",
+              "Research Collaboration",
+              "Innovation & Design Thinking Bootcamps",
+            ],
+            cover_image: "",
+            logo: "",
+            legal_documents: [
+              {
+                title: "Academic Collaboration Agreement",
+                size: "980 KB",
+                type: "PDF",
+                url: "",
+              },
+            ],
+          },
+          alliance_activities: {
+            happenings_link: "",
+            activities: [
+              {
+                id: "activity_1",
+                title: "Design Thinking Workshop",
+                thumbnail: "",
+                link: "",
+              },
+              {
+                id: "activity_2",
+                title: "Student Exchange Batch 2024",
+                thumbnail: "",
+                link: "",
+              },
+            ],
+          },
+        },
+      ],
     },
     other_courses_offered: {
       id: "other_courses_offered",
