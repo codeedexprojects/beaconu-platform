@@ -524,6 +524,84 @@ function transformPublicClubsAssociationsTab(raw: Record<string, unknown>): {
   };
 }
 
+function transformPublicAllianceTab(raw: Record<string, unknown>): {
+  data: Record<string, unknown>[];
+} {
+  const alliances = Array.isArray(raw.alliances)
+    ? (raw.alliances as Record<string, unknown>[])
+    : [];
+
+  const categoryColorMap: Record<string, string> = {
+    "industrial collaboration": "blue",
+    "academic & research": "green",
+    "own hospital": "red",
+    government: "orange",
+  };
+
+  const transformedAlliances = alliances.map((alliance) => {
+    const details = asRecord(alliance.details);
+    const activitiesRaw = asRecord(
+      alliance.alliance_activities || details.alliance_activities,
+    );
+    const activities = Array.isArray(activitiesRaw.activities)
+      ? (activitiesRaw.activities as Record<string, unknown>[])
+      : [];
+    const legalDocs = Array.isArray(details.legal_documents)
+      ? (details.legal_documents as Record<string, unknown>[])
+      : [];
+
+    const category = asText(details.category) || asText(alliance.tag);
+    const categoryLower = category.toLowerCase();
+    const categoryColor = categoryColorMap[categoryLower] ?? "blue";
+
+    return {
+      id: asText(alliance.id),
+      name: asText(details.full_name) || asText(alliance.name),
+      category: category.toUpperCase(),
+      category_color: categoryColor,
+      cover_image: asText(alliance.cover_image || details.cover_image),
+      logo: asText(alliance.logo || details.logo),
+      about: {
+        description: asText(details.about),
+      },
+      collaboration_impact: {
+        description: asText(details.collaboration_impact),
+      },
+      key_focus_areas: {
+        items: Array.isArray(details.key_focus_areas)
+          ? (details.key_focus_areas as string[])
+          : [],
+      },
+      legal_and_documentation: {
+        items: legalDocs.map((doc) => ({
+          title: asText(doc.title),
+          size: asText(doc.size),
+          type: asText(doc.type),
+          download_icon:
+            "https://cdn.iconsdb.example.com/icons/download-gray.png",
+          url: asText(doc.url),
+        })),
+      },
+      alliance_activities: {
+        view_all_cta: {
+          label: "View Happenings",
+          link: asText(activitiesRaw.happenings_link),
+        },
+        items: activities.map((activity, index) => ({
+          id: asText(activity.id) || `activity_${index + 1}`,
+          title: asText(activity.title),
+          thumbnail: asText(activity.image || activity.thumbnail),
+          link: asText(activity.link),
+        })),
+      },
+    };
+  });
+
+  return {
+    data: transformedAlliances,
+  };
+}
+
 export class CourseTabsService {
   // ── College-Admin Endpoints ──────────────────────────────────────────────
 
@@ -798,6 +876,16 @@ export class CourseTabsService {
         const transformed = transformPublicClubsAssociationsTab(
           asRecord(rawData),
         );
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: transformed.data,
+        };
+      }
+
+      if (tabName === "alliance") {
+        const transformed = transformPublicAllianceTab(asRecord(rawData));
         return {
           sectionName: tabName,
           sectionId: tabName,
