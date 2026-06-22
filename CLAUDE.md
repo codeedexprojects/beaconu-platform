@@ -40,7 +40,7 @@ packages/utils/     Pure utility functions
 
 ```
 /api/v1/admin/*         Platform Admin
-/api/v1/college/*       College Admin / Staff
+/api/v1/college-admin/*       College Admin / Staff
 /api/v1/student/*       Students
 /api/v1/blink/*         Blink (associate, ambassador)
 /api/v1/counsellor/*    Counsellors

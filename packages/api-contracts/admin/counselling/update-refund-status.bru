@@ -1,0 +1,49 @@
+meta {
+  name: Update Refund Status
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/counsellors/refund-requests/{{refundRequestId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "approved",
+    "remarks": "Verified the counsellor no-show complaint and processed the UPI refund manually"
+  }
+}
+
+docs {
+  Approves or rejects a pending counselling refund request.
+  Requires: platform admin access token + permission "counsellors.manage".
+
+  Body:
+  - status: approved | rejected
+  - remarks (optional, max 500 chars)
+
+  Behavior:
+  - approved: debits the request's amount from the counsellor's wallet
+    (counsellor_wallets.balance — fails with 409 if insufficient balance)
+    and marks the session's payment_status as "refunded". The actual
+    payout to the student's UPI ID happens manually outside the system.
+  - rejected: no wallet change.
+
+  Returns 404 if the request doesn't exist, 409 if it has already been
+  reviewed (or, on approval, if the counsellor's wallet balance is
+  insufficient to cover the refund).
+
+  Tables: counselling_refund_requests, counsellor_wallets,
+  counsellor_wallet_transactions, counselling_sessions
+}

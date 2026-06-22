@@ -33,13 +33,27 @@ export interface PublicCourse {
   id: string;
   name: string;
   code: string;
-  discipline: { name: string; stream: { name: string } };
-  studyLevel: { name: string };
-  programType: { name: string };
+  duration?: string | null;
+  durationMonths?: number | null;
+  eligibility?: string | null;
+  intakeCapacity?: number | null;
+  discipline: {
+    id: string;
+    name: string;
+    slug: string;
+    stream: { id: string; name: string; slug: string };
+  };
+  studyLevel: { id: string; name: string; slug: string };
+  programType: { id: string; name: string; slug: string };
   studyMode: string;
-  intakeCapacity: number | null;
-  durationMonths: number | null;
-  tuitionFee: number | null;
+  tuitionFee?: number | null;
+  campus?: {
+    id: string;
+    name: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+  } | null;
 }
 
 export interface PublicCollege {
@@ -64,6 +78,13 @@ export interface PublicCollege {
   } | null;
   campuses: PublicCampus[];
   courses: PublicCourse[];
+  campusAmbassadors?: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+    phoneNumber: string | null;
+  }[];
   institutionGroups?: {
     members: {
       college: {
@@ -90,9 +111,107 @@ export interface PublicCollege {
       }[];
     };
   } | null;
+  tabs?: { id: string; name: string }[];
+  totalCourses?: number;
+  instituteType?: string | null;
+}
+
+type PublicCollegeApiResponse =
+  | PublicCollege
+  | {
+      collegeDetails: PublicCollege;
+      tabs?: { id: string; name: string }[];
+      totalCourses?: number;
+      instituteType?: string | null;
+      campusAmbassadors?: PublicCollege["campusAmbassadors"];
+    };
+
+function normalizeCollegePayload(
+  payload: PublicCollegeApiResponse,
+): PublicCollege {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "collegeDetails" in payload &&
+    payload.collegeDetails
+  ) {
+    return {
+      ...payload.collegeDetails,
+      tabs: payload.tabs,
+      totalCourses: payload.totalCourses,
+      instituteType: payload.instituteType,
+      campusAmbassadors:
+        payload.campusAmbassadors ?? payload.collegeDetails.campusAmbassadors,
+    };
+  }
+
+  return payload as PublicCollege;
+}
+
+export interface PublicCollegeSectionResponse {
+  sectionName: string;
+  sectionId?: string;
+  sectionKey: string;
+  data: unknown;
+}
+
+export interface PublicCollegeSummaryQuery {
+  universityId?: string;
+  streamId?: string;
+  disciplineId?: string;
+  studyLevelId?: string;
+  programTypeId?: string;
+}
+
+export interface PublicCollegeSummary {
+  college: {
+    id: string;
+    name: string;
+    slug: string;
+    code: string;
+    logoUrl: string | null;
+    coverImageUrl: string | null;
+    domain: string | null;
+    location: {
+      address: string | null;
+      city: string | null;
+      state: string | null;
+      district: string | null;
+      pinCode: string | null;
+    };
+  };
+  course: PublicCourse;
+  tabListing: { id: string; name: string }[];
+}
+
+function buildQueryString(query: PublicCollegeSummaryQuery) {
+  const params = new URLSearchParams();
+
+  if (query.universityId) params.set("universityId", query.universityId);
+  if (query.streamId) params.set("streamId", query.streamId);
+  if (query.disciplineId) params.set("disciplineId", query.disciplineId);
+  if (query.studyLevelId) params.set("studyLevelId", query.studyLevelId);
+  if (query.programTypeId) params.set("programTypeId", query.programTypeId);
+
+  const serialized = params.toString();
+  return serialized ? `?${serialized}` : "";
 }
 
 export const publicCollegeService = {
-  getBySlug: (slug: string) =>
-    publicFetch<PublicCollege>(`/api/v1/public/colleges/by-slug/${slug}`),
+  getBySlug: async (slug: string) => {
+    const payload = await publicFetch<PublicCollegeApiResponse>(
+      `/api/v1/public/colleges/by-slug/${slug}`,
+    );
+    return normalizeCollegePayload(payload);
+  },
+
+  getSection: (collegeId: string, sectionName: string) =>
+    publicFetch<PublicCollegeSectionResponse>(
+      `/api/v1/public/colleges/${collegeId}/section/${encodeURIComponent(sectionName)}`,
+    ),
+
+  getSummary: (collegeId: string, query: PublicCollegeSummaryQuery = {}) =>
+    publicFetch<PublicCollegeSummary>(
+      `/api/v1/public/colleges/${collegeId}/summary${buildQueryString(query)}`,
+    ),
 };

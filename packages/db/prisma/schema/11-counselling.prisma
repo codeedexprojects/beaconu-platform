@@ -3,13 +3,17 @@
 // ============================================================
 
 model CounsellorAvailability {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId        String   @map("counsellor_id") @db.Uuid
+  id                  String   @id @default(dbgenerated("('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text)")) @db.Text
+  counsellorId        String   @map("counsellor_id")
   availableDate       DateTime @map("available_date") @db.Date
   startTime           DateTime @map("start_time") @db.Time
   endTime             DateTime @map("end_time") @db.Time
   sessionDurationMins Int      @default(45) @map("session_duration_mins")
   isBooked            Boolean  @default(false) @map("is_booked")
+  sessionFee          Decimal  @default(0.0) @map("session_fee") @db.Decimal(10, 2)
+  meetingUrl          String?  @map("meeting_url") @db.Text
+  meetingId           String?  @map("meeting_id") @db.VarChar(50)
+  googleEventId       String?  @map("google_event_id") @db.VarChar(255)
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -25,10 +29,10 @@ model CounsellorAvailability {
 }
 
 model CounsellingSession {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId          String    @map("student_id") @db.Uuid
-  counsellorId       String    @map("counsellor_id") @db.Uuid
-  availabilityId     String    @map("availability_id") @db.Uuid
+  id                 String    @id @default(dbgenerated("('CLS-'::text || (nextval('counselling_session_seq'::regclass))::text)")) @db.Text
+  studentId          String    @map("student_id")
+  counsellorId       String    @map("counsellor_id")
+  availabilityId     String    @map("availability_id")
   sessionMode        String    @map("session_mode") @db.VarChar(20)
   sessionType        String    @map("session_type") @db.VarChar(20)
   scheduledDate      DateTime  @map("scheduled_date") @db.Date
@@ -38,14 +42,17 @@ model CounsellingSession {
   status             String    @default("booked") @db.VarChar(20)
   meetingUrl         String?   @map("meeting_url") @db.Text
   meetingId          String?   @map("meeting_id") @db.VarChar(50)
+  googleEventId      String?   @map("google_event_id") @db.VarChar(255)
   sessionFee         Decimal?  @map("session_fee") @db.Decimal(10, 2)
   paymentStatus      String    @default("pending") @map("payment_status") @db.VarChar(20)
-  transactionId      String?   @map("transaction_id") @db.Uuid
+  transactionId      String?   @map("transaction_id") @db.VarChar(100)
   cancelledBy        String?   @map("cancelled_by") @db.VarChar(20)
   cancellationReason String?   @map("cancellation_reason") @db.Text
   cancelledAt        DateTime? @map("cancelled_at") @db.Timestamptz
   completedAt        DateTime? @map("completed_at") @db.Timestamptz
   sessionNotes       String?   @map("session_notes") @db.Text
+  rating             Int?      @map("rating")
+  ratingFeedback     String?   @map("rating_feedback") @db.Text
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -55,6 +62,7 @@ model CounsellingSession {
   availability CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
   reschedules  SessionReschedule[]
   walletTxns   CounsellorWalletTransaction[]
+  refundRequests CounsellingRefundRequest[]
 
   @@index([studentId], name: "idx_sessions_student")
   @@index([counsellorId], name: "idx_sessions_counsellor")
@@ -66,12 +74,12 @@ model CounsellingSession {
 }
 
 model SessionReschedule {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId        String   @map("session_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('SRS-'::text || (nextval('session_reschedule_seq'::regclass))::text)")) @db.Text
+  sessionId        String   @map("session_id")
   rescheduledBy    String   @map("rescheduled_by") @db.VarChar(20)
   fromDate         DateTime @map("from_date") @db.Date
   fromTime         DateTime @map("from_time") @db.Time
-  toAvailabilityId String   @map("to_availability_id") @db.Uuid
+  toAvailabilityId String   @map("to_availability_id")
   toDate           DateTime @map("to_date") @db.Date
   toTime           DateTime @map("to_time") @db.Time
   reason           String?  @db.Text
@@ -86,8 +94,8 @@ model SessionReschedule {
 }
 
 model CounsellorWallet {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  counsellorId   String   @unique @map("counsellor_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('CNW-'::text || (nextval('counsellor_wallet_seq'::regclass))::text)")) @db.Text
+  counsellorId   String   @unique @map("counsellor_id")
   balance        Decimal  @default(0) @db.Decimal(12, 2)
   totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
   totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
@@ -103,26 +111,88 @@ model CounsellorWallet {
 }
 
 model CounsellorWalletTransaction {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId         String   @map("wallet_id") @db.Uuid
-  counsellorId     String   @map("counsellor_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('CWT-'::text || (nextval('counsellor_wallet_transaction_seq'::regclass))::text)")) @db.Text
+  walletId         String   @map("wallet_id")
+  counsellorId     String   @map("counsellor_id")
   type             String   @db.VarChar(20)
   amount           Decimal  @db.Decimal(10, 2)
   description      String?  @db.VarChar(255)
-  sessionId        String?  @map("session_id") @db.Uuid
+  sessionId        String?  @map("session_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
-  bankDetails      Json     @default("{}") @map("bank_details")
+  payoutDetails    Json     @default("{}") @map("payout_details")
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
+  reviewedBy       String?  @map("reviewed_by")
+  reviewRemarks    String?  @map("review_remarks") @db.Text
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   wallet     CounsellorWallet    @relation(fields: [walletId], references: [id])
   counsellor Counsellor          @relation(fields: [counsellorId], references: [id])
   session    CounsellingSession? @relation(fields: [sessionId], references: [id])
+  reviewer   PlatformAdmin?      @relation(fields: [reviewedBy], references: [id])
 
   @@index([walletId], name: "idx_wtxn_wallet")
   @@index([counsellorId], name: "idx_wtxn_counsellor")
   @@index([type], name: "idx_wtxn_type")
   @@index([createdAt], name: "idx_wtxn_created")
   @@map("counsellor_wallet_transactions")
+}
+
+model CounsellingRefundRequest {
+  id            String    @id @default(dbgenerated("('CRQ-'::text || (nextval('counselling_refund_request_seq'::regclass))::text)")) @db.Text
+  sessionId     String    @map("session_id")
+  studentId     String    @map("student_id")
+  counsellorId  String    @map("counsellor_id")
+  amount        Decimal   @db.Decimal(10, 2)
+  upiId         String    @map("upi_id") @db.VarChar(100)
+  reason        String    @db.Text
+  proofUrl      String?   @map("proof_url") @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  reviewedBy    String?   @map("reviewed_by")
+  reviewRemarks String?   @map("review_remarks") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  session    CounsellingSession @relation(fields: [sessionId], references: [id])
+  student    Student            @relation(fields: [studentId], references: [id])
+  counsellor Counsellor         @relation(fields: [counsellorId], references: [id])
+  reviewer   PlatformAdmin?     @relation(fields: [reviewedBy], references: [id])
+
+  @@index([sessionId], name: "idx_refund_req_session")
+  @@index([studentId], name: "idx_refund_req_student")
+  @@index([counsellorId], name: "idx_refund_req_counsellor")
+  @@index([status], name: "idx_refund_req_status")
+  @@map("counselling_refund_requests")
+}
+
+model CounsellorRegistrationRequest {
+  id String @id @default(dbgenerated("('CRR-'::text || (nextval('counsellor_registration_request_seq'::regclass))::text)")) @db.Text
+
+  fullName          String   @map("full_name") @db.VarChar(255)
+  email             String   @db.VarChar(255)
+  phoneNumber       String?  @map("phone_number") @db.VarChar(20)
+  gender            String?  @db.VarChar(20)
+  city              String?  @db.VarChar(100)
+  counsellorType    String   @map("counsellor_type") @db.VarChar(20)
+  qualification     String?  @db.VarChar(255)
+  yearsOfExperience String?  @map("years_of_experience") @db.VarChar(50)
+  knownLanguages    String?  @map("known_languages") @db.VarChar(255)
+  specialization    String?  @db.Text
+  licenseNumber     String?  @map("license_number") @db.VarChar(100)
+  message           String?  @db.Text
+  passwordHash      String?  @map("password_hash") @db.Text
+  status            String   @default("pending") @db.VarChar(20)
+  reviewedBy        String?  @map("reviewed_by")
+  reviewRemarks     String?  @map("review_remarks") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  reviewer PlatformAdmin? @relation(fields: [reviewedBy], references: [id])
+
+  @@index([status], name: "idx_counsellor_request_status")
+  @@index([counsellorType], name: "idx_counsellor_request_type")
+  @@map("counsellor_registration_requests")
 }

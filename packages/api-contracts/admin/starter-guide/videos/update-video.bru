@@ -1,0 +1,26 @@
+meta {
+  name: Update Video
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/videos/{{sgvId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Updated: Getting Started with BeaconU",
+    "display_order": 1
+  }
+}

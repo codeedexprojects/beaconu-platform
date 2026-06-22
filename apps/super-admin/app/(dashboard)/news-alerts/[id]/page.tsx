@@ -30,6 +30,7 @@ import {
   useArchiveNewsAlert,
   useUnarchiveNewsAlert,
 } from "@/hooks/use-news-alerts";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const STATUS_BADGE: Record<string, string> = {
   draft: "bg-amber-50 text-amber-700 border-amber-200",
@@ -313,25 +314,22 @@ export default function NewsAlertDetailPage() {
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="cover_image_url">
-                  Cover Image URL{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
-                </Label>
-                <Input
-                  id="cover_image_url"
-                  type="url"
-                  disabled={isArchived}
-                  {...form.register("cover_image_url")}
-                />
-                {form.formState.errors.cover_image_url && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.cover_image_url.message}
-                  </p>
-                )}
-              </div>
+              <ImageUpload
+                label="Cover Image (optional)"
+                value={form.watch("cover_image_url") ?? ""}
+                onChange={(url) =>
+                  form.setValue("cover_image_url", url, {
+                    shouldValidate: true,
+                  })
+                }
+                context="news-alert-covers"
+                disabled={isArchived}
+              />
+              {form.formState.errors.cover_image_url && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.cover_image_url.message}
+                </p>
+              )}
 
               <div className="space-y-1.5">
                 <Label htmlFor="tags_input">

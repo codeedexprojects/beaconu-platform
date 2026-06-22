@@ -42,7 +42,7 @@ const listEntranceExamsQuerySchema = z.object({
 });
 
 const idParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 export const entranceExamSchemas = {

@@ -1,0 +1,227 @@
+meta {
+  name: Tab - Exam Policy (Update)
+  type: http
+  seq: 20
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/exam_policy
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "evaluation_patterns": [
+        {
+          "pattern_type": "Course with Practical",
+          "duration": "2 + 3 Hrs",
+          "chart": {
+            "total": 100,
+            "segments": [
+              { "label": "Theory", "percent": 50, "color": "#FF6B00" },
+              { "label": "Practical", "percent": 20, "color": "#FFB27A" },
+              { "label": "Internal", "percent": 30, "color": "#E5E5E5" }
+            ]
+          },
+          "subtotals": [
+            { "label": "ISA Theory", "marks": 20 },
+            { "label": "ISA Practical", "marks": 15 },
+            { "label": "ESA Theory", "marks": 50 },
+            { "label": "ESA Practical", "marks": 20 }
+          ],
+          "internal_assessment": [
+            {
+              "section": "ISA - Theory",
+              "components": [
+                {
+                  "name": "Test Papers",
+                  "marks": 10,
+                  "description": "",
+                  "icon": "",
+                  "sub_components": [
+                    { "name": "Mid-term Exam", "marks": 6 },
+                    { "name": "Class Test", "marks": 4 }
+                  ]
+                },
+                {
+                  "name": "Assignment",
+                  "marks": 5,
+                  "description": "",
+                  "icon": "",
+                  "sub_components": [
+                    { "name": "Content Relevance", "marks": 2 },
+                    { "name": "Research Quality", "marks": 2 },
+                    { "name": "Timely Submission", "marks": 1 }
+                  ]
+                },
+                {
+                  "name": "Seminar",
+                  "marks": 5,
+                  "description": "",
+                  "icon": "",
+                  "sub_components": [
+                    { "name": "Presentation Skills", "marks": 1 },
+                    { "name": "Topic Depth", "marks": 3 },
+                    { "name": "Q&A Interaction", "marks": 1 }
+                  ]
+                }
+              ]
+            },
+            {
+              "section": "ISA - Practical",
+              "components": [
+                {
+                  "name": "Practical Record",
+                  "marks": 5,
+                  "description": "Assessment of maintained practical records and observations.",
+                  "icon": "",
+                  "sub_components": []
+                },
+                {
+                  "name": "Lab Performance",
+                  "marks": 5,
+                  "description": "Evaluation of day-to-day lab performance and skill.",
+                  "icon": "",
+                  "sub_components": []
+                },
+                {
+                  "name": "Viva-Voce",
+                  "marks": 5,
+                  "description": "Oral examination based on practical concepts.",
+                  "icon": "",
+                  "sub_components": []
+                }
+              ]
+            }
+          ],
+          "external_examination": [
+            {
+              "section": "ESA - Theory",
+              "columns": ["Section", "Total Q", "Attempt", "Marks"],
+              "rows": [
+                { "section": "Section A", "subtitle": "1 Mark each", "total_questions": 10, "attempt": 10, "marks": 10 },
+                { "section": "Section B", "subtitle": "3 Marks each", "total_questions": 5, "attempt": 5, "marks": 15 },
+                { "section": "Section C", "subtitle": "12.5 Marks each", "total_questions": 2, "attempt": 2, "marks": 25 }
+              ]
+            },
+            {
+              "section": "ESA - Practical",
+              "columns": ["Component", "Total Q", "Attempt", "Marks"],
+              "rows": [
+                { "section": "Execution", "subtitle": "", "total_questions": 1, "attempt": 1, "marks": 10 },
+                { "section": "Result & Analysis", "subtitle": "", "total_questions": 1, "attempt": 1, "marks": 5 },
+                { "section": "External Viva-Voce", "subtitle": "", "total_questions": 1, "attempt": 1, "marks": 5 }
+              ]
+            }
+          ],
+          "summary_cards": [
+            { "label": "ISA THEORY", "value": "20 Marks" },
+            { "label": "ISA PRACTICAL", "value": "15 Marks" },
+            { "label": "ESA THEORY", "value": "50 Marks" },
+            { "label": "ESA PRACTICAL", "value": "20 Marks" }
+          ],
+          "exam_duration": { "label": "DURATION", "value": "2 + 3 Hrs" }
+        }
+      ],
+      "projects_dissertation": {
+        "marks_distribution_bar": {
+          "title": "Marks Distribution",
+          "total_label": "Total: 100",
+          "segments": [
+            { "label": "ESA", "percent": 70, "color": "#3B82F6" },
+            { "label": "Internal", "percent": 30, "color": "#A78BFA" }
+          ]
+        },
+        "internal_assessment": [
+          {
+            "section": "Components of Internal Evaluation",
+            "components": [
+              { "name": "Relevance of the Topic", "marks": 5 },
+              { "name": "Project Content & Methodology", "marks": 10 },
+              { "name": "Presentation", "marks": 10 },
+              { "name": "Viva-Voce", "marks": 5 }
+            ]
+          }
+        ],
+        "external_examination": [
+          {
+            "section": "Components of External Assessment",
+            "components": [
+              { "name": "Project Dissertation", "marks": 50 },
+              { "name": "Presentation & Viva-Voce", "marks": 20 }
+            ]
+          }
+        ],
+        "summary_cards": [
+          { "label": "SUBTOTAL ISA", "value": "30 Marks" },
+          { "label": "SUBTOTAL ESA", "value": "70 Marks" }
+        ]
+      },
+      "ojt_evaluation": {
+        "section_title": "OJT ASSESSMENT CRITERIA",
+        "columns": ["Criterion", "Marks"],
+        "components": [
+          { "name": "Attendance & Punctuality", "marks": 20 },
+          { "name": "Work Performance", "marks": 30 },
+          { "name": "OJT Report", "marks": 30 },
+          { "name": "Viva-Voce", "marks": 20 }
+        ],
+        "total_summary": { "label": "TOTAL ASSESSMENT", "value": "100 Marks" }
+      },
+      "internship_evaluation": {
+        "section_title": "COMPONENTS OF INTERNSHIP EVALUATION",
+        "columns": ["Component", "Marks"],
+        "components": [
+          { "name": "Industry Supervisor Evaluation", "marks": 40 },
+          { "name": "Internship Report", "marks": 30 },
+          { "name": "Presentation & Viva", "marks": 30 }
+        ],
+        "total_summary": { "label": "TOTAL EVALUATION", "value": "100 Marks" }
+      },
+      "grading_scale": {
+        "title": "Grading Scale",
+        "columns": ["Percentage of Marks", "Grade", "Grade Point"],
+        "rows": [
+          { "percentage_range": "90% - 100%", "grade": "O", "grade_color": "green", "grade_point": 10.0 },
+          { "percentage_range": "80% - 89%", "grade": "A+", "grade_color": "green", "grade_point": 9.0 },
+          { "percentage_range": "70% - 79%", "grade": "A", "grade_color": "green", "grade_point": 8.0 },
+          { "percentage_range": "60% - 69%", "grade": "B+", "grade_color": "blue", "grade_point": 7.0 },
+          { "percentage_range": "50% - 59%", "grade": "B", "grade_color": "blue", "grade_point": 6.0 },
+          { "percentage_range": "45% - 49%", "grade": "C", "grade_color": "orange", "grade_point": 5.0 },
+          { "percentage_range": "40% - 44%", "grade": "P", "grade_color": "orange", "grade_point": 4.0 },
+          { "percentage_range": "Below 40%", "grade": "F", "grade_color": "red", "grade_point": 0.0 }
+        ]
+      },
+      "important_guidelines_banner": {
+        "tag": "ACADEMIC POLICIES",
+        "title": "Important Guidelines",
+        "description": "Essential rules and regulations regarding attendance, examinations, grading, and student conduct.",
+        "background_style": "gradient_orange",
+        "academic_policies": [
+          { "badge": "Required: 75%", "title": "Minimum Attendance", "description": "Students must maintain a minimum of 75% attendance in theory and practical sessions separately.", "read_more_link": "", "icon": "" },
+          { "badge": "65% - 75% Range", "title": "Condonation Policy", "description": "Shortage of attendance between 65% and 75% may be condoned by the Vice-Chancellor on valid grounds.", "read_more_link": "", "icon": "" },
+          { "badge": "Max 4 Failed Subjects", "title": "Year Back Scheme", "description": "Students failing in more than 4 subjects will not be promoted to the next academic year.", "read_more_link": "", "icon": "" },
+          { "badge": "Min 50% Aggregate", "title": "Pass Percentage", "description": "ISA: Min 50% aggregate (Theory + Practical). ESA: Min 40% in each subject & 50% aggregate.", "read_more_link": "", "icon": "" }
+        ]
+      }
+    }
+  }
+}
+
+docs {
+  Updates exam_policy tab with the correct structure matching the frontend expected response.
+
+  Required env vars:
+    courseId   — set automatically by list-courses.bru or create-course.bru
+    staffToken — set automatically by login.bru
+
+  After PATCH, verify by running:
+    tab-exam-policy.bru         (admin view — raw stored data)
+    public/.../get-course-tab   (public view — transformed with tab: "exam_policy")
+}

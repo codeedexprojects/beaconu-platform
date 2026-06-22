@@ -1,0 +1,34 @@
+meta {
+  name: Complete Session
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/counsellor/sessions/{{sessionId}}/complete
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "session_notes": "Student asked for a 2-year academic and career roadmap."
+  }
+}
+
+script:pre-request {
+  const sessionId = bru.getEnvVar("sessionId");
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run List Sessions first.");
+  }
+}
+
+docs {
+  Marks a session as completed.
+  Requires: counsellor access token.
+}

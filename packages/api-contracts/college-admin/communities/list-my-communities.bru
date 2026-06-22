@@ -1,0 +1,31 @@
+meta {
+  name: List My Communities
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/communities/my
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+query {
+  page: 1
+  limit: 10
+  search: 
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists communities created by current college-admin with pagination and optional search.
+  You can use update community API to edit these communities.
+  Response includes iconUrl and coverImageUrl.
+}

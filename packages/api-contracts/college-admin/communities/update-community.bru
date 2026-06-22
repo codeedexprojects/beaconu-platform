@@ -1,0 +1,33 @@
+meta {
+  name: Update Community
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Campus Startup Circle - Updated",
+    "description": "Updated community details for the campus",
+    "iconUrl": "https://images.example.com/startup-icon.png",
+    "coverImageUrl": "https://images.example.com/startup-cover.png"
+  }
+}
+
+docs {
+  Updates a community. Allowed for the creator (or platform admin via backend rules).
+  Requires college-admin login token (staffToken).
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Financial Aid
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/financial_aid
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `financial_aid` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-financial-aid-update.bru`
+}

@@ -1,0 +1,34 @@
+meta {
+  name: List Event Registrations
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/events/{{eventId}}/registrations
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  List all students registered for a specific event. Platform admin only.
+
+  Response:
+  - data.registrations[]: registration rows with student info
+  - data.summary.joined_count: currently joined registrations
+  - data.summary.left_count: cancelled registrations
+
+  Query Parameters:
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10)
+}

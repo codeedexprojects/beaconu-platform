@@ -1,11 +1,50 @@
 meta {
   name: Get College By Slug
   type: http
-  seq: 1
+  seq: 3
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges/by-slug/:slug
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}
   body: none
   auth: none
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.collegeDetails && data.data.collegeDetails.id) {
+      bru.setEnvVar("collegeId", data.data.collegeDetails.id);
+    }
+  }
+}
+
+docs {
+  Returns full public details for a college by its subdomain slug.
+  Same response shape as Get College By Id.
+
+  Response shape:
+  {
+    "collegeDetails": {
+      "id": "CLG-1",
+      "name": "...",
+      "slug": "...",
+      "logoUrl": "...",
+      "coverImageUrl": "...",
+      "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { ... } },
+      "campuses": [...]
+    },
+    "tabs": [
+      { "id": "college_overview", "name": "College Overview" },
+      { "id": "commute", "name": "Commute" },
+      { "id": "happenings", "name": "Happenings" },
+      { "id": "student_code_of_conduct", "name": "Student Code of Conduct" },
+      { "id": "institutions_across_world", "name": "Institutions Across the World" }
+    ]
+  }
+
+  `tabs` contains only enabled college-level static tabs as { id, name } — not course tabs.
+  `placements` is available via course tab APIs, not this college details tabs list.
+  `profileSections` is excluded from the response; use the section endpoint for content.
+  Sets collegeId env var from the response for downstream requests.
 }

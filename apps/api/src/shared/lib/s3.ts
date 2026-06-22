@@ -7,12 +7,42 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/shared/config/env";
 
-export const s3Client = new S3Client({
-  region: env.AWS_REGION,
-  credentials: {
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  },
+let _s3Client: S3Client | null = null;
+
+export function isS3Ready(): boolean {
+  return !!(
+    env.AWS_REGION &&
+    env.AWS_ACCESS_KEY_ID &&
+    env.AWS_SECRET_ACCESS_KEY &&
+    env.AWS_S3_BUCKET
+  );
+}
+
+function getS3Client(): S3Client {
+  if (!isS3Ready()) {
+    throw new Error(
+      "S3 is not configured. Set AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET.",
+    );
+  }
+  if (!_s3Client) {
+    _s3Client = new S3Client({
+      region: env.AWS_REGION,
+      credentials: {
+        accessKeyId: env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+      },
+      // SDK v3 ≥3.536 defaults to "when_supported", injecting CRC32 into
+      // presigned URLs. Clients (Flutter, Bruno) that don't send the matching
+      // header cause S3 to reject with AuthorizationQueryParametersError.
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
+    });
+  }
+  return _s3Client;
+}
+
+export const s3Client = new Proxy({} as S3Client, {
+  get: (_, prop) => getS3Client()[prop as keyof S3Client],
 });
 
 export async function generateUploadUrl(
@@ -25,7 +55,7 @@ export async function generateUploadUrl(
     Key: key,
     ContentType: contentType,
   });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 export async function generateDownloadUrl(
@@ -36,14 +66,15 @@ export async function generateDownloadUrl(
     Bucket: env.AWS_S3_BUCKET,
     Key: key,
   });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 export async function objectExists(key: string): Promise<boolean> {
   try {
-    await s3Client.send(
+    await getS3Client().send(
       new HeadObjectCommand({ Bucket: env.AWS_S3_BUCKET, Key: key }),
     );
+
     return true;
   } catch (err: unknown) {
     const status = (err as { $metadata?: { httpStatusCode?: number } })

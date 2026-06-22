@@ -3,9 +3,9 @@
 // ============================================================
 
 model FeeStructure {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId         String   @map("college_id") @db.Uuid
-  courseId          String   @map("course_id") @db.Uuid
+  id                String   @id @default(dbgenerated("('FST-'::text || (nextval('fee_structure_seq'::regclass))::text)"))
+  collegeId         String   @map("college_id")
+  courseId          String   @map("course_id")
   academicYear      String   @map("academic_year") @db.VarChar(10)
   feeCategory       String   @map("fee_category") @db.VarChar(30)
   amount            Decimal  @db.Decimal(12, 2)
@@ -15,6 +15,13 @@ model FeeStructure {
   isActive          Boolean  @default(true) @map("is_active")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  gender         String? @default("both") @db.VarChar(10) // boys|girls|both
+  feePdfUrl      String? @map("fee_pdf_url") @db.Text
+  oneTimeFees    Json    @default("[]") @map("one_time_fees") // [{label, amount}]
+  additionalFees Json    @default("[]") @map("additional_fees") // [{label, amount}]
+  whatsIncluded  Json    @default("[]") @map("whats_included") // [string]
+  whatsExcluded  Json    @default("[]") @map("whats_excluded") // [string]
 
   // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -28,11 +35,11 @@ model FeeStructure {
 }
 
 model StudentFeeLedger {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  applicationCourseId String?   @map("application_course_id") @db.Uuid
-  enrollmentId        String?   @map("enrollment_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('SFL-'::text || (nextval('student_fee_ledger_seq'::regclass))::text)"))
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  applicationCourseId String?   @map("application_course_id")
+  enrollmentId        String?   @map("enrollment_id")
   feeCategory         String    @map("fee_category") @db.VarChar(30)
   description         String?   @db.VarChar(255)
   totalAmount         Decimal   @map("total_amount") @db.Decimal(12, 2)
@@ -62,11 +69,11 @@ model StudentFeeLedger {
 }
 
 model Transaction {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String    @id @default(dbgenerated("('TXN-'::text || (nextval('transaction_seq'::regclass))::text)"))
   transactionNumber   String    @unique @map("transaction_number") @db.VarChar(30)
-  studentId           String    @map("student_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  ledgerEntryId       String?   @map("ledger_entry_id") @db.Uuid
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  ledgerEntryId       String?   @map("ledger_entry_id")
   amount              Decimal   @db.Decimal(12, 2)
   currency            String    @default("INR") @db.VarChar(5)
   paymentMethod       String    @map("payment_method") @db.VarChar(20)
@@ -85,7 +92,7 @@ model Transaction {
   ddDate              DateTime? @map("dd_date") @db.Date
   bankRefNumber       String?   @map("bank_ref_number") @db.VarChar(100)
   verificationStatus  String    @default("not_required") @map("verification_status") @db.VarChar(20)
-  verifiedBy          String?   @map("verified_by") @db.Uuid
+  verifiedBy          String?   @map("verified_by")
   verifiedAt          DateTime? @map("verified_at") @db.Timestamptz
   rejectionReason     String?   @map("rejection_reason") @db.Text
   status              String    @default("pending") @db.VarChar(20)
@@ -116,10 +123,10 @@ model Transaction {
 }
 
 model PaymentReceipt {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  transactionId String   @unique @map("transaction_id") @db.Uuid
-  studentId     String   @map("student_id") @db.Uuid
-  collegeId     String   @map("college_id") @db.Uuid
+  id            String   @id @default(dbgenerated("('RCP-'::text || (nextval('payment_receipt_seq'::regclass))::text)"))
+  transactionId String   @unique @map("transaction_id")
+  studentId     String   @map("student_id")
+  collegeId     String   @map("college_id")
   receiptNumber String   @unique @map("receipt_number") @db.VarChar(30)
   receiptDate   DateTime @default(dbgenerated("CURRENT_DATE")) @map("receipt_date") @db.Date
   feeCategory   String   @map("fee_category") @db.VarChar(30)
@@ -141,16 +148,16 @@ model PaymentReceipt {
 }
 
 model Refund {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  transactionId   String    @map("transaction_id") @db.Uuid
-  studentId       String    @map("student_id") @db.Uuid
-  collegeId       String    @map("college_id") @db.Uuid
+  id              String    @id @default(dbgenerated("('RFD-'::text || (nextval('refund_seq'::regclass))::text)"))
+  transactionId   String    @map("transaction_id")
+  studentId       String    @map("student_id")
+  collegeId       String    @map("college_id")
   refundAmount    Decimal   @map("refund_amount") @db.Decimal(12, 2)
   reason          String    @db.Text
   refundType      String    @map("refund_type") @db.VarChar(20)
   status          String    @default("pending") @db.VarChar(20)
   gatewayRefundId String?   @map("gateway_refund_id") @db.VarChar(100)
-  processedBy     String?   @map("processed_by") @db.Uuid
+  processedBy     String?   @map("processed_by")
   processedAt     DateTime? @map("processed_at") @db.Timestamptz
   remarks         String?   @db.Text
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -170,8 +177,8 @@ model Refund {
 }
 
 model ScholarshipConfig {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('SCG-'::text || (nextval('scholarship_config_seq'::regclass))::text)"))
+  collegeId          String   @map("college_id")
   name               String   @db.VarChar(255)
   scholarshipType    String   @map("scholarship_type") @db.VarChar(30)
   eligibility        Json
@@ -182,6 +189,10 @@ model ScholarshipConfig {
   isActive           Boolean  @default(true) @map("is_active")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  calculatorConfig Json    @default("{}") @map("calculator_config") // {portOfEntryOptions[], rankRangeBrackets[]}
+  displayLabel     String? @map("display_label") @db.VarChar(100) // "Defence personnel"
+  discountDisplay  String? @map("discount_display") @db.VarChar(20) // "20% OFF"
 
   // Relations
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -194,15 +205,15 @@ model ScholarshipConfig {
 }
 
 model ScholarshipApplication {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scholarshipConfigId String    @map("scholarship_config_id") @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  applicationCourseId String    @map("application_course_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('SCA-'::text || (nextval('scholarship_application_seq'::regclass))::text)"))
+  scholarshipConfigId String    @map("scholarship_config_id")
+  studentId           String    @map("student_id")
+  applicationCourseId String    @map("application_course_id")
   supportingDocuments Json      @default("[]") @map("supporting_documents")
   remarks             String?   @db.Text
   discountAmount      Decimal?  @map("discount_amount") @db.Decimal(12, 2)
   status              String    @default("pending") @db.VarChar(20)
-  reviewedBy          String?   @map("reviewed_by") @db.Uuid
+  reviewedBy          String?   @map("reviewed_by")
   reviewedAt          DateTime? @map("reviewed_at") @db.Timestamptz
   reviewRemarks       String?   @map("review_remarks") @db.Text
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -223,8 +234,8 @@ model ScholarshipApplication {
 }
 
 model CollegePaymentAccount {
-  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId             String   @unique @map("college_id") @db.Uuid
+  id                    String   @id @default(dbgenerated("('CPA-'::text || (nextval('college_payment_account_seq'::regclass))::text)"))
+  collegeId             String   @unique @map("college_id")
   razorpayAccountId     String   @map("razorpay_account_id") @db.VarChar(100)
   onboardingStatus      String   @default("pending") @map("onboarding_status") @db.VarChar(20)
   businessName          String?  @map("business_name") @db.VarChar(255)

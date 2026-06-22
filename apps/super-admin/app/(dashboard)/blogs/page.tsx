@@ -55,8 +55,6 @@ export default function BlogsPage() {
   const blogs = data?.data ?? [];
   const meta = data?.meta;
 
-  console.log(blogs);
-
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setSearch(searchInput);

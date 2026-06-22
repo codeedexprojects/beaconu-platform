@@ -10,7 +10,7 @@ get {
   auth: none
 }
 
-query {
+params:query {
   ~is_active: true
 }
 
@@ -19,11 +19,20 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0].id) {
+      bru.setEnvVar("universityTypeId", data.data[0].id);
+    }
+  }
+}
+
 docs {
   Returns all university types.
-
+  
   Query Parameters:
   - is_active: Filter by active status (optional)
-
+  
   Requires: platform admin access token.
 }

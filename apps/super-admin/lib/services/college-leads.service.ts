@@ -18,6 +18,8 @@ export interface CollegeLead {
     id: string;
     slug: string;
     ownedGroupCode?: string | null;
+    adminSetupCompleted: boolean;
+    setupUrl?: string | null;
   } | null;
   groupCode?: string | null;
   createdAt: string;
@@ -52,6 +54,18 @@ export interface CollegeLeadsListResponse {
   meta: { total: number; page: number; limit: number; totalPages: number };
 }
 
+export interface CollegeLeadUpsertInput {
+  collegeName: string;
+  universityName?: string;
+  contactPersonName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  city?: string;
+  state?: string;
+  groupCode?: string;
+  message?: string;
+}
+
 export const collegeLeadsService = {
   getAll: (filters?: {
     status?: string;
@@ -76,11 +90,38 @@ export const collegeLeadsService = {
   getStats: () =>
     api.get<CollegeLeadStats>("/api/v1/admin/college-leads/stats"),
 
+  create: (data: CollegeLeadUpsertInput) =>
+    api.post<CollegeLead>("/api/v1/admin/college-leads", {
+      college_name: data.collegeName,
+      university_name: data.universityName,
+      contact_person_name: data.contactPersonName,
+      contact_email: data.contactEmail,
+      contact_phone: data.contactPhone,
+      city: data.city,
+      state: data.state,
+      group_code: data.groupCode,
+      message: data.message,
+    }),
+
+  update: (id: string, data: CollegeLeadUpsertInput) =>
+    api.patch<CollegeLead>(`/api/v1/admin/college-leads/${id}`, {
+      college_name: data.collegeName,
+      university_name: data.universityName,
+      contact_person_name: data.contactPersonName,
+      contact_email: data.contactEmail,
+      contact_phone: data.contactPhone,
+      city: data.city,
+      state: data.state,
+      group_code: data.groupCode,
+      message: data.message,
+    }),
+
   updateStatus: (
     id: string,
     status: string,
     review_remarks?: string,
     enableInstitutionGroup?: boolean,
+    universityId?: string,
   ) =>
     api.patch<UpdateStatusResponse>(
       `/api/v1/admin/college-leads/${id}/status`,
@@ -88,6 +129,7 @@ export const collegeLeadsService = {
         status,
         review_remarks,
         enableInstitutionGroup,
+        universityId,
       },
     ),
 };

@@ -1,0 +1,80 @@
+meta {
+  name: Tab - College Overview
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/college_overview
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches only the `college_overview` section.
+
+  Response shape:
+  {
+    "sectionName": "college_overview",
+    "sectionId": "college_overview",
+    "sectionKey": "college_overview",
+    "data": {
+      "id": "college_overview",
+      "name": "University of Hyderabad",
+      "type": "Public",
+      "about": "...",
+      "enabled": true,
+      "accolades": [],
+      "university_details": [],
+      "amenities": [
+        {
+          "label": "Wi-Fi",
+          "icon": "amenity:wifi"
+        },
+        {
+          "label": "Toiletries",
+          "icon": "amenity:toiletries"
+        },
+        {
+          "label": "Bathrobes",
+          "icon": "amenity:bathrobes"
+        },
+        {
+          "label": "Smart Classrooms",
+          "icon": "amenity:smart_classrooms"
+        }
+      ],
+      "inside_campus_facilities": [],
+      "location": {
+        "address": "",
+        "latitude": null,
+        "longitude": null,
+        "map_link": ""
+      },
+      "nearby_access": [],
+      "campus_ambassadors": [],
+      "social": [
+        {
+          "platform": "Instagram",
+          "icon": "instagram",
+          "url": "https://instagram.com/example"
+        }
+      ],
+      "campus_reels": [
+        {
+          "title": "Campus Tour",
+          "duration": "1 min 30 secs",
+          "date": "12 Oct 2023",
+          "video": "https://example.com/campus-tour",
+          "thumbnail": "https://example.com/campus-tour.jpg",
+          "type": "youtube"
+        }
+      ],
+      "navigation_tabs": []
+    }
+  }
+}

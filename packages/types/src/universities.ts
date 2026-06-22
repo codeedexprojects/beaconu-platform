@@ -8,6 +8,7 @@ export interface UniversityTypeRef {
 // Full university response DTO.
 export interface University {
   id: string;
+  universityTypeId: string | null;
   name: string;
   slug: string;
   state: string | null;
@@ -19,7 +20,7 @@ export interface University {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
-  universityType: UniversityTypeRef;
+  universityType: UniversityTypeRef | null;
 }
 
 // Full university type response DTO — returned by /universities/types endpoints.

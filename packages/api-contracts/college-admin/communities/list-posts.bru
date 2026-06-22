@@ -1,0 +1,61 @@
+meta {
+  name: List Posts
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}/posts?page=1&limit=10
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("communityPostId", data.data[0].id);
+    }
+    if (data.data && data.data[0] && data.data[0].comments && data.data[0].comments[0]) {
+      bru.setEnvVar("communityCommentId", data.data[0].comments[0].id);
+    }
+  }
+}
+
+docs {
+  Lists active posts of a community with pagination.
+  Set communityId env var before calling.
+
+  Response includes for each post:
+    - authorName        (String|null)              — full name of the post author
+    - authorAvatarUrl   (String|null)              — avatar URL of the post author
+    - isOwnPost         (Boolean)                  — true if the requesting user authored this post
+    - upvoteCount       (Int)                      — total upvotes on the post
+    - downvoteCount     (Int)                      — total downvotes on the post
+    - currentUserVote   ("upvote"|"downvote"|null) — current user's vote
+    - isLiked           (Boolean)                  — true if current user upvoted
+    - isDisliked        (Boolean)                  — true if current user downvoted
+    - attachments       (Array)                    — media attachments with type, url, thumbnailUrl, fileName, mimeType
+    - comments[]        (Array)                    — top-level comments, each includes:
+        - authorName      (String|null)
+        - authorAvatarUrl (String|null)
+        - isOwnComment    (Boolean)                — true if the requesting user authored this comment
+        - isLiked         (Boolean)                — true if the requesting user has liked this comment
+        - isComment       (Boolean)                — always true for top-level comments
+        - isReplyComment  (Boolean)                — always false for top-level comments
+        - replies[]       (Array)                  — each reply includes:
+            - authorName      (String|null)
+            - authorAvatarUrl (String|null)
+            - isOwnReply      (Boolean)            — true if the requesting user authored this reply
+            - isLiked         (Boolean)            — true if the requesting user has liked this reply
+            - isComment       (Boolean)            — always false for replies
+            - isReplyComment  (Boolean)            — always true for replies
+}

@@ -1,12 +1,28 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { CounsellingService } from "../services/counselling.service";
+import { SessionService } from "../services/sessions.service";
+import { RefundService } from "../services/refund.service";
+import { CounsellorRequestService } from "../services/counsellor-request.service";
+import { counsellorRequestSchemas } from "../validators/counsellor-request.validator";
+import type {
+  ListCounsellorSlotsQueryInput,
+  ListSessionsQueryInput,
+  ListWalletTransactionsQueryInput,
+  ListWithdrawalRequestsQueryInput,
+  UpdateWithdrawalStatusInput,
+} from "../validators/sessions.validator";
+import type {
+  ListRefundRequestsQueryInput,
+  UpdateRefundStatusInput,
+} from "../validators/refund.validator";
 
 export class CounsellingPlatformAdminController {
   static async listAll(req: Request, res: Response) {
     const counsellors = await CounsellingService.listAll({
       counsellor_type: req.query["counsellor_type"] as string | undefined,
       status: req.query["status"] as string | undefined,
+      language: req.query["language"] as string | undefined,
     });
     return res
       .status(200)
@@ -22,6 +38,48 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Counsellor retrieved", counsellor));
   }
 
+  static async getDetail(req: Request, res: Response) {
+    const detail = await SessionService.getCounsellorDetailForAdmin(
+      req.params["id"] as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Counsellor detail retrieved", detail));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/wallet-transactions
+  static async getWalletTransactions(req: Request, res: Response) {
+    const wallet = await SessionService.getWallet(
+      req.params["id"] as string,
+      req.query as unknown as ListWalletTransactionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Wallet transactions retrieved", wallet));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/slots
+  static async getSlots(req: Request, res: Response) {
+    const { data, meta } = await SessionService.listCounsellorSlotsForAdmin(
+      req.params["id"] as string,
+      req.query as unknown as ListCounsellorSlotsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Slots retrieved", data, meta));
+  }
+
+  // GET /api/v1/admin/counsellors/:id/sessions
+  static async getSessions(req: Request, res: Response) {
+    const { data, meta } = await SessionService.listCounsellorSessions(
+      req.params["id"] as string,
+      req.query as unknown as ListSessionsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Sessions retrieved", data, meta));
+  }
+
   static async updateStatus(req: Request, res: Response) {
     const counsellor = await CounsellingService.updateStatus(
       req.params["id"] as string,
@@ -30,5 +88,108 @@ export class CounsellingPlatformAdminController {
     return res
       .status(200)
       .json(ApiResponse.success("Status updated", counsellor));
+  }
+
+  // GET /api/v1/admin/counsellor-requests
+  static async listRequests(req: Request, res: Response) {
+    const filters = counsellorRequestSchemas.list.parse(req.query);
+    const result = await CounsellorRequestService.list(filters);
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Counsellor registration requests retrieved",
+          result,
+        ),
+      );
+  }
+
+  // GET /api/v1/admin/counsellor-requests/:id
+  static async getRequestById(req: Request, res: Response) {
+    const result = await CounsellorRequestService.getById(
+      req.params["id"] as string,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Counsellor registration request retrieved",
+          result,
+        ),
+      );
+  }
+
+  // PATCH /api/v1/admin/counsellor-requests/:id/status
+  static async updateRequestStatus(req: Request, res: Response) {
+    const data = counsellorRequestSchemas.updateStatus.parse(req.body);
+    const result = await CounsellorRequestService.updateStatus(
+      req.params["id"] as string,
+      data,
+      req.userId as string,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Counsellor registration request status updated",
+          result,
+        ),
+      );
+  }
+
+  // GET /api/v1/admin/counsellors/withdrawals
+  static async listWithdrawalRequests(req: Request, res: Response) {
+    const result = await SessionService.listWithdrawalRequests(
+      req.query as unknown as ListWithdrawalRequestsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Withdrawal requests retrieved",
+          result.requests,
+          result.meta,
+        ),
+      );
+  }
+
+  // PATCH /api/v1/admin/counsellors/withdrawals/:id/status
+  static async updateWithdrawalStatus(req: Request, res: Response) {
+    const result = await SessionService.updateWithdrawalStatus(
+      req.params["id"] as string,
+      req.body as UpdateWithdrawalStatusInput,
+      req.userId as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Withdrawal request status updated", result));
+  }
+
+  // GET /api/v1/admin/counsellors/refund-requests
+  static async listRefundRequests(req: Request, res: Response) {
+    const result = await RefundService.listAllForAdmin(
+      req.query as unknown as ListRefundRequestsQueryInput,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Refund requests retrieved",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  // PATCH /api/v1/admin/counsellors/refund-requests/:id/status
+  static async updateRefundStatus(req: Request, res: Response) {
+    const result = await RefundService.updateStatus(
+      req.params["id"] as string,
+      req.body as UpdateRefundStatusInput,
+      req.userId as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Refund request status updated", result));
   }
 }

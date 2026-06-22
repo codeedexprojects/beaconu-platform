@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Review
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/review
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `review` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-review-update.bru`
+}

@@ -1,0 +1,51 @@
+meta {
+  name: Get College By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns full public details for a college by its ID.
+
+  Response shape:
+  {
+    "collegeDetails": {
+      "id": "CLG-1",
+      "name": "...",
+      "slug": "...",
+      "logoUrl": "...",
+      "coverImageUrl": "...",
+      "address": "...",
+      "city": "...",
+      "state": "...",
+      "district": "...",
+      "pinCode": "...",
+      "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { "id": "...", "name": "...", "slug": "..." } },
+      "campuses": [...]
+    },
+    "tabs": [
+      { "id": "college_overview", "name": "College Overview" },
+      { "id": "commute", "name": "Commute" },
+      { "id": "happenings", "name": "Happenings" },
+      { "id": "student_code_of_conduct", "name": "Student Code of Conduct" },
+      { "id": "institutions_across_world", "name": "Institutions Across the World" }
+    ]
+  }
+
+  `tabs` is an array of enabled college-level static sections only — { id, name } objects.
+  These are tabs under the college profile (e.g. college_overview, fees)
+  and do NOT include course-level tabs (highlights, curriculum, etc.).
+  `placements` is exposed via course tab endpoints, not this college details tabs list.
+  Disabled sections are excluded.
+
+  Note: `settings` is excluded from the response.
+  Note: `profileSections` is excluded from the response; use the Get College Section
+  endpoint to fetch a specific tab's content.
+  To fetch the content of a specific tab, use the Get College Section endpoint.
+}

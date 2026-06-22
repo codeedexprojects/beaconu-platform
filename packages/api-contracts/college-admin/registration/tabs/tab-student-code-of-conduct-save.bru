@@ -1,0 +1,76 @@
+meta {
+  name: Tab - Student Code Of Conduct (Save)
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "profileSections": {
+      "student_code_of_conduct": {
+        "id": "student_code_of_conduct",
+        "enabled": true,
+        "tab": "student_code_of_conduct",
+        "section_title": "General Rules of Discipline",
+        "rules": [
+          {
+            "number": 1,
+            "rule": "Always carry the Identity Card with you while in college or the hospital."
+          },
+          {
+            "number": 2,
+            "rule": "Attend classes and clinical postings on time."
+          },
+          {
+            "number": 3,
+            "rule": "Wear the college uniform (if prescribed) neatly and properly."
+          },
+          {
+            "number": 4,
+            "rule": "Maintain silence and discipline in the library, classrooms, and corridors."
+          },
+          {
+            "number": 5,
+            "rule": "Use of mobile phones is prohibited in classrooms, laboratories, and library."
+          },
+          {
+            "number": 6,
+            "rule": "Respect faculty, staff, and fellow students. Ragging is a punishable offense."
+          },
+          {
+            "number": 7,
+            "rule": "Keep the campus clean and use designated waste bins."
+          },
+          {
+            "number": 8,
+            "rule": "Any damage to college property will be recovered from the student concerned."
+          },
+          {
+            "number": 9,
+            "rule": "Prior permission is required for leave of absence."
+          }
+        ]
+      }
+    }
+  }
+}
+
+docs {
+  Saves student_code_of_conduct tab payload using PATCH /api/v1/college-admin/profile.
+
+  Important:
+  - This request writes `profileSections` as provided.
+  - If your college already has other section data, merge current `profileSections`
+    from GET /api/v1/college-admin/profile first, then replace only
+    `student_code_of_conduct`.
+}

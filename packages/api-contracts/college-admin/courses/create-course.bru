@@ -18,15 +18,1045 @@ body:json {
   {
     "name": "Bachelor of Technology in Computer Science",
     "code": "BTECH-CSE",
-    "disciplineId": "discipline_uuid_here",
-    "studyLevelId": "study_level_uuid_here",
-    "programTypeId": "program_type_uuid_here",
-    "studyMode": "FULL_TIME",
+    "disciplineId": "{{disciplineId}}",
+    "studyLevelId": "{{studyLevelId}}",
+    "programTypeId": "{{programTypeId}}",
+    "studyMode": "full_time",
     "intakeCapacity": 120,
     "duration": "4 years",
     "eligibility": "10+2 with Physics, Chemistry and Mathematics",
-    "campusId": "campus_uuid_here"
+    "campusId": "{{campusId}}",
+    "tabs": [
+      "course_info",
+      "admission_policy",
+      "placements",
+      "fees",
+      "financial_aid",
+      "student_housing",
+      "exam_policy",
+      "faculty",
+      "review",
+      "library",
+      "clubs_associations",
+      "alliance",
+      "other_courses_offered",
+      "demo_graphics"
+    ],
+    "tabData": {
+      "course_info": {
+        "tab": "course_info",
+        "course_name": "MBA Digital Transformation",
+        "admissions": [
+          { "label": "Admissions 2025", "status": "open" },
+          { "label": "Admissions 2026", "status": "upcoming" }
+        ],
+        "admission_status": {
+          "tag": "Admissions Open",
+          "seat_availability_percent": 90,
+          "urgency_label": "Limited seats available for current intake"
+        },
+        "overview": {
+          "duration": "24 months",
+          "study_mode": "Regular",
+          "academic_cycle": "Semester",
+          "credits": 102,
+          "gender_accepted": "Co-ed",
+          "course_category": "Self Financing"
+        },
+        "program_highlights": [],
+        "course_accolades": [],
+        "key_dates": [],
+        "curriculum": { "brochure_link": "", "semesters": [] },
+        "course_structure": [],
+        "total_credits": 102,
+        "value_added_courses": [],
+        "career_opportunities": [],
+        "higher_education": { "global_certifications": [], "postgraduation": [] },
+        "flexible_exit_options": [],
+        "class_timings": [],
+        "industry_tools": [],
+        "lab_facilities": [],
+        "classroom_facilities": [],
+        "bonus_certification": { "name": "", "note": "", "certificate_link": "" },
+        "featured_alumni": [],
+        "faqs": [],
+        "student_forum": { "admission_team_contact": "", "ex_student_chat": "" }
+      },
+      "admission_policy": {
+        "eligibility_criteria": {
+          "student_types": ["Indian Students", "Foreign Students"],
+          "by_student_type": [
+            {
+              "student_type": "Indian Students",
+              "criteria_by_quota": [
+                {
+                  "quota": "Government Quota",
+                  "blog_link": "",
+                  "criteria": [
+                    {
+                      "label": "Educational Qualification",
+                      "description": "Candidates must have completed 10+2 from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                    },
+                    {
+                      "label": "Age Requirement",
+                      "description": "Minimum 17 years of age as of 31st December. No upper age limit."
+                    },
+                    {
+                      "label": "Academic Grades (10+2)",
+                      "description": "Minimum 50% marks in aggregate in 10+2 / 10+3 from a recognized board."
+                    },
+                    {
+                      "label": "Entrance Grades",
+                      "description": "Must secure a valid rank in NEET/CET with a minimum percentile of 50th (40th for SC/ST/OBC categories)."
+                    }
+                  ]
+                },
+                {
+                  "quota": "Management Quota",
+                  "blog_link": "",
+                  "criteria": [
+                    {
+                      "label": "Educational Qualification",
+                      "description": ""
+                    }
+                  ]
+                },
+                {
+                  "quota": "NRI Quota",
+                  "blog_link": "",
+                  "criteria": [
+                    {
+                      "label": "Educational Qualification",
+                      "description": ""
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "student_type": "Foreign Students",
+              "criteria_by_quota": [
+                {
+                  "quota": "NRI Quota",
+                  "blog_link": "",
+                  "criteria": [
+                    {
+                      "label": "Educational Qualification",
+                      "description": ""
+                    },
+                    {
+                      "label": "Age Requirement",
+                      "description": ""
+                    },
+                    {
+                      "label": "Valid Passport & Visa",
+                      "description": ""
+                    },
+                    {
+                      "label": "English Proficiency",
+                      "description": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "placements": {
+        "tab": "placements",
+        "report": {
+          "year": 2024,
+          "download_link": ""
+        },
+        "stats": [
+          { "label": "Average Package", "value": "4.2 LPA" },
+          { "label": "Highest Package", "value": "14.2 LPA" },
+          { "label": "Placement Rate", "value": "94%" },
+          { "label": "Lowest Package", "value": "3.5 LPA" },
+          { "label": "Companies Visited", "value": "120+" },
+          { "label": "Students Placed", "value": "450+" }
+        ],
+        "placement_trends": {
+          "label": "Last 5 Years",
+          "yoy_growth": "+12.5%",
+          "data": [
+            { "year": 2020, "avg_package": null },
+            { "year": 2021, "avg_package": null },
+            { "year": 2022, "avg_package": null },
+            { "year": 2023, "avg_package": null },
+            { "year": 2024, "avg_package": null }
+          ]
+        },
+        "industry_salary_report": [
+          {
+            "industry": "BFSI",
+            "full_name": "Banking & Finance",
+            "students_placed": 155,
+            "avg_package": "Rs8.2 L",
+            "max_package": "Rs12 LPA"
+          },
+          {
+            "industry": "FMCG",
+            "full_name": "Retail & Goods",
+            "students_placed": 98,
+            "avg_package": "Rs7.5 L",
+            "max_package": "Rs10 LPA"
+          },
+          {
+            "industry": "Consulting",
+            "full_name": "Mgmt Consulting",
+            "students_placed": 81,
+            "avg_package": "Rs9.1 L",
+            "max_package": "Rs14.5 LPA"
+          }
+        ],
+        "notable_offers": [
+          {
+            "company": "Deloitte",
+            "company_logo": "",
+            "tag": "Highest",
+            "domain": "Consulting",
+            "offers": [
+              { "package": "14.5 LPA", "role": "Senior Analyst Role" },
+              { "package": "12.0 LPA", "role": "Manager Role" }
+            ]
+          }
+        ],
+        "company_statistics": [
+          {
+            "company": "Deloitte",
+            "company_logo": "",
+            "students": 145,
+            "avg_package": "Rs9.2 L",
+            "max_package": "Rs14.5 L"
+          },
+          {
+            "company": "Accenture",
+            "company_logo": "",
+            "students": 210,
+            "avg_package": "Rs7.8 L",
+            "max_package": "Rs11.2 L"
+          },
+          {
+            "company": "TCS",
+            "company_logo": "",
+            "students": 340,
+            "avg_package": "Rs6.5 L",
+            "max_package": "Rs9.0 L"
+          }
+        ],
+        "student_success": [
+          {
+            "name": "Rohan Mehta",
+            "company": "Deloitte",
+            "avatar": "",
+            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!",
+            "media": {
+              "type": "youtube",
+              "url": ""
+            }
+          },
+          {
+            "name": "Priya S.",
+            "company": "HDFC",
+            "avatar": "",
+            "quote": "I never thought I'd get such a high package. The mock interviews were key.",
+            "media": {
+              "type": "link",
+              "url": ""
+            }
+          },
+          {
+            "name": "Example with no media",
+            "company": "TCS",
+            "avatar": "",
+            "quote": "Great experience overall.",
+            "media": {
+              "type": "none",
+              "url": null
+            }
+          }
+        ]
+      },
+      "fees": {
+        "tab": "fees",
+        "fee_structure_pdf": {
+          "label": "Detailed breakdown PDF",
+          "size": "2.4 MB",
+          "url": ""
+        },
+        "filters": {
+          "quota_categories": ["Merit Quota"],
+          "genders": ["Boys", "Girls"]
+        },
+        "fee_details": [
+          {
+            "quota": "Merit Quota",
+            "gender": "Boys",
+            "tuition_fees": [
+              { "year": "1st Year", "amount": "Rs 1,25,276" },
+              { "year": "2nd Year", "amount": "Rs 1,25,276" },
+              { "year": "3rd Year", "amount": "Rs 1,25,276" },
+              { "year": "4th Year", "amount": "Rs 1,25,276" }
+            ],
+            "one_time_payable_fees": [
+              { "label": "Application Fees", "amount": "Rs 1,500" },
+              { "label": "Admission Fees", "amount": "Rs 15,000" }
+            ],
+            "additional_fees": [
+              { "label": "Examination Fees", "amount": "Rs 3,500" },
+              { "label": "Library Fees", "amount": "Rs 1,200" },
+              { "label": "Lab Fees", "amount": "Rs 2,800" },
+              { "label": "Sports Fees", "amount": "Rs 1,500" }
+            ],
+            "deadlines_and_installments": [
+              {
+                "label": "1st Installment (Booking)",
+                "due": "Within 10 Days",
+                "amount": "Rs 25,000"
+              },
+              {
+                "label": "2nd Installment",
+                "due": "Before Classes Start",
+                "amount": "Rs 54,638"
+              },
+              {
+                "label": "Final Installment",
+                "due": "After 60 Days",
+                "amount": "Rs 54,638"
+              }
+            ],
+            "fees_summary": {
+              "full_course_fee": "INR 1,48,750",
+              "booking_amount": "INR 6,198"
+            }
+          },
+          {
+            "quota": "Merit Quota",
+            "gender": "Girls",
+            "tuition_fees": [
+              { "year": "1st Year", "amount": "Rs 1,25,276" },
+              { "year": "2nd Year", "amount": "Rs 1,25,276" },
+              { "year": "3rd Year", "amount": "Rs 1,25,276" },
+              { "year": "4th Year", "amount": "Rs 1,25,276" }
+            ],
+            "one_time_payable_fees": [
+              { "label": "Application Fees", "amount": "Rs 1,500" },
+              { "label": "Admission Fees", "amount": "Rs 15,000" }
+            ],
+            "additional_fees": [
+              { "label": "Examination Fees", "amount": "Rs 3,500" },
+              { "label": "Library Fees", "amount": "Rs 1,200" },
+              { "label": "Lab Fees", "amount": "Rs 2,800" },
+              { "label": "Sports Fees", "amount": "Rs 1,500" }
+            ],
+            "deadlines_and_installments": [
+              {
+                "label": "1st Installment (Booking)",
+                "due": "Within 10 Days",
+                "amount": "Rs 25,000"
+              },
+              {
+                "label": "2nd Installment",
+                "due": "Before Classes Start",
+                "amount": "Rs 54,638"
+              },
+              {
+                "label": "Final Installment",
+                "due": "After 60 Days",
+                "amount": "Rs 54,638"
+              }
+            ],
+            "fees_summary": {
+              "full_course_fee": "INR 1,48,750",
+              "booking_amount": "INR 6,198"
+            }
+          }
+        ],
+        "whats_included": [
+          "Tuition Fees",
+          "Library Access",
+          "Lab Materials",
+          "Basic Medical Aid"
+        ],
+        "whats_excluded": [
+          "Uniform Dress",
+          "University Exam Fees",
+          "Transportation",
+          "Convocation Fee"
+        ],
+        "refund_policy": [
+          "Booking amount refundable within limited time",
+          "Processing charges may apply",
+          "Refund processed within 7-10 working days"
+        ]
+      },
+      "financial_aid": {
+        "tab": "financial_aid",
+        "merit_scholarship": {
+          "title": "Merit Scholarship",
+          "calculator": {
+            "port_of_entry_options": [],
+            "rank_range_options": []
+          },
+          "terms_and_conditions": [
+            "Students can avail 25% of scholarship based on the entered rank/score.",
+            "Applicable only for the first year. Subsequent years require CGPA 8.0+.",
+            "Offered on a first-come, first-serve basis subject to seat availability."
+          ],
+          "final_summary": {
+            "max_scholarship": "Rs1,50,000",
+            "net_payable_fees": "Rs2,45,000"
+          }
+        },
+        "financial_concessions": {
+          "total_types": 4,
+          "items": [
+            {
+              "name": "Defence personnel",
+              "discount_percent": 20,
+              "details": {
+                "eligibility_criteria": [],
+                "scholarship_amount": "",
+                "net_payable": ""
+              }
+            },
+            {
+              "name": "Divyaang (PwD)",
+              "discount_percent": 20,
+              "details": {
+                "eligibility_criteria": [],
+                "scholarship_amount": "",
+                "net_payable": ""
+              }
+            },
+            {
+              "name": "Alumni",
+              "discount_percent": 15,
+              "details": {
+                "eligibility_criteria": [
+                  "Must have completed a full-time degree program.",
+                  "Valid alumni association membership card required."
+                ],
+                "scholarship_amount": "Rs75,000",
+                "net_payable": "Rs3,20,000"
+              }
+            },
+            {
+              "name": "Upfront Fees Concession",
+              "discount_percent": 5,
+              "details": {
+                "eligibility_criteria": [],
+                "scholarship_amount": "",
+                "net_payable": ""
+              }
+            }
+          ]
+        }
+      },
+      "exam_policy": {
+        "tab": "exam_policy",
+        "evaluation_patterns": [
+          {
+            "pattern_type": "Course with Practical",
+            "marks_distribution": {
+              "total": 100,
+              "theory_percent": 50,
+              "practical_percent": 20,
+              "internal_percent": 30
+            },
+            "internal_assessment": [
+              {
+                "section": "ISA - Theory",
+                "components": [
+                  {
+                    "name": "Test Papers",
+                    "marks": 10,
+                    "sub_components": [
+                      { "name": "Mid-term Exam", "marks": 6 },
+                      { "name": "Class Test", "marks": 4 }
+                    ]
+                  },
+                  {
+                    "name": "Assignment",
+                    "marks": 5,
+                    "sub_components": [
+                      { "name": "Content Relevance", "marks": 2 },
+                      { "name": "Research Quality", "marks": 2 },
+                      { "name": "Timely Submission", "marks": 1 }
+                    ]
+                  },
+                  {
+                    "name": "Seminar",
+                    "marks": 5,
+                    "sub_components": [
+                      { "name": "Presentation Skills", "marks": 1 },
+                      { "name": "Topic Depth", "marks": 3 },
+                      { "name": "Q&A Interaction", "marks": 1 }
+                    ]
+                  }
+                ]
+              },
+              {
+                "section": "ISA - Practical",
+                "components": [
+                  {
+                    "name": "Practical Record",
+                    "marks": 5,
+                    "description": "Assessment of maintained practical records and observations."
+                  },
+                  {
+                    "name": "Lab Performance",
+                    "marks": 5,
+                    "description": "Evaluation of day-to-day lab performance and skill."
+                  },
+                  {
+                    "name": "Viva-Voce",
+                    "marks": 5,
+                    "description": "Oral examination based on practical concepts."
+                  }
+                ]
+              }
+            ],
+            "external_examination": [
+              {
+                "section": "ESA - Theory",
+                "rows": [
+                  { "section": "Section A", "total_questions": 10, "attempt": 10, "marks": 10, "marks_per_question": "1 Mark each" },
+                  { "section": "Section B", "total_questions": 5, "attempt": 5, "marks": 15, "marks_per_question": "3 Marks each" },
+                  { "section": "Section C", "total_questions": 2, "attempt": 2, "marks": 25, "marks_per_question": "12.5 Marks each" }
+                ]
+              },
+              {
+                "section": "ESA - Practical",
+                "rows": [
+                  { "component": "Execution", "total_questions": 1, "attempt": 1, "marks": 10 },
+                  { "component": "Result & Analysis", "total_questions": 1, "attempt": 1, "marks": 5 },
+                  { "component": "External Viva-Voce", "total_questions": 1, "attempt": 1, "marks": 5 }
+                ]
+              }
+            ],
+            "subtotals": [
+              { "label": "ISA Theory", "marks": 20 },
+              { "label": "ISA Practical", "marks": 15 },
+              { "label": "ESA Theory", "marks": 50 },
+              { "label": "ESA Practical", "marks": 20 }
+            ],
+            "duration": "2 + 3 Hrs"
+          },
+          {
+            "pattern_type": "Course without Practical",
+            "marks_distribution": {
+              "total": 100,
+              "theory_percent": 75,
+              "internal_percent": 25
+            },
+            "internal_assessment": [
+              {
+                "section": "Internal Assessment (ISA)",
+                "components": [
+                  {
+                    "name": "Test Papers",
+                    "marks": 10,
+                    "sub_components": [
+                      { "name": "Mid-term Exam", "marks": 6 },
+                      { "name": "Class Test", "marks": 4 }
+                    ]
+                  },
+                  {
+                    "name": "Assignment",
+                    "marks": 5,
+                    "sub_components": [
+                      { "name": "Content Relevance", "marks": 6 },
+                      { "name": "Research Quality", "marks": 6 },
+                      { "name": "Timely Submission", "marks": 6 }
+                    ]
+                  },
+                  {
+                    "name": "Seminar",
+                    "marks": 5,
+                    "sub_components": [
+                      { "name": "Presentation Skills", "marks": 6 },
+                      { "name": "Topic Depth", "marks": 6 },
+                      { "name": "Q&A Interaction", "marks": 6 }
+                    ]
+                  },
+                  {
+                    "name": "Attendance",
+                    "marks": 5,
+                    "sub_components": [
+                      { "name": "90% - 100%", "marks": 5 },
+                      { "name": "85% - 89%", "marks": 4 },
+                      { "name": "80% - 84%", "marks": 3 },
+                      { "name": "76% - 79%", "marks": 2 },
+                      { "name": "75%", "marks": 1 }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "external_examination": [
+              {
+                "section": "External Examination Pattern",
+                "rows": [
+                  { "section": "Part A", "total_questions": 10, "answered": 10, "marks": 20, "marks_per_question": "2 Marks each" },
+                  { "section": "Part B", "total_questions": 5, "answered": 5, "marks": 25, "marks_per_question": "5 Marks each" },
+                  { "section": "Part C", "total_questions": 2, "answered": 2, "marks": 30, "marks_per_question": "15 Marks each" }
+                ]
+              }
+            ],
+            "subtotals": [
+              { "label": "Subtotal ISA", "marks": 25 },
+              { "label": "Subtotal ESA", "marks": 75 }
+            ],
+            "duration": "3 Hours"
+          },
+          {
+            "pattern_type": "Standalone Practical",
+            "marks_distribution": {
+              "total": 100,
+              "practical_percent": 70,
+              "internal_percent": 30
+            },
+            "internal_assessment": [
+              {
+                "section": "Internal Assessment (ISA)",
+                "components": [
+                  { "name": "Practical Record", "marks": 10, "description": "Evaluation criteria for Practical Records." },
+                  { "name": "Lab Performance", "marks": 10, "description": "Evaluation criteria for Lab Performance." },
+                  { "name": "Viva-Voce", "marks": 10, "description": "Evaluation criteria for Viva-Voce." }
+                ]
+              }
+            ],
+            "external_examination": [
+              {
+                "section": "External Examination Pattern",
+                "rows": [
+                  { "component": "Experiment Execution", "total_questions": 1, "answered": 1, "marks": 30 },
+                  { "component": "Result & Analysis", "total_questions": 1, "answered": 1, "marks": 20 },
+                  { "component": "External Viva-Voce", "total_questions": 1, "answered": 1, "marks": 20 }
+                ]
+              }
+            ],
+            "subtotals": [
+              { "label": "Subtotal ISA", "marks": 30 },
+              { "label": "Subtotal ESA", "marks": 70 }
+            ],
+            "duration": "4 Hours"
+          },
+          {
+            "pattern_type": "Projects / Dissertation",
+            "marks_distribution": {
+              "total": 100,
+              "esa_percent": 70,
+              "internal_percent": 30
+            },
+            "internal_assessment": [
+              {
+                "section": "Components of Internal Evaluation",
+                "components": [
+                  { "name": "Relevance of the Topic", "marks": 5 },
+                  { "name": "Project Content & Methodology", "marks": 10 },
+                  { "name": "Presentation", "marks": 10 },
+                  { "name": "Viva-Voce", "marks": 5 }
+                ]
+              }
+            ],
+            "external_examination": [
+              {
+                "section": "Components of External Assessment",
+                "rows": [
+                  { "component": "Project Dissertation", "marks": 50 },
+                  { "component": "Presentation & Viva-Voce", "marks": 20 }
+                ]
+              }
+            ],
+            "subtotals": [
+              { "label": "Subtotal ISA", "marks": 30 },
+              { "label": "Subtotal ESA", "marks": 70 }
+            ]
+          },
+          {
+            "pattern_type": "On the Job Training (OJT)",
+            "components": [
+              { "name": "Attendance & Punctuality", "marks": 20 },
+              { "name": "Work Performance", "marks": 30 },
+              { "name": "OJT Report", "marks": 30 },
+              { "name": "Viva-Voce", "marks": 20 }
+            ],
+            "total_assessment": 100
+          },
+          {
+            "pattern_type": "Internship Evaluation",
+            "components": [
+              { "name": "Industry Supervisor Evaluation", "marks": 40 },
+              { "name": "Internship Report", "marks": 30 },
+              { "name": "Presentation & Viva", "marks": 30 }
+            ],
+            "total_evaluation": 100
+          }
+        ],
+        "grading_scale": [
+          { "percentage_range": "90% - 100%", "grade": "O", "grade_point": 10.0 },
+          { "percentage_range": "80% - 89%", "grade": "A+", "grade_point": 9.0 },
+          { "percentage_range": "70% - 79%", "grade": "A", "grade_point": 8.0 },
+          { "percentage_range": "60% - 69%", "grade": "B+", "grade_point": 7.0 },
+          { "percentage_range": "50% - 59%", "grade": "B", "grade_point": 6.0 },
+          { "percentage_range": "45% - 49%", "grade": "C", "grade_point": 5.0 },
+          { "percentage_range": "40% - 44%", "grade": "P", "grade_point": 4.0 },
+          { "percentage_range": "Below 40%", "grade": "F", "grade_point": 0.0 }
+        ],
+        "academic_policies": [
+          {
+            "title": "Minimum Attendance",
+            "badge": "Required: 75%",
+            "description": "Students must maintain a minimum of 75% attendance in theory and practical sessions separately to be eligible for...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Condonation Policy",
+            "badge": "65% - 75% Range",
+            "description": "Shortage of attendance between 65% and 75% may be condoned by the Vice-Chancellor on valid grounds, subject to...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Year Back Scheme",
+            "badge": "Max 4 Failed Subjects",
+            "description": "Students failing in more than 4 subjects (Theory/Practical combined) will not be promoted to the next academic year.",
+            "read_more_link": ""
+          },
+          {
+            "title": "Medical Leave",
+            "badge": "Submit within 3 days",
+            "description": "Medical certificates must be submitted within 3 days of returning. Approved medical leave is considered for eligibility...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Pass Percentage",
+            "badge": "Min 50% Aggregate",
+            "description": "ISA: Min 50% aggregate (Theory + Practical). ESA: Min 40% in each subject & 50% aggregate.",
+            "read_more_link": ""
+          },
+          {
+            "title": "Credit Transfer",
+            "badge": "Lateral Entry",
+            "description": "Applicable for lateral entry/inter-university transfers. Credits are mapped based on UGC guidelines and subject...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Grace Marks",
+            "badge": "Up to 5 marks",
+            "description": "Eligible students may receive up to 5 grace marks in theory to pass a specific subject, provided all other subjects are...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Malpractice",
+            "badge": "Zero Tolerance",
+            "description": "Strict disciplinary action, including exam cancellation and debarment for up to 3 years, applies to any student found using...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Late Fee",
+            "badge": "Submission Deadline",
+            "description": "Examination forms submitted after the deadline attract a late fee. No forms are accepted within 7 days of the exam...",
+            "read_more_link": ""
+          },
+          {
+            "title": "Revaluation",
+            "badge": "Within 10 Days",
+            "description": "Students can apply for revaluation of answer scripts within 10 days of result declaration.",
+            "read_more_link": ""
+          },
+          {
+            "title": "Re-exam Scheme",
+            "badge": "Within 45 Days",
+            "description": "Supplementary exams are conducted within 45 days for students failing in regular attempts.",
+            "read_more_link": ""
+          },
+          {
+            "title": "Result Publish",
+            "badge": "Online Portal",
+            "description": "Results are published online on the student portal within 30 days of the last examination.",
+            "read_more_link": ""
+          },
+          {
+            "title": "Mode of Exam",
+            "badge": "Offline Only",
+            "description": "All semester-end examinations are conducted in offline Pen & Paper mode only.",
+            "read_more_link": ""
+          }
+        ]
+      },
+      "review": {
+        "tab": "review",
+        "rating_summary": {
+          "average_rating": 4.5,
+          "total_reviews": 2909,
+          "rating_breakdown": [
+            { "emoji": "😍", "count": 1000 },
+            { "emoji": "😁", "count": 500 },
+            { "emoji": "🙂", "count": 256 },
+            { "emoji": "😐", "count": 102 },
+            { "emoji": "😠", "count": 23 }
+          ]
+        },
+        "review_categories": [
+          { "label": "Faculty & Course", "count": null },
+          { "label": "Campus Life", "count": 44 }
+        ],
+        "reviews": [
+          {
+            "reviewer_name": "Anonymous",
+            "avatar": "",
+            "date": "October 10, 2025",
+            "rating": null,
+            "category": "",
+            "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+          },
+          {
+            "reviewer_name": "Anonymous",
+            "avatar": "",
+            "date": "October 10, 2025",
+            "rating": null,
+            "category": "",
+            "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+          },
+          {
+            "reviewer_name": "Anonymous",
+            "avatar": "",
+            "date": "October 10, 2025",
+            "rating": null,
+            "category": "",
+            "comment": "Great infrastructure, experienced faculty, and diverse clinical exposure."
+          }
+        ],
+        "pagination": {
+          "has_more": true,
+          "load_more_label": "Load more"
+        }
+      },
+      "library": {
+        "tab": "library",
+        "name": "Central Library",
+        "overview_stats": [
+          { "label": "Sq Feet Area", "value": "21,786" },
+          { "label": "Total Seats", "value": "300" },
+          { "label": "Volumes", "value": "79,316" },
+          { "label": "Research Cabins", "value": "44" }
+        ],
+        "available_resources": [
+          { "label": "Encyclopaedias", "count": 50 },
+          { "label": "Journals (Print)", "count": 39 },
+          { "label": "Journals (Online)", "count": 6150 },
+          { "label": "Magazines (Print)", "count": 36 },
+          { "label": "Rare Books", "count": 1562 },
+          { "label": "Magazines & Papers", "count": 7500 },
+          { "label": "E-Books", "count": 195809 }
+        ],
+        "library_hours": [
+          {
+            "day": "Monday",
+            "working_hours": "09:00 AM - 04:30 PM",
+            "transaction_hours": "09:00 AM - 04:30 PM"
+          },
+          {
+            "day": "Tuesday",
+            "working_hours": "09:00 AM - 04:30 PM",
+            "transaction_hours": "09:00 AM - 04:30 PM"
+          },
+          {
+            "day": "Wednesday",
+            "working_hours": "09:00 AM - 04:30 PM",
+            "transaction_hours": "09:00 AM - 04:30 PM"
+          },
+          {
+            "day": "Sunday",
+            "working_hours": "09:00 AM - 04:30 PM",
+            "transaction_hours": ""
+          }
+        ],
+        "facilities": [
+          {
+            "title": "Quiet Study Areas",
+            "image": "damel1.jpg"
+          },
+          {
+            "title": "Quiet Study Areas",
+            "image": "damel1.jpg"
+          }
+        ]
+      },
+      "alliance": {
+        "tab": "alliance",
+        "search_placeholder": "Search alliances or partners",
+        "alliances": [
+          {
+            "id": "baby-memorial-hospital",
+            "name": "Baby Memorial Hospital",
+            "tag": "Own Hospital",
+            "logo": "",
+            "cover_image": "",
+            "short_description": "Baby Memorial Hospital (BMH) is a multi-specialty, tertiary care corporate hospital in Kozhikode, Kerala.",
+            "details": {
+              "category": "Industrial Collaboration",
+              "full_name": "Baby Memorial Hospital (BMH)",
+              "logo": "",
+              "cover_image": "",
+              "about": "The alliance with Baby Memorial Hospital (BMH) represents a significant milestone in bridging the gap between academic theory and clinical practice. Established to foster excellence in healthcare education, this partnership provides our students with unparalleled access to world-class medical facilities and mentorship.",
+              "collaboration_impact": "Through this strategic collaboration, students gain hands-on experience in advanced diagnostic procedures and patient care. The initiative also supports faculty exchange programs, enhancing the curriculum with real-world medical insights.",
+              "key_focus_areas": [
+                "Clinical Rotations for Nursing Students",
+                "Joint Biomedical Research",
+                "Internship Opportunities",
+                "Continuing Medical Education (CME) Seminars"
+              ],
+              "legal_documents": [
+                {
+                  "title": "Memorandum of Understanding (MoU)",
+                  "size": "2.4 MB",
+                  "type": "PDF",
+                  "url": ""
+                },
+                {
+                  "title": "Partnership Agreement",
+                  "size": "1.8 MB",
+                  "type": "PDF",
+                  "url": ""
+                }
+              ],
+              "alliance_activities": {
+                "happenings_link": "",
+                "activities": [
+                  { "title": "Clinical Training Session", "image": "" },
+                  { "title": "Joint Research Lab", "image": "" },
+                  { "title": "Community Outreach", "image": "" }
+                ]
+              }
+            }
+          },
+          {
+            "id": "sia-india",
+            "name": "SIA India",
+            "tag": "Industrial Collaboration",
+            "logo": "",
+            "cover_image": "",
+            "short_description": "The Satellite Industry Association of India (SIA-India) is a non-profit association of Indian and global satellite industry players.",
+            "details": {
+              "category": "Industrial Collaboration",
+              "full_name": "Satellite Industry Association of India",
+              "logo": "",
+              "cover_image": "",
+              "about": "",
+              "collaboration_impact": "",
+              "key_focus_areas": [],
+              "legal_documents": [],
+              "alliance_activities": {
+                "happenings_link": "",
+                "activities": []
+              }
+            }
+          },
+          {
+            "id": "nid",
+            "name": "National Institute of Design",
+            "tag": "Academic & Research",
+            "logo": "",
+            "cover_image": "",
+            "short_description": "A premier institute for design education and research. This collaboration enables student exchange programs and joint workshops.",
+            "details": {
+              "category": "Academic & Research",
+              "full_name": "National Institute of Design",
+              "logo": "",
+              "cover_image": "",
+              "about": "",
+              "collaboration_impact": "",
+              "key_focus_areas": [],
+              "legal_documents": [],
+              "alliance_activities": {
+                "happenings_link": "",
+                "activities": []
+              }
+            }
+          }
+        ]
+      },
+      "demo_graphics": {
+        "tab": "demo_graphics",
+        "age_distribution": {
+          "description": "Students age groups across all years",
+          "data": [
+            { "range": "18 - 22 years", "percent": 64 },
+            { "range": "23 - 26 years", "percent": 22 },
+            { "range": "27 - 30 years", "percent": 10 },
+            { "range": "30+ years", "percent": 4 }
+          ]
+        },
+        "gender_diversity": [
+          { "label": "Male", "percent": 60 },
+          { "label": "Female", "percent": 38 },
+          { "label": "Others", "percent": 2 }
+        ],
+        "work_experience": [
+          {
+            "label": "Freshers",
+            "percent": 45,
+            "description": "Directly after undergrad"
+          },
+          {
+            "label": "1 - 3 Years",
+            "percent": 35,
+            "description": "Junior professionals"
+          },
+          {
+            "label": "4+ Years",
+            "percent": 20,
+            "description": "Senior/Leadership roles"
+          }
+        ],
+        "international_presence": [
+          { "country": "India", "percent": 42, "flag": "" },
+          { "country": "UAE", "percent": 18, "flag": "" },
+          { "country": "China", "percent": 12, "flag": "🇨🇳" },
+          { "country": "United Kingdom", "percent": 8, "flag": "🇬🇧" },
+          { "country": "Germany", "percent": 6, "flag": "🇩🇪" },
+          { "country": "Canada", "percent": 5, "flag": "🇨🇦" }
+        ],
+        "national_presence": [
+          { "state": "Kerala", "percent": 42, "flag": "" },
+          { "state": "Tamil Nadu", "percent": 18, "flag": "" },
+          { "state": "China", "percent": 12, "flag": "🇨🇳" },
+          { "state": "United Kingdom", "percent": 8, "flag": "🇬🇧" },
+          { "state": "Germany", "percent": 6, "flag": "🇩🇪" },
+          { "state": "Canada", "percent": 5, "flag": "🇨🇦" }
+        ]
+      }
+    }
   }
+}
+
+docs {
+  Creates a course and assigns course setup tabs in `tabs`.
+  You can also send per-tab initial content in `tabData`.
+  Example: `tabData.course_info` for first-tab details during create.
+
+  Before running this request, run these lookup requests once:
+    - list-streams-lookup (sets `disciplineId`)
+    - list-study-levels-lookup (sets `studyLevelId`)
+    - list-program-types-lookup (sets `programTypeId`)
+    - create-campus or list-campuses (sets `campusId`)
+
+  Course tabs for create flow (14):
+    course_info, admission_policy, placements, fees, financial_aid,
+    student_housing, exam_policy, faculty, review, library,
+    clubs_associations, alliance, other_courses_offered, demo_graphics
+
+  College-only static tabs (not sent in create-course):
+    college_overview, student_code_of_conduct, happenings,
+    institutions_across_world, commute
+
+  If `tabs` is omitted, backend applies all 14 course tabs by default.
+  `tabData` is fully dynamic JSON per tab key.
 }
 
 script:post-response {

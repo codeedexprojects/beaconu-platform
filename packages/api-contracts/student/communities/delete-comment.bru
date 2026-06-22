@@ -1,0 +1,25 @@
+meta {
+  name: Delete Comment
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts/{{communityPostId}}/comments/{{communityCommentId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Soft deletes a community comment.
+  Allowed for comment author or community owner.
+  Set communityId, communityPostId, and communityCommentId env vars before calling.
+}

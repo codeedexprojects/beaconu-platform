@@ -1,0 +1,37 @@
+meta {
+  name: My Event Recordings
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/events/recordings
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~search: workshop
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  List recordings for events the student is registered for.
+  Only returns events where has_recording=true and recording_url is set.
+
+  Response fields per recording:
+  - registration_id, event_id, event_title, event_slug, cover_image_url
+  - category, speaker_name, speaker_title, organizer, event_date, is_joined
+  - recording_url, is_youtube_video, recording_duration, recorded_at, registered_at
+
+  Query Parameters:
+  - search: Search by event title, speaker, organizer, category (optional)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10)
+}

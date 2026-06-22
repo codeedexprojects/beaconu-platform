@@ -1,0 +1,44 @@
+meta {
+  name: Update Platform Config
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/config
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "meetingGstPercentage": 18,
+    "counsellorMinWithdrawalAmount": 500
+  }
+}
+
+docs {
+  Updates the platform-wide config singleton. Both fields optional — send only
+  what changed. At least one field required.
+  Requires: platform admin access token + permission "platform.settings.manage".
+
+  Body:
+  - meetingGstPercentage (optional): 0-100 — applies only to counselling
+    session fee payments (meet-link generation flow). Other payment flows
+    (e.g. Blink referral commissions) have their own separate per-course GST
+    and are unaffected by this value.
+  - counsellorMinWithdrawalAmount (optional): > 0
+
+  Response: same shape as GET /admin/config. updatedByAdminId is set to the
+  authenticated admin's id automatically.
+
+  Table: platform_configs
+}

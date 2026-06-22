@@ -1,0 +1,37 @@
+meta {
+  name: Tab - Admission Policy
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/admission_policy
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `admission_policy` tab for a specific course.
+
+  Response shape:
+  {
+    "sectionName": "admission_policy",
+    "sectionId": "admission_policy",
+    "sectionKey": "admission_policy",
+    "data": {
+      "id": "admission_policy",
+      "title": "Admission Policy",
+      "enabled": true,
+      "seat_matrix": { ... },
+      "quota_options": { ... },
+      "entrance_exams_accepted": { ... }
+    }
+  }
+
+  To update this tab, use:
+  `tabs/tab-admission-policy-update.bru`
+}

@@ -1,0 +1,51 @@
+meta {
+  name: Upcoming Events
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/events/upcoming
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~search: career
+  ~category: workshop
+  ~event_mode: online
+  ~is_free: true
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("eventId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  List upcoming published events for students. Returns events with event_date >= today.
+
+  Response fields per event:
+  - total_seats, registered_count, is_joined, cover_image_url, category, title
+  - speaker_name, speaker_title, organizer, event_date, start_time, end_time
+  - duration, event_mode, venue, is_free
+
+  Query Parameters:
+  - search: Search by title, speaker, organizer, category (optional)
+  - category: Filter by category (optional)
+  - event_mode: online | offline | hybrid (optional)
+  - is_free: true | false (optional)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10)
+}

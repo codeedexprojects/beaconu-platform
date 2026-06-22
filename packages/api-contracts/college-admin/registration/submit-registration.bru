@@ -11,5 +11,18 @@ post {
 }
 
 auth:bearer {
-  token: {{collegeAdminToken}}
+  token: {{staffToken}}
+}
+
+docs {
+  Finalizes college registration after profile update.
+
+  Expected registration setup before submit:
+  - College details updated in profile (name, address, city, state, district, pinCode)
+  - Registration tabs configured in profile:
+    student_code_of_conduct, happenings, institutions_across_world, commute, college_overview
+
+  Campus creation and course creation are managed in dedicated folders:
+  - college-admin/campuses
+  - college-admin/courses
 }

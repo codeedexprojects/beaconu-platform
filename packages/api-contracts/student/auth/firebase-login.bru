@@ -1,0 +1,67 @@
+meta {
+  name: Firebase Login (Google)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/auth/firebase
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_token": "{{studentFirebaseIdToken}}",
+    "fcm_token": "{{studentFcmToken}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data) {
+      if (data.data.accessToken) {
+        bru.setEnvVar("accessToken", data.data.accessToken);
+        bru.setEnvVar("studentAccessToken", data.data.accessToken);
+      }
+      if (data.data.refreshToken) {
+        bru.setEnvVar("studentRefreshToken", data.data.refreshToken);
+      }
+      if (data.data.user && data.data.user.id) {
+        bru.setEnvVar("studentId", data.data.user.id);
+      }
+    }
+  }
+}
+
+docs {
+  Sign in a student using a Firebase Google ID token obtained from the Flutter app.
+
+  FLOW:
+  1. Flutter calls Firebase Google Sign-In → gets an ID token
+  2. Send that ID token here → backend verifies it with Firebase Admin SDK
+  3. Backend upserts the student in Postgres and issues its own JWT
+  4. Use the returned accessToken for all subsequent student requests
+
+  FIRST LOGIN: creates a new student record (source: "google")
+  RETURNING LOGIN: updates name and avatar, issues a fresh token pair
+
+  ACCOUNT LINKING: if a student previously signed up via phone OTP using the
+  same email address, their existing account is linked to the Google ID —
+  all their data (applications, etc.) is preserved.
+
+  Set {{studentFirebaseIdToken}} to the ID token from the Flutter Firebase SDK.
+  Leave {{studentFcmToken}} empty if not testing push notifications.
+
+  Response:
+  - accessToken: JWT (15 min), auto-captured into {{accessToken}} and {{studentAccessToken}}
+  - refreshToken: long-lived token (90 days), also set as httpOnly cookie,
+                  auto-captured into {{studentRefreshToken}}
+  - user: { id, fullName, email, avatarUrl }
+  - studentId auto-captured into {{studentId}}
+}

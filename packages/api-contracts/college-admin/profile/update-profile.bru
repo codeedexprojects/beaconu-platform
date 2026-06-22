@@ -16,9 +16,705 @@ auth:bearer {
 
 body:json {
   {
+    "name": "Beacon Institute of Technology",
+    "code": "BIT-101",
     "address": "123 Main St",
     "city": "Noida",
     "state": "UP",
-    "pinCode": "201301"
+    "district": "Gautam Buddha Nagar",
+    "pinCode": "201301",
+    "logoUrl": "https://example.com/college-logo.png",
+    "coverImageUrl": "https://example.com/college-cover.png",
+    "profileSections": {
+      "college_overview": {
+        "id": "college_overview",
+        "enabled": true,
+        "description": "Industry-focused programs with modern infrastructure.",
+        "accreditation_and_affiliation": [
+          {
+            "body": "NIRF",
+            "rank": "MAHE Rank 3",
+            "logo": "nirf",
+            "recognitions": "India's top #131/200 universities in 2024"
+          },
+          {
+            "body": "Outlook ICARE Ranking 2024",
+            "rank": "MAHE Rank 3",
+            "logo": "outlook",
+            "recognitions": "India's top #131/200 universities in 2024"
+          }
+        ],
+        "instution_details": {
+          "estd": "2005",
+          "gender": "Co-Ed",
+          "average_student_count": "3500",
+          "campus_size": "42",
+          "Student_from_outside": "28%"
+        },
+        "inside_campus_facilities": [
+          {
+            "name": "Main Auditorium",
+            "description": "Seating for 2,000+ students and guests",
+            "image": "https://example.com/auditorium.jpg"
+          }
+        ],
+        "location": {
+          "map_link": "https://maps.google.com/?q=28.5355,77.3910"
+        },
+        "connectwithus": {
+          "links": [
+            {
+              "platform": "LinkedIn",
+              "url": "https://linkedin.com/school/example"
+            },
+            {
+              "platform": "Instagram",
+              "url": "https://instagram.com/example"
+            }
+          ]
+        },
+        "amenities": ["Library", "Wi-Fi Campus", "Sports Complex"],
+        "nearby_access": {
+          "transit": [
+            {
+              "type": "Metro",
+              "name": "Noida Sector 62",
+              "distance": "1.2 km"
+            }
+          ],
+          "essentials": [
+            {
+              "type": "Hospital",
+              "name": "City Care Hospital",
+              "distance": "2.1 km"
+            }
+          ],
+          "utilities": [
+            {
+              "type": "ATM",
+              "name": "SBI ATM",
+              "distance": "0.5 km"
+            }
+          ]
+        },
+        "campus_reels": [
+          {
+            "title": "Campus Tour",
+            "video": "https://example.com/reels/campus-tour",
+            "thumbnail": "https://example.com/reels/campus-tour.jpg",
+            "type": "youtube"
+          }
+        ]
+      },
+      "course_info": {
+        "id": "course_info",
+        "enabled": true,
+        "course_name": "B.Tech Computer Science",
+        "data": {
+          "course_name": "B.Tech Computer Science",
+          "admissions": [
+            {
+              "year": "Admissions 2026",
+              "status": "Open",
+              "placement_rate": "35",
+              "seats_note": "Limited seats available",
+              "basic_details": {
+                "duration": "4 Years",
+                "study_mode": "Full Time",
+                "academic_cycle": "Semester",
+                "total_credits": 160,
+                "gender_accepted": "All",
+                "course_category": "UG"
+              }
+            }
+          ],
+          "program_highlights": [
+            "Industry-aligned curriculum",
+            "Capstone with live projects"
+          ],
+          "course_accolades": [
+            {
+              "body": "NBA Accredited",
+              "rank": "A+",
+              "image": "https://example.com/images/nba.png"
+            }
+          ],
+          "key_dates": {
+            "application_start": "2026-04-01",
+            "application_close": {
+              "date": "2026-07-15",
+              "urgency": "Deadline"
+            },
+            "class_commencement": {
+              "date": "2026-08-05",
+              "note": "Orientation week starts earlier"
+            }
+          },
+          "value_added_course": {
+            "name": "Advanced Problem Solving",
+            "credits": 2,
+            "delivery_mode": "Hybrid",
+            "course_type": "Certificate"
+          },
+          "higher_education_and_certifications": [
+            {
+              "title": "Global Certifications",
+              "description": [
+                "AWS Certified Cloud Practitioner",
+                "Google Associate Cloud Engineer"
+              ]
+            },
+            {
+              "title": "Postgraduation",
+              "description": [
+                "M.Tech in Computer Science",
+                "MBA in Technology Management"
+              ]
+            }
+          ],
+          "bonus_certification": [
+            {
+              "name": "Industry Mentor Certification",
+              "note": "Awarded after capstone evaluation",
+              "certificate_details_available": true,
+              "details_page": "https://example.com/certifications/industry-mentor"
+            }
+          ],
+          "featured_alumni": [
+            {
+              "name": "Aarav Sharma",
+              "designation": "Senior Software Engineer",
+              "career_progression": [
+                {
+                  "year": 2021,
+                  "milestone": "Joined as Graduate Trainee"
+                },
+                {
+                  "year": 2024,
+                  "milestone": "Promoted to Senior Software Engineer"
+                }
+              ]
+            }
+          ],
+          "faqs": [
+            {
+              "title": "Is hostel accommodation available?",
+              "description": "Yes, separate on-campus hostels are available for boys and girls."
+            },
+            {
+              "title": "What is the admission process?",
+              "description": "Submit the application form, upload documents, and complete counselling based on eligibility."
+            }
+          ]
+        }
+      },
+      "admission_policy": {
+        "id": "admission_policy",
+        "enabled": true,
+        "eligibility_criteria": {
+          "applicant_type_tabs": [
+            {
+              "id": "indian",
+              "label": "Indian Students",
+              "quota_categories": [
+                {
+                  "id": "government_quota",
+                  "label": "Government Quota",
+                  "criteria": [
+                    {
+                      "title": "Educational Qualification",
+                      "description": "Candidates must have completed 10+2 (Intermediate/Senior Secondary Education) from a recognized board, or 10+3 diploma from a recognized national or state institute."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2l9 4.5-9 4.5-9-4.5L12 2z\"/><path d=\"M3 11.5L12 16l9-4.5\"/><path d=\"M7 13.5V17a5 5 0 0 0 10 0v-3.5\"/></svg>"
+                    },
+                    {
+                      "title": "Age Requirement",
+                      "description": "Minimum 17 years of age as of 31st December. No upper age limit for admission to this course."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 3\"/></svg>"
+                    },
+                    {
+                      "title": "Academic Grades (10+2)",
+                      "description": "Minimum 50% marks in aggregate in 10+2 / 10+3 from a recognized board."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 8h10\"/><path d=\"M7 12h10\"/><path d=\"M7 16h6\"/></svg>"
+                    },
+                    {
+                      "title": "Entrance Grades",
+                      "description": "Must secure a valid rank in NEET/CET with a minimum percentile of 50th (40th for SC/ST/OBC categories)."
+                      ,"logo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 4h16v16H4z\"/><path d=\"M8 14l2 2 6-6\"/></svg>"
+                    }
+                  ]
+                },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            },
+            {
+              "id": "foreign",
+              "label": "Foreign Students",
+              "quota_categories": [
+                { "id": "government_quota", "label": "Government Quota", "criteria": [] },
+                { "id": "management_quota", "label": "Management Quota", "criteria": [] },
+                { "id": "nri_quota", "label": "NRI Quota", "criteria": [] },
+                { "id": "scholarship", "label": "Scholarship", "criteria": [] },
+                { "id": "sports", "label": "Sports", "criteria": [] }
+              ]
+            }
+          ],
+          "default_applicant_type": "indian",
+          "default_quota": "government_quota",
+          "cta": {
+            "label": "Check Eligibility",
+            "action": "check_eligibility"
+          }
+        }
+      },
+      "placements": {
+        "id": "placements",
+        "enabled": true,
+        "report": {
+          "label": "Download Full Placement Report 2024",
+          "action": "download_placement_report_2024"
+        },
+        "summary_stats": [
+          { "id": "average_package", "label": "Average Package", "value": 4.2, "unit": "LPA" },
+          { "id": "highest_package", "label": "Highest Package", "value": 14.2, "unit": "LPA" },
+          { "id": "placement_rate", "label": "Placement Rate", "value": 94, "unit": "%" },
+          { "id": "lowest_package", "label": "Lowest Package", "value": 3.5, "unit": "LPA" },
+          { "id": "companies_visited", "label": "Companies Visited", "value": "120+", "unit": null },
+          { "id": "students_placed", "label": "Students Placed", "value": "450+", "unit": null }
+        ],
+        "placement_trends": {
+          "label": "Placement Trends",
+          "period": "Last 5 Years",
+          "years": [2020, 2021, 2022, 2023],
+          "avg_package_growth_yoy": "+12.5%"
+        },
+        "industry_salary_report": {
+          "label": "Industry & Salary Report",
+          "columns": ["Industry", "Placed", "Avg Pkg"],
+          "industries": [
+            {
+              "id": "bfsi",
+              "name": "BFSI",
+              "sub_label": "Banking & Finance",
+              "students_placed": 155,
+              "avg_package": "₹8.2 L",
+              "max_package": "12 LPA"
+            },
+            {
+              "id": "fmcg",
+              "name": "FMCG",
+              "sub_label": "Retail & Goods",
+              "students_placed": 98,
+              "avg_package": "₹7.5 L",
+              "max_package": "10 LPA"
+            },
+            {
+              "id": "consulting",
+              "name": "Consulting",
+              "sub_label": "Mgmt Consulting",
+              "students_placed": 81,
+              "avg_package": "₹9.1 L",
+              "max_package": "14.5 LPA"
+            }
+          ],
+          "cta": {
+            "label": "View All Industries",
+            "action": "view_all_industries"
+          }
+        },
+        "notable_offers": {
+          "label": "Notable Offers",
+          "cta": {
+            "label": "View All",
+            "action": "view_all_notable_offers"
+          },
+          "featured": [
+            {
+              "company": "Deloitte",
+              "tag": "Highest",
+              "industry": "Consulting",
+              "offers": [
+                { "role": "Senior Analyst Role", "package": 14.5, "unit": "LPA", "type": "Package Offered" },
+                { "role": "Manager Role", "package": 12.0, "unit": "LPA", "type": "Package Offered" }
+              ]
+            }
+          ]
+        },
+        "all_company_statistics": {
+          "label": "All Company Statistics",
+          "columns": ["Company Name", "Avg Pkg", "Max Pkg"],
+          "companies": [
+            { "id": "deloitte", "name": "Deloitte", "students": 145, "avg_package": "₹9.2 L", "max_package": "₹14.5 L" },
+            { "id": "accenture", "name": "Accenture", "students": 210, "avg_package": "₹7.8 L", "max_package": "₹11.2 L" },
+            { "id": "tcs", "name": "TCS", "students": 340, "avg_package": "₹6.5 L", "max_package": "₹9.0 L" }
+          ]
+        },
+        "student_success": [
+          {
+            "name": "Rohan Mehta",
+            "placed_at": "Deloitte",
+            "quote": "The placement support helped me secure a role at a top firm. Best decision ever!"
+          },
+          {
+            "name": "Priya S.",
+            "placed_at": "HDFC",
+            "quote": "I never thought I'd get such a high package. The mock interviews were key."
+          }
+        ]
+      },
+      "fees": {
+        "id": "fees",
+        "enabled": true,
+        "filters": {
+          "quota_category": {
+            "label": "Quota Category",
+            "default": "General",
+            "options": ["General", "Management", "NRI"]
+          },
+          "gender": {
+            "label": "Gender",
+            "default": "Male",
+            "options": ["Male", "Female"]
+          }
+        },
+        "inclusions": {
+          "whats_included": [
+            "Tuition",
+            "Library Access"
+          ],
+          "whats_excluded": [
+            "Hostel",
+            "Transport"
+          ]
+        },
+        "download": {
+          "label": "Download Fee Structure",
+          "file_label": "BBA Fee Structure 2026",
+          "file_size": "2.4 MB",
+          "file_type": "PDF",
+          "action": "download"
+        },
+        "fee_structures": [
+          {
+            "gender": "Male",
+            "quota_category": "General",
+            "fees_summary": {
+              "full_course_fee": 370000,
+              "booking_amount": 50000,
+              "currency": "INR"
+            },
+            "tuition_fees": [
+              { "year": "1st Year", "amount": 185000 },
+              { "year": "2nd Year", "amount": 185000 }
+            ],
+            "one_time_payable_fees": [
+              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
+              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
+            ],
+            "additional_fees": [
+              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
+              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
+            ],
+            "tuitionFeesSummary": "₹1,85,000 per year"
+          },
+          {
+            "gender": "Female",
+            "quota_category": "General",
+            "fees_summary": {
+              "full_course_fee": 350000,
+              "booking_amount": 50000,
+              "currency": "INR"
+            },
+            "tuition_fees": [
+              { "year": "1st Year", "amount": 175000 },
+              { "year": "2nd Year", "amount": 175000 }
+            ],
+            "one_time_payable_fees": [
+              { "id": "admission", "label": "Admission Fee", "amount": 20000 },
+              { "id": "caution", "label": "Caution Deposit", "amount": 10000 }
+            ],
+            "additional_fees": [
+              { "id": "exam", "label": "Exam Fee", "amount": 5000 },
+              { "id": "lab", "label": "Lab Fee", "amount": 3000 }
+            ],
+            "tuitionFeesSummary": "₹1,75,000 per year"
+          }
+        ],
+        "refund_policy": [
+          "100% refund before classes start",
+          "50% refund within first 15 days"
+        ],
+        "deadlines_and_installments": [
+          {
+            "id": "installment_1",
+            "label": "Installment 1",
+            "deadline": "2026-07-15",
+            "amount": 100000
+          },
+          {
+            "id": "installment_2",
+            "label": "Installment 2",
+            "deadline": "2026-11-15",
+            "amount": 85000
+          }
+        ]
+      },
+      "financial_aid": {
+        "id": "financial_aid",
+        "enabled": true,
+        "meritScholarship": {
+          "title": "Merit Scholarship",
+          "description": "Up to 50% tuition fee waiver for top scorers."
+        },
+        "financialConcessions": [
+          {
+            "name": "Need-based concession",
+            "description": "Concession for eligible families."
+          }
+        ]
+      },
+      "student_housing": {
+        "id": "student_housing",
+        "enabled": true,
+        "summary": "On-campus hostels with modern facilities."
+      },
+      "exam_policy": {
+        "id": "exam_policy",
+        "enabled": true,
+        "grading_scale": [
+          {
+            "percentage": "90-100",
+            "grade": "A+",
+            "gradePoint": "10"
+          }
+        ],
+        "academic_policies": [
+          {
+            "title": "Attendance",
+            "shortValue": "75%",
+            "description": "Minimum attendance required.",
+            "readMoreEnabled": true
+          }
+        ]
+      },
+      "faculty": {
+        "id": "faculty",
+        "enabled": true,
+        "summary": "Experienced faculty with strong academic background."
+      },
+      "review": {
+        "id": "review",
+        "enabled": true,
+        "ratingDistribution": [
+          { "emoji": "5", "count": 220 },
+          { "emoji": "4", "count": 95 }
+        ],
+        "categoryRatings": [
+          { "category": "Academics", "rating": 4.6 },
+          { "category": "Placements", "rating": 4.3 }
+        ],
+        "reviews": [
+          {
+            "reviewerName": "Aman",
+            "reviewDate": "2026-02-11",
+            "reviewText": "Great faculty support and placement training."
+          }
+        ]
+      },
+      "commute": {
+        "id": "commute",
+        "enabled": true,
+        "tab": "commute",
+        "pickup_points": ["HSR Layout"],
+        "selected_pickup_point": "HSR Layout",
+        "routes": [
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12 - HSR Layout",
+            "via": "Via BTM Layout, Madivala",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "6:45 AM - 8:10 AM" },
+              { "label": "Evening", "time": "4:30 PM - 6:15 PM" }
+            ],
+            "transport_fee": {
+              "amount": "₹25,000 / Year",
+              "payment_structure": "Payable as a one-time annual payment or in two semester-wise installments of ₹12,500 each."
+            },
+            "bus_information": {
+              "registration_number": "KA-01-F-4829",
+              "seats": 42,
+              "model": "Tata Marcopolo (AC)"
+            },
+            "morning_pickup_points": [
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:45 AM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:55 AM" },
+              { "point": "Silk Board", "landmark": "", "time": "7:05 AM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "7:28 AM" },
+              { "point": "College Campus", "landmark": "Main Block Entrance", "time": "8:10 AM" }
+            ],
+            "evening_dropoff_points": [
+              { "point": "College Campus", "landmark": "Bus Bay Area", "time": "4:30 PM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "5:40 PM" },
+              { "point": "Silk Board", "landmark": "", "time": "5:55 PM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:05 PM" },
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:15 PM" }
+            ]
+          },
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12B - HSR Express",
+            "via": "Via 27th Main, Agara",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "7:00 AM - 8:15 AM" },
+              { "label": "Evening", "time": "4:45 PM - 6:30 PM" }
+            ],
+            "transport_fee": { "amount": "", "payment_structure": "" },
+            "bus_information": { "registration_number": "", "seats": null, "model": "" },
+            "morning_pickup_points": [],
+            "evening_dropoff_points": []
+          }
+        ],
+        "rules_and_code_of_conduct": {
+          "title": "Rules & Code of Conduct",
+          "subtitle": "Detailed guidelines for student commuters",
+          "intro": "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+          "rules": [
+            {
+              "title": "Mandatory Identification",
+              "description": "Students must carry their valid college ID and transport pass at all times. Inspection may occur at any point during the journey."
+            },
+            {
+              "title": "Seat Policy",
+              "description": "Seats are not pre-assigned. Occupancy is on a strictly first-come, first-served basis. \"Saving\" seats for friends is prohibited."
+            },
+            {
+              "title": "Discipline & Safety",
+              "description": "Any form of ragging, vandalism, or disruptive behavior will lead to immediate suspension of transport privileges and disciplinary action."
+            },
+            {
+              "title": "Punctuality",
+              "description": "Buses adhere to a strict schedule. Students are advised to be at their designated pickup point 5 minutes prior to the scheduled time."
+            }
+          ]
+        }
+      },
+      "library": {
+        "id": "library",
+        "enabled": true,
+        "availableResources": [
+          { "resourceType": "Books", "count": 42000 },
+          { "resourceType": "Journals", "count": 180 }
+        ],
+        "libraryHours": [
+          {
+            "day": "Mon-Fri",
+            "workingHours": "8:00-20:00",
+            "transactionHours": "9:00-17:00"
+          }
+        ],
+        "facilities": ["Digital Library", "Reading Hall"]
+      },
+      "clubs_associations": {
+        "id": "clubs_associations",
+        "enabled": true,
+        "summary": "Student-driven clubs for technical and cultural growth.",
+        "items": [
+          {
+            "clubName": "Coding Club",
+            "description": "Weekly coding contests and peer learning sessions."
+          }
+        ]
+      },
+      "student_code_of_conduct": {
+        "id": "student_code_of_conduct",
+        "enabled": true,
+        "title": "Code of Conduct",
+        "description": "Students must adhere to academic and campus discipline guidelines."
+      },
+      "happenings": {
+        "id": "happenings",
+        "enabled": true,
+        "summary": "Recent events and campus activities.",
+        "items": [
+          {
+            "title": "Innovation Fest 2026",
+            "description": "Annual showcase for student projects.",
+            "date": "2026-08-21"
+          }
+        ]
+      },
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "summary": "Our institution network and collaborations worldwide."
+      },
+      "alliance": {
+        "id": "alliance",
+        "enabled": true,
+        "summary": "Global academic collaborations.",
+        "items": [
+          {
+            "title": "University of Leeds",
+            "type": "Academic",
+            "description": "Semester exchange and joint workshops.",
+            "documents": ["MoU 2025"],
+            "allianceActivities": ["Faculty exchange"]
+          }
+        ]
+      },
+      "other_courses_offered": {
+        "id": "other_courses_offered",
+        "enabled": true,
+        "summary": "Short-term certifications and value-added programs."
+      },
+      "demo_graphics": {
+        "id": "demo_graphics",
+        "enabled": true,
+        "summary": "Charts, visuals, and infographic assets for preview."
+      }
+    }
   }
 }
+
+docs {
+  Updates college onboarding/profile data.
+
+  Notes:
+  - Send tab data under `profileSections`.
+  - Include all section keys used by the setup tabs:
+    `college_overview`, `course_info`, `admission_policy`, `placements`,
+    `fees`, `financial_aid`, `student_housing`, `exam_policy`, `faculty`,
+    `review`, `commute`, `library`, `clubs_associations`,
+    `student_code_of_conduct`, `happenings`, `institutions_across_world`,
+    `alliance`, `other_courses_offered`, `demo_graphics`.
+  - Keep list-like fields as arrays even for one item.
+    Examples: `aminities`, `nearby_access.transit`, `campus_reels`,
+    `courseAccolades`, `grading_scale`, `ratingDistribution`,
+    `libraryHours`, `alliance.items`.
+
+  Response shape:
+  ```json
+  {
+    "success": true,
+    "message": "College profile updated",
+    "data": {
+      "collegeDetails": { ... },
+      "tabs": ["college_overview", "course_info", "placements", ...],
+      "totalCourses": 5,
+      "instituteType": "Private University",
+      "campusAmbassadors": []
+    }
+  }
+  ```
+
+  - `tabs` is a flat array of enabled profile section IDs.
+    Disabled sections (where `enabled === false`) are excluded.
+  - `collegeDetails` contains the full college object without raw `profileSections`.
+
+  Requires: college-admin staff access token.
+}
+

@@ -1,0 +1,52 @@
+meta {
+  name: List My Slots
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/counsellor/availability/slots
+  body: none
+  auth: none
+}
+
+params:query {
+  from_date: 2026-06-01
+  to_date: 2026-06-30
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Lists availability slots for the logged-in counsellor, grouped by date.
+  Requires: counsellor access token.
+
+  Query params:
+  - from_date / to_date: filter slots within a date range (YYYY-MM-DD),
+    both optional, applied to available_date. If both are set, from_date
+    must be ≤ to_date — otherwise 422 "from_date must be before or equal
+    to to_date".
+  - page, limit: pagination
+
+  ## Response structure
+  data: [
+    {
+      "date": "2026-06-12",
+      "counsellor": null,
+      "time_slots": [
+        {
+          "id": "CNA-4",
+          "start_time": "10:00:00.000Z",
+          "end_time": "10:45:00.000Z",
+          "session_duration_mins": 45,
+          "session_fee": 499,
+          "is_booked": false
+        }
+      ]
+    }
+  ]
+}

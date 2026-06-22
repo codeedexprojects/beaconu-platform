@@ -32,4 +32,50 @@ export const QUERY_KEYS = {
   entranceExam: (id: string) => ["entrance-exams", id] as const,
   institutionGroup: (collegeId: string) =>
     ["institution-group", collegeId] as const,
+  educationLoans: (params?: object) =>
+    params ? ["education-loans", params] : (["education-loans"] as const),
+  educationLoan: (id: string) => ["education-loans", id] as const,
+  starterGuideVideos: (params?: object) =>
+    params
+      ? ["starter-guide-videos", params]
+      : (["starter-guide-videos"] as const),
+  starterGuideVideo: (id: string) => ["starter-guide-videos", id] as const,
+  events: (params?: object) =>
+    params ? ["events", params] : (["events"] as const),
+  event: (id: string) => ["events", id] as const,
+  eventRegistrations: (eventId: string, params?: object) =>
+    params
+      ? ["event-registrations", eventId, params]
+      : (["event-registrations", eventId] as const),
+  counsellorRequests: (params?: object) =>
+    params
+      ? ["counsellor-requests", params]
+      : (["counsellor-requests"] as const),
+  counsellorRequest: (id: string) => ["counsellor-requests", id] as const,
+  counsellors: (params?: object) =>
+    params ? ["counsellors", params] : (["counsellors"] as const),
+  counsellorDetail: (id: string) => ["counsellors", id, "detail"] as const,
+  counsellorWalletTransactions: (id: string, params?: object) =>
+    params
+      ? (["counsellors", id, "wallet-transactions", params] as const)
+      : (["counsellors", id, "wallet-transactions"] as const),
+  counsellorSlots: (
+    id: string,
+    status: "available" | "booked",
+    params?: object,
+  ) =>
+    params
+      ? (["counsellors", id, "slots", status, params] as const)
+      : (["counsellors", id, "slots", status] as const),
+  counsellorSessions: (id: string, params?: object) =>
+    params
+      ? (["counsellors", id, "sessions", params] as const)
+      : (["counsellors", id, "sessions"] as const),
+  platformConfig: ["platform-config"] as const,
+  withdrawalRequests: (params?: object) =>
+    params
+      ? ["withdrawal-requests", params]
+      : (["withdrawal-requests"] as const),
+  refundRequests: (params?: object) =>
+    params ? ["refund-requests", params] : (["refund-requests"] as const),
 } as const;

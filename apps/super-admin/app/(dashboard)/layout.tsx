@@ -30,14 +30,14 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 
 function NoPermissionView() {
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <ShieldOff className="h-6 w-6 text-muted-foreground" />
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="flex flex-col items-center gap-3 text-center max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md shadow-xl">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+          <ShieldOff className="h-6 w-6 text-destructive" />
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">No Permission</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-sm font-semibold text-foreground">No Permission</p>
+          <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
             You don&apos;t have access to this section. Contact your
             administrator to request access.
           </p>
@@ -78,12 +78,15 @@ export default function DashboardLayout({
   if (!hasHydrated || !isAuthenticated) return <></>;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto">
-          {hasPermission ? children : <NoPermissionView />}
-        </main>
+    <div className="relative flex h-screen overflow-hidden bg-cream text-navy-dark">
+      {/* Main dashboard content container */}
+      <div className="relative z-10 flex h-full w-full overflow-hidden">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto relative z-10">
+            {hasPermission ? children : <NoPermissionView />}
+          </main>
+        </div>
       </div>
     </div>
   );

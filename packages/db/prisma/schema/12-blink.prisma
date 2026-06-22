@@ -3,10 +3,10 @@
 // ============================================================
 
 model ReferralCode {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  blinkUserId        String   @map("blink_user_id") @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
-  courseId           String?  @map("course_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('RFC-'::text || (nextval('referral_code_seq'::regclass))::text)"))
+  blinkUserId        String   @map("blink_user_id")
+  collegeId          String   @map("college_id")
+  courseId           String?  @map("course_id")
   code               String   @unique @db.VarChar(30)
   referralUrl        String?  @map("referral_url") @db.Text
   totalClicks        Int      @default(0) @map("total_clicks")
@@ -28,11 +28,11 @@ model ReferralCode {
 }
 
 model Referral {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  referralCodeId      String    @map("referral_code_id") @db.Uuid
-  blinkUserId         String    @map("blink_user_id") @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  applicationCourseId String?   @unique @map("application_course_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('RFL-'::text || (nextval('referral_seq'::regclass))::text)"))
+  referralCodeId      String    @map("referral_code_id")
+  blinkUserId         String    @map("blink_user_id")
+  studentId           String    @map("student_id")
+  applicationCourseId String?   @unique @map("application_course_id")
   status              String    @default("registered") @db.VarChar(30)
   statusHistory       Json      @default("[]") @map("status_history")
   statusUpdatedAt     DateTime? @map("status_updated_at") @db.Timestamptz
@@ -56,9 +56,9 @@ model Referral {
 }
 
 model ServiceChargeConfig {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
-  courseId           String   @map("course_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('SCC-'::text || (nextval('service_charge_config_seq'::regclass))::text)"))
+  collegeId          String   @map("college_id")
+  courseId           String   @map("course_id")
   academicYear       String   @map("academic_year") @db.VarChar(10)
   studentCategory    String   @map("student_category") @db.VarChar(50)
   grossAmount        Decimal  @map("gross_amount") @db.Decimal(10, 2)
@@ -82,17 +82,17 @@ model ServiceChargeConfig {
 }
 
 model Commission {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  referralId      String    @unique @map("referral_id") @db.Uuid
-  blinkUserId     String    @map("blink_user_id") @db.Uuid
-  serviceChargeId String    @map("service_charge_id") @db.Uuid
+  id              String    @id @default(dbgenerated("('CMN-'::text || (nextval('commission_seq'::regclass))::text)"))
+  referralId      String    @unique @map("referral_id")
+  blinkUserId     String    @map("blink_user_id")
+  serviceChargeId String    @map("service_charge_id")
   grossAmount     Decimal   @map("gross_amount") @db.Decimal(10, 2)
   gstAmount       Decimal   @map("gst_amount") @db.Decimal(10, 2)
   netPayout       Decimal   @map("net_payout") @db.Decimal(10, 2)
   status          String    @default("pending") @db.VarChar(20)
   payoutDueDate   DateTime? @map("payout_due_date") @db.Date
   paidAt          DateTime? @map("paid_at") @db.Timestamptz
-  approvedBy      String?   @map("approved_by") @db.Uuid
+  approvedBy      String?   @map("approved_by")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -109,8 +109,8 @@ model Commission {
 }
 
 model BlinkWallet {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  blinkUserId    String   @unique @map("blink_user_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('BLW-'::text || (nextval('blink_wallet_seq'::regclass))::text)"))
+  blinkUserId    String   @unique @map("blink_user_id")
   balance        Decimal  @default(0) @db.Decimal(12, 2)
   totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
   totalWithdrawn Decimal  @default(0) @map("total_withdrawn") @db.Decimal(12, 2)
@@ -127,13 +127,13 @@ model BlinkWallet {
 }
 
 model BlinkWalletTransaction {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId         String   @map("wallet_id") @db.Uuid
-  blinkUserId      String   @map("blink_user_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('BWT-'::text || (nextval('blink_wallet_transaction_seq'::regclass))::text)"))
+  walletId         String   @map("wallet_id")
+  blinkUserId      String   @map("blink_user_id")
   type             String   @db.VarChar(20)
   amount           Decimal  @db.Decimal(10, 2)
   description      String?  @db.VarChar(255)
-  commissionId     String?  @map("commission_id") @db.Uuid
+  commissionId     String?  @map("commission_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -151,17 +151,17 @@ model BlinkWalletTransaction {
 }
 
 model CampusVisit {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId          String   @map("college_id") @db.Uuid
-  studentId          String   @map("student_id") @db.Uuid
-  ambassadorId       String   @map("ambassador_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('CMV-'::text || (nextval('campus_visit_seq'::regclass))::text)"))
+  collegeId          String   @map("college_id")
+  studentId          String   @map("student_id")
+  ambassadorId       String   @map("ambassador_id")
   studentName        String   @map("student_name") @db.VarChar(255)
   courseInterest     String?  @map("course_interest") @db.VarChar(255)
   department         String?  @db.VarChar(255)
   proposedDate       DateTime @map("proposed_date") @db.Date
   proposedTime       DateTime @map("proposed_time") @db.Time
   status             String   @default("pending") @db.VarChar(20)
-  reassignedFrom     String?  @map("reassigned_from") @db.Uuid
+  reassignedFrom     String?  @map("reassigned_from")
   reassignmentReason String?  @map("reassignment_reason") @db.Text
   visitNotes         String?  @map("visit_notes") @db.Text
   visitRating        Int?     @map("visit_rating") @db.SmallInt
@@ -184,9 +184,9 @@ model CampusVisit {
 }
 
 model MediaKit {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId     String   @map("college_id") @db.Uuid
-  courseId      String?  @map("course_id") @db.Uuid
+  id            String   @id @default(dbgenerated("('MDK-'::text || (nextval('media_kit_seq'::regclass))::text)"))
+  collegeId     String   @map("college_id")
+  courseId      String?  @map("course_id")
   title         String   @db.VarChar(255)
   assetType     String   @map("asset_type") @db.VarChar(20)
   scope         String   @db.VarChar(20)

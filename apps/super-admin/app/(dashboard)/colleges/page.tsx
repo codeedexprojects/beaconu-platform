@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Building2,
@@ -17,6 +18,7 @@ import {
   Copy,
   Network,
 } from "lucide-react";
+
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,6 +76,8 @@ function InstitutionGroupModal({
   const [groupName, setGroupName] = useState(college.name + " Group");
   const [groupDescription, setGroupDescription] = useState("");
 
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+
   const { data: group, isLoading, refetch } = useInstitutionGroup(college.id);
 
   const enableMutation = useEnableInstitutionGroup();
@@ -109,22 +113,20 @@ function InstitutionGroupModal({
     );
   };
 
-  const handleDisable = () => {
-    if (
-      !confirm(
-        "Disable this institution group? New colleges will no longer be able to join using the code.",
-      )
-    )
-      return;
+  const handleDisable = () => setShowDisableConfirm(true);
+
+  const confirmDisable = () => {
     disableMutation.mutate(college.id, {
       onSuccess: () => {
         toast.success("Institution group disabled");
+        setShowDisableConfirm(false);
         refetch();
       },
       onError: (error) => {
         toast.error(
           error instanceof Error ? error.message : "Failed to disable group",
         );
+        setShowDisableConfirm(false);
       },
     });
   };
@@ -262,20 +264,51 @@ function InstitutionGroupModal({
                 )}
               </div>
 
-              {/* Disable Button */}
+              {/* Disable Button / Inline Confirm */}
               <div className="pt-2 border-t">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDisable}
-                  disabled={disableMutation.isPending}
-                  className="w-full"
-                >
-                  {disableMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  Disable Institution Group
-                </Button>
+                {showDisableConfirm ? (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+                    <p className="text-sm font-medium text-destructive">
+                      Disable this group?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      New colleges won&apos;t be able to join using the code.
+                      You can reactivate it later.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setShowDisableConfirm(false)}
+                        disabled={disableMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={confirmDisable}
+                        disabled={disableMutation.isPending}
+                      >
+                        {disableMutation.isPending && (
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        )}
+                        Yes, disable
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDisable}
+                    className="w-full"
+                  >
+                    Disable Institution Group
+                  </Button>
+                )}
               </div>
             </>
           ) : (
@@ -357,6 +390,7 @@ function InstitutionGroupModal({
 // ── Main Page ───────────────────────────────────────────────────────────
 
 export default function CollegesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -505,7 +539,11 @@ export default function CollegesPage() {
                     const link = getCollegeLink(college.slug);
                     const cleanLinkDisplay = link.replace(/^https?:\/\//, "");
                     return (
-                      <TableRow key={college.id}>
+                      <TableRow
+                        key={college.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => router.push(`/colleges/${college.id}`)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {college.logoUrl ? (
@@ -591,18 +629,16 @@ export default function CollegesPage() {
                           </Badge>
                         </TableCell>
 
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs gap-1"
-                              onClick={() => setSelectedCollege(college)}
-                            >
-                              <Network className="h-3 w-3" />
-                              Group
-                            </Button>
-                          </div>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs gap-1"
+                            onClick={() => setSelectedCollege(college)}
+                          >
+                            <Network className="h-3 w-3" />
+                            Group
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

@@ -3,7 +3,7 @@
 // ============================================================
 
 model UniversityType {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('UVT-'::text || (nextval('university_type_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
   slug      String   @unique @db.VarChar(50)
   sortOrder Int      @default(0) @map("sort_order")
@@ -17,8 +17,8 @@ model UniversityType {
 }
 
 model University {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityTypeId  String   @map("university_type_id") @db.Uuid
+  id                String   @id @default(dbgenerated("('UNV-'::text || (nextval('university_seq'::regclass))::text)"))
+  universityTypeId  String   @map("university_type_id")
   name              String   @db.VarChar(255)
   slug              String   @unique @db.VarChar(100)
   state             String?  @db.VarChar(100)
@@ -43,14 +43,14 @@ model University {
 }
 
 model InstitutionGroup {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String   @id @default(dbgenerated("('ING-'::text || (nextval('institution_group_seq'::regclass))::text)"))
   name               String   @db.VarChar(255)
   slug               String   @unique @db.VarChar(100)
   description        String?  @db.Text
   logoUrl            String?  @map("logo_url") @db.Text
   groupCode          String   @unique @map("group_code") @db.VarChar(30)
-  createdByCollegeId String   @map("created_by_college_id") @db.Uuid
-  createdByStaffId   String?  @map("created_by_staff_id") @db.Uuid
+  createdByCollegeId String   @map("created_by_college_id")
+  createdByStaffId   String?  @map("created_by_staff_id")
   status             String   @default("active") @db.VarChar(20)
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -68,9 +68,9 @@ model InstitutionGroup {
 }
 
 model InstitutionGroupMember {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  groupId   String   @map("group_id") @db.Uuid
-  collegeId String   @unique @map("college_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('IGM-'::text || (nextval('institution_group_member_seq'::regclass))::text)"))
+  groupId   String   @map("group_id")
+  collegeId String   @unique @map("college_id")
   role      String   @default("member") @db.VarChar(20)
   joinedVia String   @default("code") @map("joined_via") @db.VarChar(20)
   joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
@@ -86,28 +86,61 @@ model InstitutionGroupMember {
 }
 
 model College {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  universityId    String   @map("university_id") @db.Uuid
-  name            String   @db.VarChar(255)
-  slug            String   @unique @db.VarChar(100)
-  code            String   @unique @db.VarChar(20)
-  domain          String?  @db.VarChar(255)
-  logoUrl         String?  @map("logo_url") @db.Text
-  coverImageUrl   String?  @map("cover_image_url") @db.Text
-  state           String?  @db.VarChar(100)
-  city            String?  @db.VarChar(100)
-  district        String?  @db.VarChar(100)
-  address         String?  @db.Text
-  pinCode         String?  @map("pin_code") @db.VarChar(10)
-  status          String   @default("active") @db.VarChar(20)
-  requestedGroupCode String? @map("requested_group_code") @db.VarChar(30)
-  profileSections Json     @default("{}") @map("profile_sections")
-  settings        Json     @default("{}")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("('CLG-'::text || (nextval('college_seq'::regclass))::text)"))
+  universityId       String   @map("university_id")
+  name               String   @db.VarChar(255)
+  slug               String   @unique @db.VarChar(100)
+  code               String   @unique @db.VarChar(20)
+  domain             String?  @db.VarChar(255)
+  logoUrl            String?  @map("logo_url") @db.Text
+  coverImageUrl      String?  @map("cover_image_url") @db.Text
+  leadId             String?  @map("lead_id") @db.VarChar(100)
+  addressFromLead    Boolean  @default(false) @map("address_from_lead")
+  state              String?  @db.VarChar(100)
+  city               String?  @db.VarChar(100)
+  district           String?  @db.VarChar(100)
+  address            String?  @db.Text
+  pinCode            String?  @map("pin_code") @db.VarChar(10)
+  status             String   @default("active") @db.VarChar(20)
+  requestedGroupCode String?  @map("requested_group_code") @db.VarChar(30)
+  registrationTabs   Json     @default("[]") @map("registration_tabs")
+  profileSections    Json     @default("{}") @map("profile_sections")
+  settings           Json     @default("{}")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // College Overview
+  establishedYear  Int?     @map("established_year")
+  collegeType      String?  @map("college_type") @db.VarChar(30) // public|private|deemed|autonomous
+  genderType       String?  @map("gender_type") @db.VarChar(20) // co_ed|boys|girls
+  avgStudentCount  Int?     @map("avg_student_count")
+  campusSizeAcres  Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
+  outsideStatePct  Decimal? @map("outside_state_pct") @db.Decimal(5, 2)
+  avgRating        Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
+  reviewCount      Int      @default(0) @map("review_count")
+  amenities        Json     @default("[]") // [{name, iconKey}]
+  campusFacilities Json     @default("[]") @map("campus_facilities") // [{name, category, iconUrl}]
+  nearbyAccess     Json     @default("{}") @map("nearby_access") // {transit:[], essentials:[], utility:[]}
+  socialLinks      Json     @default("{}") @map("social_links") // {facebook, linkedin, instagram}
+  campusReels      Json     @default("[]") @map("campus_reels") // [{videoUrl, title, duration}]
+  view360Url       String?  @map("view_360_url") @db.Text
+
+  // Student Code of Conduct
+  codeOfConduct Json @default("[]") @map("code_of_conduct") // [{order, rule}]
+
+  // Library, Clubs & Alliances
+  libraries Json @default("[]") // [{type, departmentId?, name, ...}]
+  clubs     Json @default("[]") // [{id, name, slug, category, ...}]
+  alliances Json @default("[]") // [{id, partnerName, allianceType, ...}]
+
+  // Placements & Demographics
+  placementData           Json      @default("{}") @map("placement_data") // {academicYear: {...}}
+  demographics            Json      @default("{}") // college-level demographics
+  demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
   // Relations
   university                University                 @relation(fields: [universityId], references: [id])
+  departments               Department[]
   campuses                  Campus[]
   courses                   Course[]
   gallery                   CollegeGallery[]
@@ -165,7 +198,7 @@ model College {
 }
 
 model CollegeOnboardingRequest {
-  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id String @id @default(dbgenerated("('COR-'::text || (nextval('college_onboarding_request_seq'::regclass))::text)"))
 
   collegeName       String   @map("college_name") @db.VarChar(255)
   universityName    String?  @map("university_name") @db.VarChar(255)
@@ -177,9 +210,9 @@ model CollegeOnboardingRequest {
   groupCode         String?  @map("group_code") @db.VarChar(20)
   message           String?  @db.Text
   status            String   @default("pending") @db.VarChar(20)
-  reviewedBy        String?  @map("reviewed_by") @db.Uuid
+  reviewedBy        String?  @map("reviewed_by")
   reviewRemarks     String?  @map("review_remarks") @db.Text
-  createdCollegeId  String?  @map("created_college_id") @db.Uuid
+  createdCollegeId  String?  @map("created_college_id")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -192,8 +225,8 @@ model CollegeOnboardingRequest {
 }
 
 model Campus {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId    String   @map("college_id") @db.Uuid
+  id           String   @id @default(dbgenerated("('CMP-'::text || (nextval('campus_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
   name         String   @db.VarChar(255)
   address      String?  @db.Text
   city         String?  @db.VarChar(100)
@@ -208,6 +241,7 @@ model Campus {
 
   // Relations
   college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  departments  Department[]
   courses      Course[]
   applications Application[]
   enrollments  Enrollment[]
@@ -217,8 +251,32 @@ model Campus {
   @@map("campuses")
 }
 
+model Department {
+  id        String   @id @default(dbgenerated("('DPT-'::text || (nextval('department_seq'::regclass))::text)"))
+  collegeId String   @map("college_id")
+  campusId  String?  @map("campus_id")
+  name      String   @db.VarChar(255)
+  slug      String   @db.VarChar(100)
+  faculty   Json     @default("[]") // [{id, name, designation, avatarUrl, education[], experience[]}]
+  status    String   @default("active") @db.VarChar(20)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  campus     Campus?     @relation(fields: [campusId], references: [id])
+  courses    Course[]
+  newsAlerts NewsAlert[]
+
+  @@unique([collegeId, slug], name: "uq_department_slug")
+  @@index([collegeId], name: "idx_departments_college")
+  @@index([campusId], name: "idx_departments_campus")
+  @@map("departments")
+}
+
 model Stream {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('STR-'::text || (nextval('stream_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
   slug      String   @unique @db.VarChar(50)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -227,14 +285,14 @@ model Stream {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  disciplines   Discipline[]
+  disciplines Discipline[]
 
   @@map("streams")
 }
 
 model Discipline {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  streamId  String   @map("stream_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('DSC-'::text || (nextval('discipline_seq'::regclass))::text)"))
+  streamId  String   @map("stream_id")
   name      String   @db.VarChar(100)
   slug      String   @db.VarChar(50)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -243,8 +301,8 @@ model Discipline {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  stream        Stream        @relation(fields: [streamId], references: [id])
-  courses       Course[]
+  stream  Stream   @relation(fields: [streamId], references: [id])
+  courses Course[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")
@@ -252,7 +310,7 @@ model Discipline {
 }
 
 model StudyLevel {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('SVL-'::text || (nextval('study_level_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(50)
   slug      String   @unique @db.VarChar(30)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -261,13 +319,13 @@ model StudyLevel {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses       Course[]
+  courses Course[]
 
   @@map("study_levels")
 }
 
 model ProgramType {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("('PGT-'::text || (nextval('program_type_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(50)
   slug      String   @unique @db.VarChar(30)
   logoUrl   String?  @map("logo_url") @db.Text
@@ -276,19 +334,18 @@ model ProgramType {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  courses       Course[]
+  courses Course[]
 
   @@map("program_types")
 }
 
-
 model Course {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId              String   @map("college_id") @db.Uuid
-  campusId               String?  @map("campus_id") @db.Uuid
-  disciplineId           String   @map("discipline_id") @db.Uuid
-  studyLevelId           String   @map("study_level_id") @db.Uuid
-  programTypeId          String   @map("program_type_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
+  collegeId              String   @map("college_id")
+  campusId               String?  @map("campus_id")
+  disciplineId           String   @map("discipline_id")
+  studyLevelId           String   @map("study_level_id")
+  programTypeId          String   @map("program_type_id")
   appFeeCommissionType   String?  @map("app_fee_commission_type") @db.VarChar(10)
   appFeeCommissionValue  Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
   tuitionCommissionType  String?  @map("tuition_commission_type") @db.VarChar(10)
@@ -304,9 +361,34 @@ model Course {
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  // Course Detail Page (display-only, write-once)
+  departmentId String? @map("department_id")
+
+  highlights                     Json      @default("[]")
+  curriculum                     Json      @default("[]") // [{semester, subjects[], specializations[]}]
+  courseStructure                Json      @default("{}") @map("course_structure") // credit breakdown
+  valueAddedCourses              Json      @default("[]") @map("value_added_courses") // [{name, credits, deliveryMode}]
+  careerOpportunities            Json      @default("[]") @map("career_opportunities") // [{role, salaryRange}]
+  higherEducationCertifications  Json      @default("{}") @map("higher_education_certifications") // {global[], postGraduation[]}
+  flexibleExitOptions            Json      @default("[]") @map("flexible_exit_options") // [{afterYears, awardName}]
+  classTimings                   Json      @default("{}") @map("class_timings") // {monday: {start,end,status}, ...}
+  industryTools                  Json      @default("[]") @map("industry_tools")
+  labFacilities                  Json      @default("[]") @map("lab_facilities")
+  roomFacilities                 Json      @default("[]") @map("room_facilities")
+  featuredAlumni                 Json      @default("[]") @map("featured_alumni")
+  faqs                           Json      @default("[]")
+  examPolicy                     Json      @default("{}") @map("exam_policy")
+  entranceExamEligibility        Json      @default("[]") @map("entrance_exam_eligibility")
+  eligibilityCriteria            Json      @default("{}") @map("eligibility_criteria")
+  accreditations                 Json      @default("[]")
+  keyDates                        Json      @default("[]") @map("key_dates")
+  demographics                    Json      @default("{}") // course-level demographics
+  demographicsRefreshedAt          DateTime? @map("demographics_refreshed_at") @db.Timestamptz
+
   // Relations
   college                College                 @relation(fields: [collegeId], references: [id])
   campus                 Campus?                 @relation(fields: [campusId], references: [id])
+  department             Department?             @relation(fields: [departmentId], references: [id])
   discipline             Discipline              @relation(fields: [disciplineId], references: [id])
   studyLevel             StudyLevel              @relation(fields: [studyLevelId], references: [id])
   programType            ProgramType             @relation(fields: [programTypeId], references: [id])
@@ -320,10 +402,14 @@ model Course {
   mediaKits              MediaKit[]
   enrollments            Enrollment[]
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
+  seatMatrices           SeatMatrix[]
+  newsAlerts             NewsAlert[]
+  collegeReviews         CollegeReview[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
   @@index([campusId], name: "idx_courses_campus")
+  @@index([departmentId], name: "idx_courses_department")
   @@index([disciplineId], name: "idx_courses_discipline")
   @@index([studyLevelId], name: "idx_courses_level")
   @@index([programTypeId], name: "idx_courses_program")
@@ -332,8 +418,8 @@ model Course {
 }
 
 model CourseQuota {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId           String   @map("course_id") @db.Uuid
+  id                 String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
+  courseId           String   @map("course_id")
   tuitionFeeOverride Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
   quotaName          String   @map("quota_name") @db.VarChar(100)
   seats              Int
@@ -344,6 +430,7 @@ model CourseQuota {
   // Relations
   course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
   applicationCourses ApplicationCourse[]
+  seatMatrices       SeatMatrix[]
 
   @@unique([courseId, quotaName], name: "uq_course_quota")
   @@index([courseId], name: "idx_quotas_course")
@@ -351,8 +438,8 @@ model CourseQuota {
 }
 
 model CollegeGallery {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId String   @map("college_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('CGY-'::text || (nextval('college_gallery_seq'::regclass))::text)"))
+  collegeId String   @map("college_id")
   mediaType String   @map("media_type") @db.VarChar(10)
   url       String   @db.Text
   caption   String?  @db.VarChar(255)
@@ -367,20 +454,27 @@ model CollegeGallery {
 }
 
 model CollegeReview {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId  String   @map("college_id") @db.Uuid
-  studentId  String   @map("student_id") @db.Uuid
+  id         String   @id @default(dbgenerated("('CRV-'::text || (nextval('college_review_seq'::regclass))::text)"))
+  collegeId  String   @map("college_id")
+  studentId  String   @map("student_id")
   rating     Int      @db.SmallInt
   reviewText String?  @map("review_text") @db.Text
   status     String   @default("pending") @db.VarChar(20)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
+  courseId        String?  @map("course_id") // null = campus_life, filled = faculty_course
+  reviewType      String   @default("campus_life") @map("review_type") @db.VarChar(20)
+  categoryRatings Json     @default("{}") @map("category_ratings") // {facultyAndCourse: 4, campusLife: 4}
+  isAnonymous     Boolean  @default(true) @map("is_anonymous")
+
   // Relations
   college College @relation(fields: [collegeId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
+  course  Course?  @relation(fields: [courseId], references: [id])
 
   @@index([collegeId, status], name: "idx_reviews_college")
   @@index([studentId], name: "idx_reviews_student")
+  @@index([courseId], name: "idx_reviews_course")
   @@map("college_reviews")
 }

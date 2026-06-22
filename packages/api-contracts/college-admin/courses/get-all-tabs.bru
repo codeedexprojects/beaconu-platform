@@ -1,0 +1,53 @@
+meta {
+  name: Get All Course Tabs
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Returns all tab IDs configured for a course (admin view).
+  Use this to render the tab list in order.
+
+  Requires: staff access token with academics.view or academics.manage.
+
+  Create-course assigns setup tabs under `tabs`:
+    course_info, admission_policy, placements, fees, financial_aid,
+    student_housing, exam_policy, faculty, review, library,
+    clubs_associations, alliance, other_courses_offered, demo_graphics
+
+  College-only static tabs remain under college profile sections:
+    college_overview, student_code_of_conduct, happenings,
+    institutions_across_world, commute
+
+  Response shape:
+  {
+    "courseId": "CRS-1",
+    "courseName": "B.Tech Computer Science",
+    "tabs": [
+      "course_info",
+      "admission_policy",
+      "placements",
+      "fees",
+      "financial_aid",
+      "student_housing",
+      "exam_policy",
+      "faculty",
+      "review",
+      "library",
+      "clubs_associations",
+      "alliance",
+      "other_courses_offered",
+      "demo_graphics"
+    ]
+  }
+}

@@ -7,7 +7,7 @@ const createNewsAlertSchema = z.object({
   cover_image_url: z.string().url().optional(),
   tags: z.array(z.string().trim().max(50)).max(10).default([]),
   source: z.string().trim().max(500).optional(),
-  college_id: z.string().uuid().optional(),
+  college_id: z.string().optional(),
 });
 
 const updateNewsAlertSchema = z.object({
@@ -33,7 +33,7 @@ const publicListNewsAlertsQuerySchema = z.object({
 });
 
 const idParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 const slugParamSchema = z.object({

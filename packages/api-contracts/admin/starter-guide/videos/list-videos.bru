@@ -1,0 +1,21 @@
+meta {
+  name: List Videos
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/videos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~is_active: true
+}

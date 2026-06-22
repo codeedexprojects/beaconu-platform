@@ -7,3 +7,8 @@ export * from "./colleges";
 export * from "./news-alerts";
 export * from "./entrance-exams";
 export * from "./students";
+export * from "./financial-aid";
+export * from "./starter-guide";
+export * from "./events";
+export * from "./counselling";
+export * from "./blink";

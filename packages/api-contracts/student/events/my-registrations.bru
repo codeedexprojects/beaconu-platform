@@ -1,0 +1,41 @@
+meta {
+  name: My Registered Events
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/events/registrations
+  body: none
+  auth: none
+}
+
+query {
+  page: 1
+  limit: 10
+  ~status: registered
+  ~search: workshop
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  List all events the authenticated student is registered for.
+  Each registration includes the full event listing details.
+
+  Response fields per registration:
+  - registration: id, event_id, student_id, payment_status, transaction_id, paid_amount,
+    is_joined, status, registered_at, cancelled_at
+  - event: total_seats, registered_count, is_joined, cover_image_url, category, title,
+    speaker_name, speaker_title, organizer, event_date, start_time, end_time,
+    duration, event_mode, venue, is_free
+
+  Query Parameters:
+  - status: Filter by registration status — registered | cancelled (optional)
+  - search: Search by event title, speaker, organizer, category (optional)
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10)
+}

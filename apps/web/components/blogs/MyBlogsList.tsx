@@ -29,7 +29,13 @@ type StatusValue = (typeof STATUS_TABS)[number]["value"];
 
 const STATUS_CONFIG: Record<
   string,
-  { bg: string; text: string; border: string; icon: React.ElementType; label: string }
+  {
+    bg: string;
+    text: string;
+    border: string;
+    icon: React.ElementType;
+    label: string;
+  }
 > = {
   pending: {
     bg: "bg-amber-50",
@@ -122,7 +128,9 @@ export function MyBlogsList() {
             <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
               <AlertCircle size={22} className="text-red-500" />
             </div>
-            <p className="text-[15px] font-bold text-gray-900">Failed to load blogs</p>
+            <p className="text-[15px] font-bold text-gray-900">
+              Failed to load blogs
+            </p>
             <p className="text-[13px] text-gray-500 text-center">
               Something went wrong. Please refresh and try again.
             </p>
@@ -180,7 +188,9 @@ function MyBlogCard({ blog }: { blog: Blog }) {
           <span
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border",
-              sc.bg, sc.text, sc.border,
+              sc.bg,
+              sc.text,
+              sc.border,
             )}
           >
             <StatusIcon size={11} aria-hidden />
@@ -202,7 +212,15 @@ function MyBlogCard({ blog }: { blog: Blog }) {
               href={`/blogs/${blog.slug}`}
               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border-[1.5px] border-emerald-200 bg-emerald-50 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                aria-hidden
+              >
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                 <polyline points="15,3 21,3 21,9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
@@ -220,8 +238,12 @@ function MyBlogCard({ blog }: { blog: Blog }) {
         {/* Rejection reason */}
         {blog.rejectionReason && (
           <div className="bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-3">
-            <p className="text-[12px] font-semibold text-red-600 mb-0.5">Rejection reason</p>
-            <p className="text-[12px] text-red-500 leading-relaxed">{blog.rejectionReason}</p>
+            <p className="text-[12px] font-semibold text-red-600 mb-0.5">
+              Rejection reason
+            </p>
+            <p className="text-[12px] text-red-500 leading-relaxed">
+              {blog.rejectionReason}
+            </p>
           </div>
         )}
 
@@ -239,7 +261,17 @@ function MyBlogCard({ blog }: { blog: Blog }) {
           className="w-full h-11 bg-[#E8521A] hover:bg-[#D04718] transition-colors flex items-center justify-center gap-2 text-white text-[13px] font-semibold"
         >
           Read Article
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </Link>

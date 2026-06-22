@@ -37,8 +37,6 @@ export function authorize(...requiredPermissions: string[]) {
     _res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    console.log(req);
-
     if (!req.userId) {
       next(new UnauthorizedError());
       return;
@@ -183,8 +181,34 @@ export function authorizeAny(...allowedPermissions: string[]) {
 
 export function authorizeUserType(...allowedUserTypes: AuthUserType[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    console.log(req.userId, req.userType);
+    if (!req.userId) {
+      next(new UnauthorizedError());
+      return;
+    }
     if (!req.userType || !allowedUserTypes.includes(req.userType)) {
+      next(
+        new ForbiddenError(
+          "You do not have permission to access this resource",
+        ),
+      );
+      return;
+    }
+    next();
+  };
+}
+
+export function authorizeCounsellorType(
+  ...allowedCounsellorTypes: Array<"academic" | "mindcare">
+) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.userId) {
+      next(new UnauthorizedError());
+      return;
+    }
+    if (
+      !req.counsellorType ||
+      !allowedCounsellorTypes.includes(req.counsellorType)
+    ) {
       next(
         new ForbiddenError(
           "You do not have permission to access this resource",

@@ -1,0 +1,50 @@
+meta {
+  name: List Streams (with Disciplines)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/streams?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("blinkStreamId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns a paginated list of active streams for the authenticated associate
+  employee, with the count of active disciplines under each stream.
+  Requires: blink_employee access token.
+
+  Query params:
+  - search (optional): filter by stream name (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100) — applies to streams only
+
+  Response shape:
+  [
+    { "id", "name", "slug", "logoUrl", "discipline_count": number }
+  ]
+  meta: { total, page, limit, hasNext }
+
+  Tables: streams, disciplines
+}

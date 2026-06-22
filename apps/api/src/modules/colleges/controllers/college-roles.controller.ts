@@ -333,7 +333,7 @@ export class CollegeRolesController {
       email: z.string().trim().email(),
       phoneNumber: z.string().trim().optional().nullable(),
       password: z.string().min(6),
-      collegeRoleId: z.string().uuid(),
+      collegeRoleId: z.string(),
     });
 
     const body = schema.parse(req.body);
@@ -405,7 +405,7 @@ export class CollegeRolesController {
     const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
     const schema = z.object({
-      collegeRoleId: z.string().uuid().optional(),
+      collegeRoleId: z.string().optional(),
       status: z.enum(["active", "inactive"]).optional(),
     });
 
@@ -416,6 +416,10 @@ export class CollegeRolesController {
     });
     if (!staff || staff.collegeId !== collegeId) {
       throw new NotFoundError("Staff member not found");
+    }
+
+    if (id === req.userId) {
+      throw new ForbiddenError("You cannot modify your own staff record");
     }
 
     if (body.collegeRoleId) {

@@ -4,6 +4,7 @@ import { ListUniversitiesQuery } from "../validators/universities.validator";
 
 const UNIVERSITY_WITH_TYPE_SELECT = {
   id: true,
+  universityTypeId: true,
   name: true,
   slug: true,
   state: true,
@@ -75,5 +76,26 @@ export class UniversityQuery {
     });
     if (!university) throw new NotFoundError("University not found");
     return university;
+  }
+
+  static async getFilters() {
+    const [universityTypes, stateRows] = await Promise.all([
+      prisma.universityType.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, slug: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      }),
+      prisma.university.findMany({
+        where: { status: "active", state: { not: null } },
+        select: { state: true },
+        distinct: ["state"],
+        orderBy: { state: "asc" },
+      }),
+    ]);
+
+    return {
+      universityTypes,
+      states: stateRows.map((r) => r.state as string),
+    };
   }
 }

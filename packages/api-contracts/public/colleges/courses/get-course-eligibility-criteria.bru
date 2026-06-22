@@ -1,0 +1,54 @@
+meta {
+  name: Get Course Eligibility Criteria
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/eligibility-criteria?student_type=indian&quota_category=government_quota
+  body: none
+  auth: none
+}
+
+params:query {
+  student_type: indian
+  quota_category: government_quota
+}
+
+docs {
+  Dedicated endpoint for course eligibility criteria — NOT the same as the
+  generic GET .../courses/:courseId/tabs/eligibility_criteria endpoint.
+  That generic route returns the raw stored JSON verbatim (no
+  filters_applied). This endpoint additionally resolves filters_applied
+  from the query string.
+
+  Path params:
+  - collegeSlug: College subdomain slug
+  - courseId: Course ID
+
+  Query params (both optional):
+  - student_type: e.g. indian | foreign — defaults to the first option in
+    student_type_filter.options if omitted
+  - quota_category: e.g. government_quota | management_quota | nri_quota |
+    scholarship_quota | sports_quota — defaults to the first option in
+    quota_filter.options if omitted
+
+  Response:
+  {
+    "id": "eligibility_criteria",
+    "title": "Eligibility Criteria",
+    "filters_applied": { "student_type", "quota_category" },
+    "student_type_filter": { "options": [{ "label", "value" }] },
+    "quota_filter": { "label", "options": [{ "label", "value" }] },
+    "check_eligibility_cta": { "label" },
+    "view_blogs_cta": { "label", "link" },
+    "criteria": [{ "icon", "heading", "description" }]
+  }
+
+  Response message: "Eligibility criteria fetched successfully" (distinct
+  from the generic tabs endpoint's "College section fetched successfully").
+  Returns 404 "Course not found" if the course/college doesn't exist or
+  isn't active.
+
+  Table: courses (eligibility_criteria JSONB column)
+}

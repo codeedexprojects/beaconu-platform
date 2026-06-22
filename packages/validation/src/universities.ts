@@ -1,9 +1,23 @@
 import { z } from "zod";
 
-const optionalUrlSchema = z.preprocess(
-  (value) => (value === "" ? undefined : value),
-  z.string().url().optional(),
-);
+function isAcceptableUrl(value: string): boolean {
+  if (value.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const optionalUrlSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}, z.string().refine(isAcceptableUrl, "Expected a valid http(s) URL or a relative path").optional());
 
 const universityGovernanceMemberSchema = z.object({
   userPhotoUrl: optionalUrlSchema,
@@ -12,20 +26,28 @@ const universityGovernanceMemberSchema = z.object({
   description: z.string().optional(),
 });
 
+const universityGovernanceCouncilSchema = z.union([
+  z.array(universityGovernanceMemberSchema),
+  z.object({
+    description: z.string().optional(),
+    members: z.array(universityGovernanceMemberSchema).optional(),
+  }),
+]);
+
 const universityGovernanceSchema = z.object({
-  academic_council: z.array(universityGovernanceMemberSchema).optional(),
-  management_council: z.array(universityGovernanceMemberSchema).optional(),
+  academic_council: universityGovernanceCouncilSchema.optional(),
+  management_council: universityGovernanceCouncilSchema.optional(),
   organizational_organogram: z
     .object({
       title: z.string().max(255).optional(),
-      imageUrl: optionalUrlSchema,
+      fileUrl: optionalUrlSchema,
       description: z.string().optional(),
     })
     .optional(),
 });
 
 export const createUniversitySchema = z.object({
-  university_type_id: z.string().uuid(),
+  university_type_id: z.string(),
   name: z.string().min(1).max(255),
   slug: z
     .string()
@@ -46,7 +68,7 @@ export const updateUniversitySchema = createUniversitySchema.partial();
 
 export const listUniversitiesQuerySchema = z.object({
   status: z.enum(["active", "inactive", "archived"]).optional(),
-  university_type_id: z.string().uuid().optional(),
+  university_type_id: z.string().optional(),
   state: z.string().optional(),
   search: z.string().optional(),
 });

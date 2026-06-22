@@ -29,4 +29,8 @@ docs {
 
   Also saves counsellorId to env for use in super-admin counselling endpoints.
   Table: counsellors
+
+  Response includes upi_id (string | null) and bank_details (object, {}
+  if not set) — these are the payout options configurable via
+  PATCH /api/v1/counsellor/profile.
 }

@@ -5,14 +5,10 @@ import {
   sendStudentOtpSchema,
   verifyStudentOtpSchema,
   registerStudentSchema,
+  firebaseStudentLoginSchema,
 } from "../validators/auth.validator";
 
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 90 * 24 * 60 * 60 * 1000,
-};
+import { REFRESH_TOKEN_COOKIE_OPTIONS } from "@/shared/constants";
 
 export class StudentAuthController {
   static async sendOtp(req: Request, res: Response) {
@@ -62,7 +58,11 @@ export class StudentAuthController {
     );
 
     if (!result.isNewUser) {
-      res.cookie("refreshToken", result.tokens.refreshToken, COOKIE_OPTIONS);
+      res.cookie(
+        "refreshToken",
+        result.tokens.refreshToken,
+        REFRESH_TOKEN_COOKIE_OPTIONS,
+      );
       return res.status(200).json(
         ApiResponse.success("Login successful", {
           isNewUser: false,
@@ -84,7 +84,11 @@ export class StudentAuthController {
   static async register(req: Request, res: Response) {
     const data = registerStudentSchema.parse(req.body);
     const result = await AuthService.registerStudent(data);
-    res.cookie("refreshToken", result.tokens.refreshToken, COOKIE_OPTIONS);
+    res.cookie(
+      "refreshToken",
+      result.tokens.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     return res.status(201).json(
       ApiResponse.success("Account created successfully", {
         user: result.user,
@@ -97,11 +101,35 @@ export class StudentAuthController {
   static async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     const result = await AuthService.refreshTokens(refreshToken);
-    res.cookie("refreshToken", result.refreshToken, COOKIE_OPTIONS);
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     return res.status(200).json(
       ApiResponse.success("Token refreshed successfully", {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
+      }),
+    );
+  }
+
+  static async firebaseLogin(req: Request, res: Response) {
+    const { id_token, fcm_token } = firebaseStudentLoginSchema.parse(req.body);
+    const result = await AuthService.loginWithFirebaseGoogle(
+      id_token,
+      fcm_token,
+    );
+    res.cookie(
+      "refreshToken",
+      result.tokens.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
+    return res.status(200).json(
+      ApiResponse.success("Login successful", {
+        user: result.user,
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken,
       }),
     );
   }

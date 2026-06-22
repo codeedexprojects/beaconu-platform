@@ -4,7 +4,11 @@ import { commonSchemas } from "@/shared/validators";
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
+  blink_role: z
+    .enum(["associate_admin", "associate_employee", "campus_ambassador"])
+    .optional(),
   agency_reg_number: z.string().trim().optional(),
+  fcm_token: z.string().trim().optional(),
 });
 
 export const staffLoginSchema = z.object({
@@ -42,6 +46,13 @@ export const registerAssociateAdminSchema = z
     agency_reg_number: z.string().trim().min(1),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
+    companyPan: z.string().trim().min(1, "Company PAN is required"),
+    currentAccNo: z
+      .string()
+      .trim()
+      .min(1, "Current Account Number is required"),
+    ifsc: z.string().trim().min(1, "IFSC is required"),
+    gstin: z.string().trim().optional(),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
@@ -75,12 +86,22 @@ export const registerBlogAuthorSchema = z
     path: ["confirm_password"],
   });
 
+export const counsellorLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6),
+  counsellor_type: z.enum(["academic", "mindcare"], {
+    error: "counsellor_type must be 'academic' or 'mindcare'",
+  }),
+  fcm_token: z.string().trim().optional(),
+});
+
 export const loginBlogAuthorSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type CounsellorLoginInput = z.infer<typeof counsellorLoginSchema>;
 export type StaffLoginInput = z.infer<typeof staffLoginSchema>;
 export type PlatformLoginInput = z.infer<typeof platformLoginSchema>;
 export type RegisterCounsellorInput = z.infer<typeof registerCounsellorSchema>;
@@ -112,6 +133,38 @@ export const registerStudentSchema = z.object({
   fcm_token: z.string().trim().optional(),
 });
 
+export const firebaseStudentLoginSchema = z.object({
+  id_token: z.string().min(1, "Firebase ID token is required"),
+  fcm_token: z.string().trim().optional(),
+});
+
 export type SendStudentOtpInput = z.infer<typeof sendStudentOtpSchema>;
 export type VerifyStudentOtpInput = z.infer<typeof verifyStudentOtpSchema>;
 export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
+export type FirebaseStudentLoginInput = z.infer<
+  typeof firebaseStudentLoginSchema
+>;
+
+// ── Blink forgot-password ──────────────────────────────────────────────────
+
+export const blinkForgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+export const blinkVerifyResetOtpSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  otp: z.string().trim().length(4),
+});
+
+export const blinkResetPasswordSchema = z.object({
+  reset_token: z.string().uuid(),
+  new_password: z.string().min(8),
+});
+
+export type BlinkForgotPasswordInput = z.infer<
+  typeof blinkForgotPasswordSchema
+>;
+export type BlinkVerifyResetOtpInput = z.infer<
+  typeof blinkVerifyResetOtpSchema
+>;
+export type BlinkResetPasswordInput = z.infer<typeof blinkResetPasswordSchema>;

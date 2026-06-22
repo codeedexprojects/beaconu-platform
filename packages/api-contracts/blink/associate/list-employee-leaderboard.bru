@@ -1,0 +1,46 @@
+meta {
+  name: Employee Leaderboard
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/employees/leaderboard?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  from:
+  to:
+}
+
+docs {
+  Returns employees under the authenticated associate admin, ranked by confirmed
+  referral count within the given date range.
+  Requires: associate admin access token (blink_associate userType).
+
+  Query params:
+  - from (optional): ISO date/datetime — only referrals/commissions on or after this date count toward ranking
+  - to (optional): ISO date/datetime — only referrals/commissions on or before this date count toward ranking
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Each item includes: rank, totalReferrals, confirmedCount, commissionEarned (credited only) —
+  all computed within the from/to window. Ranking is computed over the FULL team first,
+  then the requested page is sliced — rank numbers stay stable across pages.
+
+  Sorted by confirmedCount DESC — rank 1 is the top performer in the window.
+
+  Renamed from GET /blink/associate/employees (now the plain employee list) to
+  avoid confusion between "list employees" and "ranked leaderboard".
+
+  Tables: blink_users, referrals, commissions
+}

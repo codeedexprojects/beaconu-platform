@@ -2,27 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
   Loader2,
   ArrowRight,
   Building,
-  Award,
-  BookOpen,
-  DollarSign,
-  GraduationCap,
   Plus,
   Trash2,
   Globe,
-  PlusCircle,
   Play,
   Users,
   Compass,
   MapPin,
-  TrendingUp,
   FileText,
+  Save,
+  Check,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,86 +41,80 @@ import {
   useCollegeProfile,
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
+import {
+  getDefaultCollegeOverviewAmenities,
+  isFixedCollegeAmenity,
+  mergeCollegeOverviewAmenities,
+  resolveCollegeAmenityIcon,
+} from "@beaconu/utils";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
-// Define a unified form schema supporting Basic info & complex profileSections
-const profileFormSchema = z.object({
-  name: z.string().min(2, "College name is required"),
-  code: z.string().min(2, "College code is required"),
-  address: z.string().min(5, "Address is required"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  district: z.string().min(2, "District is required"),
-  pinCode: z.string().min(6, "Valid PIN code is required"),
-  logoUrl: z
-    .string()
-    .url("Enter a valid logo URL")
-    .optional()
-    .or(z.literal("")),
-  coverImageUrl: z
-    .string()
-    .url("Enter a valid cover image URL")
-    .optional()
-    .or(z.literal("")),
-  requestedGroupCode: z.string().optional(),
+// Tab metadata
+const PROFILE_TABS = [
+  {
+    id: "basic",
+    label: "Basic Info",
+    icon: Building,
+    desc: "Primary institutional parameters and contact details",
+  },
+  {
+    id: "college_overview",
+    label: "College Overview",
+    icon: Compass,
+    desc: "Campus scale, ratings, facilities, accolades, and media",
+  },
+  {
+    id: "student_code_of_conduct",
+    label: "Student Conduct",
+    icon: FileText,
+    desc: "Rules and discipline guidelines for students",
+  },
+  {
+    id: "happenings",
+    label: "Happenings",
+    icon: Play,
+    desc: "Important events, updates, and news highlights",
+  },
+  {
+    id: "institutions_across_world",
+    label: "Global Presence",
+    icon: Globe,
+    desc: "International partner colleges and exchange networks",
+  },
+  {
+    id: "commute",
+    label: "Commute & Access",
+    icon: MapPin,
+    desc: "Nearby transit hubs and regional accessibility mappings",
+  },
+] as const;
 
-  // profileSections fields
+type ProfileTabId = (typeof PROFILE_TABS)[number]["id"];
+
+const profileSchema = z.object({
+  name: z.string().min(2, "College name must be at least 2 characters"),
+  code: z.string().min(2, "College code must be at least 2 characters"),
+  leadId: z.string().optional().nullable(),
+  addressFromLead: z.boolean().default(false),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  district: z.string().optional().nullable(),
+  pinCode: z.string().optional().nullable(),
+  logoUrl: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
+  requestedGroupCode: z.string().optional().nullable(),
   profileSections: z.object({
-    college_overview: z.object({
-      description: z.string().default(""),
-      accreditation_and_affilation: z.object({
-        img: z.string().default(""),
-        description: z.string().default(""),
-      }),
-      instution_details: z.object({
-        estd: z.string().default(""),
-        gender: z.string().default("Co-Ed"),
-        average_student_count: z.string().default(""),
-        campus_size: z.string().default(""),
-        Student_from_outside: z.string().default(""),
-      }),
-      inside_campus: z.object({
-        img: z.string().default(""),
-        description: z.string().default(""),
-      }),
-      location: z.object({
-        map_link: z.string().default(""),
-      }),
-      connect: z.object({
-        linkedin: z.string().default(""),
-        instagram: z.string().default(""),
-        twitter: z.string().default(""),
-        website: z.string().default(""),
-      }),
-    }),
-    course_info: z.object({
-      eligibilitySummary: z.string().default(""),
-    }),
-    placements: z.object({
-      placementReportUrl: z.string().default(""),
-      growthSummary: z.string().default(""),
-    }),
-    tuition_and_aid: z.object({
-      tuitionFeesSummary: z.string().default(""),
-      scholarshipCalculatorEnabled: z.boolean().default(false),
-    }),
+    college_overview: z.any().optional(),
+    student_code_of_conduct: z.any().optional(),
+    happenings: z.any().optional(),
+    institutions_across_world: z.any().optional(),
+    commute: z.any().optional(),
   }),
 });
 
-type ProfileFormData = z.infer<typeof profileFormSchema>;
-
-const PREDEFINED_AMENITIES = [
-  "Wi-Fi Campus",
-  "Library",
-  "Swimming Pool",
-  "Sports Complex",
-  "Gymnasium",
-  "AC Classrooms",
-  "Computer Lab",
-  "Hostel Facility",
-  "Cafeteria",
-  "Auditorium",
-];
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function SetupProfilePage() {
   const router = useRouter();
@@ -131,93 +123,89 @@ export default function SetupProfilePage() {
       ? null
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
+  const [activeTab, setActiveTab] = useState<ProfileTabId>("basic");
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
-
-  const [activeTab, setActiveTab] = useState<
-    "basic" | "overview" | "admissions" | "placements" | "fees"
-  >("basic");
-
-  // State to hold dynamic JSON fields not easily mapped in standard zod/rhf fields
-  const [amenities, setAmenities] = useState<string[]>([]);
-  const [customAmenity, setCustomAmenity] = useState("");
-
-  const [transitAccess, setTransitAccess] = useState<
-    { type: string; name: string; distance: string }[]
-  >([]);
-  const [essentialsAccess, setEssentialsAccess] = useState<
-    { type: string; name: string; distance: string }[]
-  >([]);
-  const [campusReels, setCampusReels] = useState<
-    { title: string; link: string }[]
-  >([]);
-
-  const [seatMatrix, setSeatMatrix] = useState<
-    { quota: string; total: string; open: string }[]
-  >([]);
-  const [eligibilityCriteria, setEligibilityCriteria] = useState<
-    { studentType: string; criteria: string }[]
-  >([]);
-
-  const [placementStats, setPlacementStats] = useState<
-    { title: string; value: string }[]
-  >([]);
-  const [placementTrends, setPlacementTrends] = useState<
-    { year: string; averagePackage: string; highestPackage: string }[]
-  >([]);
-  const [notableOffers, setNotableOffers] = useState<
-    { studentName: string; company: string; package: string }[]
-  >([]);
-
-  const [additionalFees, setAdditionalFees] = useState<
-    { name: string; amount: string; frequency: string }[]
-  >([]);
-  const [installmentSchedule, setInstallmentSchedule] = useState<
-    { installmentNo: string; dueDate: string; percentage: string }[]
-  >([]);
-  const [scholarshipsList, setScholarshipsList] = useState<
-    { name: string; concession: string; criteria: string }[]
-  >([]);
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     reset,
+    control,
     formState: { errors },
   } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileFormSchema),
+    resolver: zodResolver(profileSchema as any),
     defaultValues: {
-      requestedGroupCode: "",
-      profileSections: {
-        college_overview: {
-          description: "",
-          accreditation_and_affilation: { img: "", description: "" },
-          instution_details: {
-            estd: "",
-            gender: "Co-Ed",
-            average_student_count: "",
-            campus_size: "",
-            Student_from_outside: "",
-          },
-          inside_campus: { img: "", description: "" },
-          location: { map_link: "" },
-          connect: { linkedin: "", instagram: "", twitter: "", website: "" },
-        },
-        course_info: { eligibilitySummary: "" },
-        placements: { placementReportUrl: "", growthSummary: "" },
-        tuition_and_aid: {
-          tuitionFeesSummary: "",
-          scholarshipCalculatorEnabled: false,
-        },
-      },
+      addressFromLead: false,
+      profileSections: {},
     },
   });
 
   useEffect(() => {
     if (profile) {
+      const commuteSection = (profile.profileSections?.commute as any) || {};
+      const existingOverview =
+        (profile.profileSections?.college_overview as Record<string, any>) ||
+        undefined;
+      const mergedAmenities = mergeCollegeOverviewAmenities(
+        existingOverview?.amenities,
+      );
+      const collegeOverviewSection = existingOverview
+        ? { ...existingOverview, amenities: mergedAmenities }
+        : {
+            id: "college_overview",
+            enabled: true,
+            name: profile.name || "",
+            alt_name: "",
+            location_name: profile.city
+              ? `${profile.city}, ${profile.state}`
+              : "",
+            type: "Public",
+            established: 2000,
+            navigation_tabs: ["Overview", "Governance"],
+            about: "",
+            accolades: [],
+            university_details: [
+              { label: "Established year", value: "2000" },
+              { label: "Nature of University", value: "Public" },
+              { label: "Type of University", value: "State University" },
+              { label: "District", value: profile.district || "" },
+              { label: "State", value: profile.state || "" },
+              { label: "Pincode", value: profile.pinCode || "" },
+              { label: "Total Courses", value: "" },
+              { label: "Gender", value: "Co-Ed" },
+              { label: "Campus Size", value: "" },
+              { label: "Avg Student Count", value: "" },
+              { label: "Students Outside State", value: "" },
+            ],
+            amenities: mergedAmenities,
+            inside_campus_facilities: [],
+            location: {
+              address: profile.address || "",
+              latitude: null,
+              longitude: null,
+              map_link: "",
+            },
+            nearby_access: [],
+            campus_ambassadors: [],
+            social: [],
+            campus_reels: [],
+          };
+
       reset({
         name: profile.name || "",
         code: profile.code || "",
+        leadId:
+          (profile.settings?.registrationMeta as any)?.leadId ||
+          profile.leadId ||
+          "",
+        addressFromLead:
+          (profile.settings?.registrationMeta as any)?.addressFromLead ??
+          profile.addressFromLead ??
+          false,
         address: profile.address || "",
         city: profile.city || "",
         state: profile.state || "",
@@ -227,1612 +215,2434 @@ export default function SetupProfilePage() {
         coverImageUrl: profile.coverImageUrl || "",
         requestedGroupCode: profile.requestedGroupCode || "",
         profileSections: {
-          college_overview: {
-            description:
-              profile.profileSections?.college_overview?.description || "",
-            accreditation_and_affilation: {
-              img:
-                profile.profileSections?.college_overview
-                  ?.accreditation_and_affilation?.img || "",
-              description:
-                profile.profileSections?.college_overview
-                  ?.accreditation_and_affilation?.description || "",
-            },
-            instution_details: {
-              estd:
-                profile.profileSections?.college_overview?.instution_details
-                  ?.estd || "",
-              gender:
-                profile.profileSections?.college_overview?.instution_details
-                  ?.gender || "Co-Ed",
-              average_student_count:
-                profile.profileSections?.college_overview?.instution_details
-                  ?.average_student_count || "",
-              campus_size:
-                profile.profileSections?.college_overview?.instution_details
-                  ?.campus_size || "",
-              Student_from_outside:
-                profile.profileSections?.college_overview?.instution_details
-                  ?.Student_from_outside || "",
-            },
-            inside_campus: {
-              img:
-                profile.profileSections?.college_overview?.inside_campus?.img ||
-                "",
-              description:
-                profile.profileSections?.college_overview?.inside_campus
-                  ?.description || "",
-            },
-            location: {
-              map_link:
-                profile.profileSections?.college_overview?.location?.map_link ||
-                "",
-            },
-            connect: {
-              linkedin:
-                profile.profileSections?.college_overview?.connect?.linkedin ||
-                "",
-              instagram:
-                profile.profileSections?.college_overview?.connect?.instagram ||
-                "",
-              twitter:
-                profile.profileSections?.college_overview?.connect?.twitter ||
-                "",
-              website:
-                profile.profileSections?.college_overview?.connect?.website ||
-                "",
+          student_code_of_conduct: profile.profileSections
+            ?.student_code_of_conduct || {
+            id: "student_code_of_conduct",
+            enabled: true,
+            tab: "student_code_of_conduct",
+            section_title: "General Rules of Discipline",
+            rules: [],
+          },
+          happenings: profile.profileSections?.happenings || {
+            id: "happenings",
+            enabled: true,
+            title: "Happenings",
+            filters: { categories: ["Certification"] },
+            happenings: [],
+          },
+          institutions_across_world: profile.profileSections
+            ?.institutions_across_world || {
+            id: "institutions_across_world",
+            enabled: true,
+            title: "Institution Across the World",
+            institutions: [],
+          },
+          commute: {
+            id: "commute",
+            enabled: true,
+            tab: "commute",
+            title: commuteSection.title || "Commute",
+            pickup_points: Array.isArray(commuteSection.pickup_points)
+              ? commuteSection.pickup_points
+              : [],
+            selected_pickup_point: commuteSection.selected_pickup_point || "",
+            routes: Array.isArray(commuteSection.routes)
+              ? commuteSection.routes
+              : [],
+            rules_and_code_of_conduct: {
+              title:
+                commuteSection.rules_and_code_of_conduct?.title ||
+                "Rules & Code of Conduct",
+              subtitle:
+                commuteSection.rules_and_code_of_conduct?.subtitle ||
+                "Detailed guidelines for student commuters",
+              intro:
+                commuteSection.rules_and_code_of_conduct?.intro ||
+                "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+              rules: Array.isArray(
+                commuteSection.rules_and_code_of_conduct?.rules,
+              )
+                ? commuteSection.rules_and_code_of_conduct.rules
+                : [],
             },
           },
-          course_info: {
-            eligibilitySummary:
-              profile.profileSections?.course_info?.eligibilitySummary || "",
-          },
-          placements: {
-            placementReportUrl:
-              profile.profileSections?.placements?.placementReportUrl || "",
-            growthSummary:
-              profile.profileSections?.placements?.growthSummary || "",
-          },
-          tuition_and_aid: {
-            tuitionFeesSummary:
-              profile.profileSections?.tuition_and_aid?.tuitionFeesSummary ||
-              "",
-            scholarshipCalculatorEnabled:
-              !!profile.profileSections?.tuition_and_aid
-                ?.scholarshipCalculatorEnabled,
-          },
+          college_overview: collegeOverviewSection,
         },
       });
-
-      // Load nested list state
-      if (Array.isArray(profile.profileSections?.college_overview?.aminities)) {
-        setAmenities(profile.profileSections.college_overview.aminities);
-      }
-      if (
-        Array.isArray(
-          profile.profileSections?.college_overview?.nearby_access?.transit,
-        )
-      ) {
-        setTransitAccess(
-          profile.profileSections.college_overview.nearby_access.transit,
-        );
-      }
-      if (
-        Array.isArray(
-          profile.profileSections?.college_overview?.nearby_access?.essentials,
-        )
-      ) {
-        setEssentialsAccess(
-          profile.profileSections.college_overview.nearby_access.essentials,
-        );
-      }
-      if (
-        Array.isArray(profile.profileSections?.college_overview?.campus_reels)
-      ) {
-        setCampusReels(profile.profileSections.college_overview.campus_reels);
-      }
-
-      if (Array.isArray(profile.profileSections?.course_info?.seatMatrix)) {
-        setSeatMatrix(profile.profileSections.course_info.seatMatrix);
-      }
-      if (
-        Array.isArray(profile.profileSections?.course_info?.eligibilityCriteria)
-      ) {
-        setEligibilityCriteria(
-          profile.profileSections.course_info.eligibilityCriteria,
-        );
-      }
-
-      if (Array.isArray(profile.profileSections?.placements?.placementStats)) {
-        setPlacementStats(profile.profileSections.placements.placementStats);
-      }
-      if (Array.isArray(profile.profileSections?.placements?.placementTrends)) {
-        setPlacementTrends(profile.profileSections.placements.placementTrends);
-      }
-      if (Array.isArray(profile.profileSections?.placements?.notableOffers)) {
-        setNotableOffers(profile.profileSections.placements.notableOffers);
-      }
-
-      if (
-        Array.isArray(profile.profileSections?.tuition_and_aid?.additionalFees)
-      ) {
-        setAdditionalFees(
-          profile.profileSections.tuition_and_aid.additionalFees,
-        );
-      }
-      if (
-        Array.isArray(profile.profileSections?.tuition_and_aid?.installments)
-      ) {
-        setInstallmentSchedule(
-          profile.profileSections.tuition_and_aid.installments,
-        );
-      }
-      if (
-        Array.isArray(profile.profileSections?.tuition_and_aid?.scholarships)
-      ) {
-        setScholarshipsList(
-          profile.profileSections.tuition_and_aid.scholarships,
-        );
-      }
     }
   }, [profile, reset]);
 
-  const toggleAmenity = (amenity: string) => {
-    setAmenities((prev) =>
-      prev.includes(amenity)
-        ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity],
-    );
-  };
+  // Form watch variables for nested arrays/objects
+  const rules = watch("profileSections.student_code_of_conduct.rules") || [];
+  const happeningsList = watch("profileSections.happenings.happenings") || [];
+  const globalInstitutions =
+    watch("profileSections.institutions_across_world.institutions") || [];
+  const globalInstitutionsGroup = watch(
+    "profileSections.institutions_across_world.group",
+  );
 
-  const addCustomAmenity = () => {
-    if (customAmenity.trim() && !amenities.includes(customAmenity.trim())) {
-      setAmenities([...amenities, customAmenity.trim()]);
-      setCustomAmenity("");
-    }
-  };
+  // Overview arrays
+  const overviewAccolades =
+    watch("profileSections.college_overview.accolades") || [];
+  const overviewUnivDetails =
+    watch("profileSections.college_overview.university_details") || [];
+  const overviewAmenities =
+    watch("profileSections.college_overview.amenities") || [];
+  const overviewFacilities =
+    watch("profileSections.college_overview.inside_campus_facilities") || [];
+  const overviewSocialLinks =
+    watch("profileSections.college_overview.social") || [];
+  const overviewReels =
+    watch("profileSections.college_overview.campus_reels") || [];
+  const overviewAmbassadors =
+    watch("profileSections.college_overview.campus_ambassadors") || [];
+  const overviewNearbyAccess =
+    watch("profileSections.college_overview.nearby_access") || [];
+
+  // Commute arrays
+  const commutePickupPoints =
+    watch("profileSections.commute.pickup_points") || [];
+  const commuteRoutes = watch("profileSections.commute.routes") || [];
+  const commuteRules =
+    watch("profileSections.commute.rules_and_code_of_conduct.rules") || [];
+
+  const createEmptyCommuteStop = () => ({
+    point: "",
+    landmark: "",
+    time: "",
+  });
+
+  const createEmptyCommuteRoute = () => ({
+    pickup_point: "",
+    route_name: "",
+    via: "",
+    status: "UNVERIFIED",
+    timings: [
+      { label: "Morning", time: "" },
+      { label: "Evening", time: "" },
+    ],
+    transport_fee: {
+      amount: "",
+      payment_structure: "",
+    },
+    bus_information: {
+      registration_number: "",
+      seats: null,
+      model: "",
+    },
+    morning_pickup_points: [],
+    evening_dropoff_points: [],
+  });
 
   const onSubmit = (data: ProfileFormData) => {
-    // Construct final JSON payload cleanly preserving both standard and complex attributes
-    const profileSectionsPayload = {
-      ...data.profileSections,
-      college_overview: {
-        ...data.profileSections.college_overview,
-        aminities: amenities,
-        nearby_access: {
-          transit: transitAccess,
-          essentials: essentialsAccess,
-        },
-        campus_reels: campusReels,
-      },
-      course_info: {
-        ...data.profileSections.course_info,
-        seatMatrix: seatMatrix,
-        eligibilityCriteria: eligibilityCriteria,
-      },
-      placements: {
-        ...data.profileSections.placements,
-        placementStats: placementStats,
-        placementTrends: placementTrends,
-        notableOffers: notableOffers,
-      },
-      tuition_and_aid: {
-        ...data.profileSections.tuition_and_aid,
-        additionalFees: additionalFees,
-        installments: installmentSchedule,
-        scholarships: scholarshipsList,
-      },
-    };
-
     updateProfile(
       {
         name: data.name,
         code: data.code,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        district: data.district,
-        pinCode: data.pinCode,
-        logoUrl: data.logoUrl ? data.logoUrl : null,
-        coverImageUrl: data.coverImageUrl ? data.coverImageUrl : null,
-        requestedGroupCode: data.requestedGroupCode,
-        profileSections: profileSectionsPayload,
+        leadId: data.leadId || null,
+        addressFromLead: data.addressFromLead,
+        address: data.address || undefined,
+        city: data.city || undefined,
+        state: data.state || undefined,
+        district: data.district || undefined,
+        pinCode: data.pinCode || undefined,
+        logoUrl: data.logoUrl || null,
+        coverImageUrl: data.coverImageUrl || null,
+        requestedGroupCode: data.requestedGroupCode || null,
+        profileSections: data.profileSections,
+        registrationTabs: [
+          "student_code_of_conduct",
+          "happenings",
+          "institutions_across_world",
+          "commute",
+          "college_overview",
+        ],
       },
       {
         onSuccess: () => {
-          toast.success("Profile saved successfully");
-          router.push(getPortalPath(collegeSlug, "/setup/campuses"));
+          toast.success("College Profile configured successfully!");
         },
       },
     );
   };
 
+  const handleImageUpload = async (
+    file: File | null,
+    fieldPath: string,
+    context: string,
+  ) => {
+    if (!file) return;
+
+    try {
+      setUploadingField(fieldPath);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      setValue(fieldPath as any, permanentUrl, {
+        shouldDirty: true,
+      });
+      toast.success("File uploaded to S3");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Sleek Custom Tabs Switcher with glassmorphism accenting */}
-      <div className="flex flex-wrap gap-2 border-b border-border/60 pb-3">
-        {[
-          { id: "basic", label: "Basic Info", icon: Building },
-          { id: "overview", label: "Overview & Vibe", icon: Compass },
-          { id: "admissions", label: "Admissions", icon: GraduationCap },
-          { id: "placements", label: "Placements", icon: TrendingUp },
-          { id: "fees", label: "Tuition & Aid", icon: DollarSign },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
-        })}
+    <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/60">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            College Profile Configuration
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            Set up details, discipline rules, commuting info, and global ties.
+          </p>
+        </div>
+
+        <Button
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending}
+          size="lg"
+          className="shadow-md bg-indigo-600 hover:bg-indigo-700 text-white transition-all font-semibold"
+        >
+          {isPending ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-5 w-5" />
+          )}
+          Save Settings
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* ==================== TAB 1: BASIC INFO ==================== */}
-        {activeTab === "basic" && (
-          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>
-                Core identifiers and administrative contacts of your college.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">College Name</Label>
-                  <Input id="name" {...register("name")} />
-                  {errors.name && (
-                    <p className="text-xs text-destructive">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="code">College Code</Label>
-                  <Input
-                    id="code"
-                    placeholder="AMITY-N"
-                    {...register("code")}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* LEFT NAVIGATION MENU */}
+        <aside className="lg:col-span-3 space-y-2">
+          {PROFILE_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex flex-col items-start gap-1 p-4 rounded-xl text-left transition-all border ${
+                  isActive
+                    ? "bg-indigo-600/5 border-indigo-600/30 text-indigo-900 shadow-sm font-semibold ring-1 ring-indigo-500/20"
+                    : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-muted-foreground"}`}
                   />
-                  {errors.code && (
-                    <p className="text-xs text-destructive">
-                      {errors.code.message}
-                    </p>
-                  )}
+                  <span className="text-sm font-bold">{tab.label}</span>
                 </div>
+                <span className="text-xs text-muted-foreground/85 line-clamp-1 pl-8">
+                  {tab.desc}
+                </span>
+              </button>
+            );
+          })}
+        </aside>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Full Address</Label>
-                  <Input id="address" {...register("address")} />
-                  {errors.address && (
-                    <p className="text-xs text-destructive">
-                      {errors.address.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" {...register("city")} />
-                  {errors.city && (
-                    <p className="text-xs text-destructive">
-                      {errors.city.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="district">District</Label>
-                  <Input id="district" {...register("district")} />
-                  {errors.district && (
-                    <p className="text-xs text-destructive">
-                      {errors.district.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input id="state" {...register("state")} />
-                  {errors.state && (
-                    <p className="text-xs text-destructive">
-                      {errors.state.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pinCode">PIN Code</Label>
-                  <Input id="pinCode" {...register("pinCode")} />
-                  {errors.pinCode && (
-                    <p className="text-xs text-destructive">
-                      {errors.pinCode.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="logoUrl">College Logo URL</Label>
-                  <Input
-                    id="logoUrl"
-                    placeholder="https://example.com/logo.png"
-                    {...register("logoUrl")}
-                  />
-                  {errors.logoUrl && (
-                    <p className="text-xs text-destructive">
-                      {errors.logoUrl.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="coverImageUrl">Cover Image URL</Label>
-                  <Input
-                    id="coverImageUrl"
-                    placeholder="https://example.com/cover.jpg"
-                    {...register("coverImageUrl")}
-                  />
-                  {errors.coverImageUrl && (
-                    <p className="text-xs text-destructive">
-                      {errors.coverImageUrl.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2 md:col-span-2 pt-4 border-t border-border/40">
-                  <Label
-                    htmlFor="requestedGroupCode"
-                    className="flex items-center gap-2"
-                  >
-                    <Building className="h-4 w-4 text-primary" />
-                    Institution Group Join Code (Optional)
-                  </Label>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    If you are joining an existing group of colleges, enter the
-                    Group Code here. You will automatically be added once you
-                    Submit and Go Live!
-                  </p>
-                  <Input
-                    id="requestedGroupCode"
-                    placeholder="e.g. IGC-ABCD-1234"
-                    {...register("requestedGroupCode")}
-                  />
-                  {errors.requestedGroupCode && (
-                    <p className="text-xs text-destructive">
-                      {errors.requestedGroupCode.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ==================== TAB 2: OVERVIEW & EXPERIENCE ==================== */}
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            {/* Dynamic statistics and Read-only metrics banner */}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Card className="border border-border/50 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
-                <CardContent className="pt-6">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Total Courses
-                  </p>
-                  <p className="text-3xl font-extrabold mt-1 text-blue-500">
-                    {profile?.totalCourses ?? 0}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Automatically computed from academic database
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-border/50 bg-gradient-to-br from-green-500/5 to-teal-500/5">
-                <CardContent className="pt-6">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Institution Type
-                  </p>
-                  <p className="text-lg font-bold mt-2 text-green-600 truncate">
-                    {profile?.instituteType || "State University"}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Fetched from linked University details
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-border/50 bg-gradient-to-br from-purple-500/5 to-pink-500/5">
-                <CardContent className="pt-6">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Linked Ambassadors
-                  </p>
-                  <p className="text-3xl font-extrabold mt-1 text-purple-500">
-                    {profile?.campusAmbassadors?.length ?? 0}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Active student/teacher representatives
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle>College Experience & Vibes</CardTitle>
-                <CardDescription>
-                  Tell students about campus life, amenities, and location
-                  guides.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="overview-desc">
-                    Institutional Description
-                  </Label>
-                  <Textarea
-                    id="overview-desc"
-                    placeholder="Provide a compelling story about your university, history, and mission..."
-                    className="min-h-[120px]"
-                    {...register(
-                      "profileSections.college_overview.description",
-                    )}
-                  />
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Award className="h-4 w-4 text-primary" /> Accreditation &
-                      Affiliations
-                    </h3>
+        {/* RIGHT CONTENT PANEL */}
+        <main className="lg:col-span-9">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* 1. BASIC INFO TAB */}
+            {activeTab === "basic" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Building className="h-5 w-5 text-indigo-500" /> Basic
+                    Details
+                  </CardTitle>
+                  <CardDescription>
+                    Primary administrative metadata of your educational
+                    institution.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="accred-img">Badge Image URL</Label>
+                      <Label
+                        htmlFor="name"
+                        className="font-semibold text-foreground"
+                      >
+                        College Name *
+                      </Label>
                       <Input
-                        id="accred-img"
-                        placeholder="https://example.com/naac.png"
-                        {...register(
-                          "profileSections.college_overview.accreditation_and_affilation.img",
-                        )}
+                        id="name"
+                        placeholder="Beacon Institute of Technology"
+                        {...register("name")}
                       />
+                      {errors.name && (
+                        <p className="text-xs text-destructive">
+                          {errors.name.message}
+                        </p>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="accred-desc">Accreditation Summary</Label>
-                      <Textarea
-                        id="accred-desc"
-                        placeholder="NAAC A++ Grade, AICTE Approved..."
-                        {...register(
-                          "profileSections.college_overview.accreditation_and_affilation.description",
-                        )}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Compass className="h-4 w-4 text-primary" /> Inside Campus
-                      Highlights
-                    </h3>
                     <div className="space-y-2">
-                      <Label htmlFor="campus-img">Highlight Cover URL</Label>
+                      <Label
+                        htmlFor="code"
+                        className="font-semibold text-foreground"
+                      >
+                        College Code *
+                      </Label>
                       <Input
-                        id="campus-img"
-                        placeholder="https://example.com/campus-life.jpg"
-                        {...register(
-                          "profileSections.college_overview.inside_campus.img",
-                        )}
+                        id="code"
+                        placeholder="BIT-101"
+                        className="uppercase"
+                        {...register("code")}
                       />
+                      {errors.code && (
+                        <p className="text-xs text-destructive">
+                          {errors.code.message}
+                        </p>
+                      )}
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="campus-desc">Inside Campus Vibe</Label>
-                      <Textarea
-                        id="campus-desc"
-                        placeholder="Modern high-tech corridors, interactive smart boards, greenery..."
-                        {...register(
-                          "profileSections.college_overview.inside_campus.description",
-                        )}
+                      <Label
+                        htmlFor="leadId"
+                        className="font-semibold text-foreground"
+                      >
+                        Lead ID
+                      </Label>
+                      <Input
+                        id="leadId"
+                        placeholder="LEAD-2026-001"
+                        {...register("leadId")}
                       />
                     </div>
-                  </div>
-                </div>
 
-                {/* Institution parameters */}
-                <div className="grid gap-6 md:grid-cols-3 border-t pt-6 border-border/40">
-                  <div className="space-y-2">
-                    <Label htmlFor="details-estd">Established Year</Label>
-                    <Input
-                      id="details-estd"
-                      placeholder="2005"
-                      {...register(
-                        "profileSections.college_overview.instution_details.estd",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="details-gender">Admission Target</Label>
-                    <select
-                      id="details-gender"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      {...register(
-                        "profileSections.college_overview.instution_details.gender",
-                      )}
-                    >
-                      <option value="Co-Ed">Co-Educational</option>
-                      <option value="Girls">Girls Only</option>
-                      <option value="Boys">Boys Only</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="details-avg-stud">
-                      Average Yearly Intake
-                    </Label>
-                    <Input
-                      id="details-avg-stud"
-                      placeholder="1500+"
-                      {...register(
-                        "profileSections.college_overview.instution_details.average_student_count",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="details-campus-size">
-                      Campus Size (Acres)
-                    </Label>
-                    <Input
-                      id="details-campus-size"
-                      placeholder="120 Acres"
-                      {...register(
-                        "profileSections.college_overview.instution_details.campus_size",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="details-outside">
-                      % of Outside State Students
-                    </Label>
-                    <Input
-                      id="details-outside"
-                      placeholder="35%"
-                      {...register(
-                        "profileSections.college_overview.instution_details.Student_from_outside",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="details-map">Google Maps Embed Link</Label>
-                    <Input
-                      id="details-map"
-                      placeholder="https://google.com/maps/..."
-                      {...register(
-                        "profileSections.college_overview.location.map_link",
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Predefined & Custom Amenities tags editor */}
-                <div className="border-t pt-6 border-border/40 space-y-3">
-                  <Label>Interactive Campus Amenities</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {PREDEFINED_AMENITIES.map((item) => {
-                      const isSelected = amenities.includes(item);
-                      return (
-                        <Badge
-                          key={item}
-                          variant={isSelected ? "default" : "outline"}
-                          className="cursor-pointer px-3 py-1 text-xs select-none transition-all duration-200"
-                          onClick={() => toggleAmenity(item)}
-                        >
-                          {isSelected ? "✓ " : "+ "} {item}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-2 max-w-sm">
-                    <Input
-                      placeholder="Add custom amenity..."
-                      value={customAmenity}
-                      onChange={(e) => setCustomAmenity(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={addCustomAmenity}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {amenities
-                      .filter((a) => !PREDEFINED_AMENITIES.includes(a))
-                      .map((custom) => (
-                        <Badge
-                          key={custom}
-                          variant="secondary"
-                          className="pl-3 pr-2 py-1 text-xs flex items-center gap-1"
-                        >
-                          {custom}
-                          <Trash2
-                            className="h-3 w-3 text-destructive cursor-pointer hover:scale-110"
-                            onClick={() => toggleAmenity(custom)}
+                    <div className="flex items-center space-x-2 pt-8">
+                      <Controller
+                        name="addressFromLead"
+                        control={control}
+                        render={({ field }) => (
+                          <input
+                            type="checkbox"
+                            id="addressFromLead"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                           />
-                        </Badge>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Transit & Essentials accessibility grids */}
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Label className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-500" /> Transit
-                        Accessibility
+                        )}
+                      />
+                      <Label
+                        htmlFor="addressFromLead"
+                        className="font-semibold text-sm cursor-pointer select-none"
+                      >
+                        Address source from Lead metadata
                       </Label>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label
+                        htmlFor="address"
+                        className="font-semibold text-foreground"
+                      >
+                        Full Address
+                      </Label>
+                      <Textarea
+                        id="address"
+                        placeholder="123 Tech Campus Road"
+                        rows={2}
+                        {...register("address")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="city"
+                        className="font-semibold text-foreground"
+                      >
+                        City
+                      </Label>
+                      <Input
+                        id="city"
+                        placeholder="Bangalore"
+                        {...register("city")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="state"
+                        className="font-semibold text-foreground"
+                      >
+                        State
+                      </Label>
+                      <Input
+                        id="state"
+                        placeholder="Karnataka"
+                        {...register("state")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="district"
+                        className="font-semibold text-foreground"
+                      >
+                        District
+                      </Label>
+                      <Input
+                        id="district"
+                        placeholder="Bangalore Urban"
+                        {...register("district")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="pinCode"
+                        className="font-semibold text-foreground"
+                      >
+                        Pin Code
+                      </Label>
+                      <Input
+                        id="pinCode"
+                        placeholder="560001"
+                        {...register("pinCode")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="logoUrl"
+                        className="font-semibold text-foreground"
+                      >
+                        Logo Image URL
+                      </Label>
+                      <Input
+                        id="logoUrl"
+                        placeholder="https://example.com/logo.png"
+                        {...register("logoUrl")}
+                      />
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingField === "logoUrl"}
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "logoUrl",
+                            "registration/logo",
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="coverImageUrl"
+                        className="font-semibold text-foreground"
+                      >
+                        Cover Image URL
+                      </Label>
+                      <Input
+                        id="coverImageUrl"
+                        placeholder="https://example.com/cover.png"
+                        {...register("coverImageUrl")}
+                      />
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingField === "coverImageUrl"}
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "coverImageUrl",
+                            "registration/cover",
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label
+                        htmlFor="requestedGroupCode"
+                        className="font-semibold text-foreground"
+                      >
+                        Requested Group Code
+                      </Label>
+                      <Input
+                        id="requestedGroupCode"
+                        placeholder="e.g. GROUP-ABC"
+                        {...register("requestedGroupCode")}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 2. COLLEGE OVERVIEW TAB */}
+            {activeTab === "college_overview" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Compass className="h-5 w-5 text-indigo-500" /> College
+                    Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Configure the public overview details displayed on the
+                    campus landing profile.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="font-semibold">
+                        Alternative College Name
+                      </Label>
+                      <Input
+                        placeholder="Alt Name"
+                        {...register(
+                          "profileSections.college_overview.alt_name",
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold">
+                        Display Location Name
+                      </Label>
+                      <Input
+                        placeholder="Gachibowli, Hyderabad"
+                        {...register(
+                          "profileSections.college_overview.location_name",
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold">College Type</Label>
+                      <Input
+                        placeholder="Public / Private"
+                        {...register("profileSections.college_overview.type")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold">Established Year</Label>
+                      <Input
+                        type="number"
+                        placeholder="2000"
+                        {...register(
+                          "profileSections.college_overview.established",
+                          { valueAsNumber: true },
+                        )}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label className="font-semibold">
+                        About / Description
+                      </Label>
+                      <Textarea
+                        placeholder="Describe the institution..."
+                        rows={4}
+                        {...register("profileSections.college_overview.about")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Accolades Section */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Accolades & Ratings
+                      </h4>
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() =>
-                          setTransitAccess([
-                            ...transitAccess,
-                            { type: "Metro", name: "", distance: "" },
-                          ])
-                        }
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.accolades",
+                            [
+                              ...overviewAccolades,
+                              { tag: "", title: "", image: "" },
+                            ],
+                          );
+                        }}
                       >
-                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Transit
+                        <Plus className="h-4 w-4 mr-2" /> Add Accolade
                       </Button>
                     </div>
-                    {transitAccess.map((row, idx) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        <select
-                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-                          value={row.type}
-                          onChange={(e) => {
-                            const updated = [...transitAccess];
-                            updated[idx].type = e.target.value;
-                            setTransitAccess(updated);
-                          }}
-                        >
-                          <option value="Metro">Metro</option>
-                          <option value="Bus Station">Bus</option>
-                          <option value="Railway">Railway</option>
-                          <option value="Airport">Airport</option>
-                        </select>
-                        <Input
-                          placeholder="Station Name"
-                          className="h-8 text-xs"
-                          value={row.name}
-                          onChange={(e) => {
-                            const updated = [...transitAccess];
-                            updated[idx].name = e.target.value;
-                            setTransitAccess(updated);
-                          }}
-                        />
-                        <Input
-                          placeholder="Distance (e.g. 2.5 km)"
-                          className="h-8 text-xs w-28"
-                          value={row.distance}
-                          onChange={(e) => {
-                            const updated = [...transitAccess];
-                            updated[idx].distance = e.target.value;
-                            setTransitAccess(updated);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="text-destructive hover:scale-105"
-                          onClick={() =>
-                            setTransitAccess(
-                              transitAccess.filter((_, i) => i !== idx),
-                            )
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Label className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-green-500" /> Nearby
-                        Essentials
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setEssentialsAccess([
-                            ...essentialsAccess,
-                            { type: "Hospital", name: "", distance: "" },
-                          ])
-                        }
-                      >
-                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Essential
-                      </Button>
-                    </div>
-                    {essentialsAccess.map((row, idx) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        <select
-                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-                          value={row.type}
-                          onChange={(e) => {
-                            const updated = [...essentialsAccess];
-                            updated[idx].type = e.target.value;
-                            setEssentialsAccess(updated);
-                          }}
-                        >
-                          <option value="Hospital">Hospital</option>
-                          <option value="Pharmacy">Pharmacy</option>
-                          <option value="Mall">Mall/Market</option>
-                          <option value="ATM">ATM / Bank</option>
-                        </select>
-                        <Input
-                          placeholder="Name"
-                          className="h-8 text-xs"
-                          value={row.name}
-                          onChange={(e) => {
-                            const updated = [...essentialsAccess];
-                            updated[idx].name = e.target.value;
-                            setEssentialsAccess(updated);
-                          }}
-                        />
-                        <Input
-                          placeholder="Distance (e.g. 1.2 km)"
-                          className="h-8 text-xs w-28"
-                          value={row.distance}
-                          onChange={(e) => {
-                            const updated = [...essentialsAccess];
-                            updated[idx].distance = e.target.value;
-                            setEssentialsAccess(updated);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="text-destructive hover:scale-105"
-                          onClick={() =>
-                            setEssentialsAccess(
-                              essentialsAccess.filter((_, i) => i !== idx),
-                            )
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Campus Ambassadors listing from database */}
-                {profile?.campusAmbassadors &&
-                  profile.campusAmbassadors.length > 0 && (
-                    <div className="border-t pt-6 border-border/40 space-y-4">
-                      <Label className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-purple-500" /> Campus
-                        Ambassadors (Active representatives from DB)
-                      </Label>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        {profile.campusAmbassadors.map((amb: any) => (
+                    {overviewAccolades.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        No accolades configured yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {overviewAccolades.map((item: any, idx: number) => (
                           <div
-                            key={amb.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/20"
+                            key={idx}
+                            className="flex gap-3 items-center border p-3 rounded-lg bg-muted/20"
                           >
-                            <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center font-bold text-purple-600">
-                              {amb.fullName.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold">
-                                {amb.fullName}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {amb.email}
-                              </p>
-                              {amb.phoneNumber && (
-                                <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                                  {amb.phoneNumber}
-                                </p>
+                            <Input
+                              placeholder="Tag (e.g. Rank)"
+                              className="max-w-[150px]"
+                              {...register(
+                                `profileSections.college_overview.accolades.${idx}.tag`,
                               )}
+                            />
+                            <Input
+                              placeholder="Title (e.g. MAHE Rank 3)"
+                              className="flex-1"
+                              {...register(
+                                `profileSections.college_overview.accolades.${idx}.title`,
+                              )}
+                            />
+                            <Input
+                              placeholder="Image Url"
+                              className="flex-1"
+                              {...register(
+                                `profileSections.college_overview.accolades.${idx}.image`,
+                              )}
+                            />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="max-w-[220px]"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.college_overview.accolades.${idx}.image`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.college_overview.accolades.${idx}.image`,
+                                  `college-overview/accolades-${idx}`,
+                                )
+                              }
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                setValue(
+                                  "profileSections.college_overview.accolades",
+                                  overviewAccolades.filter(
+                                    (_: any, i: number) => i !== idx,
+                                  ),
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* University Details Section */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        University Fact Sheet
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.university_details",
+                            [...overviewUnivDetails, { label: "", value: "" }],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Stat
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewUnivDetails.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex gap-2 items-center border p-2 rounded-lg bg-muted/10"
+                        >
+                          <Input
+                            placeholder="Label"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.university_details.${idx}.label`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Value"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.university_details.${idx}.value`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.university_details",
+                                overviewUnivDetails.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Amenities Section */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Campus Amenities
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.amenities",
+                            [...overviewAmenities, { label: "", icon: "" }],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Amenity
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Wi-Fi and other default amenities use fixed logos. For
+                      newly added amenities, you can upload a custom logo.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewAmenities.map((item: any, idx: number) => {
+                        const amenityLabel = item?.label || "Amenity";
+                        const amenityIcon = resolveCollegeAmenityIcon(
+                          item?.icon,
+                          amenityLabel,
+                        );
+                        const isFixedAmenity = isFixedCollegeAmenity(
+                          amenityLabel,
+                          item?.icon,
+                        );
+
+                        return (
+                          <div
+                            key={idx}
+                            className="space-y-2 border p-3 rounded-lg bg-muted/10"
+                          >
+                            <div className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2">
+                              {amenityIcon ? (
+                                <img
+                                  src={amenityIcon}
+                                  alt={amenityLabel}
+                                  className="h-9 w-9 rounded-md object-contain"
+                                />
+                              ) : (
+                                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
+                                  Logo
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {amenityLabel}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {isFixedAmenity
+                                    ? "Fixed global logo"
+                                    : "Upload a custom logo"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                placeholder="Amenity Label"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.amenities.${idx}.label`,
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.college_overview.amenities",
+                                    overviewAmenities.filter(
+                                      (_: any, i: number) => i !== idx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                            {!isFixedAmenity && (
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.amenities.${idx}.icon`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.amenities.${idx}.icon`,
+                                    `college-overview/amenities-${idx}`,
+                                  )
+                                }
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Inside Campus Facilities */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Campus Facilities & Outlets
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.inside_campus_facilities",
+                            [
+                              ...overviewFacilities,
+                              { label: "", subtitle: "", icon: "" },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Facility
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewFacilities.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex gap-2 items-center border p-2 rounded-lg bg-muted/10"
+                        >
+                          <Input
+                            placeholder="Facility Name"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.inside_campus_facilities.${idx}.label`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Subtitle"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.inside_campus_facilities.${idx}.subtitle`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Icon Url / Key"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.inside_campus_facilities.${idx}.icon`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.inside_campus_facilities",
+                                overviewFacilities.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Social Links
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.college_overview.social", [
+                            ...overviewSocialLinks,
+                            { platform: "", icon: "", url: "" },
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Social Link
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      {overviewSocialLinks.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="grid gap-2 rounded-lg border bg-muted/10 p-3 md:grid-cols-[1fr_1fr_2fr_auto]"
+                        >
+                          <Input
+                            placeholder="Platform"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.platform`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Icon"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.icon`,
+                            )}
+                          />
+                          <Input
+                            placeholder="https://example.com/profile"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.social.${idx}.url`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.social",
+                                overviewSocialLinks.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location Settings */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      Geographic & Map Coordinates
+                    </h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label>Google Maps Embed or Link</Label>
+                        <Input
+                          placeholder="Google Maps link"
+                          {...register(
+                            "profileSections.college_overview.location.map_link",
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Address String</Label>
+                        <Input
+                          placeholder="Map Address"
+                          {...register(
+                            "profileSections.college_overview.location.address",
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nearby Access Section */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Nearby Establishments
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.nearby_access",
+                            [
+                              ...overviewNearbyAccess,
+                              { category: "Transit", items: [] },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Category Group
+                      </Button>
+                    </div>
+                    {overviewNearbyAccess.map(
+                      (catGroup: any, catIdx: number) => (
+                        <div
+                          key={catIdx}
+                          className="border p-4 rounded-lg bg-muted/10 space-y-3"
+                        >
+                          <div className="flex justify-between items-center gap-3">
+                            <Input
+                              placeholder="Category Name (e.g. Hospital)"
+                              className="h-9 font-bold max-w-[200px]"
+                              {...register(
+                                `profileSections.college_overview.nearby_access.${catIdx}.category`,
+                              )}
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const currentItems = catGroup.items || [];
+                                  setValue(
+                                    `profileSections.college_overview.nearby_access.${catIdx}.items`,
+                                    [
+                                      ...currentItems,
+                                      { name: "", distance: "" },
+                                    ],
+                                  );
+                                }}
+                              >
+                                Add Item
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.college_overview.nearby_access",
+                                    overviewNearbyAccess.filter(
+                                      (_: any, i: number) => i !== catIdx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            {(catGroup.items || []).map(
+                              (item: any, itemIdx: number) => (
+                                <div
+                                  key={itemIdx}
+                                  className="flex gap-2 items-center pl-4"
+                                >
+                                  <Input
+                                    placeholder="Name (e.g. Fortis Hospital)"
+                                    className="h-8 text-sm flex-1"
+                                    {...register(
+                                      `profileSections.college_overview.nearby_access.${catIdx}.items.${itemIdx}.name`,
+                                    )}
+                                  />
+                                  <Input
+                                    placeholder="Distance (e.g. 2.4 km)"
+                                    className="h-8 text-sm max-w-[120px]"
+                                    {...register(
+                                      `profileSections.college_overview.nearby_access.${catIdx}.items.${itemIdx}.distance`,
+                                    )}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setValue(
+                                        `profileSections.college_overview.nearby_access.${catIdx}.items`,
+                                        catGroup.items.filter(
+                                          (_: any, i: number) => i !== itemIdx,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  </Button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+
+                  {/* Campus Ambassadors */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Campus Ambassadors
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.campus_ambassadors",
+                            [
+                              ...overviewAmbassadors,
+                              {
+                                name: "",
+                                course: "",
+                                district: "",
+                                state: "",
+                                image: "",
+                                message_link: "",
+                              },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Ambassador
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {overviewAmbassadors.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="border p-4 rounded-xl bg-muted/20 grid gap-3 md:grid-cols-2"
+                        >
+                          <div className="space-y-1">
+                            <Label className="text-xs">Full Name</Label>
+                            <Input
+                              placeholder="Arshal Mathew"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.name`,
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Course Name</Label>
+                            <Input
+                              placeholder="B.Sc Nursing"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.course`,
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">District</Label>
+                            <Input
+                              placeholder="Palakkad"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.district`,
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">State</Label>
+                            <Input
+                              placeholder="Kerala"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.state`,
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Image Link</Label>
+                            <Input
+                              placeholder="https://example.com/ambassador.jpg"
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.image`,
+                              )}
+                            />
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              disabled={
+                                uploadingField ===
+                                `profileSections.college_overview.campus_ambassadors.${idx}.image`
+                              }
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  `profileSections.college_overview.campus_ambassadors.${idx}.image`,
+                                  `college-overview/ambassadors-${idx}`,
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">
+                              Message/Chat CTA link
+                            </Label>
+                            <Input
+                              placeholder="https://wa.me/..."
+                              className="h-9"
+                              {...register(
+                                `profileSections.college_overview.campus_ambassadors.${idx}.message_link`,
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-2 flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="text-destructive h-9"
+                              onClick={() => {
+                                setValue(
+                                  "profileSections.college_overview.campus_ambassadors",
+                                  overviewAmbassadors.filter(
+                                    (_: any, i: number) => i !== idx,
+                                  ),
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Remove
+                              Ambassador
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Campus Reels Section */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Campus Reels & Videos
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.campus_reels",
+                            [
+                              ...overviewReels,
+                              {
+                                title: "",
+                                duration: "",
+                                date: "",
+                                video: "",
+                                thumbnail: "",
+                                type: "youtube",
+                              },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Reel
+                      </Button>
+                    </div>
+                    {overviewReels.map((reel: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="border p-4 rounded-lg bg-muted/10 grid gap-3 md:grid-cols-2"
+                      >
+                        <div className="space-y-1">
+                          <Label className="text-xs">Title</Label>
+                          <Input
+                            placeholder="Vydehi Institute Welcome"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.title`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Video Source Link</Label>
+                          <Input
+                            placeholder="YouTube or Mp4 link"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.video`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Duration text</Label>
+                          <Input
+                            placeholder="1 min 12 secs"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.duration`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Date</Label>
+                          <Input
+                            placeholder="29th March"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.date`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Thumbnail</Label>
+                          <Input
+                            placeholder="Thumbnail image URL"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.thumbnail`,
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Video Type</Label>
+                          <select
+                            className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            {...register(
+                              `profileSections.college_overview.campus_reels.${idx}.type`,
+                            )}
+                          >
+                            <option value="youtube">YouTube</option>
+                            <option value="mp4">MP4 Video</option>
+                          </select>
+                        </div>
+                        <div className="md:col-span-2 flex justify-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="text-destructive h-9"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.campus_reels",
+                                overviewReels.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Remove Reel
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 3. STUDENT CONDUCT TAB */}
+            {activeTab === "student_code_of_conduct" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-indigo-500" /> Student
+                    Code of Conduct
+                  </CardTitle>
+                  <CardDescription>
+                    Specify the code of discipline rules, instructions, and
+                    standard regulations.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="section_title" className="font-semibold">
+                        Conduct Title
+                      </Label>
+                      <Input
+                        id="section_title"
+                        placeholder="General Rules of Discipline"
+                        {...register(
+                          "profileSections.student_code_of_conduct.section_title",
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                      <Label className="font-bold">Rules List</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.student_code_of_conduct.rules",
+                            [...rules, { number: rules.length + 1, rule: "" }],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Rule
+                      </Button>
+                    </div>
+
+                    {rules.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5">
+                        No rules added yet. Click &apos;Add Rule&apos; to create
+                        code of conduct rules.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {rules.map((ruleItem: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="flex gap-3 items-start border p-3 rounded-lg bg-muted/10"
+                          >
+                            <div className="font-bold text-sm text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-md mt-1">
+                              #{idx + 1}
+                            </div>
+                            <Textarea
+                              placeholder="Describe this rule details..."
+                              className="flex-1 min-h-[60px]"
+                              {...register(
+                                `profileSections.student_code_of_conduct.rules.${idx}.rule`,
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 mt-1"
+                              onClick={() => {
+                                const newRules = rules
+                                  .filter((_: any, i: number) => i !== idx)
+                                  .map((r: any, idxPos: number) => ({
+                                    ...r,
+                                    number: idxPos + 1,
+                                  }));
+                                setValue(
+                                  "profileSections.student_code_of_conduct.rules",
+                                  newRules,
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 4. HAPPENINGS TAB */}
+            {activeTab === "happenings" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Play className="h-5 w-5 text-indigo-500" /> Happenings &
+                    News
+                  </CardTitle>
+                  <CardDescription>
+                    Publish events, certifications, achievements, and
+                    notifications for prospects.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="happeningsTitle" className="font-semibold">
+                      Section Heading Title
+                    </Label>
+                    <Input
+                      id="happeningsTitle"
+                      placeholder="Happenings"
+                      {...register("profileSections.happenings.title")}
+                    />
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold">Happenings Cards</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.happenings.happenings", [
+                            ...happeningsList,
+                            {
+                              category: "Certification",
+                              date: "",
+                              title: "",
+                              description: "",
+                              image: "",
+                              link: "",
+                            },
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Happening
+                      </Button>
+                    </div>
+
+                    {happeningsList.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5">
+                        No events configured. Add first happening to highlight
+                        campus news.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {happeningsList.map((happening: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="border p-4 rounded-xl bg-muted/20 space-y-3"
+                          >
+                            <div className="flex justify-between items-center">
+                              <h5 className="font-bold text-sm text-indigo-800">
+                                Happening #{idx + 1}
+                              </h5>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive h-8"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.happenings.happenings",
+                                    happeningsList.filter(
+                                      (_: any, i: number) => i !== idx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                              </Button>
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Category</Label>
+                                <Input
+                                  placeholder="e.g. Certification / Event"
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.category`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Date Label</Label>
+                                <Input
+                                  placeholder="Oct 12, 2023"
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.date`,
+                                  )}
+                                />
+                              </div>
+                              <div className="md:col-span-2 space-y-1">
+                                <Label className="text-xs">Title</Label>
+                                <Input
+                                  placeholder="Professor Ratna awarded international certification"
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.title`,
+                                  )}
+                                />
+                              </div>
+                              <div className="md:col-span-2 space-y-1">
+                                <Label className="text-xs">Description</Label>
+                                <Textarea
+                                  placeholder="Details about this achievement..."
+                                  rows={2}
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.description`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Image Link URL
+                                </Label>
+                                <Input
+                                  placeholder="https://example.com/image.jpg"
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.image`,
+                                  )}
+                                />
+                                <Input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp"
+                                  disabled={
+                                    uploadingField ===
+                                    `profileSections.happenings.happenings.${idx}.image`
+                                  }
+                                  onChange={(e) =>
+                                    handleImageUpload(
+                                      e.target.files?.[0] ?? null,
+                                      `profileSections.happenings.happenings.${idx}.image`,
+                                      `happenings/items-${idx}`,
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Read More Link (Link)
+                                </Label>
+                                <Input
+                                  placeholder="https://example.com/details"
+                                  {...register(
+                                    `profileSections.happenings.happenings.${idx}.link`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 5. GLOBAL PRESENCE TAB */}
+            {activeTab === "institutions_across_world" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-indigo-500" /> Institutions
+                    Across the World
+                  </CardTitle>
+                  <CardDescription>
+                    {globalInstitutionsGroup
+                      ? "This college is part of an institution group — the institutions below are computed live from that group, not editable here."
+                      : "Configure global collaborations, student exchange programs, or dual degree colleges."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {globalInstitutionsGroup ? (
+                    <div className="space-y-4">
+                      <div className="rounded-lg border bg-primary/5 p-4 space-y-1">
+                        <p className="text-sm font-semibold">
+                          {globalInstitutionsGroup.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {globalInstitutionsGroup.groupCode}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Institutions ({globalInstitutions.length})
+                        </Label>
+                        {globalInstitutions.map((inst: any) => (
+                          <div
+                            key={inst.id}
+                            className="flex items-center justify-between rounded-lg border bg-background/40 px-3 py-2 text-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              {inst.logoUrl ? (
+                                <img
+                                  src={inst.logoUrl}
+                                  alt={inst.name}
+                                  className="h-6 w-6 rounded object-cover"
+                                />
+                              ) : (
+                                <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
+                                  <Building className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-medium leading-none">
+                                    {inst.name}
+                                  </p>
+                                  {inst.selected && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px]"
+                                    >
+                                      Your College
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {[inst.city, inst.state]
+                                    .filter(Boolean)
+                                    .join(", ") || "—"}
+                                  {inst.selected &&
+                                    ` · ${inst.departments?.length ?? 0} department(s)`}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="globalTitle" className="font-semibold">
+                          Section Title
+                        </Label>
+                        <Input
+                          id="globalTitle"
+                          placeholder="Institution Across the World"
+                          {...register(
+                            "profileSections.institutions_across_world.title",
+                          )}
+                        />
+                      </div>
 
-                {/* Video reels */}
-                <div className="border-t pt-6 border-border/40 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="flex items-center gap-2">
-                      <Play className="h-4 w-4 text-red-500" /> Campus Short
-                      Video Reels
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setCampusReels([
-                          ...campusReels,
-                          { title: "", link: "" },
-                        ])
-                      }
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Reel
-                    </Button>
-                  </div>
-                  {campusReels.map((reel, idx) => (
-                    <div key={idx} className="flex gap-4 items-center">
+                      <div className="space-y-4 pt-4 border-t border-border/40">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-bold">
+                            Affiliated Institutions
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.institutions_across_world.institutions",
+                                [
+                                  ...globalInstitutions,
+                                  { name: "", country: "", logo: "" },
+                                ],
+                              );
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add Partner
+                          </Button>
+                        </div>
+
+                        {globalInstitutions.length === 0 ? (
+                          <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5">
+                            No global institutions configured. Add a partner to
+                            highlight international footprint.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {globalInstitutions.map(
+                              (inst: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-3 items-center border p-3 rounded-lg bg-muted/10"
+                                >
+                                  <Input
+                                    placeholder="Institution Name"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.name`,
+                                    )}
+                                  />
+                                  <Input
+                                    placeholder="Country / Region"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.country`,
+                                    )}
+                                  />
+                                  <Input
+                                    placeholder="Logo URL"
+                                    className="flex-1"
+                                    {...register(
+                                      `profileSections.institutions_across_world.institutions.${idx}.logo`,
+                                    )}
+                                  />
+                                  <Input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="max-w-[220px]"
+                                    disabled={
+                                      uploadingField ===
+                                      `profileSections.institutions_across_world.institutions.${idx}.logo`
+                                    }
+                                    onChange={(e) =>
+                                      handleImageUpload(
+                                        e.target.files?.[0] ?? null,
+                                        `profileSections.institutions_across_world.institutions.${idx}.logo`,
+                                        `institutions/logos-${idx}`,
+                                      )
+                                    }
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      setValue(
+                                        "profileSections.institutions_across_world.institutions",
+                                        globalInstitutions.filter(
+                                          (_: any, i: number) => i !== idx,
+                                        ),
+                                      );
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 6. COMMUTE TAB */}
+            {activeTab === "commute" && (
+              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-indigo-500" /> Commute &
+                    Accessibility
+                  </CardTitle>
+                  <CardDescription>
+                    Configure pickup points, route timings, bus details, and
+                    commuter conduct policy.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="commuteTitle" className="font-semibold">
+                        Section Title
+                      </Label>
                       <Input
-                        placeholder="Reel Title (e.g. Campus tour)"
-                        className="h-9 text-xs"
-                        value={reel.title}
-                        onChange={(e) => {
-                          const updated = [...campusReels];
-                          updated[idx].title = e.target.value;
-                          setCampusReels(updated);
-                        }}
+                        id="commuteTitle"
+                        placeholder="Commute"
+                        {...register("profileSections.commute.title")}
                       />
-                      <Input
-                        placeholder="Video Link (e.g. https://youtube.com/shorts/...)"
-                        className="h-9 text-xs flex-1"
-                        value={reel.link}
-                        onChange={(e) => {
-                          const updated = [...campusReels];
-                          updated[idx].link = e.target.value;
-                          setCampusReels(updated);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="text-destructive hover:scale-105"
-                        onClick={() =>
-                          setCampusReels(
-                            campusReels.filter((_, i) => i !== idx),
-                          )
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold">
+                        Selected Pickup Point
+                      </Label>
+                      <Input
+                        placeholder="HSR Layout"
+                        {...register(
+                          "profileSections.commute.selected_pickup_point",
+                        )}
+                      />
+                    </div>
+                  </div>
 
-                {/* Social links */}
-                <div className="grid gap-6 md:grid-cols-2 border-t pt-6 border-border/40">
-                  <div className="space-y-2">
-                    <Label htmlFor="linkedin-url">LinkedIn Profile</Label>
-                    <Input
-                      id="linkedin-url"
-                      placeholder="https://linkedin.com/school/..."
-                      {...register(
-                        "profileSections.college_overview.connect.linkedin",
-                      )}
-                    />
+                  {/* Pickup points */}
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Pickup Points
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.commute.pickup_points", [
+                            ...commutePickupPoints,
+                            "",
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Pickup Point
+                      </Button>
+                    </div>
+                    {commutePickupPoints.map((item: string, idx: number) => (
+                      <div key={idx} className="flex gap-2 items-center pl-2">
+                        <Input
+                          placeholder="Pickup point name"
+                          className="h-9 flex-1"
+                          value={item || ""}
+                          onChange={(e) => {
+                            const next = [...commutePickupPoints];
+                            next[idx] = e.target.value;
+                            setValue(
+                              "profileSections.commute.pickup_points",
+                              next,
+                            );
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setValue(
+                              "profileSections.commute.pickup_points",
+                              commutePickupPoints.filter(
+                                (_: any, i: number) => i !== idx,
+                              ),
+                            );
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="insta-url">Instagram Page</Label>
-                    <Input
-                      id="insta-url"
-                      placeholder="https://instagram.com/..."
-                      {...register(
-                        "profileSections.college_overview.connect.instagram",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="twitter-url">Twitter / X Handle</Label>
-                    <Input
-                      id="twitter-url"
-                      placeholder="https://twitter.com/..."
-                      {...register(
-                        "profileSections.college_overview.connect.twitter",
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="website-url">Official Website</Label>
-                    <Input
-                      id="website-url"
-                      placeholder="https://example.edu"
-                      {...register(
-                        "profileSections.college_overview.connect.website",
-                      )}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* ==================== TAB 3: ADMISSIONS ==================== */}
-        {activeTab === "admissions" && (
-          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle>Admissions & Seat Quota Matrix</CardTitle>
-              <CardDescription>
-                Manage seats allocations, student quotas, and entrance
-                requirements.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Quota Matrix */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-blue-500" /> Quota Seat
-                    Matrix
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setSeatMatrix([
-                        ...seatMatrix,
-                        { quota: "General", total: "", open: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Quota
-                  </Button>
-                </div>
-                {seatMatrix.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
-                  >
-                    <select
-                      className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                      value={row.quota}
-                      onChange={(e) => {
-                        const updated = [...seatMatrix];
-                        updated[idx].quota = e.target.value;
-                        setSeatMatrix(updated);
-                      }}
-                    >
-                      <option value="General">General Quota</option>
-                      <option value="Management">Management Quota</option>
-                      <option value="NRI">NRI Quota</option>
-                      <option value="State Domicile">State Domicile</option>
-                      <option value="Sports/ECA">Sports/ECA Quota</option>
-                    </select>
-                    <Input
-                      placeholder="Total Seats"
-                      className="h-9"
-                      value={row.total}
-                      onChange={(e) => {
-                        const updated = [...seatMatrix];
-                        updated[idx].total = e.target.value;
-                        setSeatMatrix(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Open Seats"
-                      className="h-9"
-                      value={row.open}
-                      onChange={(e) => {
-                        const updated = [...seatMatrix];
-                        updated[idx].open = e.target.value;
-                        setSeatMatrix(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setSeatMatrix(seatMatrix.filter((_, i) => i !== idx))
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  {/* Routes */}
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                        Routes
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue("profileSections.commute.routes", [
+                            ...commuteRoutes,
+                            createEmptyCommuteRoute(),
+                          ]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Route
+                      </Button>
+                    </div>
+                    {commuteRoutes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground border border-dashed rounded-lg p-4">
+                        No commute route configured yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {commuteRoutes.map((route: any, routeIdx: number) => (
+                          <div
+                            key={routeIdx}
+                            className="border rounded-xl p-4 space-y-4 bg-muted/15"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <h5 className="font-semibold text-indigo-900">
+                                Route #{routeIdx + 1}
+                              </h5>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive"
+                                onClick={() => {
+                                  setValue(
+                                    "profileSections.commute.routes",
+                                    commuteRoutes.filter(
+                                      (_: any, i: number) => i !== routeIdx,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Remove Route
+                              </Button>
+                            </div>
 
-              {/* Eligibility checklist */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-purple-500" />{" "}
-                    Eligibility Checkpoints
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setEligibilityCriteria([
-                        ...eligibilityCriteria,
-                        { studentType: "Indian Local", criteria: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Eligibility
-                  </Button>
-                </div>
-                {eligibilityCriteria.map((row, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
-                    <select
-                      className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-44"
-                      value={row.studentType}
-                      onChange={(e) => {
-                        const updated = [...eligibilityCriteria];
-                        updated[idx].studentType = e.target.value;
-                        setEligibilityCriteria(updated);
-                      }}
-                    >
-                      <option value="Indian Local">Indian (Local)</option>
-                      <option value="State Resident">State Resident</option>
-                      <option value="International">International</option>
-                      <option value="Quota Specific">Quota Specific</option>
-                    </select>
-                    <Input
-                      placeholder="Minimum 60% in 12th Board examinations..."
-                      className="h-9 flex-1"
-                      value={row.criteria}
-                      onChange={(e) => {
-                        const updated = [...eligibilityCriteria];
-                        updated[idx].criteria = e.target.value;
-                        setEligibilityCriteria(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setEligibilityCriteria(
-                          eligibilityCriteria.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Pickup Point</Label>
+                                <Input
+                                  placeholder="HSR Layout"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.pickup_point`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Route Name</Label>
+                                <Input
+                                  placeholder="Route 12 - HSR Layout"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.route_name`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Via</Label>
+                                <Input
+                                  placeholder="Via BTM Layout, Madivala"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.via`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Status</Label>
+                                <select
+                                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.status`,
+                                  )}
+                                >
+                                  <option value="VERIFIED">VERIFIED</option>
+                                  <option value="UNVERIFIED">UNVERIFIED</option>
+                                </select>
+                              </div>
+                            </div>
 
-              <div className="border-t pt-6 border-border/40 space-y-2">
-                <Label htmlFor="eligibility-sum">
-                  Overview of Admissions Criteria
-                </Label>
-                <Textarea
-                  id="eligibility-sum"
-                  placeholder="Provide brief guidelines about entrance tests, interviews, and timeline..."
-                  {...register(
-                    "profileSections.course_info.eligibilitySummary",
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Morning Timing Window
+                                </Label>
+                                <Input
+                                  placeholder="6:45 AM - 8:10 AM"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.timings.0.time`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Evening Timing Window
+                                </Label>
+                                <Input
+                                  placeholder="4:30 PM - 6:15 PM"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.timings.1.time`,
+                                  )}
+                                />
+                              </div>
+                            </div>
 
-        {/* ==================== TAB 4: PLACEMENTS ==================== */}
-        {activeTab === "placements" && (
-          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle>Placements & Recruiter Highlights</CardTitle>
-              <CardDescription>
-                Upload stats to show off average packages and notable corporate
-                offers.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="placement-rep">
-                    Placement Report (PDF Link)
-                  </Label>
-                  <Input
-                    id="placement-rep"
-                    placeholder="https://example.com/placement-report.pdf"
-                    {...register(
-                      "profileSections.placements.placementReportUrl",
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Transport Fee Amount
+                                </Label>
+                                <Input
+                                  placeholder="₹25,000 / Year"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.transport_fee.amount`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Payment Structure
+                                </Label>
+                                <Input
+                                  placeholder="Installment details"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.transport_fee.payment_structure`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Bus Registration
+                                </Label>
+                                <Input
+                                  placeholder="KA-01-F-4829"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.registration_number`,
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Seats</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="42"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.seats`,
+                                    { valueAsNumber: true },
+                                  )}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Model</Label>
+                                <Input
+                                  placeholder="Tata Marcopolo (AC)"
+                                  {...register(
+                                    `profileSections.commute.routes.${routeIdx}.bus_information.model`,
+                                  )}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2 border-t border-border/40">
+                              <div className="flex items-center justify-between">
+                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                  Morning Pickup Points
+                                </h6>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const next = [...commuteRoutes];
+                                    const current =
+                                      next[routeIdx]?.morning_pickup_points ||
+                                      [];
+                                    next[routeIdx] = {
+                                      ...next[routeIdx],
+                                      morning_pickup_points: [
+                                        ...current,
+                                        createEmptyCommuteStop(),
+                                      ],
+                                    };
+                                    setValue(
+                                      "profileSections.commute.routes",
+                                      next,
+                                    );
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                                  Morning Stop
+                                </Button>
+                              </div>
+                              {(route.morning_pickup_points || []).map(
+                                (stop: any, stopIdx: number) => (
+                                  <div
+                                    key={stopIdx}
+                                    className="grid gap-2 md:grid-cols-3"
+                                  >
+                                    <Input
+                                      placeholder="Point"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.point`,
+                                      )}
+                                    />
+                                    <Input
+                                      placeholder="Landmark"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.landmark`,
+                                      )}
+                                    />
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Time"
+                                        {...register(
+                                          `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.time`,
+                                        )}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = [...commuteRoutes];
+                                          const current =
+                                            next[routeIdx]
+                                              ?.morning_pickup_points || [];
+                                          next[routeIdx] = {
+                                            ...next[routeIdx],
+                                            morning_pickup_points:
+                                              current.filter(
+                                                (_: any, i: number) =>
+                                                  i !== stopIdx,
+                                              ),
+                                          };
+                                          setValue(
+                                            "profileSections.commute.routes",
+                                            next,
+                                          );
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+
+                            <div className="space-y-3 pt-2 border-t border-border/40">
+                              <div className="flex items-center justify-between">
+                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                  Evening Dropoff Points
+                                </h6>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const next = [...commuteRoutes];
+                                    const current =
+                                      next[routeIdx]?.evening_dropoff_points ||
+                                      [];
+                                    next[routeIdx] = {
+                                      ...next[routeIdx],
+                                      evening_dropoff_points: [
+                                        ...current,
+                                        createEmptyCommuteStop(),
+                                      ],
+                                    };
+                                    setValue(
+                                      "profileSections.commute.routes",
+                                      next,
+                                    );
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                                  Evening Stop
+                                </Button>
+                              </div>
+                              {(route.evening_dropoff_points || []).map(
+                                (stop: any, stopIdx: number) => (
+                                  <div
+                                    key={stopIdx}
+                                    className="grid gap-2 md:grid-cols-3"
+                                  >
+                                    <Input
+                                      placeholder="Point"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.point`,
+                                      )}
+                                    />
+                                    <Input
+                                      placeholder="Landmark"
+                                      {...register(
+                                        `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.landmark`,
+                                      )}
+                                    />
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="Time"
+                                        {...register(
+                                          `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.time`,
+                                        )}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = [...commuteRoutes];
+                                          const current =
+                                            next[routeIdx]
+                                              ?.evening_dropoff_points || [];
+                                          next[routeIdx] = {
+                                            ...next[routeIdx],
+                                            evening_dropoff_points:
+                                              current.filter(
+                                                (_: any, i: number) =>
+                                                  i !== stopIdx,
+                                              ),
+                                          };
+                                          setValue(
+                                            "profileSections.commute.routes",
+                                            next,
+                                          );
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="placement-grow">
-                    Placement Success/Growth Summary
-                  </Label>
-                  <Input
-                    id="placement-grow"
-                    placeholder="35% increase in placement offers over last academic cycle..."
-                    {...register("profileSections.placements.growthSummary")}
-                  />
-                </div>
-              </div>
+                  </div>
 
-              {/* Placement stats */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" /> Placement
-                    Quick Stats
-                  </Label>
+                  {/* Rules and code of conduct */}
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      Rules & Code Of Conduct
+                    </h4>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Title</Label>
+                        <Input
+                          placeholder="Rules & Code of Conduct"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.title",
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Subtitle</Label>
+                        <Input
+                          placeholder="Detailed guidelines for student commuters"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.subtitle",
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Intro</Label>
+                        <Textarea
+                          rows={2}
+                          placeholder="Intro text shown above rules"
+                          {...register(
+                            "profileSections.commute.rules_and_code_of_conduct.intro",
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label className="font-semibold">Rule Items</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.commute.rules_and_code_of_conduct.rules",
+                            [
+                              ...commuteRules,
+                              {
+                                title: "",
+                                description: "",
+                              },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Rule
+                      </Button>
+                    </div>
+
+                    {commuteRules.map((rule: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="border rounded-lg p-3 bg-muted/10 space-y-2"
+                      >
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            placeholder="Rule title"
+                            {...register(
+                              `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.title`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.commute.rules_and_code_of_conduct.rules",
+                                commuteRules.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Textarea
+                          rows={2}
+                          placeholder="Rule description"
+                          {...register(
+                            `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.description`,
+                          )}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Raw payload helper */}
+                  <div className="space-y-2 pt-4 border-t border-border/40">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Commute Payload (Preview)
+                    </Label>
+                    <Textarea
+                      rows={10}
+                      value={JSON.stringify(
+                        {
+                          tab: "commute",
+                          pickup_points: commutePickupPoints,
+                          selected_pickup_point: watch(
+                            "profileSections.commute.selected_pickup_point",
+                          ),
+                          routes: commuteRoutes,
+                          rules_and_code_of_conduct: watch(
+                            "profileSections.commute.rules_and_code_of_conduct",
+                          ),
+                        },
+                        null,
+                        2,
+                      )}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* TAB FOOTER NAVIGATION */}
+            <div className="flex justify-between items-center pt-8 border-t border-border/60">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  const currentIdx = PROFILE_TABS.findIndex(
+                    (t) => t.id === activeTab,
+                  );
+                  if (currentIdx > 0) {
+                    setActiveTab(PROFILE_TABS[currentIdx - 1].id);
+                  } else {
+                    router.push(getPortalPath(collegeSlug, "/setup/campuses"));
+                  }
+                }}
+              >
+                Back
+              </Button>
+
+              <div className="flex gap-3">
+                {PROFILE_TABS.findIndex((t) => t.id === activeTab) <
+                PROFILE_TABS.length - 1 ? (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setPlacementStats([
-                        ...placementStats,
-                        { title: "", value: "" },
-                      ])
-                    }
+                    size="lg"
+                    className="bg-zinc-800 hover:bg-zinc-900 text-white"
+                    onClick={() => {
+                      const currentIdx = PROFILE_TABS.findIndex(
+                        (t) => t.id === activeTab,
+                      );
+                      setActiveTab(PROFILE_TABS[currentIdx + 1].id);
+                    }}
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Stat
+                    Next Tab <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </div>
-                {placementStats.map((row, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
-                    <Input
-                      placeholder="Title (e.g. Average Package)"
-                      className="h-9"
-                      value={row.title}
-                      onChange={(e) => {
-                        const updated = [...placementStats];
-                        updated[idx].title = e.target.value;
-                        setPlacementStats(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Value (e.g. 8.5 LPA)"
-                      className="h-9 w-44"
-                      value={row.value}
-                      onChange={(e) => {
-                        const updated = [...placementStats];
-                        updated[idx].value = e.target.value;
-                        setPlacementStats(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setPlacementStats(
-                          placementStats.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Trends chart */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-purple-500" /> Placement
-                    Package Trends
-                  </Label>
+                ) : (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    size="lg"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md"
                     onClick={() =>
-                      setPlacementTrends([
-                        ...placementTrends,
-                        { year: "", averagePackage: "", highestPackage: "" },
-                      ])
+                      router.push(getPortalPath(collegeSlug, "/setup/campuses"))
                     }
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Trend Year
+                    Continue to Campuses <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </div>
-                {placementTrends.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
-                  >
-                    <Input
-                      placeholder="Year (e.g. 2024)"
-                      className="h-9"
-                      value={row.year}
-                      onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].year = e.target.value;
-                        setPlacementTrends(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Average (LPA)"
-                      className="h-9"
-                      value={row.averagePackage}
-                      onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].averagePackage = e.target.value;
-                        setPlacementTrends(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Highest (LPA)"
-                      className="h-9"
-                      value={row.highestPackage}
-                      onChange={(e) => {
-                        const updated = [...placementTrends];
-                        updated[idx].highestPackage = e.target.value;
-                        setPlacementTrends(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setPlacementTrends(
-                          placementTrends.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                )}
               </div>
-
-              {/* Notable Offers */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4 text-green-500" /> Outstanding
-                    Placement Offers
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setNotableOffers([
-                        ...notableOffers,
-                        { studentName: "", company: "", package: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Offer Record
-                  </Button>
-                </div>
-                {notableOffers.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
-                  >
-                    <Input
-                      placeholder="Student Name"
-                      className="h-9"
-                      value={row.studentName}
-                      onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].studentName = e.target.value;
-                        setNotableOffers(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Company"
-                      className="h-9"
-                      value={row.company}
-                      onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].company = e.target.value;
-                        setNotableOffers(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Package (LPA)"
-                      className="h-9"
-                      value={row.package}
-                      onChange={(e) => {
-                        const updated = [...notableOffers];
-                        updated[idx].package = e.target.value;
-                        setNotableOffers(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setNotableOffers(
-                          notableOffers.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ==================== TAB 5: TUITION & AID ==================== */}
-        {activeTab === "fees" && (
-          <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle>Tuition Fees, Deadlines & Scholarships</CardTitle>
-              <CardDescription>
-                Setup clear tuition structures, utility charges, deadlines, and
-                aid calculator.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="tuition-fees-sum">Tuition Fees Overview</Label>
-                <Textarea
-                  id="tuition-fees-sum"
-                  placeholder="General structure of yearly tuition fees per program levels..."
-                  {...register(
-                    "profileSections.tuition_and_aid.tuitionFeesSummary",
-                  )}
-                />
-              </div>
-
-              {/* Additional Fees */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-blue-500" /> Utility /
-                    Additional Charges
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setAdditionalFees([
-                        ...additionalFees,
-                        { name: "", amount: "", frequency: "One-Time" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Charge
-                  </Button>
-                </div>
-                {additionalFees.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
-                  >
-                    <Input
-                      placeholder="Charge Name (e.g. Admission Fee)"
-                      className="h-9"
-                      value={row.name}
-                      onChange={(e) => {
-                        const updated = [...additionalFees];
-                        updated[idx].name = e.target.value;
-                        setAdditionalFees(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Amount"
-                      className="h-9"
-                      value={row.amount}
-                      onChange={(e) => {
-                        const updated = [...additionalFees];
-                        updated[idx].amount = e.target.value;
-                        setAdditionalFees(updated);
-                      }}
-                    />
-                    <select
-                      className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                      value={row.frequency}
-                      onChange={(e) => {
-                        const updated = [...additionalFees];
-                        updated[idx].frequency = e.target.value;
-                        setAdditionalFees(updated);
-                      }}
-                    >
-                      <option value="One-Time">One-Time</option>
-                      <option value="Per Semester">Per Semester</option>
-                      <option value="Annual">Annual</option>
-                      <option value="Refundable">Refundable Deposit</option>
-                    </select>
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setAdditionalFees(
-                          additionalFees.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Installment Plan */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-500" />{" "}
-                    Installments Schedule & Deadlines
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setInstallmentSchedule([
-                        ...installmentSchedule,
-                        { installmentNo: "", dueDate: "", percentage: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Installment
-                  </Button>
-                </div>
-                {installmentSchedule.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-4 gap-4 items-center"
-                  >
-                    <Input
-                      placeholder="No. (e.g. 1st Installment)"
-                      className="h-9"
-                      value={row.installmentNo}
-                      onChange={(e) => {
-                        const updated = [...installmentSchedule];
-                        updated[idx].installmentNo = e.target.value;
-                        setInstallmentSchedule(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Due Date (e.g. July 31)"
-                      className="h-9"
-                      value={row.dueDate}
-                      onChange={(e) => {
-                        const updated = [...installmentSchedule];
-                        updated[idx].dueDate = e.target.value;
-                        setInstallmentSchedule(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Percentage (e.g. 50%)"
-                      className="h-9"
-                      value={row.percentage}
-                      onChange={(e) => {
-                        const updated = [...installmentSchedule];
-                        updated[idx].percentage = e.target.value;
-                        setInstallmentSchedule(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105 justify-self-start"
-                      onClick={() =>
-                        setInstallmentSchedule(
-                          installmentSchedule.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Scholarships */}
-              <div className="border-t pt-6 border-border/40 space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4 text-purple-500" /> Scholarships &
-                    Aids
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setScholarshipsList([
-                        ...scholarshipsList,
-                        { name: "", concession: "", criteria: "" },
-                      ])
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Scholarship
-                  </Button>
-                </div>
-                {scholarshipsList.map((row, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
-                    <Input
-                      placeholder="Scholarship Name"
-                      className="h-9 w-44"
-                      value={row.name}
-                      onChange={(e) => {
-                        const updated = [...scholarshipsList];
-                        updated[idx].name = e.target.value;
-                        setScholarshipsList(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Concession (e.g. 50% waiver)"
-                      className="h-9 w-44"
-                      value={row.concession}
-                      onChange={(e) => {
-                        const updated = [...scholarshipsList];
-                        updated[idx].concession = e.target.value;
-                        setScholarshipsList(updated);
-                      }}
-                    />
-                    <Input
-                      placeholder="Criteria (e.g. >95% in 12th Board)"
-                      className="h-9 flex-1"
-                      value={row.criteria}
-                      onChange={(e) => {
-                        const updated = [...scholarshipsList];
-                        updated[idx].criteria = e.target.value;
-                        setScholarshipsList(updated);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="text-destructive hover:scale-105"
-                      onClick={() =>
-                        setScholarshipsList(
-                          scholarshipsList.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Calculator toggle */}
-              <div className="flex items-center gap-2 border-t pt-6 border-border/40">
-                <input
-                  type="checkbox"
-                  id="calc-enabled"
-                  className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary"
-                  {...register(
-                    "profileSections.tuition_and_aid.scholarshipCalculatorEnabled",
-                  )}
-                />
-                <Label htmlFor="calc-enabled">
-                  Enable dynamic scholarship calculator on public portal
-                </Label>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Global Save & Continue trigger */}
-        <div className="flex justify-end pt-4 border-t border-border/50">
-          <Button type="submit" size="lg" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Profile & Continue
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      </form>
+            </div>
+          </form>
+        </main>
+      </div>
     </div>
   );
 }

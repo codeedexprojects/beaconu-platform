@@ -1,0 +1,15 @@
+meta {
+  name: Tab - Other Courses Offered
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/other_courses_offered
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

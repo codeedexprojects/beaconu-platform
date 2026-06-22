@@ -18,15 +18,32 @@ body:json {
   {
     "name": "Route 42 - South Delhi Express",
     "description": "Daily student transport transit route connecting Saket and main campus.",
+    "isVerified": true,
+    "conductPolicy": [
+      {
+        "title": "Mandatory Identification",
+        "description": "Students must carry their valid college ID and transport pass at all times."
+      },
+      {
+        "title": "Punctuality",
+        "description": "Students are advised to be at the pickup point 5 minutes prior to the scheduled time."
+      }
+    ],
     "stops": [
       {
         "stopName": "Saket Metro Station Pick-up Gate 2",
         "landmark": "Near Select Citywalk Mall",
+        "morningTime": "1970-01-01T06:45:00+05:30",
+        "eveningTime": "1970-01-01T18:15:00+05:30",
+        "isPickupPoint": true,
         "stopOrder": 1
       },
       {
         "stopName": "Noida Sector 15 Crossroad",
         "landmark": "Under Noida Flyover",
+        "morningTime": "1970-01-01T07:05:00+05:30",
+        "eveningTime": "1970-01-01T17:55:00+05:30",
+        "isPickupPoint": true,
         "stopOrder": 2
       }
     ],
@@ -37,8 +54,19 @@ body:json {
         "totalSeats": 50,
         "driverName": "Ramesh Singh",
         "driverPhone": "+91 98111 22222",
-        "monthlyFee": 2500
+        "monthlyFee": 2500,
+        "busModel": "Tata Marcopolo (AC)",
+        "paymentStructureNotes": "Payable as a one-time annual payment or in two semester-wise installments."
       }
     ]
   }
+}
+
+docs {
+  Creates a route in CommuteRoute with nested CommuteRouteStop and CommuteBus rows.
+
+  New supported fields:
+  - Route: isVerified, conductPolicy[]
+  - Stop: morningTime, eveningTime, isPickupPoint
+  - Bus: busModel, paymentStructureNotes
 }

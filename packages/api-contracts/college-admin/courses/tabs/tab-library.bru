@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Library
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/library
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `library` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-library-update.bru`
+}

@@ -1,19 +1,34 @@
 import { Router } from "express";
+import { authenticate } from "@/shared/middleware/authenticate";
+import { authorizeUserType } from "@/shared/middleware/authorize";
 
 import studentAuthRoutes from "@/modules/auth/routes/student-auth.routes";
 import studentBlogRoutes from "@/modules/content/routes/student.routes";
+import studentCommunityRoutes from "@/modules/community/routes/student.routes";
 import studentNewsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts-student.routes";
 import studentEntranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams-student.routes";
+import studentFinancialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans-public.routes";
 import studentProfileRoutes from "@/modules/students/routes/student.routes";
 import studentUploadRoutes from "@/modules/upload/routes/student.routes";
+import studentCounsellingRoutes from "@/modules/counselling/routes/student.routes";
+import studentEventRoutes from "@/modules/events/routes/student.routes";
 
 const router: Router = Router();
 
 router.use("/auth", studentAuthRoutes);
 router.use("/blogs", studentBlogRoutes);
+router.use("/communities", studentCommunityRoutes);
 router.use("/news", studentNewsAlertsRoutes);
 router.use("/entrance-exams", studentEntranceExamsRoutes);
-router.use("/", studentProfileRoutes);
+router.use("/financial-aid/loans", studentFinancialAidLoansRoutes);
+router.use("/counselling", studentCounsellingRoutes);
+router.use(
+  "/events",
+  authenticate,
+  authorizeUserType("student"),
+  studentEventRoutes,
+);
 router.use("/uploads", studentUploadRoutes);
+router.use("/", studentProfileRoutes);
 
 export default router;

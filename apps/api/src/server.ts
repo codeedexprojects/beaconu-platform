@@ -3,6 +3,10 @@ import app from "@/app";
 import { getRedisClient, disconnectRedis } from "@/shared/lib/redis";
 import { prisma } from "@beaconu/db";
 import { logger } from "@/shared/lib/logger";
+import {
+  startBackgroundJobs,
+  stopBackgroundJobs,
+} from "@/shared/lib/background-jobs";
 
 async function startServer(): Promise<void> {
   try {
@@ -12,6 +16,8 @@ async function startServer(): Promise<void> {
 
     await prisma.$connect();
     logger.info("Database connected successfully");
+
+    await startBackgroundJobs();
 
     const server = app.listen(env.PORT, () => {
       logger.info(
@@ -23,6 +29,7 @@ async function startServer(): Promise<void> {
     const shutdown = async (signal: string): Promise<void> => {
       logger.info({ signal }, "Graceful shutdown initiated");
       server.close(async () => {
+        await stopBackgroundJobs();
         await disconnectRedis();
         await prisma.$disconnect();
         logger.info("Server shut down cleanly");
@@ -37,7 +44,7 @@ async function startServer(): Promise<void> {
     process.exit(1);
   }
 }
-// #test
+
 if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
   startServer().catch((error) => {
     console.error("Unhandled server startup error:", error);

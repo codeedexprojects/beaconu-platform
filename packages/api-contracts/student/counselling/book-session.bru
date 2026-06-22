@@ -1,0 +1,96 @@
+meta {
+  name: Book Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "availability_id": "{{availabilityId}}",
+    "session_mode": "video_call",
+    "session_type": "career",
+    "booking_reason": "Need guidance for higher studies"
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  const availabilityId = bru.getEnvVar("availabilityId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+  if (!availabilityId) {
+    throw new Error("availabilityId is not set. Run List Available Slots first and pick a slot id from time_slots array.");
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("sessionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Books a counselling session for the logged-in student.
+  Requires: student access token.
+
+  ## Fields
+  - availability_id : required, slot id from time_slots[].id in List Available Slots response
+  - session_mode    : required, "voice_call" | "video_call"
+  - session_type    : required, "career" | "academic" | "personal" | "mental_health"
+  - booking_reason  : optional, max 500 chars
+
+  ## Booking cutoff
+  A slot can only be booked at least 10 minutes before its scheduled
+  start time. E.g. for a 4:00 PM slot, booking is allowed up to and
+  including 3:50 PM; attempting at 3:55 PM returns 400 "Sessions can
+  only be booked at least 10 minutes before the scheduled start time".
+  If the slot's start time has already passed entirely (e.g. booking a
+  4:00 PM slot at 4:30 PM), it returns 400 "This slot's scheduled time
+  has already passed" instead.
+
+  ## Fee logic (no need to pass session_fee)
+  Fee is taken automatically from the slot's session_fee.
+  Falls back to counsellor's default fee if slot has no fee set.
+
+  ## Payment (Razorpay)
+  If the resolved fee > 0, run Create Payment Order first and complete
+  Razorpay Checkout. Payment confirmation is received via the Razorpay
+  `payment.captured` webhook (POST /api/v1/webhooks/counselling/razorpay),
+  which marks the order as paid server-side. This endpoint then verifies
+  that marker for (availability_id, student) — no payment fields are
+  passed in the request body.
+
+  If the slot is free (fee = 0), this endpoint can be called directly
+  after Create Payment Order returns payment_required: false.
+
+  ## Wallet
+  On successful booking, session_fee is credited directly to the counsellor's wallet.
+
+  ## Google Meet (all sessions)
+  If Google Meet is configured on the server, a Google Calendar event with
+  an auto-generated Meet link is created for this session at booking time
+  (regardless of session_mode — "voice_call" or "video_call"), with the
+  counsellor and student added as attendees (calendar invite emails sent
+  to both). The response's data.meeting_url / data.meeting_id reflect this
+  new event.
+
+  If Meet is not configured or the Calendar API call fails, booking still
+  succeeds with meeting_url/meeting_id as null — the counsellor can set
+  them manually via PATCH /api/v1/counsellor/sessions/:id/meeting.
+}

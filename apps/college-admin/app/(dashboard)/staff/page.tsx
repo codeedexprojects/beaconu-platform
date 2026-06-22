@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
   UserPlus,
@@ -16,6 +16,8 @@ import {
   Trash2,
   Lock,
   ArrowRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,7 +58,7 @@ const staffSchema = z.object({
   email: z.string().trim().email("Enter a valid email address"),
   phoneNumber: z.string().trim().optional().nullable(),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  collegeRoleId: z.string().uuid("Please select a security role"),
+  collegeRoleId: z.string().min(1, "Please select a security role"),
 });
 
 type StaffFormData = z.infer<typeof staffSchema>;
@@ -69,10 +71,13 @@ export default function StaffDirectoryPage() {
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("staff.manage") ?? false);
 
+  const isSelf = (memberId: string) => memberId === user?.id;
+
   const { mutate: inviteStaff, isPending: inviting } = useInviteStaffMember();
   const { mutate: updateStaff } = useUpdateStaffMember();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showStaffPassword, setShowStaffPassword] = useState(false);
 
   const {
     register,
@@ -95,7 +100,7 @@ export default function StaffDirectoryPage() {
     currentStatus: "active" | "inactive",
     name: string,
   ) => {
-    if (!canManageStaff) return;
+    if (!canManageStaff || isSelf(id)) return;
     const nextStatus = currentStatus === "active" ? "inactive" : "active";
     if (
       confirm(
@@ -116,7 +121,7 @@ export default function StaffDirectoryPage() {
   };
 
   const handleRoleChange = (id: string, roleId: string, name: string) => {
-    if (!canManageStaff) return;
+    if (!canManageStaff || isSelf(id)) return;
     updateStaff(
       { id, data: { collegeRoleId: roleId } },
       {
@@ -220,7 +225,7 @@ export default function StaffDirectoryPage() {
                         <select
                           className="rounded-md border border-input bg-background px-2.5 py-1 text-xs focus:outline-none"
                           value={member.collegeRoleId}
-                          disabled={!canManageStaff}
+                          disabled={!canManageStaff || isSelf(member.id)}
                           onChange={(e) =>
                             handleRoleChange(
                               member.id,
@@ -263,7 +268,7 @@ export default function StaffDirectoryPage() {
 
                     {/* Status switcher button */}
                     <TableCell className="text-right pr-6">
-                      {canManageStaff ? (
+                      {canManageStaff && !isSelf(member.id) ? (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -348,7 +353,7 @@ export default function StaffDirectoryPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="staff-phone">Phone Number (Optional)</Label>
+                  <Label htmlFor="staff-phone">Phone Number </Label>
                   <Input
                     id="staff-phone"
                     placeholder="e.g. +91 98765 43210"
@@ -358,12 +363,29 @@ export default function StaffDirectoryPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="staff-pass">Initial Login Password</Label>
-                  <Input
-                    id="staff-pass"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="staff-pass"
+                      type={showStaffPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pr-10"
+                      {...register("password")}
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showStaffPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={() => setShowStaffPassword((v) => !v)}
+                    >
+                      {showStaffPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && (
                     <p className="text-xs text-destructive">
                       {errors.password.message}

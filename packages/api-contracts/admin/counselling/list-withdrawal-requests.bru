@@ -1,0 +1,52 @@
+meta {
+  name: List Withdrawal Requests
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/counsellors/withdrawals?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("withdrawalRequestId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns counsellor withdrawal requests for super admin review.
+  Requires: platform admin access token + permission "counsellors.view".
+
+  Query params:
+  - status (optional): pending | approved | rejected — defaults to all
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Each item includes counsellor snippet (id, full_name, email,
+  counsellor_code), amount, payout_details snapshotted at request time
+  ({ method: "upi", upi_id } or { method: "bank", account_holder_name,
+  account_number, ifsc, bank_name }), and review_remarks (if reviewed).
+
+  For full counsellor profile info + live wallet balance (for an admin
+  detail view), call GET /api/v1/admin/counsellors/:id/detail using
+  counsellor.id from this response.
+
+  Tables: counsellor_wallet_transactions, counsellors
+}

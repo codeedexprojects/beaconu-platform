@@ -1,16 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  School,
+  MapPin,
+  BookOpen,
+  AlertCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -50,83 +52,126 @@ export default function SetupReviewPage() {
   const isReady = profile?.name && campuses.length > 0;
 
   return (
-    <div className="space-y-6">
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-4 border-b">
-          <CardTitle>Review & Submit</CardTitle>
-          <CardDescription>
-            Review your college information before finalizing the setup. Once
-            submitted, your public landing page will go live.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6 space-y-8">
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center justify-between border-b pb-2">
-              Profile Summary
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() =>
-                  router.push(getPortalPath(collegeSlug, "/setup/profile"))
-                }
-              >
-                Edit
-              </Button>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Review & Submit
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Review your college information before finalizing the setup. Your
+            public landing page will be generated upon submission.
+          </p>
+        </div>
+      </div>
+
+      {!isReady && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-semibold">Incomplete Setup</h4>
+            <p className="text-sm opacity-90">
+              Please ensure you have filled out your profile and added at least
+              one campus before submitting.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Profile Summary */}
+        <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
+          <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
+            <h3 className="font-bold flex items-center gap-2">
+              <School className="h-4 w-4 text-primary" /> Profile
             </h3>
-            <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <span className="text-muted-foreground">College Name:</span>
-              <span className="font-medium">{profile?.name || "—"}</span>
-
-              <span className="text-muted-foreground">College Code:</span>
-              <span className="font-medium">{profile?.code || "—"}</span>
-
-              <span className="text-muted-foreground">Address:</span>
-              <span className="font-medium">
-                {[profile?.address, profile?.city, profile?.state]
-                  .filter(Boolean)
-                  .join(", ") || "—"}
-              </span>
-
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() =>
+                router.push(getPortalPath(collegeSlug, "/setup/profile"))
+              }
+            >
+              Edit
+            </Button>
+          </div>
+          <CardContent className="p-6 flex-1">
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">
+                  College Name
+                </p>
+                <p className="font-medium text-base">{profile?.name || "—"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">
+                  College Code
+                </p>
+                <p className="font-medium inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs">
+                  {profile?.code || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mb-1">
+                  Address
+                </p>
+                <p className="font-medium leading-relaxed">
+                  {[profile?.address, profile?.city, profile?.state]
+                    .filter(Boolean)
+                    .join(", ") || "—"}
+                </p>
+              </div>
               {profile?.requestedGroupCode && (
-                <>
-                  <span className="text-muted-foreground text-primary">
-                    Joining Group:
-                  </span>
-                  <span className="font-mono text-primary font-medium tracking-wide">
+                <div className="pt-2 border-t border-border/50 mt-2">
+                  <p className="text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+                    Joining Group
+                  </p>
+                  <p className="font-mono text-primary font-bold tracking-wide bg-primary/10 px-2 py-1 rounded inline-block">
                     {profile.requestedGroupCode}
-                  </span>
-                </>
+                  </p>
+                </div>
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center justify-between border-b pb-2">
-              Campuses ({campuses.length})
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() =>
-                  router.push(getPortalPath(collegeSlug, "/setup/campuses"))
-                }
-              >
-                Edit
-              </Button>
+        {/* Campuses Summary */}
+        <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
+          <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
+            <h3 className="font-bold flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" /> Campuses{" "}
+              <span className="bg-primary text-primary-foreground rounded-full text-[10px] px-2 py-0.5 ml-1">
+                {campuses.length}
+              </span>
             </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() =>
+                router.push(getPortalPath(collegeSlug, "/setup/campuses"))
+              }
+            >
+              Edit
+            </Button>
+          </div>
+          <CardContent className="p-6 flex-1">
             {campuses.length === 0 ? (
-              <p className="text-sm text-destructive">
-                You must add at least one campus.
-              </p>
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60 py-8">
+                <MapPin className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium">No campuses added</p>
+              </div>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-3">
                 {campuses.map((c) => (
                   <li
                     key={c.id}
-                    className="flex items-center justify-between bg-muted/20 p-2 rounded"
+                    className="flex items-center justify-between bg-muted/40 border border-border/50 p-3 rounded-lg"
                   >
-                    <span>{c.name}</span>
+                    <span className="font-semibold text-sm">{c.name}</span>
                     {c.isMainCampus && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                      <span className="text-[10px] bg-primary text-primary-foreground font-bold tracking-wider px-2 py-1 rounded-full uppercase">
                         Main
                       </span>
                     )}
@@ -134,73 +179,96 @@ export default function SetupReviewPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center justify-between border-b pb-2">
-              Academic Programs ({courses.length})
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() =>
-                  router.push(getPortalPath(collegeSlug, "/setup/academics"))
-                }
-              >
-                Edit
-              </Button>
+        {/* Academics Summary */}
+        <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
+          <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
+            <h3 className="font-bold flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-primary" /> Academics{" "}
+              <span className="bg-primary text-primary-foreground rounded-full text-[10px] px-2 py-0.5 ml-1">
+                {courses.length}
+              </span>
             </h3>
-            {courses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No courses added yet. You can add them later.
-              </p>
-            ) : (
-              <ul className="space-y-2 text-sm max-h-40 overflow-y-auto pr-2">
-                {courses.map((c) => (
-                  <li key={c.id} className="bg-muted/20 p-2 rounded">
-                    <p className="font-medium">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.studyLevel?.name} • {c.discipline?.name}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="flex justify-between pt-8 border-t mt-8">
             <Button
-              type="button"
               variant="outline"
+              size="sm"
+              className="h-8 text-xs"
               onClick={() =>
                 router.push(getPortalPath(collegeSlug, "/setup/academics"))
               }
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button
-              onClick={() =>
-                submitSetup(undefined, {
-                  onSuccess: (data) => {
-                    toast.success("College setup completed successfully!");
-                    updateUser({ collegeStatus: data.status });
-                    router.push(getPortalPath(collegeSlug, "/"));
-                  },
-                })
-              }
-              disabled={!isReady || isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              {isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle className="mr-2 h-4 w-4" />
-              )}
-              Submit & Go Live
+              Edit
             </Button>
           </div>
-        </CardContent>
-      </Card>
+          <CardContent className="p-0 flex-1 flex flex-col">
+            {courses.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60 p-6 py-12">
+                <BookOpen className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium">No courses added</p>
+                <p className="text-xs text-muted-foreground">
+                  You can configure these later.
+                </p>
+              </div>
+            ) : (
+              <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-6 space-y-3">
+                {courses.map((c) => (
+                  <div
+                    key={c.id}
+                    className="bg-muted/40 border border-border/50 p-3 rounded-lg"
+                  >
+                    <p className="font-bold text-sm line-clamp-1">{c.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                      <span className="bg-background px-1.5 py-0.5 rounded border border-border/50">
+                        {c.code}
+                      </span>
+                      <span>{c.studyLevel?.name}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-between pt-10 mt-10">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={() =>
+            router.push(getPortalPath(collegeSlug, "/setup/academics"))
+          }
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Academics
+        </Button>
+        <Button
+          size="lg"
+          onClick={() =>
+            submitSetup(undefined, {
+              onSuccess: (data) => {
+                toast.success(
+                  "College setup completed successfully! Welcome to your dashboard.",
+                );
+                updateUser({ collegeStatus: data.status });
+                router.push(getPortalPath(collegeSlug, "/"));
+              },
+            })
+          }
+          disabled={!isReady || isPending}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 text-md px-8 h-12"
+        >
+          {isPending ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <CheckCircle className="mr-2 h-5 w-5" />
+          )}
+          Submit & Go Live
+        </Button>
+      </div>
     </div>
   );
 }

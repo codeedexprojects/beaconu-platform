@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/blink/associate/employees
+  url: {{baseUrl}}/api/v1/blink/associate/employees?page=1&limit=20
   body: none
   auth: none
 }
@@ -15,10 +15,37 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+params:query {
+  page: 1
+  limit: 20
+  status:
+  search:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("employeeId", data.data[0].id);
+    }
+  }
+}
+
 docs {
-  Returns all employees under the authenticated associate admin.
+  Returns a plain (non-ranked) paginated list of employees under the authenticated
+  associate admin.
   Requires: associate admin access token (blink_associate userType).
 
-  Only returns employees where associateParentId = req.userId.
-  Table: blink_users (role: associate_employee)
+  Query params:
+  - status (optional): active | inactive | suspended | rejected | pending_approval
+  - search (optional): matches employee full name or id (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  meta includes activeCount — total count of active employees under this admin
+  (unaffected by status/search filters, always the overall active count).
+
+  For ranked/leaderboard view, use GET /blink/associate/employees/leaderboard instead.
+
+  Tables: blink_users
 }

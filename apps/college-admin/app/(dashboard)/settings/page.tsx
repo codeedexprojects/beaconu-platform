@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import {
   Loader2,
@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
+import { IndiaDistrictSelect } from "@/components/ui/india-district-select";
 import { useAuthStore } from "@/store";
 
 import {
@@ -73,10 +75,14 @@ export default function SettingsPage() {
     handleSubmit,
     reset,
     watch,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsFormSchema),
   });
+
+  const selectedState = watch("state");
 
   const logoUrl = watch("logoUrl");
   const coverImageUrl = watch("coverImageUrl");
@@ -333,11 +339,17 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="settings-district">District</Label>
-                    <Input
-                      id="settings-district"
-                      placeholder="Gautam Buddha Nagar"
-                      {...register("district")}
+                    <Label>District</Label>
+                    <Controller
+                      name="district"
+                      control={control}
+                      render={({ field }) => (
+                        <IndiaDistrictSelect
+                          stateName={selectedState ?? ""}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                     {errors.district && (
                       <p className="text-xs text-destructive">
@@ -347,11 +359,19 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="settings-state">State</Label>
-                    <Input
-                      id="settings-state"
-                      placeholder="Uttar Pradesh"
-                      {...register("state")}
+                    <Label>State</Label>
+                    <Controller
+                      name="state"
+                      control={control}
+                      render={({ field }) => (
+                        <IndiaStateSelect
+                          value={field.value ?? ""}
+                          onChange={(value) => {
+                            field.onChange(value);
+                            setValue("district", "");
+                          }}
+                        />
+                      )}
                     />
                     {errors.state && (
                       <p className="text-xs text-destructive">

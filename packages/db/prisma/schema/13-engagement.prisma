@@ -3,13 +3,13 @@
 // ============================================================
 
 model Community {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String   @id @default(dbgenerated("('CMT-'::text || (nextval('community_seq'::regclass))::text)"))
   name          String   @db.VarChar(255)
   slug          String   @unique @db.VarChar(100)
   description   String?  @db.Text
   coverImageUrl String?  @map("cover_image_url") @db.Text
   iconUrl       String?  @map("icon_url") @db.Text
-  createdById   String   @map("created_by_id") @db.Uuid
+  createdById   String   @map("created_by_id")
   createdByType String   @map("created_by_type") @db.VarChar(20)
   memberCount   Int      @default(0) @map("member_count")
   postCount     Int      @default(0) @map("post_count")
@@ -28,26 +28,26 @@ model Community {
 }
 
 model CommunityMember {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  communityId String   @map("community_id") @db.Uuid
-  studentId   String   @map("student_id") @db.Uuid
+  id          String   @id @default(dbgenerated("('CMM-'::text || (nextval('community_member_seq'::regclass))::text)"))
+  communityId String   @map("community_id")
+  memberType  String   @map("member_type") @db.VarChar(20)
+  memberId    String   @map("member_id")
   notifyMe    Boolean  @default(false) @map("notify_me")
   joinedAt    DateTime @default(now()) @map("joined_at") @db.Timestamptz
 
-  // Relations
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@unique([communityId, studentId], name: "uq_community_member")
+  @@unique([communityId, memberType, memberId], name: "uq_community_member")
   @@index([communityId], name: "idx_cmembers_community")
-  @@index([studentId], name: "idx_cmembers_student")
+  @@index([memberType, memberId], name: "idx_cmembers_member")
   @@map("community_members")
 }
 
 model CommunityPost {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  communityId   String   @map("community_id") @db.Uuid
-  authorId      String   @map("author_id") @db.Uuid
+  id            String   @id @default(dbgenerated("('CPT-'::text || (nextval('community_post_seq'::regclass))::text)"))
+  communityId   String   @map("community_id")
+  authorId      String   @map("author_id")
+  authorType    String   @map("author_type") @db.VarChar(20)
   content       String   @db.Text
   attachments   Json     @default("[]")
   upvoteCount   Int      @default(0) @map("upvote_count")
@@ -60,7 +60,6 @@ model CommunityPost {
 
   // Relations
   community Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  author    Student             @relation(fields: [authorId], references: [id])
   votes     CommunityPostVote[]
   comments  CommunityComment[]
 
@@ -71,38 +70,40 @@ model CommunityPost {
 }
 
 model CommunityPostVote {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId    String   @map("post_id") @db.Uuid
-  studentId String   @map("student_id") @db.Uuid
+  id        String   @id @default(dbgenerated("('CPV-'::text || (nextval('community_post_vote_seq'::regclass))::text)"))
+  postId    String   @map("post_id")
+  voterId   String   @map("voter_id")
+  voterType String   @map("voter_type") @db.VarChar(20)
   voteType  String   @map("vote_type") @db.VarChar(10)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  post    CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  student Student       @relation(fields: [studentId], references: [id])
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@unique([postId, studentId], name: "uq_post_vote")
+  @@unique([postId, voterId, voterType], name: "uq_post_vote")
   @@index([postId], name: "idx_votes_post")
-  @@index([studentId], name: "idx_votes_student")
+  @@index([voterId], name: "idx_votes_voter")
   @@map("community_post_votes")
 }
 
 model CommunityComment {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId          String   @map("post_id") @db.Uuid
-  authorId        String   @map("author_id") @db.Uuid
-  parentCommentId String?  @map("parent_comment_id") @db.Uuid
+  id              String   @id @default(dbgenerated("('CCT-'::text || (nextval('community_comment_seq'::regclass))::text)"))
+  postId          String   @map("post_id")
+  authorId        String   @map("author_id")
+  authorType      String   @map("author_type") @db.VarChar(20)
+  parentCommentId String?  @map("parent_comment_id")
   content         String   @db.Text
   likeCount       Int      @default(0) @map("like_count")
   status          String   @default("active") @db.VarChar(20)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
-  post          CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author        Student            @relation(fields: [authorId], references: [id])
-  parentComment CommunityComment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  replies       CommunityComment[] @relation("CommentReplies")
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parentComment CommunityComment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
+
+  replies CommunityComment[]     @relation("CommentReplies")
+  likes   CommunityCommentLike[]
 
   @@index([postId, createdAt], name: "idx_comments_post")
   @@index([authorId], name: "idx_comments_author")
@@ -110,9 +111,24 @@ model CommunityComment {
   @@map("community_comments")
 }
 
+model CommunityCommentLike {
+  id        String   @id @default(dbgenerated("('CCL-'::text || (nextval('community_comment_like_seq'::regclass))::text)"))
+  commentId String   @map("comment_id")
+  likerId   String   @map("liker_id")
+  likerType String   @map("liker_type") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  comment CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, likerId, likerType], name: "uq_comment_like")
+  @@index([commentId], name: "idx_clikes_comment")
+  @@index([likerId], name: "idx_clikes_liker")
+  @@map("community_comment_likes")
+}
+
 model SquadSearch {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId      String   @map("student_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('SQS-'::text || (nextval('squad_search_seq'::regclass))::text)"))
+  studentId      String   @map("student_id")
   preferredCity  String?  @map("preferred_city") @db.VarChar(100)
   preferredState String?  @map("preferred_state") @db.VarChar(100)
   friends        Json
@@ -127,8 +143,8 @@ model SquadSearch {
 }
 
 model BeaconuCard {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId      String   @unique @map("student_id") @db.Uuid
+  id             String   @id @default(dbgenerated("('BCR-'::text || (nextval('beaconu_card_seq'::regclass))::text)"))
+  studentId      String   @unique @map("student_id")
   cardNumber     String   @unique @map("card_number") @db.VarChar(20)
   cardHolderName String   @map("card_holder_name") @db.VarChar(255)
   validUntil     DateTime @map("valid_until") @db.Date
@@ -150,8 +166,8 @@ model BeaconuCard {
 }
 
 model StudentBankAccount {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId              String   @map("student_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('SBA-'::text || (nextval('student_bank_account_seq'::regclass))::text)"))
+  studentId              String   @map("student_id")
   bankName               String   @map("bank_name") @db.VarChar(100)
   accountHolderName      String   @map("account_holder_name") @db.VarChar(255)
   accountNumberLast4     String   @map("account_number_last4") @db.VarChar(4)
@@ -172,14 +188,14 @@ model StudentBankAccount {
 }
 
 model StudentWalletTransaction {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cardId           String   @map("card_id") @db.Uuid
-  studentId        String   @map("student_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('SWT-'::text || (nextval('student_wallet_transaction_seq'::regclass))::text)"))
+  cardId           String   @map("card_id")
+  studentId        String   @map("student_id")
   type             String   @db.VarChar(20)
   amount           Decimal  @db.Decimal(10, 2)
   description      String?  @db.VarChar(255)
-  referralId       String?  @map("referral_id") @db.Uuid
-  bankAccountId    String?  @map("bank_account_id") @db.Uuid
+  referralId       String?  @map("referral_id")
+  bankAccountId    String?  @map("bank_account_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -199,16 +215,16 @@ model StudentWalletTransaction {
 }
 
 model AntiRaggingComplaint {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId       String    @map("student_id") @db.Uuid
-  collegeId       String    @map("college_id") @db.Uuid
+  id              String    @id @default(dbgenerated("('ARC-'::text || (nextval('anti_ragging_complaint_seq'::regclass))::text)"))
+  studentId       String    @map("student_id")
+  collegeId       String    @map("college_id")
   complaintNumber String    @unique @map("complaint_number") @db.VarChar(30)
   subject         String    @db.VarChar(255)
   description     String    @db.Text
   isAnonymous     Boolean   @default(false) @map("is_anonymous")
   attachments     Json      @default("[]")
   status          String    @default("submitted") @db.VarChar(20)
-  assignedTo      String?   @map("assigned_to") @db.Uuid
+  assignedTo      String?   @map("assigned_to")
   resolution      String?   @db.Text
   resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz

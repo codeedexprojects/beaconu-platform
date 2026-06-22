@@ -17,6 +17,7 @@ export interface JwtPayload {
   collegeId?: string;
   permissions?: string[];
   sessionId: string;
+  counsellorType?: "academic" | "mindcare";
 }
 
 export interface TokenResponse {

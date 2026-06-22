@@ -13,7 +13,11 @@ export class StudentsService {
     const existing = await StudentsRepository.findById(id);
     if (!existing) throw new NotFoundError("Student not found");
 
-    if (data.email !== undefined && data.email !== null && data.email !== existing.email) {
+    if (
+      data.email !== undefined &&
+      data.email !== null &&
+      data.email !== existing.email
+    ) {
       const conflict = await StudentsRepository.findByEmail(data.email);
       if (conflict) throw new ConflictError("Email is already in use");
     }

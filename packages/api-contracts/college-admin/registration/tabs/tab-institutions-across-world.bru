@@ -1,0 +1,19 @@
+meta {
+  name: Tab - Institutions Across World
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections/institutions_across_world
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches only the `institutions_across_world` section.
+}

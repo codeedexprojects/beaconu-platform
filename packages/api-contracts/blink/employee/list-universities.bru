@@ -1,0 +1,47 @@
+meta {
+  name: List Universities
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/universities?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("blinkUniversityId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns a paginated list of active universities (with logo) for the
+  authenticated associate employee.
+  Requires: blink_employee access token.
+
+  Query params:
+  - search (optional): filter by university name (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response includes: id, name, slug, logoUrl
+  meta: { total, page, limit, hasNext }
+
+  Tables: universities
+}

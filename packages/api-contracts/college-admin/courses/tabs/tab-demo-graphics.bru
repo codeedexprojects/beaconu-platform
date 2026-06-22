@@ -1,0 +1,22 @@
+meta {
+  name: Tab - Demo Graphics
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/demo_graphics
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Fetches the `demo_graphics` tab for a specific course.
+
+  To update this tab, use:
+  `tabs/tab-demo-graphics-update.bru`
+}

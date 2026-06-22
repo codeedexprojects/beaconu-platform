@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
 import {
   LayoutDashboard,
   Building2,
@@ -16,15 +19,17 @@ import {
   Calendar,
   ShieldCheck,
   Settings,
-  LogOut,
   ChevronRight,
   UserPlus,
   Inbox,
   Layers,
+  Landmark,
+  PlayCircle,
+  Wallet,
+  ReceiptIndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuthStore } from "@/store";
 
 interface NavItem {
   href: string;
@@ -53,16 +58,16 @@ const navSections: NavSection[] = [
         permission: "colleges.view",
       },
       {
-        href: "/universities",
-        label: "Universities",
-        icon: GraduationCap,
-        permission: "universities.view",
-      },
-      {
         href: "/university-types",
         label: "University Types",
         icon: GraduationCap,
         permission: "university-types.view",
+      },
+      {
+        href: "/universities",
+        label: "Universities",
+        icon: GraduationCap,
+        permission: "universities.view",
       },
       {
         href: "/academic-masters",
@@ -97,6 +102,18 @@ const navSections: NavSection[] = [
         href: "/counsellors",
         label: "Counsellors",
         icon: HeartHandshake,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/counsellors/withdrawals",
+        label: "Withdrawal Requests",
+        icon: Wallet,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/counsellors/refund-requests",
+        label: "Refund Requests",
+        icon: ReceiptIndianRupee,
         permission: "counsellors.view",
       },
     ],
@@ -140,10 +157,22 @@ const navSections: NavSection[] = [
         permission: "exams.view",
       },
       {
+        href: "/financial-aid",
+        label: "Financial Aid",
+        icon: Landmark,
+        permission: "content.view",
+      },
+      {
         href: "/events",
         label: "Events",
         icon: Calendar,
         permission: "events.view",
+      },
+      {
+        href: "/starter-guide",
+        label: "Starter Guide",
+        icon: PlayCircle,
+        permission: "content.view",
       },
     ],
   },
@@ -180,6 +209,18 @@ const navSections: NavSection[] = [
         permission: "platform.admins.manage",
       },
       {
+        href: "/blink/academic-counsellor-requests",
+        label: "Academic Counsellor Requests",
+        icon: GraduationCap,
+        permission: "counsellors.view",
+      },
+      {
+        href: "/blink/mindcare-counsellor-requests",
+        label: "MindCare Counsellor Requests",
+        icon: HeartHandshake,
+        permission: "counsellors.view",
+      },
+      {
         href: "/blink/users",
         label: "Blink Users",
         icon: Users,
@@ -189,11 +230,36 @@ const navSections: NavSection[] = [
   },
 ];
 
+function getActiveHref(pathname: string): string | null {
+  let best: string | null = null;
+  for (const section of navSections) {
+    for (const item of section.items) {
+      const matches =
+        item.href === "/"
+          ? pathname === "/"
+          : pathname === item.href || pathname.startsWith(item.href + "/");
+      if (matches && (best === null || item.href.length > best.length)) {
+        best = item.href;
+      }
+    }
+  }
+  return best;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const activeHref = getActiveHref(pathname);
+
   const admin = useAuthStore((state) => state.admin);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+
+  const initials =
+    admin?.fullName
+      ?.split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "A";
 
   function handleLogout() {
     clearAuth();
@@ -201,17 +267,17 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-sidebar border-r border-sidebar-border">
+    <aside className="flex h-screen w-72 flex-col bg-navy border-r border-transparent shrink-0">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/30">
-          <span className="text-sm font-bold text-white">B</span>
+      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-navy-dark/50">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+          <span className="text-sm font-bold text-navy-dark font-serif">B</span>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-bold text-white tracking-wide">
+          <span className="text-lg font-bold text-white font-serif tracking-wide">
             BeaconU
           </span>
-          <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-widest">
+          <span className="text-[10px] text-gray-sidebar uppercase tracking-widest mt-1">
             Super Admin
           </span>
         </div>
@@ -225,38 +291,34 @@ export function Sidebar() {
 
             return (
               <div key={section.label}>
-                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
+                <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-sidebar">
                   {section.label}
                 </p>
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
-                    const isActive =
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname === item.href ||
-                          pathname.startsWith(item.href + "/");
+                    const isActive = item.href === activeHref;
                     return (
                       <li key={item.href}>
                         <Link
                           href={item.href}
                           className={cn(
-                            "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-150",
+                            "group flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-out",
                             isActive
-                              ? "bg-primary text-white shadow-sm shadow-primary/20"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-white",
+                              ? "bg-gold text-white"
+                              : "text-gray-sidebar hover:bg-navy-dark hover:text-white border border-transparent",
                           )}
                         >
                           <item.icon
                             className={cn(
-                              "h-4 w-4 shrink-0 transition-colors",
+                              "h-4 w-4 shrink-0 transition-colors duration-200",
                               isActive
                                 ? "text-white"
-                                : "text-sidebar-foreground/60 group-hover:text-white",
+                                : "text-gray-sidebar group-hover:text-white",
                             )}
                           />
                           <span className="truncate">{item.label}</span>
                           {isActive && (
-                            <ChevronRight className="ml-auto h-3 w-3 opacity-60" />
+                            <ChevronRight className="ml-auto h-3 w-3 opacity-80 animate-pulse" />
                           )}
                         </Link>
                       </li>
@@ -269,24 +331,27 @@ export function Sidebar() {
         </nav>
       </ScrollArea>
 
-      {/* User footer */}
-      <div className="shrink-0 border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
-            {admin?.fullName?.charAt(0) ?? "A"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {admin?.fullName ?? "Admin"}
-            </p>
-            <p className="truncate text-[11px] text-sidebar-foreground/50 capitalize">
-              {admin?.role?.replace("_", " ")}
-            </p>
+      {/* User Profile Footer */}
+      <div className="p-4 border-t border-navy-dark/50">
+        <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-navy-dark">
+          <Avatar className="h-9 w-9 border border-navy-dark">
+            <AvatarImage src={admin?.avatarUrl} />
+            <AvatarFallback className="bg-navy-dark text-white text-xs">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 flex flex-col">
+            <span className="text-sm font-medium text-white truncate">
+              {admin?.fullName}
+            </span>
+            <span className="text-[11px] text-gray-sidebar truncate">
+              {admin?.email}
+            </span>
           </div>
           <button
             onClick={handleLogout}
-            className="shrink-0 rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-white transition-colors"
-            title="Sign out"
+            className="p-1.5 text-gray-sidebar hover:text-white rounded-md hover:bg-navy transition-colors"
+            title="Log out"
           >
             <LogOut className="h-4 w-4" />
           </button>

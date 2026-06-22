@@ -1,0 +1,34 @@
+meta {
+  name: List Tab Details
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/profile/sections
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Lists all registration tab details from profile sections.
+
+  First set tabs using:
+  - tabs/set-registration-tabs.bru
+  - tabs/tab-student-code-of-conduct-save.bru
+  - tabs/tab-happenings-save.bru
+  - tabs/tab-institutions-across-world-save.bru
+  - tabs/tab-commute-save.bru
+  - tabs/tab-college-overview-save.bru
+
+  Registration tabs returned in response data:
+  - student_code_of_conduct
+  - happenings
+  - institutions_across_world
+  - commute
+  - college_overview
+}

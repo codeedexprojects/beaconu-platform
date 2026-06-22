@@ -5,10 +5,16 @@ export const collegeOnboardingSchemas = {
     college_name: z.string().trim().min(1).max(255),
     university_name: z.string().trim().max(255).optional(),
     contact_person_name: z.string().trim().min(1).max(255),
-    contact_email: z.string().trim().email().max(255),
+    contact_email: z
+      .string()
+      .trim()
+      .email()
+      .max(255)
+      .transform((v) => v.toLowerCase()),
     contact_phone: z.string().trim().max(20).optional(),
     city: z.string().trim().max(100).optional(),
     state: z.string().trim().max(100).optional(),
+    group_code: z.string().trim().max(20).optional(),
     message: z.string().trim().optional(),
   }),
 
@@ -16,6 +22,22 @@ export const collegeOnboardingSchemas = {
     status: z.enum(["pending", "approved", "rejected"]),
     review_remarks: z.string().trim().optional(),
     enableInstitutionGroup: z.boolean().optional(),
+    universityId: z
+      .preprocess(
+        (value) => {
+          if (value === undefined || value === null) return undefined;
+          if (typeof value !== "string") return value;
+          const trimmed = value.trim();
+          return trimmed === "" ? undefined : trimmed;
+        },
+        z
+          .string()
+          .regex(
+            /^(UNV-\d+|[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
+            "Invalid universityId",
+          ),
+      )
+      .optional(),
   }),
 
   list: z.object({

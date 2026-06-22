@@ -3,9 +3,9 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -51,6 +51,8 @@ const setupSchema = z
 type LoginFormData = z.infer<typeof loginSchema>;
 type SetupFormData = z.infer<typeof setupSchema>;
 
+type FormErrors = Record<string, { message?: string } | undefined>;
+
 function getAuthToastMessage(error: unknown): string {
   if (error instanceof Error && !(error instanceof ApiError)) {
     return error.message;
@@ -69,6 +71,28 @@ function getAuthToastMessage(error: unknown): string {
   return getErrorMessage(error);
 }
 
+function getFormErrorMessages(errors: FormErrors): string[] {
+  return Object.values(errors)
+    .map((error) => error?.message?.trim())
+    .filter((message): message is string => Boolean(message));
+}
+
+function toastFormErrors(errors: FormErrors, fallbackMessage: string) {
+  const messages = getFormErrorMessages(errors);
+
+  if (!messages.length) {
+    toast.error(fallbackMessage);
+    return;
+  }
+
+  const [firstMessage, ...restMessages] = messages;
+  const description = restMessages.length ? restMessages.join("\n") : undefined;
+
+  toast.error(firstMessage, {
+    description,
+  });
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,6 +101,10 @@ function LoginPageContent() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const [collegeSlug, setCollegeSlug] = useState<string | null>(null);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSetupPassword, setShowSetupPassword] = useState(false);
+  const [showSetupConfirmPassword, setShowSetupConfirmPassword] =
+    useState(false);
   const { mutateAsync: loginCollegeAdmin, isPending: isLoginPending } =
     useLoginCollegeAdmin();
   const { mutateAsync: setupCollegeAccount, isPending: isSetupPending } =
@@ -89,7 +117,7 @@ function LoginPageContent() {
   const setupForm = useForm<SetupFormData>({
     resolver: zodResolver(setupSchema as any),
   });
-
+  //
   const {
     data: validationData,
     error: setupError,
@@ -172,6 +200,20 @@ function LoginPageContent() {
     }
   };
 
+  const onLoginInvalid = () => {
+    toastFormErrors(
+      loginForm.formState.errors as FormErrors,
+      "Please fix the login form errors.",
+    );
+  };
+
+  const onSetupInvalid = () => {
+    toastFormErrors(
+      setupForm.formState.errors as FormErrors,
+      "Please fix the password setup errors.",
+    );
+  };
+
   const displayName =
     college?.name ?? validationData?.collegeName ?? "College Admin";
   const logoUrl = college?.logoUrl ?? college?.university?.logoUrl ?? null;
@@ -243,7 +285,7 @@ function LoginPageContent() {
         <CardContent>
           {isSetupMode ? (
             <form
-              onSubmit={setupForm.handleSubmit(onSetupSubmit)}
+              onSubmit={setupForm.handleSubmit(onSetupSubmit, onSetupInvalid)}
               className="space-y-4"
             >
               <div className="space-y-2">
@@ -257,11 +299,28 @@ function LoginPageContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...setupForm.register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showSetupPassword ? "text" : "password"}
+                    className="pr-10"
+                    {...setupForm.register("password")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={
+                      showSetupPassword ? "Hide password" : "Show password"
+                    }
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => setShowSetupPassword((value) => !value)}
+                  >
+                    {showSetupPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {setupForm.formState.errors.password && (
                   <p className="text-sm text-destructive">
                     {setupForm.formState.errors.password.message}
@@ -271,11 +330,32 @@ function LoginPageContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  {...setupForm.register("confirmPassword")}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showSetupConfirmPassword ? "text" : "password"}
+                    className="pr-10"
+                    {...setupForm.register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={
+                      showSetupConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() =>
+                      setShowSetupConfirmPassword((value) => !value)
+                    }
+                  >
+                    {showSetupConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {setupForm.formState.errors.confirmPassword && (
                   <p className="text-sm text-destructive">
                     {setupForm.formState.errors.confirmPassword.message}
@@ -296,7 +376,7 @@ function LoginPageContent() {
             </form>
           ) : (
             <form
-              onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+              onSubmit={loginForm.handleSubmit(onLoginSubmit, onLoginInvalid)}
               className="space-y-4"
             >
               <div className="space-y-2">
@@ -315,11 +395,28 @@ function LoginPageContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...loginForm.register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showLoginPassword ? "text" : "password"}
+                    className="pr-10"
+                    {...loginForm.register("password")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={
+                      showLoginPassword ? "Hide password" : "Show password"
+                    }
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => setShowLoginPassword((value) => !value)}
+                  >
+                    {showLoginPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {loginForm.formState.errors.password && (
                   <p className="text-sm text-destructive">
                     {loginForm.formState.errors.password.message}

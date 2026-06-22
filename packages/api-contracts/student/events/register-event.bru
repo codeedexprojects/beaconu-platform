@@ -1,0 +1,77 @@
+meta {
+  name: Register for Event
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/events/{{eventId}}/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "paid_amount": 499,
+    "transaction_id": "txn_evt_001"
+  }
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken");
+  const eventId = bru.getEnvVar("eventId");
+
+  if (!token) {
+    throw new Error("studentAccessToken is missing. Run Student login first.");
+  }
+
+  if (!eventId) {
+    throw new Error("eventId is missing. Run Upcoming Events/Get Event first.");
+  }
+
+  const tokenParts = token.split(".");
+  if (tokenParts.length !== 3) {
+    throw new Error("studentAccessToken is not a valid JWT format.");
+  }
+
+  try {
+    const payloadRaw = tokenParts[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const payloadJson = JSON.parse(Buffer.from(payloadRaw, "base64").toString("utf8"));
+
+    if (payloadJson.userType !== "student") {
+      throw new Error(`Wrong token userType=${payloadJson.userType}. Use a student token.`);
+    }
+
+    if (typeof payloadJson.userId !== "string" || !payloadJson.userId.startsWith("STU-")) {
+      throw new Error(
+        `Suspicious student token userId=${payloadJson.userId}. Expected STU-* user id.`,
+      );
+    }
+  } catch (err) {
+    throw new Error(
+      `Unable to parse/validate studentAccessToken payload: ${err.message || err}`,
+    );
+  }
+}
+
+docs {
+  Register the authenticated student for an event.
+  Only published events can be registered for.
+  Atomically increments registered_count and checks seat availability.
+
+  Body (optional):
+  - paid_amount: amount paid by student during registration (for paid events)
+  - transaction_id: payment transaction reference
+
+  Errors:
+  - 404: Event not found
+  - 400: Event is not open for registration
+  - 409: Event is fully booked / Already registered
+}

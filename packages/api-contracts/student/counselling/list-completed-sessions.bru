@@ -1,0 +1,47 @@
+meta {
+  name: List Completed Sessions
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/completed
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  date:
+  search:
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+}
+
+docs {
+  Lists only completed counselling sessions for logged-in student.
+
+  ## Optional filters
+  - date: YYYY-MM-DD (exact scheduled date)
+  - search: counsellor name/email, booking reason, session type/mode
+
+  ## Response shape (each item)
+  Each session includes "payment_status" ("pending" | "paid" | "refunded"),
+  "transaction_id", and "refund_status" ("pending" | "approved" | "rejected" | null).
+  refund_status reflects the most recent refund request for that session
+  (null if the student never requested a refund). If a refund is approved,
+  payment_status also flips to "refunded".
+
+  Table: counselling_sessions, counselling_refund_requests
+}

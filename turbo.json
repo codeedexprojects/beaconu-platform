@@ -1,9 +1,10 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
+  "concurrency": "20",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "*.tsbuildinfo"]
     },
     "dev": {
       "cache": false,

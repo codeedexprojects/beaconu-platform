@@ -13,9 +13,14 @@ interface AuthBlinkUserData {
   country?: string | null;
   agencyName?: string | null;
   agencyRegNumber?: string | null;
+  companyPan?: string | null;
+  currentAccNo?: string | null;
+  ifsc?: string | null;
+  gstin?: string | null;
   associateParentId?: string | null;
   blinkRoleId: string;
   status: string;
+  profileMetadata?: Prisma.InputJsonValue;
 }
 
 interface AuthCounsellorData {
@@ -24,6 +29,8 @@ interface AuthCounsellorData {
   passwordHash: string;
   phoneNumber?: string | null;
   counsellorType: "academic" | "mindcare";
+  knownLanguages?: string | null;
+  profileMetadata?: Prisma.InputJsonValue;
   status: string;
 }
 
@@ -91,14 +98,34 @@ export class AuthRepository {
   static async invalidateSession(refreshToken: string) {
     await prisma.userSession.updateMany({
       where: { refreshToken, isActive: true },
-      data: { isActive: false },
+      data: { isActive: false, deviceInfo: {} },
     });
   }
 
   static async invalidateAllUserSessions(userId: string, userType: string) {
     await prisma.userSession.updateMany({
       where: { userId, userType, isActive: true },
-      data: { isActive: false },
+      data: { isActive: false, deviceInfo: {} },
+    });
+  }
+
+  /**
+   * Clears the FCM token from all OTHER active sessions for this user so only
+   * the newly created session receives push notifications.
+   */
+  static async clearFcmTokensExcept(
+    userId: string,
+    userType: string,
+    currentSessionId: string,
+  ) {
+    await prisma.userSession.updateMany({
+      where: {
+        userId,
+        userType,
+        isActive: true,
+        id: { not: currentSessionId },
+      },
+      data: { deviceInfo: {} },
     });
   }
 
@@ -115,6 +142,13 @@ export class AuthRepository {
       where: { id },
       include: { blinkRole: true },
     });
+  }
+
+  static async updateBlinkUserById(
+    id: string,
+    data: { passwordHash?: string; passwordChangedAt?: Date },
+  ) {
+    return prisma.blinkUser.update({ where: { id }, data });
   }
 
   static async findBlinkUserByRegNumber(regNumber: string) {
@@ -151,9 +185,14 @@ export class AuthRepository {
         country: data.country,
         agencyName: data.agencyName,
         agencyRegNumber: data.agencyRegNumber,
+        companyPan: data.companyPan,
+        currentAccNo: data.currentAccNo,
+        ifsc: data.ifsc,
+        gstin: data.gstin,
         associateParentId: data.associateParentId,
         blinkRoleId: data.blinkRoleId,
         status: data.status,
+        profileMetadata: data.profileMetadata ?? {},
       },
       include: { blinkRole: true },
     });
@@ -162,6 +201,21 @@ export class AuthRepository {
   // Counsellor lookups
   static async findCounsellorByEmail(email: string) {
     return prisma.counsellor.findUnique({ where: { email } });
+  }
+
+  static async findCounsellorCodesByEmails(
+    emails: string[],
+  ): Promise<Map<string, string>> {
+    if (emails.length === 0) return new Map();
+    const counsellors = await prisma.counsellor.findMany({
+      where: { email: { in: emails } },
+      select: { email: true, counsellorCode: true },
+    });
+    return new Map(
+      counsellors
+        .filter((c) => c.counsellorCode !== null)
+        .map((c) => [c.email, c.counsellorCode!]),
+    );
   }
 
   static async findCounsellorById(id: string) {
@@ -183,6 +237,8 @@ export class AuthRepository {
         passwordHash: data.passwordHash,
         phoneNumber: data.phoneNumber,
         counsellorType: data.counsellorType,
+        knownLanguages: data.knownLanguages,
+        profileMetadata: data.profileMetadata ?? {},
         status: data.status,
       },
     });
@@ -256,6 +312,61 @@ export class AuthRepository {
     await prisma.student.update({
       where: { id },
       data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async findStudentByEmail(email: string) {
+    return prisma.student.findUnique({ where: { email } });
+  }
+
+  static async findStudentByGoogleId(googleId: string) {
+    return prisma.student.findUnique({ where: { googleId } });
+  }
+
+  static async upsertStudentFromGoogle(data: {
+    googleId: string;
+    email: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  }) {
+    const updateFields = {
+      fullName: data.fullName,
+      avatarUrl: data.avatarUrl ?? null,
+      isEmailVerified: true,
+      lastLoginAt: new Date(),
+    };
+
+    const byGoogle = await prisma.student.findUnique({
+      where: { googleId: data.googleId },
+    });
+    if (byGoogle) {
+      return prisma.student.update({
+        where: { id: byGoogle.id },
+        data: updateFields,
+      });
+    }
+
+    // Link existing phone-auth account that shares the same email
+    const byEmail = await prisma.student.findUnique({
+      where: { email: data.email },
+    });
+    if (byEmail) {
+      return prisma.student.update({
+        where: { id: byEmail.id },
+        data: { googleId: data.googleId, ...updateFields },
+      });
+    }
+
+    return prisma.student.create({
+      data: {
+        googleId: data.googleId,
+        email: data.email,
+        fullName: data.fullName,
+        avatarUrl: data.avatarUrl ?? null,
+        isEmailVerified: true,
+        source: "google",
+        status: "active",
+      },
     });
   }
 

@@ -1,0 +1,40 @@
+meta {
+  name: Create Campus Ambassador
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/ambassadors
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "full_name": "Priya Sharma",
+    "email": "priya.ambassador@college.edu",
+    "phone_number": "+919900112233",
+    "college_id": "{{collegeId}}",
+    "ambassador_type": "student",
+    "password": "Password@123",
+    "confirm_password": "Password@123"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("ambassadorId", data.data.id);
+    }
+  }
+}

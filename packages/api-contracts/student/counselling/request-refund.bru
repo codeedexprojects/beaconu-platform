@@ -1,0 +1,65 @@
+meta {
+  name: Request Refund
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}/refund-request
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "upi_id": "student@upi",
+    "reason": "The counsellor did not join the session at the scheduled time.",
+    "proof_url": "{{refundProofUrl}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("refundRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Requests a refund for a paid counselling session. Goes to the super
+  admin panel for manual review — does not refund automatically.
+  Requires: student access token (must own the session).
+
+  Validation:
+  - Can only be requested after the session's scheduled meeting time
+    (scheduled_date + end_time, IST) has passed.
+  - Session must have payment_status = "paid" (free sessions have nothing
+    to refund) and must not already be "refunded".
+  - Cancelled sessions are refunded automatically via Cancel Session —
+    they cannot use this endpoint.
+  - Only one pending refund request is allowed per session at a time.
+
+  Body:
+  - upi_id (required): UPI VPA format, e.g. name@bank — where the refund
+    will be sent if approved.
+  - reason (required): min 10 chars, max 2000.
+  - proof_url (optional): permanentUrl from Verify Refund Proof Upload.
+
+  Refund amount is the session's authoritative session_fee — not taken
+  from the request body.
+
+  Response: { id, session_id, amount, upi_id, reason, proof_url, status,
+  created_at }
+
+  Tables: counselling_refund_requests
+}

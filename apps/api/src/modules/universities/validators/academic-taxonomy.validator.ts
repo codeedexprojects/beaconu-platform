@@ -14,16 +14,29 @@ const slugSchema = z
 
 export const academicTaxonomySchemas = {
   idParam: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
   }),
 
   listDisciplinesQuery: z.object({
     is_active: optionalBooleanFromQuery.optional(),
-    stream_id: z.string().uuid().optional(),
+    stream_id: z.string().optional(),
   }),
 
   listSimpleQuery: z.object({
     is_active: optionalBooleanFromQuery.optional(),
+  }),
+
+  adminListQuery: z.object({
+    search: z.string().optional(),
+    is_active: optionalBooleanFromQuery.optional(),
+    stream_id: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v === "" ? undefined : v))
+      .pipe(z.string().optional()),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(500).optional().default(10),
   }),
 
   publicListQuery: z.object({
@@ -33,7 +46,19 @@ export const academicTaxonomySchemas = {
       .trim()
       .optional()
       .transform((v) => (v === "" ? undefined : v))
-      .pipe(z.string().uuid().optional()),
+      .pipe(z.string().optional()),
+    discipline_id: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v === "" ? undefined : v))
+      .pipe(z.string().optional()),
+    stream_id: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v === "" ? undefined : v))
+      .pipe(z.string().optional()),
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   }),
@@ -67,7 +92,7 @@ export const academicTaxonomySchemas = {
     }),
 
   createDiscipline: z.object({
-    stream_id: z.string().uuid(),
+    stream_id: z.string(),
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
     logo_url: z
@@ -81,7 +106,7 @@ export const academicTaxonomySchemas = {
 
   updateDiscipline: z
     .object({
-      stream_id: z.string().uuid().optional(),
+      stream_id: z.string().optional(),
       name: z.string().trim().min(1).max(100).optional(),
       slug: slugSchema.max(50).optional(),
       logo_url: z
@@ -158,6 +183,9 @@ export type ListDisciplinesQuery = z.output<
 >;
 export type ListSimpleQuery = z.output<
   typeof academicTaxonomySchemas.listSimpleQuery
+>;
+export type AdminListQuery = z.output<
+  typeof academicTaxonomySchemas.adminListQuery
 >;
 export type PublicListQuery = z.output<
   typeof academicTaxonomySchemas.publicListQuery

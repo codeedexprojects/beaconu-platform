@@ -13,6 +13,10 @@ import {
   updateCollegeProfile,
   getMyInstitutionGroup,
   joinInstitutionGroup,
+  updateCollegeCourse,
+  deleteCollegeCourse,
+  getCourseTabs,
+  updateCourseTab,
   type CreateCampusInput,
   type CreateCourseInput,
   type UpdateCollegeProfileInput,
@@ -77,6 +81,72 @@ export function useCreateCollegeCourse() {
     mutationFn: (data: CreateCourseInput) => createCollegeCourse(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.courses });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateCollegeCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<CreateCourseInput>;
+    }) => updateCollegeCourse(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.courses });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteCollegeCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCollegeCourse(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.courses });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCourseTabs(courseId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.courses, courseId, "tabs"],
+    queryFn: () => getCourseTabs(courseId),
+    enabled: !!courseId && enabled,
+  });
+}
+
+export function useUpdateCourseTab() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      tabName,
+      data,
+    }: {
+      courseId: string;
+      tabName: string;
+      data: any;
+    }) => updateCourseTab(courseId, tabName, { data }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.courses, variables.courseId, "tabs"],
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

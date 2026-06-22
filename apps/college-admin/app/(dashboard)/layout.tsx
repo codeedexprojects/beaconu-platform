@@ -15,6 +15,7 @@ import {
   Truck,
   Settings,
   LayoutDashboard,
+  Star,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -25,6 +26,7 @@ import {
 import { useLogoutCollegeAdmin } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
+import { Bell, HelpCircle } from "lucide-react";
 
 const WIZARD_STEPS = [
   { id: "profile", name: "College Profile", path: "/setup/profile" },
@@ -192,6 +194,7 @@ export default function DashboardLayout({
     if (path.includes("/hostels")) return "hostel.view";
     if (path.includes("/commute")) return "commute.view";
     if (path.includes("/settings")) return "profile.view";
+    if (path.includes("/ambassadors")) return "staff.view";
     return null;
   };
 
@@ -239,47 +242,28 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/20">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b bg-background shadow-sm">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <School className="h-5 w-5 text-primary" />
-            </div>
-            <span className="font-bold text-lg hidden sm:inline-block tracking-tight">
-              {user.collegeName}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium leading-none">
-                {user.fullName}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {getRoleDisplayName(user.roleSlug)}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              title="Log out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <div className="flex h-screen flex-col bg-cream">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar (Onboarding Wizard or Active console dashboard navigation) */}
         {!isPendingSetup ? (
-          <aside className="w-64 shrink-0 border-r bg-card hidden md:block">
-            <div className="p-6">
-              <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-6">
+          <aside className="w-72 flex flex-col shrink-0 border-r border-transparent bg-navy hidden md:flex h-screen sticky top-0">
+            {/* Logo */}
+            <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-navy-dark/50">
+              <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+                <School className="h-5 w-5 text-navy-dark" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-lg font-bold text-white font-serif tracking-wide truncate max-w-[180px]">
+                  {user.collegeName}
+                </span>
+                <span className="text-[10px] text-gray-sidebar uppercase tracking-widest mt-1">
+                  College Admin
+                </span>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <h2 className="font-semibold text-[10px] uppercase tracking-widest text-gray-sidebar mb-4 px-2">
                 Active Console
               </h2>
               <nav className="space-y-1">
@@ -333,6 +317,12 @@ export default function DashboardLayout({
                     permission: "commute.view",
                   },
                   {
+                    name: "Campus Ambassadors",
+                    path: "/ambassadors",
+                    icon: Star,
+                    permission: "staff.view",
+                  },
+                  {
                     name: "Settings",
                     path: "/settings",
                     icon: Settings,
@@ -355,28 +345,69 @@ export default function DashboardLayout({
                         onClick={() =>
                           router.push(getPortalPath(collegeSlug, item.path))
                         }
-                        className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                        className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
                           isActive
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            ? "bg-gold text-white"
+                            : "text-gray-sidebar hover:bg-navy-dark hover:text-white"
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon
+                          className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-gray-sidebar group-hover:text-white"}`}
+                        />
                         {item.name}
                       </button>
                     );
                   })}
               </nav>
             </div>
+
+            {/* User Profile Footer */}
+            <div className="p-4 border-t border-navy-dark/50 mt-auto">
+              <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-navy-dark">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-navy-dark bg-navy-dark text-xs text-white uppercase font-medium">
+                  {user.fullName?.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="text-sm font-medium text-white truncate">
+                    {user.fullName}
+                  </span>
+                  <span className="text-[11px] text-gray-sidebar truncate">
+                    {getRoleDisplayName(user.roleSlug)}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 text-gray-sidebar hover:text-white rounded-md hover:bg-navy transition-colors"
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </aside>
         ) : (
-          <aside className="w-64 shrink-0 border-r bg-card hidden md:block">
-            <div className="p-6">
-              <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-6">
+          <aside className="w-72 flex flex-col shrink-0 border-r border-transparent bg-navy hidden md:flex h-screen sticky top-0">
+            {/* Logo */}
+            <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-navy-dark/50">
+              <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
+                <School className="h-5 w-5 text-navy-dark" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-lg font-bold text-white font-serif tracking-wide truncate max-w-[180px]">
+                  {user.collegeName}
+                </span>
+                <span className="text-[10px] text-gray-sidebar uppercase tracking-widest mt-1">
+                  Setup
+                </span>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <h2 className="font-semibold text-[10px] uppercase tracking-widest text-gray-sidebar mb-6 px-2">
                 Onboarding Setup
               </h2>
-              <nav className="space-y-4 relative">
-                <div className="absolute left-3.5 top-2 bottom-6 w-0.5 bg-muted z-0"></div>
+              <nav className="space-y-4 relative px-2">
+                <div className="absolute left-[1.1rem] top-2 bottom-6 w-[2px] bg-navy-dark z-0"></div>
                 {WIZARD_STEPS.map((step, index) => {
                   const isActive = index === currentStepIndex;
                   const isPast = index < currentStepIndex;
@@ -387,12 +418,12 @@ export default function DashboardLayout({
                       className="flex items-start gap-4 relative z-10"
                     >
                       <div
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-medium transition-colors ${
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-medium transition-colors ${
                           isPast
-                            ? "border-primary bg-primary text-primary-foreground"
+                            ? "border-success bg-success text-white"
                             : isActive
-                              ? "border-primary bg-background text-primary"
-                              : "border-muted-foreground/30 bg-background text-muted-foreground"
+                              ? "border-gold bg-gold text-white"
+                              : "border-gray-sidebar/30 bg-navy text-gray-sidebar"
                         }`}
                       >
                         {isPast ? (
@@ -404,9 +435,9 @@ export default function DashboardLayout({
                       <div className="pt-1">
                         <p
                           className={`text-sm font-medium ${
-                            isActive
-                              ? "text-foreground"
-                              : "text-muted-foreground"
+                            isActive || isPast
+                              ? "text-white"
+                              : "text-gray-sidebar"
                           }`}
                         >
                           {step.name}
@@ -417,20 +448,44 @@ export default function DashboardLayout({
                 })}
               </nav>
             </div>
+
+            {/* User Profile Footer */}
+            <div className="p-4 border-t border-navy-dark/50 mt-auto">
+              <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-navy-dark">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-navy-dark bg-navy-dark text-xs text-white uppercase font-medium">
+                  {user.fullName?.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="text-sm font-medium text-white truncate">
+                    {user.fullName}
+                  </span>
+                  <span className="text-[11px] text-gray-sidebar truncate">
+                    {getRoleDisplayName(user.roleSlug)}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 text-gray-sidebar hover:text-white rounded-md hover:bg-navy transition-colors"
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </aside>
         )}
 
-        {/* Mobile Wizard Nav (only visible if pending setup) */}
+        {/* Mobile Wizard Nav */}
         {isPendingSetup && (
-          <div className="md:hidden w-full bg-card border-b p-4 flex items-center justify-between">
+          <div className="md:hidden w-full bg-white border-b p-4 flex items-center justify-between shadow-soft">
             {WIZARD_STEPS.map((step, index) => {
               if (index === currentStepIndex) {
                 return (
                   <div
                     key={step.id}
-                    className="flex items-center gap-2 font-medium text-sm"
+                    className="flex items-center gap-2 font-medium text-sm text-navy-dark"
                   >
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold text-white text-xs">
                       {index + 1}
                     </span>
                     {step.name}
@@ -439,18 +494,74 @@ export default function DashboardLayout({
               }
               return null;
             })}
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-gray-label">
               Step {currentStepIndex + 1} of {WIZARD_STEPS.length}
             </div>
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-4xl">
-            {hasAccess ? children : renderAccessDenied()}
+        <main className="flex-1 flex flex-col overflow-y-auto">
+          {/* Top Navbar */}
+          <header className="sticky top-0 z-40 border-b border-border bg-cream/90 backdrop-blur-md">
+            <div className="flex h-16 items-center justify-between px-6">
+              <div className="flex items-center text-sm font-medium text-gray-label">
+                <span className="hover:text-navy-dark transition-colors cursor-pointer">
+                  Dashboard
+                </span>
+                <span className="mx-2">/</span>
+                <span className="text-navy-dark">
+                  {WIZARD_STEPS.find((s) => appPathname.includes(s.path))
+                    ?.name ||
+                    [
+                      { name: "Overview Profile", path: "/setup/profile" },
+                      { name: "Campuses Catalog", path: "/setup/campuses" },
+                      { name: "Academics Catalog", path: "/setup/academics" },
+                      { name: "Role Builder (RBAC)", path: "/roles" },
+                      { name: "Staff Directory", path: "/staff" },
+                      { name: "Hostels Occupancy", path: "/hostels" },
+                      { name: "Bus Fleet & Commute", path: "/commute" },
+                      { name: "Campus Ambassadors", path: "/ambassadors" },
+                      { name: "Settings", path: "/settings" },
+                    ].find((s) => appPathname.includes(s.path))?.name ||
+                    "Overview"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full h-9 w-9 border-border text-gray-label hover:text-navy-dark hover:bg-white bg-white"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full h-9 w-9 border-border text-gray-label hover:text-navy-dark hover:bg-white relative bg-white"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-gold border-2 border-white"></span>
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto max-w-4xl">
+              {hasAccess ? children : renderAccessDenied()}
+            </div>
           </div>
         </main>
       </div>
+
+      {/* Global CSS overrides to position the user profile footer correctly when sidebar is sticky, since we changed the structure slightly */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        aside > div:last-child { margin-bottom: 0; }
+      `,
+        }}
+      />
     </div>
   );
 }

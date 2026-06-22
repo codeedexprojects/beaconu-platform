@@ -1,0 +1,41 @@
+meta {
+  name: Rate Session
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}/rate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "rating": 5,
+    "rating_feedback": "Highly recommend! Very helpful academic counselling session."
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  const sessionId = bru.getEnvVar("sessionId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run Book Session or List Sessions first.");
+  }
+}
+
+docs {
+  Rates a completed counselling session.
+  - `rating`: integer between 1 and 5 (inclusive).
+  - `rating_feedback`: optional text comment/notes.
+}

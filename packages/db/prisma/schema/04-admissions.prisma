@@ -3,8 +3,8 @@
 // ============================================================
 
 model AdmissionCycle {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId     String    @map("college_id") @db.Uuid
+  id            String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
+  collegeId     String    @map("college_id")
   name          String    @db.VarChar(255)
   slug          String    @db.VarChar(100)
   programLevel  String    @map("program_level") @db.VarChar(30)
@@ -23,6 +23,7 @@ model AdmissionCycle {
   enrollments           Enrollment[]
   admissionFormConfigs  AdmissionFormConfig[]
   documentUploadConfigs DocumentUploadConfig[]
+  seatMatrices          SeatMatrix[]
 
   @@unique([collegeId, slug], name: "uq_cycle_slug_college")
   @@index([collegeId], name: "idx_cycles_college")
@@ -32,9 +33,9 @@ model AdmissionCycle {
 }
 
 model AdmissionCycleCourse {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admissionCycleId       String   @map("admission_cycle_id") @db.Uuid
-  courseId               String   @map("course_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('ACC-'::text || (nextval('admission_cycle_course_seq'::regclass))::text)"))
+  admissionCycleId       String   @map("admission_cycle_id")
+  courseId               String   @map("course_id")
   applicationFee         Decimal  @default(0) @map("application_fee") @db.Decimal(10, 2)
   interviewRequired      Boolean  @default(true) @map("interview_required")
   assessmentRequired     Boolean  @default(true) @map("assessment_required")
@@ -54,12 +55,12 @@ model AdmissionCycleCourse {
 }
 
 model Application {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                    String    @id @default(dbgenerated("('APP-'::text || (nextval('application_seq'::regclass))::text)"))
   applicationNumber     String    @unique @map("application_number") @db.VarChar(30)
-  studentId             String    @map("student_id") @db.Uuid
-  collegeId             String    @map("college_id") @db.Uuid
-  campusId              String?   @map("campus_id") @db.Uuid
-  admissionCycleId      String    @map("admission_cycle_id") @db.Uuid
+  studentId             String    @map("student_id")
+  collegeId             String    @map("college_id")
+  campusId              String?   @map("campus_id")
+  admissionCycleId      String    @map("admission_cycle_id")
   currentStep           Int       @default(1) @map("current_step") @db.SmallInt
   formStatus            String    @default("draft") @map("form_status") @db.VarChar(20)
   profilePhotoUrl       String?   @map("profile_photo_url") @db.Text
@@ -80,8 +81,8 @@ model Application {
   declaration           Json      @default("{}")
   totalApplicationFee   Decimal   @default(0) @map("total_application_fee") @db.Decimal(10, 2)
   feePaymentStatus      String    @default("pending") @map("fee_payment_status") @db.VarChar(20)
-  feeTransactionId      String?   @map("fee_transaction_id") @db.Uuid
-  referralCodeId        String?   @map("referral_code_id") @db.Uuid
+  feeTransactionId      String?   @map("fee_transaction_id")
+  referralCodeId        String?   @map("referral_code_id")
   submittedAt           DateTime? @map("submitted_at") @db.Timestamptz
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -105,13 +106,13 @@ model Application {
 }
 
 model ApplicationCourse {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId   String    @map("application_id") @db.Uuid
-  courseId        String    @map("course_id") @db.Uuid
+  id              String    @id @default(dbgenerated("('APC-'::text || (nextval('application_course_seq'::regclass))::text)"))
+  applicationId   String    @map("application_id")
+  courseId        String    @map("course_id")
   applicationFee  Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
   status          String    @default("draft") @db.VarChar(30)
   rejectionReason String?   @map("rejection_reason") @db.Text
-  quotaId         String?   @map("quota_id") @db.Uuid
+  quotaId         String?   @map("quota_id")
   statusHistory   Json      @default("[]") @map("status_history")
   statusUpdatedAt DateTime? @map("status_updated_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -139,8 +140,8 @@ model ApplicationCourse {
 }
 
 model ApplicationDocument {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId      String    @map("application_id") @db.Uuid
+  id                 String    @id @default(dbgenerated("('APD-'::text || (nextval('application_document_seq'::regclass))::text)"))
+  applicationId      String    @map("application_id")
   documentType       String    @map("document_type") @db.VarChar(50)
   documentCategory   String    @map("document_category") @db.VarChar(30)
   fileUrl            String    @map("file_url") @db.Text
@@ -148,7 +149,7 @@ model ApplicationDocument {
   fileSizeBytes      Int?      @map("file_size_bytes")
   verificationStatus String    @default("pending") @map("verification_status") @db.VarChar(20)
   rejectionReason    String?   @map("rejection_reason") @db.Text
-  verifiedBy         String?   @map("verified_by") @db.Uuid
+  verifiedBy         String?   @map("verified_by")
   verifiedAt         DateTime? @map("verified_at") @db.Timestamptz
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -166,12 +167,12 @@ model ApplicationDocument {
 }
 
 model ApplicationStatusLog {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId String   @map("application_course_id") @db.Uuid
+  id                  String   @id @default(dbgenerated("('APL-'::text || (nextval('application_status_log_seq'::regclass))::text)"))
+  applicationCourseId String   @map("application_course_id")
   fromStatus          String?  @map("from_status") @db.VarChar(30)
   toStatus            String   @map("to_status") @db.VarChar(30)
   changedByType       String   @map("changed_by_type") @db.VarChar(20)
-  changedById         String?  @map("changed_by_id") @db.Uuid
+  changedById         String?  @map("changed_by_id")
   remarks             String?  @db.Text
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -184,15 +185,15 @@ model ApplicationStatusLog {
 }
 
 model SeatCancellation {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationCourseId String    @map("application_course_id") @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('SCN-'::text || (nextval('seat_cancellation_seq'::regclass))::text)"))
+  applicationCourseId String    @map("application_course_id")
+  studentId           String    @map("student_id")
   reason              String    @db.Text
   supportingDocUrls   Json      @default("[]") @map("supporting_doc_urls")
   status              String    @default("pending") @db.VarChar(20)
   refundAmount        Decimal?  @map("refund_amount") @db.Decimal(10, 2)
   refundStatus        String?   @map("refund_status") @db.VarChar(20)
-  processedBy         String?   @map("processed_by") @db.Uuid
+  processedBy         String?   @map("processed_by")
   remarks             String?   @db.Text
   requestedAt         DateTime  @default(now()) @map("requested_at") @db.Timestamptz
   processedAt         DateTime? @map("processed_at") @db.Timestamptz
@@ -209,13 +210,13 @@ model SeatCancellation {
 }
 
 model Enrollment {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  courseId            String    @map("course_id") @db.Uuid
-  campusId            String?   @map("campus_id") @db.Uuid
-  applicationCourseId String    @unique @map("application_course_id") @db.Uuid
-  admissionCycleId    String    @map("admission_cycle_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('ENR-'::text || (nextval('enrollment_seq'::regclass))::text)"))
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  courseId            String    @map("course_id")
+  campusId            String?   @map("campus_id")
+  applicationCourseId String    @unique @map("application_course_id")
+  admissionCycleId    String    @map("admission_cycle_id")
   enrollmentNumber    String    @unique @map("enrollment_number") @db.VarChar(30)
   academicYear        String    @map("academic_year") @db.VarChar(10)
   enrolledAt          DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz
@@ -247,18 +248,18 @@ model Enrollment {
 }
 
 model CourseSwitchRequest {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId           String    @map("student_id") @db.Uuid
-  collegeId           String    @map("college_id") @db.Uuid
-  enrollmentId        String    @map("enrollment_id") @db.Uuid
-  toCourseId          String    @map("to_course_id") @db.Uuid
+  id                  String    @id @default(dbgenerated("('CSR-'::text || (nextval('course_switch_request_seq'::regclass))::text)"))
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  enrollmentId        String    @map("enrollment_id")
+  toCourseId          String    @map("to_course_id")
   reason              String    @db.Text
   supportingDocuments Json      @default("[]") @map("supporting_documents")
   status              String    @default("pending") @db.VarChar(20)
-  processedBy         String?   @map("processed_by") @db.Uuid
+  processedBy         String?   @map("processed_by")
   remarks             String?   @db.Text
   processedAt         DateTime? @map("processed_at") @db.Timestamptz
-  newEnrollmentId     String?   @map("new_enrollment_id") @db.Uuid
+  newEnrollmentId     String?   @map("new_enrollment_id")
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -278,9 +279,9 @@ model CourseSwitchRequest {
 }
 
 model AdmissionFormConfig {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId        String   @map("college_id") @db.Uuid
-  admissionCycleId String?  @map("admission_cycle_id") @db.Uuid
+  id               String   @id @default(dbgenerated("('AFC-'::text || (nextval('admission_form_config_seq'::regclass))::text)"))
+  collegeId        String   @map("college_id")
+  admissionCycleId String?  @map("admission_cycle_id")
   section          String   @db.VarChar(30)
   fieldConfig      Json     @map("field_config")
   sortOrder        Int      @default(0) @map("sort_order")
@@ -300,9 +301,9 @@ model AdmissionFormConfig {
 }
 
 model DocumentUploadConfig {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  collegeId              String   @map("college_id") @db.Uuid
-  admissionCycleId       String?  @map("admission_cycle_id") @db.Uuid
+  id                     String   @id @default(dbgenerated("('DUC-'::text || (nextval('document_upload_config_seq'::regclass))::text)"))
+  collegeId              String   @map("college_id")
+  admissionCycleId       String?  @map("admission_cycle_id")
   documentType           String   @map("document_type") @db.VarChar(50)
   documentCategory       String   @map("document_category") @db.VarChar(30)
   documentLabel          String   @map("document_label") @db.VarChar(100)
@@ -324,4 +325,26 @@ model DocumentUploadConfig {
   @@index([documentCategory], name: "idx_duc_category")
   @@index([collegeId, isActive], name: "idx_duc_active")
   @@map("document_upload_configs")
+}
+
+model SeatMatrix {
+  id               String   @id @default(dbgenerated("('SMX-'::text || (nextval('seat_matrix_seq'::regclass))::text)"))
+  courseId         String   @map("course_id")
+  admissionCycleId String   @map("admission_cycle_id")
+  quotaId          String   @map("quota_id")
+  totalSeats       Int      @map("total_seats")
+  openSeats        Int      @map("open_seats")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  admissionCycle AdmissionCycle @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  quota          CourseQuota    @relation(fields: [quotaId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, admissionCycleId, quotaId], name: "uq_seat_matrix")
+  @@index([courseId], name: "idx_seat_matrix_course")
+  @@index([admissionCycleId], name: "idx_seat_matrix_cycle")
+  @@index([quotaId], name: "idx_seat_matrix_quota")
+  @@map("seat_matrix")
 }

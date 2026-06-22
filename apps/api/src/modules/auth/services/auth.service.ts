@@ -5,17 +5,21 @@ import {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
+  ValidationError,
 } from "@/shared/errors";
 import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
+import { auth as firebaseAuth } from "@/shared/lib/firebase";
 import {
   BLINK_ROLE_PERMISSIONS,
   BLINK_ROLES,
 } from "@/modules/blink/blink.permissions";
 import { JwtUtils } from "../auth.jwt";
 import { AuthRepository } from "../repositories/auth.repository";
+import { CounsellorRequestRepository } from "@/modules/counselling/repositories/counsellor-request.repository";
 import { UserType, TokenResponse } from "../auth.types";
 import {
   LoginInput,
+  CounsellorLoginInput,
   LoginBlogAuthorInput,
   PlatformLoginInput,
   RegisterCounsellorInput,
@@ -26,8 +30,10 @@ import {
 } from "../validators/auth.validator";
 
 const OTP_TTL_MS = 5 * 60 * 1000;
-// Swap this Map with Redis (setex/get/del) when moving to production.
+const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+// Swap both Maps with Redis (setex/get/del) when moving to production.
 const otpStore = new Map<string, { otp: string; expiresAt: Date }>();
+const resetTokenStore = new Map<string, { userId: string; expiresAt: Date }>();
 
 function getBlinkUserType(roleSlug: string): UserType {
   switch (roleSlug) {
@@ -56,6 +62,19 @@ export class AuthService {
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
 
+    if (data.blink_role && blinkUser.blinkRole.slug !== data.blink_role) {
+      const roleLabels: Record<string, string> = {
+        associate_admin: "an associate admin",
+        associate_employee: "an associate employee",
+        campus_ambassador: "a campus ambassador",
+      };
+      const actual =
+        roleLabels[blinkUser.blinkRole.slug] ?? blinkUser.blinkRole.slug;
+      throw new ForbiddenError(
+        `This account is registered as ${actual}. Please use the correct login.`,
+      );
+    }
+
     if (blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_ADMIN) {
       if (
         !data.agency_reg_number ||
@@ -66,7 +85,22 @@ export class AuthService {
     }
 
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
-      throw new ForbiddenError(`Account is ${blinkUser.status}`);
+      const isEmployee =
+        blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_EMPLOYEE;
+      const contact = isEmployee ? "your agency admin" : "support";
+
+      const statusMessages: Record<string, string> = {
+        [ACCOUNT_STATUS.PENDING_APPROVAL]: isEmployee
+          ? "Your account is pending approval by your agency admin."
+          : "Your account is pending platform approval. You will be notified once approved.",
+        [ACCOUNT_STATUS.REJECTED]: `Your account was not approved. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.SUSPENDED]: `Your account has been suspended. Please contact ${contact}.`,
+        [ACCOUNT_STATUS.INACTIVE]: `Your account has been deactivated. Please contact ${contact}.`,
+      };
+
+      throw new ForbiddenError(
+        statusMessages[blinkUser.status] ?? `Account is ${blinkUser.status}.`,
+      );
     }
 
     const userType = getBlinkUserType(blinkUser.blinkRole.slug);
@@ -74,7 +108,16 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: blinkUser.id,
       userType,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        blinkUser.id,
+        userType,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateBlinkLastLogin(blinkUser.id);
 
@@ -99,12 +142,32 @@ export class AuthService {
     };
   }
 
-  static async loginCounsellor(data: LoginInput) {
+  static async loginCounsellor(data: CounsellorLoginInput) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     const counsellor =
       await AuthRepository.findCounsellorByEmail(normalizedEmail);
-    if (!counsellor) throw new UnauthorizedError("Invalid credentials");
+    if (!counsellor) {
+      const request =
+        await CounsellorRequestRepository.findByEmail(normalizedEmail);
+      if (request?.status === "pending") {
+        throw new ForbiddenError(
+          "Your registration is pending admin approval. You will be able to log in once approved.",
+        );
+      }
+      if (request?.status === "rejected") {
+        throw new ForbiddenError(
+          "Your registration was not approved. Please contact support.",
+        );
+      }
+      throw new UnauthorizedError("Invalid credentials");
+    }
+
+    if (counsellor.counsellorType !== data.counsellor_type) {
+      throw new ForbiddenError(
+        `This account is registered as a ${counsellor.counsellorType} counsellor. Please use the correct login.`,
+      );
+    }
 
     const isMatch = await CryptoUtils.compare(
       data.password,
@@ -118,7 +181,16 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: counsellor.id,
       userType: USER_TYPES.COUNSELLOR,
+      deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        counsellor.id,
+        USER_TYPES.COUNSELLOR,
+        session.sessionId,
+      );
+    }
 
     await AuthRepository.updateCounsellorLastLogin(counsellor.id);
 
@@ -127,6 +199,7 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       permissions: [],
       sessionId: session.sessionId,
+      counsellorType: counsellor.counsellorType as "academic" | "mindcare",
     });
 
     return {
@@ -166,6 +239,7 @@ export class AuthService {
       userType: USER_TYPES.COUNSELLOR,
       permissions: [],
       sessionId: session.sessionId,
+      counsellorType: counsellor.counsellorType as "academic" | "mindcare",
     });
 
     return {
@@ -195,7 +269,7 @@ export class AuthService {
     const role = await AuthRepository.findBlinkRoleBySlug(
       BLINK_ROLES.ASSOCIATE_ADMIN,
     );
-    if (!role) throw new NotFoundError("Blink role not found");
+    if (!role) throw new NotFoundError("Blink role");
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -209,6 +283,10 @@ export class AuthService {
       agencyRegNumber: data.agency_reg_number,
       blinkRoleId: role.id,
       status: ACCOUNT_STATUS.PENDING_APPROVAL,
+      companyPan: data.companyPan,
+      currentAccNo: data.currentAccNo,
+      ifsc: data.ifsc,
+      gstin: data.gstin,
     });
 
     const userType = USER_TYPES.BLINK_ASSOCIATE as UserType;
@@ -233,6 +311,10 @@ export class AuthService {
         fullName: user.fullName,
         agencyName: user.agencyName,
         roleSlug: user.blinkRole.slug,
+        companyPan: user.companyPan,
+        currentAccNo: user.currentAccNo,
+        ifsc: user.ifsc,
+        gstin: user.gstin,
       },
       tokens: { accessToken, refreshToken: session.refreshToken },
     };
@@ -248,8 +330,7 @@ export class AuthService {
     const parentUser = await AuthRepository.findBlinkUserByRegNumberWithRole(
       data.agency_reg_number,
     );
-    if (!parentUser)
-      throw new NotFoundError("Agency registration number not found");
+    if (!parentUser) throw new NotFoundError("Agency registration number");
     if (parentUser.blinkRole.slug !== BLINK_ROLES.ASSOCIATE_ADMIN) {
       throw new ForbiddenError(
         "Target agency is not an associate admin account",
@@ -259,7 +340,7 @@ export class AuthService {
     const role = await AuthRepository.findBlinkRoleBySlug(
       BLINK_ROLES.ASSOCIATE_EMPLOYEE,
     );
-    if (!role) throw new NotFoundError("Blink role not found");
+    if (!role) throw new NotFoundError("Blink role");
 
     const passwordHash = await CryptoUtils.hash(data.password);
 
@@ -378,6 +459,8 @@ export class AuthService {
       collegeId: userData.collegeId,
       permissions: userData.permissions,
       sessionId: newSession.sessionId,
+      counsellorType: (userData as { counsellorType?: "academic" | "mindcare" })
+        .counsellorType,
     });
 
     return { accessToken, refreshToken: newSession.refreshToken };
@@ -466,7 +549,6 @@ export class AuthService {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
     // TODO: deliver via SMS/WhatsApp provider using `key` and `otp`
-    console.log(process.env.NODE_ENV);
     if (process.env.NODE_ENV !== "production") {
       console.log(`[DEV OTP] ${key}: ${otp}`);
       return { devOtp: otp };
@@ -507,6 +589,13 @@ export class AuthService {
         userType: USER_TYPES.STUDENT,
         deviceInfo: fcmToken ? { fcmToken } : undefined,
       });
+      if (fcmToken) {
+        await AuthRepository.clearFcmTokensExcept(
+          student.id,
+          USER_TYPES.STUDENT,
+          session.sessionId,
+        );
+      }
       const accessToken = JwtUtils.generateAccessToken({
         userId: student.id,
         userType: USER_TYPES.STUDENT,
@@ -563,6 +652,76 @@ export class AuthService {
       userType: USER_TYPES.STUDENT,
       deviceInfo: data.fcm_token ? { fcmToken: data.fcm_token } : undefined,
     });
+    if (data.fcm_token) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
+    const accessToken = JwtUtils.generateAccessToken({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+      permissions: [],
+      sessionId: session.sessionId,
+    });
+
+    return {
+      user: {
+        id: student.id,
+        fullName: student.fullName,
+        email: student.email,
+        avatarUrl: student.avatarUrl,
+      },
+      tokens: { accessToken, refreshToken: session.refreshToken },
+    };
+  }
+
+  static async loginWithFirebaseGoogle(idToken: string, fcmToken?: string) {
+    if (!firebaseAuth) {
+      throw new UnauthorizedError("Google authentication is not configured");
+    }
+
+    let decoded: Awaited<ReturnType<typeof firebaseAuth.verifyIdToken>>;
+    try {
+      decoded = await firebaseAuth.verifyIdToken(idToken);
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (code === "auth/id-token-expired") {
+        throw new UnauthorizedError("Google token has expired");
+      }
+      throw new UnauthorizedError("Invalid Google token");
+    }
+
+    if (!decoded.email_verified) {
+      throw new ForbiddenError("Google account email is not verified");
+    }
+
+    const student = await AuthRepository.upsertStudentFromGoogle({
+      googleId: decoded.uid,
+      email: decoded.email!,
+      fullName: decoded.name ?? decoded.email!,
+      avatarUrl: decoded.picture ?? null,
+    });
+
+    if (student.status !== ACCOUNT_STATUS.ACTIVE) {
+      throw new ForbiddenError(`Account is ${student.status}`);
+    }
+
+    const session = await AuthRepository.createSession({
+      userId: student.id,
+      userType: USER_TYPES.STUDENT,
+      deviceInfo: fcmToken ? { fcmToken } : undefined,
+    });
+
+    if (fcmToken) {
+      await AuthRepository.clearFcmTokensExcept(
+        student.id,
+        USER_TYPES.STUDENT,
+        session.sessionId,
+      );
+    }
+
     const accessToken = JwtUtils.generateAccessToken({
       userId: student.id,
       userType: USER_TYPES.STUDENT,
@@ -640,7 +799,14 @@ export class AuthService {
       case USER_TYPES.COUNSELLOR: {
         const counsellor = await AuthRepository.findCounsellorById(userId);
         return counsellor
-          ? { roleId: undefined, collegeId: undefined, permissions: [] }
+          ? {
+              roleId: undefined,
+              collegeId: undefined,
+              permissions: [],
+              counsellorType: counsellor.counsellorType as
+                | "academic"
+                | "mindcare",
+            }
           : null;
       }
 
@@ -654,5 +820,71 @@ export class AuthService {
       default:
         return null;
     }
+  }
+
+  // ── Blink forgot-password ────────────────────────────────────────────────
+
+  static async blinkForgotPassword(
+    email: string,
+  ): Promise<{ devOtp?: string }> {
+    const user = await AuthRepository.findBlinkUserByEmail(email);
+    if (!user) throw new NotFoundError("Account with this email");
+    if (!user.phoneNumber)
+      throw new ValidationError("No phone number on file for this account");
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const key = `blink-reset:${email}`;
+    otpStore.set(key, { otp, expiresAt: new Date(Date.now() + OTP_TTL_MS) });
+
+    // TODO: deliver via SMS/WhatsApp to user.phoneCountryCode + user.phoneNumber
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[DEV RESET OTP] ${email}: ${otp}`);
+      return { devOtp: otp };
+    }
+    return {};
+  }
+
+  static async blinkVerifyResetOtp(
+    email: string,
+    otp: string,
+  ): Promise<{ resetToken: string }> {
+    const key = `blink-reset:${email}`;
+    const stored = otpStore.get(key);
+
+    if (!stored || stored.otp !== otp || stored.expiresAt < new Date()) {
+      throw new ValidationError("Invalid or expired OTP");
+    }
+
+    const user = await AuthRepository.findBlinkUserByEmail(email);
+    if (!user) throw new NotFoundError("User");
+
+    otpStore.delete(key);
+
+    const resetToken = crypto.randomUUID();
+    resetTokenStore.set(resetToken, {
+      userId: user.id,
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    });
+
+    return { resetToken };
+  }
+
+  static async blinkResetPassword(
+    resetToken: string,
+    newPassword: string,
+  ): Promise<void> {
+    const entry = resetTokenStore.get(resetToken);
+
+    if (!entry || entry.expiresAt < new Date()) {
+      throw new ValidationError("Invalid or expired reset token");
+    }
+
+    const passwordHash = await CryptoUtils.hash(newPassword);
+    await AuthRepository.updateBlinkUserById(entry.userId, {
+      passwordHash,
+      passwordChangedAt: new Date(),
+    });
+
+    resetTokenStore.delete(resetToken);
   }
 }

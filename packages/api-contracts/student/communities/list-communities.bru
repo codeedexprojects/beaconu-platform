@@ -1,0 +1,31 @@
+meta {
+  name: List Communities
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/communities
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 10
+  search: 
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists communities with pagination and optional search.
+  Response includes iconUrl, coverImageUrl, and isJoined fields.
+  Requires login token from student auth.
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Disable Community
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/communities/{{communityId}}/disable
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Disables a community by id.
+  Requires platform admin login token.
+  Your backend enforces super-admin check.
+}

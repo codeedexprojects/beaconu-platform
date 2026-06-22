@@ -1,0 +1,62 @@
+meta {
+  name: List Colleges
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges
+  body: none
+  auth: none
+}
+
+query {
+  ~universityId:
+  ~streamId:
+  ~disciplineId:
+  ~studyLevelId:
+  ~programTypeId:
+  ~sortBy: popularity
+  ~state: Karnataka
+  ~district: Bangalore
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("collegeId", data.data[0].id);
+    }
+    if (data.data && data.data[0] && data.data[0].slug) {
+      bru.setEnvVar("collegeSlug", data.data[0].slug);
+    }
+  }
+}
+
+docs {
+  Returns a lightweight list of active colleges with optional taxonomy and location filters.
+
+  Query parameters (all optional):
+  - universityId: Filter by university UUID
+  - streamId: Filter by stream UUID (ignored if disciplineId is set)
+  - disciplineId: Filter by discipline UUID
+  - studyLevelId: Filter by study level UUID
+  - programTypeId: Filter by program type UUID
+  - sortBy: Sort colleges by one of:
+    - popularity
+    - fees_high_to_low
+    - fees_low_to_high
+    (aliases `sort` and `filter` are also accepted)
+  - state: Filter by state name (case-insensitive, e.g. "Karnataka")
+  - district: Filter by district/city name (case-insensitive, e.g. "Bangalore")
+
+  Response includes per college:
+  - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
+    state, city, district, address, pinCode, status, createdAt, updatedAt
+  - university: { id, name, logoUrl, universityType: { id, name, slug } }
+  - campuses: full active campus list [{ id, collegeId, name, address, city, state,
+    pinCode, latitude, longitude, isMainCampus, status, createdAt, updatedAt }]
+
+  Note: tabs and profileSections are NOT included in the list response.
+  Use Get College By Id for college details with tab listing.
+}

@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import {
   UpdateCollegeProfileData,
   CreateCampusData,
@@ -6,6 +6,67 @@ import {
   CreateCourseData,
   UpdateCourseData,
 } from "../validators/college-registration.validator";
+
+const DEFAULT_COURSE_CREATE_TABS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+] as const;
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeToArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  return [value];
+}
+
+function extractAllowedStreamIdsFromMetadata(metadata: unknown): string[] {
+  if (!isRecord(metadata)) return [];
+  const overview = isRecord(metadata.overview) ? metadata.overview : {};
+  const discipline = normalizeToArray(overview.discipline);
+
+  const ids = discipline
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return UUID_REGEX.test(entry) ? entry : null;
+      }
+
+      if (!isRecord(entry)) {
+        return null;
+      }
+
+      const candidate =
+        asString(entry.id) ||
+        asString(entry.streamId) ||
+        asString(entry.stream_id);
+
+      return UUID_REGEX.test(candidate) ? candidate : null;
+    })
+    .filter((id): id is string => Boolean(id));
+
+  return Array.from(new Set(ids));
+}
 
 export class CollegeRegistrationRepository {
   private static readonly COURSE_RELATIONS_INCLUDE = {
@@ -99,6 +160,41 @@ export class CollegeRegistrationRepository {
     collegeId: string,
     data: UpdateCollegeProfileData,
   ) {
+    const registrationMetaPatch: Record<string, unknown> = {};
+
+    if (data.leadId !== undefined) {
+      registrationMetaPatch.leadId = data.leadId;
+    }
+
+    if (data.addressFromLead !== undefined) {
+      registrationMetaPatch.addressFromLead = data.addressFromLead;
+    }
+
+    if (data.registrationTabs !== undefined) {
+      registrationMetaPatch.registrationTabs = data.registrationTabs;
+    }
+
+    const hasRegistrationMetaPatch =
+      Object.keys(registrationMetaPatch).length > 0;
+
+    const incomingSettings = isRecord(data.settings)
+      ? { ...(data.settings as Record<string, unknown>) }
+      : {};
+
+    const existingRegistrationMeta = isRecord(incomingSettings.registrationMeta)
+      ? (incomingSettings.registrationMeta as Record<string, unknown>)
+      : {};
+
+    const mergedSettings = hasRegistrationMetaPatch
+      ? {
+          ...incomingSettings,
+          registrationMeta: {
+            ...existingRegistrationMeta,
+            ...registrationMetaPatch,
+          },
+        }
+      : data.settings;
+
     const payload: Record<string, unknown> = {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.code !== undefined ? { code: data.code } : {}),
@@ -129,7 +225,10 @@ export class CollegeRegistrationRepository {
       ...(data.profileSections !== undefined
         ? { profileSections: data.profileSections }
         : {}),
-      ...(data.settings !== undefined ? { settings: data.settings } : {}),
+      ...(data.registrationTabs !== undefined
+        ? { registrationTabs: data.registrationTabs }
+        : {}),
+      ...(mergedSettings !== undefined ? { settings: mergedSettings } : {}),
     };
 
     return prisma.college.update({
@@ -242,6 +341,16 @@ export class CollegeRegistrationRepository {
   }
 
   static async createCourse(collegeId: string, data: CreateCourseData) {
+    const payloadTabData =
+      data.tabData && typeof data.tabData === "object"
+        ? (data.tabData as Record<string, unknown>)
+        : {};
+    const tabDataKeys = Object.keys(payloadTabData);
+    const baseTabs = Array.isArray(data.tabs)
+      ? data.tabs
+      : DEFAULT_COURSE_CREATE_TABS;
+    const tabs = Array.from(new Set([...baseTabs, ...tabDataKeys]));
+
     return prisma.course.create({
       data: {
         collegeId,
@@ -255,9 +364,43 @@ export class CollegeRegistrationRepository {
         eligibility: data.eligibility,
         intakeCapacity: data.intakeCapacity,
         studyMode: data.studyMode,
+        metadata: {
+          tabs,
+          tabData: payloadTabData as Prisma.InputJsonValue,
+        },
+        highlights: [],
+        curriculum: [],
+        courseStructure: {},
+        valueAddedCourses: [],
+        careerOpportunities: [],
+        higherEducationCertifications: {},
+        flexibleExitOptions: [],
+        classTimings: {},
+        industryTools: [],
+        labFacilities: [],
+        roomFacilities: [],
+        featuredAlumni: [],
+        faqs: [],
+        examPolicy: {},
+        entranceExamEligibility: [],
+        eligibilityCriteria: {},
+        accreditations: [],
+        keyDates: [],
+        demographics: {},
         status: "active",
       },
       include: this.COURSE_RELATIONS_INCLUDE_NO_CAMPUS,
+    });
+  }
+
+  static async getDisciplineById(disciplineId: string) {
+    return prisma.discipline.findUnique({
+      where: { id: disciplineId },
+      select: {
+        id: true,
+        streamId: true,
+        isActive: true,
+      },
     });
   }
 
@@ -295,8 +438,58 @@ export class CollegeRegistrationRepository {
 
   // ── Lookups ────────────────────────────────────────────────────────────────
 
-  static async getStreamsWithDisciplines() {
-    return prisma.stream.findMany({
+  static async getStreamsWithDisciplines(allowedStreamIds?: string[]) {
+    if (allowedStreamIds && allowedStreamIds.length === 0) {
+      return [];
+    }
+
+    const streamsWithActiveDisciplines = await prisma.stream.findMany({
+      where: {
+        isActive: true,
+        ...(allowedStreamIds ? { id: { in: allowedStreamIds } } : {}),
+      },
+      include: {
+        disciplines: {
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const hasAnyDisciplines = streamsWithActiveDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyDisciplines) {
+      return streamsWithActiveDisciplines;
+    }
+
+    // Fallback for legacy/inconsistent seed data where isActive flags are not set as expected.
+    const streamsWithAllDisciplines = await prisma.stream.findMany({
+      where: {
+        isActive: true,
+        ...(allowedStreamIds ? { id: { in: allowedStreamIds } } : {}),
+      },
+      include: {
+        disciplines: {
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const hasAnyDisciplinesAfterRelaxedFilter = streamsWithAllDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyDisciplinesAfterRelaxedFilter || !allowedStreamIds) {
+      return streamsWithAllDisciplines;
+    }
+
+    // Final fallback: if university-level stream restrictions point to empty/misconfigured streams,
+    // return all active streams so course discipline selection is still usable.
+    const globalStreamsWithActiveDisciplines = await prisma.stream.findMany({
       where: { isActive: true },
       include: {
         disciplines: {
@@ -306,6 +499,39 @@ export class CollegeRegistrationRepository {
       },
       orderBy: { sortOrder: "asc" },
     });
+
+    const hasAnyGlobalDisciplines = globalStreamsWithActiveDisciplines.some(
+      (stream) => stream.disciplines.length > 0,
+    );
+
+    if (hasAnyGlobalDisciplines) {
+      return globalStreamsWithActiveDisciplines;
+    }
+
+    return prisma.stream.findMany({
+      where: { isActive: true },
+      include: {
+        disciplines: {
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+  }
+
+  static async getAllowedStreamIdsForCollege(collegeId: string) {
+    const college = await prisma.college.findUnique({
+      where: { id: collegeId },
+      select: {
+        university: {
+          select: {
+            metadata: true,
+          },
+        },
+      },
+    });
+
+    return extractAllowedStreamIdsFromMetadata(college?.university?.metadata);
   }
 
   static async getStudyLevels() {

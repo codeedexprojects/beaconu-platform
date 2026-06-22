@@ -30,6 +30,9 @@ script:post-response {
       if (data.data.accessToken) {
         bru.setEnvVar("accessToken", data.data.accessToken);
       }
+      if (data.data.accessToken) {
+        bru.setEnvVar("studentAccessToken", data.data.accessToken);
+      }
       if (data.data.refreshToken) {
         bru.setEnvVar("studentRefreshToken", data.data.refreshToken);
       }
@@ -45,20 +48,20 @@ script:post-response {
 
 docs {
   Verify the OTP sent to the student's phone number.
-
+  
   DEV SHORTCUT: set studentOtp env var to "0000" to bypass the OTP check entirely.
   This works in any non-production environment without needing to call send-otp first.
-
+  
   REAL FLOW: run send-otp first → it captures the actual devOtp into {{studentOtp}}.
-
+  
   Optional: pass fcm_token for push notification targeting (mobile only).
   Leave {{studentFcmToken}} empty to omit it.
-
+  
   Response when existing student (isNewUser: false):
   - accessToken: JWT access token (15 min)
   - refreshToken: long-lived token (90 days) — also set as httpOnly cookie
   - user: { id, fullName, email, avatarUrl }
-
+  
   Response when new student (isNewUser: true):
   - registrationToken: short-lived token (10 min), auto-captured into {{studentRegistrationToken}}
 }

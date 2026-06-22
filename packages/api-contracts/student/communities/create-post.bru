@@ -1,0 +1,75 @@
+meta {
+  name: Create Post
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/communities/{{communityId}}/posts
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "content": "Check out this amazing campus tour!",
+    "attachments": [
+      {
+        "type": "image",
+        "url": "https://cdn.example.com/uploads/campus-photo.jpg",
+        "fileName": "campus-photo.jpg",
+        "mimeType": "image/jpeg"
+      },
+      {
+        "type": "video",
+        "url": "https://cdn.example.com/uploads/tour-video.mp4",
+        "thumbnailUrl": "https://cdn.example.com/uploads/tour-thumb.jpg",
+        "fileName": "tour-video.mp4",
+        "mimeType": "video/mp4"
+      },
+      {
+        "type": "link",
+        "url": "https://www.example.com/article/campus-life"
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  communityId: CMT-1
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("communityPostId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a post in the community.
+  Allowed only for joined members or the community owner.
+
+  Body fields:
+    - content       (String, optional) — text content, max 5000 chars
+    - attachments   (Array, optional, max 10) — media & link attachments
+      Each attachment object:
+        - type          (Required) — "image" | "video" | "link"
+        - url           (Required) — fully-qualified URL of the uploaded file or external link
+        - thumbnailUrl  (Optional) — thumbnail URL (useful for videos)
+        - fileName      (Optional) — original file name
+        - mimeType      (Optional) — MIME type (e.g. "image/jpeg", "video/mp4")
+
+  Note: Post must have at least content or one attachment.
+  Upload files first via the upload API, then pass the returned URLs here.
+}

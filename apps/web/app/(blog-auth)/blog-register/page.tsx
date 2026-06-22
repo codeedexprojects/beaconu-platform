@@ -219,7 +219,7 @@ export default function BlogRegisterPage(): React.JSX.Element {
 
           <div className="space-y-1.5">
             <label htmlFor="bio" className="text-sm font-medium text-white/70">
-              Bio <span className="text-white/30 font-normal">(optional)</span>
+              Bio <span className="text-white/30 font-normal"></span>
             </label>
             <textarea
               id="bio"

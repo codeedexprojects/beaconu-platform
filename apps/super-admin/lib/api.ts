@@ -13,11 +13,22 @@ export class ApiError extends Error {
   }
 }
 
+type ApiErrorDetail = { path?: string; message?: string };
+
+type ApiErrorBody = {
+  message?: string;
+  error?: {
+    details?: ApiErrorDetail[];
+  };
+};
+
 export interface PaginationMeta {
   total: number;
   page: number;
   limit: number;
-  hasNext: boolean;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export interface Paginated<T> {
@@ -122,7 +133,14 @@ async function requestPaginatedWithRetry<T>(
     const body = await executeRequest(path, options);
     return {
       data: (body.data as T[]) ?? [],
-      meta: body.meta ?? { total: 0, page: 1, limit: 10, hasNext: false },
+      meta: body.meta ?? {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
     };
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
@@ -186,7 +204,13 @@ export const api = {
 export function getErrorMessage(error: unknown): string {
   if (!(error instanceof ApiError))
     return "Something went wrong. Please try again.";
+
+  const body = (error.data ?? null) as ApiErrorBody | null;
+  const validationMessage = body?.error?.details?.[0]?.message;
+
   switch (error.status) {
+    case 400:
+      return validationMessage ?? error.message;
     case 403:
       return "You don't have permission to do this";
     case 404:

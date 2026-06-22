@@ -1,5 +1,5 @@
 meta {
-  name: Update College Profile
+  name: Update College Registration Profile
   type: http
   seq: 3
 }
@@ -11,17 +11,329 @@ patch {
 }
 
 auth:bearer {
-  token: {{collegeAdminToken}}
+  token: {{staffToken}}
 }
 
 body:json {
   {
-    "name": "Beacon University",
-    "code": "BU-101",
+    "name": "Beacon Institute of Technology",
+    "code": "BIT-101",
+    "leadId": "LEAD-2026-001",
+    "addressFromLead": true,
     "address": "123 Tech Campus Road",
     "city": "Bangalore",
     "state": "Karnataka",
     "district": "Bangalore Urban",
-    "pinCode": "560001"
+    "pinCode": "560001",
+    "registrationTabs": [
+      "student_code_of_conduct",
+      "happenings",
+      "institutions_across_world",
+      "commute",
+      "college_overview"
+    ],
+    "profileSections": {
+      "student_code_of_conduct": {
+        "id": "student_code_of_conduct",
+        "enabled": true,
+        "tab": "student_code_of_conduct",
+        "section_title": "General Rules of Discipline",
+        "rules": [
+          {
+            "number": 1,
+            "rule": "Always carry the Identity Card with you while in college or the hospital."
+          },
+          {
+            "number": 2,
+            "rule": "Attend the classes and clinical postings on time."
+          },
+          {
+            "number": 3,
+            "rule": "Wear the college uniform (if prescribed) neatly and properly."
+          },
+          {
+            "number": 4,
+            "rule": "Maintain silence and discipline in the library, classrooms, and corridors."
+          },
+          {
+            "number": 5,
+            "rule": "Use of mobile phones is strictly prohibited in classrooms, laboratories, and library."
+          },
+          {
+            "number": 6,
+            "rule": "Respect the faculty, staff, and fellow students. Ragging is a punishable offense."
+          },
+          {
+            "number": 7,
+            "rule": "Keep the campus clean. Do not litter."
+          },
+          {
+            "number": 8,
+            "rule": "Any damage to college property will be recovered from the student concerned."
+          },
+          {
+            "number": 9,
+            "rule": "Prior permission is required for leave of absence."
+          }
+        ]
+      },
+      "happenings": {
+        "id": "happenings",
+        "enabled": true,
+        "title": "Happenings",
+        "filters": {
+          "categories": ["Certification"]
+        },
+        "happenings": [
+          {
+            "category": "Certification",
+            "date": "Oct 12, 2023",
+            "title": "Professor Ratna awarded international certification in Quantum Research",
+            "description": "The University of Cambridge has formally recognized Dr. Ratna's groundbreaking work...",
+            "image": "",
+            "link": ""
+          }
+        ]
+      },
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "title": "Institution Across the World",
+        "institutions": []
+      },
+      "commute": {
+        "id": "commute",
+        "enabled": true,
+        "tab": "commute",
+        "title": "Commute",
+        "pickup_points": ["HSR Layout"],
+        "selected_pickup_point": "HSR Layout",
+        "routes": [
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12 - HSR Layout",
+            "via": "Via BTM Layout, Madivala",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "6:45 AM - 8:10 AM" },
+              { "label": "Evening", "time": "4:30 PM - 6:15 PM" }
+            ],
+            "transport_fee": {
+              "amount": "₹25,000 / Year",
+              "payment_structure": "Payable as a one-time annual payment or in two semester-wise installments of ₹12,500 each."
+            },
+            "bus_information": {
+              "registration_number": "KA-01-F-4829",
+              "seats": 42,
+              "model": "Tata Marcopolo (AC)"
+            },
+            "morning_pickup_points": [
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:45 AM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:55 AM" },
+              { "point": "Silk Board", "landmark": "", "time": "7:05 AM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "7:28 AM" },
+              { "point": "College Campus", "landmark": "Main Block Entrance", "time": "8:10 AM" }
+            ],
+            "evening_dropoff_points": [
+              { "point": "College Campus", "landmark": "Bus Bay Area", "time": "4:30 PM" },
+              { "point": "BTM Water Tank", "landmark": "", "time": "5:40 PM" },
+              { "point": "Silk Board", "landmark": "", "time": "5:55 PM" },
+              { "point": "Agara Junction", "landmark": "", "time": "6:05 PM" },
+              { "point": "HSR Layout BDA Complex", "landmark": "Main Gate", "time": "6:15 PM" }
+            ]
+          },
+          {
+            "pickup_point": "HSR Layout",
+            "route_name": "Route 12B - HSR Express",
+            "via": "Via 27th Main, Agara",
+            "status": "VERIFIED",
+            "timings": [
+              { "label": "Morning", "time": "7:00 AM - 8:15 AM" },
+              { "label": "Evening", "time": "4:45 PM - 6:30 PM" }
+            ],
+            "transport_fee": { "amount": "", "payment_structure": "" },
+            "bus_information": { "registration_number": "", "seats": null, "model": "" },
+            "morning_pickup_points": [],
+            "evening_dropoff_points": []
+          }
+        ],
+        "rules_and_code_of_conduct": {
+          "title": "Rules & Code of Conduct",
+          "subtitle": "Detailed guidelines for student commuters",
+          "intro": "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
+          "rules": [
+            {
+              "title": "Mandatory Identification",
+              "description": "Students must carry their valid college ID and transport pass at all times. Inspection may occur at any point during the journey."
+            },
+            {
+              "title": "Seat Policy",
+              "description": "Seats are not pre-assigned. Occupancy is on a strictly first-come, first-served basis. \"Saving\" seats for friends is prohibited."
+            },
+            {
+              "title": "Discipline & Safety",
+              "description": "Any form of ragging, vandalism, or disruptive behavior will lead to immediate suspension of transport privileges and disciplinary action."
+            },
+            {
+              "title": "Punctuality",
+              "description": "Buses adhere to a strict schedule. Students are advised to be at their designated pickup point 5 minutes prior to the scheduled time."
+            }
+          ]
+        }
+      },
+      "college_overview": {
+        "id": "college_overview",
+        "enabled": true,
+        "name": "University of Hyderabad",
+        "alt_name": "Hyderabad Central University",
+        "location_name": "Gachibowli, Hyderabad",
+        "type": "Public",
+        "established": 2000,
+        "navigation_tabs": ["Overview", "Governance"],
+        "about": "The University of Hyderabad (UoH), also known as Hyderabad Central University, is a top-ranking public research university in India. Known for its academic excellence, vibrant campus life, and focus on postgraduate education and research, UoH is recognized by UGC and accredited with an 'A' grade by NAAC.",
+        "accolades": [
+          {
+            "tag": "Rank",
+            "title": "MAHE Rank 3",
+            "image": ""
+          },
+          {
+            "tag": "University",
+            "title": "India's top #131/200 universities in 2024",
+            "image": ""
+          }
+        ],
+        "university_details": [
+          { "label": "Established year", "value": "2000" },
+          { "label": "Nature of University", "value": "Public" },
+          { "label": "Type of University", "value": "State University" },
+          { "label": "District", "value": "Hyderabad" },
+          { "label": "State", "value": "Telangana" },
+          { "label": "Pincode", "value": "500046" },
+          { "label": "Total Courses", "value": "28" },
+          { "label": "Gender", "value": "Co-Ed" },
+          { "label": "Campus Size", "value": "2300 Acres" },
+          { "label": "Avg Student Count", "value": "5200" },
+          { "label": "Students Outside State", "value": "38%" },
+          { "label": "Affiliated colleges", "value": "45" },
+          { "label": "Autonomous colleges", "value": "12" }
+        ],
+        "amenities": [
+          { "label": "Wi-Fi", "icon": "amenity:wifi" },
+          { "label": "Toiletries", "icon": "amenity:toiletries" },
+          { "label": "Bathrobes", "icon": "amenity:bathrobes" },
+          { "label": "Smart Classrooms", "icon": "amenity:smart_classrooms" }
+        ],
+        "inside_campus_facilities": [
+          { "label": "Subway", "subtitle": "Fresh sandwiches and quick bites", "icon": "" },
+          { "label": "Indian Post", "subtitle": "On-campus postal support", "icon": "" },
+          { "label": "Food Court", "subtitle": "Multi-cuisine student dining", "icon": "" },
+          { "label": "Postal Service", "subtitle": "Parcel and document dispatch", "icon": "" }
+        ],
+        "location": {
+          "address": "",
+          "latitude": null,
+          "longitude": null,
+          "map_link": ""
+        },
+        "nearby_access": [
+          {
+            "category": "Transit",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Essentials",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Utility",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "Hospital",
+            "items": [
+              { "name": "Apollo Spectra Hospitals", "distance": "3.0 km" },
+              { "name": "Fortis Hospital Bannerghatta Road", "distance": "7.6 km" }
+            ]
+          },
+          {
+            "category": "School",
+            "items": [
+              { "name": "KLAY Prep Schools and DayCare", "distance": "6.9 km" },
+              { "name": "VIBGYOR High School", "distance": "0.1 km" }
+            ]
+          }
+        ],
+        "campus_ambassadors": [
+          {
+            "name": "Arshal Mathew",
+            "course": "BSC NURSING",
+            "district": "PALAKAD",
+            "state": "KERALA",
+            "image": "",
+            "message_link": ""
+          }
+        ],
+        "social": [
+          {
+            "platform": "Instagram",
+            "icon": "instagram",
+            "url": "https://instagram.com/universityofhyderabad"
+          },
+          {
+            "platform": "LinkedIn",
+            "icon": "linkedin",
+            "url": "https://linkedin.com/school/university-of-hyderabad"
+          }
+        ],
+        "campus_reels": [
+          {
+            "title": "Welcome to Vydehi Institute",
+            "duration": "1 min 12 secs",
+            "date": "29th March",
+            "video": "",
+            "thumbnail": "",
+            "type": "youtube"
+          },
+          {
+            "title": "All About Campus Life",
+            "duration": "2 min 45 secs",
+            "date": "1st April",
+            "video": "",
+            "thumbnail": "",
+            "type": "mp4"
+          }
+        ]
+      }
+    }
   }
+}
+
+docs {
+  Registration update should capture core college details and college-level tab setup only.
+
+  Registration tabs list (college section):
+  - student_code_of_conduct
+  - happenings
+  - institutions_across_world
+  - commute
+  - college_overview
+
+  Use campuses endpoints to create and manage campuses.
+  Use courses endpoints to create courses and course tabs.
+
+  Dynamic fetch notes for registration sections:
+  - `commute` in GET /api/v1/college-admin/profile/sections is sourced from
+    GET /api/v1/college-admin/commute.
+  - `institutions_across_world` in GET /api/v1/college-admin/profile/sections
+    is sourced from institution group membership data.
 }

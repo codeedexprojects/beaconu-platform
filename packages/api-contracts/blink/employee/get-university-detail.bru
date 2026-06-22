@@ -1,0 +1,49 @@
+meta {
+  name: Get University Detail
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/universities/{{blinkUniversityId}}?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+docs {
+  Returns basic details for a single active university, plus a paginated
+  list of active colleges under it, for the authenticated associate
+  employee.
+  Requires: blink_employee access token.
+
+  Query params (apply to the colleges list only):
+  - search (optional): filter colleges by name (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response shape:
+  {
+    "university": { "id", "name", "slug", "logoUrl", "state", "city",
+      "accreditation", "universityType": { "id", "name", "slug" } | null },
+    "colleges": [
+      { "id", "name", "slug", "code", "logoUrl", "city", "state", "totalCourses" }
+    ]
+  }
+  meta: { total, page, limit, hasNext } — for the colleges list
+
+  Returns 404 "University not found" if the university doesn't exist or
+  is not active.
+
+  Tables: universities, university_types, colleges
+}

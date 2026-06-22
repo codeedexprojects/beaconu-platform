@@ -6,6 +6,7 @@ import counsellorRoutes from "./counsellor";
 import studentRoutes from "./student";
 import collegeRoutes from "./college";
 import publicRoutes from "./public";
+import webhookRoutes from "./webhooks";
 import blogRoutes from "./blog";
 import healthRoutes from "@/modules/health/routes/health.routes";
 
@@ -17,6 +18,7 @@ router.use("/api/v1/counsellor", counsellorRoutes);
 router.use("/api/v1/student", studentRoutes);
 router.use("/api/v1/college-admin", collegeRoutes);
 router.use("/api/v1/public", publicRoutes);
+router.use("/api/v1/webhooks", webhookRoutes);
 router.use("/api/v1/blog", blogRoutes);
 router.use("/api/v1/health", healthRoutes);
 router.use("/health", healthRoutes); // Render health-check probe hits /health directly

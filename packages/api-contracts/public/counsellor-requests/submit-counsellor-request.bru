@@ -1,0 +1,52 @@
+meta {
+  name: Submit Counsellor Registration Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/public/counsellor-requests
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "full_name": "Dr. Priya Nair",
+    "email": "priya.nair@example.com",
+    "phone_number": "9876543210",
+    "counsellor_type": "academic",
+    "qualification": "M.Ed in Counselling Psychology",
+    "years_of_experience": "6 years",
+    "message": "I would like to support students with course and college selection guidance."
+  }
+}
+
+script:post-response {
+  if (res.status === 201 || res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("counsellorRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Submits a counsellor registration request (public — Blink landing page).
+  No authentication required.
+
+  Fields:
+  - full_name: Applicant's full name (required)
+  - email: Contact email (required)
+  - phone_number: Contact phone number (optional)
+  - counsellor_type: academic | mindcare (required)
+  - qualification: Qualification / certification (optional)
+  - years_of_experience: Years of experience as free text (optional)
+  - message: Additional message (optional)
+
+  Saves counsellorRequestId to env if returned.
+}

@@ -1,0 +1,45 @@
+meta {
+  name: Cancel Session
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/counselling/sessions/{{sessionId}}/cancel
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "cancellation_reason": "Unable to attend"
+  }
+}
+
+script:pre-request {
+  const token = bru.getEnvVar("studentAccessToken") || bru.getEnvVar("accessToken");
+  const sessionId = bru.getEnvVar("sessionId");
+  if (!token) {
+    throw new Error("studentAccessToken is not set. Run Student Verify OTP/Login first.");
+  }
+  bru.setEnvVar("studentAccessToken", token);
+  if (!sessionId) {
+    throw new Error("sessionId is not set. Run List Sessions first.");
+  }
+}
+
+docs {
+  Cancels a counselling session for logged-in student.
+  Requires: student access token.
+
+  Validation: must be cancelled at least 30 minutes before the session's
+  scheduled start time (scheduled_date + start_time, IST). Returns 400
+  "Sessions can only be cancelled at least 30 minutes before the scheduled
+  start time" if attempted within that window or after the session has
+  started.
+}

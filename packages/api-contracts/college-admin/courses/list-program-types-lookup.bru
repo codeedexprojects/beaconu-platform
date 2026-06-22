@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/college-admin/courses/lookups/program-types
+  url: {{baseUrl}}/api/v1/college-admin/lookups/program-types
   body: none
   auth: bearer
 }
@@ -19,4 +19,14 @@ docs {
   Used to populate program type dropdown during course setup.
 
   Requires: staff access token.
+  Saves `programTypeId` from first result to env.
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("programTypeId", data.data[0].id);
+    }
+  }
 }

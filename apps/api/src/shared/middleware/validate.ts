@@ -23,9 +23,26 @@ export function validate(
       return;
     }
 
-    if (target === "body") req.body = result.data;
-    else if (target === "query") req.query = result.data as typeof req.query;
-    else req.params = result.data as typeof req.params;
+    if (target === "body") {
+      req.body = result.data;
+    } else if (target === "query") {
+      // In Express 5, req.query is a prototype-level getter that re-parses
+      // the raw URL on every access (never cached) — mutating its return
+      // value is a no-op for later reads. Define an own property on this
+      // request instance to shadow the getter with the validated data.
+      Object.defineProperty(req, "query", {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    } else {
+      const params = req.params as Record<string, unknown>;
+      for (const key of Object.keys(params)) {
+        delete params[key];
+      }
+      Object.assign(params, result.data as Record<string, unknown>);
+    }
 
     next();
   };

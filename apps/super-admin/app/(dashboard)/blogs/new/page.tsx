@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useCreateAdminBlog } from "@/hooks/use-blogs";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
@@ -143,25 +144,21 @@ export default function NewBlogPage() {
               </div>
 
               {/* Cover image */}
-              <div className="space-y-1.5">
-                <Label htmlFor="cover_image_url">
-                  Cover Image URL{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
-                </Label>
-                <Input
-                  id="cover_image_url"
-                  type="url"
-                  placeholder="https://example.com/image.jpg"
-                  {...form.register("cover_image_url")}
-                />
-                {form.formState.errors.cover_image_url && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.cover_image_url.message}
-                  </p>
-                )}
-              </div>
+              <ImageUpload
+                label="Cover Image "
+                value={form.watch("cover_image_url") ?? ""}
+                onChange={(url) =>
+                  form.setValue("cover_image_url", url, {
+                    shouldValidate: true,
+                  })
+                }
+                context="blog-covers"
+              />
+              {form.formState.errors.cover_image_url && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.cover_image_url.message}
+                </p>
+              )}
 
               {/* Tags */}
               <div className="space-y-1.5">

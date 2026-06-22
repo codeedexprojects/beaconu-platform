@@ -1,12 +1,12 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { AcademicTaxonomyRepository } from "../repositories/academic-taxonomy.repository";
+import { AcademicTaxonomyQuery } from "../queries/academic-taxonomy.query";
 import {
+  AdminListQuery,
   CreateStreamInput,
   CreateDisciplineInput,
   CreateProgramTypeInput,
   CreateStudyLevelInput,
-  ListDisciplinesQuery,
-  ListSimpleQuery,
   UpdateStreamInput,
   UpdateDisciplineInput,
   UpdateProgramTypeInput,
@@ -14,9 +14,10 @@ import {
 } from "../validators/academic-taxonomy.validator";
 
 export class AcademicTaxonomyService {
-  static async listStreams(query: ListSimpleQuery) {
-    return AcademicTaxonomyRepository.listStreams({
-      isActive: query.is_active,
+  static async listStreams(query: AdminListQuery) {
+    return AcademicTaxonomyQuery.listStreams({
+      is_active: undefined,
+      ...query,
     });
   }
 
@@ -87,10 +88,10 @@ export class AcademicTaxonomyService {
     });
   }
 
-  static async listDisciplines(query: ListDisciplinesQuery) {
-    return AcademicTaxonomyRepository.listDisciplines({
-      isActive: query.is_active,
-      streamId: query.stream_id,
+  static async listDisciplines(query: AdminListQuery) {
+    return AcademicTaxonomyQuery.listDisciplines({
+      is_active: undefined,
+      ...query,
     });
   }
 
@@ -177,9 +178,10 @@ export class AcademicTaxonomyService {
     });
   }
 
-  static async listStudyLevels(query: ListSimpleQuery) {
-    return AcademicTaxonomyRepository.listStudyLevels({
-      isActive: query.is_active,
+  static async listStudyLevels(query: AdminListQuery) {
+    return AcademicTaxonomyQuery.listStudyLevels({
+      is_active: undefined,
+      ...query,
     });
   }
 
@@ -250,9 +252,10 @@ export class AcademicTaxonomyService {
     });
   }
 
-  static async listProgramTypes(query: ListSimpleQuery) {
-    return AcademicTaxonomyRepository.listProgramTypes({
-      isActive: query.is_active,
+  static async listProgramTypes(query: AdminListQuery) {
+    return AcademicTaxonomyQuery.listProgramTypes({
+      is_active: undefined,
+      ...query,
     });
   }
 

@@ -1,0 +1,85 @@
+meta {
+  name: Tab - Institutions Across World (Save)
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/profile
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "profileSections": {
+      "institutions_across_world": {
+        "id": "institutions_across_world",
+        "enabled": true,
+        "title": "Institution Across the World",
+        "institutions": [
+          {
+            "id": "clg_bangalore_001",
+            "name": "Beacon Institute of Technology",
+            "slug": "beacon-institute-of-technology",
+            "code": "BIT-101",
+            "city": "Bangalore",
+            "state": "Karnataka",
+            "logoUrl": "https://cdn.beaconu.app/logos/bit-101.png",
+            "role": "owner",
+            "joinedAt": "2025-03-14T10:30:00.000Z",
+            "joinedVia": "group_created"
+          },
+          {
+            "id": "clg_hyd_002",
+            "name": "Beacon School of Data Science",
+            "slug": "beacon-school-of-data-science",
+            "code": "BSDS-204",
+            "city": "Hyderabad",
+            "state": "Telangana",
+            "logoUrl": "https://cdn.beaconu.app/logos/bsds-204.png",
+            "role": "member",
+            "joinedAt": "2025-05-20T07:15:00.000Z",
+            "joinedVia": "invite_code"
+          },
+          {
+            "id": "clg_chennai_003",
+            "name": "Beacon College of Arts and Commerce",
+            "slug": "beacon-college-of-arts-and-commerce",
+            "code": "BCAC-330",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "logoUrl": "https://cdn.beaconu.app/logos/bcac-330.png",
+            "role": "member",
+            "joinedAt": "2025-08-02T15:45:00.000Z",
+            "joinedVia": "platform_admin"
+          }
+        ],
+        "group": {
+          "id": "grp_south_zone_01",
+          "name": "Beacon South Zone Group",
+          "groupCode": "BZ-SOUTH-2025",
+          "status": "active"
+        }
+      }
+    }
+  }
+}
+
+docs {
+  Saves institutions_across_world tab payload using PATCH /api/v1/college-admin/profile.
+
+  Important:
+  - This request writes `profileSections` as provided.
+  - If your college already has other section data, merge current `profileSections`
+    from GET /api/v1/college-admin/profile first, then replace only
+    `institutions_across_world`.
+
+  Note:
+  - GET /api/v1/college-admin/profile/sections returns this section from
+    institution-group membership data.
+}

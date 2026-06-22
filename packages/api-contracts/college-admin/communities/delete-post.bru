@@ -1,0 +1,25 @@
+meta {
+  name: Delete Post
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/communities/{{communityId}}/posts/{{communityPostId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Deletes a community post.
+  Allowed for post author or community owner.
+  Set communityId and communityPostId env vars before calling.
+}

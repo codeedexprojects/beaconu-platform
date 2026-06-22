@@ -1,0 +1,30 @@
+meta {
+  name: List Joined Communities
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/communities/joined
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+query {
+  page: 1
+  limit: 10
+  search: 
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Lists communities joined by current student with pagination and optional search.
+  Response includes iconUrl, coverImageUrl, and isJoined=true.
+}

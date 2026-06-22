@@ -81,6 +81,10 @@ export class PlatformRolesService {
   ) {
     const role = await PlatformRolesRepository.findById(roleId);
     if (!role) throw new NotFoundError("Role not found");
+    if (role.isSystemRole)
+      throw new ForbiddenError(
+        "Permissions of system roles cannot be modified",
+      );
     if (!role.isActive)
       throw new ForbiddenError(
         "Cannot modify permissions for an inactive role",
@@ -106,6 +110,8 @@ export class PlatformRolesService {
   static async deleteRole(roleId: string) {
     const role = await PlatformRolesRepository.findById(roleId);
     if (!role) throw new NotFoundError("Role not found");
+    if (role.isSystemRole)
+      throw new ForbiddenError("System roles cannot be deleted");
 
     const assignedAdminsCount =
       await PlatformRolesRepository.countAdmins(roleId);

@@ -1,0 +1,40 @@
+meta {
+  name: Get Wallet
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/counsellor/wallet?page=1&limit=20&type=&date=&from_date=&to_date=
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  type:
+  date:
+  from_date:
+  to_date:
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns counsellor wallet summary and paginated/filterable transactions.
+  Requires: counsellor access token.
+
+  ## Response keys are snake_case
+  - counsellor_id, total_earned, total_withdrawn, created_at, updated_at
+  - transactions[].wallet_id, session_id, student_name, withdrawal_status, balance_after
+  - transactions_meta: page, limit, total, totalPages, hasNextPage, hasPreviousPage
+
+  ## Query params (apply to `transactions` only)
+  - type: credit | debit
+  - date: filter transactions on a single date (YYYY-MM-DD)
+  - from_date / to_date: filter transactions within a date range (YYYY-MM-DD)
+  - page, limit: pagination
+}
