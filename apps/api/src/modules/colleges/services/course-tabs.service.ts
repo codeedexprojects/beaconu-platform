@@ -258,7 +258,6 @@ function normalizeAmount(val: unknown): string {
 function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
   const meritRaw = asRecord(raw.merit_scholarship);
   const calcRaw = asRecord(meritRaw.calculator);
-  const summaryRaw = asRecord(meritRaw.final_summary);
   const tcRaw = meritRaw.terms_and_conditions;
 
   const merit_scholarship = {
@@ -287,19 +286,6 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
       title: "TERMS & CONDITIONS",
       icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
       items: Array.isArray(tcRaw) ? tcRaw : [],
-    },
-    final_summary: {
-      title: "FINAL SUMMARY",
-      max_scholarship: {
-        icon: "https://cdn.iconsdb.example.com/icons/star-purple.png",
-        label: "MAX SCHOLARSHIP",
-        amount: normalizeAmount(summaryRaw.max_scholarship),
-      },
-      net_payable_fees: {
-        icon: "https://cdn.iconsdb.example.com/icons/document-teal.png",
-        label: "NET PAYABLE FEES",
-        amount: normalizeAmount(summaryRaw.net_payable_fees),
-      },
     },
   };
 

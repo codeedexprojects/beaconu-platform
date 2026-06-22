@@ -285,10 +285,6 @@ async function main() {
           "Management Quota",
         ],
       },
-      final_summary: {
-        max_scholarship: "Rs1,50,000",
-        net_payable_fees: "Rs2,45,000",
-      },
       terms_and_conditions: [
         "Students can avail 25% of scholarship based on the entered rank/score.",
         "Applicable only for the first year. Subsequent years require CGPA 8.0+.",

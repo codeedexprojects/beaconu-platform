@@ -536,14 +536,6 @@ export default function SetupAcademicsPage() {
       calculator: { ...(getMeritScholarship().calculator || {}), ...patch },
     });
 
-  const updateMeritFinalSummary = (patch: any) =>
-    updateMeritScholarship({
-      final_summary: {
-        ...(getMeritScholarship().final_summary || {}),
-        ...patch,
-      },
-    });
-
   const getConcessionItems = (): any[] =>
     getActiveTabPayload().financial_concessions?.items || [];
 
@@ -3644,39 +3636,6 @@ export default function SetupAcademicsPage() {
                                   })
                                 }
                               />
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-2 pt-2 border-t">
-                              <div className="space-y-1">
-                                <Label>Max Scholarship</Label>
-                                <Input
-                                  placeholder="e.g. Rs1,50,000"
-                                  value={
-                                    getMeritScholarship().final_summary
-                                      ?.max_scholarship || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateMeritFinalSummary({
-                                      max_scholarship: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label>Net Payable Fees</Label>
-                                <Input
-                                  placeholder="e.g. Rs2,45,000"
-                                  value={
-                                    getMeritScholarship().final_summary
-                                      ?.net_payable_fees || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateMeritFinalSummary({
-                                      net_payable_fees: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
                             </div>
 
                             {(
