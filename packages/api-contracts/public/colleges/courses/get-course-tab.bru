@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: exam_policy
+  tabName: clubs_associations
 }
 
 docs {
@@ -127,6 +127,60 @@ docs {
           ]
         }
       }
+    }
+  }
+  
+  --- clubs_associations tab response shape ---
+  {
+    "success": true,
+    "message": "Club detail fetched successfully",
+    "data": {
+      "sectionName": "clubs_associations",
+      "sectionId": "clubs_associations",
+      "sectionKey": "clubs_associations",
+      "data": [
+        {
+          "id": "club_nss",
+          "name": "National Service Scheme (NSS)",
+          "category": "SERVICE",
+          "cover_image": "https://cdn.clubphotos.example.com/clubs/nss-cover.jpg",
+          "logo": "",
+          "about": {
+            "description": "The National Service Scheme (NSS) is an Indian government-sponsored public service program conducted by the Ministry of Youth Affairs and Sports. Our college chapter is dedicated to fostering social responsibility and community engagement among students."
+          },
+          "mission": {
+            "description": "The motto of NSS \"Not Me But You\", reflects the essence of democratic living and upholds the need for self-less service. We aim to identify the needs and problems of the community and involve students in problem-solving."
+          },
+          "key_activities": {
+            "items": [
+              "Blood Donation Camps",
+              "Tree Plantation Drives",
+              "Rural Development Projects",
+              "Health & Hygiene Awareness"
+            ]
+          },
+          "recent_events": {
+            "view_all_cta": {
+              "label": "View Happenings",
+              "link": "https://example.com/clubs/nss/happenings"
+            },
+            "items": [
+              {
+                "id": "event_1",
+                "title": "Blood Donation Camp",
+                "thumbnail": "https://cdn.clubphotos.example.com/clubs/nss-blood-donation-camp.jpg",
+                "link": "https://example.com/clubs/nss/events/blood-donation-camp"
+              },
+              {
+                "id": "event_2",
+                "title": "Tree Plantation Drive",
+                "thumbnail": "https://cdn.clubphotos.example.com/clubs/nss-tree-plantation.jpg",
+                "link": "https://example.com/clubs/nss/events/tree-plantation-drive"
+              }
+            ]
+          }
+        }
+      ]
     }
   }
 }

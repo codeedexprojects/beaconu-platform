@@ -95,9 +95,13 @@ export class CourseTabsController {
       slug,
       tabName,
     );
-    return res
-      .status(200)
-      .json(ApiResponse.success("Course tab fetched", result));
+
+    let message = "Course tab fetched";
+    if (tabName === "clubs_associations") {
+      message = "Club detail fetched successfully";
+    }
+
+    return res.status(200).json(ApiResponse.success(message, result));
   }
 
   /**
