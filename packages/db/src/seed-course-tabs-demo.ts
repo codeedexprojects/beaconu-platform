@@ -3,14 +3,15 @@ import { prisma } from "./index";
 
 /**
  * One-off seed for testing the public "course detail" API
- * (GET /api/v1/public/colleges/:collegeSlug/courses/:courseId via
- * CourseTabsService.getPublicCourseDetail): fills in every field that
- * endpoint reads but is currently empty — student_forum/bonus_certification
- * inside metadata.tabData.course_info, and every top-level Course JSON
- * "detail page" column (highlights, accreditations, etc).
+ * (GET /api/v1/public/colleges/by-slug/:collegeSlug/courses/:courseId via
+ * CourseTabsService.getPublicCourseDetail).
  *
- * admission_batches/quick_info are already derived correctly from existing
- * course_info.admissions/overview/admission_status data — left untouched.
+ * The read side is a pure passthrough for these Course JSON columns
+ * (`course.highlights ?? {}` etc, see course-tabs.service.ts) and checks
+ * `course_info.admission_batches` / `.quick_info` as explicit overrides
+ * before falling back to derivation — so whatever exact shape is stored
+ * here is exactly what the API returns, with no service-layer
+ * transformation. This seed stores the full display-ready shape directly.
  *
  * Usage: pnpm --filter @beaconu/db exec tsx src/seed-course-tabs-demo.ts [courseId]
  */
@@ -28,16 +29,44 @@ async function main() {
 
   const updatedCourseInfo = {
     ...courseInfo,
+    admission_batches: [
+      {
+        label: "Admissions 2025",
+        status: "open",
+        banner: {
+          enabled: true,
+          tag: "ADMISSIONS OPEN",
+          message: "Limited seats available for current intake",
+          progress_percentage: 90,
+        },
+      },
+      {
+        label: "Admissions 2026",
+        status: "upcoming",
+        banner: {
+          enabled: false,
+          tag: "UPCOMING",
+          message: "",
+          progress_percentage: 0,
+        },
+      },
+    ],
     student_forum: {
-      ex_student_chat:
-        "https://chat.beaconu.app/forums/mba-digital-transformation",
-      admission_team_contact: "+91 98765 43210",
+      enabled: true,
+      icon: "https://cdn.iconsdb.example.com/icons/forum-people.png",
+      title: "Student Forum",
+      description:
+        "Have queries/doubts? Connect directly with our college team or chat with our ex-students.",
+      cta_label: "Ask the Admission Team",
+      cta_icon: "https://cdn.iconsdb.example.com/icons/chat-bubble-orange.png",
+      link: "https://example.com/forum/ask-admission-team",
     },
     bonus_certification: {
-      name: "Google Digital Marketing Certification",
-      note: "Awarded on completion of the digital transformation specialization track",
-      certificate_link:
-        "https://example.com/certifications/google-digital-marketing",
+      tag: "BONUS CERTIFICATION",
+      title: "Tally Prime Certification",
+      description: "Included with Finance specialization at no extra cost.",
+      cta_label: "View Certificate Details",
+      link: "https://example.com/certifications/tally-prime",
     },
   };
 
@@ -315,6 +344,7 @@ async function main() {
   await prisma.course.update({
     where: { id: courseId },
     data: {
+      name: "MBA Digital Transformation",
       metadata: {
         ...metadata,
         tabData: {
@@ -324,111 +354,299 @@ async function main() {
           financial_aid: financialAidTabData,
         },
       } as any,
-      highlights: [
-        "Industry-aligned curriculum with live case studies",
-        "Dedicated placement cell with 90%+ placement rate",
-        "Guest lectures from industry leaders every semester",
-      ],
-      accreditations: [
-        { name: "NAAC A+ Grade", issuedBy: "NAAC", year: "2024" },
-        { name: "AICTE Approved", issuedBy: "AICTE", year: "2023" },
-      ],
-      keyDates: [
-        { label: "Application Deadline", date: "2026-07-15" },
-        { label: "Entrance Exam", date: "2026-07-25" },
-        { label: "Classes Begin", date: "2026-08-10" },
-      ],
-      curriculum: [
-        {
-          semester: 1,
-          subjects: [
-            "Principles of Management",
-            "Digital Marketing Fundamentals",
-            "Business Statistics",
-          ],
-          specializations: [],
+      highlights: {
+        title: "Program Highlights",
+        items: [
+          {
+            text: "AI activity in India alone has witnessed a 2.7 times growth",
+          },
+          {
+            text: "Generative AI (GenAI) has recorded an extraordinary 9 times surge, with 34 percent of enterprises launching GenAI-based products or services, 31 percent forming collaborations and partnerships.",
+          },
+          {
+            text: "India's AI market is projected to reach 17 billion dollars by 2027, with an expected annual growth rate of 25 to 35 percent.",
+          },
+          {
+            text: "A critical talent gap between 60 to 73 percent in AI roles, creating opportunities for those with the right skills.",
+          },
+        ],
+      } as any,
+      accreditations: {
+        title: "Course Accolades",
+        items: [
+          {
+            tag: "MAHE Rank 3",
+            image:
+              "https://cdn.brandlogos.example.com/logos/outlook-icare-ranking-2024.png",
+            title: "India's top #131/200 universities in 2024",
+          },
+          {
+            tag: "MAHE Rank 3",
+            image:
+              "https://cdn.brandlogos.example.com/logos/outlook-icare-ranking-2024.png",
+            title: "India's top #131/200 universities in 2024",
+          },
+        ],
+      } as any,
+      keyDates: {
+        title: "Key Dates to Remember",
+        items: [
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-check-green.png",
+            label: "APPLICATION START",
+            date: "10th June 2024",
+            status: "",
+            status_color: "",
+          },
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-warning-orange.png",
+            label: "APPLICATION CLOSE",
+            date: "30th July 2024",
+            status: "URGENT",
+            status_color: "orange",
+          },
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-gray.png",
+            label: "CLASS COMMENCEMENT",
+            date: "10th August 2024",
+            status: "Tentative",
+            status_color: "gray",
+          },
+        ],
+      } as any,
+      curriculum: {
+        title: "Curriculum",
+        subtitle: "Explore list of subjects wise covered in our MBA program.",
+        brochure: {
+          icon: "https://cdn.iconsdb.example.com/icons/download-pdf.png",
+          label: "Download Curriculum Brochure",
+          url: "https://cdn.brochures.example.com/mba-digital-transformation-curriculum.pdf",
         },
-        {
-          semester: 2,
-          subjects: [
-            "Data Analytics",
-            "Consumer Behaviour",
-            "Financial Management",
-          ],
-          specializations: ["Digital Transformation", "Business Analytics"],
-        },
-      ],
+        semesters: [
+          {
+            id: "sem_1",
+            name: "Semester 1",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
+          },
+          {
+            id: "sem_2",
+            name: "Semester 2",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
+          },
+          {
+            id: "sem_3",
+            name: "Semester 3",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
+          },
+          {
+            id: "sem_4",
+            name: "Semester 4",
+            expanded: true,
+            core_subjects: ["Banking and Insurance Management", "Project Work"],
+            specializations: [
+              {
+                title: "Specialization 1:",
+                selected: "Marketing",
+                subjects: [
+                  "Market Research",
+                  "Service Marketing & Global Marketing",
+                ],
+              },
+              {
+                title: "Specialization 2:",
+                selected: "Select Elective",
+                subjects: [],
+              },
+            ],
+            footnote:
+              "Learner will select an avenue for internship and specialization during the final semester.",
+          },
+        ],
+      } as any,
       courseStructure: {
-        total_credits: 102,
-        core_credits: 72,
-        elective_credits: 18,
-        project_credits: 12,
-      },
-      valueAddedCourses: [
-        {
-          name: "Google Analytics Certification",
-          credits: 2,
-          deliveryMode: "online",
-        },
-        { name: "Power BI for Business", credits: 2, deliveryMode: "hybrid" },
-      ],
-      careerOpportunities: [
-        { role: "Digital Marketing Manager", salaryRange: "6-12 LPA" },
-        { role: "Business Analyst", salaryRange: "5-10 LPA" },
-        { role: "Product Manager", salaryRange: "8-15 LPA" },
-      ],
+        title: "Course Structure",
+        subtitle: "The total will sum 102 credits at the end of two years.",
+        chart_type: "donut",
+        segments: [
+          { label: "Disciplinary Major", credits: 60, color: "#FF6B00" },
+          { label: "Occupational Track", credits: 24, color: "#FFB27A" },
+          { label: "Flexible Courses", credits: 23, color: "#2E2E5C" },
+          { label: "Research/Internship", credits: 12, color: "#4DD0C4" },
+          { label: "Common Curriculum", credits: 10, color: "#A8A8B3" },
+        ],
+      } as any,
+      valueAddedCourses: {
+        title: "Value Added Course",
+        items: [
+          {
+            name: "Cyber Security",
+            credit_label: "Credit: 03",
+            delivery_mode_label: "DELIVERY MODES",
+            delivery_modes: ["MOOC Courses"],
+          },
+        ],
+      } as any,
+      careerOpportunities: {
+        title: "Career Opportunities",
+        items: [
+          { role: "Data Scientist", salary_range: "₹6L - ₹25L PA" },
+          { role: "Marketing Manager", salary_range: "₹6L - ₹18L PA" },
+          { role: "Business Analyst", salary_range: "₹5L - ₹22L PA" },
+          { role: "Product Manager", salary_range: "₹12L - ₹30L PA" },
+          { role: "Digital Strategist", salary_range: "₹6L - ₹19L PA" },
+        ],
+      } as any,
       higherEducationCertifications: {
-        global: ["MBA Global Exchange Program (Germany, Singapore)"],
-        postGraduation: ["PhD in Management", "Executive MBA"],
-      },
-      flexibleExitOptions: [
-        { afterYears: 1, awardName: "PG Certificate in Management" },
-        { afterYears: 2, awardName: "MBA Degree" },
-      ],
+        global: {
+          title: "GLOBAL CERTIFICATIONS",
+          icon: "https://cdn.iconsdb.example.com/icons/globe-orange.png",
+          items: [
+            "Project Management Professional (PMP)",
+            "Certified Information Systems Auditor (CISA)",
+            "Google Data Analytics Professional Certificate",
+          ],
+        },
+        postgraduation: {
+          title: "POSTGRADUATION",
+          icon: "https://cdn.iconsdb.example.com/icons/graduation-cap-orange.png",
+          items: [
+            "PhD in Management Studies",
+            "Specialized Masters in Artificial Intelligence",
+            "Executive MBA in Global Business",
+          ],
+        },
+      } as any,
+      flexibleExitOptions: {
+        title: "Flexible Exit Options",
+        subtitle: "Life happens. Pause or exit with a valid credential.",
+        items: [
+          {
+            step: 1,
+            label: "After 1 Year",
+            award: "Post Graduate Diploma in Management",
+          },
+          {
+            step: 2,
+            label: "After 2 Years",
+            award: "Master of Business Administration (MBA)",
+          },
+        ],
+      } as any,
       classTimings: {
-        monday: { start: "09:00", end: "16:00", status: "regular" },
-        tuesday: { start: "09:00", end: "16:00", status: "regular" },
-        saturday: { start: "09:00", end: "13:00", status: "half_day" },
-      },
-      industryTools: ["Tableau", "Power BI", "Google Analytics", "SAP"],
-      labFacilities: [
-        "Digital Marketing Lab",
-        "Bloomberg Terminal Lab",
-        "Business Simulation Lab",
-      ],
-      roomFacilities: [
-        "Smart classrooms with projectors",
-        "Air-conditioned seminar halls",
-      ],
-      featuredAlumni: [
-        {
-          name: "Anjali Menon",
-          batch: "2022",
-          designation: "Product Manager at Flipkart",
-        },
-        {
-          name: "Rahul Nair",
-          batch: "2021",
-          designation: "Marketing Lead at Zomato",
-        },
-      ],
-      faqs: [
-        {
-          question: "Is there a lateral entry option for this course?",
-          answer:
-            "Yes, lateral entry is available for candidates with a relevant PG diploma.",
-        },
-        {
-          question: "Are internships mandatory?",
-          answer:
-            "Yes, a minimum 8-week internship is mandatory in the 3rd semester.",
-        },
-      ],
+        title: "Class Timings",
+        subtitle: "Regular Classes",
+        schedule: [
+          { day: "Monday", time: "09:00 AM - 04:30 PM" },
+          { day: "Tuesday", time: "09:00 AM - 04:30 PM" },
+          { day: "Wednesday", time: "09:00 AM - 04:30 PM" },
+          { day: "Thursday", time: "09:00 AM - 04:30 PM" },
+          { day: "Friday", time: "09:00 AM - 04:30 PM" },
+          { day: "Saturday", time: "Closed" },
+          { day: "Sunday", time: "Closed" },
+        ],
+      } as any,
+      industryTools: {
+        title: "Industry Tools You'll Master",
+        items: [
+          { name: "Tableau" },
+          { name: "Python" },
+          { name: "SPSS" },
+          { name: "R Studio" },
+          { name: "PowerBI" },
+          { name: "Salesforce" },
+        ],
+      } as any,
+      labFacilities: {
+        title: "Lab Facilities for MBA Digital Transformation",
+        items: [
+          { name: "AI/ML Research Lab" },
+          { name: "Mac Development Lab" },
+        ],
+      } as any,
+      roomFacilities: {
+        title: "Class Room Facilities",
+        items: [
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/smart-board-dark.png",
+            name: "Smart Interactive Boards",
+          },
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/wifi-dark.png",
+            name: "High-Speed Wi-Fi",
+          },
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/chair-dark.png",
+            name: "Ergonomic Seating",
+          },
+        ],
+      } as any,
+      featuredAlumni: {
+        title: "Featured Alumni",
+        highlight_word: "Alumni",
+        items: [
+          {
+            name: "Amit Verma",
+            designation: "CHIEF MOM (E-BANKING)",
+            image: "https://cdn.alumniphotos.example.com/photos/amit-verma.jpg",
+            career_progression: [
+              {
+                year: "2018",
+                tag_color: "orange",
+                description: "Completed graduation and explored career options",
+              },
+              {
+                year: "2019",
+                tag_color: "orange",
+                description:
+                  "Enrolled in Online MBA in Marketing while pursuing Mentorship",
+              },
+              {
+                year: "2021",
+                tag_color: "orange",
+                description:
+                  "Became full-time Senior Digital Marketing Associate",
+              },
+              {
+                year: "2023",
+                tag_color: "orange",
+                description:
+                  "Promoted to Senior Brand Manager at a Media agency",
+              },
+            ],
+          },
+        ],
+      } as any,
+      faqs: {
+        title: "Frequently Asked Questions",
+        items: [
+          {
+            question: "What is the eligibility for this MBA?",
+            answer: "",
+            expanded: false,
+          },
+          {
+            question: "Is there any scholarship available?",
+            answer: "",
+            expanded: false,
+          },
+          {
+            question: "Can I pursue this course part-time?",
+            answer: "",
+            expanded: false,
+          },
+        ],
+      } as any,
     },
   });
 
   console.log(
-    `Done — course detail tabs (fees + financial_aid) for ${courseId} (${course.name}) are now fully populated.`,
+    `Done — course detail tabs (course_info, fees, financial_aid, and all display-page sections) for ${courseId} (${course.name}) are now fully populated.`,
   );
 }
 
