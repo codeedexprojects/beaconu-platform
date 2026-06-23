@@ -149,6 +149,11 @@ docs {
   }
   
   --- clubs_associations tab response shape ---
+  Capped at the first 10 active clubs (inline preview only) with a trimmed
+  field set (id, name, category, cover_image, logo, about). For the full
+  paginated + searchable list, use List Clubs & Associations. For a single
+  club's full detail view (includes mission, key_activities, recent_events),
+  use Get Club Detail.
   {
     "success": true,
     "message": "Club detail fetched successfully",
@@ -165,43 +170,12 @@ docs {
           "logo": "",
           "about": {
             "description": "The National Service Scheme (NSS) is an Indian government-sponsored public service program conducted by the Ministry of Youth Affairs and Sports. Our college chapter is dedicated to fostering social responsibility and community engagement among students."
-          },
-          "mission": {
-            "description": "The motto of NSS \"Not Me But You\", reflects the essence of democratic living and upholds the need for self-less service. We aim to identify the needs and problems of the community and involve students in problem-solving."
-          },
-          "key_activities": {
-            "items": [
-              "Blood Donation Camps",
-              "Tree Plantation Drives",
-              "Rural Development Projects",
-              "Health & Hygiene Awareness"
-            ]
-          },
-          "recent_events": {
-            "view_all_cta": {
-              "label": "View Happenings",
-              "link": "https://example.com/clubs/nss/happenings"
-            },
-            "items": [
-              {
-                "id": "event_1",
-                "title": "Blood Donation Camp",
-                "thumbnail": "https://cdn.clubphotos.example.com/clubs/nss-blood-donation-camp.jpg",
-                "link": "https://example.com/clubs/nss/events/blood-donation-camp"
-              },
-              {
-                "id": "event_2",
-                "title": "Tree Plantation Drive",
-                "thumbnail": "https://cdn.clubphotos.example.com/clubs/nss-tree-plantation.jpg",
-                "link": "https://example.com/clubs/nss/events/tree-plantation-drive"
-              }
-            ]
           }
         }
       ]
     }
   }
-  
+
   --- alliance tab response shape ---
   {
     "success": true,
@@ -236,8 +210,6 @@ docs {
             "items": [
               {
                 "title": "Memorandum of Understanding",
-                "size": "2.4 MB",
-                "type": "PDF",
                 "download_icon": "https://cdn.iconsdb.example.com/icons/download-gray.png",
                 "url": "https://cdn.documents.example.com/alliances/bmh-mou.pdf"
               }

@@ -1,0 +1,69 @@
+meta {
+  name: List Clubs & Associations
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/clubs-associations?page=1&per_page=10
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  per_page: 10
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && Array.isArray(data.data.list) && data.data.list[0]) {
+      bru.setEnvVar("clubId", data.data.list[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated + searchable list of all clubs & associations for a course. This
+  is the full listing endpoint — the clubs_associations tab on Get Course Tab
+  returns only the first 10 clubs as an inline preview. Both this endpoint
+  and the inline tab preview return a trimmed field set (id, name, category,
+  cover_image, logo, about). For mission, key_activities, and recent_events,
+  use Get Club Detail.
+
+  Path params:
+  - collegeSlug: slug of the college (e.g. al-jamia-arts-and-science-college-ajas)
+  - courseId: course identifier
+
+  Query params:
+  - page: page number (default: 1)
+  - per_page: items per page, max 50 (default: 10)
+  - search: filter by club name, case-insensitive (optional)
+
+  Response shape:
+  {
+    "success": true,
+    "message": "Clubs & associations fetched",
+    "data": {
+      "list": [
+        {
+          "id": "club_nss",
+          "name": "National Service Scheme (NSS)",
+          "category": "SERVICE",
+          "cover_image": "",
+          "logo": "",
+          "about": { "description": "..." }
+        }
+      ],
+      "pagination": {
+        "current_page": 1,
+        "per_page": 10,
+        "total_items": 1,
+        "total_pages": 1,
+        "has_next_page": false,
+        "has_previous_page": false
+      }
+    }
+  }
+}

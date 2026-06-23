@@ -1,0 +1,44 @@
+meta {
+  name: Get Club Detail
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/clubs-associations/{{clubId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Full detail view of a single club/association.
+
+  Path params:
+  - collegeSlug: slug of the college (e.g. al-jamia-arts-and-science-college-ajas)
+  - courseId: course identifier
+  - clubId: club identifier from the clubs_associations tab or List Clubs & Associations (e.g. club_nss)
+
+  Returns 404 if the course or club is not found.
+
+  Response shape:
+  {
+    "success": true,
+    "message": "Club detail fetched successfully",
+    "data": {
+      "id": "club_nss",
+      "name": "National Service Scheme (NSS)",
+      "category": "SERVICE",
+      "cover_image": "",
+      "logo": "",
+      "about": { "description": "..." },
+      "mission": { "description": "..." },
+      "key_activities": { "items": ["Blood Donation Camps"] },
+      "recent_events": {
+        "view_all_cta": { "label": "View Happenings", "link": "" },
+        "items": [
+          { "id": "event_1", "title": "Blood Donation Camp", "thumbnail": "", "link": "" }
+        ]
+      }
+    }
+  }
+}

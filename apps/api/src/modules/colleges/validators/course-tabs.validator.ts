@@ -106,6 +106,24 @@ export const otherCoursesOfferedQuerySchema = z.object({
   search: z.string().trim().optional(),
 });
 
+export const clubsAssociationsQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+  search: z.string().trim().optional(),
+});
+
+export const clubDetailParamSchema = z.object({
+  slug: z.string().min(1, "College slug is required"),
+  courseId: z.string().min(1, "Course ID is required"),
+  clubId: z.string().min(1, "Club ID is required"),
+});
+
 // ── Update Body Schema ───────────────────────────────────────────────────────
 
 export const updateCourseTabSchema = z.object({
@@ -127,3 +145,7 @@ export type EligibilityCriteriaQuery = z.infer<
 export type OtherCoursesOfferedQuery = z.infer<
   typeof otherCoursesOfferedQuerySchema
 >;
+export type ClubsAssociationsQuery = z.infer<
+  typeof clubsAssociationsQuerySchema
+>;
+export type ClubDetailParam = z.infer<typeof clubDetailParamSchema>;
