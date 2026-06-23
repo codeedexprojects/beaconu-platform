@@ -419,6 +419,213 @@ export default function SetupAcademicsPage() {
     }));
   };
 
+  const loadCourseInfoSeedData = () => {
+    const seedData = {
+      course_name: "MBA Digital Transformation & AI",
+      about:
+        "This program prepares future business leaders to navigate the rapidly evolving digital landscape by combining core management disciplines with cutting-edge technology strategies, artificial intelligence, and analytics.",
+      overview: {
+        duration: "24 months",
+        study_mode: "Regular",
+        academic_cycle: "Semester-based",
+        credits: 108,
+        gender_accepted: "Co-ed",
+        course_category: "Regular Program",
+      },
+      program_highlights: [
+        { tag: "Accredited", title: "AACSB & AMBA Aligned Curriculum" },
+        { tag: "Mentorship", title: "1-on-1 Executive Mentoring Program" },
+        { tag: "Immersion", title: "2-Week Silicon Valley Immersion" },
+      ],
+      course_accolades: [
+        "Ranked #5 in Digital Management by National Business Review",
+        "Best Emerging Business Program - EduExcellence Award 2025",
+        "100% Case-Study Based Experiential Learning Approach",
+      ],
+      admission_status: {
+        urgency_label: "Admissions closing in 4 days",
+      },
+      admissions: [
+        { label: "Round 1 Application", status: "closed" },
+        { label: "Round 2 Application", status: "open" },
+        { label: "Direct Interview Walk-ins", status: "upcoming" },
+      ],
+      key_dates: [
+        { label: "Application Deadline", date: "30 August 2026" },
+        { label: "Orientation Ceremony", date: "15 September 2026" },
+        { label: "Commencement of Classes", date: "01 October 2026" },
+      ],
+      total_credits: 108,
+      curriculum: {
+        brochure_link:
+          "https://beaconu-demo.s3.amazonaws.com/brochures/mba-digital.pdf",
+        semesters: [
+          {
+            label: "Semester I - Foundations",
+            description:
+              "Covers Digital Business Strategy, Managerial Economics, and Analytics Tools.",
+          },
+          {
+            label: "Semester II - Core Tech",
+            description:
+              "Covers Product Management, AI & Machine Learning for Managers, and Finance.",
+          },
+          {
+            label: "Semester III - Specialization",
+            description:
+              "Covers Data Visualization, Digital Marketing Analytics, and Cloud Architectures.",
+          },
+          {
+            label: "Semester IV - Capstone",
+            description:
+              "Focuses on the Graduation Thesis, Strategy simulation, and Corporate Internship.",
+          },
+        ],
+      },
+      course_structure: [
+        { title: "Core Courses", details: "12 Subjects, 48 Credits" },
+        {
+          title: "Electives & Specialization",
+          details: "6 Subjects, 24 Credits",
+        },
+        { title: "Capstone & Internships", details: "2 Projects, 36 Credits" },
+      ],
+      value_added_courses: [
+        "AI Ethics & Corporate Governance",
+        "No-Code App Development with FlutterFlow",
+        "Prompt Engineering for Business Executives",
+      ],
+      higher_education: {
+        global_certifications: [
+          "AWS Certified Cloud Practitioner",
+          "Scrum Alliance Product Owner (CSPO)",
+          "Google Analytics Individual Qualification (GAIQ)",
+        ],
+        postgraduation: [
+          "PhD in Business Analytics & Strategy",
+          "Postdoctoral Fellowship in Digital Transformation",
+        ],
+      },
+      flexible_exit_options: [
+        "PG Diploma in Management after successful completion of Year 1",
+        "Master's Degree in Digital Transformation upon completing Year 2",
+      ],
+      class_timings: [
+        "Weekdays: 9:30 AM to 4:30 PM",
+        "Weekend Lab Sessions (Optional): 10:00 AM to 2:00 PM",
+      ],
+      industry_tools: [
+        "Python & Pandas",
+        "Tableau / PowerBI",
+        "Jira & Confluence",
+        "Google Cloud Platform",
+      ],
+      lab_facilities: [
+        "Advanced Analytics & Bloomberg Terminal Room",
+        "Virtual Reality & Design Thinking Studio",
+      ],
+      classroom_facilities: [
+        "Fully Interactive Smart Board & Hybrid Cam setup",
+        "High-speed Academic Wi-Fi & Dedicated Power outlets",
+      ],
+      bonus_certification: {
+        title: "Micro-Credential in Generative AI for Management",
+        tag: "BONUS CERTIFICATION",
+        cta_label: "View Certificate Spec",
+        link: "https://beaconu-demo.s3.amazonaws.com/certificates/gen-ai.pdf",
+        description:
+          "Co-delivered with Leading Tech Industry Partners to ensure job-ready skills.",
+      },
+      career_opportunities: [
+        "Digital Transformation Consultant",
+        "Product Operations Manager",
+        "AI Strategy Lead",
+        "Analytics Manager",
+      ],
+      featured_alumni: [
+        {
+          name: "Sophia Martinez",
+          company: "Microsoft",
+          designation: "Senior Strategy Lead",
+          image:
+            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
+        },
+        {
+          name: "Rohan Das",
+          company: "McKinsey & Company",
+          designation: "Associate Consultant",
+          image:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+        },
+      ],
+      faqs: [
+        {
+          question: "Is prior coding experience required for this course?",
+          answer:
+            "No, prior coding experience is not necessary. We provide bridge courses in Python and analytics.",
+        },
+        {
+          question: "What is the average package for this specialization?",
+          answer:
+            "The average package for the Digital Transformation cohort is 12.5 LPA.",
+        },
+      ],
+    };
+
+    updateActiveTabPayload(seedData);
+    toast.success("Loaded all mock/seed data into Course Info!");
+  };
+
+  const saveAndGoToTab = (nextTabId: CourseTabId) => {
+    if (editingCourse?.id) {
+      const tabPayload = localTabState[activeTab] || {};
+      const dataWithId = { id: activeTab, ...tabPayload };
+      updateTab(
+        {
+          courseId: editingCourse.id,
+          tabName: activeTab,
+          data: dataWithId,
+        },
+        {
+          onSuccess: () => {
+            toast.success(
+              `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
+            );
+            setActiveTab(nextTabId);
+          },
+        },
+      );
+    } else {
+      setActiveTab(nextTabId);
+    }
+  };
+
+  const saveAndExit = () => {
+    if (editingCourse?.id) {
+      const tabPayload = localTabState[activeTab] || {};
+      const dataWithId = { id: activeTab, ...tabPayload };
+      updateTab(
+        {
+          courseId: editingCourse.id,
+          tabName: activeTab,
+          data: dataWithId,
+        },
+        {
+          onSuccess: () => {
+            toast.success(
+              `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
+            );
+            setEditingCourse(null);
+            setIsAdding(false);
+          },
+        },
+      );
+    } else {
+      setEditingCourse(null);
+      setIsAdding(false);
+    }
+  };
+
   const handleBrochureUpload = async (file: File | null) => {
     if (!file) return;
 
@@ -1151,40 +1358,57 @@ export default function SetupAcademicsPage() {
                       {/* COURSE INFO TAB */}
                       {activeTab === "course_info" && (
                         <div className="space-y-4">
-                          <div className="flex border-b overflow-x-auto scrollbar-none gap-2 pb-2 mb-6">
-                            {[
-                              { id: "general", label: "General & Overview" },
-                              { id: "admissions", label: "Admissions & Dates" },
-                              {
-                                id: "academics",
-                                label: "Academics & Curriculum",
-                              },
-                              {
-                                id: "facilities",
-                                label: "Facilities & Timings",
-                              },
-                              {
-                                id: "alumni_faqs",
-                                label: "Career & Alumni / FAQs",
-                              },
-                            ].map((subTab) => {
-                              const isSubActive =
-                                courseInfoSubTab === subTab.id;
-                              return (
-                                <button
-                                  key={subTab.id}
-                                  type="button"
-                                  onClick={() => setCourseInfoSubTab(subTab.id)}
-                                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 border ${
-                                    isSubActive
-                                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                                  }`}
-                                >
-                                  {subTab.label}
-                                </button>
-                              );
-                            })}
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-2 mb-6">
+                            <div className="flex overflow-x-auto scrollbar-none gap-2 w-full sm:w-auto">
+                              {[
+                                { id: "general", label: "General & Overview" },
+                                {
+                                  id: "admissions",
+                                  label: "Admissions & Dates",
+                                },
+                                {
+                                  id: "academics",
+                                  label: "Academics & Curriculum",
+                                },
+                                {
+                                  id: "facilities",
+                                  label: "Facilities & Timings",
+                                },
+                                {
+                                  id: "alumni_faqs",
+                                  label: "Career & Alumni / FAQs",
+                                },
+                              ].map((subTab) => {
+                                const isSubActive =
+                                  courseInfoSubTab === subTab.id;
+                                return (
+                                  <button
+                                    key={subTab.id}
+                                    type="button"
+                                    onClick={() =>
+                                      setCourseInfoSubTab(subTab.id)
+                                    }
+                                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 border ${
+                                      isSubActive
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                                        : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    }`}
+                                  >
+                                    {subTab.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-semibold shrink-0"
+                              onClick={loadCourseInfoSeedData}
+                            >
+                              <Sparkles className="h-4 w-4 mr-1 text-indigo-600" />
+                              Load Demo Data
+                            </Button>
                           </div>
 
                           {/* 1. GENERAL & OVERVIEW SUB-TAB */}
@@ -11588,11 +11812,12 @@ export default function SetupAcademicsPage() {
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={isUpdatingTab}
                     onClick={() => {
                       const idx = COURSE_TABS.findIndex(
                         (t) => t.id === activeTab,
                       );
-                      if (idx > 0) setActiveTab(COURSE_TABS[idx - 1].id);
+                      if (idx > 0) saveAndGoToTab(COURSE_TABS[idx - 1].id);
                     }}
                   >
                     Back Tab
@@ -11600,15 +11825,15 @@ export default function SetupAcademicsPage() {
                   <Button
                     type="button"
                     className="bg-zinc-800 hover:bg-zinc-900 text-white font-semibold"
+                    disabled={isUpdatingTab}
                     onClick={() => {
                       const idx = COURSE_TABS.findIndex(
                         (t) => t.id === activeTab,
                       );
                       if (idx < COURSE_TABS.length - 1) {
-                        setActiveTab(COURSE_TABS[idx + 1].id);
+                        saveAndGoToTab(COURSE_TABS[idx + 1].id);
                       } else {
-                        setEditingCourse(null);
-                        setIsAdding(false);
+                        saveAndExit();
                       }
                     }}
                   >
@@ -11624,10 +11849,8 @@ export default function SetupAcademicsPage() {
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={() => {
-                  setEditingCourse(null);
-                  setIsAdding(false);
-                }}
+                disabled={isUpdatingTab}
+                onClick={saveAndExit}
               >
                 Back to Programs List
               </Button>
