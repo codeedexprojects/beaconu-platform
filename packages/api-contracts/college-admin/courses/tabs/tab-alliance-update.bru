@@ -136,4 +136,9 @@ body:json {
 
 docs {
   Updates alliance tab with dynamic JSON data.
+
+  Each alliance's "id" is optional — if omitted, the backend auto-generates
+  a unique id from the partner name (e.g. "alliance_baby-memorial-hospital").
+  Pass an explicit "id" only to keep an existing alliance's id stable across
+  edits (e.g. when renaming a partner without changing its public URL/slug).
 }

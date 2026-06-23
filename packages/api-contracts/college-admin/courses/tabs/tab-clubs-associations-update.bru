@@ -104,3 +104,11 @@ body:json {
     }
   }
 }
+
+docs {
+  Updates clubs_associations tab with dynamic JSON data.
+
+  Each club's "id" is optional — if omitted, the backend auto-generates a
+  unique id from the club name (e.g. "club_national-service-scheme"). Pass an
+  explicit "id" only to keep an existing club's id stable across edits.
+}

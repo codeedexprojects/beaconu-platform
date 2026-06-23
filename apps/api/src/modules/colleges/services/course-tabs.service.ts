@@ -35,6 +35,14 @@ function asText(value: unknown): string {
   return "";
 }
 
+function isEmptyValue(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object")
+    return Object.keys(value as object).length === 0;
+  return false;
+}
+
 function asNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -717,6 +725,63 @@ function transformPublicClubsAssociationsTab(raw: Record<string, unknown>): {
   };
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function assignMissingIds(
+  items: Record<string, unknown>[],
+  idPrefix: string,
+): Record<string, unknown>[] {
+  const usedIds = new Set(
+    items.map((item) => asText(item.id)).filter((id) => id.length > 0),
+  );
+
+  return items.map((item, index) => {
+    if (asText(item.id)) return item;
+
+    const slug = slugify(asText(item.name)) || String(index + 1);
+    let candidate = `${idPrefix}_${slug}`;
+    let suffix = 2;
+    while (usedIds.has(candidate)) {
+      candidate = `${idPrefix}_${slug}_${suffix}`;
+      suffix += 1;
+    }
+    usedIds.add(candidate);
+    return { ...item, id: candidate };
+  });
+}
+
+function normalizeSetupTabData(tabName: string, data: unknown): unknown {
+  const record = asRecord(data);
+
+  if (tabName === "alliance" && Array.isArray(record.alliances)) {
+    return {
+      ...record,
+      alliances: assignMissingIds(
+        record.alliances as Record<string, unknown>[],
+        "alliance",
+      ),
+    };
+  }
+
+  if (tabName === "clubs_associations" && Array.isArray(record.clubs)) {
+    return {
+      ...record,
+      clubs: assignMissingIds(
+        record.clubs as Record<string, unknown>[],
+        "club",
+      ),
+    };
+  }
+
+  return data;
+}
+
 function toClubPreview(club: Record<string, unknown>): Record<string, unknown> {
   return {
     id: club.id,
@@ -999,7 +1064,7 @@ export class CourseTabsService {
         courseId,
         collegeId,
         tabName,
-        data,
+        normalizeSetupTabData(tabName, data),
       );
       if (!updated) throw new NotFoundError("Course not found");
 
@@ -1045,6 +1110,55 @@ export class CourseTabsService {
     const admissionBatches = getAdmissionBatches(courseInfo);
     const quickInfo = getQuickInfo(courseInfo);
 
+    // The college-admin dashboard has no standalone editor for these content
+    // tabs — staff only ever fill them in as part of the bundled course_info
+    // setup tab. Fall back to the equivalent course_info field whenever the
+    // dedicated column is still empty (its Prisma default).
+    const highlights = isEmptyValue(course.highlights)
+      ? (courseInfo.program_highlights ?? [])
+      : course.highlights;
+    const keyDates = isEmptyValue(course.keyDates)
+      ? (courseInfo.key_dates ?? [])
+      : course.keyDates;
+    const curriculum = isEmptyValue(course.curriculum)
+      ? (courseInfo.curriculum ?? {})
+      : course.curriculum;
+    const courseStructure = isEmptyValue(course.courseStructure)
+      ? (courseInfo.course_structure ?? [])
+      : course.courseStructure;
+    const valueAddedCourses = isEmptyValue(course.valueAddedCourses)
+      ? (courseInfo.value_added_courses ?? [])
+      : course.valueAddedCourses;
+    const careerOpportunities = isEmptyValue(course.careerOpportunities)
+      ? (courseInfo.career_opportunities ?? [])
+      : course.careerOpportunities;
+    const higherEducationCertifications = isEmptyValue(
+      course.higherEducationCertifications,
+    )
+      ? (courseInfo.higher_education ?? {})
+      : course.higherEducationCertifications;
+    const flexibleExitOptions = isEmptyValue(course.flexibleExitOptions)
+      ? (courseInfo.flexible_exit_options ?? [])
+      : course.flexibleExitOptions;
+    const classTimings = isEmptyValue(course.classTimings)
+      ? (courseInfo.class_timings ?? [])
+      : course.classTimings;
+    const industryTools = isEmptyValue(course.industryTools)
+      ? (courseInfo.industry_tools ?? [])
+      : course.industryTools;
+    const labFacilities = isEmptyValue(course.labFacilities)
+      ? (courseInfo.lab_facilities ?? [])
+      : course.labFacilities;
+    const roomFacilities = isEmptyValue(course.roomFacilities)
+      ? (courseInfo.classroom_facilities ?? [])
+      : course.roomFacilities;
+    const featuredAlumni = isEmptyValue(course.featuredAlumni)
+      ? (courseInfo.featured_alumni ?? [])
+      : course.featuredAlumni;
+    const faqs = isEmptyValue(course.faqs)
+      ? (courseInfo.faqs ?? [])
+      : course.faqs;
+
     const studentForum =
       asRecord(courseInfo.student_forum).enabled !== undefined ||
       Object.keys(asRecord(courseInfo.student_forum)).length > 0
@@ -1082,21 +1196,21 @@ export class CourseTabsService {
       admission_batches: admissionBatches,
       quick_info: quickInfo,
       tabs,
-      highlights: course.highlights ?? {},
+      highlights,
       accreditations: course.accreditations ?? {},
-      keyDates: course.keyDates ?? {},
-      curriculum: course.curriculum ?? {},
-      courseStructure: course.courseStructure ?? {},
-      valueAddedCourses: course.valueAddedCourses ?? {},
-      careerOpportunities: course.careerOpportunities ?? {},
-      higherEducationCertifications: course.higherEducationCertifications ?? {},
-      flexibleExitOptions: course.flexibleExitOptions ?? {},
-      classTimings: course.classTimings ?? {},
-      industryTools: course.industryTools ?? {},
-      labFacilities: course.labFacilities ?? {},
-      roomFacilities: course.roomFacilities ?? {},
-      featuredAlumni: course.featuredAlumni ?? {},
-      faqs: course.faqs ?? {},
+      keyDates,
+      curriculum,
+      courseStructure,
+      valueAddedCourses,
+      careerOpportunities,
+      higherEducationCertifications,
+      flexibleExitOptions,
+      classTimings,
+      industryTools,
+      labFacilities,
+      roomFacilities,
+      featuredAlumni,
+      faqs,
       studentForum,
       certifications,
     };
