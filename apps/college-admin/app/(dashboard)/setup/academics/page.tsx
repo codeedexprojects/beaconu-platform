@@ -5415,7 +5415,7 @@ export default function SetupAcademicsPage() {
                                     student_avatar: "",
                                     placed_at: "",
                                     quote: "",
-                                    type: "",
+                                    type: "youtube",
                                     thumbnail: "",
                                     video_url: "",
                                   })
@@ -5497,19 +5497,30 @@ export default function SetupAcademicsPage() {
                                           </div>
                                           <div className="space-y-1">
                                             <Label className="text-xs">
-                                              Type (mp4 / youtube)
+                                              Type
                                             </Label>
-                                            <Input
-                                              placeholder="e.g. mp4"
-                                              value={item.type || ""}
-                                              onChange={(e) =>
+                                            <Select
+                                              value={item.type || "youtube"}
+                                              onValueChange={(val) =>
                                                 updateTabListItem(
                                                   "student_success.items",
                                                   idx,
-                                                  { type: e.target.value },
+                                                  { type: val, video_url: "" },
                                                 )
                                               }
-                                            />
+                                            >
+                                              <SelectTrigger className="h-10 text-xs">
+                                                <SelectValue placeholder="Select type" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="youtube">
+                                                  YouTube
+                                                </SelectItem>
+                                                <SelectItem value="mp4">
+                                                  MP4 Video
+                                                </SelectItem>
+                                              </SelectContent>
+                                            </Select>
                                           </div>
                                           <div className="space-y-1 md:col-span-3">
                                             <Label className="text-xs">
@@ -5612,21 +5623,73 @@ export default function SetupAcademicsPage() {
                                               />
                                             </div>
                                           </div>
-                                          <div className="space-y-1">
-                                            <Label className="text-xs">
-                                              Video URL
-                                            </Label>
-                                            <Input
-                                              placeholder="https://res.cloudinary.com/... or youtube link"
-                                              value={item.video_url || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "student_success.items",
-                                                  idx,
-                                                  { video_url: e.target.value },
-                                                )
-                                              }
-                                            />
+                                          <div className="space-y-1 md:col-span-2">
+                                            {!item.type ||
+                                            item.type === "youtube" ? (
+                                              <>
+                                                <Label className="text-xs">
+                                                  YouTube Video URL
+                                                </Label>
+                                                <Input
+                                                  placeholder="https://www.youtube.com/watch?v=..."
+                                                  value={item.video_url || ""}
+                                                  onChange={(e) =>
+                                                    updateTabListItem(
+                                                      "student_success.items",
+                                                      idx,
+                                                      {
+                                                        video_url:
+                                                          e.target.value,
+                                                      },
+                                                    )
+                                                  }
+                                                />
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Label className="text-xs">
+                                                  MP4 Video (Upload or URL)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                  <Input
+                                                    placeholder="https://cdn.example.com/video.mp4"
+                                                    value={item.video_url || ""}
+                                                    onChange={(e) =>
+                                                      updateTabListItem(
+                                                        "student_success.items",
+                                                        idx,
+                                                        {
+                                                          video_url:
+                                                            e.target.value,
+                                                        },
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    type="file"
+                                                    accept="video/mp4"
+                                                    disabled={
+                                                      uploadingField ===
+                                                      `student_video_${idx}`
+                                                    }
+                                                    onChange={(e) =>
+                                                      handleCourseFieldUpload(
+                                                        e.target.files?.[0] ??
+                                                          null,
+                                                        `student_video_${idx}`,
+                                                        `placements/student_video_${idx}`,
+                                                        (url) =>
+                                                          updateTabListItem(
+                                                            "student_success.items",
+                                                            idx,
+                                                            { video_url: url },
+                                                          ),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </>
+                                            )}
                                           </div>
                                           <div className="flex items-end">
                                             <Button
