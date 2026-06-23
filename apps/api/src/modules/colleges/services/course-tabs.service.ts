@@ -572,11 +572,11 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
     };
   });
 
-  // Recent reviews (first page, up to 10)
+  // Recent reviews (first page, up to 5)
   const reviews = Array.isArray(raw.reviews)
     ? (raw.reviews as Record<string, unknown>[])
     : [];
-  const recentReviewItems = reviews.slice(0, 10).map((r, idx) => ({
+  const recentReviewItems = reviews.slice(0, 5).map((r, idx) => ({
     id: asText(r.id) || `review_${String(idx + 1).padStart(3, "0")}`,
     reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
     reviewer_avatar:
@@ -592,7 +592,7 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
   const hasMore =
     typeof paginationRaw.hasMore === "boolean"
       ? paginationRaw.hasMore
-      : reviews.length >= 10;
+      : reviews.length > 5;
 
   return {
     tab: "review",
@@ -1287,10 +1287,7 @@ export class CourseTabsService {
       : [];
 
     const overallRaw = asRecord(raw.overallRating);
-    const totalItems =
-      asNumber(overallRaw.totalReviews) ||
-      asNumber(raw.total_reviews) ||
-      allReviews.length;
+    const totalItems = allReviews.length;
     const averageRating =
       asNumber(overallRaw.rating) || asNumber(raw.average_rating);
 

@@ -349,10 +349,22 @@ export async function updateStaffMember(
 export interface HostelRoomTypeDto {
   id: string;
   name: string;
+  description?: string | null;
   totalBeds: number;
   availableBeds: number;
   annualPlanPrice: number;
+  admissionFee?: number;
   securityDeposit: number;
+  photos?: string[];
+}
+
+export interface HostelTagDto {
+  label: string;
+  color?: string;
+}
+
+export interface HostelSafetyFeatureDto {
+  label: string;
 }
 
 export interface HostelWardenInfoDto {
@@ -360,6 +372,9 @@ export interface HostelWardenInfoDto {
   phone?: string;
   whatsapp?: string;
   email?: string;
+  photo?: string;
+  designation?: string;
+  safetyFeatures?: HostelSafetyFeatureDto[];
 }
 
 export interface HostelAmenityDto {
@@ -378,9 +393,24 @@ export interface HostelNearbyEssentialDto {
   distance: string;
 }
 
+export interface HostelCollegeTransportDto {
+  description?: string;
+  busStopNote?: string;
+}
+
+export interface HostelMapDto {
+  thumbnail?: string;
+}
+
 export interface HostelLocationInfoDto {
   address?: string;
+  addressLine2?: string;
+  latitude?: number;
+  longitude?: number;
+  mapLink?: string;
   nearbyEssentials?: HostelNearbyEssentialDto[];
+  collegeTransport?: HostelCollegeTransportDto;
+  map?: HostelMapDto;
 }
 
 export interface HostelMessPlanDto {
@@ -420,6 +450,9 @@ export interface HostelDto {
   totalBeds: number;
   coverImageUrl?: string | null;
   gallery?: string[];
+  tags?: HostelTagDto[];
+  badge?: string | null;
+  safetyTier?: string | null;
   avgRating?: number;
   reviewCount?: number;
   wardenInfo?: HostelWardenInfoDto;

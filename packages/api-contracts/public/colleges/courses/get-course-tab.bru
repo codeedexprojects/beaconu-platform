@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: other_courses_offered
+  tabName: reviewd
 }
 
 docs {
@@ -35,7 +35,7 @@ docs {
     accreditations, key_dates, demographics
   
   Returns 404 if the tab name is invalid or the course is not found.
-
+  
   --- other_courses_offered tab response shape ---
   Grouped by study level. Capped at the first 10 other active courses
   offered by the college (inline preview only). For the full paginated +
@@ -57,7 +57,7 @@ docs {
       ]
     }
   }
-
+  
   --- fees tab response shape ---
   {
     "success": true,
