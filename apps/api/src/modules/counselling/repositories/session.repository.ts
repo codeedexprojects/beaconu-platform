@@ -1077,7 +1077,8 @@ export class SessionRepository {
    * to guarantee no CounsellingSession references a slot — a cancelled
    * session frees its slot (isBooked=false) but keeps its availabilityId
    * FK pointing at it for history, so we also exclude slots with any
-   * related session at all.
+   * related session at all. SessionReschedule.toAvailabilityId also points
+   * at a slot independent of any session, so that must be excluded too.
    */
   static async deleteExpiredUnbookedSlots(beforeDate: Date) {
     return prisma.counsellorAvailability.deleteMany({
@@ -1085,6 +1086,7 @@ export class SessionRepository {
         isBooked: false,
         availableDate: { lt: beforeDate },
         sessions: { none: {} },
+        rescheduleTargets: { none: {} },
       },
     });
   }

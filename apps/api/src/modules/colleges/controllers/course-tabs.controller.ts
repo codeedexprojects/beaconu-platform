@@ -9,6 +9,7 @@ import {
   updateCourseTabSchema,
   eligibilityCriteriaQuerySchema,
   reviewsQuerySchema,
+  otherCoursesOfferedQuerySchema,
 } from "../validators/course-tabs.validator";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -404,5 +405,28 @@ export class CourseTabsController {
     return res
       .status(200)
       .json(ApiResponse.success("Reviews fetched successfully", result));
+  }
+
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/other-courses-offered
+   * Paginated + searchable list of other courses offered by the college
+   * (public).
+   */
+  static async listPublicOtherCoursesOffered(req: Request, res: Response) {
+    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
+    const { page, per_page, search } = otherCoursesOfferedQuerySchema.parse(
+      req.query,
+    );
+
+    const result = await CourseTabsService.listPublicOtherCoursesOffered(
+      courseId,
+      slug,
+      page,
+      per_page,
+      search,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Other courses offered fetched", result));
   }
 }

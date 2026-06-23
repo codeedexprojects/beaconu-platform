@@ -602,11 +602,11 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
     };
   });
 
-  // Recent reviews (first page, up to 10)
+  // Recent reviews (first page, up to 5)
   const reviews = Array.isArray(raw.reviews)
     ? (raw.reviews as Record<string, unknown>[])
     : [];
-  const recentReviewItems = reviews.slice(0, 10).map((r, idx) => ({
+  const recentReviewItems = reviews.slice(0, 5).map((r, idx) => ({
     id: asText(r.id) || `review_${String(idx + 1).padStart(3, "0")}`,
     reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
     reviewer_avatar:
@@ -622,7 +622,7 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
   const hasMore =
     typeof paginationRaw.hasMore === "boolean"
       ? paginationRaw.hasMore
-      : reviews.length >= 10;
+      : reviews.length > 5;
 
   return {
     tab: "review",
@@ -858,6 +858,56 @@ function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
       })),
     },
   };
+}
+
+type OtherCollegeCourse = {
+  id: string;
+  name: string;
+  duration: string | null;
+  metadata: unknown;
+  studyLevel: { id: string; name: string; slug: string };
+};
+
+function extractCourseFee(metadata: unknown): string {
+  const tabData = asRecord(asRecord(metadata).tabData);
+  const fees = asRecord(tabData.fees);
+  const feeDetails = Array.isArray(fees.fee_details)
+    ? (fees.fee_details as Record<string, unknown>[])
+    : [];
+  const summary = asRecord(feeDetails[0]?.fees_summary);
+  return asText(summary.full_course_fee);
+}
+
+function buildOtherCoursesOfferedTree(courses: OtherCollegeCourse[]) {
+  const studyLevelMap = new Map<
+    string,
+    {
+      studyLevel: { id: string; name: string; slug: string };
+      courses: {
+        id: string;
+        name: string;
+        duration: string | null;
+        fee: string;
+      }[];
+    }
+  >();
+
+  for (const course of courses) {
+    let level = studyLevelMap.get(course.studyLevel.id);
+    if (!level) {
+      level = { studyLevel: course.studyLevel, courses: [] };
+      studyLevelMap.set(course.studyLevel.id, level);
+    }
+
+    level.courses.push({
+      id: course.id,
+      name: course.name,
+      duration: course.duration,
+      fee: extractCourseFee(course.metadata),
+    });
+  }
+
+  return Array.from(studyLevelMap.values());
 }
 
 export class CourseTabsService {
@@ -1184,6 +1234,19 @@ export class CourseTabsService {
         };
       }
 
+      if (tabName === "other_courses_offered") {
+        const otherCourses = await CourseTabsRepository.findOtherCollegeCourses(
+          course.collegeId,
+          courseId,
+        );
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          list: buildOtherCoursesOfferedTree(otherCourses),
+        };
+      }
+
       if (tabName === "demo_graphics") {
         const transformed = transformPublicDemoGraphicsTab(asRecord(rawData));
         return {
@@ -1254,10 +1317,7 @@ export class CourseTabsService {
       : [];
 
     const overallRaw = asRecord(raw.overallRating);
-    const totalItems =
-      asNumber(overallRaw.totalReviews) ||
-      asNumber(raw.total_reviews) ||
-      allReviews.length;
+    const totalItems = allReviews.length;
     const averageRating =
       asNumber(overallRaw.rating) || asNumber(raw.average_rating);
 
@@ -1284,6 +1344,49 @@ export class CourseTabsService {
         current_page: page,
         per_page: perPage,
         total_items: totalItems,
+        total_pages: totalPages,
+        has_next_page: page < totalPages,
+        has_previous_page: page > 1,
+      },
+    };
+  }
+
+  /**
+   * Paginated + searchable list of "other courses offered" by the same
+   * college, grouped by study level.
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/other-courses-offered
+   */
+  static async listPublicOtherCoursesOffered(
+    courseId: string,
+    collegeSlug: string,
+    page: number,
+    perPage: number,
+    search: string | undefined,
+  ) {
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const { data, total } =
+      await CourseTabsRepository.findOtherCollegeCoursesPaginated(
+        course.collegeId,
+        courseId,
+        search,
+        (page - 1) * perPage,
+        perPage,
+      );
+
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+    return {
+      list: buildOtherCoursesOfferedTree(data as OtherCollegeCourse[]),
+      pagination: {
+        current_page: page,
+        per_page: perPage,
+        total_items: total,
         total_pages: totalPages,
         has_next_page: page < totalPages,
         has_previous_page: page > 1,

@@ -17,6 +17,9 @@ const DETAIL_SELECT = {
   ...SUMMARY_SELECT,
   description: true,
   gallery: true,
+  tags: true,
+  badge: true,
+  safetyTier: true,
   wardenInfo: true,
   amenities: true,
   rules: true,
@@ -33,6 +36,7 @@ const DETAIL_SELECT = {
       admissionFee: true,
       securityDeposit: true,
       description: true,
+      photos: true,
     },
   },
   messPlans: {
@@ -119,6 +123,22 @@ export class HostelRepository {
         college: { slug: collegeSlug, status: "active" },
       },
       select: DETAIL_SELECT,
+    });
+  }
+
+  static async findPublicReviewsByHostelId(hostelId: string, take: number) {
+    return prisma.hostelReview.findMany({
+      where: { hostelId, status: "approved" },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: {
+        id: true,
+        rating: true,
+        reviewText: true,
+        isVerified: true,
+        createdAt: true,
+        student: { select: { fullName: true } },
+      },
     });
   }
 

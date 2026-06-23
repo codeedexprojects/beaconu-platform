@@ -44,10 +44,16 @@ export default function HostelDetailPage() {
   const [description, setDescription] = useState("");
   const [totalBeds, setTotalBeds] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [badge, setBadge] = useState("");
+  const [safetyTier, setSafetyTier] = useState("");
+  const [tags, setTags] = useState<{ label: string; color?: string }[]>([]);
   const [wardenName, setWardenName] = useState("");
   const [wardenPhone, setWardenPhone] = useState("");
   const [wardenWhatsapp, setWardenWhatsapp] = useState("");
   const [wardenEmail, setWardenEmail] = useState("");
+  const [wardenPhoto, setWardenPhoto] = useState("");
+  const [wardenDesignation, setWardenDesignation] = useState("");
+  const [safetyFeatures, setSafetyFeatures] = useState<{ label: string }[]>([]);
   const [amenities, setAmenities] = useState<{ name: string; icon?: string }[]>(
     [],
   );
@@ -55,6 +61,13 @@ export default function HostelDetailPage() {
     [],
   );
   const [address, setAddress] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [mapLink, setMapLink] = useState("");
+  const [mapThumbnail, setMapThumbnail] = useState("");
+  const [transportDescription, setTransportDescription] = useState("");
+  const [busStopNote, setBusStopNote] = useState("");
   const [nearbyEssentials, setNearbyEssentials] = useState<
     { type: string; name: string; distance: string }[]
   >([]);
@@ -64,16 +77,42 @@ export default function HostelDetailPage() {
     setDescription(hostel.description || "");
     setTotalBeds(hostel.totalBeds ? String(hostel.totalBeds) : "");
     setCoverImageUrl(hostel.coverImageUrl || "");
+    setBadge(hostel.badge || "");
+    setSafetyTier(hostel.safetyTier || "");
+    setTags(hostel.tags || []);
     setWardenName(hostel.wardenInfo?.name || "");
     setWardenPhone(hostel.wardenInfo?.phone || "");
     setWardenWhatsapp(hostel.wardenInfo?.whatsapp || "");
     setWardenEmail(hostel.wardenInfo?.email || "");
+    setWardenPhoto(hostel.wardenInfo?.photo || "");
+    setWardenDesignation(hostel.wardenInfo?.designation || "");
+    setSafetyFeatures(hostel.wardenInfo?.safetyFeatures || []);
     setAmenities(hostel.amenities || []);
     setRules(hostel.rules || []);
     setAddress(hostel.locationInfo?.address || "");
+    setAddressLine2(hostel.locationInfo?.addressLine2 || "");
+    setLatitude(
+      hostel.locationInfo?.latitude != null
+        ? String(hostel.locationInfo.latitude)
+        : "",
+    );
+    setLongitude(
+      hostel.locationInfo?.longitude != null
+        ? String(hostel.locationInfo.longitude)
+        : "",
+    );
+    setMapLink(hostel.locationInfo?.mapLink || "");
+    setMapThumbnail(hostel.locationInfo?.map?.thumbnail || "");
+    setTransportDescription(
+      hostel.locationInfo?.collegeTransport?.description || "",
+    );
+    setBusStopNote(hostel.locationInfo?.collegeTransport?.busStopNote || "");
     setNearbyEssentials(hostel.locationInfo?.nearbyEssentials || []);
   }, [hostel?.id]);
 
+  const [newTagLabel, setNewTagLabel] = useState("");
+  const [newTagColor, setNewTagColor] = useState("");
+  const [newSafetyFeature, setNewSafetyFeature] = useState("");
   const [newAmenityName, setNewAmenityName] = useState("");
   const [newRuleTitle, setNewRuleTitle] = useState("");
   const [newRuleDesc, setNewRuleDesc] = useState("");
@@ -86,10 +125,13 @@ export default function HostelDetailPage() {
     useCreateHostelRoomType();
   const { mutate: deleteRoomType } = useDeleteHostelRoomType();
   const [roomName, setRoomName] = useState("");
+  const [roomDescription, setRoomDescription] = useState("");
   const [roomBeds, setRoomBeds] = useState("");
   const [roomAnnualPrice, setRoomAnnualPrice] = useState("");
   const [roomMonthlyPrice, setRoomMonthlyPrice] = useState("");
+  const [roomAdmissionFee, setRoomAdmissionFee] = useState("");
   const [roomDeposit, setRoomDeposit] = useState("");
+  const [roomPhotos, setRoomPhotos] = useState("");
 
   // Mess plans
   const { mutate: createMessPlan, isPending: isAddingMessPlan } =
@@ -98,6 +140,8 @@ export default function HostelDetailPage() {
   const [mealName, setMealName] = useState("");
   const [mealPrice, setMealPrice] = useState("");
   const [mealIncluded, setMealIncluded] = useState("");
+  const [mealDuration, setMealDuration] = useState("1 Month");
+  const [mealDietaryOptions, setMealDietaryOptions] = useState("");
   const [mealCompulsory, setMealCompulsory] = useState(false);
 
   // Addon services
@@ -108,6 +152,7 @@ export default function HostelDetailPage() {
   const [addonName, setAddonName] = useState("");
   const [addonPlanLabel, setAddonPlanLabel] = useState("");
   const [addonPlanPrice, setAddonPlanPrice] = useState("");
+  const [addonNotes, setAddonNotes] = useState("");
 
   if (isLoading) {
     return (
@@ -138,21 +183,58 @@ export default function HostelDetailPage() {
           description: description || null,
           totalBeds: totalBeds ? Number(totalBeds) : null,
           coverImageUrl: coverImageUrl || null,
+          badge: badge || null,
+          safetyTier: safetyTier || null,
+          tags,
           wardenInfo: {
             name: wardenName || undefined,
             phone: wardenPhone || undefined,
             whatsapp: wardenWhatsapp || undefined,
             email: wardenEmail || undefined,
+            photo: wardenPhoto || undefined,
+            designation: wardenDesignation || undefined,
+            safetyFeatures,
           },
           amenities,
           rules,
-          locationInfo: { address: address || undefined, nearbyEssentials },
+          locationInfo: {
+            address: address || undefined,
+            addressLine2: addressLine2 || undefined,
+            latitude: latitude ? Number(latitude) : undefined,
+            longitude: longitude ? Number(longitude) : undefined,
+            mapLink: mapLink || undefined,
+            map: mapThumbnail ? { thumbnail: mapThumbnail } : undefined,
+            collegeTransport:
+              transportDescription || busStopNote
+                ? {
+                    description: transportDescription || undefined,
+                    busStopNote: busStopNote || undefined,
+                  }
+                : undefined,
+            nearbyEssentials,
+          },
         },
       },
       {
         onSuccess: () => toast.success("Hostel profile updated"),
       },
     );
+  };
+
+  const addTag = () => {
+    if (!newTagLabel.trim()) return;
+    setTags([
+      ...tags,
+      { label: newTagLabel.trim(), color: newTagColor.trim() || "blue" },
+    ]);
+    setNewTagLabel("");
+    setNewTagColor("");
+  };
+
+  const addSafetyFeature = () => {
+    if (!newSafetyFeature.trim()) return;
+    setSafetyFeatures([...safetyFeatures, { label: newSafetyFeature.trim() }]);
+    setNewSafetyFeature("");
   };
 
   const addAmenity = () => {
@@ -202,20 +284,29 @@ export default function HostelDetailPage() {
         hostelId: hostel.id,
         data: {
           name: roomName.trim(),
+          description: roomDescription.trim() || undefined,
           totalBeds: Number(roomBeds),
           annualPlanPrice: roomAnnualPrice ? Number(roomAnnualPrice) : 0,
           monthlyPlanPrice: roomMonthlyPrice ? Number(roomMonthlyPrice) : 0,
+          admissionFee: roomAdmissionFee ? Number(roomAdmissionFee) : 0,
           securityDeposit: roomDeposit ? Number(roomDeposit) : 0,
+          photos: roomPhotos
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
         },
       },
       {
         onSuccess: () => {
           toast.success("Room type added");
           setRoomName("");
+          setRoomDescription("");
           setRoomBeds("");
           setRoomAnnualPrice("");
           setRoomMonthlyPrice("");
+          setRoomAdmissionFee("");
           setRoomDeposit("");
+          setRoomPhotos("");
         },
       },
     );
@@ -236,6 +327,11 @@ export default function HostelDetailPage() {
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
+          duration: mealDuration.trim() || "1 Month",
+          dietaryOptions: mealDietaryOptions
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
           isCompulsory: mealCompulsory,
         },
       },
@@ -245,6 +341,8 @@ export default function HostelDetailPage() {
           setMealName("");
           setMealPrice("");
           setMealIncluded("");
+          setMealDuration("1 Month");
+          setMealDietaryOptions("");
           setMealCompulsory(false);
         },
       },
@@ -265,6 +363,7 @@ export default function HostelDetailPage() {
           plans: [
             { label: addonPlanLabel.trim(), price: Number(addonPlanPrice) },
           ],
+          notes: addonNotes.trim() || undefined,
         },
       },
       {
@@ -273,6 +372,7 @@ export default function HostelDetailPage() {
           setAddonName("");
           setAddonPlanLabel("");
           setAddonPlanPrice("");
+          setAddonNotes("");
         },
       },
     );
@@ -338,6 +438,57 @@ export default function HostelDetailPage() {
                 placeholder="https://..."
               />
             </div>
+            <div className="space-y-1">
+              <Label>Verified Badge Text</Label>
+              <Input
+                value={badge}
+                onChange={(e) => setBadge(e.target.value)}
+                placeholder="Safe & Secure - Premium PG Partnered"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Safety Tier</Label>
+              <Input
+                value={safetyTier}
+                onChange={(e) => setSafetyTier(e.target.value)}
+                placeholder="Premium"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-4 border-t">
+            <Label className="font-semibold">Tags</Label>
+            <div className="flex flex-wrap gap-2">
+              {tags.map((t, idx) => (
+                <span
+                  key={idx}
+                  className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
+                >
+                  {t.label}
+                  <button
+                    type="button"
+                    onClick={() => setTags(tags.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Label (e.g. On-Campus)"
+                value={newTagLabel}
+                onChange={(e) => setNewTagLabel(e.target.value)}
+              />
+              <Input
+                placeholder="Color (e.g. blue)"
+                value={newTagColor}
+                onChange={(e) => setNewTagColor(e.target.value)}
+              />
+              <Button type="button" variant="outline" onClick={addTag}>
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2 pt-4 border-t">
@@ -347,6 +498,11 @@ export default function HostelDetailPage() {
                 placeholder="Name"
                 value={wardenName}
                 onChange={(e) => setWardenName(e.target.value)}
+              />
+              <Input
+                placeholder="Designation (e.g. Chief Warden)"
+                value={wardenDesignation}
+                onChange={(e) => setWardenDesignation(e.target.value)}
               />
               <Input
                 placeholder="Phone"
@@ -363,6 +519,50 @@ export default function HostelDetailPage() {
                 value={wardenEmail}
                 onChange={(e) => setWardenEmail(e.target.value)}
               />
+              <Input
+                placeholder="Photo URL"
+                value={wardenPhoto}
+                onChange={(e) => setWardenPhoto(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 pt-2">
+              <Label className="text-xs text-muted-foreground">
+                Safety Features
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {safetyFeatures.map((f, idx) => (
+                  <span
+                    key={idx}
+                    className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
+                  >
+                    {f.label}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSafetyFeatures(
+                          safetyFeatures.filter((_, i) => i !== idx),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Feature (e.g. CCTV Coverage)"
+                  value={newSafetyFeature}
+                  onChange={(e) => setNewSafetyFeature(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addSafetyFeature}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -438,11 +638,50 @@ export default function HostelDetailPage() {
 
           <div className="space-y-2 pt-4 border-t">
             <Label className="font-semibold">Location</Label>
-            <Input
-              placeholder="Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                placeholder="Address line 1"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <Input
+                placeholder="Address line 2"
+                value={addressLine2}
+                onChange={(e) => setAddressLine2(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Latitude"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Longitude"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+              />
+              <Input
+                placeholder="Map link (https://maps.google.com/?q=...)"
+                value={mapLink}
+                onChange={(e) => setMapLink(e.target.value)}
+              />
+              <Input
+                placeholder="Map thumbnail URL"
+                value={mapThumbnail}
+                onChange={(e) => setMapThumbnail(e.target.value)}
+              />
+              <Input
+                placeholder="College transport description"
+                value={transportDescription}
+                onChange={(e) => setTransportDescription(e.target.value)}
+              />
+              <Input
+                placeholder="Bus stop note (e.g. 50m from gate)"
+                value={busStopNote}
+                onChange={(e) => setBusStopNote(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               {nearbyEssentials.map((ne, idx) => (
                 <div
@@ -552,6 +791,12 @@ export default function HostelDetailPage() {
               onChange={(e) => setRoomName(e.target.value)}
             />
             <Input
+              placeholder="Description"
+              className="sm:col-span-2"
+              value={roomDescription}
+              onChange={(e) => setRoomDescription(e.target.value)}
+            />
+            <Input
               type="number"
               placeholder="Total Beds"
               value={roomBeds}
@@ -571,9 +816,21 @@ export default function HostelDetailPage() {
             />
             <Input
               type="number"
+              placeholder="Admission Fee"
+              value={roomAdmissionFee}
+              onChange={(e) => setRoomAdmissionFee(e.target.value)}
+            />
+            <Input
+              type="number"
               placeholder="Security Deposit"
               value={roomDeposit}
               onChange={(e) => setRoomDeposit(e.target.value)}
+            />
+            <Input
+              placeholder="Photo URLs (comma separated)"
+              className="sm:col-span-2"
+              value={roomPhotos}
+              onChange={(e) => setRoomPhotos(e.target.value)}
             />
             <Button
               type="button"
@@ -645,6 +902,16 @@ export default function HostelDetailPage() {
               className="sm:col-span-2"
               value={mealIncluded}
               onChange={(e) => setMealIncluded(e.target.value)}
+            />
+            <Input
+              placeholder="Duration (e.g. 1 Month)"
+              value={mealDuration}
+              onChange={(e) => setMealDuration(e.target.value)}
+            />
+            <Input
+              placeholder="Dietary options (comma separated, e.g. Veg, Non-Veg)"
+              value={mealDietaryOptions}
+              onChange={(e) => setMealDietaryOptions(e.target.value)}
             />
             <label className="flex items-center gap-2 text-xs sm:col-span-2">
               <input
@@ -742,6 +1009,12 @@ export default function HostelDetailPage() {
               placeholder="Price"
               value={addonPlanPrice}
               onChange={(e) => setAddonPlanPrice(e.target.value)}
+            />
+            <Input
+              placeholder="Note (e.g. Drop off on weekends)"
+              className="sm:col-span-2"
+              value={addonNotes}
+              onChange={(e) => setAddonNotes(e.target.value)}
             />
             <Button
               type="button"

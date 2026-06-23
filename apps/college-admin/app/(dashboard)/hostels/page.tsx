@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
-import * as z from "zod";
+import { z } from "zod";
 import {
   Home,
   Plus,
@@ -16,21 +16,27 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
 
 import {
@@ -39,19 +45,104 @@ import {
   useDeleteCollegeHostel,
 } from "@/hooks/use-facilities";
 
+// ── Form schema ───────────────────────────────────────────────────────────────
+
+const roomTypeFormSchema = z.object({
+  name: z.string().trim().min(2, "Required"),
+  totalBeds: z.coerce.number().int().positive("Must be > 0"),
+  annualPlanPrice: z.coerce.number().nonnegative().default(0),
+  monthlyPlanPrice: z.coerce.number().nonnegative().default(0),
+  securityDeposit: z.coerce.number().nonnegative().default(0),
+});
+
+const messPlanFormSchema = z.object({
+  name: z.string().trim().min(2, "Required"),
+  priceMonthly: z.coerce.number().positive("Must be > 0"),
+  mealsIncluded: z.string().trim().optional(),
+});
+
+const addonServiceFormSchema = z.object({
+  serviceType: z.enum(["laundry", "gym", "parking", "other"]),
+  name: z.string().trim().min(2, "Required"),
+  planLabel: z.string().trim().min(1, "Required"),
+  planPrice: z.coerce.number().nonnegative(),
+});
+
+const amenityFormSchema = z.object({
+  name: z.string().trim().min(1, "Required"),
+});
+
+const ruleFormSchema = z.object({
+  title: z.string().trim().min(1, "Required"),
+  description: z.string().trim().min(1, "Required"),
+});
+
+const essentialFormSchema = z.object({
+  type: z.string().trim().min(1, "Required"),
+  name: z.string().trim().min(1, "Required"),
+  distance: z.string().trim().optional(),
+});
+
 const hostelSchema = z.object({
   name: z.string().trim().min(2, "Hostel name is required").max(255),
   hostelType: z.enum(["boys", "girls", "co-ed"]),
-  isOnCampus: z.boolean().default(true),
-  distanceFromCampus: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  totalBeds: z.preprocess(
-    (val) => Number(val),
-    z.number().int().positive("Beds count must be positive"),
-  ),
+  isOnCampus: z.boolean(),
+  distanceFromCampus: z.string().optional(),
+  description: z.string().optional(),
+  totalBeds: z.coerce.number().int().positive("Must be > 0"),
+  wardenName: z.string().optional(),
+  wardenPhone: z.string().optional(),
+  wardenWhatsapp: z.string().optional(),
+  wardenEmail: z
+    .union([z.string().trim().email("Invalid email"), z.literal("")])
+    .optional(),
+  address: z.string().optional(),
+  roomTypes: z.array(roomTypeFormSchema),
+  messPlans: z.array(messPlanFormSchema),
+  addonServices: z.array(addonServiceFormSchema),
+  amenities: z.array(amenityFormSchema),
+  rules: z.array(ruleFormSchema),
+  nearbyEssentials: z.array(essentialFormSchema),
 });
 
 type HostelFormData = z.infer<typeof hostelSchema>;
+
+const DEFAULT_VALUES: HostelFormData = {
+  name: "",
+  hostelType: "co-ed",
+  isOnCampus: true,
+  distanceFromCampus: "",
+  description: "",
+  totalBeds: 100,
+  wardenName: "",
+  wardenPhone: "",
+  wardenWhatsapp: "",
+  wardenEmail: "",
+  address: "",
+  roomTypes: [],
+  messPlans: [],
+  addonServices: [],
+  amenities: [],
+  rules: [],
+  nearbyEssentials: [],
+};
+
+const STEPS = [
+  { key: "basics", label: "Basic Info" },
+  { key: "rooms", label: "Room Types" },
+  { key: "facilities", label: "Mess & Addons" },
+  { key: "rules", label: "Amenities & Rules" },
+  { key: "location", label: "Warden & Location" },
+] as const;
+
+// Fields validated before advancing past each step.
+const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
+  0: ["name", "hostelType", "totalBeds", "distanceFromCampus"],
+  1: ["roomTypes"],
+  2: ["messPlans", "addonServices"],
+  3: ["amenities", "rules"],
+  4: ["wardenEmail", "nearbyEssentials"],
+};
 
 export default function HostelsPage() {
   const user = useAuthStore((state) => state.user);
@@ -64,210 +155,53 @@ export default function HostelsPage() {
     (user?.permissions?.includes("hostel.manage") ?? false);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [step, setStep] = useState(0);
   const [expandedHostel, setExpandedHostel] = useState<string | null>(null);
-
-  // Custom states for interactive additions of room types rows inside modal
-  const [roomTypes, setRoomTypes] = useState<
-    {
-      name: string;
-      totalBeds: number;
-      annualPlanPrice: number;
-      securityDeposit: number;
-    }[]
-  >([]);
-  const [newRoomName, setNewRoomName] = useState("");
-  const [newRoomBeds, setNewRoomBeds] = useState("");
-  const [newRoomPrice, setNewRoomPrice] = useState("");
-  const [newRoomDeposit, setNewRoomDeposit] = useState("");
-
-  // Warden info
-  const [wardenName, setWardenName] = useState("");
-  const [wardenPhone, setWardenPhone] = useState("");
-  const [wardenWhatsapp, setWardenWhatsapp] = useState("");
-  const [wardenEmail, setWardenEmail] = useState("");
-
-  // Amenities
-  const [amenities, setAmenities] = useState<{ name: string }[]>([]);
-  const [newAmenityName, setNewAmenityName] = useState("");
-
-  // Rules
-  const [rules, setRules] = useState<{ title: string; description: string }[]>(
-    [],
-  );
-  const [newRuleTitle, setNewRuleTitle] = useState("");
-  const [newRuleDesc, setNewRuleDesc] = useState("");
-
-  // Location
-  const [address, setAddress] = useState("");
-  const [nearbyEssentials, setNearbyEssentials] = useState<
-    { type: string; name: string; distance: string }[]
-  >([]);
-  const [newEssentialType, setNewEssentialType] = useState("");
-  const [newEssentialName, setNewEssentialName] = useState("");
-  const [newEssentialDistance, setNewEssentialDistance] = useState("");
-
-  // Mess plans
-  const [messPlans, setMessPlans] = useState<
-    { name: string; priceMonthly: number; mealsIncluded: string[] }[]
-  >([]);
-  const [newMealName, setNewMealName] = useState("");
-  const [newMealPrice, setNewMealPrice] = useState("");
-  const [newMealIncluded, setNewMealIncluded] = useState("");
-
-  // Addon services
-  const [addonServices, setAddonServices] = useState<
-    {
-      serviceType: string;
-      name: string;
-      plans: { label: string; price: number }[];
-    }[]
-  >([]);
-  const [newAddonType, setNewAddonType] = useState("laundry");
-  const [newAddonName, setNewAddonName] = useState("");
-  const [newAddonPlanLabel, setNewAddonPlanLabel] = useState("");
-  const [newAddonPlanPrice, setNewAddonPlanPrice] = useState("");
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
+    trigger,
     reset,
     formState: { errors },
   } = useForm<HostelFormData>({
     resolver: zodResolver(hostelSchema),
-    defaultValues: {
-      name: "",
-      hostelType: "co-ed",
-      isOnCampus: true,
-      distanceFromCampus: "",
-      description: "",
-      totalBeds: 100,
-    },
+    defaultValues: DEFAULT_VALUES,
   });
 
   const isOnCampus = watch("isOnCampus");
 
-  const addRoomType = () => {
-    if (newRoomName.trim() && newRoomBeds.trim()) {
-      setRoomTypes([
-        ...roomTypes,
-        {
-          name: newRoomName.trim(),
-          totalBeds: parseInt(newRoomBeds) || 0,
-          annualPlanPrice: parseFloat(newRoomPrice) || 0,
-          securityDeposit: parseFloat(newRoomDeposit) || 0,
-        },
-      ]);
-      setNewRoomName("");
-      setNewRoomBeds("");
-      setNewRoomPrice("");
-      setNewRoomDeposit("");
-    } else {
-      toast.error("Please fill in room category name and beds capacity");
-    }
-  };
-
-  const addAmenity = () => {
-    if (!newAmenityName.trim()) return;
-    setAmenities([...amenities, { name: newAmenityName.trim() }]);
-    setNewAmenityName("");
-  };
-
-  const addRule = () => {
-    if (!newRuleTitle.trim() || !newRuleDesc.trim()) {
-      toast.error("Please fill in rule title and description");
-      return;
-    }
-    setRules([
-      ...rules,
-      { title: newRuleTitle.trim(), description: newRuleDesc.trim() },
-    ]);
-    setNewRuleTitle("");
-    setNewRuleDesc("");
-  };
-
-  const addNearbyEssential = () => {
-    if (!newEssentialType.trim() || !newEssentialName.trim()) {
-      toast.error("Please fill in essential type and name");
-      return;
-    }
-    setNearbyEssentials([
-      ...nearbyEssentials,
-      {
-        type: newEssentialType.trim(),
-        name: newEssentialName.trim(),
-        distance: newEssentialDistance.trim(),
-      },
-    ]);
-    setNewEssentialType("");
-    setNewEssentialName("");
-    setNewEssentialDistance("");
-  };
-
-  const addMessPlan = () => {
-    if (!newMealName.trim() || !newMealPrice.trim()) {
-      toast.error("Please fill in mess plan name and monthly price");
-      return;
-    }
-    setMessPlans([
-      ...messPlans,
-      {
-        name: newMealName.trim(),
-        priceMonthly: parseFloat(newMealPrice) || 0,
-        mealsIncluded: newMealIncluded
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      },
-    ]);
-    setNewMealName("");
-    setNewMealPrice("");
-    setNewMealIncluded("");
-  };
-
-  const addAddonService = () => {
-    if (
-      !newAddonName.trim() ||
-      !newAddonPlanLabel.trim() ||
-      !newAddonPlanPrice.trim()
-    ) {
-      toast.error("Please fill in service name and at least one plan");
-      return;
-    }
-    setAddonServices([
-      ...addonServices,
-      {
-        serviceType: newAddonType,
-        name: newAddonName.trim(),
-        plans: [
-          {
-            label: newAddonPlanLabel.trim(),
-            price: parseFloat(newAddonPlanPrice) || 0,
-          },
-        ],
-      },
-    ]);
-    setNewAddonName("");
-    setNewAddonPlanLabel("");
-    setNewAddonPlanPrice("");
-  };
+  const roomTypesArray = useFieldArray({ control, name: "roomTypes" });
+  const messPlansArray = useFieldArray({ control, name: "messPlans" });
+  const addonServicesArray = useFieldArray({ control, name: "addonServices" });
+  const amenitiesArray = useFieldArray({ control, name: "amenities" });
+  const rulesArray = useFieldArray({ control, name: "rules" });
+  const essentialsArray = useFieldArray({ control, name: "nearbyEssentials" });
 
   const handleOpenAdd = () => {
     if (!canManageHostels) return;
-    setRoomTypes([]);
-    setAmenities([]);
-    setRules([]);
-    setAddress("");
-    setNearbyEssentials([]);
-    setMessPlans([]);
-    setAddonServices([]);
-    setWardenName("");
-    setWardenPhone("");
-    setWardenWhatsapp("");
-    setWardenEmail("");
-    reset();
+    reset(DEFAULT_VALUES);
+    setStep(0);
     setShowAddModal(true);
   };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+  };
+
+  const goNext = async () => {
+    const fieldsToValidate = STEP_FIELDS[step] ?? [];
+    const valid = await trigger(fieldsToValidate);
+    if (!valid) {
+      toast.error("Please fix the highlighted fields before continuing");
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageHostels) return;
@@ -286,28 +220,56 @@ export default function HostelsPage() {
 
   const onSubmit = (data: HostelFormData) => {
     const payload = {
-      ...data,
-      roomTypes,
-      messPlans,
-      addonServices,
+      name: data.name,
+      hostelType: data.hostelType,
+      isOnCampus: data.isOnCampus,
+      distanceFromCampus: data.isOnCampus
+        ? null
+        : data.distanceFromCampus || null,
+      description: data.description || null,
+      totalBeds: data.totalBeds,
+      roomTypes: data.roomTypes,
+      messPlans: data.messPlans.map((mp) => ({
+        name: mp.name,
+        priceMonthly: mp.priceMonthly,
+        mealsIncluded: (mp.mealsIncluded ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      })),
+      addonServices: data.addonServices.map((service) => ({
+        serviceType: service.serviceType,
+        name: service.name,
+        plans: [{ label: service.planLabel, price: service.planPrice }],
+      })),
       wardenInfo: {
-        name: wardenName || undefined,
-        phone: wardenPhone || undefined,
-        whatsapp: wardenWhatsapp || undefined,
-        email: wardenEmail || undefined,
+        name: data.wardenName || undefined,
+        phone: data.wardenPhone || undefined,
+        whatsapp: data.wardenWhatsapp || undefined,
+        email: data.wardenEmail || undefined,
       },
-      amenities,
-      rules,
-      locationInfo: { address: address || undefined, nearbyEssentials },
+      amenities: data.amenities,
+      rules: data.rules,
+      locationInfo: {
+        address: data.address || undefined,
+        nearbyEssentials: data.nearbyEssentials,
+      },
     };
 
     createHostel(payload, {
       onSuccess: () => {
         toast.success("Hostel facility provisioned successfully");
-        setShowAddModal(false);
-        reset();
+        handleCloseModal();
+        reset(DEFAULT_VALUES);
+      },
+      onError: (error) => {
+        console.error("[CreateHostel] failed", error);
       },
     });
+  };
+
+  const onInvalid = () => {
+    toast.error("Please fix the highlighted fields before submitting");
   };
 
   if (loadingHostels) {
@@ -356,7 +318,7 @@ export default function HostelsPage() {
                       {hostel.name}
                     </CardTitle>
                   </div>
-                  <CardDescription className="text-xs flex items-center gap-2 mt-1">
+                  <div className="text-xs flex items-center gap-2 mt-1">
                     <Badge
                       variant="secondary"
                       className="text-[10px] uppercase font-semibold"
@@ -369,7 +331,7 @@ export default function HostelsPage() {
                         ? "On-Campus"
                         : `Off-Campus (${hostel.distanceFromCampus || "0"} km)`}
                     </span>
-                  </CardDescription>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <Link href={`/hostels/${hostel.id}`}>
@@ -488,34 +450,60 @@ export default function HostelsPage() {
         )}
       </div>
 
-      {/* Hostel Provisioning Modal form sheet */}
-      {showAddModal && canManageHostels && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg shadow-2xl border-border bg-card/90 my-8">
-            <CardHeader>
-              <CardTitle>Provision Hostel Hall</CardTitle>
-              <CardDescription>
-                Define operational capacities, residence rules, and pricing
-                templates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="hostel-name">Hostel Hall Name</Label>
-                    <Input
-                      id="hostel-name"
-                      placeholder="e.g. CV Raman Boys Hostel"
-                      {...register("name")}
-                    />
-                    {errors.name && (
-                      <p className="text-xs text-destructive">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
+      {/* Hostel Provisioning Wizard */}
+      <Dialog
+        open={showAddModal && canManageHostels}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal();
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Provision Hostel Hall</DialogTitle>
+            <DialogDescription>
+              Step {step + 1} of {STEPS.length} &middot; {STEPS[step].label}
+            </DialogDescription>
+          </DialogHeader>
 
+          {/* Step progress indicator */}
+          <div className="flex items-center gap-1.5">
+            {STEPS.map((s, idx) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => idx <= step && setStep(idx)}
+                disabled={idx > step}
+                className={cn(
+                  "flex-1 h-1.5 rounded-full transition-colors",
+                  idx <= step ? "bg-primary" : "bg-muted",
+                )}
+                title={s.label}
+              />
+            ))}
+          </div>
+
+          <form
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
+            className="space-y-5"
+          >
+            {/* STEP 0: Basic Info */}
+            {step === 0 && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-name">Hostel Hall Name</Label>
+                  <Input
+                    id="hostel-name"
+                    placeholder="e.g. CV Raman Boys Hostel"
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <p className="text-xs text-destructive">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="hostel-type">Target Allocation</Label>
                     <select
@@ -543,463 +531,536 @@ export default function HostelsPage() {
                       </p>
                     )}
                   </div>
-
-                  <div className="space-y-1.5 flex items-center gap-2 mt-6">
-                    <input
-                      type="checkbox"
-                      id="hostel-campus"
-                      className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary"
-                      {...register("isOnCampus")}
-                    />
-                    <Label htmlFor="hostel-campus">Located On-Campus</Label>
-                  </div>
-
-                  {!isOnCampus && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="hostel-dist">
-                        Distance from campus (km)
-                      </Label>
-                      <Input
-                        id="hostel-dist"
-                        placeholder="e.g. 1.8"
-                        {...register("distanceFromCampus")}
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="hostel-desc">Description</Label>
-                    <Textarea
-                      id="hostel-desc"
-                      placeholder="Modern rooms with laundry facility..."
-                      {...register("description")}
-                    />
-                  </div>
                 </div>
 
-                {/* Dynamic Room Categories Builder */}
-                <div className="border-t pt-4 border-border/40 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-semibold">
-                      Room Categories & Pricing Plans
-                    </Label>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {roomTypes.length} configured
-                    </span>
-                  </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="hostel-campus"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    {...register("isOnCampus")}
+                  />
+                  <Label htmlFor="hostel-campus" className="!mb-0">
+                    Located On-Campus
+                  </Label>
+                </label>
 
-                  {/* Configured Room types checklist */}
-                  <div className="space-y-2">
-                    {roomTypes.map((rt, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                {!isOnCampus && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-dist">
+                      Distance from campus (km)
+                    </Label>
+                    <Input
+                      id="hostel-dist"
+                      placeholder="e.g. 1.8"
+                      {...register("distanceFromCampus")}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-desc">Description</Label>
+                  <Textarea
+                    id="hostel-desc"
+                    placeholder="Modern rooms with laundry facility..."
+                    {...register("description")}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* STEP 1: Room Types */}
+            {step === 1 && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    Room Categories & Pricing Plans
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      roomTypesArray.append({
+                        name: "",
+                        totalBeds: 10,
+                        annualPlanPrice: 0,
+                        monthlyPlanPrice: 0,
+                        securityDeposit: 0,
+                      })
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Room Type
+                  </Button>
+                </div>
+
+                {roomTypesArray.fields.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">
+                    No room categories yet. Click &quot;Add Room Type&quot; to
+                    define one (optional — can also be added later).
+                  </p>
+                )}
+
+                <div className="space-y-3">
+                  {roomTypesArray.fields.map((field, idx) => (
+                    <div
+                      key={field.id}
+                      className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                    >
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 text-destructive"
+                        onClick={() => roomTypesArray.remove(idx)}
                       >
-                        <div>
-                          <span className="font-bold">{rt.name}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2">
-                            ({rt.totalBeds} beds)
-                          </span>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">Category Name</Label>
+                        <Input
+                          placeholder="e.g. Double AC Sharing"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.name`)}
+                        />
+                        {errors.roomTypes?.[idx]?.name && (
+                          <p className="text-xs text-destructive">
+                            {errors.roomTypes[idx]?.name?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Beds Capacity</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.totalBeds`)}
+                        />
+                        {errors.roomTypes?.[idx]?.totalBeds && (
+                          <p className="text-xs text-destructive">
+                            {errors.roomTypes[idx]?.totalBeds?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Annual Price</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.annualPlanPrice`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Monthly Price</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.monthlyPlanPrice`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Security Deposit</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.securityDeposit`)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Mess Plans & Addon Services */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Mess Plans</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        messPlansArray.append({
+                          name: "",
+                          priceMonthly: 0,
+                          mealsIncluded: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Mess Plan
+                    </Button>
+                  </div>
+                  {messPlansArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No mess plans yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-3">
+                    {messPlansArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => messPlansArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="sm:col-span-2 space-y-1">
+                          <Label className="text-xs">Plan Name</Label>
+                          <Input
+                            placeholder="e.g. Standard Plan"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.name`)}
+                          />
+                          {errors.messPlans?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.messPlans[idx]?.name?.message}
+                            </p>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-blue-600 font-bold">
-                            ${rt.annualPlanPrice}/yr
-                          </span>
-                          <button
-                            type="button"
-                            className="text-destructive hover:scale-105"
-                            onClick={() =>
-                              setRoomTypes(
-                                roomTypes.filter((_, i) => i !== idx),
-                              )
-                            }
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Monthly Price</Label>
+                          <Input
+                            type="number"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.priceMonthly`)}
+                          />
+                          {errors.messPlans?.[idx]?.priceMonthly && (
+                            <p className="text-xs text-destructive">
+                              {errors.messPlans[idx]?.priceMonthly?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">
+                            Meals (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="Breakfast, Lunch, Dinner"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.mealsIncluded`)}
+                          />
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  {/* Add room type fields grid */}
-                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Category (e.g. Double AC Sharing)"
-                      className="h-8 text-xs sm:col-span-2"
-                      value={newRoomName}
-                      onChange={(e) => setNewRoomName(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Beds Capacity"
-                      className="h-8 text-xs"
-                      value={newRoomBeds}
-                      onChange={(e) => setNewRoomBeds(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Annual Fee Plan ($)"
-                      className="h-8 text-xs"
-                      value={newRoomPrice}
-                      onChange={(e) => setNewRoomPrice(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Security Deposit ($)"
-                      className="h-8 text-xs"
-                      value={newRoomDeposit}
-                      onChange={(e) => setNewRoomDeposit(e.target.value)}
-                    />
+                <div className="space-y-3 border-t pt-4 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">
+                      Addon Services (Laundry / Gym / Parking)
+                    </Label>
                     <Button
                       type="button"
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
-                      className="sm:col-span-2 h-8 text-xs"
-                      onClick={addRoomType}
+                      onClick={() =>
+                        addonServicesArray.append({
+                          serviceType: "laundry",
+                          name: "",
+                          planLabel: "Monthly",
+                          planPrice: 0,
+                        })
+                      }
                     >
-                      Configure Room Category
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Service
                     </Button>
+                  </div>
+                  {addonServicesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No addon services yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-3">
+                    {addonServicesArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => addonServicesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Type</Label>
+                          <select
+                            className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                            {...register(`addonServices.${idx}.serviceType`)}
+                          >
+                            <option value="laundry">Laundry</option>
+                            <option value="gym">Gym</option>
+                            <option value="parking">Parking</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Service Name</Label>
+                          <Input
+                            placeholder="e.g. Laundry Charges"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.name`)}
+                          />
+                          {errors.addonServices?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.addonServices[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Plan Label</Label>
+                          <Input
+                            placeholder="e.g. Monthly"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.planLabel`)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Price</Label>
+                          <Input
+                            type="number"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.planPrice`)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Amenities & Rules */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Amenities</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => amenitiesArray.append({ name: "" })}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Amenity
+                    </Button>
+                  </div>
+                  {amenitiesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No amenities yet (optional).
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {amenitiesArray.fields.map((field, idx) => (
+                      <div key={field.id} className="flex items-center gap-1">
+                        <Input
+                          placeholder="e.g. High Speed Wi-Fi"
+                          className="h-8 text-xs w-44"
+                          {...register(`amenities.${idx}.name`)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => amenitiesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Warden Info */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
+                <div className="space-y-3 border-t pt-4 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Rules</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        rulesArray.append({ title: "", description: "" })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Rule
+                    </Button>
+                  </div>
+                  {rulesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No rules yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {rulesArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => rulesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <Input
+                          placeholder="Rule title (e.g. Curfew Time)"
+                          className="h-8 text-xs"
+                          {...register(`rules.${idx}.title`)}
+                        />
+                        <Input
+                          placeholder="Description"
+                          className="h-8 text-xs"
+                          {...register(`rules.${idx}.description`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Warden & Location */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div className="space-y-2">
                   <Label className="text-sm font-semibold">Warden Info</Label>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <Input
                       placeholder="Name"
                       className="h-8 text-xs"
-                      value={wardenName}
-                      onChange={(e) => setWardenName(e.target.value)}
+                      {...register("wardenName")}
                     />
                     <Input
                       placeholder="Phone"
                       className="h-8 text-xs"
-                      value={wardenPhone}
-                      onChange={(e) => setWardenPhone(e.target.value)}
+                      {...register("wardenPhone")}
                     />
                     <Input
                       placeholder="WhatsApp"
                       className="h-8 text-xs"
-                      value={wardenWhatsapp}
-                      onChange={(e) => setWardenWhatsapp(e.target.value)}
+                      {...register("wardenWhatsapp")}
                     />
                     <Input
                       placeholder="Email"
                       className="h-8 text-xs"
-                      value={wardenEmail}
-                      onChange={(e) => setWardenEmail(e.target.value)}
+                      {...register("wardenEmail")}
                     />
                   </div>
+                  {errors.wardenEmail && (
+                    <p className="text-xs text-destructive">
+                      {errors.wardenEmail.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Amenities */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
-                  <Label className="text-sm font-semibold">Amenities</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {amenities.map((a, idx) => (
-                      <span
-                        key={idx}
-                        className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
-                      >
-                        {a.name}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAmenities(amenities.filter((_, i) => i !== idx))
-                          }
-                        >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Amenity (e.g. High Speed Wi-Fi)"
-                      className="h-8 text-xs"
-                      value={newAmenityName}
-                      onChange={(e) => setNewAmenityName(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={addAmenity}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Rules */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
-                  <Label className="text-sm font-semibold">Rules</Label>
-                  <div className="space-y-2">
-                    {rules.map((r, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-start p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <div>
-                          <span className="font-bold">{r.title}</span>
-                          <p className="text-[10px] text-muted-foreground">
-                            {r.description}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setRules(rules.filter((_, i) => i !== idx))
-                          }
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      placeholder="Rule title (e.g. Curfew Time)"
-                      className="h-8 text-xs"
-                      value={newRuleTitle}
-                      onChange={(e) => setNewRuleTitle(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Description"
-                      className="h-8 text-xs"
-                      value={newRuleDesc}
-                      onChange={(e) => setNewRuleDesc(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={addRule}
-                  >
-                    Add Rule
-                  </Button>
-                </div>
-
-                {/* Location */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
+                <div className="space-y-3 border-t pt-4 border-border/40">
                   <Label className="text-sm font-semibold">Location</Label>
                   <Input
                     placeholder="Address"
                     className="h-8 text-xs"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    {...register("address")}
                   />
-                  <div className="space-y-2">
-                    {nearbyEssentials.map((ne, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <span>
-                          {ne.type}: {ne.name} ({ne.distance})
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setNearbyEssentials(
-                              nearbyEssentials.filter((_, i) => i !== idx),
-                            )
-                          }
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <Input
-                      placeholder="Type (e.g. Hospital)"
-                      className="h-8 text-xs"
-                      value={newEssentialType}
-                      onChange={(e) => setNewEssentialType(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Name"
-                      className="h-8 text-xs"
-                      value={newEssentialName}
-                      onChange={(e) => setNewEssentialName(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Distance (e.g. 3.0 km)"
-                      className="h-8 text-xs"
-                      value={newEssentialDistance}
-                      onChange={(e) => setNewEssentialDistance(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={addNearbyEssential}
-                  >
-                    Add Nearby Essential
-                  </Button>
-                </div>
 
-                {/* Mess Plans */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
-                  <Label className="text-sm font-semibold">Mess Plans</Label>
-                  <div className="space-y-2">
-                    {messPlans.map((mp, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <span>
-                          {mp.name} &middot; {mp.mealsIncluded.join(", ")}
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-blue-600 font-bold">
-                            ${mp.priceMonthly}/mo
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setMessPlans(
-                                messPlans.filter((_, i) => i !== idx),
-                              )
-                            }
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Plan name (e.g. Standard Plan)"
-                      className="h-8 text-xs sm:col-span-2"
-                      value={newMealName}
-                      onChange={(e) => setNewMealName(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Monthly Price ($)"
-                      className="h-8 text-xs"
-                      value={newMealPrice}
-                      onChange={(e) => setNewMealPrice(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Meals included (comma separated)"
-                      className="h-8 text-xs"
-                      value={newMealIncluded}
-                      onChange={(e) => setNewMealIncluded(e.target.value)}
-                    />
+                  <div className="flex justify-between items-center pt-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Nearby Essentials
+                    </Label>
                     <Button
                       type="button"
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
-                      className="sm:col-span-2 h-8 text-xs"
-                      onClick={addMessPlan}
+                      onClick={() =>
+                        essentialsArray.append({
+                          type: "",
+                          name: "",
+                          distance: "",
+                        })
+                      }
                     >
-                      Add Mess Plan
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Essential
                     </Button>
                   </div>
-                </div>
-
-                {/* Addon Services */}
-                <div className="border-t pt-4 border-border/40 space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Addon Services (Laundry / Gym / Parking)
-                  </Label>
+                  {essentialsArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No nearby essentials yet (optional).
+                    </p>
+                  )}
                   <div className="space-y-2">
-                    {addonServices.map((service, idx) => (
+                    {essentialsArray.fields.map((field, idx) => (
                       <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
                       >
-                        <span>
-                          [{service.serviceType}] {service.name} &middot;{" "}
-                          {service.plans
-                            .map((p) => `${p.label}: $${p.price}`)
-                            .join(", ")}
-                        </span>
                         <button
                           type="button"
-                          onClick={() =>
-                            setAddonServices(
-                              addonServices.filter((_, i) => i !== idx),
-                            )
-                          }
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => essentialsArray.remove(idx)}
                         >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
+                        <Input
+                          placeholder="Type (e.g. Hospital)"
+                          className="h-8 text-xs"
+                          {...register(`nearbyEssentials.${idx}.type`)}
+                        />
+                        <Input
+                          placeholder="Name"
+                          className="h-8 text-xs"
+                          {...register(`nearbyEssentials.${idx}.name`)}
+                        />
+                        <Input
+                          placeholder="Distance (e.g. 3.0 km)"
+                          className="h-8 text-xs"
+                          {...register(`nearbyEssentials.${idx}.distance`)}
+                        />
                       </div>
                     ))}
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
-                    <select
-                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
-                      value={newAddonType}
-                      onChange={(e) => setNewAddonType(e.target.value)}
-                    >
-                      <option value="laundry">Laundry</option>
-                      <option value="gym">Gym</option>
-                      <option value="parking">Parking</option>
-                      <option value="other">Other</option>
-                    </select>
-                    <Input
-                      placeholder="Service name (e.g. Laundry Charges)"
-                      className="h-8 text-xs"
-                      value={newAddonName}
-                      onChange={(e) => setNewAddonName(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Plan label (e.g. Monthly)"
-                      className="h-8 text-xs"
-                      value={newAddonPlanLabel}
-                      onChange={(e) => setNewAddonPlanLabel(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      className="h-8 text-xs"
-                      value={newAddonPlanPrice}
-                      onChange={(e) => setNewAddonPlanPrice(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="sm:col-span-2 h-8 text-xs"
-                      onClick={addAddonService}
-                    >
-                      Add Addon Service
-                    </Button>
-                  </div>
                 </div>
+              </div>
+            )}
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddModal(false)}
-                  >
-                    Cancel
+            <DialogFooter className="pt-2 border-t border-border/40 sm:justify-between">
+              <div className="flex gap-2">
+                {step > 0 && (
+                  <Button type="button" variant="outline" onClick={goBack}>
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Back
                   </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCloseModal}
+                >
+                  Cancel
+                </Button>
+                {step < STEPS.length - 1 ? (
+                  <Button type="button" onClick={goNext}>
+                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                ) : (
                   <Button type="submit" disabled={creating}>
-                    {creating && (
+                    {creating ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-2 h-4 w-4" />
                     )}
                     Provision Hostel
                   </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                )}
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
