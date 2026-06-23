@@ -115,6 +115,7 @@ export const addonServiceSchema = z.object({
       z.object({
         label: z.string().trim().min(1),
         price: z.number().nonnegative(),
+        feature_tags: z.array(z.string().trim()).optional().default([]),
       }),
     )
     .default([]),

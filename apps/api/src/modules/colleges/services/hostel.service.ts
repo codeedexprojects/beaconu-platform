@@ -162,11 +162,6 @@ function buildHostelFees(hostel: Record<string, unknown>) {
       currency: "₹",
       period: "Per Month",
       additional_charges: additionalCharges,
-      duration_selector: {
-        label: "Duration:",
-        selected: "1 Month",
-        options: ["1 Month", "3 Months", "6 Months", "12 Months"],
-      },
     });
   }
 
@@ -205,11 +200,6 @@ function buildMessPlan(hostel: Record<string, unknown>) {
         currency: "₹",
         period: "Per Month",
         meal_tags: mealLabels,
-        duration_selector: {
-          label: "Duration:",
-          selected: asText(plan.duration) || "1 Month",
-          options: ["1 Month", "3 Months", "6 Months"],
-        },
       };
     }),
     note: "Mess charges are billed in advance for the selected duration and are non-refundable once the cycle starts.",

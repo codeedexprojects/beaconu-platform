@@ -6847,6 +6847,45 @@ export default function SetupAcademicsPage() {
                                           Segment
                                         </Button>
                                       </div>
+                                      <div className="grid gap-2 sm:grid-cols-2">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Chart Total
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="100"
+                                            value={pat.chart?.total ?? 100}
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                chart: {
+                                                  ...(pat.chart || {}),
+                                                  total: Number(e.target.value),
+                                                },
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Chart Total Label
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Total"
+                                            value={pat.chart?.total_label || ""}
+                                            onChange={(e) =>
+                                              updatePattern({
+                                                chart: {
+                                                  ...(pat.chart || {
+                                                    total: 100,
+                                                  }),
+                                                  total_label: e.target.value,
+                                                },
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                      </div>
                                       {(pat.chart?.segments || []).map(
                                         (seg: any, si: number) => (
                                           <div
@@ -7340,6 +7379,32 @@ export default function SetupAcademicsPage() {
                                                           ...comps[ci],
                                                           description:
                                                             e.target.value,
+                                                        };
+                                                        sections[si] = {
+                                                          ...sections[si],
+                                                          components: comps,
+                                                        };
+                                                        updatePattern({
+                                                          internal_assessment:
+                                                            sections,
+                                                        });
+                                                      }}
+                                                    />
+                                                    <Input
+                                                      placeholder="Icon URL (optional)"
+                                                      value={comp.icon || ""}
+                                                      onChange={(e) => {
+                                                        const sections = [
+                                                          ...(pat.internal_assessment ||
+                                                            []),
+                                                        ];
+                                                        const comps = [
+                                                          ...(sections[si]
+                                                            .components || []),
+                                                        ];
+                                                        comps[ci] = {
+                                                          ...comps[ci],
+                                                          icon: e.target.value,
                                                         };
                                                         sections[si] = {
                                                           ...sections[si],
@@ -7927,6 +7992,30 @@ export default function SetupAcademicsPage() {
                                   }
                                 />
                               </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">
+                                  Table Columns (comma-separated)
+                                </Label>
+                                <Input
+                                  placeholder="e.g. Percentage of Marks, Grade, Grade Point"
+                                  value={(
+                                    getActiveTabPayload().grading_scale
+                                      ?.columns || []
+                                  ).join(", ")}
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      grading_scale: {
+                                        ...(getActiveTabPayload()
+                                          .grading_scale || {}),
+                                        columns: e.target.value
+                                          .split(",")
+                                          .map((s: string) => s.trim())
+                                          .filter(Boolean),
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
                               <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                   <Label className="font-bold">
@@ -8201,6 +8290,7 @@ export default function SetupAcademicsPage() {
                                           badge: "",
                                           title: "",
                                           description: "",
+                                          read_more_cta: "Read More",
                                           read_more_link: "",
                                           icon: "",
                                         },
@@ -8315,6 +8405,34 @@ export default function SetupAcademicsPage() {
                                         </div>
                                         <div className="space-y-1">
                                           <Label className="text-xs">
+                                            Read More CTA Text
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Read More"
+                                            value={policy.read_more_cta || ""}
+                                            onChange={(e) => {
+                                              const policies = [
+                                                ...(getActiveTabPayload()
+                                                  .important_guidelines_banner
+                                                  ?.academic_policies || []),
+                                              ];
+                                              policies[pi] = {
+                                                ...policies[pi],
+                                                read_more_cta: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                important_guidelines_banner: {
+                                                  ...(getActiveTabPayload()
+                                                    .important_guidelines_banner ||
+                                                    {}),
+                                                  academic_policies: policies,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
                                             Read More Link (optional)
                                           </Label>
                                           <Input
@@ -8410,6 +8528,66 @@ export default function SetupAcademicsPage() {
                                   Projects & Dissertation
                                 </h4>
                                 <div className="space-y-3">
+                                  <div className="grid gap-2 sm:grid-cols-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">
+                                        Marks Distribution Title
+                                      </Label>
+                                      <Input
+                                        placeholder="e.g. Marks Distribution"
+                                        value={
+                                          getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.marks_distribution_bar?.title ||
+                                          ""
+                                        }
+                                        onChange={(e) =>
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                title: e.target.value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">
+                                        Total Label
+                                      </Label>
+                                      <Input
+                                        placeholder="e.g. Total: 100"
+                                        value={
+                                          getActiveTabPayload()
+                                            .projects_dissertation
+                                            ?.marks_distribution_bar
+                                            ?.total_label || ""
+                                        }
+                                        onChange={(e) =>
+                                          updateActiveTabPayload({
+                                            projects_dissertation: {
+                                              ...(getActiveTabPayload()
+                                                .projects_dissertation || {}),
+                                              marks_distribution_bar: {
+                                                ...(getActiveTabPayload()
+                                                  .projects_dissertation
+                                                  ?.marks_distribution_bar ||
+                                                  {}),
+                                                total_label: e.target.value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                  </div>
                                   <div className="flex justify-between items-center">
                                     <Label className="text-xs font-semibold">
                                       Marks Distribution Segments
@@ -9040,6 +9218,30 @@ export default function SetupAcademicsPage() {
                                       }
                                     />
                                   </div>
+                                  <div className="space-y-1 md:col-span-2">
+                                    <Label className="text-xs">
+                                      Table Columns (comma-separated)
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. Criterion, Marks"
+                                      value={(
+                                        getActiveTabPayload().ojt_evaluation
+                                          ?.columns || []
+                                      ).join(", ")}
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          ojt_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .ojt_evaluation || {}),
+                                            columns: e.target.value
+                                              .split(",")
+                                              .map((s: string) => s.trim())
+                                              .filter(Boolean),
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
                                 </div>
                                 <div className="space-y-2">
                                   <div className="flex justify-between items-center">
@@ -9226,6 +9428,30 @@ export default function SetupAcademicsPage() {
                                                 ?.total_summary || {}),
                                               value: e.target.value,
                                             },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1 md:col-span-2">
+                                    <Label className="text-xs">
+                                      Table Columns (comma-separated)
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. Component, Marks"
+                                      value={(
+                                        getActiveTabPayload()
+                                          .internship_evaluation?.columns || []
+                                      ).join(", ")}
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          internship_evaluation: {
+                                            ...(getActiveTabPayload()
+                                              .internship_evaluation || {}),
+                                            columns: e.target.value
+                                              .split(",")
+                                              .map((s: string) => s.trim())
+                                              .filter(Boolean),
                                           },
                                         })
                                       }

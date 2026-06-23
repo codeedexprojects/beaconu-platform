@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
+import { getPortalPath, getCollegeSlugFromPath } from "@/lib/portal-path";
 
 import {
   useCollegeHostels,
@@ -66,6 +67,7 @@ const addonServiceFormSchema = z.object({
   name: z.string().trim().min(2, "Required"),
   planLabel: z.string().trim().min(1, "Required"),
   planPrice: z.coerce.number().nonnegative(),
+  featureTags: z.string().trim().optional(),
 });
 
 const amenityFormSchema = z.object({
@@ -146,7 +148,12 @@ const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
 
 export default function HostelsPage() {
   const user = useAuthStore((state) => state.user);
+  const collegeSlug =
+    typeof window === "undefined"
+      ? null
+      : getCollegeSlugFromPath(window.location.pathname, window.location.host);
   const { data: hostels = [], isLoading: loadingHostels } = useCollegeHostels();
+
   const { mutate: createHostel, isPending: creating } =
     useCreateCollegeHostel();
   const { mutate: deleteHostel } = useDeleteCollegeHostel();
@@ -240,7 +247,16 @@ export default function HostelsPage() {
       addonServices: data.addonServices.map((service) => ({
         serviceType: service.serviceType,
         name: service.name,
-        plans: [{ label: service.planLabel, price: service.planPrice }],
+        plans: [
+          {
+            label: service.planLabel,
+            price: service.planPrice,
+            feature_tags: (service.featureTags ?? "")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          },
+        ],
       })),
       wardenInfo: {
         name: data.wardenName || undefined,
@@ -334,7 +350,9 @@ export default function HostelsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Link href={`/hostels/${hostel.id}`}>
+                  <Link
+                    href={getPortalPath(collegeSlug, `/hostels/${hostel.id}`)}
+                  >
                     <Button variant="outline" size="sm" className="h-8 text-xs">
                       Manage
                     </Button>
@@ -765,6 +783,7 @@ export default function HostelsPage() {
                           name: "",
                           planLabel: "Monthly",
                           planPrice: 0,
+                          featureTags: "",
                         })
                       }
                     >
@@ -828,6 +847,16 @@ export default function HostelsPage() {
                             type="number"
                             className="h-8 text-xs"
                             {...register(`addonServices.${idx}.planPrice`)}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">
+                            Feature Tags (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="e.g. Detergent, Ironing"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.featureTags`)}
                           />
                         </div>
                       </div>
