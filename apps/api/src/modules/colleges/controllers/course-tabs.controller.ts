@@ -10,6 +10,8 @@ import {
   eligibilityCriteriaQuerySchema,
   reviewsQuerySchema,
   otherCoursesOfferedQuerySchema,
+  clubsAssociationsQuerySchema,
+  clubDetailParamSchema,
 } from "../validators/course-tabs.validator";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -428,5 +430,44 @@ export class CourseTabsController {
     return res
       .status(200)
       .json(ApiResponse.success("Other courses offered fetched", result));
+  }
+
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations
+   * Paginated + searchable list of clubs & associations (public).
+   */
+  static async listPublicClubsAssociations(req: Request, res: Response) {
+    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
+    const { page, per_page, search } = clubsAssociationsQuerySchema.parse(
+      req.query,
+    );
+
+    const result = await CourseTabsService.listPublicClubsAssociations(
+      courseId,
+      slug,
+      page,
+      per_page,
+      search,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Clubs & associations fetched", result));
+  }
+
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations/:clubId
+   * Single club's full detail view (public).
+   */
+  static async getPublicClubDetail(req: Request, res: Response) {
+    const { slug, courseId, clubId } = clubDetailParamSchema.parse(req.params);
+
+    const result = await CourseTabsService.getPublicClubDetail(
+      courseId,
+      slug,
+      clubId,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Club detail fetched successfully", result));
   }
 }

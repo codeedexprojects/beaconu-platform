@@ -717,6 +717,17 @@ function transformPublicClubsAssociationsTab(raw: Record<string, unknown>): {
   };
 }
 
+function toClubPreview(club: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: club.id,
+    name: club.name,
+    category: club.category,
+    cover_image: club.cover_image,
+    logo: club.logo,
+    about: club.about,
+  };
+}
+
 function transformPublicAllianceTab(raw: Record<string, unknown>): {
   data: Record<string, unknown>[];
 } {
@@ -768,8 +779,6 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
       legal_and_documentation: {
         items: legalDocs.map((doc) => ({
           title: asText(doc.title),
-          size: asText(doc.size),
-          type: asText(doc.type),
           download_icon:
             "https://cdn.iconsdb.example.com/icons/download-gray.png",
           url: asText(doc.url),
@@ -1216,11 +1225,12 @@ export class CourseTabsService {
         const transformed = transformPublicClubsAssociationsTab(
           asRecord(rawData),
         );
+        const preview = transformed.data.slice(0, 10).map(toClubPreview);
         return {
           sectionName: tabName,
           sectionId: tabName,
           sectionKey: tabName,
-          data: transformed.data,
+          data: preview,
         };
       }
 
@@ -1392,5 +1402,85 @@ export class CourseTabsService {
         has_previous_page: page > 1,
       },
     };
+  }
+
+  /**
+   * Paginated + searchable list of clubs & associations for a course.
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations
+   */
+  static async listPublicClubsAssociations(
+    courseId: string,
+    collegeSlug: string,
+    page: number,
+    perPage: number,
+    search: string | undefined,
+  ) {
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const rawData = getSetupTabDataFromMetadata(
+      course.metadata,
+      "clubs_associations",
+    );
+    const allClubs = transformPublicClubsAssociationsTab(
+      asRecord(rawData),
+    ).data;
+
+    const searchTerm = search?.trim().toLowerCase();
+    const filtered = searchTerm
+      ? allClubs.filter((club) =>
+          asText(club.name).toLowerCase().includes(searchTerm),
+        )
+      : allClubs;
+
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const start = (page - 1) * perPage;
+
+    return {
+      list: filtered.slice(start, start + perPage).map(toClubPreview),
+      pagination: {
+        current_page: page,
+        per_page: perPage,
+        total_items: total,
+        total_pages: totalPages,
+        has_next_page: page < totalPages,
+        has_previous_page: page > 1,
+      },
+    };
+  }
+
+  /**
+   * Single club's full detail view.
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations/:clubId
+   */
+  static async getPublicClubDetail(
+    courseId: string,
+    collegeSlug: string,
+    clubId: string,
+  ) {
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const rawData = getSetupTabDataFromMetadata(
+      course.metadata,
+      "clubs_associations",
+    );
+    const allClubs = transformPublicClubsAssociationsTab(
+      asRecord(rawData),
+    ).data;
+
+    const club = allClubs.find((c) => c.id === clubId);
+    if (!club) throw new NotFoundError("Club not found");
+
+    return club;
   }
 }

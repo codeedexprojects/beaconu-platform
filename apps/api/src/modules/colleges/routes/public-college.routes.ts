@@ -25,6 +25,14 @@ router.get(
   CourseTabsController.listPublicOtherCoursesOffered,
 );
 router.get(
+  "/by-slug/:slug/courses/:courseId/clubs-associations/:clubId",
+  CourseTabsController.getPublicClubDetail,
+);
+router.get(
+  "/by-slug/:slug/courses/:courseId/clubs-associations",
+  CourseTabsController.listPublicClubsAssociations,
+);
+router.get(
   "/by-slug/:slug/courses/:courseId/eligibility-criteria",
   CourseTabsController.getPublicEligibilityCriteria,
 );
