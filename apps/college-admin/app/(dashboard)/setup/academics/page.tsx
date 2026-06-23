@@ -175,18 +175,6 @@ const COURSE_TABS = [
     desc: "Accreditations, ranking approvals, and year details",
   },
   {
-    id: "key_dates",
-    label: "Key Dates",
-    icon: Calendar,
-    desc: "Important calendar timelines, admissions, and exam dates",
-  },
-  {
-    id: "room_facilities",
-    label: "Room Facilities",
-    icon: Bed,
-    desc: "Hostel room standards, air conditioning, and storage",
-  },
-  {
     id: "entrance_exam_eligibility",
     label: "Exam Eligibility",
     icon: ShieldCheck,
@@ -237,6 +225,30 @@ export default function SetupAcademicsPage() {
     number | null
   >(null);
   const [uploadingFeePdf, setUploadingFeePdf] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+
+  const handleCourseFieldUpload = async (
+    file: File | null,
+    fieldKey: string,
+    s3PathSuffix: string,
+    onSuccess: (url: string) => void,
+  ) => {
+    if (!file) return;
+    try {
+      setUploadingField(fieldKey);
+      const permanentUrl = await uploadCollegeAdminFile(
+        file,
+        `courses/${editingCourse?.id || "draft"}/${s3PathSuffix}`,
+      );
+      onSuccess(permanentUrl);
+      toast.success("File uploaded to S3");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const { data: courses = [], isLoading: isLoadingCourses } =
     useCollegeCourses();
@@ -4286,7 +4298,6 @@ export default function SetupAcademicsPage() {
                                     value: "",
                                     unit: "",
                                     icon: "",
-                                    icon_bg_color: "",
                                   })
                                 }
                               >
@@ -4355,40 +4366,44 @@ export default function SetupAcademicsPage() {
                                               }
                                             />
                                           </div>
-                                          <div className="space-y-1">
+                                          <div className="space-y-1 md:col-span-2">
                                             <Label className="text-xs">
-                                              Icon URL
+                                              Icon (Upload or URL)
                                             </Label>
-                                            <Input
-                                              placeholder="https://cdn.example.com/icon.png"
-                                              value={item.icon || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "summary_stats",
-                                                  idx,
-                                                  { icon: e.target.value },
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                          <div className="space-y-1">
-                                            <Label className="text-xs">
-                                              Icon Background Color
-                                            </Label>
-                                            <Input
-                                              placeholder="e.g. #FF6B00"
-                                              value={item.icon_bg_color || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "summary_stats",
-                                                  idx,
-                                                  {
-                                                    icon_bg_color:
-                                                      e.target.value,
-                                                  },
-                                                )
-                                              }
-                                            />
+                                            <div className="flex gap-2">
+                                              <Input
+                                                placeholder="https://cdn.example.com/icon.png"
+                                                value={item.icon || ""}
+                                                onChange={(e) =>
+                                                  updateTabListItem(
+                                                    "summary_stats",
+                                                    idx,
+                                                    { icon: e.target.value },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                                disabled={
+                                                  uploadingField ===
+                                                  `summary_stats_${idx}`
+                                                }
+                                                onChange={(e) =>
+                                                  handleCourseFieldUpload(
+                                                    e.target.files?.[0] ?? null,
+                                                    `summary_stats_${idx}`,
+                                                    `placements/summary_stats_${idx}`,
+                                                    (url) =>
+                                                      updateTabListItem(
+                                                        "summary_stats",
+                                                        idx,
+                                                        { icon: url },
+                                                      ),
+                                                  )
+                                                }
+                                              />
+                                            </div>
                                           </div>
                                           <div className="flex items-end">
                                             <Button
@@ -4441,7 +4456,6 @@ export default function SetupAcademicsPage() {
                                     unit: "LPA",
                                     package_label: "Package Offered",
                                     badge: "",
-                                    badge_color: "",
                                     category: "",
                                   })
                                 }
@@ -4523,24 +4537,47 @@ export default function SetupAcademicsPage() {
                                               }
                                             />
                                           </div>
-                                          <div className="space-y-1">
+                                          <div className="space-y-1 md:col-span-2">
                                             <Label className="text-xs">
-                                              Company Logo URL
+                                              Company Logo (Upload or URL)
                                             </Label>
-                                            <Input
-                                              placeholder="https://cdn.example.com/logo.png"
-                                              value={item.company_logo || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "notable_offers.items",
-                                                  idx,
-                                                  {
-                                                    company_logo:
-                                                      e.target.value,
-                                                  },
-                                                )
-                                              }
-                                            />
+                                            <div className="flex gap-2">
+                                              <Input
+                                                placeholder="https://cdn.example.com/logo.png"
+                                                value={item.company_logo || ""}
+                                                onChange={(e) =>
+                                                  updateTabListItem(
+                                                    "notable_offers.items",
+                                                    idx,
+                                                    {
+                                                      company_logo:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                                disabled={
+                                                  uploadingField ===
+                                                  `notable_offers_${idx}`
+                                                }
+                                                onChange={(e) =>
+                                                  handleCourseFieldUpload(
+                                                    e.target.files?.[0] ?? null,
+                                                    `notable_offers_${idx}`,
+                                                    `placements/notable_offers_${idx}`,
+                                                    (url) =>
+                                                      updateTabListItem(
+                                                        "notable_offers.items",
+                                                        idx,
+                                                        { company_logo: url },
+                                                      ),
+                                                  )
+                                                }
+                                              />
+                                            </div>
                                           </div>
                                           <div className="space-y-1">
                                             <Label className="text-xs">
@@ -4641,24 +4678,7 @@ export default function SetupAcademicsPage() {
                                               }
                                             />
                                           </div>
-                                          <div className="space-y-1">
-                                            <Label className="text-xs">
-                                              Badge Color
-                                            </Label>
-                                            <Input
-                                              placeholder="e.g. orange"
-                                              value={item.badge_color || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "notable_offers.items",
-                                                  idx,
-                                                  {
-                                                    badge_color: e.target.value,
-                                                  },
-                                                )
-                                              }
-                                            />
-                                          </div>
+
                                           <div className="flex items-end col-span-2">
                                             <Button
                                               type="button"
@@ -4825,35 +4845,6 @@ export default function SetupAcademicsPage() {
                                       }
                                     />
                                   </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Footer Value Color
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. green"
-                                      value={
-                                        (
-                                          getActiveTabPayload()
-                                            .placement_trends as any
-                                        )?.footer?.value_color || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          placement_trends: {
-                                            ...((getActiveTabPayload()
-                                              .placement_trends as any) || {}),
-                                            footer: {
-                                              ...((
-                                                getActiveTabPayload()
-                                                  .placement_trends as any
-                                              )?.footer || {}),
-                                              value_color: e.target.value,
-                                            },
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
                                 </div>
                               </div>
                               {getTabList("placement_trends.data_points")
@@ -4958,7 +4949,6 @@ export default function SetupAcademicsPage() {
                                       company_name: "",
                                       company_initial: "",
                                       company_logo: "",
-                                      logo_bg_color: "",
                                       avg_package: "",
                                       max_package: "",
                                       students_placed: "",
@@ -5045,41 +5035,47 @@ export default function SetupAcademicsPage() {
                                             }
                                           />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-1 md:col-span-2">
                                           <Label className="text-xs">
-                                            Company Logo URL
+                                            Company Logo (Upload or URL)
                                           </Label>
-                                          <Input
-                                            placeholder="https://cdn.example.com/logo.png"
-                                            value={item.company_logo || ""}
-                                            onChange={(e) =>
-                                              updateTabListItem(
-                                                "all_company_statistics.rows",
-                                                idx,
-                                                {
-                                                  company_logo: e.target.value,
-                                                },
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <Label className="text-xs">
-                                            Logo Background Color
-                                          </Label>
-                                          <Input
-                                            placeholder="e.g. #000000"
-                                            value={item.logo_bg_color || ""}
-                                            onChange={(e) =>
-                                              updateTabListItem(
-                                                "all_company_statistics.rows",
-                                                idx,
-                                                {
-                                                  logo_bg_color: e.target.value,
-                                                },
-                                              )
-                                            }
-                                          />
+                                          <div className="flex gap-2">
+                                            <Input
+                                              placeholder="https://cdn.example.com/logo.png"
+                                              value={item.company_logo || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "all_company_statistics.rows",
+                                                  idx,
+                                                  {
+                                                    company_logo:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                            <Input
+                                              type="file"
+                                              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                              disabled={
+                                                uploadingField ===
+                                                `all_company_stats_${idx}`
+                                              }
+                                              onChange={(e) =>
+                                                handleCourseFieldUpload(
+                                                  e.target.files?.[0] ?? null,
+                                                  `all_company_stats_${idx}`,
+                                                  `placements/all_company_stats_${idx}`,
+                                                  (url) =>
+                                                    updateTabListItem(
+                                                      "all_company_statistics.rows",
+                                                      idx,
+                                                      { company_logo: url },
+                                                    ),
+                                                )
+                                              }
+                                            />
+                                          </div>
                                         </div>
                                         <div className="space-y-1">
                                           <Label className="text-xs">
@@ -5407,7 +5403,7 @@ export default function SetupAcademicsPage() {
                                     student_avatar: "",
                                     placed_at: "",
                                     quote: "",
-                                    type: "",
+                                    type: "youtube",
                                     thumbnail: "",
                                     video_url: "",
                                   })
@@ -5489,19 +5485,30 @@ export default function SetupAcademicsPage() {
                                           </div>
                                           <div className="space-y-1">
                                             <Label className="text-xs">
-                                              Type (mp4 / youtube)
+                                              Type
                                             </Label>
-                                            <Input
-                                              placeholder="e.g. mp4"
-                                              value={item.type || ""}
-                                              onChange={(e) =>
+                                            <Select
+                                              value={item.type || "youtube"}
+                                              onValueChange={(val) =>
                                                 updateTabListItem(
                                                   "student_success.items",
                                                   idx,
-                                                  { type: e.target.value },
+                                                  { type: val, video_url: "" },
                                                 )
                                               }
-                                            />
+                                            >
+                                              <SelectTrigger className="h-10 text-xs">
+                                                <SelectValue placeholder="Select type" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="youtube">
+                                                  YouTube
+                                                </SelectItem>
+                                                <SelectItem value="mp4">
+                                                  MP4 Video
+                                                </SelectItem>
+                                              </SelectContent>
+                                            </Select>
                                           </div>
                                           <div className="space-y-1 md:col-span-3">
                                             <Label className="text-xs">
@@ -5519,56 +5526,158 @@ export default function SetupAcademicsPage() {
                                               }
                                             />
                                           </div>
-                                          <div className="space-y-1">
+                                          <div className="space-y-1 md:col-span-2">
                                             <Label className="text-xs">
-                                              Student Avatar URL
+                                              Student Avatar (Upload or URL)
                                             </Label>
-                                            <Input
-                                              placeholder="https://cdn.example.com/photo.jpg"
-                                              value={item.student_avatar || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "student_success.items",
-                                                  idx,
-                                                  {
-                                                    student_avatar:
-                                                      e.target.value,
-                                                  },
-                                                )
-                                              }
-                                            />
+                                            <div className="flex gap-2">
+                                              <Input
+                                                placeholder="https://cdn.example.com/photo.jpg"
+                                                value={
+                                                  item.student_avatar || ""
+                                                }
+                                                onChange={(e) =>
+                                                  updateTabListItem(
+                                                    "student_success.items",
+                                                    idx,
+                                                    {
+                                                      student_avatar:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                disabled={
+                                                  uploadingField ===
+                                                  `student_avatar_${idx}`
+                                                }
+                                                onChange={(e) =>
+                                                  handleCourseFieldUpload(
+                                                    e.target.files?.[0] ?? null,
+                                                    `student_avatar_${idx}`,
+                                                    `placements/student_avatar_${idx}`,
+                                                    (url) =>
+                                                      updateTabListItem(
+                                                        "student_success.items",
+                                                        idx,
+                                                        { student_avatar: url },
+                                                      ),
+                                                  )
+                                                }
+                                              />
+                                            </div>
                                           </div>
-                                          <div className="space-y-1">
+                                          <div className="space-y-1 md:col-span-2">
                                             <Label className="text-xs">
-                                              Thumbnail URL
+                                              Thumbnail (Upload or URL)
                                             </Label>
-                                            <Input
-                                              placeholder="https://cdn.example.com/thumb.jpg"
-                                              value={item.thumbnail || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "student_success.items",
-                                                  idx,
-                                                  { thumbnail: e.target.value },
-                                                )
-                                              }
-                                            />
+                                            <div className="flex gap-2">
+                                              <Input
+                                                placeholder="https://cdn.example.com/thumb.jpg"
+                                                value={item.thumbnail || ""}
+                                                onChange={(e) =>
+                                                  updateTabListItem(
+                                                    "student_success.items",
+                                                    idx,
+                                                    {
+                                                      thumbnail: e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                disabled={
+                                                  uploadingField ===
+                                                  `student_thumbnail_${idx}`
+                                                }
+                                                onChange={(e) =>
+                                                  handleCourseFieldUpload(
+                                                    e.target.files?.[0] ?? null,
+                                                    `student_thumbnail_${idx}`,
+                                                    `placements/student_thumbnail_${idx}`,
+                                                    (url) =>
+                                                      updateTabListItem(
+                                                        "student_success.items",
+                                                        idx,
+                                                        { thumbnail: url },
+                                                      ),
+                                                  )
+                                                }
+                                              />
+                                            </div>
                                           </div>
-                                          <div className="space-y-1">
-                                            <Label className="text-xs">
-                                              Video URL
-                                            </Label>
-                                            <Input
-                                              placeholder="https://res.cloudinary.com/... or youtube link"
-                                              value={item.video_url || ""}
-                                              onChange={(e) =>
-                                                updateTabListItem(
-                                                  "student_success.items",
-                                                  idx,
-                                                  { video_url: e.target.value },
-                                                )
-                                              }
-                                            />
+                                          <div className="space-y-1 md:col-span-2">
+                                            {!item.type ||
+                                            item.type === "youtube" ? (
+                                              <>
+                                                <Label className="text-xs">
+                                                  YouTube Video URL
+                                                </Label>
+                                                <Input
+                                                  placeholder="https://www.youtube.com/watch?v=..."
+                                                  value={item.video_url || ""}
+                                                  onChange={(e) =>
+                                                    updateTabListItem(
+                                                      "student_success.items",
+                                                      idx,
+                                                      {
+                                                        video_url:
+                                                          e.target.value,
+                                                      },
+                                                    )
+                                                  }
+                                                />
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Label className="text-xs">
+                                                  MP4 Video (Upload or URL)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                  <Input
+                                                    placeholder="https://cdn.example.com/video.mp4"
+                                                    value={item.video_url || ""}
+                                                    onChange={(e) =>
+                                                      updateTabListItem(
+                                                        "student_success.items",
+                                                        idx,
+                                                        {
+                                                          video_url:
+                                                            e.target.value,
+                                                        },
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    type="file"
+                                                    accept="video/mp4"
+                                                    disabled={
+                                                      uploadingField ===
+                                                      `student_video_${idx}`
+                                                    }
+                                                    onChange={(e) =>
+                                                      handleCourseFieldUpload(
+                                                        e.target.files?.[0] ??
+                                                          null,
+                                                        `student_video_${idx}`,
+                                                        `placements/student_video_${idx}`,
+                                                        (url) =>
+                                                          updateTabListItem(
+                                                            "student_success.items",
+                                                            idx,
+                                                            { video_url: url },
+                                                          ),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </>
+                                            )}
                                           </div>
                                           <div className="flex items-end">
                                             <Button
@@ -5607,25 +5716,51 @@ export default function SetupAcademicsPage() {
                             </CardHeader>
                             <CardContent className="space-y-3">
                               <div className="space-y-1">
-                                <Label className="text-xs">Report URL</Label>
-                                <Input
-                                  placeholder="https://cdn.example.com/placement-report-2024.pdf"
-                                  value={
-                                    (
-                                      getActiveTabPayload()
-                                        .download_report as any
-                                    )?.url || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateActiveTabPayload({
-                                      download_report: {
-                                        ...((getActiveTabPayload()
-                                          .download_report as any) || {}),
-                                        url: e.target.value,
-                                      },
-                                    })
-                                  }
-                                />
+                                <Label className="text-xs">
+                                  Report File (Upload or URL)
+                                </Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="https://cdn.example.com/placement-report-2024.pdf"
+                                    value={
+                                      (
+                                        getActiveTabPayload()
+                                          .download_report as any
+                                      )?.url || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        download_report: {
+                                          ...((getActiveTabPayload()
+                                            .download_report as any) || {}),
+                                          url: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                  <Input
+                                    type="file"
+                                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                                    disabled={
+                                      uploadingField === "download_report_url"
+                                    }
+                                    onChange={(e) =>
+                                      handleCourseFieldUpload(
+                                        e.target.files?.[0] ?? null,
+                                        "download_report_url",
+                                        "placements/download_report",
+                                        (url) =>
+                                          updateActiveTabPayload({
+                                            download_report: {
+                                              ...((getActiveTabPayload()
+                                                .download_report as any) || {}),
+                                              url,
+                                            },
+                                          }),
+                                      )
+                                    }
+                                  />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <Label className="text-xs">Button Label</Label>
@@ -5649,25 +5784,51 @@ export default function SetupAcademicsPage() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs">Icon URL</Label>
-                                <Input
-                                  placeholder="https://cdn.example.com/icons/pdf-document-purple.png"
-                                  value={
-                                    (
-                                      getActiveTabPayload()
-                                        .download_report as any
-                                    )?.icon || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateActiveTabPayload({
-                                      download_report: {
-                                        ...((getActiveTabPayload()
-                                          .download_report as any) || {}),
-                                        icon: e.target.value,
-                                      },
-                                    })
-                                  }
-                                />
+                                <Label className="text-xs">
+                                  Icon (Upload or URL)
+                                </Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="https://cdn.example.com/icons/pdf-document-purple.png"
+                                    value={
+                                      (
+                                        getActiveTabPayload()
+                                          .download_report as any
+                                      )?.icon || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        download_report: {
+                                          ...((getActiveTabPayload()
+                                            .download_report as any) || {}),
+                                          icon: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                  <Input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                    disabled={
+                                      uploadingField === "download_report_icon"
+                                    }
+                                    onChange={(e) =>
+                                      handleCourseFieldUpload(
+                                        e.target.files?.[0] ?? null,
+                                        "download_report_icon",
+                                        "placements/download_report_icon",
+                                        (url) =>
+                                          updateActiveTabPayload({
+                                            download_report: {
+                                              ...((getActiveTabPayload()
+                                                .download_report as any) || {}),
+                                              icon: url,
+                                            },
+                                          }),
+                                      )
+                                    }
+                                  />
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -10501,25 +10662,59 @@ export default function SetupAcademicsPage() {
                                             });
                                           }}
                                         />
-                                        <Input
-                                          placeholder="Image URL"
-                                          value={fac.image || ""}
-                                          onChange={(e) => {
-                                            const items = [
-                                              ...(lib.facilities?.items || []),
-                                            ];
-                                            items[fci] = {
-                                              ...items[fci],
-                                              image: e.target.value,
-                                            };
-                                            updateLib({
-                                              facilities: {
-                                                ...(lib.facilities || {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        />
+                                        <div className="flex gap-2 w-full">
+                                          <Input
+                                            placeholder="Image URL"
+                                            value={fac.image || ""}
+                                            onChange={(e) => {
+                                              const items = [
+                                                ...(lib.facilities?.items ||
+                                                  []),
+                                              ];
+                                              items[fci] = {
+                                                ...items[fci],
+                                                image: e.target.value,
+                                              };
+                                              updateLib({
+                                                facilities: {
+                                                  ...(lib.facilities || {}),
+                                                  items,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                          <Input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            disabled={
+                                              uploadingField ===
+                                              `library_facility_${fci}`
+                                            }
+                                            onChange={(e) =>
+                                              handleCourseFieldUpload(
+                                                e.target.files?.[0] ?? null,
+                                                `library_facility_${fci}`,
+                                                `library/facility_${fci}`,
+                                                (url) => {
+                                                  const items = [
+                                                    ...(lib.facilities?.items ||
+                                                      []),
+                                                  ];
+                                                  items[fci] = {
+                                                    ...items[fci],
+                                                    image: url,
+                                                  };
+                                                  updateLib({
+                                                    facilities: {
+                                                      ...(lib.facilities || {}),
+                                                      items,
+                                                    },
+                                                  });
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
                                         <Button
                                           type="button"
                                           variant="ghost"
@@ -10890,165 +11085,6 @@ export default function SetupAcademicsPage() {
                                         <Textarea
                                           rows={2}
                                           placeholder="Description (optional)"
-                                          value={item.description || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem("items", idx, {
-                                              description: e.target.value,
-                                            })
-                                          }
-                                        />
-                                      </div>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem("items", idx)
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-
-                      {/* KEY DATES */}
-                      {activeTab === "key_dates" && (
-                        <div className="space-y-6">
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                              <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Key Dates
-                                </CardTitle>
-                                <CardDescription>
-                                  Important admissions and exam timelines for
-                                  this course.
-                                </CardDescription>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  addTabListItem("items", {
-                                    label: "",
-                                    date: "",
-                                  })
-                                }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Date
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("items").length === 0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No key dates added yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList("items").map((item, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-center"
-                                    >
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Label (e.g. Application Deadline)"
-                                        value={item.label || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem("items", idx, {
-                                            label: e.target.value,
-                                          })
-                                        }
-                                      />
-                                      <Input
-                                        className="w-48"
-                                        placeholder="Date (e.g. 15 July 2026)"
-                                        value={item.date || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem("items", idx, {
-                                            date: e.target.value,
-                                          })
-                                        }
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem("items", idx)
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-
-                      {/* ROOM FACILITIES */}
-                      {activeTab === "room_facilities" && (
-                        <div className="space-y-6">
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                              <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Room Facilities
-                                </CardTitle>
-                                <CardDescription>
-                                  Hostel room standards, amenities, and storage
-                                  details for this course&apos;s students.
-                                </CardDescription>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  addTabListItem("items", {
-                                    label: "",
-                                    description: "",
-                                  })
-                                }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Facility
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("items").length === 0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No room facilities added yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList("items").map((item, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
-                                    >
-                                      <div className="flex-1 space-y-2">
-                                        <Input
-                                          placeholder="Label (e.g. Air Conditioning)"
-                                          value={item.label || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem("items", idx, {
-                                              label: e.target.value,
-                                            })
-                                          }
-                                        />
-                                        <Textarea
-                                          rows={2}
-                                          placeholder="Description (e.g. Available in all premium rooms)"
                                           value={item.description || ""}
                                           onChange={(e) =>
                                             updateTabListItem("items", idx, {
