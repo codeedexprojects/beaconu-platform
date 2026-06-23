@@ -273,6 +273,7 @@ export default function SetupAcademicsPage() {
 
   // Tab State - local JSON fields representing active tab data edits
   const [localTabState, setLocalTabState] = useState<any>({});
+  const [courseInfoJsonDraft, setCourseInfoJsonDraft] = useState("");
 
   const {
     register,
@@ -316,6 +317,13 @@ export default function SetupAcademicsPage() {
       setLocalTabState({});
     }
   }, [tabDataResponse]);
+
+  useEffect(() => {
+    if (activeTab !== "course_info") return;
+    setCourseInfoJsonDraft(
+      JSON.stringify(localTabState.course_info || {}, null, 2),
+    );
+  }, [activeTab, localTabState.course_info]);
 
   const handleBasicSubmit = (data: CourseFormData) => {
     if (editingCourse) {
@@ -489,157 +497,310 @@ export default function SetupAcademicsPage() {
     }));
   };
 
+  const applyCourseInfoJsonDraft = () => {
+    try {
+      const parsed = JSON.parse(courseInfoJsonDraft);
+      const nextPayload =
+        parsed && typeof parsed === "object" && parsed.data
+          ? parsed.data
+          : parsed;
+
+      setLocalTabState((prev: any) => ({
+        ...prev,
+        course_info: nextPayload,
+      }));
+      setCourseInfoJsonDraft(JSON.stringify(nextPayload, null, 2));
+      toast.success("Course Info JSON applied");
+    } catch {
+      toast.error(
+        "Invalid JSON. Paste the full API response or the data object.",
+      );
+    }
+  };
+
   const loadCourseInfoSeedData = () => {
     const seedData = {
-      course_name: "MBA Digital Transformation & AI",
-      about:
-        "This program prepares future business leaders to navigate the rapidly evolving digital landscape by combining core management disciplines with cutting-edge technology strategies, artificial intelligence, and analytics.",
-      overview: {
-        duration: "24 months",
-        study_mode: "Regular",
-        academic_cycle: "Semester-based",
-        credits: 108,
-        gender_accepted: "Co-ed",
-        course_category: "Regular Program",
+      name: "MBA Digital Transformation",
+      admission_batches: [
+        {
+          label: "Admissions 2025",
+          banner: {
+            tag: "ADMISSIONS OPEN",
+            enabled: true,
+            message: "Limited seats available for current intake",
+            progress_percentage: 90,
+          },
+          status: "open",
+        },
+        {
+          label: "Admissions 2026",
+          banner: {
+            tag: "UPCOMING",
+            enabled: false,
+            message: "",
+            progress_percentage: 0,
+          },
+          status: "upcoming",
+        },
+      ],
+      quick_info: [
+        { label: "DURATION", value: "24 months" },
+        { label: "STUDY MODE", value: "Regular" },
+        { label: "ACADEMIC CYCLE", value: "Semester" },
+        { label: "STUDY CREDITS", value: "102 Credits" },
+        { label: "GENDER ADMITTED", value: "Co-ed" },
+        { label: "CAMPUS CATEGORY", value: "Self Financing" },
+      ],
+      highlights: {
+        items: [
+          {
+            text: "AI activity in India alone has witnessed a 2.7 times growth",
+          },
+          {
+            text: "Generative AI (GenAI) has recorded an extraordinary 9 times surge, with 34 percent of enterprises launching GenAI-based products or services.",
+          },
+        ],
+        title: "Program Highlights",
       },
-      program_highlights: [
-        { tag: "Accredited", title: "AACSB & AMBA Aligned Curriculum" },
-        { tag: "Mentorship", title: "1-on-1 Executive Mentoring Program" },
-        { tag: "Immersion", title: "2-Week Silicon Valley Immersion" },
-      ],
-      course_accolades: [
-        "Ranked #5 in Digital Management by National Business Review",
-        "Best Emerging Business Program - EduExcellence Award 2025",
-        "100% Case-Study Based Experiential Learning Approach",
-      ],
-      admission_status: {
-        urgency_label: "Admissions closing in 4 days",
+      accreditations: {
+        items: [
+          {
+            tag: "MAHE Rank 3",
+            image:
+              "https://cdn.brandlogos.example.com/logos/outlook-icare-ranking-2024.png",
+            title: "India's top #131/200 universities in 2024",
+          },
+        ],
+        title: "Course Accolades",
       },
-      admissions: [
-        { label: "Round 1 Application", status: "closed" },
-        { label: "Round 2 Application", status: "open" },
-        { label: "Direct Interview Walk-ins", status: "upcoming" },
-      ],
-      key_dates: [
-        { label: "Application Deadline", date: "30 August 2026" },
-        { label: "Orientation Ceremony", date: "15 September 2026" },
-        { label: "Commencement of Classes", date: "01 October 2026" },
-      ],
-      total_credits: 108,
+      keyDates: {
+        items: [
+          {
+            date: "10th June 2024",
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-check-green.png",
+            label: "APPLICATION START",
+            status: "",
+            status_color: "",
+          },
+          {
+            date: "30th July 2024",
+            icon: "https://cdn.iconsdb.example.com/icons/calendar-warning-orange.png",
+            label: "APPLICATION CLOSE",
+            status: "URGENT",
+            status_color: "orange",
+          },
+        ],
+        title: "Key Dates to Remember",
+      },
       curriculum: {
-        brochure_link:
-          "https://beaconu-demo.s3.amazonaws.com/brochures/mba-digital.pdf",
+        title: "Curriculum",
+        brochure: {
+          url: "https://cdn.brochures.example.com/mba-digital-transformation-curriculum.pdf",
+          icon: "https://cdn.iconsdb.example.com/icons/download-pdf.png",
+          label: "Download Curriculum Brochure",
+        },
+        subtitle: "Explore list of subjects wise covered in our MBA program.",
         semesters: [
           {
-            label: "Semester I - Foundations",
-            description:
-              "Covers Digital Business Strategy, Managerial Economics, and Analytics Tools.",
+            id: "sem_1",
+            name: "Semester 1",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
           },
           {
-            label: "Semester II - Core Tech",
-            description:
-              "Covers Product Management, AI & Machine Learning for Managers, and Finance.",
+            id: "sem_2",
+            name: "Semester 2",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
           },
           {
-            label: "Semester III - Specialization",
-            description:
-              "Covers Data Visualization, Digital Marketing Analytics, and Cloud Architectures.",
+            id: "sem_3",
+            name: "Semester 3",
+            expanded: false,
+            core_subjects: [],
+            specializations: [],
           },
           {
-            label: "Semester IV - Capstone",
-            description:
-              "Focuses on the Graduation Thesis, Strategy simulation, and Corporate Internship.",
+            id: "sem_4",
+            name: "Semester 4",
+            expanded: true,
+            core_subjects: ["Banking and Insurance Management", "Project Work"],
+            specializations: [
+              {
+                title: "Specialization 1:",
+                selected: "Marketing",
+                subjects: ["Market Research", "Service Marketing"],
+              },
+            ],
           },
         ],
       },
-      course_structure: [
-        { title: "Core Courses", details: "12 Subjects, 48 Credits" },
-        {
-          title: "Electives & Specialization",
-          details: "6 Subjects, 24 Credits",
+      courseStructure: {
+        title: "Course Structure",
+        segments: [
+          { color: "#FF6B00", label: "Disciplinary Major", credits: 60 },
+          { color: "#FFB27A", label: "Occupational Track", credits: 24 },
+          { color: "#2E2E5C", label: "Flexible Courses", credits: 23 },
+        ],
+        subtitle: "The total will sum 102 credits at the end of two years.",
+        chart_type: "donut",
+      },
+      valueAddedCourses: {
+        items: [
+          {
+            name: "Cyber Security",
+            credit_label: "Credit: 03",
+            delivery_modes: ["MOOC Courses"],
+            delivery_mode_label: "DELIVERY MODES",
+          },
+        ],
+        title: "Value Added Course",
+      },
+      careerOpportunities: {
+        items: [
+          { role: "Data Scientist", salary_range: "₹6L - ₹25L PA" },
+          { role: "Marketing Manager", salary_range: "₹6L - ₹18L PA" },
+          { role: "Business Analyst", salary_range: "₹5L - ₹22L PA" },
+        ],
+        title: "Career Opportunities",
+      },
+      higherEducationCertifications: {
+        global: {
+          icon: "https://cdn.iconsdb.example.com/icons/globe-orange.png",
+          items: [
+            "Project Management Professional (PMP)",
+            "Certified Information Systems Auditor (CISA)",
+          ],
+          title: "GLOBAL CERTIFICATIONS",
         },
-        { title: "Capstone & Internships", details: "2 Projects, 36 Credits" },
-      ],
-      value_added_courses: [
-        "AI Ethics & Corporate Governance",
-        "No-Code App Development with FlutterFlow",
-        "Prompt Engineering for Business Executives",
-      ],
-      higher_education: {
-        global_certifications: [
-          "AWS Certified Cloud Practitioner",
-          "Scrum Alliance Product Owner (CSPO)",
-          "Google Analytics Individual Qualification (GAIQ)",
-        ],
-        postgraduation: [
-          "PhD in Business Analytics & Strategy",
-          "Postdoctoral Fellowship in Digital Transformation",
-        ],
+        postgraduation: {
+          icon: "https://cdn.iconsdb.example.com/icons/graduation-cap-orange.png",
+          items: [
+            "PhD in Management Studies",
+            "Specialized Masters in Artificial Intelligence",
+          ],
+          title: "POSTGRADUATION",
+        },
       },
-      flexible_exit_options: [
-        "PG Diploma in Management after successful completion of Year 1",
-        "Master's Degree in Digital Transformation upon completing Year 2",
-      ],
-      class_timings: [
-        "Weekdays: 9:30 AM to 4:30 PM",
-        "Weekend Lab Sessions (Optional): 10:00 AM to 2:00 PM",
-      ],
-      industry_tools: [
-        "Python & Pandas",
-        "Tableau / PowerBI",
-        "Jira & Confluence",
-        "Google Cloud Platform",
-      ],
-      lab_facilities: [
-        "Advanced Analytics & Bloomberg Terminal Room",
-        "Virtual Reality & Design Thinking Studio",
-      ],
-      classroom_facilities: [
-        "Fully Interactive Smart Board & Hybrid Cam setup",
-        "High-speed Academic Wi-Fi & Dedicated Power outlets",
-      ],
-      bonus_certification: {
-        title: "Micro-Credential in Generative AI for Management",
-        tag: "BONUS CERTIFICATION",
-        cta_label: "View Certificate Spec",
-        link: "https://beaconu-demo.s3.amazonaws.com/certificates/gen-ai.pdf",
+      flexibleExitOptions: {
+        items: [
+          {
+            step: 1,
+            award: "Post Graduate Diploma in Management",
+            label: "After 1 Year",
+          },
+          {
+            step: 2,
+            award: "Master of Business Administration (MBA)",
+            label: "After 2 Years",
+          },
+        ],
+        title: "Flexible Exit Options",
+        subtitle: "Life happens. Pause or exit with a valid credential.",
+      },
+      classTimings: {
+        title: "Class Timings",
+        schedule: [
+          { day: "Monday", time: "09:00 AM - 04:30 PM" },
+          { day: "Tuesday", time: "09:00 AM - 04:30 PM" },
+          { day: "Wednesday", time: "09:00 AM - 04:30 PM" },
+        ],
+        subtitle: "Regular Classes",
+      },
+      industryTools: {
+        items: [
+          { name: "Tableau" },
+          { name: "Python" },
+          { name: "SPSS" },
+          { name: "R Studio" },
+        ],
+        title: "Industry Tools You'll Master",
+      },
+      labFacilities: {
+        items: [
+          { name: "AI/ML Research Lab" },
+          { name: "Mac Development Lab" },
+        ],
+        title: "Lab Facilities for MBA Digital Transformation",
+      },
+      roomFacilities: {
+        items: [
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/smart-board-dark.png",
+            name: "Smart Interactive Boards",
+          },
+          {
+            icon: "https://cdn.iconsdb.example.com/icons/wifi-dark.png",
+            name: "High-Speed Wi-Fi",
+          },
+        ],
+        title: "Class Room Facilities",
+      },
+      featuredAlumni: {
+        items: [
+          {
+            name: "Amit Verma",
+            image: "https://cdn.alumniphotos.example.com/photos/amit-verma.jpg",
+            designation: "CHIEF MOM (E-BANKING)",
+            career_progression: [
+              {
+                year: "2018",
+                tag_color: "orange",
+                description: "Completed graduation and explored career options",
+              },
+              {
+                year: "2019",
+                tag_color: "orange",
+                description:
+                  "Enrolled in Online MBA in Marketing while pursuing Mentorship",
+              },
+            ],
+          },
+        ],
+        title: "Featured Alumni",
+        highlight_word: "Alumni",
+      },
+      faqs: {
+        items: [
+          {
+            answer: "",
+            expanded: false,
+            question: "What is the eligibility for this MBA?",
+          },
+          {
+            answer: "",
+            expanded: false,
+            question: "Is there any scholarship available?",
+          },
+        ],
+        title: "Frequently Asked Questions",
+      },
+      studentForum: {
+        icon: "https://cdn.iconsdb.example.com/icons/forum-people.png",
+        link: "https://example.com/forum/ask-admission-team",
+        title: "Student Forum",
+        enabled: true,
+        cta_icon:
+          "https://cdn.iconsdb.example.com/icons/chat-bubble-orange.png",
+        cta_label: "Ask the Admission Team",
         description:
-          "Co-delivered with Leading Tech Industry Partners to ensure job-ready skills.",
+          "Have queries/doubts? Connect directly with our college team or chat with our ex-students.",
       },
-      career_opportunities: [
-        "Digital Transformation Consultant",
-        "Product Operations Manager",
-        "AI Strategy Lead",
-        "Analytics Manager",
-      ],
-      featured_alumni: [
-        {
-          name: "Sophia Martinez",
-          company: "Microsoft",
-          designation: "Senior Strategy Lead",
-          image:
-            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150",
-        },
-        {
-          name: "Rohan Das",
-          company: "McKinsey & Company",
-          designation: "Associate Consultant",
-          image:
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        },
-      ],
-      faqs: [
-        {
-          question: "Is prior coding experience required for this course?",
-          answer:
-            "No, prior coding experience is not necessary. We provide bridge courses in Python and analytics.",
-        },
-        {
-          question: "What is the average package for this specialization?",
-          answer:
-            "The average package for the Digital Transformation cohort is 12.5 LPA.",
-        },
-      ],
+      certifications: {
+        title: "Certifications",
+        items: [
+          {
+            tag: "BONUS CERTIFICATION",
+            title: "Tally Prime Certification",
+            description:
+              "Included with Finance specialization at no extra cost.",
+            cta_label: "View Certificate Details",
+            link: "https://example.com/certifications/tally-prime",
+          },
+        ],
+      },
     };
 
     updateActiveTabPayload(seedData);
@@ -1428,6 +1589,40 @@ export default function SetupAcademicsPage() {
                       {/* COURSE INFO TAB */}
                       {activeTab === "course_info" && (
                         <div className="space-y-4">
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h4 className="text-sm font-bold text-amber-950">
+                                  Strict Course Info JSON
+                                </h4>
+                                <p className="text-xs text-amber-800">
+                                  Paste the exact public API response or just
+                                  the `data` object here. This is the safest
+                                  path if you need the saved payload to match
+                                  your target response exactly.
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+                                onClick={applyCourseInfoJsonDraft}
+                              >
+                                Apply JSON
+                              </Button>
+                            </div>
+                            <Textarea
+                              value={courseInfoJsonDraft}
+                              onChange={(e) =>
+                                setCourseInfoJsonDraft(e.target.value)
+                              }
+                              rows={16}
+                              className="font-mono text-xs"
+                              placeholder="Paste the exact course_info response JSON here"
+                            />
+                          </div>
+
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-2 mb-6">
                             <div className="flex overflow-x-auto scrollbar-none gap-2 w-full sm:w-auto">
                               {[
@@ -1488,201 +1683,137 @@ export default function SetupAcademicsPage() {
                                 <Label>Course Info Name</Label>
                                 <Input
                                   placeholder="e.g. MBA Digital Transformation"
-                                  value={
-                                    getActiveTabPayload().course_name || ""
-                                  }
+                                  value={getActiveTabPayload().name || ""}
                                   onChange={(e) =>
                                     updateActiveTabPayload({
-                                      course_name: e.target.value,
+                                      name: e.target.value,
                                     })
                                   }
                                 />
                               </div>
 
-                              <div className="space-y-2">
-                                <Label>Program Description (About)</Label>
-                                <Textarea
-                                  rows={3}
-                                  placeholder="Overview description..."
-                                  value={getActiveTabPayload().about || ""}
-                                  onChange={(e) =>
-                                    updateActiveTabPayload({
-                                      about: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-
-                              {/* Overview Section */}
+                              {/* Quick Info - Key-Value pairs */}
                               <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
-                                <h4 className="font-bold text-sm text-foreground">
-                                  Program Overview Details
-                                </h4>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Duration</Label>
-                                    <Input
-                                      placeholder="e.g. 24 months"
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.duration || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            duration: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Study Mode
-                                    </Label>
-                                    <Select
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.study_mode || ""
-                                      }
-                                      onValueChange={(val) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            study_mode: val,
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select mode" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Regular">
-                                          Regular
-                                        </SelectItem>
-                                        <SelectItem value="Part-time">
-                                          Part-time
-                                        </SelectItem>
-                                        <SelectItem value="Online">
-                                          Online
-                                        </SelectItem>
-                                        <SelectItem value="Distance">
-                                          Distance
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Academic Cycle
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. Semester"
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.academic_cycle || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            academic_cycle: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Credits</Label>
-                                    <Input
-                                      type="number"
-                                      placeholder="e.g. 102"
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.credits ?? ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            credits: e.target.value
-                                              ? Number(e.target.value)
-                                              : "",
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Gender Accepted
-                                    </Label>
-                                    <Select
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.gender_accepted || ""
-                                      }
-                                      onValueChange={(val) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            gender_accepted: val,
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select gender option" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Co-ed">
-                                          Co-ed
-                                        </SelectItem>
-                                        <SelectItem value="Female Only">
-                                          Female Only
-                                        </SelectItem>
-                                        <SelectItem value="Male Only">
-                                          Male Only
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Course Category
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. Self Financing"
-                                      value={
-                                        getActiveTabPayload().overview
-                                          ?.course_category || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          overview: {
-                                            ...(getActiveTabPayload()
-                                              .overview || {}),
-                                            course_category: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
+                                <div className="flex justify-between items-center">
+                                  <h4 className="font-bold text-sm text-foreground">
+                                    Quick Info
+                                  </h4>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const next = [
+                                        ...(getActiveTabPayload().quick_info ||
+                                          []),
+                                        { label: "", value: "" },
+                                      ];
+                                      updateActiveTabPayload({
+                                        quick_info: next,
+                                      });
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add
+                                  </Button>
                                 </div>
+                                {(getActiveTabPayload().quick_info || []).map(
+                                  (item: any, idx: number) => (
+                                    <div
+                                      key={idx}
+                                      className="grid gap-2 grid-cols-12 items-center"
+                                    >
+                                      <Input
+                                        placeholder="Label (e.g. DURATION)"
+                                        value={item.label || ""}
+                                        className="col-span-5"
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload()
+                                              .quick_info || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            label: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            quick_info: next,
+                                          });
+                                        }}
+                                      />
+                                      <Input
+                                        placeholder="Value (e.g. 24 months)"
+                                        value={item.value || ""}
+                                        className="col-span-6"
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload()
+                                              .quick_info || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            value: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            quick_info: next,
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="col-span-1"
+                                        onClick={() => {
+                                          const next = (
+                                            getActiveTabPayload().quick_info ||
+                                            []
+                                          ).filter(
+                                            (_: any, i: number) => i !== idx,
+                                          );
+                                          updateActiveTabPayload({
+                                            quick_info: next,
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ),
+                                )}
                               </div>
 
                               {/* Highlights */}
-                              <div className="space-y-3">
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
                                 <div className="flex justify-between items-center">
-                                  <Label className="font-bold">
-                                    Program Highlights
+                                  <div>
+                                    <Label className="font-bold text-sm">
+                                      Highlights
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                      Title
+                                    </p>
+                                  </div>
+                                  <Input
+                                    placeholder="e.g. Program Highlights"
+                                    className="w-60"
+                                    value={
+                                      getActiveTabPayload().highlights?.title ||
+                                      ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        highlights: {
+                                          ...(getActiveTabPayload()
+                                            .highlights || {}),
+                                          title: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <Label className="text-xs font-semibold">
+                                    Items
                                   </Label>
                                   <Button
                                     type="button"
@@ -1690,12 +1821,16 @@ export default function SetupAcademicsPage() {
                                     size="sm"
                                     onClick={() => {
                                       const next = [
-                                        ...(getActiveTabPayload()
-                                          .program_highlights || []),
-                                        { tag: "", title: "" },
+                                        ...(getActiveTabPayload().highlights
+                                          ?.items || []),
+                                        { text: "" },
                                       ];
                                       updateActiveTabPayload({
-                                        program_highlights: next,
+                                        highlights: {
+                                          ...(getActiveTabPayload()
+                                            .highlights || {}),
+                                          items: next,
+                                        },
                                       });
                                     }}
                                   >
@@ -1704,43 +1839,31 @@ export default function SetupAcademicsPage() {
                                   </Button>
                                 </div>
                                 {(
-                                  getActiveTabPayload().program_highlights || []
-                                ).map((h: any, idx: number) => (
+                                  getActiveTabPayload().highlights?.items || []
+                                ).map((item: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex gap-2 items-center"
+                                    className="flex gap-2 items-start"
                                   >
-                                    <Input
-                                      placeholder="Tag (e.g. NBA Accreditated)"
-                                      value={h.tag || ""}
+                                    <Textarea
+                                      placeholder="Highlight text"
+                                      rows={2}
+                                      value={item.text || ""}
                                       onChange={(e) => {
                                         const next = [
-                                          ...(getActiveTabPayload()
-                                            .program_highlights || []),
+                                          ...(getActiveTabPayload().highlights
+                                            ?.items || []),
                                         ];
                                         next[idx] = {
                                           ...next[idx],
-                                          tag: e.target.value,
+                                          text: e.target.value,
                                         };
                                         updateActiveTabPayload({
-                                          program_highlights: next,
-                                        });
-                                      }}
-                                    />
-                                    <Input
-                                      placeholder="Headline Title"
-                                      value={h.title || ""}
-                                      onChange={(e) => {
-                                        const next = [
-                                          ...(getActiveTabPayload()
-                                            .program_highlights || []),
-                                        ];
-                                        next[idx] = {
-                                          ...next[idx],
-                                          title: e.target.value,
-                                        };
-                                        updateActiveTabPayload({
-                                          program_highlights: next,
+                                          highlights: {
+                                            ...(getActiveTabPayload()
+                                              .highlights || {}),
+                                            items: next,
+                                          },
                                         });
                                       }}
                                     />
@@ -1750,13 +1873,17 @@ export default function SetupAcademicsPage() {
                                       size="icon"
                                       onClick={() => {
                                         const next = (
-                                          getActiveTabPayload()
-                                            .program_highlights || []
+                                          getActiveTabPayload().highlights
+                                            ?.items || []
                                         ).filter(
                                           (_: any, i: number) => i !== idx,
                                         );
                                         updateActiveTabPayload({
-                                          program_highlights: next,
+                                          highlights: {
+                                            ...(getActiveTabPayload()
+                                              .highlights || {}),
+                                            items: next,
+                                          },
                                         });
                                       }}
                                     >
@@ -1766,67 +1893,167 @@ export default function SetupAcademicsPage() {
                                 ))}
                               </div>
 
-                              {/* Accolades */}
-                              <div className="space-y-3 pt-4 border-t">
+                              {/* Accreditations */}
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
                                 <div className="flex justify-between items-center">
-                                  <Label className="font-bold">
-                                    Course Accolades
+                                  <div>
+                                    <Label className="font-bold text-sm">
+                                      Accreditations
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                      Title
+                                    </p>
+                                  </div>
+                                  <Input
+                                    placeholder="e.g. Course Accolades"
+                                    className="w-60"
+                                    value={
+                                      getActiveTabPayload().accreditations
+                                        ?.title || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        accreditations: {
+                                          ...(getActiveTabPayload()
+                                            .accreditations || {}),
+                                          title: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <Label className="text-xs font-semibold">
+                                    Items
                                   </Label>
                                   <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                      const current =
-                                        getActiveTabPayload()
-                                          .course_accolades || [];
+                                      const next = [
+                                        ...(getActiveTabPayload().accreditations
+                                          ?.items || []),
+                                        { tag: "", image: "", title: "" },
+                                      ];
                                       updateActiveTabPayload({
-                                        course_accolades: [...current, ""],
+                                        accreditations: {
+                                          ...(getActiveTabPayload()
+                                            .accreditations || {}),
+                                          items: next,
+                                        },
                                       });
                                     }}
                                   >
                                     <Plus className="h-4 w-4 mr-1" /> Add
-                                    Accolade
                                   </Button>
                                 </div>
                                 {(
-                                  getActiveTabPayload().course_accolades || []
-                                ).map((acc: string, idx: number) => (
+                                  getActiveTabPayload().accreditations?.items ||
+                                  []
+                                ).map((item: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex gap-2 items-center"
+                                    className="space-y-2 pt-2 pb-4 border-b"
                                   >
-                                    <Input
-                                      placeholder="e.g. Ranked #1 for Digital Transformation"
-                                      value={acc || ""}
-                                      onChange={(e) => {
-                                        const next = [
-                                          ...(getActiveTabPayload()
-                                            .course_accolades || []),
-                                        ];
-                                        next[idx] = e.target.value;
-                                        updateActiveTabPayload({
-                                          course_accolades: next,
-                                        });
-                                      }}
-                                    />
+                                    <div className="grid gap-2 grid-cols-3">
+                                      <div>
+                                        <Label className="text-xs">Tag</Label>
+                                        <Input
+                                          placeholder="e.g. MAHE Rank 3"
+                                          value={item.tag || ""}
+                                          onChange={(e) => {
+                                            const next = [
+                                              ...(getActiveTabPayload()
+                                                .accreditations?.items || []),
+                                            ];
+                                            next[idx] = {
+                                              ...next[idx],
+                                              tag: e.target.value,
+                                            };
+                                            updateActiveTabPayload({
+                                              accreditations: {
+                                                ...(getActiveTabPayload()
+                                                  .accreditations || {}),
+                                                items: next,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">
+                                          Image URL
+                                        </Label>
+                                        <Input
+                                          placeholder="Image URL"
+                                          value={item.image || ""}
+                                          onChange={(e) => {
+                                            const next = [
+                                              ...(getActiveTabPayload()
+                                                .accreditations?.items || []),
+                                            ];
+                                            next[idx] = {
+                                              ...next[idx],
+                                              image: e.target.value,
+                                            };
+                                            updateActiveTabPayload({
+                                              accreditations: {
+                                                ...(getActiveTabPayload()
+                                                  .accreditations || {}),
+                                                items: next,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Title</Label>
+                                        <Input
+                                          placeholder="e.g. India's top #131"
+                                          value={item.title || ""}
+                                          onChange={(e) => {
+                                            const next = [
+                                              ...(getActiveTabPayload()
+                                                .accreditations?.items || []),
+                                            ];
+                                            next[idx] = {
+                                              ...next[idx],
+                                              title: e.target.value,
+                                            };
+                                            updateActiveTabPayload({
+                                              accreditations: {
+                                                ...(getActiveTabPayload()
+                                                  .accreditations || {}),
+                                                items: next,
+                                              },
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
                                     <Button
                                       type="button"
                                       variant="ghost"
-                                      size="icon"
+                                      size="sm"
                                       onClick={() => {
                                         const next = (
-                                          getActiveTabPayload()
-                                            .course_accolades || []
+                                          getActiveTabPayload().accreditations
+                                            ?.items || []
                                         ).filter(
                                           (_: any, i: number) => i !== idx,
                                         );
                                         updateActiveTabPayload({
-                                          course_accolades: next,
+                                          accreditations: {
+                                            ...(getActiveTabPayload()
+                                              .accreditations || {}),
+                                            items: next,
+                                          },
                                         });
                                       }}
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                      <Trash2 className="h-4 w-4 mr-1 text-destructive" />
+                                      Remove
                                     </Button>
                                   </div>
                                 ))}
@@ -1837,87 +2064,11 @@ export default function SetupAcademicsPage() {
                           {/* 2. ADMISSIONS & TIMELINE SUB-TAB */}
                           {courseInfoSubTab === "admissions" && (
                             <div className="space-y-6">
-                              {/* Admission Status Object */}
-                              <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
-                                <h4 className="font-bold text-sm text-foreground">
-                                  Admission Status
-                                </h4>
-                                <div className="grid gap-4 md:grid-cols-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Status Tag
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. Admissions Open"
-                                      value={
-                                        getActiveTabPayload().admission_status
-                                          ?.tag || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          admission_status: {
-                                            ...(getActiveTabPayload()
-                                              .admission_status || {}),
-                                            tag: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Seat Availability (%)
-                                    </Label>
-                                    <Input
-                                      type="number"
-                                      placeholder="e.g. 90"
-                                      value={
-                                        getActiveTabPayload().admission_status
-                                          ?.seat_availability_percent ?? ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          admission_status: {
-                                            ...(getActiveTabPayload()
-                                              .admission_status || {}),
-                                            seat_availability_percent: e.target
-                                              .value
-                                              ? Number(e.target.value)
-                                              : "",
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Urgency Label
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. Limited seats available"
-                                      value={
-                                        getActiveTabPayload().admission_status
-                                          ?.urgency_label || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          admission_status: {
-                                            ...(getActiveTabPayload()
-                                              .admission_status || {}),
-                                            urgency_label: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Admissions Timeline Array */}
+                              {/* Admission Batches */}
                               <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                   <Label className="font-bold text-foreground">
-                                    Intake Admissions
+                                    Admission Batches
                                   </Label>
                                   <Button
                                     type="button"
@@ -1925,180 +2076,434 @@ export default function SetupAcademicsPage() {
                                     size="sm"
                                     onClick={() => {
                                       const next = [
-                                        ...(getActiveTabPayload().admissions ||
-                                          []),
-                                        { label: "", status: "upcoming" },
+                                        ...(getActiveTabPayload()
+                                          .admission_batches || []),
+                                        {
+                                          label: "",
+                                          status: "upcoming",
+                                          banner: {
+                                            enabled: true,
+                                            tag: "",
+                                            message: "",
+                                            progress_percentage: 0,
+                                          },
+                                        },
                                       ];
                                       updateActiveTabPayload({
-                                        admissions: next,
+                                        admission_batches: next,
                                       });
                                     }}
                                   >
-                                    <Plus className="h-4 w-4 mr-1" /> Add
-                                    Admission Cycle
+                                    <Plus className="h-4 w-4 mr-1" /> Add Batch
                                   </Button>
                                 </div>
-                                {(getActiveTabPayload().admissions || []).map(
-                                  (adm: any, idx: number) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-center border p-3 rounded-lg bg-muted/5"
-                                    >
-                                      <Input
-                                        placeholder="e.g. Admissions 2025"
-                                        value={adm.label || ""}
-                                        onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload()
-                                              .admissions || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            label: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            admissions: next,
-                                          });
-                                        }}
-                                      />
-                                      <Select
-                                        value={adm.status || "upcoming"}
-                                        onValueChange={(val) => {
-                                          const next = [
-                                            ...(getActiveTabPayload()
-                                              .admissions || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            status: val,
-                                          };
-                                          updateActiveTabPayload({
-                                            admissions: next,
-                                          });
-                                        }}
-                                      >
-                                        <SelectTrigger className="w-[180px]">
-                                          <SelectValue placeholder="Status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="open">
-                                            Open
-                                          </SelectItem>
-                                          <SelectItem value="upcoming">
-                                            Upcoming
-                                          </SelectItem>
-                                          <SelectItem value="closed">
-                                            Closed
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                          const next = (
-                                            getActiveTabPayload().admissions ||
-                                            []
-                                          ).filter(
-                                            (_: any, i: number) => i !== idx,
-                                          );
-                                          updateActiveTabPayload({
-                                            admissions: next,
-                                          });
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
+                                {(
+                                  getActiveTabPayload().admission_batches || []
+                                ).map((batch: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="border p-4 rounded-lg space-y-3 bg-muted/5"
+                                  >
+                                    <div className="grid gap-3 grid-cols-3">
+                                      <div>
+                                        <Label className="text-xs">Label</Label>
+                                        <Input
+                                          placeholder="e.g. Admissions 2025"
+                                          value={batch.label || ""}
+                                          onChange={(e) => {
+                                            const next = [
+                                              ...(getActiveTabPayload()
+                                                .admission_batches || []),
+                                            ];
+                                            next[idx] = {
+                                              ...next[idx],
+                                              label: e.target.value,
+                                            };
+                                            updateActiveTabPayload({
+                                              admission_batches: next,
+                                            });
+                                          }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">
+                                          Status
+                                        </Label>
+                                        <Select
+                                          value={batch.status || "upcoming"}
+                                          onValueChange={(val) => {
+                                            const next = [
+                                              ...(getActiveTabPayload()
+                                                .admission_batches || []),
+                                            ];
+                                            next[idx] = {
+                                              ...next[idx],
+                                              status: val,
+                                            };
+                                            updateActiveTabPayload({
+                                              admission_batches: next,
+                                            });
+                                          }}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Status" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="open">
+                                              Open
+                                            </SelectItem>
+                                            <SelectItem value="upcoming">
+                                              Upcoming
+                                            </SelectItem>
+                                            <SelectItem value="closed">
+                                              Closed
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="flex items-end">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            const next = (
+                                              getActiveTabPayload()
+                                                .admission_batches || []
+                                            ).filter(
+                                              (_: any, i: number) => i !== idx,
+                                            );
+                                            updateActiveTabPayload({
+                                              admission_batches: next,
+                                            });
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                  ),
-                                )}
+                                    <div className="border-t pt-3 space-y-2">
+                                      <h5 className="font-semibold text-xs">
+                                        Banner Settings
+                                      </h5>
+                                      <div className="grid gap-2 grid-cols-4">
+                                        <div>
+                                          <Label className="text-xs">Tag</Label>
+                                          <Input
+                                            placeholder="e.g. ADMISSIONS OPEN"
+                                            value={batch.banner?.tag || ""}
+                                            onChange={(e) => {
+                                              const next = [
+                                                ...(getActiveTabPayload()
+                                                  .admission_batches || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                banner: {
+                                                  ...(next[idx].banner || {}),
+                                                  tag: e.target.value,
+                                                },
+                                              };
+                                              updateActiveTabPayload({
+                                                admission_batches: next,
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs">
+                                            Message
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Limited seats..."
+                                            value={batch.banner?.message || ""}
+                                            onChange={(e) => {
+                                              const next = [
+                                                ...(getActiveTabPayload()
+                                                  .admission_batches || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                banner: {
+                                                  ...(next[idx].banner || {}),
+                                                  message: e.target.value,
+                                                },
+                                              };
+                                              updateActiveTabPayload({
+                                                admission_batches: next,
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs">
+                                            Progress %
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 90"
+                                            value={
+                                              batch.banner
+                                                ?.progress_percentage ?? ""
+                                            }
+                                            onChange={(e) => {
+                                              const next = [
+                                                ...(getActiveTabPayload()
+                                                  .admission_batches || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                banner: {
+                                                  ...(next[idx].banner || {}),
+                                                  progress_percentage: e.target
+                                                    .value
+                                                    ? Number(e.target.value)
+                                                    : 0,
+                                                },
+                                              };
+                                              updateActiveTabPayload({
+                                                admission_batches: next,
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex items-end gap-2">
+                                          <input
+                                            type="checkbox"
+                                            checked={
+                                              batch.banner?.enabled || false
+                                            }
+                                            onChange={(e) => {
+                                              const next = [
+                                                ...(getActiveTabPayload()
+                                                  .admission_batches || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                banner: {
+                                                  ...(next[idx].banner || {}),
+                                                  enabled: e.target.checked,
+                                                },
+                                              };
+                                              updateActiveTabPayload({
+                                                admission_batches: next,
+                                              });
+                                            }}
+                                            className="w-4 h-4"
+                                          />
+                                          <Label className="text-xs cursor-pointer">
+                                            Enabled
+                                          </Label>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
 
-                              {/* Key Dates Array */}
+                              {/* Key Dates */}
                               <div className="space-y-3 pt-4 border-t">
                                 <div className="flex justify-between items-center">
-                                  <Label className="font-bold">Key Dates</Label>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const next = [
-                                        ...(getActiveTabPayload().key_dates ||
-                                          []),
-                                        { label: "", date: "" },
-                                      ];
-                                      updateActiveTabPayload({
-                                        key_dates: next,
-                                      });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" /> Add Key
-                                    Date
-                                  </Button>
-                                </div>
-                                {(getActiveTabPayload().key_dates || []).map(
-                                  (kd: any, idx: number) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-center border p-3 rounded-lg bg-muted/5"
-                                    >
-                                      <Input
-                                        placeholder="Date Label (e.g. Admission Deadline)"
-                                        value={kd.label || ""}
-                                        onChange={(e) => {
-                                          const next = [
+                                  <div>
+                                    <Label className="font-bold">
+                                      Key Dates
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                      Title
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Input
+                                      placeholder="Title"
+                                      className="w-60"
+                                      value={
+                                        getActiveTabPayload().keyDates?.title ||
+                                        ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          keyDates: {
                                             ...(getActiveTabPayload()
-                                              .key_dates || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            label: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            key_dates: next,
-                                          });
-                                        }}
-                                      />
+                                              .keyDates || {}),
+                                            title: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const next = [
+                                          ...(getActiveTabPayload().keyDates
+                                            ?.items || []),
+                                          {
+                                            date: "",
+                                            icon: "",
+                                            label: "",
+                                            status: "",
+                                            status_color: "",
+                                          },
+                                        ];
+                                        updateActiveTabPayload({
+                                          keyDates: {
+                                            ...(getActiveTabPayload()
+                                              .keyDates || {}),
+                                            items: next,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4 mr-1" /> Add Date
+                                    </Button>
+                                  </div>
+                                </div>
+                                {(
+                                  getActiveTabPayload().keyDates?.items || []
+                                ).map((kd: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="border p-3 rounded-lg space-y-2 bg-muted/5"
+                                  >
+                                    <div className="grid gap-2 grid-cols-6">
                                       <Input
-                                        placeholder="Date (e.g. 15th August 2025)"
+                                        placeholder="Date"
                                         value={kd.date || ""}
                                         onChange={(e) => {
                                           const next = [
-                                            ...(getActiveTabPayload()
-                                              .key_dates || []),
+                                            ...(getActiveTabPayload().keyDates
+                                              ?.items || []),
                                           ];
                                           next[idx] = {
                                             ...next[idx],
                                             date: e.target.value,
                                           };
                                           updateActiveTabPayload({
-                                            key_dates: next,
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
                                           });
                                         }}
+                                        className="col-span-1"
+                                      />
+                                      <Input
+                                        placeholder="Icon URL"
+                                        value={kd.icon || ""}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload().keyDates
+                                              ?.items || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            icon: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
+                                          });
+                                        }}
+                                        className="col-span-2"
+                                      />
+                                      <Input
+                                        placeholder="Label"
+                                        value={kd.label || ""}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload().keyDates
+                                              ?.items || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            label: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
+                                          });
+                                        }}
+                                        className="col-span-1"
+                                      />
+                                      <Input
+                                        placeholder="Status"
+                                        value={kd.status || ""}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload().keyDates
+                                              ?.items || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            status: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
+                                          });
+                                        }}
+                                        className="col-span-1"
                                       />
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
+                                        className="col-span-1"
                                         onClick={() => {
                                           const next = (
-                                            getActiveTabPayload().key_dates ||
-                                            []
+                                            getActiveTabPayload().keyDates
+                                              ?.items || []
                                           ).filter(
                                             (_: any, i: number) => i !== idx,
                                           );
                                           updateActiveTabPayload({
-                                            key_dates: next,
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
                                           });
                                         }}
                                       >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
                                     </div>
-                                  ),
-                                )}
+                                    <div className="flex gap-2 items-center">
+                                      <Input
+                                        placeholder="Status Color"
+                                        value={kd.status_color || ""}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload().keyDates
+                                              ?.items || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            status_color: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            keyDates: {
+                                              ...(getActiveTabPayload()
+                                                .keyDates || {}),
+                                              items: next,
+                                            },
+                                          });
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           )}
