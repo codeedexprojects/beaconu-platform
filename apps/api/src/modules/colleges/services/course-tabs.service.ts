@@ -1701,9 +1701,47 @@ export class CourseTabsService {
     if (!course) throw new NotFoundError("Course not found");
 
     const tabs = getCourseSetupTabsFromMetadata(course.metadata);
-    const courseInfo = normalizeCourseInfoData(
+    const courseInfoRaw = asRecord(
       getSetupTabDataFromMetadata(course.metadata, "course_info"),
     );
+
+    // Merge individual tab columns as fallbacks when metadata course_info is sparse
+    const col = course as Record<string, unknown>;
+    const merged: Record<string, unknown> = { ...courseInfoRaw };
+
+    const columnFields = [
+      "highlights",
+      "accreditations",
+      "keyDates",
+      "curriculum",
+      "courseStructure",
+      "valueAddedCourses",
+      "careerOpportunities",
+      "higherEducationCertifications",
+      "flexibleExitOptions",
+      "classTimings",
+      "industryTools",
+      "labFacilities",
+      "roomFacilities",
+      "featuredAlumni",
+      "faqs",
+    ] as const;
+
+    for (const field of columnFields) {
+      if (isEmptyValue(merged[field]) && !isEmptyValue(col[field])) {
+        merged[field] = col[field];
+      }
+    }
+
+    // Use course-level duration/studyMode as fallbacks for quick_info overview
+    if (isEmptyValue(merged.overview)) {
+      merged.overview = {
+        duration: course.duration ?? "",
+        study_mode: (course as Record<string, unknown>).studyMode ?? "",
+      };
+    }
+
+    const courseInfo = normalizeCourseInfoData(merged);
 
     return {
       id: course.id,
