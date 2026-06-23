@@ -94,6 +94,18 @@ export const reviewsQuerySchema = z.object({
     .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
 });
 
+export const otherCoursesOfferedQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+  search: z.string().trim().optional(),
+});
+
 // ── Update Body Schema ───────────────────────────────────────────────────────
 
 export const updateCourseTabSchema = z.object({
@@ -111,4 +123,7 @@ export type PublicCourseDetailParam = z.infer<
 export type UpdateCourseTabData = z.infer<typeof updateCourseTabSchema>;
 export type EligibilityCriteriaQuery = z.infer<
   typeof eligibilityCriteriaQuerySchema
+>;
+export type OtherCoursesOfferedQuery = z.infer<
+  typeof otherCoursesOfferedQuerySchema
 >;
