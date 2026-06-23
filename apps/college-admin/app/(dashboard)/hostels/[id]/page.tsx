@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft, Plus, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store";
+import { getPortalPath, getCollegeSlugFromPath } from "@/lib/portal-path";
 
 import {
   Card,
@@ -33,7 +35,12 @@ const ADDON_SERVICE_TYPES = ["laundry", "gym", "parking", "other"] as const;
 export default function HostelDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const hostelId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const collegeSlug =
+    typeof window === "undefined"
+      ? user?.collegeSlug || null
+      : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
   const { data: hostels = [], isLoading } = useCollegeHostels();
   const hostel = hostels.find((h) => h.id === hostelId);
@@ -153,6 +160,7 @@ export default function HostelDetailPage() {
   const [addonPlanLabel, setAddonPlanLabel] = useState("");
   const [addonPlanPrice, setAddonPlanPrice] = useState("");
   const [addonNotes, setAddonNotes] = useState("");
+  const [addonPlanFeatureTags, setAddonPlanFeatureTags] = useState("");
 
   if (isLoading) {
     return (
@@ -167,7 +175,10 @@ export default function HostelDetailPage() {
       <div className="py-12 text-center text-muted-foreground">
         Hostel not found.
         <div className="mt-4">
-          <Button variant="outline" onClick={() => router.push("/hostels")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push(getPortalPath(collegeSlug, "/hostels"))}
+          >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Hostels
           </Button>
         </div>
@@ -361,7 +372,14 @@ export default function HostelDetailPage() {
           serviceType: addonType,
           name: addonName.trim(),
           plans: [
-            { label: addonPlanLabel.trim(), price: Number(addonPlanPrice) },
+            {
+              label: addonPlanLabel.trim(),
+              price: Number(addonPlanPrice),
+              feature_tags: addonPlanFeatureTags
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            },
           ],
           notes: addonNotes.trim() || undefined,
         },
@@ -373,6 +391,7 @@ export default function HostelDetailPage() {
           setAddonPlanLabel("");
           setAddonPlanPrice("");
           setAddonNotes("");
+          setAddonPlanFeatureTags("");
         },
       },
     );
@@ -389,7 +408,7 @@ export default function HostelDetailPage() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => router.push("/hostels")}
+          onClick={() => router.push(getPortalPath(collegeSlug, "/hostels"))}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -959,7 +978,14 @@ export default function HostelDetailPage() {
                         <p className="text-sm font-semibold">{service.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {service.plans
-                            .map((p) => `${p.label}: ₹${p.price}`)
+                            .map((p) => {
+                              const base = `${p.label}: ₹${p.price}`;
+                              const tags =
+                                p.feature_tags && p.feature_tags.length > 0
+                                  ? ` (${p.feature_tags.join(", ")})`
+                                  : "";
+                              return base + tags;
+                            })
                             .join(", ")}
                         </p>
                       </div>
@@ -1009,6 +1035,12 @@ export default function HostelDetailPage() {
               placeholder="Price"
               value={addonPlanPrice}
               onChange={(e) => setAddonPlanPrice(e.target.value)}
+            />
+            <Input
+              placeholder="Feature tags (comma separated, e.g. Detergent, Ironing)"
+              className="sm:col-span-2"
+              value={addonPlanFeatureTags}
+              onChange={(e) => setAddonPlanFeatureTags(e.target.value)}
             />
             <Input
               placeholder="Note (e.g. Drop off on weekends)"

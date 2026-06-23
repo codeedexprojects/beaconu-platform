@@ -427,6 +427,7 @@ export interface HostelMessPlanDto {
 export interface HostelAddonPlanItemDto {
   label: string;
   price: number;
+  feature_tags?: string[];
 }
 
 export interface HostelAddonServiceDto {
