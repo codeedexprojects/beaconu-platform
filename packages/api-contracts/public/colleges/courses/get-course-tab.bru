@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: library
+  tabName: other_courses_offered
 }
 
 docs {
@@ -35,7 +35,29 @@ docs {
     accreditations, key_dates, demographics
   
   Returns 404 if the tab name is invalid or the course is not found.
-  
+
+  --- other_courses_offered tab response shape ---
+  Grouped by study level. Capped at the first 10 other active courses
+  offered by the college (inline preview only). For the full paginated +
+  searchable list, use List Other Courses Offered.
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "sectionName": "other_courses_offered",
+      "sectionId": "other_courses_offered",
+      "sectionKey": "other_courses_offered",
+      "list": [
+        {
+          "studyLevel": { "id": "SVL-1", "name": "Short term", "slug": "short-term" },
+          "courses": [
+            { "id": "CRS-1", "name": "Bachelor of Computer Application (BCA)", "duration": "3 Years", "fee": "INR 45,000" }
+          ]
+        }
+      ]
+    }
+  }
+
   --- fees tab response shape ---
   {
     "success": true,
