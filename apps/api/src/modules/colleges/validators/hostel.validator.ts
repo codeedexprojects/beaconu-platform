@@ -13,12 +13,27 @@ export const updateHostelSchema = z.object({
   description: z.string().trim().optional().nullable(),
   totalBeds: z.number().int().positive().optional().nullable(),
   coverImageUrl: z.string().trim().url().optional().nullable(),
+  tags: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1),
+        color: z.string().trim().optional(),
+      }),
+    )
+    .optional(),
+  badge: z.string().trim().optional().nullable(),
+  safetyTier: z.string().trim().optional().nullable(),
   wardenInfo: z
     .object({
       name: z.string().trim().optional(),
       phone: z.string().trim().optional(),
       whatsapp: z.string().trim().optional(),
       email: z.string().trim().email().optional(),
+      photo: z.string().trim().url().optional(),
+      designation: z.string().trim().optional(),
+      safetyFeatures: z
+        .array(z.object({ label: z.string().trim().min(1) }))
+        .optional(),
     })
     .optional(),
   amenities: z
@@ -40,6 +55,10 @@ export const updateHostelSchema = z.object({
   locationInfo: z
     .object({
       address: z.string().trim().optional(),
+      addressLine2: z.string().trim().optional(),
+      latitude: z.number().min(-90).max(90).optional(),
+      longitude: z.number().min(-180).max(180).optional(),
+      mapLink: z.string().trim().url().optional(),
       nearbyEssentials: z
         .array(
           z.object({
@@ -48,6 +67,17 @@ export const updateHostelSchema = z.object({
             distance: z.string().trim().min(1),
           }),
         )
+        .optional(),
+      collegeTransport: z
+        .object({
+          description: z.string().trim().optional(),
+          busStopNote: z.string().trim().optional(),
+        })
+        .optional(),
+      map: z
+        .object({
+          thumbnail: z.string().trim().url().optional(),
+        })
         .optional(),
     })
     .optional(),
@@ -62,6 +92,7 @@ export const roomTypeSchema = z.object({
   monthlyPlanPrice: z.number().nonnegative().optional(),
   admissionFee: z.number().nonnegative().optional(),
   securityDeposit: z.number().nonnegative().optional(),
+  photos: z.array(z.string().trim().url()).optional(),
 });
 
 export const messPlanSchema = z.object({
@@ -98,21 +129,14 @@ export const createHostelSchema = z.object({
   description: z.string().optional().nullable(),
   totalBeds: z.number().int().positive().optional().nullable(),
   coverImageUrl: z.string().trim().url().optional().nullable(),
+  tags: updateHostelSchema.shape.tags,
+  badge: updateHostelSchema.shape.badge,
+  safetyTier: updateHostelSchema.shape.safetyTier,
   wardenInfo: updateHostelSchema.shape.wardenInfo,
   amenities: updateHostelSchema.shape.amenities,
   rules: updateHostelSchema.shape.rules,
   locationInfo: updateHostelSchema.shape.locationInfo,
-  roomTypes: z
-    .array(
-      z.object({
-        name: z.string().trim().min(2),
-        totalBeds: z.number().int().positive(),
-        annualPlanPrice: z.number().nonnegative().optional(),
-        monthlyPlanPrice: z.number().nonnegative().optional(),
-        securityDeposit: z.number().nonnegative().optional(),
-      }),
-    )
-    .optional(),
+  roomTypes: z.array(roomTypeSchema).optional(),
   messPlans: z.array(messPlanSchema).optional(),
   addonServices: z.array(addonServiceSchema).optional(),
 });
