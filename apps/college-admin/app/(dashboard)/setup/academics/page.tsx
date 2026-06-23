@@ -360,12 +360,13 @@ export default function SetupAcademicsPage() {
     if (!editingCourse?.id) return;
 
     const tabPayload = localTabState[activeTab] || {};
+    const dataWithId = { id: activeTab, ...tabPayload };
 
     updateTab(
       {
         courseId: editingCourse.id,
         tabName: activeTab,
-        data: tabPayload,
+        data: dataWithId,
       },
       {
         onSuccess: () => {
@@ -583,6 +584,7 @@ export default function SetupAcademicsPage() {
         ...(getActiveTabPayload().financial_concessions || {}),
         items: next,
         total_types: next.length,
+        total_types_label: `${next.length} TYPES`,
       },
     });
 
@@ -598,6 +600,13 @@ export default function SetupAcademicsPage() {
       {
         name: "",
         discount_percent: 0,
+        discount_label: "0% OFF",
+        accent_color: "black",
+        expanded: true,
+        details_cta: {
+          label: "SHOW LESS",
+          icon: "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
+        },
         details: {
           eligibility_criteria: [],
           scholarship_amount: "",
@@ -2627,23 +2636,59 @@ export default function SetupAcademicsPage() {
                                 <h4 className="font-bold text-sm text-foreground">
                                   Bonus Certification
                                 </h4>
-                                <div className="space-y-3">
+                                <div className="grid gap-3 md:grid-cols-2">
                                   <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Certification Name
-                                    </Label>
+                                    <Label className="text-xs">Title</Label>
                                     <Input
-                                      placeholder="e.g. Professional Scrum Master"
+                                      placeholder="e.g. Tally Prime Certification"
                                       value={
                                         getActiveTabPayload()
-                                          .bonus_certification?.name || ""
+                                          .bonus_certification?.title || ""
                                       }
                                       onChange={(e) =>
                                         updateActiveTabPayload({
                                           bonus_certification: {
                                             ...(getActiveTabPayload()
                                               .bonus_certification || {}),
-                                            name: e.target.value,
+                                            title: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Tag</Label>
+                                    <Input
+                                      placeholder="e.g. BONUS CERTIFICATION"
+                                      value={
+                                        getActiveTabPayload()
+                                          .bonus_certification?.tag || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          bonus_certification: {
+                                            ...(getActiveTabPayload()
+                                              .bonus_certification || {}),
+                                            tag: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">CTA Label</Label>
+                                    <Input
+                                      placeholder="e.g. View Certificate Details"
+                                      value={
+                                        getActiveTabPayload()
+                                          .bonus_certification?.cta_label || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          bonus_certification: {
+                                            ...(getActiveTabPayload()
+                                              .bonus_certification || {}),
+                                            cta_label: e.target.value,
                                           },
                                         })
                                       }
@@ -2651,42 +2696,42 @@ export default function SetupAcademicsPage() {
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">
-                                      Certification Note / Description
+                                      Link / URL
                                     </Label>
                                     <Input
-                                      placeholder="e.g. Included as part of semester 3 curricula"
+                                      placeholder="https://example.com/certifications/tally-prime"
                                       value={
                                         getActiveTabPayload()
-                                          .bonus_certification?.note || ""
+                                          .bonus_certification?.link || ""
                                       }
                                       onChange={(e) =>
                                         updateActiveTabPayload({
                                           bonus_certification: {
                                             ...(getActiveTabPayload()
                                               .bonus_certification || {}),
-                                            note: e.target.value,
+                                            link: e.target.value,
                                           },
                                         })
                                       }
                                     />
                                   </div>
-                                  <div className="space-y-1">
+                                  <div className="space-y-1 md:col-span-2">
                                     <Label className="text-xs">
-                                      Certificate / Syllabus Link
+                                      Description
                                     </Label>
                                     <Input
-                                      placeholder="https://example.com/syllabus.pdf"
+                                      placeholder="e.g. Included with Finance specialization at no extra cost."
                                       value={
                                         getActiveTabPayload()
-                                          .bonus_certification
-                                          ?.certificate_link || ""
+                                          .bonus_certification?.description ||
+                                        ""
                                       }
                                       onChange={(e) =>
                                         updateActiveTabPayload({
                                           bonus_certification: {
                                             ...(getActiveTabPayload()
                                               .bonus_certification || {}),
-                                            certificate_link: e.target.value,
+                                            description: e.target.value,
                                           },
                                         })
                                       }
@@ -2998,26 +3043,23 @@ export default function SetupAcademicsPage() {
                               {/* Student Forum Object */}
                               <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
                                 <h4 className="font-bold text-sm text-foreground">
-                                  Student Forum & Admissions Contact
+                                  Student Forum
                                 </h4>
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="grid gap-3 md:grid-cols-2">
                                   <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Admission Team Contact
-                                    </Label>
+                                    <Label className="text-xs">Title</Label>
                                     <Input
-                                      placeholder="e.g. +91 99999 88888"
+                                      placeholder="e.g. Student Forum"
                                       value={
                                         getActiveTabPayload().student_forum
-                                          ?.admission_team_contact || ""
+                                          ?.title || ""
                                       }
                                       onChange={(e) =>
                                         updateActiveTabPayload({
                                           student_forum: {
                                             ...(getActiveTabPayload()
                                               .student_forum || {}),
-                                            admission_team_contact:
-                                              e.target.value,
+                                            title: e.target.value,
                                           },
                                         })
                                       }
@@ -3025,20 +3067,80 @@ export default function SetupAcademicsPage() {
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">
-                                      Ex-Student Chat / Community Link
+                                      Forum Link / URL
                                     </Label>
                                     <Input
-                                      placeholder="https://community.example.com"
+                                      placeholder="https://example.com/forum/ask-admission-team"
                                       value={
                                         getActiveTabPayload().student_forum
-                                          ?.ex_student_chat || ""
+                                          ?.link || ""
                                       }
                                       onChange={(e) =>
                                         updateActiveTabPayload({
                                           student_forum: {
                                             ...(getActiveTabPayload()
                                               .student_forum || {}),
-                                            ex_student_chat: e.target.value,
+                                            link: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">CTA Label</Label>
+                                    <Input
+                                      placeholder="e.g. Ask the Admission Team"
+                                      value={
+                                        getActiveTabPayload().student_forum
+                                          ?.cta_label || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          student_forum: {
+                                            ...(getActiveTabPayload()
+                                              .student_forum || {}),
+                                            cta_label: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-3 pt-1">
+                                    <Label className="text-xs">Enabled</Label>
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 accent-indigo-600"
+                                      checked={
+                                        getActiveTabPayload().student_forum
+                                          ?.enabled ?? true
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          student_forum: {
+                                            ...(getActiveTabPayload()
+                                              .student_forum || {}),
+                                            enabled: e.target.checked,
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1 md:col-span-2">
+                                    <Label className="text-xs">
+                                      Description
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. Have queries? Connect directly with our college team."
+                                      value={
+                                        getActiveTabPayload().student_forum
+                                          ?.description || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          student_forum: {
+                                            ...(getActiveTabPayload()
+                                              .student_forum || {}),
+                                            description: e.target.value,
                                           },
                                         })
                                       }
@@ -3054,188 +3156,828 @@ export default function SetupAcademicsPage() {
                       {/* ADMISSION POLICY */}
                       {activeTab === "admission_policy" && (
                         <div className="space-y-6">
-                          <div className="space-y-2">
-                            <Label>Admission Policy Summary</Label>
-                            <Textarea
-                              rows={3}
-                              placeholder="Describe the overall admission flow..."
-                              value={getActiveTabPayload().policySummary || ""}
-                              onChange={(e) =>
-                                updateActiveTabPayload({
-                                  policySummary: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-2 pt-4 border-t">
+                          {/* Header fields */}
+                          <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-1">
-                              <Label>
-                                National Level Entrance exams accepted
-                              </Label>
+                              <Label>Section Title</Label>
                               <Input
-                                placeholder="JEE Main, NEET"
-                                value={
-                                  getActiveTabPayload().entranceExams?.nationalLevel?.join(
-                                    ", ",
-                                  ) || ""
-                                }
+                                placeholder="e.g. Admission Policy"
+                                value={getActiveTabPayload().title || ""}
                                 onChange={(e) =>
                                   updateActiveTabPayload({
-                                    entranceExams: {
-                                      ...(getActiveTabPayload().entranceExams ||
-                                        {}),
-                                      nationalLevel: e.target.value
-                                        .split(",")
-                                        .map((s) => s.trim())
-                                        .filter(Boolean),
-                                    },
+                                    title: e.target.value,
                                   })
                                 }
                               />
                             </div>
-                            <div className="space-y-1">
-                              <Label>State Level Entrance exams accepted</Label>
-                              <Input
-                                placeholder="KCET, MHT-CET"
-                                value={
-                                  getActiveTabPayload().entranceExams?.stateLevel?.join(
-                                    ", ",
-                                  ) || ""
-                                }
+                            <div className="flex items-center gap-3 pt-5">
+                              <Label className="text-xs">Enabled</Label>
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 accent-indigo-600"
+                                checked={getActiveTabPayload().enabled ?? true}
                                 onChange={(e) =>
                                   updateActiveTabPayload({
-                                    entranceExams: {
-                                      ...(getActiveTabPayload().entranceExams ||
-                                        {}),
-                                      stateLevel: e.target.value
-                                        .split(",")
-                                        .map((s) => s.trim())
-                                        .filter(Boolean),
-                                    },
+                                    enabled: e.target.checked,
                                   })
                                 }
                               />
                             </div>
                           </div>
 
-                          <div className="space-y-4 pt-4 border-t">
-                            <div className="space-y-1">
-                              <Label>Quota Options (Comma separated)</Label>
-                              <Input
-                                placeholder="e.g. Management Quota, Merit Quota, NRI Quota"
-                                value={
-                                  getActiveTabPayload().quota_options?.join(
-                                    ", ",
-                                  ) || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    quota_options: e.target.value
-                                      .split(",")
-                                      .map((s) => s.trim())
-                                      .filter(Boolean),
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                          {/* Seat Matrix */}
+                          <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+                            <div className="flex justify-between items-center">
                               <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                <h4 className="font-bold text-sm text-foreground">
                                   Seat Matrix
-                                </CardTitle>
-                                <CardDescription>
-                                  Total and filled seats split by
-                                  quotas/categories.
-                                </CardDescription>
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Total and open seats split by quota/category.
+                                </p>
                               </div>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  addTabListItem("seat_matrix", {
-                                    quota: "",
-                                    total_seats: "",
-                                    filled_seats: "",
+                                onClick={() => {
+                                  const sm =
+                                    getActiveTabPayload().seat_matrix || {};
+                                  const rows = Array.isArray((sm as any).rows)
+                                    ? (sm as any).rows
+                                    : [];
+                                  updateActiveTabPayload({
+                                    seat_matrix: {
+                                      ...(sm as any),
+                                      rows: [
+                                        ...rows,
+                                        {
+                                          quota_category: "",
+                                          total: "",
+                                          open: "",
+                                        },
+                                      ],
+                                    },
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Row
+                              </Button>
+                            </div>
+
+                            {/* Seat matrix title & columns */}
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Table Title</Label>
+                                <Input
+                                  placeholder="e.g. Seat Matrix"
+                                  value={
+                                    (getActiveTabPayload().seat_matrix as any)
+                                      ?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      seat_matrix: {
+                                        ...((getActiveTabPayload()
+                                          .seat_matrix as any) || {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">
+                                  Columns (comma-separated)
+                                </Label>
+                                <Input
+                                  placeholder="Quota Category, Total, Open"
+                                  value={
+                                    Array.isArray(
+                                      (getActiveTabPayload().seat_matrix as any)
+                                        ?.columns,
+                                    )
+                                      ? (
+                                          getActiveTabPayload()
+                                            .seat_matrix as any
+                                        ).columns.join(", ")
+                                      : ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      seat_matrix: {
+                                        ...((getActiveTabPayload()
+                                          .seat_matrix as any) || {}),
+                                        columns: e.target.value
+                                          .split(",")
+                                          .map((s) => s.trim())
+                                          .filter(Boolean),
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            {/* Rows */}
+                            <div className="space-y-2">
+                              {(Array.isArray(
+                                (getActiveTabPayload().seat_matrix as any)
+                                  ?.rows,
+                              )
+                                ? (getActiveTabPayload().seat_matrix as any)
+                                    .rows
+                                : []
+                              ).map((row: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-2 items-center border p-2 rounded-lg bg-muted/5"
+                                >
+                                  <Input
+                                    className="flex-1"
+                                    placeholder="Quota Category (e.g. Government)"
+                                    value={row.quota_category || ""}
+                                    onChange={(e) => {
+                                      const rows = [
+                                        ...((
+                                          getActiveTabPayload()
+                                            .seat_matrix as any
+                                        )?.rows || []),
+                                      ];
+                                      rows[idx] = {
+                                        ...rows[idx],
+                                        quota_category: e.target.value,
+                                      };
+                                      updateActiveTabPayload({
+                                        seat_matrix: {
+                                          ...((getActiveTabPayload()
+                                            .seat_matrix as any) || {}),
+                                          rows,
+                                        },
+                                      });
+                                    }}
+                                  />
+                                  <Input
+                                    className="w-28"
+                                    type="number"
+                                    placeholder="Total"
+                                    value={row.total ?? ""}
+                                    onChange={(e) => {
+                                      const rows = [
+                                        ...((
+                                          getActiveTabPayload()
+                                            .seat_matrix as any
+                                        )?.rows || []),
+                                      ];
+                                      rows[idx] = {
+                                        ...rows[idx],
+                                        total: e.target.value
+                                          ? Number(e.target.value)
+                                          : "",
+                                      };
+                                      updateActiveTabPayload({
+                                        seat_matrix: {
+                                          ...((getActiveTabPayload()
+                                            .seat_matrix as any) || {}),
+                                          rows,
+                                        },
+                                      });
+                                    }}
+                                  />
+                                  <Input
+                                    className="w-28"
+                                    type="number"
+                                    placeholder="Open"
+                                    value={row.open ?? ""}
+                                    onChange={(e) => {
+                                      const rows = [
+                                        ...((
+                                          getActiveTabPayload()
+                                            .seat_matrix as any
+                                        )?.rows || []),
+                                      ];
+                                      rows[idx] = {
+                                        ...rows[idx],
+                                        open: e.target.value
+                                          ? Number(e.target.value)
+                                          : "",
+                                      };
+                                      updateActiveTabPayload({
+                                        seat_matrix: {
+                                          ...((getActiveTabPayload()
+                                            .seat_matrix as any) || {}),
+                                          rows,
+                                        },
+                                      });
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const rows = (
+                                        (
+                                          getActiveTabPayload()
+                                            .seat_matrix as any
+                                        )?.rows || []
+                                      ).filter(
+                                        (_: any, i: number) => i !== idx,
+                                      );
+                                      updateActiveTabPayload({
+                                        seat_matrix: {
+                                          ...((getActiveTabPayload()
+                                            .seat_matrix as any) || {}),
+                                          rows,
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              ))}
+                              {!(getActiveTabPayload().seat_matrix as any)?.rows
+                                ?.length && (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No seat rows added yet.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Quota Options */}
+                          <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="font-bold text-sm text-foreground">
+                                  Quota Options
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Dropdown options for quota category filter.
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const qo =
+                                    getActiveTabPayload().quota_options || {};
+                                  const opts = Array.isArray(
+                                    (qo as any).options,
+                                  )
+                                    ? (qo as any).options
+                                    : [];
+                                  updateActiveTabPayload({
+                                    quota_options: {
+                                      ...(qo as any),
+                                      options: [
+                                        ...opts,
+                                        { label: "", value: "" },
+                                      ],
+                                    },
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Option
+                              </Button>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Dropdown Title</Label>
+                              <Input
+                                placeholder="e.g. Select Quota Category"
+                                value={
+                                  (getActiveTabPayload().quota_options as any)
+                                    ?.title || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    quota_options: {
+                                      ...((getActiveTabPayload()
+                                        .quota_options as any) || {}),
+                                      title: e.target.value,
+                                    },
                                   })
                                 }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Seat Row
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("seat_matrix").length === 0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No seat matrix items defined yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList("seat_matrix").map(
-                                    (item, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Quota / Category Name (e.g. Merit Quota)"
-                                          value={item.quota || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "seat_matrix",
-                                              idx,
-                                              { quota: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="w-32"
-                                          placeholder="Total Seats (e.g. 120)"
-                                          value={item.total_seats || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "seat_matrix",
-                                              idx,
-                                              { total_seats: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="w-32"
-                                          placeholder="Filled Seats (e.g. 102)"
-                                          value={item.filled_seats || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "seat_matrix",
-                                              idx,
-                                              { filled_seats: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            removeTabListItem(
-                                              "seat_matrix",
-                                              idx,
-                                            )
-                                          }
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    ),
-                                  )}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              {(Array.isArray(
+                                (getActiveTabPayload().quota_options as any)
+                                  ?.options,
+                              )
+                                ? (getActiveTabPayload().quota_options as any)
+                                    .options
+                                : []
+                              ).map((opt: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-2 items-center"
+                                >
+                                  <Input
+                                    placeholder="Label (e.g. Government Quota)"
+                                    value={opt.label || ""}
+                                    onChange={(e) => {
+                                      const opts = [
+                                        ...((
+                                          getActiveTabPayload()
+                                            .quota_options as any
+                                        )?.options || []),
+                                      ];
+                                      opts[idx] = {
+                                        ...opts[idx],
+                                        label: e.target.value,
+                                      };
+                                      updateActiveTabPayload({
+                                        quota_options: {
+                                          ...((getActiveTabPayload()
+                                            .quota_options as any) || {}),
+                                          options: opts,
+                                        },
+                                      });
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Value (e.g. government_quota)"
+                                    value={opt.value || ""}
+                                    onChange={(e) => {
+                                      const opts = [
+                                        ...((
+                                          getActiveTabPayload()
+                                            .quota_options as any
+                                        )?.options || []),
+                                      ];
+                                      opts[idx] = {
+                                        ...opts[idx],
+                                        value: e.target.value,
+                                      };
+                                      updateActiveTabPayload({
+                                        quota_options: {
+                                          ...((getActiveTabPayload()
+                                            .quota_options as any) || {}),
+                                          options: opts,
+                                        },
+                                      });
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const opts = (
+                                        (
+                                          getActiveTabPayload()
+                                            .quota_options as any
+                                        )?.options || []
+                                      ).filter(
+                                        (_: any, i: number) => i !== idx,
+                                      );
+                                      updateActiveTabPayload({
+                                        quota_options: {
+                                          ...((getActiveTabPayload()
+                                            .quota_options as any) || {}),
+                                          options: opts,
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
                                 </div>
+                              ))}
+                              {!(getActiveTabPayload().quota_options as any)
+                                ?.options?.length && (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No quota options added yet.
+                                </p>
                               )}
-                            </CardContent>
-                          </Card>
+                            </div>
+                          </div>
+
+                          {/* Entrance Exams Accepted */}
+                          <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="font-bold text-sm text-foreground">
+                                  Entrance Exams Accepted
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Group exams by level (National, State,
+                                  Institutional).
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const ee =
+                                    getActiveTabPayload()
+                                      .entrance_exams_accepted || {};
+                                  const levels = Array.isArray(
+                                    (ee as any).levels,
+                                  )
+                                    ? (ee as any).levels
+                                    : [];
+                                  updateActiveTabPayload({
+                                    entrance_exams_accepted: {
+                                      ...(ee as any),
+                                      levels: [
+                                        ...levels,
+                                        { level_label: "", exams: [] },
+                                      ],
+                                    },
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Level
+                              </Button>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Section Title</Label>
+                              <Input
+                                placeholder="e.g. Entrance Exams Accepted"
+                                value={
+                                  (
+                                    getActiveTabPayload()
+                                      .entrance_exams_accepted as any
+                                  )?.title || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    entrance_exams_accepted: {
+                                      ...((getActiveTabPayload()
+                                        .entrance_exams_accepted as any) || {}),
+                                      title: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-4">
+                              {(Array.isArray(
+                                (
+                                  getActiveTabPayload()
+                                    .entrance_exams_accepted as any
+                                )?.levels,
+                              )
+                                ? (
+                                    getActiveTabPayload()
+                                      .entrance_exams_accepted as any
+                                  ).levels
+                                : []
+                              ).map((level: any, li: number) => (
+                                <div
+                                  key={li}
+                                  className="border rounded-lg p-3 space-y-3 bg-background"
+                                >
+                                  <div className="flex gap-2 items-center">
+                                    <Input
+                                      className="flex-1"
+                                      placeholder="Level Label (e.g. NATIONAL LEVEL)"
+                                      value={level.level_label || ""}
+                                      onChange={(e) => {
+                                        const levels = [
+                                          ...((
+                                            getActiveTabPayload()
+                                              .entrance_exams_accepted as any
+                                          )?.levels || []),
+                                        ];
+                                        levels[li] = {
+                                          ...levels[li],
+                                          level_label: e.target.value,
+                                        };
+                                        updateActiveTabPayload({
+                                          entrance_exams_accepted: {
+                                            ...((getActiveTabPayload()
+                                              .entrance_exams_accepted as any) ||
+                                              {}),
+                                            levels,
+                                          },
+                                        });
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const levels = [
+                                          ...((
+                                            getActiveTabPayload()
+                                              .entrance_exams_accepted as any
+                                          )?.levels || []),
+                                        ];
+                                        const exams = Array.isArray(
+                                          levels[li].exams,
+                                        )
+                                          ? levels[li].exams
+                                          : [];
+                                        levels[li] = {
+                                          ...levels[li],
+                                          exams: [
+                                            ...exams,
+                                            {
+                                              name: "",
+                                              exam_code: "",
+                                              code_badge: "",
+                                              min_criteria_label: "",
+                                              min_criteria_value: "",
+                                            },
+                                          ],
+                                        };
+                                        updateActiveTabPayload({
+                                          entrance_exams_accepted: {
+                                            ...((getActiveTabPayload()
+                                              .entrance_exams_accepted as any) ||
+                                              {}),
+                                            levels,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" /> Add Exam
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const levels = (
+                                          (
+                                            getActiveTabPayload()
+                                              .entrance_exams_accepted as any
+                                          )?.levels || []
+                                        ).filter(
+                                          (_: any, i: number) => i !== li,
+                                        );
+                                        updateActiveTabPayload({
+                                          entrance_exams_accepted: {
+                                            ...((getActiveTabPayload()
+                                              .entrance_exams_accepted as any) ||
+                                              {}),
+                                            levels,
+                                          },
+                                        });
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                  <div className="space-y-2 pl-2">
+                                    {(Array.isArray(level.exams)
+                                      ? level.exams
+                                      : []
+                                    ).map((exam: any, ei: number) => (
+                                      <div
+                                        key={ei}
+                                        className="border rounded-lg p-3 space-y-2 bg-muted/5"
+                                      >
+                                        <div className="grid gap-2 md:grid-cols-3">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Exam Name
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Common Admission Test"
+                                              value={exam.name || ""}
+                                              onChange={(e) => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = [
+                                                  ...(levels[li].exams || []),
+                                                ];
+                                                exams[ei] = {
+                                                  ...exams[ei],
+                                                  name: e.target.value,
+                                                };
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Exam Code
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. CAT-105"
+                                              value={exam.exam_code || ""}
+                                              onChange={(e) => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = [
+                                                  ...(levels[li].exams || []),
+                                                ];
+                                                exams[ei] = {
+                                                  ...exams[ei],
+                                                  exam_code: e.target.value,
+                                                };
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Code Badge
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. CAT"
+                                              value={exam.code_badge || ""}
+                                              onChange={(e) => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = [
+                                                  ...(levels[li].exams || []),
+                                                ];
+                                                exams[ei] = {
+                                                  ...exams[ei],
+                                                  code_badge: e.target.value,
+                                                };
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Min Criteria Label
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Min. Percentile"
+                                              value={
+                                                exam.min_criteria_label || ""
+                                              }
+                                              onChange={(e) => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = [
+                                                  ...(levels[li].exams || []),
+                                                ];
+                                                exams[ei] = {
+                                                  ...exams[ei],
+                                                  min_criteria_label:
+                                                    e.target.value,
+                                                };
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Min Criteria Value
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. 85%ile"
+                                              value={
+                                                exam.min_criteria_value || ""
+                                              }
+                                              onChange={(e) => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = [
+                                                  ...(levels[li].exams || []),
+                                                ];
+                                                exams[ei] = {
+                                                  ...exams[ei],
+                                                  min_criteria_value:
+                                                    e.target.value,
+                                                };
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                          <div className="flex items-end">
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() => {
+                                                const levels = [
+                                                  ...((
+                                                    getActiveTabPayload()
+                                                      .entrance_exams_accepted as any
+                                                  )?.levels || []),
+                                                ];
+                                                const exams = (
+                                                  levels[li].exams || []
+                                                ).filter(
+                                                  (_: any, i: number) =>
+                                                    i !== ei,
+                                                );
+                                                levels[li] = {
+                                                  ...levels[li],
+                                                  exams,
+                                                };
+                                                updateActiveTabPayload({
+                                                  entrance_exams_accepted: {
+                                                    ...((getActiveTabPayload()
+                                                      .entrance_exams_accepted as any) ||
+                                                      {}),
+                                                    levels,
+                                                  },
+                                                });
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {!level.exams?.length && (
+                                      <p className="text-xs text-muted-foreground italic pl-1">
+                                        No exams added for this level yet.
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                              {!(
+                                getActiveTabPayload()
+                                  .entrance_exams_accepted as any
+                              )?.levels?.length && (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No exam levels added yet.
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -3493,107 +4235,45 @@ export default function SetupAcademicsPage() {
                       {/* PLACEMENTS */}
                       {activeTab === "placements" && (
                         <div className="space-y-6">
-                          {/* Core Placement Stats Card */}
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-lg font-bold text-indigo-950 flex items-center gap-2">
-                                <Briefcase className="h-5 w-5 text-indigo-600" />
-                                Core Placement Statistics
-                              </CardTitle>
-                              <CardDescription>
-                                Main placement achievements for quick display.
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="grid gap-4 md:grid-cols-3">
-                                <div className="space-y-1">
-                                  <Label>Average Salary Package</Label>
-                                  <Input
-                                    placeholder="e.g. 7.5 LPA"
-                                    value={
-                                      getActiveTabPayload().placement_stats
-                                        ?.averagePackage || ""
-                                    }
-                                    onChange={(e) =>
-                                      updateActiveTabPayload({
-                                        placement_stats: {
-                                          ...(getActiveTabPayload()
-                                            .placement_stats || {}),
-                                          averagePackage: e.target.value,
-                                        },
-                                      })
-                                    }
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label>Highest Salary Package</Label>
-                                  <Input
-                                    placeholder="e.g. 45 LPA"
-                                    value={
-                                      getActiveTabPayload().placement_stats
-                                        ?.highestPackage || ""
-                                    }
-                                    onChange={(e) =>
-                                      updateActiveTabPayload({
-                                        placement_stats: {
-                                          ...(getActiveTabPayload()
-                                            .placement_stats || {}),
-                                          highestPackage: e.target.value,
-                                        },
-                                      })
-                                    }
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label>Placement Percentage</Label>
-                                  <Input
-                                    placeholder="e.g. 96%"
-                                    value={
-                                      getActiveTabPayload().placement_stats
-                                        ?.placementPercentage || ""
-                                    }
-                                    onChange={(e) =>
-                                      updateActiveTabPayload({
-                                        placement_stats: {
-                                          ...(getActiveTabPayload()
-                                            .placement_stats || {}),
-                                          placementPercentage: e.target.value,
-                                        },
-                                      })
-                                    }
-                                  />
-                                </div>
-                              </div>
+                          {/* Header */}
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1">
+                              <Label>Section Title</Label>
+                              <Input
+                                placeholder="e.g. Placements"
+                                value={getActiveTabPayload().title || ""}
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    title: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="flex items-center gap-3 pt-5">
+                              <Label className="text-xs">Enabled</Label>
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 accent-indigo-600"
+                                checked={getActiveTabPayload().enabled ?? true}
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    enabled: e.target.checked,
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
 
-                              <div className="space-y-1 pt-2">
-                                <Label>
-                                  Placement Growth Summary Description
-                                </Label>
-                                <Textarea
-                                  placeholder="Highlight top recruiting companies and statistics growth..."
-                                  value={
-                                    getActiveTabPayload().growthSummary || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateActiveTabPayload({
-                                      growthSummary: e.target.value,
-                                    })
-                                  }
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-
-                          {/* Custom Summary Stats Card */}
+                          {/* Summary Stats */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
                                 <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Custom Summary Stats
+                                  Summary Stats
                                 </CardTitle>
                                 <CardDescription>
-                                  Add extra placement data points (e.g. Median
-                                  Package, Total Recruiters).
+                                  Key placement numbers shown at the top (e.g.
+                                  Average Package, Highest Package).
                                 </CardDescription>
                               </div>
                               <Button
@@ -3605,6 +4285,8 @@ export default function SetupAcademicsPage() {
                                     label: "",
                                     value: "",
                                     unit: "",
+                                    icon: "",
+                                    icon_bg_color: "",
                                   })
                                 }
                               >
@@ -3614,7 +4296,7 @@ export default function SetupAcademicsPage() {
                             <CardContent className="space-y-3">
                               {getTabList("summary_stats").length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
-                                  No custom stats added yet.
+                                  No stats added yet.
                                 </p>
                               ) : (
                                 <div className="space-y-3">
@@ -3622,57 +4304,108 @@ export default function SetupAcademicsPage() {
                                     (item, idx) => (
                                       <div
                                         key={idx}
-                                        className="flex gap-2 items-center"
+                                        className="border rounded-lg p-3 space-y-2 bg-muted/5"
                                       >
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Label (e.g. Total Recruiters)"
-                                          value={item.label || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "summary_stats",
-                                              idx,
-                                              { label: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="w-32"
-                                          placeholder="Value (e.g. 150+)"
-                                          value={item.value || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "summary_stats",
-                                              idx,
-                                              { value: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="w-24"
-                                          placeholder="Unit (e.g. Companies)"
-                                          value={item.unit || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "summary_stats",
-                                              idx,
-                                              { unit: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            removeTabListItem(
-                                              "summary_stats",
-                                              idx,
-                                            )
-                                          }
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
+                                        <div className="grid gap-2 md:grid-cols-3">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Label
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Average Package"
+                                              value={item.label || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                  { label: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Value
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. 4.2"
+                                              value={item.value || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                  { value: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Unit
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. LPA"
+                                              value={item.unit || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                  { unit: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Icon URL
+                                            </Label>
+                                            <Input
+                                              placeholder="https://cdn.example.com/icon.png"
+                                              value={item.icon || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                  { icon: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Icon Background Color
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. #FF6B00"
+                                              value={item.icon_bg_color || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                  {
+                                                    icon_bg_color:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex items-end">
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                removeTabListItem(
+                                                  "summary_stats",
+                                                  idx,
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </div>
                                       </div>
                                     ),
                                   )}
@@ -3681,15 +4414,285 @@ export default function SetupAcademicsPage() {
                             </CardContent>
                           </Card>
 
-                          {/* Placement Trends Card */}
+                          {/* Notable Offers */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
                                 <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Placement Trends (Year-on-Year)
+                                  Notable Offers
                                 </CardTitle>
                                 <CardDescription>
-                                  Average package growth trends over the years.
+                                  Highlight top company offers with package
+                                  details.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem("notable_offers.items", {
+                                    id: `offer_${Date.now()}`,
+                                    company_name: "",
+                                    company_logo: "",
+                                    company_initial: "",
+                                    role: "",
+                                    package: "",
+                                    unit: "LPA",
+                                    package_label: "Package Offered",
+                                    badge: "",
+                                    badge_color: "",
+                                    category: "",
+                                  })
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Offer
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Section Title</Label>
+                                <Input
+                                  placeholder="e.g. Notable Offers"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .notable_offers as any
+                                    )?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      notable_offers: {
+                                        ...((getActiveTabPayload()
+                                          .notable_offers as any) || {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              {getTabList("notable_offers.items").length ===
+                              0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No offers added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList("notable_offers.items").map(
+                                    (item, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="border rounded-lg p-3 space-y-2 bg-muted/5"
+                                      >
+                                        <div className="grid gap-2 md:grid-cols-3">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Company Name
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Deloitte"
+                                              value={item.company_name || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  {
+                                                    company_name:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Company Initial
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. D"
+                                              value={item.company_initial || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  {
+                                                    company_initial:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Company Logo URL
+                                            </Label>
+                                            <Input
+                                              placeholder="https://cdn.example.com/logo.png"
+                                              value={item.company_logo || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  {
+                                                    company_logo:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Role
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Senior Analyst Role"
+                                              value={item.role || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  { role: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Category
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Consulting"
+                                              value={item.category || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  { category: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Package
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. 14.5"
+                                              value={item.package || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  { package: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Unit
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. LPA"
+                                              value={item.unit || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  { unit: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Package Label
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Package Offered"
+                                              value={item.package_label || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  {
+                                                    package_label:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Badge
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. HIGHEST"
+                                              value={item.badge || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  { badge: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Badge Color
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. orange"
+                                              value={item.badge_color || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                  {
+                                                    badge_color: e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex items-end col-span-2">
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                removeTabListItem(
+                                                  "notable_offers.items",
+                                                  idx,
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Placement Trends */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Placement Trends
+                                </CardTitle>
+                                <CardDescription>
+                                  Year-on-year average package growth data
+                                  points.
                                 </CardDescription>
                               </div>
                               <Button
@@ -3702,22 +4705,164 @@ export default function SetupAcademicsPage() {
                                     {
                                       year: "",
                                       avg_package: "",
+                                      highlighted: false,
                                     },
                                   )
                                 }
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Add Trend
-                                Point
+                                <Plus className="h-4 w-4 mr-1" /> Add Year
                               </Button>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
+                              <div className="grid gap-3 md:grid-cols-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs">
+                                    Section Title
+                                  </Label>
+                                  <Input
+                                    placeholder="e.g. Placement Trends"
+                                    value={
+                                      (
+                                        getActiveTabPayload()
+                                          .placement_trends as any
+                                      )?.title || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        placement_trends: {
+                                          ...((getActiveTabPayload()
+                                            .placement_trends as any) || {}),
+                                          title: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs">
+                                    Duration Filter
+                                  </Label>
+                                  <Input
+                                    placeholder="e.g. Last 5 Years"
+                                    value={
+                                      (
+                                        getActiveTabPayload()
+                                          .placement_trends as any
+                                      )?.duration_filter || ""
+                                    }
+                                    onChange={(e) =>
+                                      updateActiveTabPayload({
+                                        placement_trends: {
+                                          ...((getActiveTabPayload()
+                                            .placement_trends as any) || {}),
+                                          duration_filter: e.target.value,
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="border rounded-lg p-3 space-y-2 bg-muted/5">
+                                <Label className="text-xs font-semibold">
+                                  Footer
+                                </Label>
+                                <div className="grid gap-2 md:grid-cols-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Footer Label
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. Avg Package Growth"
+                                      value={
+                                        (
+                                          getActiveTabPayload()
+                                            .placement_trends as any
+                                        )?.footer?.label || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          placement_trends: {
+                                            ...((getActiveTabPayload()
+                                              .placement_trends as any) || {}),
+                                            footer: {
+                                              ...((
+                                                getActiveTabPayload()
+                                                  .placement_trends as any
+                                              )?.footer || {}),
+                                              label: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Footer Value
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. +12.5% YoY"
+                                      value={
+                                        (
+                                          getActiveTabPayload()
+                                            .placement_trends as any
+                                        )?.footer?.value || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          placement_trends: {
+                                            ...((getActiveTabPayload()
+                                              .placement_trends as any) || {}),
+                                            footer: {
+                                              ...((
+                                                getActiveTabPayload()
+                                                  .placement_trends as any
+                                              )?.footer || {}),
+                                              value: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">
+                                      Footer Value Color
+                                    </Label>
+                                    <Input
+                                      placeholder="e.g. green"
+                                      value={
+                                        (
+                                          getActiveTabPayload()
+                                            .placement_trends as any
+                                        )?.footer?.value_color || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateActiveTabPayload({
+                                          placement_trends: {
+                                            ...((getActiveTabPayload()
+                                              .placement_trends as any) || {}),
+                                            footer: {
+                                              ...((
+                                                getActiveTabPayload()
+                                                  .placement_trends as any
+                                              )?.footer || {}),
+                                              value_color: e.target.value,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </div>
                               {getTabList("placement_trends.data_points")
                                 .length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
                                   No trend points added yet.
                                 </p>
                               ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                   {getTabList(
                                     "placement_trends.data_points",
                                   ).map((item, idx) => (
@@ -3726,8 +4871,8 @@ export default function SetupAcademicsPage() {
                                       className="flex gap-2 items-center"
                                     >
                                       <Input
-                                        className="flex-1"
-                                        placeholder="Year (e.g. 2025)"
+                                        className="w-28"
+                                        placeholder="Year (e.g. 2023)"
                                         value={item.year || ""}
                                         onChange={(e) =>
                                           updateTabListItem(
@@ -3739,244 +4884,67 @@ export default function SetupAcademicsPage() {
                                       />
                                       <Input
                                         className="flex-1"
-                                        placeholder="Avg Package (e.g. 8.2 LPA)"
-                                        value={item.avg_package || ""}
+                                        placeholder="Avg Package (e.g. 4.2)"
+                                        value={item.avg_package ?? ""}
                                         onChange={(e) =>
                                           updateTabListItem(
                                             "placement_trends.data_points",
                                             idx,
-                                            { avg_package: e.target.value },
+                                            {
+                                              avg_package: e.target.value
+                                                ? Number(e.target.value)
+                                                : "",
+                                            },
                                           )
                                         }
                                       />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem(
-                                            "placement_trends.data_points",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-
-                          {/* Industry Salary Report Card */}
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                              <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Industry Salary Report
-                                </CardTitle>
-                                <CardDescription>
-                                  Packages split by industry sectors.
-                                </CardDescription>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  addTabListItem(
-                                    "industry_salary_report.rows",
-                                    {
-                                      industry: "",
-                                      avg_package: "",
-                                      top_package: "",
-                                    },
-                                  )
-                                }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Sector
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("industry_salary_report.rows")
-                                .length === 0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No sectors added yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList(
-                                    "industry_salary_report.rows",
-                                  ).map((item, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-center"
-                                    >
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Industry (e.g. IT & Software)"
-                                        value={item.industry || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "industry_salary_report.rows",
-                                            idx,
-                                            { industry: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Avg Package (e.g. 7.8 LPA)"
-                                        value={item.avg_package || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "industry_salary_report.rows",
-                                            idx,
-                                            { avg_package: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Top Package (e.g. 24 LPA)"
-                                        value={item.top_package || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "industry_salary_report.rows",
-                                            idx,
-                                            { top_package: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem(
-                                            "industry_salary_report.rows",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-
-                          {/* Recruiters Card */}
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                              <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Notable Recruiter Offers
-                                </CardTitle>
-                                <CardDescription>
-                                  Highlight top students hired with high
-                                  packages at top companies.
-                                </CardDescription>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  addTabListItem("notable_offers.items", {
-                                    company: "",
-                                    package: "",
-                                    logo: "",
-                                  })
-                                }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Recruiter
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("notable_offers.items").length ===
-                              0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No notable offers added yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList("notable_offers.items").map(
-                                    (item, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Company name (e.g. Microsoft)"
-                                          value={item.company || ""}
+                                      <div className="flex items-center gap-2">
+                                        <Label className="text-xs whitespace-nowrap">
+                                          Highlighted
+                                        </Label>
+                                        <input
+                                          type="checkbox"
+                                          className="h-4 w-4 accent-indigo-600"
+                                          checked={item.highlighted ?? false}
                                           onChange={(e) =>
                                             updateTabListItem(
-                                              "notable_offers.items",
+                                              "placement_trends.data_points",
                                               idx,
-                                              { company: e.target.value },
+                                              { highlighted: e.target.checked },
                                             )
                                           }
                                         />
-                                        <Input
-                                          className="w-48"
-                                          placeholder="Package (e.g. 42 LPA)"
-                                          value={item.package || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "notable_offers.items",
-                                              idx,
-                                              { package: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Logo URL (optional)"
-                                          value={item.logo || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "notable_offers.items",
-                                              idx,
-                                              { logo: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            removeTabListItem(
-                                              "notable_offers.items",
-                                              idx,
-                                            )
-                                          }
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
                                       </div>
-                                    ),
-                                  )}
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          removeTabListItem(
+                                            "placement_trends.data_points",
+                                            idx,
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </CardContent>
                           </Card>
 
-                          {/* All Company Statistics Card */}
+                          {/* All Company Statistics */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
                                 <CardTitle className="text-lg font-bold text-indigo-950">
-                                  All Recruiter Details
+                                  All Company Statistics
                                 </CardTitle>
                                 <CardDescription>
-                                  Full statistics of offers and packages by
-                                  company.
+                                  Full statistics of students placed and
+                                  packages by company.
                                 </CardDescription>
                               </div>
                               <Button
@@ -3987,18 +4955,44 @@ export default function SetupAcademicsPage() {
                                   addTabListItem(
                                     "all_company_statistics.rows",
                                     {
-                                      company: "",
-                                      offers: "",
+                                      company_name: "",
+                                      company_initial: "",
+                                      company_logo: "",
+                                      logo_bg_color: "",
                                       avg_package: "",
+                                      max_package: "",
+                                      students_placed: "",
+                                      progress_percentage: "",
                                     },
                                   )
                                 }
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Add Recruiter
-                                Stat
+                                <Plus className="h-4 w-4 mr-1" /> Add Company
                               </Button>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Section Title</Label>
+                                <Input
+                                  placeholder="e.g. All Company Statistics"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .all_company_statistics as any
+                                    )?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      all_company_statistics: {
+                                        ...((getActiveTabPayload()
+                                          .all_company_statistics as any) ||
+                                          {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
                               {getTabList("all_company_statistics.rows")
                                 .length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
@@ -4011,57 +5005,176 @@ export default function SetupAcademicsPage() {
                                   ).map((item, idx) => (
                                     <div
                                       key={idx}
-                                      className="flex gap-2 items-center"
+                                      className="border rounded-lg p-3 space-y-2 bg-muted/5"
                                     >
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Company (e.g. Accenture)"
-                                        value={item.company || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "all_company_statistics.rows",
-                                            idx,
-                                            { company: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Input
-                                        className="w-32"
-                                        placeholder="Offers Count (e.g. 45)"
-                                        value={item.offers || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "all_company_statistics.rows",
-                                            idx,
-                                            { offers: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Input
-                                        className="w-48"
-                                        placeholder="Avg Package (e.g. 6.5 LPA)"
-                                        value={item.avg_package || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "all_company_statistics.rows",
-                                            idx,
-                                            { avg_package: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem(
-                                            "all_company_statistics.rows",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
+                                      <div className="grid gap-2 md:grid-cols-3">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Company Name
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Deloitte"
+                                            value={item.company_name || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  company_name: e.target.value,
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Company Initial
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. D"
+                                            value={item.company_initial || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  company_initial:
+                                                    e.target.value,
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Company Logo URL
+                                          </Label>
+                                          <Input
+                                            placeholder="https://cdn.example.com/logo.png"
+                                            value={item.company_logo || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  company_logo: e.target.value,
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Logo Background Color
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. #000000"
+                                            value={item.logo_bg_color || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  logo_bg_color: e.target.value,
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Avg Package
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 9.2 L"
+                                            value={item.avg_package || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                { avg_package: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Max Package
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 14.5 L"
+                                            value={item.max_package || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                { max_package: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Students Placed
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 145"
+                                            value={item.students_placed ?? ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  students_placed: e.target
+                                                    .value
+                                                    ? Number(e.target.value)
+                                                    : "",
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Progress Percentage
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 70"
+                                            value={
+                                              item.progress_percentage ?? ""
+                                            }
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                                {
+                                                  progress_percentage: e.target
+                                                    .value
+                                                    ? Number(e.target.value)
+                                                    : "",
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="flex items-end">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              removeTabListItem(
+                                                "all_company_statistics.rows",
+                                                idx,
+                                              )
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -4069,7 +5182,211 @@ export default function SetupAcademicsPage() {
                             </CardContent>
                           </Card>
 
-                          {/* Student Success Card */}
+                          {/* Industry Salary Report */}
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg font-bold text-indigo-950">
+                                  Industry &amp; Salary Report
+                                </CardTitle>
+                                <CardDescription>
+                                  Packages and placements split by industry
+                                  sector.
+                                </CardDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  addTabListItem(
+                                    "industry_salary_report.rows",
+                                    {
+                                      industry: "",
+                                      subtitle: "",
+                                      avg_package: "",
+                                      max_package: "",
+                                      students_placed: "",
+                                      progress_percentage: "",
+                                    },
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 mr-1" /> Add Sector
+                              </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Section Title</Label>
+                                <Input
+                                  placeholder="e.g. Industry & Salary Report"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .industry_salary_report as any
+                                    )?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      industry_salary_report: {
+                                        ...((getActiveTabPayload()
+                                          .industry_salary_report as any) ||
+                                          {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              {getTabList("industry_salary_report.rows")
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No sectors added yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {getTabList(
+                                    "industry_salary_report.rows",
+                                  ).map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="border rounded-lg p-3 space-y-2 bg-muted/5"
+                                    >
+                                      <div className="grid gap-2 md:grid-cols-3">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Industry
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. BFSI"
+                                            value={item.industry || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                { industry: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Subtitle
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Banking & Finance"
+                                            value={item.subtitle || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                { subtitle: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Avg Package
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 8.2 L"
+                                            value={item.avg_package || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                { avg_package: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Max Package
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. 12 LPA"
+                                            value={item.max_package || ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                { max_package: e.target.value },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Students Placed
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 155"
+                                            value={item.students_placed ?? ""}
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                {
+                                                  students_placed: e.target
+                                                    .value
+                                                    ? Number(e.target.value)
+                                                    : "",
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Progress Percentage
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 65"
+                                            value={
+                                              item.progress_percentage ?? ""
+                                            }
+                                            onChange={(e) =>
+                                              updateTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                                {
+                                                  progress_percentage: e.target
+                                                    .value
+                                                    ? Number(e.target.value)
+                                                    : "",
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                        <div className="flex items-end">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              removeTabListItem(
+                                                "industry_salary_report.rows",
+                                                idx,
+                                              )
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Student Success Stories */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
@@ -4077,8 +5394,7 @@ export default function SetupAcademicsPage() {
                                   Student Success Stories
                                 </CardTitle>
                                 <CardDescription>
-                                  List individual stellar placements of
-                                  students.
+                                  Video/quote testimonials from placed students.
                                 </CardDescription>
                               </div>
                               <Button
@@ -4087,21 +5403,45 @@ export default function SetupAcademicsPage() {
                                 size="sm"
                                 onClick={() =>
                                   addTabListItem("student_success.items", {
-                                    name: "",
-                                    company: "",
-                                    package: "",
+                                    student_name: "",
+                                    student_avatar: "",
+                                    placed_at: "",
+                                    quote: "",
+                                    type: "",
+                                    thumbnail: "",
+                                    video_url: "",
                                   })
                                 }
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Add Success
-                                Story
+                                <Plus className="h-4 w-4 mr-1" /> Add Story
                               </Button>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Section Title</Label>
+                                <Input
+                                  placeholder="e.g. Student Success"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .student_success as any
+                                    )?.title || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      student_success: {
+                                        ...((getActiveTabPayload()
+                                          .student_success as any) || {}),
+                                        title: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
                               {getTabList("student_success.items").length ===
                               0 ? (
                                 <p className="text-xs text-muted-foreground italic">
-                                  No student success stories added yet.
+                                  No success stories added yet.
                                 </p>
                               ) : (
                                 <div className="space-y-3">
@@ -4109,57 +5449,143 @@ export default function SetupAcademicsPage() {
                                     (item, idx) => (
                                       <div
                                         key={idx}
-                                        className="flex gap-2 items-center"
+                                        className="border rounded-lg p-3 space-y-2 bg-muted/5"
                                       >
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Student Name (e.g. Rahul Sharma)"
-                                          value={item.name || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "student_success.items",
-                                              idx,
-                                              { name: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Placed Company (e.g. Google)"
-                                          value={item.company || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "student_success.items",
-                                              idx,
-                                              { company: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="w-48"
-                                          placeholder="Package (e.g. 32 LPA)"
-                                          value={item.package || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "student_success.items",
-                                              idx,
-                                              { package: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            removeTabListItem(
-                                              "student_success.items",
-                                              idx,
-                                            )
-                                          }
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
+                                        <div className="grid gap-2 md:grid-cols-3">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Student Name
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Rohan Mehta"
+                                              value={item.student_name || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  {
+                                                    student_name:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Placed At
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Deloitte"
+                                              value={item.placed_at || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  { placed_at: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Type (mp4 / youtube)
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. mp4"
+                                              value={item.type || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  { type: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1 md:col-span-3">
+                                            <Label className="text-xs">
+                                              Quote
+                                            </Label>
+                                            <Textarea
+                                              placeholder="e.g. The placement support helped me secure a role at a top firm."
+                                              value={item.quote || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  { quote: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Student Avatar URL
+                                            </Label>
+                                            <Input
+                                              placeholder="https://cdn.example.com/photo.jpg"
+                                              value={item.student_avatar || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  {
+                                                    student_avatar:
+                                                      e.target.value,
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Thumbnail URL
+                                            </Label>
+                                            <Input
+                                              placeholder="https://cdn.example.com/thumb.jpg"
+                                              value={item.thumbnail || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  { thumbnail: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">
+                                              Video URL
+                                            </Label>
+                                            <Input
+                                              placeholder="https://res.cloudinary.com/... or youtube link"
+                                              value={item.video_url || ""}
+                                              onChange={(e) =>
+                                                updateTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                  { video_url: e.target.value },
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex items-end">
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                removeTabListItem(
+                                                  "student_success.items",
+                                                  idx,
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </div>
                                       </div>
                                     ),
                                   )}
@@ -4168,32 +5594,76 @@ export default function SetupAcademicsPage() {
                             </CardContent>
                           </Card>
 
-                          {/* Placement Report PDF Link */}
+                          {/* Download Report */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3">
                               <CardTitle className="text-lg font-bold text-indigo-950">
-                                Placement Report PDF
+                                Download Report
                               </CardTitle>
                               <CardDescription>
-                                Document URL for the full placement audit
-                                report.
+                                PDF report link shown to students for full
+                                placement details.
                               </CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="space-y-3">
                               <div className="space-y-1">
-                                <Label>Placement Report PDF URL</Label>
+                                <Label className="text-xs">Report URL</Label>
                                 <Input
-                                  placeholder="https://example.com/placement-report.pdf"
+                                  placeholder="https://cdn.example.com/placement-report-2024.pdf"
                                   value={
-                                    getActiveTabPayload().download_report
-                                      ?.url || ""
+                                    (
+                                      getActiveTabPayload()
+                                        .download_report as any
+                                    )?.url || ""
                                   }
                                   onChange={(e) =>
                                     updateActiveTabPayload({
                                       download_report: {
-                                        ...(getActiveTabPayload()
-                                          .download_report || {}),
+                                        ...((getActiveTabPayload()
+                                          .download_report as any) || {}),
                                         url: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Button Label</Label>
+                                <Input
+                                  placeholder="e.g. Download Full Placement Report 2024"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .download_report as any
+                                    )?.label || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      download_report: {
+                                        ...((getActiveTabPayload()
+                                          .download_report as any) || {}),
+                                        label: e.target.value,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Icon URL</Label>
+                                <Input
+                                  placeholder="https://cdn.example.com/icons/pdf-document-purple.png"
+                                  value={
+                                    (
+                                      getActiveTabPayload()
+                                        .download_report as any
+                                    )?.icon || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateActiveTabPayload({
+                                      download_report: {
+                                        ...((getActiveTabPayload()
+                                          .download_report as any) || {}),
+                                        icon: e.target.value,
                                       },
                                     })
                                   }
@@ -4207,32 +5677,63 @@ export default function SetupAcademicsPage() {
                       {/* FEES */}
                       {activeTab === "fees" && (
                         <div className="space-y-6">
-                          <div className="space-y-1">
-                            <Label>Fee Structure PDF</Label>
-                            <Input
-                              placeholder="https://example.com/fee-structure.pdf"
-                              value={
-                                getActiveTabPayload().fee_structure_pdf?.url ||
-                                ""
-                              }
-                              onChange={(e) =>
-                                updateActiveTabPayload({
-                                  fee_structure_pdf: {
-                                    ...(getActiveTabPayload()
-                                      .fee_structure_pdf || {}),
-                                    url: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                            <Input
-                              type="file"
-                              accept="application/pdf"
-                              disabled={uploadingFeePdf}
-                              onChange={(e) =>
-                                handleFeePdfUpload(e.target.files?.[0] ?? null)
-                              }
-                            />
+                          <div className="space-y-3 border p-4 rounded-xl bg-muted/10">
+                            <h4 className="font-bold text-sm">
+                              Fee Structure PDF
+                            </h4>
+                            <div className="space-y-1">
+                              <Label className="text-xs">PDF URL</Label>
+                              <Input
+                                placeholder="https://example.com/fee-structure.pdf"
+                                value={
+                                  getActiveTabPayload().fee_structure_pdf
+                                    ?.url || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    fee_structure_pdf: {
+                                      ...(getActiveTabPayload()
+                                        .fee_structure_pdf || {}),
+                                      url: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">
+                                PDF Size (e.g. 2.4 MB)
+                              </Label>
+                              <Input
+                                placeholder="e.g. 2.4 MB"
+                                value={
+                                  getActiveTabPayload().fee_structure_pdf
+                                    ?.size || ""
+                                }
+                                onChange={(e) =>
+                                  updateActiveTabPayload({
+                                    fee_structure_pdf: {
+                                      ...(getActiveTabPayload()
+                                        .fee_structure_pdf || {}),
+                                      size: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Upload PDF File</Label>
+                              <Input
+                                type="file"
+                                accept="application/pdf"
+                                disabled={uploadingFeePdf}
+                                onChange={(e) =>
+                                  handleFeePdfUpload(
+                                    e.target.files?.[0] ?? null,
+                                  )
+                                }
+                              />
+                            </div>
                           </div>
 
                           {getFeeDetails().map((detail, dIdx) => (

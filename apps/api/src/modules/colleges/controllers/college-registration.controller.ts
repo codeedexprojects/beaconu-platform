@@ -54,210 +54,126 @@ function formatStudentCodeOfConductSection(section: unknown) {
   };
 }
 
-function parseTimingRange(value: unknown): { start: string; end: string } {
-  const text = typeof value === "string" ? value.trim() : "";
-  if (!text) return { start: "", end: "" };
-
-  const parts = text.split("-").map((item) => item.trim());
-  if (parts.length < 2) return { start: text, end: "" };
-
-  return { start: parts[0], end: parts.slice(1).join(" - ") };
-}
-
-function parseTransportAmount(value: unknown): {
-  amount: string;
-  currency: string;
-  period: string;
-} {
-  const text = typeof value === "string" ? value : "";
-  const amountMatch = text.match(/\d[\d,]*/);
-  const periodMatch = text.match(/\/\s*([A-Za-z]+)/);
-
-  return {
-    amount: amountMatch ? amountMatch[0].replace(/,/g, "") : "",
-    currency: text.includes("₹") ? "INR" : "",
-    period: periodMatch ? periodMatch[1] : "",
-  };
-}
-
-function formatStopType(index: number, total: number): string {
-  if (index === 0) return "pickup";
-  if (index === total - 1) return "destination";
-  return "intermediate";
-}
-
 function formatCommuteSection(section: unknown) {
   if (!isRecord(section)) return section;
 
-  const pickupPoints = Array.isArray(section.pickup_points)
-    ? section.pickup_points
-        .map((item) => (typeof item === "string" ? item.trim() : ""))
-        .filter(Boolean)
+  // ── routes ────────────────────────────────────────────────────────────────
+  const routes = Array.isArray(section.routes)
+    ? section.routes
+        .filter((r): r is Record<string, unknown> => isRecord(r))
+        .map((route) => {
+          // timings → flat array [{label, time}]
+          const timings = Array.isArray(route.timings)
+            ? route.timings
+                .filter((t): t is Record<string, unknown> => isRecord(t))
+                .map((t) => ({
+                  label: typeof t.label === "string" ? t.label : "",
+                  time: typeof t.time === "string" ? t.time : "",
+                }))
+            : [];
+
+          // transport_fee → {amount, payment_structure}
+          const rawFee = isRecord(route.transport_fee)
+            ? (route.transport_fee as Record<string, unknown>)
+            : {};
+          const transportFee = {
+            amount: typeof rawFee.amount === "string" ? rawFee.amount : "",
+            payment_structure:
+              typeof rawFee.payment_structure === "string"
+                ? rawFee.payment_structure
+                : "",
+          };
+
+          // bus_information → {model, seats, registration_number}
+          const rawBus = isRecord(route.bus_information)
+            ? (route.bus_information as Record<string, unknown>)
+            : {};
+          const busInfo = {
+            model: typeof rawBus.model === "string" ? rawBus.model : "",
+            seats:
+              typeof rawBus.seats === "number" && Number.isFinite(rawBus.seats)
+                ? rawBus.seats
+                : null,
+            registration_number:
+              typeof rawBus.registration_number === "string"
+                ? rawBus.registration_number
+                : "",
+          };
+
+          // stop normalizer → [{time, point, landmark}]
+          const normalizeStops = (arr: unknown[]) =>
+            arr
+              .filter((s): s is Record<string, unknown> => isRecord(s))
+              .map((s) => ({
+                time: typeof s.time === "string" ? s.time : "",
+                point: typeof s.point === "string" ? s.point : "",
+                landmark: typeof s.landmark === "string" ? s.landmark : "",
+              }));
+
+          return {
+            pickup_point:
+              typeof route.pickup_point === "string" ? route.pickup_point : "",
+            route_name:
+              typeof route.route_name === "string" ? route.route_name : "",
+            via: typeof route.via === "string" ? route.via : "",
+            status:
+              typeof route.status === "string" ? route.status : "UNVERIFIED",
+            timings,
+            transport_fee: transportFee,
+            bus_information: busInfo,
+            morning_pickup_points: Array.isArray(route.morning_pickup_points)
+              ? normalizeStops(route.morning_pickup_points)
+              : [],
+            evening_dropoff_points: Array.isArray(route.evening_dropoff_points)
+              ? normalizeStops(route.evening_dropoff_points)
+              : [],
+          };
+        })
     : [];
 
-  const sourceRoutes = Array.isArray(section.routes)
-    ? section.routes.filter((item): item is Record<string, unknown> =>
-        isRecord(item),
+  // ── pickup points ─────────────────────────────────────────────────────────
+  const pickupPoints = Array.isArray(section.pickup_points)
+    ? section.pickup_points.filter(
+        (p): p is string => typeof p === "string" && p.trim() !== "",
       )
     : [];
 
-  const groupedRoutes = pickupPoints.map((pickupPoint) => {
-    const details = sourceRoutes
-      .filter((route) => {
-        const routePickup =
-          typeof route.pickup_point === "string" ? route.pickup_point : "";
-        return routePickup.trim().toLowerCase() === pickupPoint.toLowerCase();
-      })
-      .map((route, index) => {
-        const routeId =
-          typeof route.id === "string" && route.id.trim() !== ""
-            ? route.id
-            : `route_${index + 1}`;
+  const selectedPickupPoint =
+    typeof section.selected_pickup_point === "string"
+      ? section.selected_pickup_point
+      : (pickupPoints[0] ?? "");
 
-        const timings = Array.isArray(route.timings)
-          ? route.timings.filter((item): item is Record<string, unknown> =>
-              isRecord(item),
-            )
-          : [];
+  // ── rules & code of conduct ───────────────────────────────────────────────
+  const rawRules = isRecord(section.rules_and_code_of_conduct)
+    ? (section.rules_and_code_of_conduct as Record<string, unknown>)
+    : {};
 
-        const morningTiming = timings.find(
-          (item) =>
-            typeof item.label === "string" &&
-            item.label.toLowerCase().includes("morning"),
-        );
-        const eveningTiming = timings.find(
-          (item) =>
-            typeof item.label === "string" &&
-            item.label.toLowerCase().includes("evening"),
-        );
-
-        const morningRange = parseTimingRange(morningTiming?.time);
-        const eveningRange = parseTimingRange(eveningTiming?.time);
-
-        const fee = isRecord(route.transport_fee)
-          ? route.transport_fee
-          : ({} as Record<string, unknown>);
-        const feeAmount = parseTransportAmount(fee.amount);
-
-        const busInfo = isRecord(route.bus_information)
-          ? route.bus_information
-          : ({} as Record<string, unknown>);
-
-        const morningStops = Array.isArray(route.morning_pickup_points)
-          ? route.morning_pickup_points.filter(
-              (item): item is Record<string, unknown> => isRecord(item),
-            )
-          : [];
-        const eveningStops = Array.isArray(route.evening_dropoff_points)
-          ? route.evening_dropoff_points.filter(
-              (item): item is Record<string, unknown> => isRecord(item),
-            )
-          : [];
-
-        return {
-          id: routeId,
-          name: typeof route.route_name === "string" ? route.route_name : "",
-          icon: "https://cdn.iconsdb.example.com/icons/bus-route-orange.png",
-          via: typeof route.via === "string" ? route.via : "",
-          verified:
-            typeof route.status === "string"
-              ? route.status.toLowerCase() === "verified"
-              : false,
-          timings: {
-            morning: {
-              label: "MORNING",
-              icon: "https://cdn.iconsdb.example.com/icons/sun-orange.png",
-              start_time: morningRange.start,
-              end_time: morningRange.end,
-            },
-            evening: {
-              label: "EVENING",
-              icon: "https://cdn.iconsdb.example.com/icons/moon-purple.png",
-              start_time: eveningRange.start,
-              end_time: eveningRange.end,
-            },
-          },
-          transport_fee: {
-            icon: "https://cdn.iconsdb.example.com/icons/payment-card.png",
-            label: "Transport Fee",
-            amount: feeAmount.amount,
-            currency: feeAmount.currency,
-            period: feeAmount.period,
-            payment_structure:
-              typeof fee.payment_structure === "string"
-                ? fee.payment_structure
-                : "",
-          },
-          bus_information: {
-            label: "BUS INFORMATION",
-            registration_number:
-              typeof busInfo.registration_number === "string"
-                ? busInfo.registration_number
-                : "",
-            model: typeof busInfo.model === "string" ? busInfo.model : "",
-            seat_capacity:
-              typeof busInfo.seats === "number" &&
-              Number.isFinite(busInfo.seats)
-                ? busInfo.seats
-                : null,
-          },
-          morning_pickup_points: {
-            title: "Morning Pickup Points & Timings",
-            icon: "https://cdn.iconsdb.example.com/icons/sun-orange.png",
-            stops: morningStops.map((stop, stopIndex) => ({
-              name: typeof stop.point === "string" ? stop.point : "",
-              subtitle: typeof stop.landmark === "string" ? stop.landmark : "",
-              time: typeof stop.time === "string" ? stop.time : "",
-              type: formatStopType(stopIndex, morningStops.length),
-            })),
-          },
-          evening_dropoff_points: {
-            title: "Evening Drop-off Points & Timings",
-            icon: "https://cdn.iconsdb.example.com/icons/moon-purple.png",
-            stops: eveningStops.map((stop, stopIndex) => ({
-              name: typeof stop.point === "string" ? stop.point : "",
-              subtitle: typeof stop.landmark === "string" ? stop.landmark : "",
-              time: typeof stop.time === "string" ? stop.time : "",
-              type: formatStopType(stopIndex, eveningStops.length),
-            })),
-          },
-        };
-      });
-
-    return {
-      route_name: pickupPoint,
-      details,
-    };
-  });
-
-  const rulesPayload = isRecord(section.rules_and_code_of_conduct)
-    ? section.rules_and_code_of_conduct
-    : ({} as Record<string, unknown>);
-
-  const rules = Array.isArray(rulesPayload.rules)
-    ? rulesPayload.rules
-        .filter((item): item is Record<string, unknown> => isRecord(item))
-        .map((item) => ({
-          heading: typeof item.title === "string" ? item.title : "",
-          description:
-            typeof item.description === "string" ? item.description : "",
+  const rules = Array.isArray(rawRules.rules)
+    ? rawRules.rules
+        .filter((r): r is Record<string, unknown> => isRecord(r))
+        .map((r) => ({
+          title: typeof r.title === "string" ? r.title : "",
+          description: typeof r.description === "string" ? r.description : "",
         }))
     : [];
 
   return {
-    id: typeof section.id === "string" ? section.id : "commute",
-    title: typeof section.title === "string" ? section.title : "Commute",
+    id:
+      typeof section.id === "string" && section.id.trim() !== ""
+        ? section.id
+        : "commute",
+    tab: typeof section.tab === "string" ? section.tab : "commute",
     enabled: typeof section.enabled === "boolean" ? section.enabled : true,
-    routes: groupedRoutes,
+    pickup_points: pickupPoints,
+    selected_pickup_point: selectedPickupPoint,
+    routes,
     rules_and_code_of_conduct: {
       title:
-        typeof rulesPayload.title === "string"
-          ? rulesPayload.title
+        typeof rawRules.title === "string"
+          ? rawRules.title
           : "Rules & Code of Conduct",
-      subtitle:
-        typeof rulesPayload.subtitle === "string" ? rulesPayload.subtitle : "",
-      icon: "https://cdn.iconsdb.example.com/icons/gavel-orange.png",
-      intro: typeof rulesPayload.intro === "string" ? rulesPayload.intro : "",
+      subtitle: typeof rawRules.subtitle === "string" ? rawRules.subtitle : "",
+      intro: typeof rawRules.intro === "string" ? rawRules.intro : "",
       rules,
     },
   };
@@ -281,6 +197,157 @@ function normalizeIsoLikeDate(value: unknown): string {
   }
 
   return parsed.toISOString().slice(0, 10);
+}
+
+function formatCollegeOverviewSection(section: unknown) {
+  if (!isRecord(section)) return section;
+
+  // accolades
+  const accolades = Array.isArray(section.accolades)
+    ? section.accolades
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          tag: typeof item.tag === "string" ? item.tag : "",
+          title: typeof item.title === "string" ? item.title : "",
+          image: typeof item.image === "string" ? item.image : "",
+        }))
+    : [];
+
+  // university_details
+  const universityDetails = Array.isArray(section.university_details)
+    ? section.university_details
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          label: typeof item.label === "string" ? item.label : "",
+          value: typeof item.value === "string" ? item.value : "",
+        }))
+    : [];
+
+  // amenities
+  const amenities = Array.isArray(section.amenities)
+    ? section.amenities
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          label: typeof item.label === "string" ? item.label : "",
+          icon: typeof item.icon === "string" ? item.icon : "",
+        }))
+    : [];
+
+  // inside_campus_facilities
+  const insideCampusFacilities = Array.isArray(section.inside_campus_facilities)
+    ? section.inside_campus_facilities
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          label: typeof item.label === "string" ? item.label : "",
+          subtitle: typeof item.subtitle === "string" ? item.subtitle : "",
+          icon: typeof item.icon === "string" ? item.icon : "",
+        }))
+    : [];
+
+  // location
+  const rawLocation = isRecord(section.location)
+    ? (section.location as Record<string, unknown>)
+    : {};
+  const location = {
+    address: typeof rawLocation.address === "string" ? rawLocation.address : "",
+    latitude:
+      typeof rawLocation.latitude === "number" ? rawLocation.latitude : null,
+    longitude:
+      typeof rawLocation.longitude === "number" ? rawLocation.longitude : null,
+    map_link:
+      typeof rawLocation.map_link === "string" ? rawLocation.map_link : "",
+  };
+
+  // nearby_access
+  const nearbyAccess = Array.isArray(section.nearby_access)
+    ? section.nearby_access
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          category: typeof item.category === "string" ? item.category : "",
+          items: Array.isArray(item.items)
+            ? item.items
+                .filter((i): i is Record<string, unknown> => isRecord(i))
+                .map((i) => ({
+                  name: typeof i.name === "string" ? i.name : "",
+                  distance: typeof i.distance === "string" ? i.distance : "",
+                }))
+            : [],
+        }))
+    : [];
+
+  // campus_ambassadors
+  const campusAmbassadors = Array.isArray(section.campus_ambassadors)
+    ? section.campus_ambassadors
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          name: typeof item.name === "string" ? item.name : "",
+          course: typeof item.course === "string" ? item.course : "",
+          district: typeof item.district === "string" ? item.district : "",
+          state: typeof item.state === "string" ? item.state : "",
+          image: typeof item.image === "string" ? item.image : "",
+          message_link:
+            typeof item.message_link === "string" ? item.message_link : "",
+        }))
+    : [];
+
+  // social
+  const social = Array.isArray(section.social)
+    ? section.social
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          platform: typeof item.platform === "string" ? item.platform : "",
+          icon: typeof item.icon === "string" ? item.icon : "",
+          url: typeof item.url === "string" ? item.url : "",
+        }))
+    : [];
+
+  // campus_reels
+  const campusReels = Array.isArray(section.campus_reels)
+    ? section.campus_reels
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((item) => ({
+          title: typeof item.title === "string" ? item.title : "",
+          duration: typeof item.duration === "string" ? item.duration : "",
+          date: typeof item.date === "string" ? item.date : "",
+          video: typeof item.video === "string" ? item.video : "",
+          thumbnail: typeof item.thumbnail === "string" ? item.thumbnail : "",
+          type: typeof item.type === "string" ? item.type : "",
+        }))
+    : [];
+
+  return {
+    id:
+      typeof section.id === "string" && section.id.trim() !== ""
+        ? section.id
+        : "college_overview",
+    enabled: typeof section.enabled === "boolean" ? section.enabled : true,
+    name: typeof section.name === "string" ? section.name : "",
+    alt_name: typeof section.alt_name === "string" ? section.alt_name : "",
+    location_name:
+      typeof section.location_name === "string" ? section.location_name : "",
+    type: typeof section.type === "string" ? section.type : "",
+    established:
+      typeof section.established === "number"
+        ? section.established
+        : typeof section.established === "string"
+          ? parseInt(section.established, 10) || null
+          : null,
+    navigation_tabs: Array.isArray(section.navigation_tabs)
+      ? section.navigation_tabs.filter(
+          (tab): tab is string => typeof tab === "string",
+        )
+      : [],
+    about: typeof section.about === "string" ? section.about : "",
+    accolades,
+    university_details: universityDetails,
+    amenities,
+    inside_campus_facilities: insideCampusFacilities,
+    location,
+    nearby_access: nearbyAccess,
+    campus_ambassadors: campusAmbassadors,
+    social,
+    campus_reels: campusReels,
+  };
 }
 
 function formatHappeningsSection(section: unknown) {
@@ -369,6 +436,116 @@ function formatHappeningsSection(section: unknown) {
   };
 }
 
+function formatInstitutionsSection(section: unknown) {
+  if (!isRecord(section)) return section;
+
+  const institutions = Array.isArray(section.institutions)
+    ? section.institutions
+        .filter((item): item is Record<string, unknown> => isRecord(item))
+        .map((inst) => {
+          const departments = Array.isArray(inst.departments)
+            ? inst.departments
+                .filter((d): d is Record<string, unknown> => isRecord(d))
+                .map((dept) => {
+                  const ptRaw = isRecord(dept.program_type_tabs)
+                    ? (dept.program_type_tabs as Record<string, unknown>)
+                    : {};
+                  const courses = Array.isArray(dept.courses)
+                    ? dept.courses
+                        .filter((c): c is Record<string, unknown> =>
+                          isRecord(c),
+                        )
+                        .map((c) => ({
+                          id: typeof c.id === "string" ? c.id : "",
+                          name: typeof c.name === "string" ? c.name : "",
+                          duration:
+                            typeof c.duration === "string" ? c.duration : "",
+                          mode: typeof c.mode === "string" ? c.mode : "",
+                          fee:
+                            typeof c.fee === "string"
+                              ? c.fee
+                              : c.fee === null
+                                ? null
+                                : null,
+                          currency:
+                            typeof c.currency === "string" ? c.currency : "INR",
+                        }))
+                    : [];
+
+                  return {
+                    id: typeof dept.id === "string" ? dept.id : "",
+                    name: typeof dept.name === "string" ? dept.name : "",
+                    programs_available:
+                      typeof dept.programs_available === "number"
+                        ? dept.programs_available
+                        : courses.length,
+                    expanded:
+                      typeof dept.expanded === "boolean"
+                        ? dept.expanded
+                        : courses.length > 0,
+                    program_type_tabs: {
+                      selected:
+                        typeof ptRaw.selected === "string"
+                          ? ptRaw.selected
+                          : "",
+                      options: Array.isArray(ptRaw.options)
+                        ? ptRaw.options.filter(
+                            (o): o is string => typeof o === "string",
+                          )
+                        : [],
+                    },
+                    courses,
+                  };
+                })
+            : [];
+
+          return {
+            id: typeof inst.id === "string" ? inst.id : "",
+            name: typeof inst.name === "string" ? inst.name : "",
+            code: typeof inst.code === "string" ? inst.code : "",
+            slug: typeof inst.slug === "string" ? inst.slug : "",
+            logoUrl: typeof inst.logoUrl === "string" ? inst.logoUrl : "",
+            city: typeof inst.city === "string" ? inst.city : "",
+            state: typeof inst.state === "string" ? inst.state : "",
+            country: typeof inst.country === "string" ? inst.country : "India",
+            role: typeof inst.role === "string" ? inst.role : "",
+            selected:
+              typeof inst.selected === "boolean" ? inst.selected : false,
+            joinedAt: typeof inst.joinedAt === "string" ? inst.joinedAt : "",
+            joinedVia: typeof inst.joinedVia === "string" ? inst.joinedVia : "",
+            departments,
+          };
+        })
+    : [];
+
+  const rawGroup = isRecord(section.group)
+    ? (section.group as Record<string, unknown>)
+    : null;
+  const group = rawGroup
+    ? {
+        id: typeof rawGroup.id === "string" ? rawGroup.id : "",
+        name: typeof rawGroup.name === "string" ? rawGroup.name : "",
+        groupCode:
+          typeof rawGroup.groupCode === "string" ? rawGroup.groupCode : "",
+        status: typeof rawGroup.status === "string" ? rawGroup.status : "",
+      }
+    : null;
+
+  return {
+    id:
+      typeof section.id === "string" && section.id.trim() !== ""
+        ? section.id
+        : "institutions_across_world",
+    title:
+      typeof section.title === "string"
+        ? section.title
+        : "Institution Across the World",
+    enabled: typeof section.enabled === "boolean" ? section.enabled : true,
+    institutions,
+    group,
+  };
+}
+
 export class CollegeRegistrationController {
   // ── Profile ────────────────────────────────────────────────────────────────
 
@@ -401,13 +578,17 @@ export class CollegeRegistrationController {
       query,
     );
     const responseData =
-      tabId === "student_code_of_conduct"
-        ? formatStudentCodeOfConductSection(result)
-        : tabId === "commute"
-          ? formatCommuteSection(result)
-          : tabId === "happenings"
-            ? formatHappeningsSection(result)
-            : result;
+      tabId === "college_overview"
+        ? formatCollegeOverviewSection(result)
+        : tabId === "student_code_of_conduct"
+          ? formatStudentCodeOfConductSection(result)
+          : tabId === "commute"
+            ? formatCommuteSection(result)
+            : tabId === "happenings"
+              ? formatHappeningsSection(result)
+              : tabId === "institutions_across_world"
+                ? formatInstitutionsSection(result)
+                : result;
 
     return res.status(200).json(
       ApiResponse.success("College section fetched successfully", {

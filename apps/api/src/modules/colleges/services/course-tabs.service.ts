@@ -261,32 +261,49 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
   const calcRaw = asRecord(meritRaw.calculator);
   const tcRaw = meritRaw.terms_and_conditions;
 
+  const portOfEntryRaw = asRecord(calcRaw.port_of_entry);
+  const rankRangeRaw = asRecord(calcRaw.rank_range);
+
+  const portOfEntryOptions = Array.isArray(calcRaw.port_of_entry_options)
+    ? calcRaw.port_of_entry_options
+    : Array.isArray(portOfEntryRaw.options)
+      ? portOfEntryRaw.options
+      : [];
+
+  const rankRangeOptions = Array.isArray(calcRaw.rank_range_options)
+    ? calcRaw.rank_range_options
+    : Array.isArray(rankRangeRaw.options)
+      ? rankRangeRaw.options
+      : [];
+
+  const tcItems = Array.isArray(tcRaw)
+    ? tcRaw
+    : Array.isArray(asRecord(tcRaw).items)
+      ? asRecord(tcRaw).items
+      : [];
+
   const merit_scholarship = {
     title: asText(meritRaw.title) || "Merit Scholarship",
     calculator: {
-      title: "Scholarship Calculator",
+      title: asText(calcRaw.title) || "Scholarship Calculator",
       icon: "https://cdn.iconsdb.example.com/icons/calculator-orange.png",
       port_of_entry: {
         icon: "https://cdn.iconsdb.example.com/icons/login-arrow-gray.png",
         label: "Select Port of Entry",
         selected: "",
-        options: Array.isArray(calcRaw.port_of_entry_options)
-          ? calcRaw.port_of_entry_options
-          : [],
+        options: portOfEntryOptions,
       },
       rank_range: {
         icon: "https://cdn.iconsdb.example.com/icons/bar-chart-gray.png",
         label: "Select Rank Range",
         selected: "",
-        options: Array.isArray(calcRaw.rank_range_options)
-          ? calcRaw.rank_range_options
-          : [],
+        options: rankRangeOptions,
       },
     },
     terms_and_conditions: {
       title: "TERMS & CONDITIONS",
       icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
-      items: Array.isArray(tcRaw) ? tcRaw : [],
+      items: tcItems,
     },
   };
 
@@ -297,31 +314,43 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
 
   const concessionItems = rawItems.map((item) => {
     const details = asRecord(item.details);
+    const criteriaRaw = asRecord(details.eligibility_criteria);
     const criteria = Array.isArray(details.eligibility_criteria)
       ? (details.eligibility_criteria as string[])
-      : [];
-    const scholarshipAmt = normalizeAmount(details.scholarship_amount);
-    const netPayableAmt = normalizeAmount(details.net_payable);
-    const hasDetails =
-      criteria.length > 0 || scholarshipAmt !== "₹" || netPayableAmt !== "₹";
+      : Array.isArray(criteriaRaw.items)
+        ? (criteriaRaw.items as string[])
+        : [];
+
+    const scholarshipRaw = asRecord(details.scholarship);
+    const netPayableRaw = asRecord(details.net_payable);
+
+    const scholarshipAmt = normalizeAmount(
+      details.scholarship_amount ?? scholarshipRaw.amount,
+    );
+    const netPayableAmt = normalizeAmount(
+      details.net_payable ?? netPayableRaw.amount,
+    );
     const discountPct = asNumber(item.discount_percent);
-    const expanded = hasDetails;
+
+    const detailsCtaRaw = asRecord(item.details_cta);
+    const expandedRaw = item.expanded;
+
+    const expanded = typeof expandedRaw === "boolean" ? expandedRaw : true;
+
+    const detailsCta = {
+      label: asText(detailsCtaRaw.label) || "SHOW LESS",
+      icon:
+        asText(detailsCtaRaw.icon) ||
+        "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
+    };
 
     return {
       name: asText(item.name),
       discount_percent: discountPct,
-      discount_label: `${discountPct}% OFF`,
-      accent_color: hasDetails ? "black" : "orange",
+      discount_label: asText(item.discount_label) || `${discountPct}% OFF`,
+      accent_color: asText(item.accent_color) || "black",
       expanded,
-      details_cta: expanded
-        ? {
-            label: "SHOW LESS",
-            icon: "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
-          }
-        : {
-            label: "DETAILS",
-            icon: "https://cdn.iconsdb.example.com/icons/arrow-right-orange.png",
-          },
+      details_cta: detailsCta,
       details: {
         eligibility_criteria: {
           title: "ELIGIBILITY CRITERIA",
@@ -350,7 +379,8 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
     financial_concessions: {
       title: "Financial Concessions",
       total_types: totalTypes,
-      total_types_label: `${totalTypes} TYPES`,
+      total_types_label:
+        asText(concessionsRaw.total_types_label) || `${totalTypes} TYPES`,
       items: concessionItems,
     },
   };
