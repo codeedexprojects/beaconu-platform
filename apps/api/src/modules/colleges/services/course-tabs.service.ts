@@ -189,6 +189,298 @@ function asStringArray(value: unknown): string[] {
     : [];
 }
 
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function firstNonEmptyStringArray(...values: unknown[]): string[] {
+  for (const value of values) {
+    const next = asStringArray(value);
+    if (next.length > 0) return next;
+  }
+  return [];
+}
+
+function toPositiveInt(value: unknown): number {
+  const n = asNumber(value);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+function numberFromText(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return 0;
+  const match = value.match(/\d+/);
+  return match ? Number(match[0]) : 0;
+}
+
+function normalizeQuickInfoItems(
+  value: unknown,
+): Array<{ label: string; value: string }> {
+  return asArray(value).map((item, index) => {
+    if (typeof item === "string") {
+      return { label: `INFO_${index + 1}`, value: item };
+    }
+    const rec = asRecord(item);
+    return {
+      label: asText(rec.label) || `INFO_${index + 1}`,
+      value: asText(rec.value),
+    };
+  });
+}
+
+function normalizeHighlightsItems(value: unknown): Array<{ text: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") return { text: item };
+    const rec = asRecord(item);
+    return { text: asText(rec.text) || asText(rec.title) || asText(rec.tag) };
+  });
+}
+
+function normalizeAccreditationItems(
+  value: unknown,
+): Array<{ tag: string; image: string; title: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") {
+      return { tag: "", image: "", title: item };
+    }
+    const rec = asRecord(item);
+    return {
+      tag: asText(rec.tag),
+      image: asText(rec.image),
+      title: asText(rec.title) || asText(rec.text),
+    };
+  });
+}
+
+function normalizeKeyDateItems(value: unknown): Array<{
+  date: string;
+  icon: string;
+  label: string;
+  status: string;
+  status_color: string;
+}> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") {
+      return {
+        date: "",
+        icon: "",
+        label: item,
+        status: "",
+        status_color: "",
+      };
+    }
+    const rec = asRecord(item);
+    return {
+      date: asText(rec.date),
+      icon: asText(rec.icon),
+      label: asText(rec.label),
+      status: asText(rec.status),
+      status_color: asText(rec.status_color),
+    };
+  });
+}
+
+function normalizeCurriculumSemesters(
+  value: unknown,
+): Array<Record<string, unknown>> {
+  return asArray(value).map((item, index) => {
+    const rec = asRecord(item);
+    return {
+      id: asText(rec.id) || `sem_${index + 1}`,
+      name: asText(rec.name) || asText(rec.label) || `Semester ${index + 1}`,
+      expanded: asBoolean(rec.expanded, false),
+      footnote: asText(rec.footnote),
+      core_subjects: asStringArray(rec.core_subjects),
+      specializations: asArray(rec.specializations).map((sp) => {
+        const sr = asRecord(sp);
+        return {
+          title: asText(sr.title),
+          selected: asText(sr.selected),
+          subjects: asStringArray(sr.subjects),
+        };
+      }),
+    };
+  });
+}
+
+function normalizeCourseStructureSegments(
+  value: unknown,
+): Array<{ color: string; label: string; credits: number }> {
+  const palette = ["#FF6B00", "#FFB27A", "#2E2E5C", "#4DD0C4", "#A8A8B3"];
+  return asArray(value).map((item, index) => {
+    if (typeof item === "string") {
+      return {
+        color: palette[index % palette.length],
+        label: item,
+        credits: 0,
+      };
+    }
+    const rec = asRecord(item);
+    return {
+      color: asText(rec.color) || palette[index % palette.length],
+      label: asText(rec.label) || asText(rec.title),
+      credits: toPositiveInt(rec.credits) || numberFromText(rec.details),
+    };
+  });
+}
+
+function normalizeNamedItems(value: unknown): Array<{ name: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") return { name: item };
+    const rec = asRecord(item);
+    return { name: asText(rec.name) || asText(rec.label) || asText(rec.title) };
+  });
+}
+
+function normalizeCareerItems(
+  value: unknown,
+): Array<{ role: string; salary_range: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") return { role: item, salary_range: "" };
+    const rec = asRecord(item);
+    return {
+      role: asText(rec.role) || asText(rec.title),
+      salary_range: asText(rec.salary_range) || asText(rec.salary),
+    };
+  });
+}
+
+function normalizeValueAddedItems(value: unknown): Array<{
+  name: string;
+  credit_label: string;
+  delivery_modes: string[];
+  delivery_mode_label: string;
+}> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") {
+      return {
+        name: item,
+        credit_label: "",
+        delivery_modes: [],
+        delivery_mode_label: "DELIVERY MODES",
+      };
+    }
+    const rec = asRecord(item);
+    return {
+      name: asText(rec.name) || asText(rec.title),
+      credit_label: asText(rec.credit_label),
+      delivery_modes: asStringArray(rec.delivery_modes),
+      delivery_mode_label: asText(rec.delivery_mode_label) || "DELIVERY MODES",
+    };
+  });
+}
+
+function normalizeFlexibleExitItems(
+  value: unknown,
+): Array<{ step: number; award: string; label: string }> {
+  return asArray(value).map((item, index) => {
+    if (typeof item === "string") {
+      return { step: index + 1, award: item, label: `After ${index + 1} Year` };
+    }
+    const rec = asRecord(item);
+    return {
+      step: toPositiveInt(rec.step) || index + 1,
+      award: asText(rec.award) || asText(rec.title),
+      label: asText(rec.label) || `After ${index + 1} Year`,
+    };
+  });
+}
+
+function normalizeClassSchedule(
+  value: unknown,
+): Array<{ day: string; time: string }> {
+  return asArray(value).map((item, index) => {
+    if (typeof item === "string") {
+      const parts = item.split(":");
+      if (parts.length >= 2) {
+        return { day: parts[0].trim(), time: parts.slice(1).join(":").trim() };
+      }
+      return { day: `Day ${index + 1}`, time: item };
+    }
+    const rec = asRecord(item);
+    return {
+      day: asText(rec.day) || `Day ${index + 1}`,
+      time: asText(rec.time),
+    };
+  });
+}
+
+function normalizeRoomItems(
+  value: unknown,
+): Array<{ icon: string; name: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") return { icon: "", name: item };
+    const rec = asRecord(item);
+    return {
+      icon: asText(rec.icon),
+      name: asText(rec.name) || asText(rec.label),
+    };
+  });
+}
+
+function normalizeFaqItems(
+  value: unknown,
+): Array<{ answer: string; expanded: boolean; question: string }> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") {
+      return { answer: "", expanded: false, question: item };
+    }
+    const rec = asRecord(item);
+    return {
+      answer: asText(rec.answer),
+      expanded: asBoolean(rec.expanded, false),
+      question: asText(rec.question),
+    };
+  });
+}
+
+function normalizeAlumniItems(value: unknown): Array<Record<string, unknown>> {
+  return asArray(value).map((item) => {
+    const rec = asRecord(item);
+    return {
+      name: asText(rec.name),
+      image: asText(rec.image),
+      designation: asText(rec.designation),
+      career_progression: asArray(rec.career_progression).map((step) => {
+        const sr = asRecord(step);
+        return {
+          year: asText(sr.year),
+          tag_color: asText(sr.tag_color),
+          description: asText(sr.description),
+        };
+      }),
+    };
+  });
+}
+
+function normalizeCertificationItems(value: unknown): Array<{
+  tag: string;
+  title: string;
+  description: string;
+  cta_label: string;
+  link: string;
+}> {
+  return asArray(value).map((item) => {
+    if (typeof item === "string") {
+      return {
+        tag: "BONUS CERTIFICATION",
+        title: item,
+        description: "",
+        cta_label: "View Certificate Details",
+        link: "",
+      };
+    }
+    const rec = asRecord(item);
+    return {
+      tag: asText(rec.tag),
+      title: asText(rec.title) || asText(rec.name),
+      description: asText(rec.description) || asText(rec.note),
+      cta_label: asText(rec.cta_label) || asText(rec.ctaLabel),
+      link: asText(rec.link) || asText(rec.certificate_link),
+    };
+  });
+}
+
 function getCourseInfoSource(data: unknown): Record<string, unknown> {
   const record = asRecord(data);
   const wrappedData = asRecord(record.data);
@@ -221,46 +513,135 @@ function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
   const legacyHigherEducation = asRecord(
     record.higher_education || record.higher_education_and_certifications,
   );
+  const quickInfo = normalizeQuickInfoItems(
+    Array.isArray(record.quick_info) ? record.quick_info : getQuickInfo(record),
+  );
+  const highlightItems = normalizeHighlightsItems(
+    Array.isArray(highlightData.items)
+      ? highlightData.items
+      : Array.isArray(record.program_highlights)
+        ? record.program_highlights
+        : [],
+  );
+  const accreditationItems = normalizeAccreditationItems(
+    Array.isArray(accreditationData.items)
+      ? accreditationData.items
+      : Array.isArray(record.course_accolades)
+        ? record.course_accolades
+        : [],
+  );
+  const keyDateItems = normalizeKeyDateItems(
+    Array.isArray(keyDatesData.items)
+      ? keyDatesData.items
+      : Array.isArray(record.key_dates)
+        ? record.key_dates
+        : [],
+  );
+  const curriculumSemesters = normalizeCurriculumSemesters(
+    Array.isArray(curriculumData.semesters) ? curriculumData.semesters : [],
+  );
+  const structureSegments = normalizeCourseStructureSegments(
+    Object.keys(courseStructureData).length > 0
+      ? courseStructureData.segments
+      : Array.isArray(record.course_structure)
+        ? record.course_structure
+        : [],
+  );
+  const valueAddedItems = normalizeValueAddedItems(
+    Object.keys(valueAddedCoursesData).length > 0
+      ? valueAddedCoursesData.items
+      : Array.isArray(record.value_added_courses)
+        ? record.value_added_courses
+        : [],
+  );
+  const careerItems = normalizeCareerItems(
+    Object.keys(careerOpportunitiesData).length > 0
+      ? careerOpportunitiesData.items
+      : Array.isArray(record.career_opportunities)
+        ? record.career_opportunities
+        : [],
+  );
+  const flexibleItems = normalizeFlexibleExitItems(
+    Object.keys(flexibleExitOptionsData).length > 0
+      ? flexibleExitOptionsData.items
+      : Array.isArray(record.flexible_exit_options)
+        ? record.flexible_exit_options
+        : [],
+  );
+  const classSchedule = normalizeClassSchedule(
+    Object.keys(classTimingsData).length > 0
+      ? classTimingsData.schedule
+      : Array.isArray(record.class_timings)
+        ? record.class_timings
+        : [],
+  );
+  const toolItems = normalizeNamedItems(
+    Object.keys(industryToolsData).length > 0
+      ? industryToolsData.items
+      : Array.isArray(record.industry_tools)
+        ? record.industry_tools
+        : [],
+  );
+  const labItems = normalizeNamedItems(
+    Object.keys(labFacilitiesData).length > 0
+      ? labFacilitiesData.items
+      : Array.isArray(record.lab_facilities)
+        ? record.lab_facilities
+        : [],
+  );
+  const roomItems = normalizeRoomItems(
+    Object.keys(roomFacilitiesData).length > 0
+      ? roomFacilitiesData.items
+      : Array.isArray(record.classroom_facilities)
+        ? record.classroom_facilities
+        : [],
+  );
+  const alumniItems = normalizeAlumniItems(
+    Array.isArray(featuredAlumniData.items)
+      ? featuredAlumniData.items
+      : Array.isArray(record.featured_alumni)
+        ? record.featured_alumni
+        : Array.isArray(record.featuredAlumni)
+          ? record.featuredAlumni
+          : [],
+  );
+  const faqItems = normalizeFaqItems(
+    Array.isArray(faqsData.items)
+      ? faqsData.items
+      : Array.isArray(record.faqs)
+        ? record.faqs
+        : [],
+  );
+  const certificationItems = normalizeCertificationItems(
+    Array.isArray(certificationsData.items)
+      ? certificationsData.items
+      : Object.keys(bonusCertificationData).length > 0
+        ? [bonusCertificationData]
+        : [],
+  );
 
   return {
     name: asText(record.name || record.course_name),
     admission_batches: getAdmissionBatches(record),
-    quick_info: Array.isArray(record.quick_info)
-      ? record.quick_info
-      : getQuickInfo(record),
-    tabs:
-      Array.isArray(record.tabs) && record.tabs.length > 0
-        ? record.tabs.filter((tab): tab is string => typeof tab === "string")
-        : DEFAULT_PUBLIC_COURSE_INFO_TABS,
+    quick_info: quickInfo,
+    tabs: DEFAULT_PUBLIC_COURSE_INFO_TABS,
     highlights: {
       title:
         asText(highlightData.title) ||
         asText(asRecord(record.program_highlights).title) ||
         "Program Highlights",
-      items: Array.isArray(highlightData.items)
-        ? highlightData.items
-        : Array.isArray(record.program_highlights)
-          ? record.program_highlights
-          : [],
+      items: highlightItems,
     },
     accreditations: {
       title:
         asText(accreditationData.title) ||
         asText(asRecord(record.course_accolades).title) ||
         "Course Accolades",
-      items: Array.isArray(accreditationData.items)
-        ? accreditationData.items
-        : Array.isArray(record.course_accolades)
-          ? record.course_accolades
-          : [],
+      items: accreditationItems,
     },
     keyDates: {
       title: asText(keyDatesData.title) || "Key Dates to Remember",
-      items: Array.isArray(keyDatesData.items)
-        ? keyDatesData.items
-        : Array.isArray(record.key_dates)
-          ? record.key_dates
-          : [],
+      items: keyDateItems,
     },
     curriculum: {
       title: asText(curriculumData.title) || "Curriculum",
@@ -279,127 +660,83 @@ function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
               icon: "",
               label: "",
             },
-      semesters: Array.isArray(curriculumData.semesters)
-        ? curriculumData.semesters
-        : [],
+      semesters: curriculumSemesters,
     },
-    courseStructure:
-      Object.keys(courseStructureData).length > 0
-        ? courseStructureData
-        : {
-            title: "Course Structure",
-            segments: Array.isArray(record.course_structure)
-              ? record.course_structure
-              : [],
-            subtitle: "",
-            chart_type: "",
-          },
-    valueAddedCourses:
-      Object.keys(valueAddedCoursesData).length > 0
-        ? valueAddedCoursesData
-        : {
-            title: "Value Added Course",
-            items: Array.isArray(record.value_added_courses)
-              ? record.value_added_courses
-              : [],
-          },
-    careerOpportunities:
-      Object.keys(careerOpportunitiesData).length > 0
-        ? careerOpportunitiesData
-        : {
-            title: "Career Opportunities",
-            items: Array.isArray(record.career_opportunities)
-              ? record.career_opportunities
-              : [],
-          },
-    higherEducationCertifications:
-      Object.keys(higherEducationData).length > 0
-        ? higherEducationData
-        : {
-            global: {
-              icon: asText(asRecord(legacyHigherEducation.global).icon),
-              items:
-                asStringArray(asRecord(legacyHigherEducation.global).items) ||
-                asStringArray(legacyHigherEducation.global_certifications),
-              title:
-                asText(asRecord(legacyHigherEducation.global).title) ||
-                "GLOBAL CERTIFICATIONS",
-            },
-            postgraduation: {
-              icon: asText(asRecord(legacyHigherEducation.postgraduation).icon),
-              items:
-                asStringArray(
-                  asRecord(legacyHigherEducation.postgraduation).items,
-                ) || asStringArray(legacyHigherEducation.postgraduation),
-              title:
-                asText(asRecord(legacyHigherEducation.postgraduation).title) ||
-                "POSTGRADUATION",
-            },
-          },
-    flexibleExitOptions:
-      Object.keys(flexibleExitOptionsData).length > 0
-        ? flexibleExitOptionsData
-        : {
-            title: "Flexible Exit Options",
-            subtitle: "",
-            items: Array.isArray(record.flexible_exit_options)
-              ? record.flexible_exit_options
-              : [],
-          },
-    classTimings:
-      Object.keys(classTimingsData).length > 0
-        ? classTimingsData
-        : {
-            title: "Class Timings",
-            subtitle: "",
-            schedule: Array.isArray(record.class_timings)
-              ? record.class_timings
-              : [],
-          },
-    industryTools:
-      Object.keys(industryToolsData).length > 0
-        ? industryToolsData
-        : {
-            title: "Industry Tools You'll Master",
-            items: Array.isArray(record.industry_tools)
-              ? record.industry_tools
-              : [],
-          },
-    labFacilities:
-      Object.keys(labFacilitiesData).length > 0
-        ? labFacilitiesData
-        : {
-            title: asText(labFacilitiesData.title) || "Lab Facilities",
-            items: Array.isArray(record.lab_facilities)
-              ? record.lab_facilities
-              : [],
-          },
-    roomFacilities:
-      Object.keys(roomFacilitiesData).length > 0
-        ? roomFacilitiesData
-        : {
-            title: asText(roomFacilitiesData.title) || "Class Room Facilities",
-            items: Array.isArray(record.classroom_facilities)
-              ? record.classroom_facilities
-              : [],
-          },
-    featuredAlumni:
-      Object.keys(featuredAlumniData).length > 0
-        ? featuredAlumniData
-        : {
-            title: "Featured Alumni",
-            highlight_word: "Alumni",
-            items: Array.isArray(record.featured_alumni)
-              ? record.featured_alumni
-              : [],
-          },
-    faqs:
-      Object.keys(faqsData).length > 0
-        ? faqsData
-        : {
-            title: "Frequently Asked Questions",
-            items: Array.isArray(record.faqs) ? record.faqs : [],
-          },
+    courseStructure: {
+      title: asText(courseStructureData.title) || "Course Structure",
+      segments: structureSegments,
+      subtitle: asText(courseStructureData.subtitle),
+      chart_type: asText(courseStructureData.chart_type),
+    },
+    valueAddedCourses: {
+      title: asText(valueAddedCoursesData.title) || "Value Added Course",
+      items: valueAddedItems,
+    },
+    careerOpportunities: {
+      title: asText(careerOpportunitiesData.title) || "Career Opportunities",
+      items: careerItems,
+    },
+    higherEducationCertifications: {
+      global: {
+        icon:
+          asText(asRecord(higherEducationData.global).icon) ||
+          asText(asRecord(legacyHigherEducation.global).icon),
+        items: firstNonEmptyStringArray(
+          asRecord(higherEducationData.global).items,
+          asRecord(legacyHigherEducation.global).items,
+          legacyHigherEducation.global_certifications,
+        ),
+        title:
+          asText(asRecord(higherEducationData.global).title) ||
+          asText(asRecord(legacyHigherEducation.global).title) ||
+          "GLOBAL CERTIFICATIONS",
+      },
+      postgraduation: {
+        icon:
+          asText(asRecord(higherEducationData.postgraduation).icon) ||
+          asText(asRecord(legacyHigherEducation.postgraduation).icon),
+        items: firstNonEmptyStringArray(
+          asRecord(higherEducationData.postgraduation).items,
+          asRecord(legacyHigherEducation.postgraduation).items,
+          legacyHigherEducation.postgraduation,
+        ),
+        title:
+          asText(asRecord(higherEducationData.postgraduation).title) ||
+          asText(asRecord(legacyHigherEducation.postgraduation).title) ||
+          "POSTGRADUATION",
+      },
+    },
+    flexibleExitOptions: {
+      title: asText(flexibleExitOptionsData.title) || "Flexible Exit Options",
+      subtitle: asText(flexibleExitOptionsData.subtitle),
+      items: flexibleItems,
+    },
+    classTimings: {
+      title: asText(classTimingsData.title) || "Class Timings",
+      subtitle: asText(classTimingsData.subtitle),
+      schedule: classSchedule,
+    },
+    industryTools: {
+      title: asText(industryToolsData.title) || "Industry Tools You'll Master",
+      items: toolItems,
+    },
+    labFacilities: {
+      title: asText(labFacilitiesData.title) || "Lab Facilities",
+      items: labItems,
+    },
+    roomFacilities: {
+      title: asText(roomFacilitiesData.title) || "Class Room Facilities",
+      items: roomItems,
+    },
+    featuredAlumni: {
+      title: asText(featuredAlumniData.title) || "Featured Alumni",
+      highlight_word: asText(featuredAlumniData.highlight_word) || "Alumni",
+      items: alumniItems,
+    },
+    faqs: {
+      title: asText(faqsData.title) || "Frequently Asked Questions",
+      items: faqItems,
+    },
     studentForum: {
       icon: asText(studentForumData.icon),
       link:
@@ -411,32 +748,10 @@ function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
       cta_label: asText(studentForumData.cta_label),
       description: asText(studentForumData.description),
     },
-    certifications:
-      Object.keys(certificationsData).length > 0
-        ? certificationsData
-        : {
-            title: "Certifications",
-            items:
-              Object.keys(bonusCertificationData).length > 0
-                ? [
-                    {
-                      tag: asText(bonusCertificationData.tag),
-                      title:
-                        asText(bonusCertificationData.title) ||
-                        asText(bonusCertificationData.name),
-                      description:
-                        asText(bonusCertificationData.description) ||
-                        asText(bonusCertificationData.note),
-                      cta_label:
-                        asText(bonusCertificationData.cta_label) ||
-                        asText(bonusCertificationData.ctaLabel),
-                      link:
-                        asText(bonusCertificationData.link) ||
-                        asText(bonusCertificationData.certificate_link),
-                    },
-                  ]
-                : [],
-          },
+    certifications: {
+      title: asText(certificationsData.title) || "Certifications",
+      items: certificationItems,
+    },
   };
 }
 
