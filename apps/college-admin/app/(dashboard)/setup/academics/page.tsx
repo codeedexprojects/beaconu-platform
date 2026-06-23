@@ -368,8 +368,78 @@ export default function SetupAcademicsPage() {
     }
   };
 
+  const isValidUrl = (value: string) => {
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const validateActiveTabPayload = (): string | null => {
+    if (activeTab === "alliance") {
+      const alliances = getActiveTabPayload().alliances || [];
+      for (let i = 0; i < alliances.length; i++) {
+        const a = alliances[i];
+        const label = a.name?.trim() || `Alliance #${i + 1}`;
+        if (!a.name?.trim())
+          return `Alliance #${i + 1}: Partner name is required`;
+        if (a.cover_image && !isValidUrl(a.cover_image))
+          return `${label}: Cover image must be a valid URL`;
+        if (a.logo && !isValidUrl(a.logo))
+          return `${label}: Logo must be a valid URL`;
+        for (const doc of a.details?.legal_documents || []) {
+          if (!doc.title?.trim())
+            return `${label}: every legal document needs a title`;
+          if (doc.url && !isValidUrl(doc.url))
+            return `${label}: document "${doc.title || "untitled"}" URL is invalid`;
+        }
+        const happeningsLink = a.details?.alliance_activities?.happenings_link;
+        if (happeningsLink && !isValidUrl(happeningsLink))
+          return `${label}: 'View Happenings' link must be a valid URL`;
+        for (const act of a.details?.alliance_activities?.activities || []) {
+          if (!act.title?.trim())
+            return `${label}: every activity needs a title`;
+          if (act.link && !isValidUrl(act.link))
+            return `${label}: activity "${act.title || "untitled"}" link is invalid`;
+        }
+      }
+    }
+
+    if (activeTab === "clubs_associations") {
+      const clubs = getActiveTabPayload().clubs || [];
+      for (let i = 0; i < clubs.length; i++) {
+        const c = clubs[i];
+        const label = c.name?.trim() || `Club #${i + 1}`;
+        if (!c.name?.trim()) return `Club #${i + 1}: Name is required`;
+        if (c.cover_image && !isValidUrl(c.cover_image))
+          return `${label}: Cover image must be a valid URL`;
+        if (c.logo && !isValidUrl(c.logo))
+          return `${label}: Logo must be a valid URL`;
+        const happeningsLink = c.details?.recent_events?.happenings_link;
+        if (happeningsLink && !isValidUrl(happeningsLink))
+          return `${label}: 'View Happenings' link must be a valid URL`;
+        for (const event of c.details?.recent_events?.events || []) {
+          if (!event.title?.trim())
+            return `${label}: every event needs a title`;
+          if (event.link && !isValidUrl(event.link))
+            return `${label}: event "${event.title || "untitled"}" link is invalid`;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const saveActiveTab = () => {
     if (!editingCourse?.id) return;
+
+    const validationError = validateActiveTabPayload();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
 
     const tabPayload = localTabState[activeTab] || {};
     const dataWithId = { id: activeTab, ...tabPayload };
@@ -10983,7 +11053,22 @@ export default function SetupAcademicsPage() {
                               onClick={() => {
                                 const next = [
                                   ...(getActiveTabPayload().clubs || []),
-                                  { name: "", description: "" },
+                                  {
+                                    id: "",
+                                    name: "",
+                                    category: "",
+                                    cover_image: "",
+                                    logo: "",
+                                    details: {
+                                      about: "",
+                                      mission: "",
+                                      key_activities: [],
+                                      recent_events: {
+                                        happenings_link: "",
+                                        events: [],
+                                      },
+                                    },
+                                  },
                                 ];
                                 updateActiveTabPayload({ clubs: next });
                               }}
@@ -10992,48 +11077,273 @@ export default function SetupAcademicsPage() {
                             </Button>
                           </div>
                           {(getActiveTabPayload().clubs || []).map(
-                            (c: any, idx: number) => (
-                              <div
-                                key={idx}
-                                className="flex gap-2 items-center border p-3 rounded-lg bg-muted/10"
-                              >
-                                <Input
-                                  placeholder="Club Name"
-                                  value={c.name || ""}
-                                  onChange={(e) => {
-                                    const next = [
-                                      ...(getActiveTabPayload().clubs || []),
-                                    ];
-                                    next[idx].name = e.target.value;
-                                    updateActiveTabPayload({ clubs: next });
-                                  }}
-                                />
-                                <Input
-                                  placeholder="Short description..."
-                                  value={c.description || ""}
-                                  onChange={(e) => {
-                                    const next = [
-                                      ...(getActiveTabPayload().clubs || []),
-                                    ];
-                                    next[idx].description = e.target.value;
-                                    updateActiveTabPayload({ clubs: next });
-                                  }}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    const next = (
-                                      getActiveTabPayload().clubs || []
-                                    ).filter((_: any, i: number) => i !== idx);
-                                    updateActiveTabPayload({ clubs: next });
-                                  }}
+                            (c: any, idx: number) => {
+                              const clubs = getActiveTabPayload().clubs || [];
+                              const updateClub = (patch: any) => {
+                                const next = [...clubs];
+                                next[idx] = { ...next[idx], ...patch };
+                                updateActiveTabPayload({ clubs: next });
+                              };
+                              const updateDetails = (patch: any) => {
+                                updateClub({
+                                  details: { ...c.details, ...patch },
+                                });
+                              };
+                              const keyActivities =
+                                c.details?.key_activities || [];
+                              const events =
+                                c.details?.recent_events?.events || [];
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className="space-y-3 border p-4 rounded-lg bg-muted/10"
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            ),
+                                  <div className="flex justify-between items-start gap-2">
+                                    <Input
+                                      className="flex-1"
+                                      placeholder="Club Name (e.g. National Service Scheme)"
+                                      value={c.name || ""}
+                                      onChange={(e) =>
+                                        updateClub({ name: e.target.value })
+                                      }
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const next = clubs.filter(
+                                          (_: any, i: number) => i !== idx,
+                                        );
+                                        updateActiveTabPayload({
+                                          clubs: next,
+                                        });
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <Input
+                                      placeholder="Category (e.g. SERVICE)"
+                                      value={c.category || ""}
+                                      onChange={(e) =>
+                                        updateClub({
+                                          category: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <Input
+                                      placeholder="https://cdn.example.com/cover.png"
+                                      value={c.cover_image || ""}
+                                      onChange={(e) =>
+                                        updateClub({
+                                          cover_image: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <Input
+                                      placeholder="https://cdn.example.com/logo.png"
+                                      value={c.logo || ""}
+                                      onChange={(e) =>
+                                        updateClub({ logo: e.target.value })
+                                      }
+                                    />
+                                  </div>
+
+                                  <Textarea
+                                    placeholder="About this club..."
+                                    value={c.details?.about || ""}
+                                    onChange={(e) =>
+                                      updateDetails({ about: e.target.value })
+                                    }
+                                  />
+                                  <Textarea
+                                    placeholder="Mission statement..."
+                                    value={c.details?.mission || ""}
+                                    onChange={(e) =>
+                                      updateDetails({
+                                        mission: e.target.value,
+                                      })
+                                    }
+                                  />
+
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <Label className="text-sm font-semibold">
+                                        Key Activities
+                                      </Label>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          updateDetails({
+                                            key_activities: [
+                                              ...keyActivities,
+                                              "",
+                                            ],
+                                          })
+                                        }
+                                      >
+                                        Add Activity
+                                      </Button>
+                                    </div>
+                                    {keyActivities.map(
+                                      (item: string, kIdx: number) => (
+                                        <div
+                                          key={kIdx}
+                                          className="flex gap-2 items-center"
+                                        >
+                                          <Input
+                                            placeholder="e.g. Blood Donation Camps"
+                                            value={item}
+                                            onChange={(e) => {
+                                              const next = [...keyActivities];
+                                              next[kIdx] = e.target.value;
+                                              updateDetails({
+                                                key_activities: next,
+                                              });
+                                            }}
+                                          />
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              updateDetails({
+                                                key_activities:
+                                                  keyActivities.filter(
+                                                    (_: any, i: number) =>
+                                                      i !== kIdx,
+                                                  ),
+                                              })
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-semibold">
+                                      Recent Events
+                                    </Label>
+                                    <Input
+                                      placeholder="'View Happenings' link"
+                                      value={
+                                        c.details?.recent_events
+                                          ?.happenings_link || ""
+                                      }
+                                      onChange={(e) =>
+                                        updateDetails({
+                                          recent_events: {
+                                            ...c.details?.recent_events,
+                                            happenings_link: e.target.value,
+                                          },
+                                        })
+                                      }
+                                    />
+                                    <div className="flex justify-end">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          updateDetails({
+                                            recent_events: {
+                                              ...c.details?.recent_events,
+                                              events: [
+                                                ...events,
+                                                {
+                                                  id: `event_${events.length + 1}`,
+                                                  title: "",
+                                                  image: "",
+                                                  link: "",
+                                                },
+                                              ],
+                                            },
+                                          })
+                                        }
+                                      >
+                                        Add Event
+                                      </Button>
+                                    </div>
+                                    {events.map((event: any, eIdx: number) => {
+                                      const updateEvent = (patch: any) => {
+                                        const next = [...events];
+                                        next[eIdx] = {
+                                          ...next[eIdx],
+                                          ...patch,
+                                        };
+                                        updateDetails({
+                                          recent_events: {
+                                            ...c.details?.recent_events,
+                                            events: next,
+                                          },
+                                        });
+                                      };
+                                      return (
+                                        <div
+                                          key={eIdx}
+                                          className="grid grid-cols-[2fr_2fr_2fr_auto] gap-2 items-center"
+                                        >
+                                          <Input
+                                            placeholder="Event Title"
+                                            value={event.title || ""}
+                                            onChange={(e) =>
+                                              updateEvent({
+                                                title: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Input
+                                            placeholder="Thumbnail image URL"
+                                            value={event.image || ""}
+                                            onChange={(e) =>
+                                              updateEvent({
+                                                image: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Input
+                                            placeholder="Event link"
+                                            value={event.link || ""}
+                                            onChange={(e) =>
+                                              updateEvent({
+                                                link: e.target.value,
+                                              })
+                                            }
+                                          />
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              updateDetails({
+                                                recent_events: {
+                                                  ...c.details?.recent_events,
+                                                  events: events.filter(
+                                                    (_: any, i: number) =>
+                                                      i !== eIdx,
+                                                  ),
+                                                },
+                                              })
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            },
                           )}
                         </div>
                       )}
@@ -11104,26 +11414,16 @@ export default function SetupAcademicsPage() {
                                   className="space-y-3 border p-4 rounded-lg bg-muted/10"
                                 >
                                   <div className="flex justify-between items-start gap-2">
-                                    <div className="grid grid-cols-2 gap-2 flex-1">
-                                      <Input
-                                        placeholder="Partner Name (e.g. Baby Memorial Hospital)"
-                                        value={a.name || ""}
-                                        onChange={(e) =>
-                                          updateAlliance({
-                                            name: e.target.value,
-                                          })
-                                        }
-                                      />
-                                      <Input
-                                        placeholder="Unique ID (e.g. baby-memorial-hospital)"
-                                        value={a.id || ""}
-                                        onChange={(e) =>
-                                          updateAlliance({
-                                            id: e.target.value,
-                                          })
-                                        }
-                                      />
-                                    </div>
+                                    <Input
+                                      className="flex-1"
+                                      placeholder="Partner Name (e.g. Baby Memorial Hospital)"
+                                      value={a.name || ""}
+                                      onChange={(e) =>
+                                        updateAlliance({
+                                          name: e.target.value,
+                                        })
+                                      }
+                                    />
                                     <Button
                                       type="button"
                                       variant="ghost"
