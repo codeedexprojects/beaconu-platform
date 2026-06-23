@@ -162,6 +162,284 @@ function getSetupTabDataFromMetadata(
   return tabData[tabName] ?? {};
 }
 
+const DEFAULT_PUBLIC_COURSE_INFO_TABS = [
+  "course_info",
+  "admission_policy",
+  "placements",
+  "fees",
+  "financial_aid",
+  "student_housing",
+  "exam_policy",
+  "faculty",
+  "review",
+  "library",
+  "clubs_associations",
+  "alliance",
+  "other_courses_offered",
+  "demo_graphics",
+];
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function getCourseInfoSource(data: unknown): Record<string, unknown> {
+  const record = asRecord(data);
+  const wrappedData = asRecord(record.data);
+  return Object.keys(wrappedData).length > 0 ? wrappedData : record;
+}
+
+function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
+  const record = getCourseInfoSource(data);
+  const highlightData = asRecord(record.highlights);
+  const accreditationData = asRecord(record.accreditations);
+  const keyDatesData = asRecord(record.keyDates);
+  const curriculumData = asRecord(record.curriculum);
+  const curriculumBrochure = asRecord(curriculumData.brochure);
+  const courseStructureData = asRecord(record.courseStructure);
+  const valueAddedCoursesData = asRecord(record.valueAddedCourses);
+  const careerOpportunitiesData = asRecord(record.careerOpportunities);
+  const higherEducationData = asRecord(record.higherEducationCertifications);
+  const flexibleExitOptionsData = asRecord(record.flexibleExitOptions);
+  const classTimingsData = asRecord(record.classTimings);
+  const industryToolsData = asRecord(record.industryTools);
+  const labFacilitiesData = asRecord(record.labFacilities);
+  const roomFacilitiesData = asRecord(record.roomFacilities);
+  const featuredAlumniData = asRecord(record.featuredAlumni);
+  const faqsData = asRecord(record.faqs);
+  const studentForumData = asRecord(
+    record.studentForum || record.student_forum,
+  );
+  const certificationsData = asRecord(record.certifications);
+  const bonusCertificationData = asRecord(record.bonus_certification);
+  const legacyHigherEducation = asRecord(
+    record.higher_education || record.higher_education_and_certifications,
+  );
+
+  return {
+    name: asText(record.name || record.course_name),
+    admission_batches: getAdmissionBatches(record),
+    quick_info: Array.isArray(record.quick_info)
+      ? record.quick_info
+      : getQuickInfo(record),
+    tabs:
+      Array.isArray(record.tabs) && record.tabs.length > 0
+        ? record.tabs.filter((tab): tab is string => typeof tab === "string")
+        : DEFAULT_PUBLIC_COURSE_INFO_TABS,
+    highlights: {
+      title:
+        asText(highlightData.title) ||
+        asText(asRecord(record.program_highlights).title) ||
+        "Program Highlights",
+      items: Array.isArray(highlightData.items)
+        ? highlightData.items
+        : Array.isArray(record.program_highlights)
+          ? record.program_highlights
+          : [],
+    },
+    accreditations: {
+      title:
+        asText(accreditationData.title) ||
+        asText(asRecord(record.course_accolades).title) ||
+        "Course Accolades",
+      items: Array.isArray(accreditationData.items)
+        ? accreditationData.items
+        : Array.isArray(record.course_accolades)
+          ? record.course_accolades
+          : [],
+    },
+    keyDates: {
+      title: asText(keyDatesData.title) || "Key Dates to Remember",
+      items: Array.isArray(keyDatesData.items)
+        ? keyDatesData.items
+        : Array.isArray(record.key_dates)
+          ? record.key_dates
+          : [],
+    },
+    curriculum: {
+      title: asText(curriculumData.title) || "Curriculum",
+      subtitle: asText(curriculumData.subtitle),
+      brochure:
+        Object.keys(curriculumBrochure).length > 0
+          ? {
+              url: asText(curriculumBrochure.url),
+              icon: asText(curriculumBrochure.icon),
+              label: asText(curriculumBrochure.label),
+            }
+          : {
+              url:
+                asText(curriculumData.brochure_link) ||
+                asText(curriculumData.brochure_upload),
+              icon: "",
+              label: "",
+            },
+      semesters: Array.isArray(curriculumData.semesters)
+        ? curriculumData.semesters
+        : [],
+    },
+    courseStructure:
+      Object.keys(courseStructureData).length > 0
+        ? courseStructureData
+        : {
+            title: "Course Structure",
+            segments: Array.isArray(record.course_structure)
+              ? record.course_structure
+              : [],
+            subtitle: "",
+            chart_type: "",
+          },
+    valueAddedCourses:
+      Object.keys(valueAddedCoursesData).length > 0
+        ? valueAddedCoursesData
+        : {
+            title: "Value Added Course",
+            items: Array.isArray(record.value_added_courses)
+              ? record.value_added_courses
+              : [],
+          },
+    careerOpportunities:
+      Object.keys(careerOpportunitiesData).length > 0
+        ? careerOpportunitiesData
+        : {
+            title: "Career Opportunities",
+            items: Array.isArray(record.career_opportunities)
+              ? record.career_opportunities
+              : [],
+          },
+    higherEducationCertifications:
+      Object.keys(higherEducationData).length > 0
+        ? higherEducationData
+        : {
+            global: {
+              icon: asText(asRecord(legacyHigherEducation.global).icon),
+              items:
+                asStringArray(asRecord(legacyHigherEducation.global).items) ||
+                asStringArray(legacyHigherEducation.global_certifications),
+              title:
+                asText(asRecord(legacyHigherEducation.global).title) ||
+                "GLOBAL CERTIFICATIONS",
+            },
+            postgraduation: {
+              icon: asText(asRecord(legacyHigherEducation.postgraduation).icon),
+              items:
+                asStringArray(
+                  asRecord(legacyHigherEducation.postgraduation).items,
+                ) || asStringArray(legacyHigherEducation.postgraduation),
+              title:
+                asText(asRecord(legacyHigherEducation.postgraduation).title) ||
+                "POSTGRADUATION",
+            },
+          },
+    flexibleExitOptions:
+      Object.keys(flexibleExitOptionsData).length > 0
+        ? flexibleExitOptionsData
+        : {
+            title: "Flexible Exit Options",
+            subtitle: "",
+            items: Array.isArray(record.flexible_exit_options)
+              ? record.flexible_exit_options
+              : [],
+          },
+    classTimings:
+      Object.keys(classTimingsData).length > 0
+        ? classTimingsData
+        : {
+            title: "Class Timings",
+            subtitle: "",
+            schedule: Array.isArray(record.class_timings)
+              ? record.class_timings
+              : [],
+          },
+    industryTools:
+      Object.keys(industryToolsData).length > 0
+        ? industryToolsData
+        : {
+            title: "Industry Tools You'll Master",
+            items: Array.isArray(record.industry_tools)
+              ? record.industry_tools
+              : [],
+          },
+    labFacilities:
+      Object.keys(labFacilitiesData).length > 0
+        ? labFacilitiesData
+        : {
+            title: asText(labFacilitiesData.title) || "Lab Facilities",
+            items: Array.isArray(record.lab_facilities)
+              ? record.lab_facilities
+              : [],
+          },
+    roomFacilities:
+      Object.keys(roomFacilitiesData).length > 0
+        ? roomFacilitiesData
+        : {
+            title: asText(roomFacilitiesData.title) || "Class Room Facilities",
+            items: Array.isArray(record.classroom_facilities)
+              ? record.classroom_facilities
+              : [],
+          },
+    featuredAlumni:
+      Object.keys(featuredAlumniData).length > 0
+        ? featuredAlumniData
+        : {
+            title: "Featured Alumni",
+            highlight_word: "Alumni",
+            items: Array.isArray(record.featured_alumni)
+              ? record.featured_alumni
+              : [],
+          },
+    faqs:
+      Object.keys(faqsData).length > 0
+        ? faqsData
+        : {
+            title: "Frequently Asked Questions",
+            items: Array.isArray(record.faqs) ? record.faqs : [],
+          },
+    studentForum: {
+      icon: asText(studentForumData.icon),
+      link:
+        asText(studentForumData.link) ||
+        asText(studentForumData.admission_team_contact),
+      title: asText(studentForumData.title) || "Student Forum",
+      enabled: asBoolean(studentForumData.enabled, true),
+      cta_icon: asText(studentForumData.cta_icon),
+      cta_label: asText(studentForumData.cta_label),
+      description: asText(studentForumData.description),
+    },
+    certifications:
+      Object.keys(certificationsData).length > 0
+        ? certificationsData
+        : {
+            title: "Certifications",
+            items:
+              Object.keys(bonusCertificationData).length > 0
+                ? [
+                    {
+                      tag: asText(bonusCertificationData.tag),
+                      title:
+                        asText(bonusCertificationData.title) ||
+                        asText(bonusCertificationData.name),
+                      description:
+                        asText(bonusCertificationData.description) ||
+                        asText(bonusCertificationData.note),
+                      cta_label:
+                        asText(bonusCertificationData.cta_label) ||
+                        asText(bonusCertificationData.ctaLabel),
+                      link:
+                        asText(bonusCertificationData.link) ||
+                        asText(bonusCertificationData.certificate_link),
+                    },
+                  ]
+                : [],
+          },
+  };
+}
+
 function transformPublicFeeTab(raw: Record<string, unknown>) {
   const feeDetails = Array.isArray(raw.fee_details)
     ? (raw.fee_details as Record<string, unknown>[]).map((detail) => {
@@ -759,6 +1037,10 @@ function assignMissingIds(
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
+  if (tabName === "course_info") {
+    return normalizeCourseInfoData(data);
+  }
+
   if (tabName === "alliance" && Array.isArray(record.alliances)) {
     return {
       ...record,
@@ -1104,115 +1386,38 @@ export class CourseTabsService {
     if (!course) throw new NotFoundError("Course not found");
 
     const tabs = getCourseSetupTabsFromMetadata(course.metadata);
-    const courseInfo = asRecord(
+    const courseInfo = normalizeCourseInfoData(
       getSetupTabDataFromMetadata(course.metadata, "course_info"),
     );
-    const admissionBatches = getAdmissionBatches(courseInfo);
-    const quickInfo = getQuickInfo(courseInfo);
-
-    // The college-admin dashboard has no standalone editor for these content
-    // tabs — staff only ever fill them in as part of the bundled course_info
-    // setup tab. Fall back to the equivalent course_info field whenever the
-    // dedicated column is still empty (its Prisma default).
-    const highlights = isEmptyValue(course.highlights)
-      ? (courseInfo.program_highlights ?? [])
-      : course.highlights;
-    const keyDates = isEmptyValue(course.keyDates)
-      ? (courseInfo.key_dates ?? [])
-      : course.keyDates;
-    const curriculum = isEmptyValue(course.curriculum)
-      ? (courseInfo.curriculum ?? {})
-      : course.curriculum;
-    const courseStructure = isEmptyValue(course.courseStructure)
-      ? (courseInfo.course_structure ?? [])
-      : course.courseStructure;
-    const valueAddedCourses = isEmptyValue(course.valueAddedCourses)
-      ? (courseInfo.value_added_courses ?? [])
-      : course.valueAddedCourses;
-    const careerOpportunities = isEmptyValue(course.careerOpportunities)
-      ? (courseInfo.career_opportunities ?? [])
-      : course.careerOpportunities;
-    const higherEducationCertifications = isEmptyValue(
-      course.higherEducationCertifications,
-    )
-      ? (courseInfo.higher_education ?? {})
-      : course.higherEducationCertifications;
-    const flexibleExitOptions = isEmptyValue(course.flexibleExitOptions)
-      ? (courseInfo.flexible_exit_options ?? [])
-      : course.flexibleExitOptions;
-    const classTimings = isEmptyValue(course.classTimings)
-      ? (courseInfo.class_timings ?? [])
-      : course.classTimings;
-    const industryTools = isEmptyValue(course.industryTools)
-      ? (courseInfo.industry_tools ?? [])
-      : course.industryTools;
-    const labFacilities = isEmptyValue(course.labFacilities)
-      ? (courseInfo.lab_facilities ?? [])
-      : course.labFacilities;
-    const roomFacilities = isEmptyValue(course.roomFacilities)
-      ? (courseInfo.classroom_facilities ?? [])
-      : course.roomFacilities;
-    const featuredAlumni = isEmptyValue(course.featuredAlumni)
-      ? (courseInfo.featured_alumni ?? [])
-      : course.featuredAlumni;
-    const faqs = isEmptyValue(course.faqs)
-      ? (courseInfo.faqs ?? [])
-      : course.faqs;
-
-    const studentForum =
-      asRecord(courseInfo.student_forum).enabled !== undefined ||
-      Object.keys(asRecord(courseInfo.student_forum)).length > 0
-        ? asRecord(courseInfo.student_forum)
-        : asRecord(courseInfo.studentForum);
-
-    const bonusCertification = asRecord(courseInfo.bonus_certification);
-    const certifications =
-      Object.keys(bonusCertification).length > 0
-        ? {
-            title: "Certifications",
-            items: [
-              {
-                tag: asText(bonusCertification.tag),
-                title:
-                  asText(bonusCertification.title) ||
-                  asText(bonusCertification.name),
-                description:
-                  asText(bonusCertification.description) ||
-                  asText(bonusCertification.note),
-                cta_label:
-                  asText(bonusCertification.cta_label) ||
-                  asText(bonusCertification.ctaLabel),
-                link:
-                  asText(bonusCertification.link) ||
-                  asText(bonusCertification.certificate_link),
-              },
-            ],
-          }
-        : {};
 
     return {
       id: course.id,
       name: course.name,
-      admission_batches: admissionBatches,
-      quick_info: quickInfo,
-      tabs,
-      highlights,
-      accreditations: course.accreditations ?? {},
-      keyDates,
-      curriculum,
-      courseStructure,
-      valueAddedCourses,
-      careerOpportunities,
-      higherEducationCertifications,
-      flexibleExitOptions,
-      classTimings,
-      industryTools,
-      labFacilities,
-      roomFacilities,
-      featuredAlumni,
-      faqs,
-      studentForum,
-      certifications,
+      admission_batches: courseInfo.admission_batches ?? [],
+      quick_info: courseInfo.quick_info ?? [],
+      tabs:
+        Array.isArray(courseInfo.tabs) &&
+        (courseInfo.tabs as unknown[]).length > 0
+          ? courseInfo.tabs
+          : tabs,
+      highlights: courseInfo.highlights ?? {},
+      accreditations: courseInfo.accreditations ?? {},
+      keyDates: courseInfo.keyDates ?? {},
+      curriculum: courseInfo.curriculum ?? {},
+      courseStructure: courseInfo.courseStructure ?? {},
+      valueAddedCourses: courseInfo.valueAddedCourses ?? {},
+      careerOpportunities: courseInfo.careerOpportunities ?? {},
+      higherEducationCertifications:
+        courseInfo.higherEducationCertifications ?? {},
+      flexibleExitOptions: courseInfo.flexibleExitOptions ?? {},
+      classTimings: courseInfo.classTimings ?? {},
+      industryTools: courseInfo.industryTools ?? {},
+      labFacilities: courseInfo.labFacilities ?? {},
+      roomFacilities: courseInfo.roomFacilities ?? {},
+      featuredAlumni: courseInfo.featuredAlumni ?? {},
+      faqs: courseInfo.faqs ?? {},
+      studentForum: asRecord(courseInfo.studentForum),
+      certifications: asRecord(courseInfo.certifications),
     };
   }
 
