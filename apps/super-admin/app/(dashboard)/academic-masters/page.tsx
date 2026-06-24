@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, X, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,11 +19,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { cn } from "@/lib/utils";
+import type {
+  StreamLookup,
+  Discipline,
+  StudyLevel,
+  ProgramType,
+} from "@/lib/services/academic-taxonomy.service";
 import {
   useCreateStream,
+  useUpdateStream,
   useCreateDiscipline,
+  useUpdateDiscipline,
   useCreateProgramType,
+  useUpdateProgramType,
   useCreateStudyLevel,
+  useUpdateStudyLevel,
   useEnableStream,
   useDisableStream,
   useEnableDiscipline,
@@ -159,15 +169,19 @@ export default function AcademicMastersPage() {
   const programTypesMeta = programTypesPage?.meta;
 
   const createStream = useCreateStream();
+  const updateStream = useUpdateStream();
   const enableStream = useEnableStream();
   const disableStream = useDisableStream();
   const createDiscipline = useCreateDiscipline();
+  const updateDiscipline = useUpdateDiscipline();
   const enableDiscipline = useEnableDiscipline();
   const disableDiscipline = useDisableDiscipline();
   const createStudyLevel = useCreateStudyLevel();
+  const updateStudyLevel = useUpdateStudyLevel();
   const enableStudyLevel = useEnableStudyLevel();
   const disableStudyLevel = useDisableStudyLevel();
   const createProgramType = useCreateProgramType();
+  const updateProgramType = useUpdateProgramType();
   const enableProgramType = useEnableProgramType();
   const disableProgramType = useDisableProgramType();
 
@@ -187,6 +201,35 @@ export default function AcademicMastersPage() {
     sort_order: 0,
   });
   const [programTypeForm, setProgramTypeForm] = useState({
+    name: "",
+    sort_order: 0,
+  });
+
+  const [editingStream, setEditingStream] = useState<StreamLookup | null>(null);
+  const [editStreamForm, setEditStreamForm] = useState({
+    name: "",
+    logo_url: "",
+    sort_order: 0,
+  });
+  const [editingDiscipline, setEditingDiscipline] = useState<Discipline | null>(
+    null,
+  );
+  const [editDisciplineForm, setEditDisciplineForm] = useState({
+    stream_id: "",
+    name: "",
+    logo_url: "",
+    sort_order: 0,
+  });
+  const [editingStudyLevel, setEditingStudyLevel] = useState<StudyLevel | null>(
+    null,
+  );
+  const [editStudyLevelForm, setEditStudyLevelForm] = useState({
+    name: "",
+    sort_order: 0,
+  });
+  const [editingProgramType, setEditingProgramType] =
+    useState<ProgramType | null>(null);
+  const [editProgramTypeForm, setEditProgramTypeForm] = useState({
     name: "",
     sort_order: 0,
   });
@@ -247,6 +290,71 @@ export default function AcademicMastersPage() {
     );
   };
 
+  function openEditStream(stream: StreamLookup) {
+    setEditStreamForm({
+      name: stream.name,
+      logo_url: stream.logoUrl ?? "",
+      sort_order: stream.sortOrder,
+    });
+    setEditingStream(stream);
+  }
+
+  const handleUpdateStream = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingStream) return;
+    updateStream.mutate(
+      {
+        id: editingStream.id,
+        data: {
+          ...editStreamForm,
+          slug: slugify(editStreamForm.name),
+          logo_url: editStreamForm.logo_url || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Stream updated");
+          setEditingStream(null);
+        },
+      },
+    );
+  };
+
+  function openEditDiscipline(discipline: Discipline) {
+    setEditDisciplineForm({
+      stream_id: discipline.streamId,
+      name: discipline.name,
+      logo_url: discipline.logoUrl ?? "",
+      sort_order: discipline.sortOrder,
+    });
+    setEditingDiscipline(discipline);
+  }
+
+  const handleUpdateDiscipline = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingDiscipline) return;
+    if (!editDisciplineForm.stream_id) {
+      toast.error("Please select a stream");
+      return;
+    }
+    updateDiscipline.mutate(
+      {
+        id: editingDiscipline.id,
+        data: {
+          ...editDisciplineForm,
+          slug: slugify(editDisciplineForm.name),
+          logo_url: editDisciplineForm.logo_url || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Discipline updated");
+          setEditingDiscipline(null);
+        },
+      },
+    );
+  };
+
   const handleCreateStudyLevel = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     createStudyLevel.mutate(
@@ -270,6 +378,56 @@ export default function AcademicMastersPage() {
           toast.success("Program type added");
           setProgramTypeForm({ name: "", sort_order: 0 });
           setShowForm(false);
+        },
+      },
+    );
+  };
+
+  function openEditStudyLevel(level: StudyLevel) {
+    setEditStudyLevelForm({ name: level.name, sort_order: level.sortOrder });
+    setEditingStudyLevel(level);
+  }
+
+  const handleUpdateStudyLevel = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingStudyLevel) return;
+    updateStudyLevel.mutate(
+      {
+        id: editingStudyLevel.id,
+        data: {
+          ...editStudyLevelForm,
+          slug: slugify(editStudyLevelForm.name),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Study level updated");
+          setEditingStudyLevel(null);
+        },
+      },
+    );
+  };
+
+  function openEditProgramType(type: ProgramType) {
+    setEditProgramTypeForm({ name: type.name, sort_order: type.sortOrder });
+    setEditingProgramType(type);
+  }
+
+  const handleUpdateProgramType = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingProgramType) return;
+    updateProgramType.mutate(
+      {
+        id: editingProgramType.id,
+        data: {
+          ...editProgramTypeForm,
+          slug: slugify(editProgramTypeForm.name),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Program type updated");
+          setEditingProgramType(null);
         },
       },
     );
@@ -395,6 +553,14 @@ export default function AcademicMastersPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEditStream(stream)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Badge
                           variant={stream.isActive ? "success" : "secondary"}
                         >
@@ -571,6 +737,14 @@ export default function AcademicMastersPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEditDiscipline(discipline)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Badge
                           variant={
                             discipline.isActive ? "success" : "secondary"
@@ -698,6 +872,14 @@ export default function AcademicMastersPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEditStudyLevel(level)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Badge
                           variant={level.isActive ? "success" : "secondary"}
                         >
@@ -826,6 +1008,14 @@ export default function AcademicMastersPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEditProgramType(type)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Badge
                           variant={type.isActive ? "success" : "secondary"}
                         >
@@ -862,6 +1052,343 @@ export default function AcademicMastersPage() {
           </Card>
         )}
       </div>
+
+      {editingStream && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingStream(null);
+          }}
+        >
+          <Card className="w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Edit Stream</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setEditingStream(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form
+              onSubmit={handleUpdateStream}
+              className="space-y-4 max-h-[70vh] overflow-y-auto"
+            >
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editStreamForm.name}
+                  onChange={(e) =>
+                    setEditStreamForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input
+                  type="number"
+                  value={editStreamForm.sort_order}
+                  onChange={(e) =>
+                    setEditStreamForm((prev) => ({
+                      ...prev,
+                      sort_order: Number(e.target.value || 0),
+                    }))
+                  }
+                />
+              </div>
+
+              <ImageUpload
+                label="Icon (optional)"
+                value={editStreamForm.logo_url}
+                onChange={(url) =>
+                  setEditStreamForm((prev) => ({ ...prev, logo_url: url }))
+                }
+                context="stream-icons"
+                aspect={1}
+              />
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingStream(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateStream.isPending}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editingDiscipline && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingDiscipline(null);
+          }}
+        >
+          <Card className="w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Edit Discipline</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setEditingDiscipline(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form
+              onSubmit={handleUpdateDiscipline}
+              className="space-y-4 max-h-[70vh] overflow-y-auto"
+            >
+              <div className="space-y-2">
+                <Label>Stream</Label>
+                <Select
+                  value={editDisciplineForm.stream_id}
+                  onValueChange={(value) =>
+                    setEditDisciplineForm((prev) => ({
+                      ...prev,
+                      stream_id: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select stream" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortedActiveStreams.map((stream) => (
+                      <SelectItem key={stream.id} value={stream.id}>
+                        {stream.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editDisciplineForm.name}
+                  onChange={(e) =>
+                    setEditDisciplineForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input
+                  type="number"
+                  value={editDisciplineForm.sort_order}
+                  onChange={(e) =>
+                    setEditDisciplineForm((prev) => ({
+                      ...prev,
+                      sort_order: Number(e.target.value || 0),
+                    }))
+                  }
+                />
+              </div>
+
+              <ImageUpload
+                label="Icon (optional)"
+                value={editDisciplineForm.logo_url}
+                onChange={(url) =>
+                  setEditDisciplineForm((prev) => ({
+                    ...prev,
+                    logo_url: url,
+                  }))
+                }
+                context="discipline-icons"
+                aspect={1}
+              />
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingDiscipline(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateDiscipline.isPending}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editingStudyLevel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingStudyLevel(null);
+          }}
+        >
+          <Card className="w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Edit Study Level</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setEditingStudyLevel(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleUpdateStudyLevel} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editStudyLevelForm.name}
+                  onChange={(e) =>
+                    setEditStudyLevelForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input
+                  type="number"
+                  value={editStudyLevelForm.sort_order}
+                  onChange={(e) =>
+                    setEditStudyLevelForm((prev) => ({
+                      ...prev,
+                      sort_order: Number(e.target.value || 0),
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingStudyLevel(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateStudyLevel.isPending}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editingProgramType && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingProgramType(null);
+          }}
+        >
+          <Card className="w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Edit Program Type</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setEditingProgramType(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form onSubmit={handleUpdateProgramType} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editProgramTypeForm.name}
+                  onChange={(e) =>
+                    setEditProgramTypeForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input
+                  type="number"
+                  value={editProgramTypeForm.sort_order}
+                  onChange={(e) =>
+                    setEditProgramTypeForm((prev) => ({
+                      ...prev,
+                      sort_order: Number(e.target.value || 0),
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingProgramType(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateProgramType.isPending}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

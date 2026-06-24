@@ -121,6 +121,9 @@ export const academicTaxonomyService = {
   createStream: (data: CreateSimpleTaxonomyInput) =>
     api.post<StreamLookup>("/api/v1/admin/universities/streams", data),
 
+  updateStream: (id: string, data: UpdateSimpleTaxonomyInput) =>
+    api.patch<StreamLookup>(`/api/v1/admin/universities/streams/${id}`, data),
+
   enableStream: (id: string) =>
     api.patch<StreamLookup>(`/api/v1/admin/universities/streams/${id}`, {
       is_active: true,

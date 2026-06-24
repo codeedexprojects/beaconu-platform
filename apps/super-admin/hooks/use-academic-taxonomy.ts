@@ -47,6 +47,26 @@ export function useCreateStream() {
   });
 }
 
+export function useUpdateStream() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateSimpleTaxonomyInput;
+    }) => academicTaxonomyService.updateStream(id, data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.streams,
+      });
+    },
+  });
+}
+
 export function useEnableStream() {
   const queryClient = useQueryClient();
 
