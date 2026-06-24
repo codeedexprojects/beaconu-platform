@@ -273,4 +273,20 @@ export class BlinkRepository {
       orderBy: { createdAt: "desc" },
     });
   }
+
+  static async findActiveAmbassadorsByCollegePublic(collegeId: string) {
+    return prisma.blinkUser.findMany({
+      where: {
+        collegeId,
+        blinkRole: { slug: "campus_ambassador" },
+        status: "active",
+      },
+      select: {
+        fullName: true,
+        avatarUrl: true,
+        profileMetadata: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }

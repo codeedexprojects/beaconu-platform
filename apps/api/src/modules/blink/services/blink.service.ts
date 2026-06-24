@@ -481,4 +481,27 @@ export class BlinkService {
       createdAt: a.createdAt,
     }));
   }
+
+  static async listPublicCampusAmbassadors(collegeId: string) {
+    const ambassadors =
+      await BlinkRepository.findActiveAmbassadorsByCollegePublic(collegeId);
+
+    return ambassadors.map((a) => {
+      const meta =
+        a.profileMetadata &&
+        typeof a.profileMetadata === "object" &&
+        !Array.isArray(a.profileMetadata)
+          ? (a.profileMetadata as Record<string, unknown>)
+          : {};
+      return {
+        name: a.fullName,
+        image: a.avatarUrl ?? "",
+        state: typeof meta.state === "string" ? meta.state : "",
+        course: typeof meta.course === "string" ? meta.course : "",
+        district: typeof meta.district === "string" ? meta.district : "",
+        message_link:
+          typeof meta.message_link === "string" ? meta.message_link : "",
+      };
+    });
+  }
 }

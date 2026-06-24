@@ -4,6 +4,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
 import { CollegeRegistrationService } from "../services/college-registration.service";
+import { BlinkService } from "@/modules/blink/services/blink.service";
 // Exhaustive list of valid college-level tab IDs.
 // Only these IDs will appear in the public college tabs array.
 // Course-level tabs (fees, faculty, etc.) are implicitly excluded.
@@ -231,6 +232,18 @@ function findSectionByIdentifier(
   return null;
 }
 
+const SECTION_DYNAMIC_OVERLAYS: Record<
+  string,
+  (collegeId: string) => Promise<Record<string, unknown>>
+> = {
+  institutions_across_world: (collegeId) =>
+    CollegeRegistrationService.buildDynamicInstitutionsSection(collegeId),
+  college_overview: async (collegeId) => ({
+    campus_ambassadors:
+      await BlinkService.listPublicCampusAmbassadors(collegeId),
+  }),
+};
+
 export class PublicCollegeController {
   static async getColleges(req: Request, res: Response) {
     const {
@@ -426,13 +439,13 @@ export class PublicCollegeController {
       sectionIdentifier,
     );
 
+    const overlayFn = SECTION_DYNAMIC_OVERLAYS[sectionIdentifier];
     // institutions_across_world is always-live (computed from institution
     // group membership) — like `commute` on the college-admin read path, it
     // exists even if the college never saved anything for this section.
-    const isInstitutionsAcrossWorld =
-      sectionIdentifier === "institutions_across_world";
+    const isAlwaysLiveOnly = sectionIdentifier === "institutions_across_world";
 
-    if (!matchedSection && !isInstitutionsAcrossWorld) {
+    if (!matchedSection && !isAlwaysLiveOnly) {
       throw new NotFoundError("Section not found");
     }
 
@@ -447,14 +460,11 @@ export class PublicCollegeController {
 
     let sectionData: unknown = matchedSection?.section;
 
-    if (isInstitutionsAcrossWorld) {
-      const dynamicSection =
-        await CollegeRegistrationService.buildDynamicInstitutionsSection(
-          collegeId,
-        );
+    if (overlayFn) {
+      const overlayData = await overlayFn(collegeId);
       sectionData = {
         ...(isRecord(sectionData) ? sectionData : {}),
-        ...dynamicSection,
+        ...overlayData,
       };
     }
 
