@@ -861,9 +861,14 @@ export default function SetupAcademicsPage() {
         file,
         `courses/${editingCourse?.id || "draft"}/featured-alumni-${idx}`,
       );
-      const next = [...(getActiveTabPayload().featured_alumni || [])];
+      const next = [...(getActiveTabPayload().featuredAlumni?.items || [])];
       next[idx] = { ...next[idx], image: permanentUrl };
-      updateActiveTabPayload({ featured_alumni: next });
+      updateActiveTabPayload({
+        featuredAlumni: {
+          ...(getActiveTabPayload().featuredAlumni || {}),
+          items: next,
+        },
+      });
       toast.success("Alumni image uploaded to S3");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed";
@@ -886,6 +891,39 @@ export default function SetupAcademicsPage() {
     const next = [...getFeeDetails()];
     next[idx] = { ...next[idx], ...patch };
     updateFeeDetails(next);
+  };
+
+  const getFaqItems = (): any[] => {
+    const faqs = getActiveTabPayload().faqs;
+    if (!faqs) return [];
+    if (Array.isArray(faqs)) return faqs;
+    return Array.isArray(faqs.items) ? faqs.items : [];
+  };
+
+  const getFaqTitle = (): string => {
+    const faqs = getActiveTabPayload().faqs;
+    if (!faqs || Array.isArray(faqs)) return "";
+    return faqs.title || "";
+  };
+
+  const updateFaqs = (patch: { title?: string; items?: any[] }) => {
+    const currentFaqs = getActiveTabPayload().faqs;
+    let title = patch.title !== undefined ? patch.title : "";
+    let items = patch.items !== undefined ? patch.items : [];
+
+    if (currentFaqs && !Array.isArray(currentFaqs)) {
+      if (patch.title === undefined) title = currentFaqs.title || "";
+      if (patch.items === undefined) items = currentFaqs.items || [];
+    } else if (currentFaqs && Array.isArray(currentFaqs)) {
+      if (patch.items === undefined) items = currentFaqs;
+    }
+
+    updateActiveTabPayload({
+      faqs: {
+        title,
+        items,
+      },
+    });
   };
 
   const addFeeDetail = () => {
@@ -3615,18 +3653,23 @@ export default function SetupAcademicsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                      const next = [
-                                        ...(getActiveTabPayload()
-                                          .featured_alumni || []),
-                                        {
-                                          name: "",
-                                          company: "",
-                                          designation: "",
-                                          image: "",
-                                        },
-                                      ];
+                                      const currentItems =
+                                        getActiveTabPayload().featuredAlumni
+                                          ?.items || [];
                                       updateActiveTabPayload({
-                                        featured_alumni: next,
+                                        featuredAlumni: {
+                                          ...(getActiveTabPayload()
+                                            .featuredAlumni || {}),
+                                          items: [
+                                            ...currentItems,
+                                            {
+                                              name: "",
+                                              image: "",
+                                              designation: "",
+                                              career_progression: [],
+                                            },
+                                          ],
+                                        },
                                       });
                                     }}
                                   >
@@ -3635,93 +3678,267 @@ export default function SetupAcademicsPage() {
                                   </Button>
                                 </div>
                                 {(
-                                  getActiveTabPayload().featured_alumni || []
-                                ).map((al: any, idx: number) => (
+                                  getActiveTabPayload().featuredAlumni?.items ||
+                                  []
+                                ).map((al: any, idx: number) => {
+                                  const updateAl = (
+                                    patch: Record<string, unknown>,
+                                  ) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().featuredAlumni
+                                        ?.items || []),
+                                    ];
+                                    next[idx] = { ...next[idx], ...patch };
+                                    updateActiveTabPayload({
+                                      featuredAlumni: {
+                                        ...(getActiveTabPayload()
+                                          .featuredAlumni || {}),
+                                        items: next,
+                                      },
+                                    });
+                                  };
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="border p-3 rounded-lg bg-muted/5 space-y-3"
+                                    >
+                                      <div className="flex gap-2 items-center">
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Alumni Name"
+                                          value={al.name || ""}
+                                          onChange={(e) =>
+                                            updateAl({ name: e.target.value })
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            const next = (
+                                              getActiveTabPayload()
+                                                .featuredAlumni?.items || []
+                                            ).filter(
+                                              (_: any, i: number) => i !== idx,
+                                            );
+                                            updateActiveTabPayload({
+                                              featuredAlumni: {
+                                                ...(getActiveTabPayload()
+                                                  .featuredAlumni || {}),
+                                                items: next,
+                                              },
+                                            });
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+
+                                      <Input
+                                        placeholder="Designation"
+                                        value={al.designation || ""}
+                                        onChange={(e) =>
+                                          updateAl({
+                                            designation: e.target.value,
+                                          })
+                                        }
+                                      />
+
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-muted-foreground">
+                                          Image URL
+                                        </Label>
+                                        <Input
+                                          placeholder="https://..."
+                                          value={al.image || ""}
+                                          onChange={(e) =>
+                                            updateAl({ image: e.target.value })
+                                          }
+                                        />
+                                        <Input
+                                          type="file"
+                                          accept="image/jpeg,image/png,image/webp"
+                                          disabled={
+                                            uploadingAlumniIndex === idx
+                                          }
+                                          onChange={(e) =>
+                                            handleAlumniImageUpload(
+                                              e.target.files?.[0] ?? null,
+                                              idx,
+                                            )
+                                          }
+                                        />
+                                      </div>
+
+                                      {/* Career Progression */}
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                          <Label className="text-xs text-muted-foreground">
+                                            Career Progression
+                                          </Label>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              updateAl({
+                                                career_progression: [
+                                                  ...(al.career_progression ||
+                                                    []),
+                                                  { year: "", description: "" },
+                                                ],
+                                              })
+                                            }
+                                          >
+                                            <Plus className="h-3 w-3 mr-1" />{" "}
+                                            Add Entry
+                                          </Button>
+                                        </div>
+                                        {(al.career_progression || []).map(
+                                          (cp: any, cpIdx: number) => {
+                                            const updateCp = (
+                                              cpPatch: Record<string, unknown>,
+                                            ) => {
+                                              const nextCp = [
+                                                ...(al.career_progression ||
+                                                  []),
+                                              ];
+                                              nextCp[cpIdx] = {
+                                                ...nextCp[cpIdx],
+                                                ...cpPatch,
+                                              };
+                                              updateAl({
+                                                career_progression: nextCp,
+                                              });
+                                            };
+                                            return (
+                                              <div
+                                                key={cpIdx}
+                                                className="border p-2 rounded space-y-2 bg-background"
+                                              >
+                                                <div className="flex gap-2 items-center">
+                                                  <Input
+                                                    className="w-24"
+                                                    placeholder="Year"
+                                                    value={cp.year || ""}
+                                                    onChange={(e) =>
+                                                      updateCp({
+                                                        year: e.target.value,
+                                                      })
+                                                    }
+                                                  />
+                                                  <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                      const nextCp = (
+                                                        al.career_progression ||
+                                                        []
+                                                      ).filter(
+                                                        (_: any, i: number) =>
+                                                          i !== cpIdx,
+                                                      );
+                                                      updateAl({
+                                                        career_progression:
+                                                          nextCp,
+                                                      });
+                                                    }}
+                                                  >
+                                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                                  </Button>
+                                                </div>
+                                                <Textarea
+                                                  placeholder="Description"
+                                                  rows={2}
+                                                  value={cp.description || ""}
+                                                  onChange={(e) =>
+                                                    updateCp({
+                                                      description:
+                                                        e.target.value,
+                                                    })
+                                                  }
+                                                />
+                                              </div>
+                                            );
+                                          },
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* FAQs Section */}
+                              <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <Label className="font-bold text-sm">
+                                      FAQs
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                      Section Title
+                                    </p>
+                                  </div>
+                                  <Input
+                                    placeholder="e.g. Frequently Asked Questions"
+                                    className="w-60"
+                                    value={getFaqTitle()}
+                                    onChange={(e) =>
+                                      updateFaqs({ title: e.target.value })
+                                    }
+                                  />
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                  <Label className="text-xs font-semibold">
+                                    Questions & Answers
+                                  </Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const next = [
+                                        ...getFaqItems(),
+                                        { question: "", answer: "" },
+                                      ];
+                                      updateFaqs({ items: next });
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" /> Add FAQ
+                                  </Button>
+                                </div>
+                                {getFaqItems().map((faq: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
+                                    className="flex gap-2 items-start border p-3 rounded-lg bg-background"
                                   >
                                     <div className="flex-1 space-y-2">
                                       <Input
-                                        placeholder="Alumni Name"
-                                        value={al.name || ""}
+                                        placeholder="Question"
+                                        value={faq.question || ""}
                                         onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload()
-                                              .featured_alumni || []),
-                                          ];
+                                          const next = [...getFaqItems()];
                                           next[idx] = {
                                             ...next[idx],
-                                            name: e.target.value,
+                                            question: e.target.value,
                                           };
-                                          updateActiveTabPayload({
-                                            featured_alumni: next,
-                                          });
+                                          updateFaqs({ items: next });
                                         }}
                                       />
-                                      <div className="grid gap-2 grid-cols-2">
-                                        <Input
-                                          placeholder="Company"
-                                          value={al.company || ""}
-                                          onChange={(e) => {
-                                            const next = [
-                                              ...(getActiveTabPayload()
-                                                .featured_alumni || []),
-                                            ];
-                                            next[idx] = {
-                                              ...next[idx],
-                                              company: e.target.value,
-                                            };
-                                            updateActiveTabPayload({
-                                              featured_alumni: next,
-                                            });
-                                          }}
-                                        />
-                                        <Input
-                                          placeholder="Designation"
-                                          value={al.designation || ""}
-                                          onChange={(e) => {
-                                            const next = [
-                                              ...(getActiveTabPayload()
-                                                .featured_alumni || []),
-                                            ];
-                                            next[idx] = {
-                                              ...next[idx],
-                                              designation: e.target.value,
-                                            };
-                                            updateActiveTabPayload({
-                                              featured_alumni: next,
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                      <Input
-                                        placeholder="Image Link"
-                                        value={al.image || ""}
+                                      <Textarea
+                                        placeholder="Answer"
+                                        rows={2}
+                                        value={faq.answer || ""}
                                         onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload()
-                                              .featured_alumni || []),
-                                          ];
+                                          const next = [...getFaqItems()];
                                           next[idx] = {
                                             ...next[idx],
-                                            image: e.target.value,
+                                            answer: e.target.value,
                                           };
-                                          updateActiveTabPayload({
-                                            featured_alumni: next,
-                                          });
+                                          updateFaqs({ items: next });
                                         }}
-                                      />
-                                      <Input
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        disabled={uploadingAlumniIndex === idx}
-                                        onChange={(e) =>
-                                          handleAlumniImageUpload(
-                                            e.target.files?.[0] ?? null,
-                                            idx,
-                                          )
-                                        }
                                       />
                                     </div>
                                     <Button
@@ -3729,105 +3946,16 @@ export default function SetupAcademicsPage() {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => {
-                                        const next = (
-                                          getActiveTabPayload()
-                                            .featured_alumni || []
-                                        ).filter(
+                                        const next = getFaqItems().filter(
                                           (_: any, i: number) => i !== idx,
                                         );
-                                        updateActiveTabPayload({
-                                          featured_alumni: next,
-                                        });
+                                        updateFaqs({ items: next });
                                       }}
                                     >
                                       <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </div>
                                 ))}
-                              </div>
-
-                              {/* FAQs Array */}
-                              <div className="space-y-3 pt-4 border-t">
-                                <div className="flex justify-between items-center">
-                                  <Label className="font-bold">FAQs</Label>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const next = [
-                                        ...(getActiveTabPayload().faqs || []),
-                                        { question: "", answer: "" },
-                                      ];
-                                      updateActiveTabPayload({ faqs: next });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" /> Add FAQ
-                                  </Button>
-                                </div>
-                                {(getActiveTabPayload().faqs || []).map(
-                                  (faq: any, idx: number) => (
-                                    <div
-                                      key={idx}
-                                      className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
-                                    >
-                                      <div className="flex-1 space-y-2">
-                                        <Input
-                                          placeholder="Question"
-                                          value={faq.question || ""}
-                                          onChange={(e) => {
-                                            const next = [
-                                              ...(getActiveTabPayload().faqs ||
-                                                []),
-                                            ];
-                                            next[idx] = {
-                                              ...next[idx],
-                                              question: e.target.value,
-                                            };
-                                            updateActiveTabPayload({
-                                              faqs: next,
-                                            });
-                                          }}
-                                        />
-                                        <Textarea
-                                          placeholder="Answer"
-                                          rows={2}
-                                          value={faq.answer || ""}
-                                          onChange={(e) => {
-                                            const next = [
-                                              ...(getActiveTabPayload().faqs ||
-                                                []),
-                                            ];
-                                            next[idx] = {
-                                              ...next[idx],
-                                              answer: e.target.value,
-                                            };
-                                            updateActiveTabPayload({
-                                              faqs: next,
-                                            });
-                                          }}
-                                        />
-                                      </div>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                          const next = (
-                                            getActiveTabPayload().faqs || []
-                                          ).filter(
-                                            (_: any, i: number) => i !== idx,
-                                          );
-                                          updateActiveTabPayload({
-                                            faqs: next,
-                                          });
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ),
-                                )}
                               </div>
 
                               {/* Student Forum Object */}
