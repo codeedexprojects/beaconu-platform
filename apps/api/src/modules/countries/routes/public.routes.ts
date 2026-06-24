@@ -3,7 +3,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   listCountriesQuerySchema,
   listStatesParamsSchema,
-  listDistrictsParamsSchema,
+  listCitiesParamsSchema,
 } from "../validators/countries.validator";
 import { CountriesController } from "../controllers/countries.controller";
 
@@ -22,9 +22,9 @@ router.get(
 );
 
 router.get(
-  "/:countryCode/states/:stateCode/districts",
-  validate(listDistrictsParamsSchema, "params"),
-  CountriesController.districts,
+  "/:countryCode/states/:stateCode/cities",
+  validate(listCitiesParamsSchema, "params"),
+  CountriesController.cities,
 );
 
 export default router;

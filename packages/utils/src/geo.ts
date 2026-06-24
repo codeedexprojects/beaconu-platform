@@ -34,7 +34,7 @@ export function getStatesOfCountry(countryCode: string): StateOption[] {
   }));
 }
 
-export function getDistrictsOfState(
+export function getCitiesOfState(
   countryCode: string,
   stateCode: string,
 ): GeoOption[] {

@@ -4,12 +4,12 @@ import { PaginationHelper } from "@/shared/responses/pagination";
 import {
   getCountries,
   getStatesOfCountry,
-  getDistrictsOfState,
+  getCitiesOfState,
 } from "@beaconu/utils";
 import type {
   ListCountriesQueryInput,
   ListStatesParamsInput,
-  ListDistrictsParamsInput,
+  ListCitiesParamsInput,
 } from "../validators/countries.validator";
 
 export class CountriesController {
@@ -37,17 +37,15 @@ export class CountriesController {
     return res.status(200).json(ApiResponse.success("States retrieved", data));
   }
 
-  static districts(req: Request, res: Response) {
+  static cities(req: Request, res: Response) {
     const { countryCode, stateCode } =
-      req.params as unknown as ListDistrictsParamsInput;
+      req.params as unknown as ListCitiesParamsInput;
 
-    const data = getDistrictsOfState(
+    const data = getCitiesOfState(
       countryCode.toUpperCase(),
       stateCode.toUpperCase(),
     );
 
-    return res
-      .status(200)
-      .json(ApiResponse.success("Districts retrieved", data));
+    return res.status(200).json(ApiResponse.success("Cities retrieved", data));
   }
 }
