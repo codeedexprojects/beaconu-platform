@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
@@ -296,6 +296,80 @@ export default function SetupProfilePage() {
     watch("profileSections.college_overview.campus_reels") || [];
   const overviewNearbyAccess =
     watch("profileSections.college_overview.nearby_access") || [];
+
+  // Map picker
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
+  const overviewLat = watch(
+    "profileSections.college_overview.location.latitude",
+  );
+  const overviewLng = watch(
+    "profileSections.college_overview.location.longitude",
+  );
+
+  useEffect(() => {
+    if ((window as any).google?.maps) {
+      setMapScriptLoaded(true);
+      return;
+    }
+    if (document.querySelector("script[data-beaconu-gm]")) return;
+    const script = document.createElement("script");
+    script.setAttribute("data-beaconu-gm", "1");
+    script.src =
+      "https://maps.googleapis.com/maps/api/js?key=AIzaSyBk9DCaKvJp9IejQ9-MCs";
+    script.async = true;
+    script.onload = () => setMapScriptLoaded(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // Reset map instance when leaving the tab so it re-inits on return
+  useEffect(() => {
+    if (activeTab !== "college_overview") {
+      mapInstanceRef.current = null;
+      markerRef.current = null;
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Re-runs when script loads OR when tab switches to college_overview
+    // (the div only exists in the DOM when that tab is active)
+    if (!mapScriptLoaded || !mapContainerRef.current || mapInstanceRef.current)
+      return;
+    const lat = overviewLat ? Number(overviewLat) : 20.5937;
+    const lng = overviewLng ? Number(overviewLng) : 78.9629;
+    const map = new (window as any).google.maps.Map(mapContainerRef.current, {
+      center: { lat, lng },
+      zoom: overviewLat ? 14 : 5,
+    });
+    mapInstanceRef.current = map;
+    if (overviewLat && overviewLng) {
+      markerRef.current = new (window as any).google.maps.Marker({
+        position: { lat, lng },
+        map,
+      });
+    }
+    map.addListener("click", (e: any) => {
+      const newLat = e.latLng.lat();
+      const newLng = e.latLng.lng();
+      setValue("profileSections.college_overview.location.latitude", newLat);
+      setValue("profileSections.college_overview.location.longitude", newLng);
+      setValue(
+        "profileSections.college_overview.location.map_link",
+        `https://maps.google.com/?q=${newLat},${newLng}`,
+      );
+      if (markerRef.current) {
+        markerRef.current.setPosition(e.latLng);
+      } else {
+        markerRef.current = new (window as any).google.maps.Marker({
+          position: e.latLng,
+          map,
+        });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapScriptLoaded, activeTab]);
 
   // Commute arrays
   const commutePickupPoints =
@@ -1193,11 +1267,107 @@ export default function SetupProfilePage() {
                     <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
                       Geographic & Map Coordinates
                     </h4>
+
+                    {/* Map Picker */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Pick Location on Map
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Click anywhere on the map to set the coordinates.
+                        Latitude, Longitude and Google Maps link will be
+                        auto-filled.
+                      </p>
+                      <div
+                        ref={mapContainerRef}
+                        className="w-full rounded-lg border border-border overflow-hidden"
+                        style={{ height: 320 }}
+                      />
+                      {!mapScriptLoaded && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Loading
+                          map…
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Lat / Lng (read from map click, editable as fallback) */}
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-1">
-                        <Label>Google Maps Embed or Link</Label>
+                        <Label>Latitude</Label>
                         <Input
-                          placeholder="Google Maps link"
+                          placeholder="e.g. 17.4599791"
+                          {...register(
+                            "profileSections.college_overview.location.latitude",
+                          )}
+                          onChange={(e) => {
+                            register(
+                              "profileSections.college_overview.location.latitude",
+                            ).onChange(e);
+                            const lat = parseFloat(e.target.value);
+                            const lng = Number(overviewLng);
+                            if (
+                              !isNaN(lat) &&
+                              !isNaN(lng) &&
+                              mapInstanceRef.current
+                            ) {
+                              const pos = { lat, lng };
+                              mapInstanceRef.current.setCenter(pos);
+                              mapInstanceRef.current.setZoom(14);
+                              if (markerRef.current)
+                                markerRef.current.setPosition(pos);
+                              else
+                                markerRef.current = new (
+                                  window as any
+                                ).google.maps.Marker({
+                                  position: pos,
+                                  map: mapInstanceRef.current,
+                                });
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Longitude</Label>
+                        <Input
+                          placeholder="e.g. 78.3320099"
+                          {...register(
+                            "profileSections.college_overview.location.longitude",
+                          )}
+                          onChange={(e) => {
+                            register(
+                              "profileSections.college_overview.location.longitude",
+                            ).onChange(e);
+                            const lat = Number(overviewLat);
+                            const lng = parseFloat(e.target.value);
+                            if (
+                              !isNaN(lat) &&
+                              !isNaN(lng) &&
+                              mapInstanceRef.current
+                            ) {
+                              const pos = { lat, lng };
+                              mapInstanceRef.current.setCenter(pos);
+                              mapInstanceRef.current.setZoom(14);
+                              if (markerRef.current)
+                                markerRef.current.setPosition(pos);
+                              else
+                                markerRef.current = new (
+                                  window as any
+                                ).google.maps.Marker({
+                                  position: pos,
+                                  map: mapInstanceRef.current,
+                                });
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label>Google Maps Link</Label>
+                        <Input
+                          placeholder="Auto-filled on map click, or paste manually"
                           {...register(
                             "profileSections.college_overview.location.map_link",
                           )}
@@ -1206,7 +1376,7 @@ export default function SetupProfilePage() {
                       <div className="space-y-1">
                         <Label>Address String</Label>
                         <Input
-                          placeholder="Map Address"
+                          placeholder="Full address"
                           {...register(
                             "profileSections.college_overview.location.address",
                           )}
