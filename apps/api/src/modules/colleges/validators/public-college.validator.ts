@@ -54,6 +54,11 @@ export const publicCollegeSchemas = {
       .trim()
       .optional()
       .transform((v) => v || undefined),
+    city: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
   }),
 };
 
