@@ -45,8 +45,10 @@ export class UniversityPublicController {
 
   static async listStreams(req: Request, res: Response): Promise<void> {
     const query = academicTaxonomySchemas.publicListQuery.parse(req.query);
-    const result = await AcademicTaxonomyQuery.listStreams(query);
-    res.status(200).json(ApiResponse.success("Streams fetched", result));
+    const result = await AcademicTaxonomyQuery.listStreamsForPublic(query);
+    res
+      .status(200)
+      .json(ApiResponse.success("Streams fetched", result.data, result.meta));
   }
 
   static async listDisciplines(req: Request, res: Response): Promise<void> {

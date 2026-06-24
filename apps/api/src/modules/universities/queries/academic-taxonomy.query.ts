@@ -157,6 +157,37 @@ export class AcademicTaxonomyQuery {
     };
   }
 
+  /** Public-facing stream list: flat array shape with active-course counts. */
+  static async listStreamsForPublic(filters: PublicListQuery) {
+    const { data: streams, meta } = await this.listStreams(filters);
+
+    const courseCounts = await Promise.all(
+      streams.map((s) =>
+        prisma.course.count({
+          where: { status: "active", discipline: { streamId: s.id } },
+        }),
+      ),
+    );
+
+    const skip = (meta.page - 1) * meta.limit;
+
+    return {
+      data: streams.map((s, idx) => ({
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+        logoUrl: s.logoUrl,
+        course_count: courseCounts[idx],
+      })),
+      meta: {
+        total: meta.total,
+        page: meta.page,
+        limit: meta.limit,
+        hasNext: skip + meta.limit < meta.total,
+      },
+    };
+  }
+
   static async listDisciplines(filters: ListQuery) {
     const isActive = resolveIsActive(filters);
     const { university_id } = getPublicFields(filters);

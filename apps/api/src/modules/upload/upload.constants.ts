@@ -2,6 +2,7 @@ export const MIME_TO_EXT = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "image/svg+xml": "svg",
   "application/pdf": "pdf",
   "video/mp4": "mp4",
   "video/webm": "webm",
@@ -15,6 +16,7 @@ export const IMAGE_MIME_TYPES: AllowedMimeType[] = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/svg+xml",
 ];
 
 export const VIDEO_MIME_TYPES: AllowedMimeType[] = [

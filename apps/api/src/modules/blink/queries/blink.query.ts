@@ -574,7 +574,7 @@ export class BlinkQuery {
     };
   }
 
-  /** Streams with their discipline count — pagination applies to streams only. */
+  /** Streams with their active course count — pagination applies to streams only. */
   static async listStreamsWithDisciplinesForEmployee(filters: StreamListQuery) {
     const { search, page, limit } = filters;
     const skip = (page - 1) * limit;
@@ -598,20 +598,25 @@ export class BlinkQuery {
           name: true,
           slug: true,
           logoUrl: true,
-          _count: {
-            select: { disciplines: { where: { isActive: true } } },
-          },
         },
       }),
     ]);
 
+    const courseCounts = await Promise.all(
+      rows.map((s) =>
+        prisma.course.count({
+          where: { status: "active", discipline: { streamId: s.id } },
+        }),
+      ),
+    );
+
     return {
-      streams: rows.map((s) => ({
+      streams: rows.map((s, idx) => ({
         id: s.id,
         name: s.name,
         slug: s.slug,
         logoUrl: s.logoUrl ?? null,
-        discipline_count: s._count.disciplines,
+        course_count: courseCounts[idx],
       })),
       meta: { total, page, limit, hasNext: skip + limit < total },
     };

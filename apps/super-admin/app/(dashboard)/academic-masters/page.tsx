@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { cn } from "@/lib/utils";
 import {
   useCreateStream,
@@ -170,10 +171,15 @@ export default function AcademicMastersPage() {
   const enableProgramType = useEnableProgramType();
   const disableProgramType = useDisableProgramType();
 
-  const [streamForm, setStreamForm] = useState({ name: "", sort_order: 0 });
+  const [streamForm, setStreamForm] = useState({
+    name: "",
+    logo_url: "",
+    sort_order: 0,
+  });
   const [disciplineForm, setDisciplineForm] = useState({
     stream_id: "",
     name: "",
+    logo_url: "",
     sort_order: 0,
   });
   const [studyLevelForm, setStudyLevelForm] = useState({
@@ -199,11 +205,15 @@ export default function AcademicMastersPage() {
   const handleCreateStream = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     createStream.mutate(
-      { ...streamForm, slug: slugify(streamForm.name) },
+      {
+        ...streamForm,
+        slug: slugify(streamForm.name),
+        logo_url: streamForm.logo_url || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Stream added");
-          setStreamForm({ name: "", sort_order: 0 });
+          setStreamForm({ name: "", logo_url: "", sort_order: 0 });
           setShowForm(false);
         },
       },
@@ -217,13 +227,18 @@ export default function AcademicMastersPage() {
       return;
     }
     createDiscipline.mutate(
-      { ...disciplineForm, slug: slugify(disciplineForm.name) },
+      {
+        ...disciplineForm,
+        slug: slugify(disciplineForm.name),
+        logo_url: disciplineForm.logo_url || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Discipline added");
           setDisciplineForm({
             stream_id: disciplineForm.stream_id,
             name: "",
+            logo_url: "",
             sort_order: 0,
           });
           setShowForm(false);
@@ -330,6 +345,18 @@ export default function AcademicMastersPage() {
                   </div>
 
                   <div className="md:col-span-4">
+                    <ImageUpload
+                      label="Icon (optional)"
+                      value={streamForm.logo_url}
+                      onChange={(url) =>
+                        setStreamForm((prev) => ({ ...prev, logo_url: url }))
+                      }
+                      context="stream-icons"
+                      aspect={1}
+                    />
+                  </div>
+
+                  <div className="md:col-span-4">
                     <Button type="submit" disabled={createStream.isPending}>
                       Save Stream
                     </Button>
@@ -352,11 +379,20 @@ export default function AcademicMastersPage() {
                       key={stream.id}
                       className="flex items-center justify-between rounded-md border p-3"
                     >
-                      <div>
-                        <p className="font-medium">{stream.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {stream.slug}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        {stream.logoUrl && (
+                          <img
+                            src={stream.logoUrl}
+                            alt=""
+                            className="h-6 w-6 shrink-0"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{stream.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {stream.slug}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge
@@ -479,6 +515,21 @@ export default function AcademicMastersPage() {
                   </div>
 
                   <div className="md:col-span-4">
+                    <ImageUpload
+                      label="Icon (optional)"
+                      value={disciplineForm.logo_url}
+                      onChange={(url) =>
+                        setDisciplineForm((prev) => ({
+                          ...prev,
+                          logo_url: url,
+                        }))
+                      }
+                      context="discipline-icons"
+                      aspect={1}
+                    />
+                  </div>
+
+                  <div className="md:col-span-4">
                     <Button
                       type="submit"
                       disabled={createDiscipline.isPending || isLoadingStreams}
@@ -504,11 +555,20 @@ export default function AcademicMastersPage() {
                       key={discipline.id}
                       className="flex items-center justify-between rounded-md border p-3"
                     >
-                      <div>
-                        <p className="font-medium">{discipline.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {discipline.slug} · {discipline.stream.name}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        {discipline.logoUrl && (
+                          <img
+                            src={discipline.logoUrl}
+                            alt=""
+                            className="h-6 w-6 shrink-0"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{discipline.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {discipline.slug} · {discipline.stream.name}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge

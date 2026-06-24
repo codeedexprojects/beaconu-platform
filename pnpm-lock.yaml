@@ -482,6 +482,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
+      react-easy-crop:
+        specifier: ^6.0.2
+        version: 6.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-hook-form:
         specifier: ^7.56.0
         version: 7.75.0(react@19.2.5)
@@ -6826,6 +6829,12 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  normalize-wheel@1.0.1:
+    resolution:
+      {
+        integrity: sha512-1OnlAPZ3zgrk8B91HyRj+eVv+kS5u+Z0SCsak6Xil/kmgEia50ga7zfkumayonZrImffAxPU/5WcyGhzetHNPA==,
+      }
+
   object-assign@4.1.1:
     resolution:
       {
@@ -7497,6 +7506,15 @@ packages:
       }
     peerDependencies:
       react: ^19.2.5
+
+  react-easy-crop@6.0.2:
+    resolution:
+      {
+        integrity: sha512-nY/YiNEuRjc851+/PsOR6Q7XoshmnXMl+oEOsxp3Ah0PrhECi5388jjRnHwsTFx3W0o2zPwvq85oljzUqZNpEw==,
+      }
+    peerDependencies:
+      react: ">=16.4.0"
+      react-dom: ">=16.4.0"
 
   react-hook-form@7.75.0:
     resolution:
@@ -13142,6 +13160,8 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
+  normalize-wheel@1.0.1: {}
+
   object-assign@4.1.1: {}
 
   object-hash@3.0.0: {}
@@ -13531,6 +13551,12 @@ snapshots:
     dependencies:
       react: 19.2.5
       scheduler: 0.27.0
+
+  react-easy-crop@6.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      normalize-wheel: 1.0.1
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
   react-hook-form@7.75.0(react@19.2.5):
     dependencies:
