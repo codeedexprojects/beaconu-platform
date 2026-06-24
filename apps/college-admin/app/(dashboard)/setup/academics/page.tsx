@@ -273,7 +273,6 @@ export default function SetupAcademicsPage() {
 
   // Tab State - local JSON fields representing active tab data edits
   const [localTabState, setLocalTabState] = useState<any>({});
-  const [courseInfoJsonDraft, setCourseInfoJsonDraft] = useState("");
 
   const {
     register,
@@ -317,13 +316,6 @@ export default function SetupAcademicsPage() {
       setLocalTabState({});
     }
   }, [tabDataResponse]);
-
-  useEffect(() => {
-    if (activeTab !== "course_info") return;
-    setCourseInfoJsonDraft(
-      JSON.stringify(localTabState.course_info || {}, null, 2),
-    );
-  }, [activeTab, localTabState.course_info]);
 
   const handleBasicSubmit = (data: CourseFormData) => {
     if (editingCourse) {
@@ -495,27 +487,6 @@ export default function SetupAcademicsPage() {
         ...updates,
       },
     }));
-  };
-
-  const applyCourseInfoJsonDraft = () => {
-    try {
-      const parsed = JSON.parse(courseInfoJsonDraft);
-      const nextPayload =
-        parsed && typeof parsed === "object" && parsed.data
-          ? parsed.data
-          : parsed;
-
-      setLocalTabState((prev: any) => ({
-        ...prev,
-        course_info: nextPayload,
-      }));
-      setCourseInfoJsonDraft(JSON.stringify(nextPayload, null, 2));
-      toast.success("Course Info JSON applied");
-    } catch {
-      toast.error(
-        "Invalid JSON. Paste the full API response or the data object.",
-      );
-    }
   };
 
   const loadCourseInfoSeedData = () => {
@@ -1589,40 +1560,6 @@ export default function SetupAcademicsPage() {
                       {/* COURSE INFO TAB */}
                       {activeTab === "course_info" && (
                         <div className="space-y-4">
-                          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <h4 className="text-sm font-bold text-amber-950">
-                                  Strict Course Info JSON
-                                </h4>
-                                <p className="text-xs text-amber-800">
-                                  Paste the exact public API response or just
-                                  the `data` object here. This is the safest
-                                  path if you need the saved payload to match
-                                  your target response exactly.
-                                </p>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
-                                onClick={applyCourseInfoJsonDraft}
-                              >
-                                Apply JSON
-                              </Button>
-                            </div>
-                            <Textarea
-                              value={courseInfoJsonDraft}
-                              onChange={(e) =>
-                                setCourseInfoJsonDraft(e.target.value)
-                              }
-                              rows={16}
-                              className="font-mono text-xs"
-                              placeholder="Paste the exact course_info response JSON here"
-                            />
-                          </div>
-
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-2 mb-6">
                             <div className="flex overflow-x-auto scrollbar-none gap-2 w-full sm:w-auto">
                               {[
@@ -2572,13 +2509,21 @@ export default function SetupAcademicsPage() {
                                       const currentSemesters =
                                         getActiveTabPayload().curriculum
                                           ?.semesters || [];
+                                      const n = currentSemesters.length + 1;
                                       updateActiveTabPayload({
                                         curriculum: {
                                           ...(getActiveTabPayload()
                                             .curriculum || {}),
                                           semesters: [
                                             ...currentSemesters,
-                                            { label: "", description: "" },
+                                            {
+                                              id: `sem_${n}`,
+                                              name: `Semester ${n}`,
+                                              expanded: false,
+                                              footnote: "",
+                                              core_subjects: [],
+                                              specializations: [],
+                                            },
                                           ],
                                         },
                                       });
@@ -2591,80 +2536,214 @@ export default function SetupAcademicsPage() {
                                 {(
                                   getActiveTabPayload().curriculum?.semesters ||
                                   []
-                                ).map((sem: any, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
-                                  >
-                                    <div className="flex-1 space-y-2">
-                                      <Input
-                                        placeholder="Semester Label (e.g. Semester I)"
-                                        value={sem.label || ""}
-                                        onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload().curriculum
-                                              ?.semesters || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            label: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            curriculum: {
-                                              ...(getActiveTabPayload()
-                                                .curriculum || {}),
-                                              semesters: next,
-                                            },
-                                          });
-                                        }}
-                                      />
-                                      <Textarea
-                                        placeholder="Semester Details / Core Subjects"
-                                        rows={2}
-                                        value={sem.description || ""}
-                                        onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload().curriculum
-                                              ?.semesters || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            description: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            curriculum: {
-                                              ...(getActiveTabPayload()
-                                                .curriculum || {}),
-                                              semesters: next,
-                                            },
-                                          });
-                                        }}
-                                      />
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        const next = (
-                                          getActiveTabPayload().curriculum
-                                            ?.semesters || []
-                                        ).filter(
-                                          (_: any, i: number) => i !== idx,
-                                        );
-                                        updateActiveTabPayload({
-                                          curriculum: {
-                                            ...(getActiveTabPayload()
-                                              .curriculum || {}),
-                                            semesters: next,
-                                          },
-                                        });
-                                      }}
+                                ).map((sem: any, idx: number) => {
+                                  const updateSem = (
+                                    patch: Record<string, unknown>,
+                                  ) => {
+                                    const next = [
+                                      ...(getActiveTabPayload().curriculum
+                                        ?.semesters || []),
+                                    ];
+                                    next[idx] = { ...next[idx], ...patch };
+                                    updateActiveTabPayload({
+                                      curriculum: {
+                                        ...(getActiveTabPayload().curriculum ||
+                                          {}),
+                                        semesters: next,
+                                      },
+                                    });
+                                  };
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="border p-3 rounded-lg bg-muted/5 space-y-3"
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                ))}
+                                      <div className="flex gap-2 items-center">
+                                        <Input
+                                          className="flex-1"
+                                          placeholder="Semester Name (e.g. Semester 1)"
+                                          value={sem.name || ""}
+                                          onChange={(e) =>
+                                            updateSem({ name: e.target.value })
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            const next = (
+                                              getActiveTabPayload().curriculum
+                                                ?.semesters || []
+                                            ).filter(
+                                              (_: any, i: number) => i !== idx,
+                                            );
+                                            updateActiveTabPayload({
+                                              curriculum: {
+                                                ...(getActiveTabPayload()
+                                                  .curriculum || {}),
+                                                semesters: next,
+                                              },
+                                            });
+                                          }}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+
+                                      <div>
+                                        <Label className="text-xs text-muted-foreground mb-1 block">
+                                          Footnote
+                                        </Label>
+                                        <Textarea
+                                          placeholder="Footnote / semester note"
+                                          rows={2}
+                                          value={sem.footnote || ""}
+                                          onChange={(e) =>
+                                            updateSem({
+                                              footnote: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <Label className="text-xs text-muted-foreground mb-1 block">
+                                          Core Subjects (one per line)
+                                        </Label>
+                                        <Textarea
+                                          placeholder="Subject 1&#10;Subject 2"
+                                          rows={3}
+                                          value={(sem.core_subjects || []).join(
+                                            "\n",
+                                          )}
+                                          onChange={(e) =>
+                                            updateSem({
+                                              core_subjects: e.target.value
+                                                .split("\n")
+                                                .map((s: string) => s.trim())
+                                                .filter(Boolean),
+                                            })
+                                          }
+                                        />
+                                      </div>
+
+                                      {/* Specializations */}
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                          <Label className="text-xs text-muted-foreground">
+                                            Specializations
+                                          </Label>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              updateSem({
+                                                specializations: [
+                                                  ...(sem.specializations ||
+                                                    []),
+                                                  {
+                                                    title: "",
+                                                    selected: "",
+                                                    subjects: [],
+                                                  },
+                                                ],
+                                              })
+                                            }
+                                          >
+                                            <Plus className="h-3 w-3 mr-1" />{" "}
+                                            Add
+                                          </Button>
+                                        </div>
+                                        {(sem.specializations || []).map(
+                                          (sp: any, spIdx: number) => {
+                                            const updateSp = (
+                                              spPatch: Record<string, unknown>,
+                                            ) => {
+                                              const nextSp = [
+                                                ...(sem.specializations || []),
+                                              ];
+                                              nextSp[spIdx] = {
+                                                ...nextSp[spIdx],
+                                                ...spPatch,
+                                              };
+                                              updateSem({
+                                                specializations: nextSp,
+                                              });
+                                            };
+                                            return (
+                                              <div
+                                                key={spIdx}
+                                                className="border p-2 rounded space-y-2 bg-background"
+                                              >
+                                                <div className="flex gap-2 items-center">
+                                                  <Input
+                                                    className="flex-1"
+                                                    placeholder='Title (e.g. "Specialization 1:")'
+                                                    value={sp.title || ""}
+                                                    onChange={(e) =>
+                                                      updateSp({
+                                                        title: e.target.value,
+                                                      })
+                                                    }
+                                                  />
+                                                  <Input
+                                                    className="flex-1"
+                                                    placeholder="Selected (e.g. Marketing)"
+                                                    value={sp.selected || ""}
+                                                    onChange={(e) =>
+                                                      updateSp({
+                                                        selected:
+                                                          e.target.value,
+                                                      })
+                                                    }
+                                                  />
+                                                  <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                      const nextSp = (
+                                                        sem.specializations ||
+                                                        []
+                                                      ).filter(
+                                                        (_: any, i: number) =>
+                                                          i !== spIdx,
+                                                      );
+                                                      updateSem({
+                                                        specializations: nextSp,
+                                                      });
+                                                    }}
+                                                  >
+                                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                                  </Button>
+                                                </div>
+                                                <Textarea
+                                                  placeholder="Subjects (one per line)"
+                                                  rows={2}
+                                                  value={(
+                                                    sp.subjects || []
+                                                  ).join("\n")}
+                                                  onChange={(e) =>
+                                                    updateSp({
+                                                      subjects: e.target.value
+                                                        .split("\n")
+                                                        .map((s: string) =>
+                                                          s.trim(),
+                                                        )
+                                                        .filter(Boolean),
+                                                    })
+                                                  }
+                                                />
+                                              </div>
+                                            );
+                                          },
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
 
                               {/* Course Structure Array */}
