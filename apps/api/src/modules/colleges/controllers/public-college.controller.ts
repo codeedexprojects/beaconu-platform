@@ -257,6 +257,7 @@ export class PublicCollegeController {
       filter,
       state,
       district,
+      city,
     } = publicCollegeSchemas.listQuery.parse(req.query);
 
     const sortOption = sortBy ?? sort ?? filter;
@@ -275,6 +276,10 @@ export class PublicCollegeController {
 
     if (district) {
       filters.district = { equals: district, mode: "insensitive" };
+    }
+
+    if (city) {
+      filters.city = { equals: city, mode: "insensitive" };
     }
 
     if (streamId || disciplineId || studyLevelId || programTypeId) {
