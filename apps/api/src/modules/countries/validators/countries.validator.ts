@@ -14,11 +14,9 @@ export const listStatesParamsSchema = z.object({
 
 export type ListStatesParamsInput = z.infer<typeof listStatesParamsSchema>;
 
-export const listDistrictsParamsSchema = z.object({
+export const listCitiesParamsSchema = z.object({
   countryCode: z.string().min(2).max(3),
   stateCode: z.string().min(1).max(10),
 });
 
-export type ListDistrictsParamsInput = z.infer<
-  typeof listDistrictsParamsSchema
->;
+export type ListCitiesParamsInput = z.infer<typeof listCitiesParamsSchema>;

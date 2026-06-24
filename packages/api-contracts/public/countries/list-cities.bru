@@ -1,11 +1,11 @@
 meta {
-  name: List Districts
+  name: List Cities
   type: http
   seq: 3
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/countries/{{countryCode}}/states/{{stateCode}}/districts
+  url: {{baseUrl}}/api/v1/public/countries/{{countryCode}}/states/{{stateCode}}/cities
   body: none
   auth: none
 }
@@ -16,7 +16,7 @@ vars:pre-request {
 }
 
 docs {
-  Returns all cities/districts for a given country + state.
+  Returns all cities/cities for a given country + state.
   No authentication required.
   
   Path params:
