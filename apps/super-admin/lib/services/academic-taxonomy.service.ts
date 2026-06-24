@@ -16,6 +16,7 @@ export interface StreamLookup {
   id: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -26,6 +27,7 @@ export interface Discipline {
   streamId: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -58,6 +60,7 @@ export interface CreateDisciplineInput {
   stream_id: string;
   name: string;
   slug: string;
+  logo_url?: string;
   sort_order?: number;
   is_active?: boolean;
 }
@@ -66,6 +69,7 @@ export interface UpdateDisciplineInput {
   stream_id?: string;
   name?: string;
   slug?: string;
+  logo_url?: string;
   sort_order?: number;
   is_active?: boolean;
 }
@@ -73,6 +77,7 @@ export interface UpdateDisciplineInput {
 export interface CreateSimpleTaxonomyInput {
   name: string;
   slug: string;
+  logo_url?: string;
   sort_order?: number;
   is_active?: boolean;
 }

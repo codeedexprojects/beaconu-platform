@@ -1,9 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImageIcon, Loader2, Upload, X } from "lucide-react";
+import type { Area } from "react-easy-crop";
+import { Loader2, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpload } from "@/hooks/use-upload";
+import { ImageCropDialog } from "@/components/ui/image-crop-dialog";
+import { getCroppedImageFile } from "@/lib/crop-image";
 
 interface ImageUploadProps {
   value: string;
@@ -12,6 +15,8 @@ interface ImageUploadProps {
   label?: string;
   className?: string;
   disabled?: boolean;
+  /** Force a crop step to this aspect ratio before upload (e.g. 1 for square). Skipped for SVG files. */
+  aspect?: number;
 }
 
 export function ImageUpload({
@@ -21,14 +26,42 @@ export function ImageUpload({
   label,
   className,
   disabled,
+  aspect,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [pendingCrop, setPendingCrop] = useState<{
+    file: File;
+    previewUrl: string;
+  } | null>(null);
   const { uploadFile, isUploading } = useUpload();
 
   async function handleFile(file: File) {
+    if (aspect && file.type !== "image/svg+xml") {
+      setPendingCrop({ file, previewUrl: URL.createObjectURL(file) });
+      return;
+    }
     const url = await uploadFile(file, context);
     if (url) onChange(url);
+  }
+
+  async function handleCropConfirm(cropArea: Area) {
+    if (!pendingCrop) return;
+    const cropped = await getCroppedImageFile(
+      pendingCrop.previewUrl,
+      cropArea,
+      pendingCrop.file.name,
+      pendingCrop.file.type,
+    );
+    URL.revokeObjectURL(pendingCrop.previewUrl);
+    setPendingCrop(null);
+    const url = await uploadFile(cropped, context);
+    if (url) onChange(url);
+  }
+
+  function handleCropCancel() {
+    if (pendingCrop) URL.revokeObjectURL(pendingCrop.previewUrl);
+    setPendingCrop(null);
   }
 
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -100,7 +133,9 @@ export function ImageUpload({
               <Upload className="h-4 w-4" />
             </div>
             <span className="text-xs font-medium">Click or drag to upload</span>
-            <span className="text-[10px]">JPEG, PNG, WebP · max 10 MB</span>
+            <span className="text-[10px]">
+              JPEG, PNG, WebP, SVG · max 10 MB
+            </span>
           </div>
         )}
       </div>
@@ -118,11 +153,21 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/svg+xml"
         className="hidden"
         onChange={onInputChange}
         disabled={disabled || isUploading}
       />
+
+      {pendingCrop && aspect && (
+        <ImageCropDialog
+          imageSrc={pendingCrop.previewUrl}
+          aspect={aspect}
+          loading={isUploading}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }

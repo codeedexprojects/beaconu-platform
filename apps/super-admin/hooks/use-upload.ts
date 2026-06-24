@@ -2,7 +2,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { uploadService } from "@/lib/services/upload.service";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/svg+xml",
+];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export function useUpload() {
@@ -13,7 +18,7 @@ export function useUpload() {
     context: string,
   ): Promise<string | null> {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Only JPEG, PNG and WebP images are allowed");
+      toast.error("Only JPEG, PNG, WebP and SVG images are allowed");
       return null;
     }
     if (file.size > MAX_BYTES) {
