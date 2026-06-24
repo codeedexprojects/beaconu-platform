@@ -55,6 +55,7 @@ export function ImageCropDialog({
 
         <div className="flex justify-end gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={onCancel}
@@ -63,6 +64,7 @@ export function ImageCropDialog({
             Cancel
           </Button>
           <Button
+            type="button"
             size="sm"
             disabled={loading || !croppedArea}
             onClick={() => croppedArea && onConfirm(croppedArea)}

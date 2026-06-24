@@ -8,6 +8,7 @@ import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
   MAX_VIDEO_SIZE_BYTES,
+  MIME_TO_EXT,
   VIDEO_MIME_TYPES,
   VIDEO_PRESIGN_EXPIRY_SECONDS,
 } from "../upload.constants";
@@ -42,7 +43,8 @@ export class PlatformAdminUploadController {
     }
 
     const expiresIn = isVideo ? VIDEO_PRESIGN_EXPIRY_SECONDS : undefined;
-    const key = `platform-admin/${context}/${randomUUID()}`;
+    const ext = MIME_TO_EXT[mimeType as AllowedMimeType];
+    const key = `platform-admin/${context}/${randomUUID()}.${ext}`;
     const result = await UploadService.presign(
       key,
       mimeType as AllowedMimeType,

@@ -308,7 +308,7 @@ export default function AcademicMastersPage() {
         data: {
           ...editStreamForm,
           slug: slugify(editStreamForm.name),
-          logo_url: editStreamForm.logo_url || undefined,
+          logo_url: editStreamForm.logo_url || null,
         },
       },
       {
@@ -343,7 +343,7 @@ export default function AcademicMastersPage() {
         data: {
           ...editDisciplineForm,
           slug: slugify(editDisciplineForm.name),
-          logo_url: editDisciplineForm.logo_url || undefined,
+          logo_url: editDisciplineForm.logo_url || null,
         },
       },
       {

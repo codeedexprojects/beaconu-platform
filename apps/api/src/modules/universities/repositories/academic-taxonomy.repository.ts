@@ -100,7 +100,7 @@ export class AcademicTaxonomyRepository {
     data: {
       name?: string;
       slug?: string;
-      logoUrl?: string;
+      logoUrl?: string | null;
       sortOrder?: number;
       isActive?: boolean;
     },
@@ -163,7 +163,7 @@ export class AcademicTaxonomyRepository {
       streamId?: string;
       name?: string;
       slug?: string;
-      logoUrl?: string;
+      logoUrl?: string | null;
       sortOrder?: number;
       isActive?: boolean;
     },

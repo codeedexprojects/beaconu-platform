@@ -83,6 +83,7 @@ export const academicTaxonomySchemas = {
         .string()
         .url()
         .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .nullable()
         .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
@@ -113,6 +114,7 @@ export const academicTaxonomySchemas = {
         .string()
         .url()
         .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .nullable()
         .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),

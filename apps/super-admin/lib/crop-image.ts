@@ -10,7 +10,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
-    img.crossOrigin = "anonymous";
     img.src = src;
   });
 }
@@ -45,5 +44,8 @@ export async function getCroppedImageFile(
   );
   if (!blob) throw new Error("Failed to crop image");
 
-  return new File([blob], fileName, { type: mimeType });
+  // Use the blob's actual encoded type, not the requested one — canvas
+  // silently falls back to image/png if the browser can't encode the
+  // requested mimeType (e.g. incomplete WebP support in some browsers).
+  return new File([blob], fileName, { type: blob.type || mimeType });
 }

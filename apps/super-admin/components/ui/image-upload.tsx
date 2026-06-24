@@ -52,16 +52,21 @@ export function ImageUpload({
 
   async function handleCropConfirm(cropArea: Area) {
     if (!pendingCrop) return;
-    const cropped = await getCroppedImageFile(
-      pendingCrop.previewUrl,
-      cropArea,
-      pendingCrop.file.name,
-      pendingCrop.file.type,
-    );
-    URL.revokeObjectURL(pendingCrop.previewUrl);
-    setPendingCrop(null);
-    const url = await uploadFile(cropped, context);
-    if (url) onChange(url);
+    try {
+      const cropped = await getCroppedImageFile(
+        pendingCrop.previewUrl,
+        cropArea,
+        pendingCrop.file.name,
+        pendingCrop.file.type,
+      );
+      const url = await uploadFile(cropped, context);
+      if (url) onChange(url);
+    } catch {
+      toast.error("Failed to crop image. Please try a different image.");
+    } finally {
+      URL.revokeObjectURL(pendingCrop.previewUrl);
+      setPendingCrop(null);
+    }
   }
 
   function handleCropCancel() {
