@@ -2232,7 +2232,7 @@ export default function SetupAcademicsPage() {
                                                   ...(next[idx].banner || {}),
                                                   progress_percentage: e.target
                                                     .value
-                                                    ? Number(e.target.value)
+                                                    ? e.target.value
                                                     : 0,
                                                 },
                                               };
@@ -2497,9 +2497,7 @@ export default function SetupAcademicsPage() {
                                     }
                                     onChange={(e) =>
                                       updateActiveTabPayload({
-                                        total_credits: e.target.value
-                                          ? Number(e.target.value)
-                                          : "",
+                                        total_credits: e.target.value,
                                       })
                                     }
                                   />
@@ -4249,9 +4247,7 @@ export default function SetupAcademicsPage() {
                                       ];
                                       rows[idx] = {
                                         ...rows[idx],
-                                        total: e.target.value
-                                          ? Number(e.target.value)
-                                          : "",
+                                        total: e.target.value,
                                       };
                                       updateActiveTabPayload({
                                         seat_matrix: {
@@ -4276,9 +4272,7 @@ export default function SetupAcademicsPage() {
                                       ];
                                       rows[idx] = {
                                         ...rows[idx],
-                                        open: e.target.value
-                                          ? Number(e.target.value)
-                                          : "",
+                                        open: e.target.value,
                                       };
                                       updateActiveTabPayload({
                                         seat_matrix: {
@@ -5788,9 +5782,7 @@ export default function SetupAcademicsPage() {
                                             "placement_trends.data_points",
                                             idx,
                                             {
-                                              avg_package: e.target.value
-                                                ? Number(e.target.value)
-                                                : "",
+                                              avg_package: e.target.value,
                                             },
                                           )
                                         }
@@ -6030,7 +6022,7 @@ export default function SetupAcademicsPage() {
                                                 {
                                                   students_placed: e.target
                                                     .value
-                                                    ? Number(e.target.value)
+                                                    ? e.target.value
                                                     : "",
                                                 },
                                               )
@@ -6054,7 +6046,7 @@ export default function SetupAcademicsPage() {
                                                 {
                                                   progress_percentage: e.target
                                                     .value
-                                                    ? Number(e.target.value)
+                                                    ? e.target.value
                                                     : "",
                                                 },
                                               )
@@ -6234,7 +6226,7 @@ export default function SetupAcademicsPage() {
                                                 {
                                                   students_placed: e.target
                                                     .value
-                                                    ? Number(e.target.value)
+                                                    ? e.target.value
                                                     : "",
                                                 },
                                               )
@@ -6258,7 +6250,7 @@ export default function SetupAcademicsPage() {
                                                 {
                                                   progress_percentage: e.target
                                                     .value
-                                                    ? Number(e.target.value)
+                                                    ? e.target.value
                                                     : "",
                                                 },
                                               )
@@ -7427,9 +7419,7 @@ export default function SetupAcademicsPage() {
                                       value={item.discount_percent ?? ""}
                                       onChange={(e) =>
                                         updateConcessionItem(idx, {
-                                          discount_percent: Number(
-                                            e.target.value,
-                                          ),
+                                          discount_percent: e.target.value,
                                         })
                                       }
                                     />
@@ -7927,7 +7917,7 @@ export default function SetupAcademicsPage() {
                                               updatePattern({
                                                 chart: {
                                                   ...(pat.chart || {}),
-                                                  total: Number(e.target.value),
+                                                  total: e.target.value,
                                                 },
                                               })
                                             }
@@ -8114,7 +8104,7 @@ export default function SetupAcademicsPage() {
                                                 ];
                                                 next[si] = {
                                                   ...next[si],
-                                                  marks: Number(e.target.value),
+                                                  marks: e.target.value,
                                                 };
                                                 updatePattern({
                                                   subtotals: next,
@@ -9215,7 +9205,7 @@ export default function SetupAcademicsPage() {
                                         ];
                                         rows[ri] = {
                                           ...rows[ri],
-                                          grade_point: Number(e.target.value),
+                                          grade_point: e.target.value,
                                         };
                                         updateActiveTabPayload({
                                           grading_scale: {
@@ -9744,7 +9734,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           segs[si] = {
                                             ...segs[si],
-                                            percent: Number(e.target.value),
+                                            percent: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             projects_dissertation: {
@@ -9911,7 +9901,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           comps[ci] = {
                                             ...comps[ci],
-                                            marks: Number(e.target.value),
+                                            marks: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             projects_dissertation: {
@@ -10048,7 +10038,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           comps[ci] = {
                                             ...comps[ci],
-                                            marks: Number(e.target.value),
+                                            marks: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             projects_dissertation: {
@@ -10380,7 +10370,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           comps[ci] = {
                                             ...comps[ci],
-                                            marks: Number(e.target.value),
+                                            marks: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             ojt_evaluation: {
@@ -10596,7 +10586,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           comps[ci] = {
                                             ...comps[ci],
-                                            marks: Number(e.target.value),
+                                            marks: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             internship_evaluation: {
@@ -11099,7 +11089,7 @@ export default function SetupAcademicsPage() {
                               value={getActiveTabPayload().overallRating || ""}
                               onChange={(e) =>
                                 updateActiveTabPayload({
-                                  overallRating: Number(e.target.value),
+                                  overallRating: e.target.value,
                                 })
                               }
                             />
@@ -12466,7 +12456,7 @@ export default function SetupAcademicsPage() {
                                   updateActiveTabPayload({
                                     stats: {
                                       ...(getActiveTabPayload().stats || {}),
-                                      maleRatio: Number(e.target.value),
+                                      maleRatio: e.target.value,
                                     },
                                   })
                                 }
@@ -12484,7 +12474,7 @@ export default function SetupAcademicsPage() {
                                   updateActiveTabPayload({
                                     stats: {
                                       ...(getActiveTabPayload().stats || {}),
-                                      femaleRatio: Number(e.target.value),
+                                      femaleRatio: e.target.value,
                                     },
                                   })
                                 }
@@ -12503,7 +12493,7 @@ export default function SetupAcademicsPage() {
                                   updateActiveTabPayload({
                                     stats: {
                                       ...(getActiveTabPayload().stats || {}),
-                                      outOfStateRatio: Number(e.target.value),
+                                      outOfStateRatio: e.target.value,
                                     },
                                   })
                                 }
