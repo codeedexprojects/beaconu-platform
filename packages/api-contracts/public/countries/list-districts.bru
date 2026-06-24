@@ -1,0 +1,29 @@
+meta {
+  name: List Districts
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/countries/{{countryCode}}/states/{{stateCode}}/districts
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  countryCode: IN
+  stateCode: KL
+}
+
+docs {
+  Returns all cities/districts for a given country + state.
+  No authentication required.
+  
+  Path params:
+  - countryCode: ISO 3166-1 alpha-2 code (e.g. IN)
+  - stateCode: State ISO code (e.g. KA, MH, TN)
+  
+  Response: { value: string, label: string }[]
+  
+  Data source: country-state-city package — no DB query.
+}
