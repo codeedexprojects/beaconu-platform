@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { Area } from "react-easy-crop";
 import { Loader2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useUpload } from "@/hooks/use-upload";
 import { ImageCropDialog } from "@/components/ui/image-crop-dialog";
@@ -15,7 +16,7 @@ interface ImageUploadProps {
   label?: string;
   className?: string;
   disabled?: boolean;
-  /** Force a crop step to this aspect ratio before upload (e.g. 1 for square). Skipped for SVG files. */
+  /** Force a crop step to this aspect ratio before upload (e.g. 1 for square). Disallows SVG, since it can't be cropped. */
   aspect?: number;
 }
 
@@ -37,7 +38,11 @@ export function ImageUpload({
   const { uploadFile, isUploading } = useUpload();
 
   async function handleFile(file: File) {
-    if (aspect && file.type !== "image/svg+xml") {
+    if (aspect) {
+      if (file.type === "image/svg+xml") {
+        toast.error("SVG is not allowed here. Upload a JPEG, PNG or WebP.");
+        return;
+      }
       setPendingCrop({ file, previewUrl: URL.createObjectURL(file) });
       return;
     }
@@ -134,7 +139,7 @@ export function ImageUpload({
             </div>
             <span className="text-xs font-medium">Click or drag to upload</span>
             <span className="text-[10px]">
-              JPEG, PNG, WebP, SVG · max 10 MB
+              {aspect ? "JPEG, PNG, WebP" : "JPEG, PNG, WebP, SVG"} · max 10 MB
             </span>
           </div>
         )}
@@ -153,7 +158,11 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept={
+          aspect
+            ? "image/jpeg,image/png,image/webp"
+            : "image/jpeg,image/png,image/webp,image/svg+xml"
+        }
         className="hidden"
         onChange={onInputChange}
         disabled={disabled || isUploading}

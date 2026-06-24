@@ -66,7 +66,11 @@ export const academicTaxonomySchemas = {
   createStream: z.object({
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
-    logo_url: z.string().url().optional(),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -75,7 +79,11 @@ export const academicTaxonomySchemas = {
     .object({
       name: z.string().trim().min(1).max(100).optional(),
       slug: slugSchema.max(50).optional(),
-      logo_url: z.string().url().optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })
@@ -87,7 +95,11 @@ export const academicTaxonomySchemas = {
     stream_id: z.string(),
     name: z.string().trim().min(1).max(100),
     slug: slugSchema.max(50),
-    logo_url: z.string().url().optional(),
+    logo_url: z
+      .string()
+      .url()
+      .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+      .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
   }),
@@ -97,7 +109,11 @@ export const academicTaxonomySchemas = {
       stream_id: z.string().optional(),
       name: z.string().trim().min(1).max(100).optional(),
       slug: slugSchema.max(50).optional(),
-      logo_url: z.string().url().optional(),
+      logo_url: z
+        .string()
+        .url()
+        .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
     })
