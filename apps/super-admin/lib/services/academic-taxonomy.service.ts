@@ -69,7 +69,7 @@ export interface UpdateDisciplineInput {
   stream_id?: string;
   name?: string;
   slug?: string;
-  logo_url?: string;
+  logo_url?: string | null;
   sort_order?: number;
   is_active?: boolean;
 }
@@ -82,7 +82,10 @@ export interface CreateSimpleTaxonomyInput {
   is_active?: boolean;
 }
 
-export type UpdateSimpleTaxonomyInput = Partial<CreateSimpleTaxonomyInput>;
+export type UpdateSimpleTaxonomyInput = Omit<
+  Partial<CreateSimpleTaxonomyInput>,
+  "logo_url"
+> & { logo_url?: string | null };
 
 export interface TaxonomyListParams {
   page?: number;
