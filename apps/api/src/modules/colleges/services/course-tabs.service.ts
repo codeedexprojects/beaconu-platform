@@ -236,17 +236,28 @@ function normalizeHighlightsItems(value: unknown): Array<{ text: string }> {
   });
 }
 
+const KEY_DATE_STATUSES = ["urgent", "active", "inactive"] as const;
+type KeyDateStatus = (typeof KEY_DATE_STATUSES)[number];
+
+function normalizeKeyDateStatus(value: unknown): KeyDateStatus | "" {
+  const status = asText(value).toLowerCase();
+  return (KEY_DATE_STATUSES as readonly string[]).includes(status)
+    ? (status as KeyDateStatus)
+    : "";
+}
+
 function normalizeAccreditationItems(
   value: unknown,
-): Array<{ tag: string; image: string; title: string }> {
+): Array<{ tag: string; image: string; document: string; title: string }> {
   return asArray(value).map((item) => {
     if (typeof item === "string") {
-      return { tag: "", image: "", title: item };
+      return { tag: "", image: "", document: "", title: item };
     }
     const rec = asRecord(item);
     return {
       tag: asText(rec.tag),
       image: asText(rec.image),
+      document: asText(rec.document),
       title: asText(rec.title) || asText(rec.text),
     };
   });
@@ -254,28 +265,18 @@ function normalizeAccreditationItems(
 
 function normalizeKeyDateItems(value: unknown): Array<{
   date: string;
-  icon: string;
   label: string;
-  status: string;
-  status_color: string;
+  status: KeyDateStatus | "";
 }> {
   return asArray(value).map((item) => {
     if (typeof item === "string") {
-      return {
-        date: "",
-        icon: "",
-        label: item,
-        status: "",
-        status_color: "",
-      };
+      return { date: "", label: item, status: "" };
     }
     const rec = asRecord(item);
     return {
       date: asText(rec.date),
-      icon: asText(rec.icon),
       label: asText(rec.label),
-      status: asText(rec.status),
-      status_color: asText(rec.status_color),
+      status: normalizeKeyDateStatus(rec.status),
     };
   });
 }
@@ -305,13 +306,14 @@ function normalizeCurriculumSemesters(
 
 function normalizeCourseStructureSegments(
   value: unknown,
-): Array<{ color: string; label: string; credits: number }> {
+): Array<{ color: string; label: string; details: string; credits: number }> {
   const palette = ["#FF6B00", "#FFB27A", "#2E2E5C", "#4DD0C4", "#A8A8B3"];
   return asArray(value).map((item, index) => {
     if (typeof item === "string") {
       return {
         color: palette[index % palette.length],
         label: item,
+        details: "",
         credits: 0,
       };
     }
@@ -319,6 +321,7 @@ function normalizeCourseStructureSegments(
     return {
       color: asText(rec.color) || palette[index % palette.length],
       label: asText(rec.label) || asText(rec.title),
+      details: asText(rec.details),
       credits: toPositiveInt(rec.credits) || numberFromText(rec.details),
     };
   });
@@ -398,10 +401,14 @@ function normalizeClassSchedule(
       return { day: `Day ${index + 1}`, time: item };
     }
     const rec = asRecord(item);
-    return {
-      day: asText(rec.day) || `Day ${index + 1}`,
-      time: asText(rec.time),
-    };
+    const day = asText(rec.day) || `Day ${index + 1}`;
+    if (asBoolean(rec.closed, false)) {
+      return { day, time: "Closed" };
+    }
+    const start = asText(rec.start);
+    const end = asText(rec.end);
+    const time = asText(rec.time) || (start && end ? `${start} - ${end}` : "");
+    return { day, time };
   });
 }
 
@@ -1349,34 +1356,138 @@ function assignMissingIds(
   });
 }
 
+// Keys that normalizeCourseInfoData() derives purely for public display.
+// The admin frontend never writes these — they only ever land in stored
+// data as leftovers from an old write-time normalization bug. Because
+// `{ items: [], title: "..." }` is never considered "empty" by isEmptyValue,
+// a stale leftover here permanently shadows the real flat-key data
+// (e.g. `value_added_courses`) in the public read path. Strip them on every
+// save so they can't keep shadowing fresh edits.
+const LEGACY_DERIVED_COURSE_INFO_KEYS = [
+  "tabs",
+  "courseStructure",
+  "valueAddedCourses",
+  "careerOpportunities",
+  "higherEducationCertifications",
+  "flexibleExitOptions",
+  "classTimings",
+  "industryTools",
+  "labFacilities",
+  "roomFacilities",
+  "studentForum",
+  "certifications",
+] as const;
+
+// Blank-array-entry filtering for every field below is handled generically
+// by deepStripBlankEntries() (see normalizeSetupTabData) — this function only
+// needs to purge the legacy keys that the generic walker can't know about.
+function cleanCourseInfoWriteData(data: unknown): unknown {
+  const record = asRecord(data);
+  const cleaned: Record<string, unknown> = { ...record };
+
+  for (const key of LEGACY_DERIVED_COURSE_INFO_KEYS) {
+    delete cleaned[key];
+  }
+
+  // Student Forum was removed from the admin form — drop any leftover data.
+  delete cleaned.student_forum;
+
+  // `details` was replaced by a dedicated numeric `credits` field on the
+  // Course Structure rows — drop the stale leftover from older saves.
+  if (Array.isArray(cleaned.course_structure)) {
+    cleaned.course_structure = (
+      cleaned.course_structure as Record<string, unknown>[]
+    ).map((cs) => {
+      const rest = { ...asRecord(cs) };
+      delete rest.details;
+      return rest;
+    });
+  }
+
+  // `cta_label` was dropped from the Bonus Certification form — drop the
+  // stale leftover from older saves.
+  if (Object.keys(asRecord(cleaned.bonus_certification)).length > 0) {
+    const rest = { ...asRecord(cleaned.bonus_certification) };
+    delete rest.cta_label;
+    cleaned.bonus_certification = rest;
+  }
+
+  return cleaned;
+}
+
+// Generic, shape-agnostic cleanup applied to EVERY setup tab's data before
+// it's stored: recursively drops blank array entries (empty strings, and
+// objects/arrays whose leaf values are all blank) at any depth. This is the
+// "basic, everywhere" validation layer — it doesn't know about any tab's
+// specific field names, so it works for admission_policy seat rows,
+// placements stats, fees structures, faculty entries, etc. without
+// per-tab field lists. Booleans and numbers (including 0/false) are never
+// considered blank.
+function isEffectivelyBlank(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).every(
+      isEffectivelyBlank,
+    );
+  }
+  return false;
+}
+
+function deepStripBlankEntries(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map(deepStripBlankEntries)
+      .filter((item) => !isEffectivelyBlank(item));
+  }
+  if (value && typeof value === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+      result[key] = deepStripBlankEntries(v);
+    }
+    return result;
+  }
+  return value;
+}
+
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
   if (tabName === "course_info") {
-    return normalizeCourseInfoData(data);
+    // Store the admin-edited shape as-is (lightly cleaned) — the public-facing
+    // display shape is derived on demand by normalizeCourseInfoData() when
+    // reading via getPublicCourseDetail. Running that transform here would
+    // overwrite the editable form data with read-only display objects,
+    // breaking edits on the next load.
+    return deepStripBlankEntries(cleanCourseInfoWriteData(data));
   }
 
   if (tabName === "alliance" && Array.isArray(record.alliances)) {
+    // Strip blanks first, then assign IDs — otherwise a freshly-assigned
+    // `id` field would make an otherwise-blank alliance look non-blank.
+    const cleaned = deepStripBlankEntries(record) as Record<string, unknown>;
     return {
-      ...record,
+      ...cleaned,
       alliances: assignMissingIds(
-        record.alliances as Record<string, unknown>[],
+        (cleaned.alliances as Record<string, unknown>[]) || [],
         "alliance",
       ),
     };
   }
 
   if (tabName === "clubs_associations" && Array.isArray(record.clubs)) {
+    const cleaned = deepStripBlankEntries(record) as Record<string, unknown>;
     return {
-      ...record,
+      ...cleaned,
       clubs: assignMissingIds(
-        record.clubs as Record<string, unknown>[],
+        (cleaned.clubs as Record<string, unknown>[]) || [],
         "club",
       ),
     };
   }
 
-  return data;
+  return deepStripBlankEntries(data);
 }
 
 function toClubPreview(club: Record<string, unknown>): Record<string, unknown> {
