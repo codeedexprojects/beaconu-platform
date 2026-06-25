@@ -205,6 +205,70 @@ const courseSchema = z.object({
 
 type CourseFormData = z.infer<typeof courseSchema>;
 
+const CLASS_TIMING_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+function SubjectTagInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState("");
+
+  const addDraft = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    onChange([...value, trimmed]);
+    setDraft("");
+  };
+
+  return (
+    <div className="space-y-1.5">
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {value.map((subject, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+            >
+              {subject}
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+              >
+                <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Input
+        placeholder={placeholder}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addDraft();
+          }
+        }}
+        onBlur={addDraft}
+      />
+    </div>
+  );
+}
+
 export default function SetupAcademicsPage() {
   const router = useRouter();
   const collegeSlug =
@@ -429,6 +493,30 @@ export default function SetupAcademicsPage() {
       }
     }
 
+    if (activeTab === "course_info" && courseInfoSubTab === "general") {
+      const accItems = getActiveTabPayload().accreditations?.items || [];
+      for (let i = 0; i < accItems.length; i++) {
+        const item = accItems[i];
+        const hasAny =
+          item.tag?.trim() ||
+          item.image?.trim() ||
+          item.document?.trim() ||
+          item.title?.trim();
+        if (hasAny) {
+          if (!item.tag?.trim())
+            return `Accreditation #${i + 1}: Tag is required`;
+          if (!item.title?.trim())
+            return `Accreditation #${i + 1}: Title is required`;
+          if (!item.image?.trim() && !item.document?.trim())
+            return `Accreditation #${i + 1}: Image or PDF document is required`;
+        }
+        if (item.image && !isValidUrl(item.image))
+          return `Accreditation #${i + 1}: Image must be a valid URL`;
+        if (item.document && !isValidUrl(item.document))
+          return `Accreditation #${i + 1}: Document must be a valid URL`;
+      }
+    }
+
     return null;
   };
 
@@ -487,295 +575,6 @@ export default function SetupAcademicsPage() {
         ...updates,
       },
     }));
-  };
-
-  const loadCourseInfoSeedData = () => {
-    const seedData = {
-      name: "MBA Digital Transformation",
-      admission_batches: [
-        {
-          label: "Admissions 2025",
-          banner: {
-            tag: "ADMISSIONS OPEN",
-            enabled: true,
-            message: "Limited seats available for current intake",
-            progress_percentage: 90,
-          },
-          status: "open",
-        },
-        {
-          label: "Admissions 2026",
-          banner: {
-            tag: "UPCOMING",
-            enabled: false,
-            message: "",
-            progress_percentage: 0,
-          },
-          status: "upcoming",
-        },
-      ],
-      quick_info: [
-        { label: "DURATION", value: "24 months" },
-        { label: "STUDY MODE", value: "Regular" },
-        { label: "ACADEMIC CYCLE", value: "Semester" },
-        { label: "STUDY CREDITS", value: "102 Credits" },
-        { label: "GENDER ADMITTED", value: "Co-ed" },
-        { label: "CAMPUS CATEGORY", value: "Self Financing" },
-      ],
-      highlights: {
-        items: [
-          {
-            text: "AI activity in India alone has witnessed a 2.7 times growth",
-          },
-          {
-            text: "Generative AI (GenAI) has recorded an extraordinary 9 times surge, with 34 percent of enterprises launching GenAI-based products or services.",
-          },
-        ],
-        title: "Program Highlights",
-      },
-      accreditations: {
-        items: [
-          {
-            tag: "MAHE Rank 3",
-            image:
-              "https://cdn.brandlogos.example.com/logos/outlook-icare-ranking-2024.png",
-            title: "India's top #131/200 universities in 2024",
-          },
-        ],
-        title: "Course Accolades",
-      },
-      keyDates: {
-        items: [
-          {
-            date: "10th June 2024",
-            icon: "https://cdn.iconsdb.example.com/icons/calendar-check-green.png",
-            label: "APPLICATION START",
-            status: "",
-            status_color: "",
-          },
-          {
-            date: "30th July 2024",
-            icon: "https://cdn.iconsdb.example.com/icons/calendar-warning-orange.png",
-            label: "APPLICATION CLOSE",
-            status: "URGENT",
-            status_color: "orange",
-          },
-        ],
-        title: "Key Dates to Remember",
-      },
-      curriculum: {
-        title: "Curriculum",
-        brochure: {
-          url: "https://cdn.brochures.example.com/mba-digital-transformation-curriculum.pdf",
-          icon: "https://cdn.iconsdb.example.com/icons/download-pdf.png",
-          label: "Download Curriculum Brochure",
-        },
-        subtitle: "Explore list of subjects wise covered in our MBA program.",
-        semesters: [
-          {
-            id: "sem_1",
-            name: "Semester 1",
-            expanded: false,
-            core_subjects: [],
-            specializations: [],
-          },
-          {
-            id: "sem_2",
-            name: "Semester 2",
-            expanded: false,
-            core_subjects: [],
-            specializations: [],
-          },
-          {
-            id: "sem_3",
-            name: "Semester 3",
-            expanded: false,
-            core_subjects: [],
-            specializations: [],
-          },
-          {
-            id: "sem_4",
-            name: "Semester 4",
-            expanded: true,
-            core_subjects: ["Banking and Insurance Management", "Project Work"],
-            specializations: [
-              {
-                title: "Specialization 1:",
-                selected: "Marketing",
-                subjects: ["Market Research", "Service Marketing"],
-              },
-            ],
-          },
-        ],
-      },
-      courseStructure: {
-        title: "Course Structure",
-        segments: [
-          { color: "#FF6B00", label: "Disciplinary Major", credits: 60 },
-          { color: "#FFB27A", label: "Occupational Track", credits: 24 },
-          { color: "#2E2E5C", label: "Flexible Courses", credits: 23 },
-        ],
-        subtitle: "The total will sum 102 credits at the end of two years.",
-        chart_type: "donut",
-      },
-      valueAddedCourses: {
-        items: [
-          {
-            name: "Cyber Security",
-            credit_label: "Credit: 03",
-            delivery_modes: ["MOOC Courses"],
-            delivery_mode_label: "DELIVERY MODES",
-          },
-        ],
-        title: "Value Added Course",
-      },
-      careerOpportunities: {
-        items: [
-          { role: "Data Scientist", salary_range: "₹6L - ₹25L PA" },
-          { role: "Marketing Manager", salary_range: "₹6L - ₹18L PA" },
-          { role: "Business Analyst", salary_range: "₹5L - ₹22L PA" },
-        ],
-        title: "Career Opportunities",
-      },
-      higherEducationCertifications: {
-        global: {
-          icon: "https://cdn.iconsdb.example.com/icons/globe-orange.png",
-          items: [
-            "Project Management Professional (PMP)",
-            "Certified Information Systems Auditor (CISA)",
-          ],
-          title: "GLOBAL CERTIFICATIONS",
-        },
-        postgraduation: {
-          icon: "https://cdn.iconsdb.example.com/icons/graduation-cap-orange.png",
-          items: [
-            "PhD in Management Studies",
-            "Specialized Masters in Artificial Intelligence",
-          ],
-          title: "POSTGRADUATION",
-        },
-      },
-      flexibleExitOptions: {
-        items: [
-          {
-            step: 1,
-            award: "Post Graduate Diploma in Management",
-            label: "After 1 Year",
-          },
-          {
-            step: 2,
-            award: "Master of Business Administration (MBA)",
-            label: "After 2 Years",
-          },
-        ],
-        title: "Flexible Exit Options",
-        subtitle: "Life happens. Pause or exit with a valid credential.",
-      },
-      classTimings: {
-        title: "Class Timings",
-        schedule: [
-          { day: "Monday", time: "09:00 AM - 04:30 PM" },
-          { day: "Tuesday", time: "09:00 AM - 04:30 PM" },
-          { day: "Wednesday", time: "09:00 AM - 04:30 PM" },
-        ],
-        subtitle: "Regular Classes",
-      },
-      industryTools: {
-        items: [
-          { name: "Tableau" },
-          { name: "Python" },
-          { name: "SPSS" },
-          { name: "R Studio" },
-        ],
-        title: "Industry Tools You'll Master",
-      },
-      labFacilities: {
-        items: [
-          { name: "AI/ML Research Lab" },
-          { name: "Mac Development Lab" },
-        ],
-        title: "Lab Facilities for MBA Digital Transformation",
-      },
-      roomFacilities: {
-        items: [
-          {
-            icon: "https://cdn.iconsdb.example.com/icons/smart-board-dark.png",
-            name: "Smart Interactive Boards",
-          },
-          {
-            icon: "https://cdn.iconsdb.example.com/icons/wifi-dark.png",
-            name: "High-Speed Wi-Fi",
-          },
-        ],
-        title: "Class Room Facilities",
-      },
-      featuredAlumni: {
-        items: [
-          {
-            name: "Amit Verma",
-            image: "https://cdn.alumniphotos.example.com/photos/amit-verma.jpg",
-            designation: "CHIEF MOM (E-BANKING)",
-            career_progression: [
-              {
-                year: "2018",
-                tag_color: "orange",
-                description: "Completed graduation and explored career options",
-              },
-              {
-                year: "2019",
-                tag_color: "orange",
-                description:
-                  "Enrolled in Online MBA in Marketing while pursuing Mentorship",
-              },
-            ],
-          },
-        ],
-        title: "Featured Alumni",
-        highlight_word: "Alumni",
-      },
-      faqs: {
-        items: [
-          {
-            answer: "",
-            expanded: false,
-            question: "What is the eligibility for this MBA?",
-          },
-          {
-            answer: "",
-            expanded: false,
-            question: "Is there any scholarship available?",
-          },
-        ],
-        title: "Frequently Asked Questions",
-      },
-      studentForum: {
-        icon: "https://cdn.iconsdb.example.com/icons/forum-people.png",
-        link: "https://example.com/forum/ask-admission-team",
-        title: "Student Forum",
-        enabled: true,
-        cta_icon:
-          "https://cdn.iconsdb.example.com/icons/chat-bubble-orange.png",
-        cta_label: "Ask the Admission Team",
-        description:
-          "Have queries/doubts? Connect directly with our college team or chat with our ex-students.",
-      },
-      certifications: {
-        title: "Certifications",
-        items: [
-          {
-            tag: "BONUS CERTIFICATION",
-            title: "Tally Prime Certification",
-            description:
-              "Included with Finance specialization at no extra cost.",
-            cta_label: "View Certificate Details",
-            link: "https://example.com/certifications/tally-prime",
-          },
-        ],
-      },
-    };
-
-    updateActiveTabPayload(seedData);
-    toast.success("Loaded all mock/seed data into Course Info!");
   };
 
   const saveAndGoToTab = (nextTabId: CourseTabId) => {
@@ -1642,16 +1441,6 @@ export default function SetupAcademicsPage() {
                                 );
                               })}
                             </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-semibold shrink-0"
-                              onClick={loadCourseInfoSeedData}
-                            >
-                              <Sparkles className="h-4 w-4 mr-1 text-indigo-600" />
-                              Load Demo Data
-                            </Button>
                           </div>
 
                           {/* 1. GENERAL & OVERVIEW SUB-TAB */}
@@ -1912,7 +1701,12 @@ export default function SetupAcademicsPage() {
                                       const next = [
                                         ...(getActiveTabPayload().accreditations
                                           ?.items || []),
-                                        { tag: "", image: "", title: "" },
+                                        {
+                                          tag: "",
+                                          image: "",
+                                          document: "",
+                                          title: "",
+                                        },
                                       ];
                                       updateActiveTabPayload({
                                         accreditations: {
@@ -1934,7 +1728,7 @@ export default function SetupAcademicsPage() {
                                     key={idx}
                                     className="space-y-2 pt-2 pb-4 border-b"
                                   >
-                                    <div className="grid gap-2 grid-cols-3">
+                                    <div className="grid gap-2 grid-cols-2">
                                       <div>
                                         <Label className="text-xs">Tag</Label>
                                         <Input
@@ -1961,29 +1755,125 @@ export default function SetupAcademicsPage() {
                                       </div>
                                       <div>
                                         <Label className="text-xs">
-                                          Image URL
+                                          Image (Upload or URL)
                                         </Label>
-                                        <Input
-                                          placeholder="Image URL"
-                                          value={item.image || ""}
-                                          onChange={(e) => {
-                                            const next = [
-                                              ...(getActiveTabPayload()
-                                                .accreditations?.items || []),
-                                            ];
-                                            next[idx] = {
-                                              ...next[idx],
-                                              image: e.target.value,
-                                            };
-                                            updateActiveTabPayload({
-                                              accreditations: {
+                                        <div className="flex gap-2">
+                                          <Input
+                                            placeholder="Image URL"
+                                            value={item.image || ""}
+                                            onChange={(e) => {
+                                              const next = [
                                                 ...(getActiveTabPayload()
-                                                  .accreditations || {}),
-                                                items: next,
-                                              },
-                                            });
-                                          }}
-                                        />
+                                                  .accreditations?.items || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                image: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                accreditations: {
+                                                  ...(getActiveTabPayload()
+                                                    .accreditations || {}),
+                                                  items: next,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                          <Input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                            disabled={
+                                              uploadingField ===
+                                              `accreditation_image_${idx}`
+                                            }
+                                            onChange={(e) =>
+                                              handleCourseFieldUpload(
+                                                e.target.files?.[0] ?? null,
+                                                `accreditation_image_${idx}`,
+                                                `accreditations/image_${idx}`,
+                                                (url) => {
+                                                  const next = [
+                                                    ...(getActiveTabPayload()
+                                                      .accreditations?.items ||
+                                                      []),
+                                                  ];
+                                                  next[idx] = {
+                                                    ...next[idx],
+                                                    image: url,
+                                                  };
+                                                  updateActiveTabPayload({
+                                                    accreditations: {
+                                                      ...(getActiveTabPayload()
+                                                        .accreditations || {}),
+                                                      items: next,
+                                                    },
+                                                  });
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">
+                                          Certificate (Upload PDF or URL)
+                                        </Label>
+                                        <div className="flex gap-2">
+                                          <Input
+                                            placeholder="Document URL"
+                                            value={item.document || ""}
+                                            onChange={(e) => {
+                                              const next = [
+                                                ...(getActiveTabPayload()
+                                                  .accreditations?.items || []),
+                                              ];
+                                              next[idx] = {
+                                                ...next[idx],
+                                                document: e.target.value,
+                                              };
+                                              updateActiveTabPayload({
+                                                accreditations: {
+                                                  ...(getActiveTabPayload()
+                                                    .accreditations || {}),
+                                                  items: next,
+                                                },
+                                              });
+                                            }}
+                                          />
+                                          <Input
+                                            type="file"
+                                            accept="application/pdf"
+                                            disabled={
+                                              uploadingField ===
+                                              `accreditation_doc_${idx}`
+                                            }
+                                            onChange={(e) =>
+                                              handleCourseFieldUpload(
+                                                e.target.files?.[0] ?? null,
+                                                `accreditation_doc_${idx}`,
+                                                `accreditations/document_${idx}`,
+                                                (url) => {
+                                                  const next = [
+                                                    ...(getActiveTabPayload()
+                                                      .accreditations?.items ||
+                                                      []),
+                                                  ];
+                                                  next[idx] = {
+                                                    ...next[idx],
+                                                    document: url,
+                                                  };
+                                                  updateActiveTabPayload({
+                                                    accreditations: {
+                                                      ...(getActiveTabPayload()
+                                                        .accreditations || {}),
+                                                      items: next,
+                                                    },
+                                                  });
+                                                },
+                                              )
+                                            }
+                                          />
+                                        </div>
                                       </div>
                                       <div>
                                         <Label className="text-xs">Title</Label>
@@ -2318,10 +2208,8 @@ export default function SetupAcademicsPage() {
                                             ?.items || []),
                                           {
                                             date: "",
-                                            icon: "",
                                             label: "",
                                             status: "",
-                                            status_color: "",
                                           },
                                         ];
                                         updateActiveTabPayload({
@@ -2344,9 +2232,9 @@ export default function SetupAcademicsPage() {
                                     key={idx}
                                     className="border p-3 rounded-lg space-y-2 bg-muted/5"
                                   >
-                                    <div className="grid gap-2 grid-cols-6">
+                                    <div className="grid gap-2 grid-cols-4">
                                       <Input
-                                        placeholder="Date"
+                                        type="date"
                                         value={kd.date || ""}
                                         onChange={(e) => {
                                           const next = [
@@ -2366,28 +2254,6 @@ export default function SetupAcademicsPage() {
                                           });
                                         }}
                                         className="col-span-1"
-                                      />
-                                      <Input
-                                        placeholder="Icon URL"
-                                        value={kd.icon || ""}
-                                        onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload().keyDates
-                                              ?.items || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            icon: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            keyDates: {
-                                              ...(getActiveTabPayload()
-                                                .keyDates || {}),
-                                              items: next,
-                                            },
-                                          });
-                                        }}
-                                        className="col-span-2"
                                       />
                                       <Input
                                         placeholder="Label"
@@ -2411,17 +2277,16 @@ export default function SetupAcademicsPage() {
                                         }}
                                         className="col-span-1"
                                       />
-                                      <Input
-                                        placeholder="Status"
+                                      <Select
                                         value={kd.status || ""}
-                                        onChange={(e) => {
+                                        onValueChange={(value) => {
                                           const next = [
                                             ...(getActiveTabPayload().keyDates
                                               ?.items || []),
                                           ];
                                           next[idx] = {
                                             ...next[idx],
-                                            status: e.target.value,
+                                            status: value,
                                           };
                                           updateActiveTabPayload({
                                             keyDates: {
@@ -2431,8 +2296,22 @@ export default function SetupAcademicsPage() {
                                             },
                                           });
                                         }}
-                                        className="col-span-1"
-                                      />
+                                      >
+                                        <SelectTrigger className="col-span-1">
+                                          <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="urgent">
+                                            Urgent
+                                          </SelectItem>
+                                          <SelectItem value="active">
+                                            Active
+                                          </SelectItem>
+                                          <SelectItem value="inactive">
+                                            Inactive
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
                                       <Button
                                         type="button"
                                         variant="ghost"
@@ -2457,29 +2336,6 @@ export default function SetupAcademicsPage() {
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
                                     </div>
-                                    <div className="flex gap-2 items-center">
-                                      <Input
-                                        placeholder="Status Color"
-                                        value={kd.status_color || ""}
-                                        onChange={(e) => {
-                                          const next = [
-                                            ...(getActiveTabPayload().keyDates
-                                              ?.items || []),
-                                          ];
-                                          next[idx] = {
-                                            ...next[idx],
-                                            status_color: e.target.value,
-                                          };
-                                          updateActiveTabPayload({
-                                            keyDates: {
-                                              ...(getActiveTabPayload()
-                                                .keyDates || {}),
-                                              items: next,
-                                            },
-                                          });
-                                        }}
-                                      />
-                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -2490,21 +2346,6 @@ export default function SetupAcademicsPage() {
                           {courseInfoSubTab === "academics" && (
                             <div className="space-y-6">
                               <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-1">
-                                  <Label>Total Credits</Label>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g. 102"
-                                    value={
-                                      getActiveTabPayload().total_credits ?? ""
-                                    }
-                                    onChange={(e) =>
-                                      updateActiveTabPayload({
-                                        total_credits: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </div>
                                 <div className="space-y-1">
                                   <Label>Brochure Link</Label>
                                   <Input
@@ -2758,21 +2599,11 @@ export default function SetupAcademicsPage() {
                                                     <Trash2 className="h-3 w-3 text-destructive" />
                                                   </Button>
                                                 </div>
-                                                <Textarea
-                                                  placeholder="Subjects (one per line)"
-                                                  rows={2}
-                                                  value={(
-                                                    sp.subjects || []
-                                                  ).join("\n")}
-                                                  onChange={(e) =>
-                                                    updateSp({
-                                                      subjects: e.target.value
-                                                        .split("\n")
-                                                        .map((s: string) =>
-                                                          s.trim(),
-                                                        )
-                                                        .filter(Boolean),
-                                                    })
+                                                <SubjectTagInput
+                                                  placeholder="Type a subject and press Enter"
+                                                  value={sp.subjects || []}
+                                                  onChange={(subjects) =>
+                                                    updateSp({ subjects })
                                                   }
                                                 />
                                               </div>
@@ -2799,7 +2630,7 @@ export default function SetupAcademicsPage() {
                                       const next = [
                                         ...(getActiveTabPayload()
                                           .course_structure || []),
-                                        { title: "", details: "" },
+                                        { title: "", credits: "" },
                                       ];
                                       updateActiveTabPayload({
                                         course_structure: next,
@@ -2836,8 +2667,9 @@ export default function SetupAcademicsPage() {
                                         }}
                                       />
                                       <Input
-                                        placeholder="Details (e.g. 12 Credits, 4 Subjects)"
-                                        value={cs.details || ""}
+                                        type="number"
+                                        placeholder="Score / Credits (e.g. 12)"
+                                        value={cs.credits ?? ""}
                                         onChange={(e) => {
                                           const next = [
                                             ...(getActiveTabPayload()
@@ -2845,7 +2677,7 @@ export default function SetupAcademicsPage() {
                                           ];
                                           next[idx] = {
                                             ...next[idx],
-                                            details: e.target.value,
+                                            credits: e.target.value,
                                           };
                                           updateActiveTabPayload({
                                             course_structure: next,
@@ -3188,71 +3020,96 @@ export default function SetupAcademicsPage() {
                           {/* 4. FACILITIES & TIMINGS SUB-TAB */}
                           {courseInfoSubTab === "facilities" && (
                             <div className="space-y-6">
-                              {/* Class Timings Array */}
+                              {/* Class Timings — fixed day rows */}
                               <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <Label className="font-bold">
-                                    Class Timings
-                                  </Label>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      const next = [
-                                        ...(getActiveTabPayload()
-                                          .class_timings || []),
-                                        "",
-                                      ];
+                                <Label className="font-bold">
+                                  Class Timings
+                                </Label>
+                                <div className="space-y-2">
+                                  {CLASS_TIMING_DAYS.map((day) => {
+                                    const timings =
+                                      getActiveTabPayload().class_timings || [];
+                                    const entry = timings.find(
+                                      (t: any) => t?.day === day,
+                                    ) || {
+                                      day,
+                                      closed: false,
+                                      start: "",
+                                      end: "",
+                                    };
+                                    const updateDay = (
+                                      patch: Record<string, unknown>,
+                                    ) => {
+                                      const next = CLASS_TIMING_DAYS.map(
+                                        (d) => {
+                                          const existing = timings.find(
+                                            (t: any) => t?.day === d,
+                                          ) || {
+                                            day: d,
+                                            closed: false,
+                                            start: "",
+                                            end: "",
+                                          };
+                                          return d === day
+                                            ? { ...existing, ...patch }
+                                            : existing;
+                                        },
+                                      );
                                       updateActiveTabPayload({
                                         class_timings: next,
                                       });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" /> Add Timing
-                                  </Button>
+                                    };
+                                    return (
+                                      <div
+                                        key={day}
+                                        className="flex flex-wrap items-center gap-3 border p-2 rounded-lg bg-muted/5"
+                                      >
+                                        <span className="w-24 text-sm font-medium">
+                                          {day}
+                                        </span>
+                                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!entry.closed}
+                                            onChange={(e) =>
+                                              updateDay({
+                                                closed: e.target.checked,
+                                              })
+                                            }
+                                          />
+                                          Closed
+                                        </label>
+                                        {!entry.closed && (
+                                          <div className="flex items-center gap-2">
+                                            <Input
+                                              type="time"
+                                              className="w-32"
+                                              value={entry.start || ""}
+                                              onChange={(e) =>
+                                                updateDay({
+                                                  start: e.target.value,
+                                                })
+                                              }
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                              to
+                                            </span>
+                                            <Input
+                                              type="time"
+                                              className="w-32"
+                                              value={entry.end || ""}
+                                              onChange={(e) =>
+                                                updateDay({
+                                                  end: e.target.value,
+                                                })
+                                              }
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                                {(
-                                  getActiveTabPayload().class_timings || []
-                                ).map((ct: string, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="flex gap-2 items-center"
-                                  >
-                                    <Input
-                                      placeholder="e.g. Mon-Fri: 9:00 AM to 4:00 PM"
-                                      value={ct || ""}
-                                      onChange={(e) => {
-                                        const next = [
-                                          ...(getActiveTabPayload()
-                                            .class_timings || []),
-                                        ];
-                                        next[idx] = e.target.value;
-                                        updateActiveTabPayload({
-                                          class_timings: next,
-                                        });
-                                      }}
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        const next = (
-                                          getActiveTabPayload().class_timings ||
-                                          []
-                                        ).filter(
-                                          (_: any, i: number) => i !== idx,
-                                        );
-                                        updateActiveTabPayload({
-                                          class_timings: next,
-                                        });
-                                      }}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                ))}
                               </div>
 
                               {/* Industry Tools Array */}
@@ -3505,44 +3362,50 @@ export default function SetupAcademicsPage() {
                                     />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-xs">CTA Label</Label>
-                                    <Input
-                                      placeholder="e.g. View Certificate Details"
-                                      value={
-                                        getActiveTabPayload()
-                                          .bonus_certification?.cta_label || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          bonus_certification: {
-                                            ...(getActiveTabPayload()
-                                              .bonus_certification || {}),
-                                            cta_label: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
                                     <Label className="text-xs">
-                                      Link / URL
+                                      Link / URL (Upload or URL)
                                     </Label>
-                                    <Input
-                                      placeholder="https://example.com/certifications/tally-prime"
-                                      value={
-                                        getActiveTabPayload()
-                                          .bonus_certification?.link || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          bonus_certification: {
-                                            ...(getActiveTabPayload()
-                                              .bonus_certification || {}),
-                                            link: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
+                                    <div className="flex gap-2">
+                                      <Input
+                                        placeholder="https://example.com/certifications/tally-prime"
+                                        value={
+                                          getActiveTabPayload()
+                                            .bonus_certification?.link || ""
+                                        }
+                                        onChange={(e) =>
+                                          updateActiveTabPayload({
+                                            bonus_certification: {
+                                              ...(getActiveTabPayload()
+                                                .bonus_certification || {}),
+                                              link: e.target.value,
+                                            },
+                                          })
+                                        }
+                                      />
+                                      <Input
+                                        type="file"
+                                        accept="application/pdf,image/jpeg,image/png,image/webp"
+                                        disabled={
+                                          uploadingField ===
+                                          "bonus_certification_link"
+                                        }
+                                        onChange={(e) =>
+                                          handleCourseFieldUpload(
+                                            e.target.files?.[0] ?? null,
+                                            "bonus_certification_link",
+                                            "bonus-certification/link",
+                                            (url) =>
+                                              updateActiveTabPayload({
+                                                bonus_certification: {
+                                                  ...(getActiveTabPayload()
+                                                    .bonus_certification || {}),
+                                                  link: url,
+                                                },
+                                              }),
+                                          )
+                                        }
+                                      />
+                                    </div>
                                   </div>
                                   <div className="space-y-1 md:col-span-2">
                                     <Label className="text-xs">
@@ -3588,7 +3451,7 @@ export default function SetupAcademicsPage() {
                                       const next = [
                                         ...(getActiveTabPayload()
                                           .career_opportunities || []),
-                                        "",
+                                        { role: "", salary_range: "" },
                                       ];
                                       updateActiveTabPayload({
                                         career_opportunities: next,
@@ -3602,20 +3465,58 @@ export default function SetupAcademicsPage() {
                                 {(
                                   getActiveTabPayload().career_opportunities ||
                                   []
-                                ).map((co: string, idx: number) => (
+                                ).map((co: any, idx: number) => (
                                   <div
                                     key={idx}
                                     className="flex gap-2 items-center"
                                   >
                                     <Input
+                                      className="flex-1"
                                       placeholder="e.g. Digital Transformation Consultant, Product Manager"
-                                      value={co || ""}
+                                      value={
+                                        (typeof co === "string"
+                                          ? co
+                                          : co?.role) || ""
+                                      }
                                       onChange={(e) => {
                                         const next = [
                                           ...(getActiveTabPayload()
                                             .career_opportunities || []),
                                         ];
-                                        next[idx] = e.target.value;
+                                        const existing = next[idx];
+                                        next[idx] = {
+                                          role: e.target.value,
+                                          salary_range:
+                                            (typeof existing === "string"
+                                              ? ""
+                                              : existing?.salary_range) || "",
+                                        };
+                                        updateActiveTabPayload({
+                                          career_opportunities: next,
+                                        });
+                                      }}
+                                    />
+                                    <Input
+                                      className="w-36"
+                                      placeholder="LPA Range (e.g. 6-10 LPA)"
+                                      value={
+                                        (typeof co === "string"
+                                          ? ""
+                                          : co?.salary_range) || ""
+                                      }
+                                      onChange={(e) => {
+                                        const next = [
+                                          ...(getActiveTabPayload()
+                                            .career_opportunities || []),
+                                        ];
+                                        const existing = next[idx];
+                                        next[idx] = {
+                                          role:
+                                            (typeof existing === "string"
+                                              ? existing
+                                              : existing?.role) || "",
+                                          salary_range: e.target.value,
+                                        };
                                         updateActiveTabPayload({
                                           career_opportunities: next,
                                         });
@@ -3957,115 +3858,6 @@ export default function SetupAcademicsPage() {
                                     </Button>
                                   </div>
                                 ))}
-                              </div>
-
-                              {/* Student Forum Object */}
-                              <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
-                                <h4 className="font-bold text-sm text-foreground">
-                                  Student Forum
-                                </h4>
-                                <div className="grid gap-3 md:grid-cols-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">Title</Label>
-                                    <Input
-                                      placeholder="e.g. Student Forum"
-                                      value={
-                                        getActiveTabPayload().student_forum
-                                          ?.title || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          student_forum: {
-                                            ...(getActiveTabPayload()
-                                              .student_forum || {}),
-                                            title: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">
-                                      Forum Link / URL
-                                    </Label>
-                                    <Input
-                                      placeholder="https://example.com/forum/ask-admission-team"
-                                      value={
-                                        getActiveTabPayload().student_forum
-                                          ?.link || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          student_forum: {
-                                            ...(getActiveTabPayload()
-                                              .student_forum || {}),
-                                            link: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs">CTA Label</Label>
-                                    <Input
-                                      placeholder="e.g. Ask the Admission Team"
-                                      value={
-                                        getActiveTabPayload().student_forum
-                                          ?.cta_label || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          student_forum: {
-                                            ...(getActiveTabPayload()
-                                              .student_forum || {}),
-                                            cta_label: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-3 pt-1">
-                                    <Label className="text-xs">Enabled</Label>
-                                    <input
-                                      type="checkbox"
-                                      className="h-4 w-4 accent-indigo-600"
-                                      checked={
-                                        getActiveTabPayload().student_forum
-                                          ?.enabled ?? true
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          student_forum: {
-                                            ...(getActiveTabPayload()
-                                              .student_forum || {}),
-                                            enabled: e.target.checked,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-1 md:col-span-2">
-                                    <Label className="text-xs">
-                                      Description
-                                    </Label>
-                                    <Input
-                                      placeholder="e.g. Have queries? Connect directly with our college team."
-                                      value={
-                                        getActiveTabPayload().student_forum
-                                          ?.description || ""
-                                      }
-                                      onChange={(e) =>
-                                        updateActiveTabPayload({
-                                          student_forum: {
-                                            ...(getActiveTabPayload()
-                                              .student_forum || {}),
-                                            description: e.target.value,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                </div>
                               </div>
                             </div>
                           )}
