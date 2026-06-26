@@ -6427,27 +6427,6 @@ export default function SetupAcademicsPage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">
-                                PDF Size (e.g. 2.4 MB)
-                              </Label>
-                              <Input
-                                placeholder="e.g. 2.4 MB"
-                                value={
-                                  getActiveTabPayload().fee_structure_pdf
-                                    ?.size || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    fee_structure_pdf: {
-                                      ...(getActiveTabPayload()
-                                        .fee_structure_pdf || {}),
-                                      size: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
                               <Label className="text-xs">Upload PDF File</Label>
                               <Input
                                 type="file"
@@ -6496,15 +6475,27 @@ export default function SetupAcademicsPage() {
                                 </div>
                                 <div className="space-y-1">
                                   <Label>Gender</Label>
-                                  <Input
-                                    placeholder="e.g. Boys / Girls"
+                                  <Select
                                     value={detail.gender || ""}
-                                    onChange={(e) =>
+                                    onValueChange={(value) =>
                                       updateFeeDetail(dIdx, {
-                                        gender: e.target.value,
+                                        gender: value,
                                       })
                                     }
-                                  />
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Boys">Boys</SelectItem>
+                                      <SelectItem value="Girls">
+                                        Girls
+                                      </SelectItem>
+                                      <SelectItem value="Other">
+                                        Other
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
 
