@@ -1513,6 +1513,122 @@ function assertCompleteOrEmpty(
   }
 }
 
+// Drops `defaultOnlyFields` from `row` when none of `contentFields` has real
+// content — used for rows whose Select/number inputs carry a non-blank
+// default value (e.g. a color picker, or marks/percent defaulting to 0)
+// that would otherwise make an entirely untouched row look non-blank to
+// isEffectivelyBlank and survive deepStripBlankEntries forever.
+function stripIfNoContent(
+  row: Record<string, unknown>,
+  contentFields: string[],
+  defaultOnlyFields: string[],
+): Record<string, unknown> {
+  const hasContent = contentFields.some(
+    (field) => !isEffectivelyBlank(row[field]),
+  );
+  if (hasContent) return row;
+  const rest = { ...row };
+  defaultOnlyFields.forEach((field) => delete rest[field]);
+  return rest;
+}
+
+// `marks`, `percent`, `grade_point`, `total_questions`, and `attempt` all
+// default to numeric 0 on a freshly-added row — asText(0) is "0", a
+// non-blank string, so pairing them in assertCompleteOrEmpty would throw on
+// rows the admin never touched at all. They're intentionally left out of
+// every completeness check below (write-time stripping in
+// preprocessExamPolicyDefaults already drops them from truly-untouched
+// rows; once a row has real text content they're optional supplementary
+// numbers, not validated). Likewise `subtitle` and `read_more_link` are
+// genuinely optional in practice (confirmed against existing data — rows/
+// policies routinely have every other field filled with these left blank).
+function validateExamPolicyTabData(data: unknown): void {
+  const record = asRecord(data);
+
+  asArray(record.evaluation_patterns).forEach((item, idx) => {
+    const pattern = asRecord(item);
+    const context = `Evaluation Pattern #${idx + 1}`;
+    const chart = asRecord(pattern.chart);
+    const hasContent =
+      asArray(chart.segments).length > 0 ||
+      asArray(pattern.subtotals).length > 0 ||
+      asArray(pattern.summary_cards).length > 0 ||
+      asArray(pattern.internal_assessment).length > 0 ||
+      asArray(pattern.external_examination).length > 0;
+    if (hasContent && !asText(pattern.pattern_type).trim()) {
+      throw new ValidationError(`${context}: pattern_type is required`);
+    }
+
+    asArray(pattern.summary_cards).forEach((row, rIdx) => {
+      assertCompleteOrEmpty(
+        asRecord(row),
+        ["label", "value"],
+        `${context} Summary Card #${rIdx + 1}`,
+      );
+    });
+    asArray(pattern.internal_assessment).forEach((section, sIdx) => {
+      const sec = asRecord(section);
+      const sectionContext = `${context} Internal Assessment Section #${sIdx + 1}`;
+      const components = asArray(sec.components);
+      if (components.length > 0 && !asText(sec.section).trim()) {
+        throw new ValidationError(`${sectionContext}: section is required`);
+      }
+    });
+    asArray(pattern.external_examination).forEach((section, sIdx) => {
+      const sec = asRecord(section);
+      const sectionContext = `${context} External Examination Section #${sIdx + 1}`;
+      const rows = asArray(sec.rows);
+      if (rows.length > 0 && !asText(sec.section).trim()) {
+        throw new ValidationError(`${sectionContext}: section is required`);
+      }
+    });
+  });
+
+  const gradingScale = asRecord(record.grading_scale);
+  asArray(gradingScale.rows).forEach((row, rIdx) => {
+    assertCompleteOrEmpty(
+      asRecord(row),
+      ["percentage_range", "grade"],
+      `Grading Scale Row #${rIdx + 1}`,
+    );
+  });
+
+  const banner = asRecord(record.important_guidelines_banner);
+  asArray(banner.academic_policies).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["badge", "title", "description"],
+      `Academic Policy #${idx + 1}`,
+    );
+  });
+
+  const projects = asRecord(record.projects_dissertation);
+  assertCompleteOrEmpty(
+    asRecord(projects.marks_distribution_bar),
+    ["title", "total_label"],
+    "Projects & Dissertation Marks Distribution Bar",
+  );
+  asArray(projects.summary_cards).forEach((row, rIdx) => {
+    assertCompleteOrEmpty(
+      asRecord(row),
+      ["label", "value"],
+      `Projects & Dissertation Summary Card #${rIdx + 1}`,
+    );
+  });
+
+  [
+    { key: "ojt_evaluation", label: "OJT Evaluation" },
+    { key: "internship_evaluation", label: "Internship Evaluation" },
+  ].forEach(({ key, label }) => {
+    const section = asRecord(record[key]);
+    assertCompleteOrEmpty(
+      asRecord(section.total_summary),
+      ["label", "value"],
+      `${label} Total Summary`,
+    );
+  });
+}
+
 function validatePlacementsTabData(data: unknown): void {
   const record = asRecord(data);
 
@@ -1694,6 +1810,198 @@ function validateFinancialAidTabData(data: unknown): void {
   });
 }
 
+// Exam Policy rows have several inputs that default to a non-blank value
+// (a color picker, a Select, or marks/percent left at 0) purely so the
+// control has something to render — those defaults alone shouldn't keep an
+// otherwise-untouched row alive through deepStripBlankEntries. Strip them
+// per row/section whenever its real identifying content is still blank.
+function preprocessExamPolicyDefaults(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
+  const record = { ...raw };
+
+  if (Array.isArray(record.evaluation_patterns)) {
+    record.evaluation_patterns = (
+      record.evaluation_patterns as Record<string, unknown>[]
+    ).map((patternRaw) => {
+      const pattern = { ...patternRaw };
+
+      const examDuration = asRecord(pattern.exam_duration);
+      if (isEffectivelyBlank(examDuration.value)) {
+        delete pattern.exam_duration;
+      }
+
+      const chart = asRecord(pattern.chart);
+      const segments = (
+        Array.isArray(chart.segments)
+          ? (chart.segments as Record<string, unknown>[])
+          : []
+      ).map((seg) => {
+        // The "Color" field was dropped from the Chart Segments form —
+        // drop the stale leftover from older saves.
+        const rest = stripIfNoContent(seg, ["label"], ["percent"]);
+        delete rest.color;
+        return rest;
+      });
+      if (segments.every(isEffectivelyBlank)) {
+        delete pattern.chart;
+      } else {
+        pattern.chart = { ...chart, segments };
+      }
+
+      if (Array.isArray(pattern.subtotals)) {
+        pattern.subtotals = (
+          pattern.subtotals as Record<string, unknown>[]
+        ).map((row) => stripIfNoContent(row, ["label"], ["marks"]));
+      }
+
+      if (Array.isArray(pattern.internal_assessment)) {
+        pattern.internal_assessment = (
+          pattern.internal_assessment as Record<string, unknown>[]
+        ).map((sectionRaw) => {
+          const section = { ...sectionRaw };
+          if (Array.isArray(section.components)) {
+            section.components = (
+              section.components as Record<string, unknown>[]
+            ).map((compRaw) => {
+              const component = stripIfNoContent(
+                compRaw,
+                ["name"],
+                ["marks", "description", "icon"],
+              );
+              if (Array.isArray(component.sub_components)) {
+                component.sub_components = (
+                  component.sub_components as Record<string, unknown>[]
+                ).map((sub) => stripIfNoContent(sub, ["name"], ["marks"]));
+              }
+              return component;
+            });
+          }
+          return section;
+        });
+      }
+
+      if (Array.isArray(pattern.external_examination)) {
+        pattern.external_examination = (
+          pattern.external_examination as Record<string, unknown>[]
+        ).map((sectionRaw) => {
+          const section = { ...sectionRaw };
+          const rows = (
+            Array.isArray(section.rows)
+              ? (section.rows as Record<string, unknown>[])
+              : []
+          ).map((row) =>
+            stripIfNoContent(
+              row,
+              ["section", "subtitle"],
+              ["total_questions", "attempt", "marks"],
+            ),
+          );
+          section.rows = rows;
+          if (
+            isEffectivelyBlank(section.section) &&
+            rows.every(isEffectivelyBlank)
+          ) {
+            delete section.columns;
+          }
+          return section;
+        });
+      }
+
+      return pattern;
+    });
+  }
+
+  const gradingScale = asRecord(record.grading_scale);
+  if (Object.keys(gradingScale).length > 0) {
+    const gs = { ...gradingScale };
+    const rows = (
+      Array.isArray(gs.rows) ? (gs.rows as Record<string, unknown>[]) : []
+    ).map((row) =>
+      stripIfNoContent(
+        row,
+        ["percentage_range", "grade"],
+        ["grade_color", "grade_point"],
+      ),
+    );
+    gs.rows = rows;
+    if (isEffectivelyBlank(gs.title) && rows.every(isEffectivelyBlank)) {
+      delete gs.columns;
+    }
+    record.grading_scale = gs;
+  }
+
+  const banner = asRecord(record.important_guidelines_banner);
+  if (Array.isArray(banner.academic_policies)) {
+    record.important_guidelines_banner = {
+      ...banner,
+      academic_policies: (
+        banner.academic_policies as Record<string, unknown>[]
+      ).map((policy) =>
+        stripIfNoContent(
+          policy,
+          ["badge", "title", "description", "read_more_link"],
+          ["read_more_cta", "icon"],
+        ),
+      ),
+    };
+  }
+
+  const projects = asRecord(record.projects_dissertation);
+  if (Object.keys(projects).length > 0) {
+    const pd = { ...projects };
+    const bar = asRecord(pd.marks_distribution_bar);
+    if (Array.isArray(bar.segments)) {
+      pd.marks_distribution_bar = {
+        ...bar,
+        segments: (bar.segments as Record<string, unknown>[]).map((seg) =>
+          stripIfNoContent(seg, ["label"], ["percent", "color"]),
+        ),
+      };
+    }
+    (["internal_assessment", "external_examination"] as const).forEach(
+      (key) => {
+        if (Array.isArray(pd[key])) {
+          pd[key] = (pd[key] as Record<string, unknown>[]).map((sectionRaw) => {
+            const section = { ...sectionRaw };
+            if (Array.isArray(section.components)) {
+              section.components = (
+                section.components as Record<string, unknown>[]
+              ).map((comp) => stripIfNoContent(comp, ["name"], ["marks"]));
+            }
+            return section;
+          });
+        }
+      },
+    );
+    record.projects_dissertation = pd;
+  }
+
+  (["ojt_evaluation", "internship_evaluation"] as const).forEach((key) => {
+    const section = asRecord(record[key]);
+    if (Object.keys(section).length === 0) return;
+    const next = { ...section };
+    if (Array.isArray(next.components)) {
+      next.components = (next.components as Record<string, unknown>[]).map(
+        (comp) => stripIfNoContent(comp, ["name"], ["marks"]),
+      );
+    }
+    const totalSummary = asRecord(next.total_summary);
+    const hasContent =
+      !isEffectivelyBlank(next.section_title) ||
+      !isEffectivelyBlank(totalSummary.label) ||
+      !isEffectivelyBlank(totalSummary.value) ||
+      (Array.isArray(next.components) &&
+        (next.components as unknown[]).some((c) => !isEffectivelyBlank(c)));
+    if (!hasContent) {
+      delete next.columns;
+    }
+    record[key] = next;
+  });
+
+  return record;
+}
+
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
@@ -1838,6 +2146,10 @@ function normalizeSetupTabData(tabName: string, data: unknown): unknown {
     };
   }
 
+  if (tabName === "exam_policy") {
+    return deepStripBlankEntries(preprocessExamPolicyDefaults(record));
+  }
+
   return deepStripBlankEntries(data);
 }
 
@@ -1929,26 +2241,44 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
 }
 
 function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
+  // The admin form stores every section as `{ items: [...] }` (gender
+  // diversity uses `{ segments: [...] }`) — read from those nested paths
+  // first, falling back to the legacy flat-array/`.data` shape used by
+  // older seed data that predates the current admin form.
   const ageDistRaw = asRecord(raw.age_distribution);
-  const ageDistData = Array.isArray(ageDistRaw.data)
-    ? (ageDistRaw.data as Record<string, unknown>[])
-    : [];
+  const ageDistData = Array.isArray(ageDistRaw.items)
+    ? (ageDistRaw.items as Record<string, unknown>[])
+    : Array.isArray(ageDistRaw.data)
+      ? (ageDistRaw.data as Record<string, unknown>[])
+      : [];
 
-  const genderDiversity = Array.isArray(raw.gender_diversity)
-    ? (raw.gender_diversity as Record<string, unknown>[])
-    : [];
+  const genderDiversityRaw = asRecord(raw.gender_diversity);
+  const genderDiversity = Array.isArray(genderDiversityRaw.segments)
+    ? (genderDiversityRaw.segments as Record<string, unknown>[])
+    : Array.isArray(raw.gender_diversity)
+      ? (raw.gender_diversity as Record<string, unknown>[])
+      : [];
 
-  const workExp = Array.isArray(raw.work_experience)
-    ? (raw.work_experience as Record<string, unknown>[])
-    : [];
+  const workExpRaw = asRecord(raw.work_experience);
+  const workExp = Array.isArray(workExpRaw.items)
+    ? (workExpRaw.items as Record<string, unknown>[])
+    : Array.isArray(raw.work_experience)
+      ? (raw.work_experience as Record<string, unknown>[])
+      : [];
 
-  const intlPresence = Array.isArray(raw.international_presence)
-    ? (raw.international_presence as Record<string, unknown>[])
-    : [];
+  const intlPresenceRaw = asRecord(raw.international_presence);
+  const intlPresence = Array.isArray(intlPresenceRaw.items)
+    ? (intlPresenceRaw.items as Record<string, unknown>[])
+    : Array.isArray(raw.international_presence)
+      ? (raw.international_presence as Record<string, unknown>[])
+      : [];
 
-  const natlPresence = Array.isArray(raw.national_presence)
-    ? (raw.national_presence as Record<string, unknown>[])
-    : [];
+  const natlPresenceRaw = asRecord(raw.national_presence);
+  const natlPresence = Array.isArray(natlPresenceRaw.items)
+    ? (natlPresenceRaw.items as Record<string, unknown>[])
+    : Array.isArray(raw.national_presence)
+      ? (raw.national_presence as Record<string, unknown>[])
+      : [];
 
   return {
     tab: "demo_graphics",
@@ -2128,6 +2458,9 @@ export class CourseTabsService {
       if (tabName === "financial_aid") {
         validateFinancialAidTabData(data);
       }
+      if (tabName === "exam_policy") {
+        validateExamPolicyTabData(data);
+      }
 
       const updated = await CourseTabsRepository.updateCourseSetupTabData(
         courseId,
@@ -2147,7 +2480,7 @@ export class CourseTabsService {
     const normalizedData =
       tabName === "eligibility_criteria"
         ? normalizeEligibilityCriteriaWriteData(data)
-        : data;
+        : deepStripBlankEntries(data);
 
     const updated = await CourseTabsRepository.updateCourseTab(
       courseId,

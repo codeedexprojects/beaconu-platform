@@ -7775,7 +7775,6 @@ export default function SetupAcademicsPage() {
                                               {
                                                 label: "",
                                                 percent: 0,
-                                                color: "#FF6B00",
                                               },
                                             ];
                                             updatePattern({
@@ -7874,29 +7873,6 @@ export default function SetupAcademicsPage() {
                                                   percent: Number(
                                                     e.target.value,
                                                   ),
-                                                };
-                                                updatePattern({
-                                                  chart: {
-                                                    ...(pat.chart || {
-                                                      total: 100,
-                                                    }),
-                                                    segments: segs,
-                                                  },
-                                                });
-                                              }}
-                                            />
-                                            <Input
-                                              placeholder="#color"
-                                              className="w-32"
-                                              value={seg.color || ""}
-                                              onChange={(e) => {
-                                                const segs = [
-                                                  ...(pat.chart?.segments ||
-                                                    []),
-                                                ];
-                                                segs[si] = {
-                                                  ...segs[si],
-                                                  color: e.target.value,
                                                 };
                                                 updatePattern({
                                                   chart: {
@@ -8335,32 +8311,77 @@ export default function SetupAcademicsPage() {
                                                         });
                                                       }}
                                                     />
-                                                    <Input
-                                                      placeholder="Icon URL (optional)"
-                                                      value={comp.icon || ""}
-                                                      onChange={(e) => {
-                                                        const sections = [
-                                                          ...(pat.internal_assessment ||
-                                                            []),
-                                                        ];
-                                                        const comps = [
-                                                          ...(sections[si]
-                                                            .components || []),
-                                                        ];
-                                                        comps[ci] = {
-                                                          ...comps[ci],
-                                                          icon: e.target.value,
-                                                        };
-                                                        sections[si] = {
-                                                          ...sections[si],
-                                                          components: comps,
-                                                        };
-                                                        updatePattern({
-                                                          internal_assessment:
-                                                            sections,
-                                                        });
-                                                      }}
-                                                    />
+                                                    <div className="flex gap-2">
+                                                      <Input
+                                                        placeholder="Icon URL (optional)"
+                                                        value={comp.icon || ""}
+                                                        onChange={(e) => {
+                                                          const sections = [
+                                                            ...(pat.internal_assessment ||
+                                                              []),
+                                                          ];
+                                                          const comps = [
+                                                            ...(sections[si]
+                                                              .components ||
+                                                              []),
+                                                          ];
+                                                          comps[ci] = {
+                                                            ...comps[ci],
+                                                            icon: e.target
+                                                              .value,
+                                                          };
+                                                          sections[si] = {
+                                                            ...sections[si],
+                                                            components: comps,
+                                                          };
+                                                          updatePattern({
+                                                            internal_assessment:
+                                                              sections,
+                                                          });
+                                                        }}
+                                                      />
+                                                      <Input
+                                                        type="file"
+                                                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                                        disabled={
+                                                          uploadingField ===
+                                                          `exam_policy_component_icon_${pi}_${si}_${ci}`
+                                                        }
+                                                        onChange={(e) =>
+                                                          handleCourseFieldUpload(
+                                                            e.target
+                                                              .files?.[0] ??
+                                                              null,
+                                                            `exam_policy_component_icon_${pi}_${si}_${ci}`,
+                                                            `exam_policy/component_icon_${pi}_${si}_${ci}`,
+                                                            (url) => {
+                                                              const sections = [
+                                                                ...(pat.internal_assessment ||
+                                                                  []),
+                                                              ];
+                                                              const comps = [
+                                                                ...(sections[si]
+                                                                  .components ||
+                                                                  []),
+                                                              ];
+                                                              comps[ci] = {
+                                                                ...comps[ci],
+                                                                icon: url,
+                                                              };
+                                                              sections[si] = {
+                                                                ...sections[si],
+                                                                components:
+                                                                  comps,
+                                                              };
+                                                              updatePattern({
+                                                                internal_assessment:
+                                                                  sections,
+                                                              });
+                                                            },
+                                                          )
+                                                        }
+                                                      />
+                                                    </div>
                                                     {/* Sub-components */}
                                                     <div className="pl-3 space-y-1">
                                                       <div className="flex justify-between items-center">
@@ -9429,31 +9450,70 @@ export default function SetupAcademicsPage() {
                                         </div>
                                         <div className="space-y-1">
                                           <Label className="text-xs">
-                                            Icon URL (optional)
+                                            Icon (Upload or URL, optional)
                                           </Label>
-                                          <Input
-                                            placeholder="https://cdn.example.com/icon.png"
-                                            value={policy.icon || ""}
-                                            onChange={(e) => {
-                                              const policies = [
-                                                ...(getActiveTabPayload()
-                                                  .important_guidelines_banner
-                                                  ?.academic_policies || []),
-                                              ];
-                                              policies[pi] = {
-                                                ...policies[pi],
-                                                icon: e.target.value,
-                                              };
-                                              updateActiveTabPayload({
-                                                important_guidelines_banner: {
+                                          <div className="flex gap-2">
+                                            <Input
+                                              placeholder="https://cdn.example.com/icon.png"
+                                              value={policy.icon || ""}
+                                              onChange={(e) => {
+                                                const policies = [
                                                   ...(getActiveTabPayload()
-                                                    .important_guidelines_banner ||
-                                                    {}),
-                                                  academic_policies: policies,
-                                                },
-                                              });
-                                            }}
-                                          />
+                                                    .important_guidelines_banner
+                                                    ?.academic_policies || []),
+                                                ];
+                                                policies[pi] = {
+                                                  ...policies[pi],
+                                                  icon: e.target.value,
+                                                };
+                                                updateActiveTabPayload({
+                                                  important_guidelines_banner: {
+                                                    ...(getActiveTabPayload()
+                                                      .important_guidelines_banner ||
+                                                      {}),
+                                                    academic_policies: policies,
+                                                  },
+                                                });
+                                              }}
+                                            />
+                                            <Input
+                                              type="file"
+                                              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                              disabled={
+                                                uploadingField ===
+                                                `exam_policy_academic_policy_icon_${pi}`
+                                              }
+                                              onChange={(e) =>
+                                                handleCourseFieldUpload(
+                                                  e.target.files?.[0] ?? null,
+                                                  `exam_policy_academic_policy_icon_${pi}`,
+                                                  `exam_policy/academic_policy_icon_${pi}`,
+                                                  (url) => {
+                                                    const policies = [
+                                                      ...(getActiveTabPayload()
+                                                        .important_guidelines_banner
+                                                        ?.academic_policies ||
+                                                        []),
+                                                    ];
+                                                    policies[pi] = {
+                                                      ...policies[pi],
+                                                      icon: url,
+                                                    };
+                                                    updateActiveTabPayload({
+                                                      important_guidelines_banner:
+                                                        {
+                                                          ...(getActiveTabPayload()
+                                                            .important_guidelines_banner ||
+                                                            {}),
+                                                          academic_policies:
+                                                            policies,
+                                                        },
+                                                    });
+                                                  },
+                                                )
+                                              }
+                                            />
+                                          </div>
                                         </div>
                                       </div>
                                       <Button
@@ -11791,7 +11851,7 @@ export default function SetupAcademicsPage() {
                                               events: [
                                                 ...events,
                                                 {
-                                                  id: `event_${events.length + 1}`,
+                                                  id: "",
                                                   title: "",
                                                   image: "",
                                                   link: "",
@@ -11899,7 +11959,7 @@ export default function SetupAcademicsPage() {
                                     cover_image: "",
                                     logo: "",
                                     details: {
-                                      category: "Industrial Collaboration",
+                                      category: "",
                                       about: "",
                                       collaboration_impact: "",
                                       key_focus_areas: [],
@@ -11974,10 +12034,7 @@ export default function SetupAcademicsPage() {
 
                                   <div className="grid grid-cols-3 gap-2">
                                     <Select
-                                      value={
-                                        a.details?.category ||
-                                        "Industrial Collaboration"
-                                      }
+                                      value={a.details?.category || ""}
                                       onValueChange={(value) =>
                                         updateDetails({ category: value })
                                       }
@@ -12208,7 +12265,7 @@ export default function SetupAcademicsPage() {
                                               activities: [
                                                 ...activities,
                                                 {
-                                                  id: `activity_${activities.length + 1}`,
+                                                  id: "",
                                                   title: "",
                                                   image: "",
                                                   link: "",
