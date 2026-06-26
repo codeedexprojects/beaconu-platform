@@ -216,16 +216,6 @@ function formatAdmissionPolicyTab(raw: unknown): Record<string, unknown> {
     rows: smRows,
   };
 
-  // quota_options
-  const qo = isRec(d.quota_options) ? d.quota_options : {};
-  const quotaOptions = {
-    title: str(qo.title) || "Select Quota Category",
-    options: arr(qo.options, (item) => {
-      const o = isRec(item) ? item : {};
-      return { label: str(o.label), value: str(o.value) };
-    }),
-  };
-
   // entrance_exams_accepted
   const ee = isRec(d.entrance_exams_accepted) ? d.entrance_exams_accepted : {};
   const levels = arr(ee.levels, (item) => {
@@ -254,7 +244,6 @@ function formatAdmissionPolicyTab(raw: unknown): Record<string, unknown> {
     title: str(d.title) || "Admission Policy",
     enabled: bool(d.enabled, true),
     seat_matrix: seatMatrix,
-    quota_options: quotaOptions,
     entrance_exams_accepted: entranceExams,
   };
 }

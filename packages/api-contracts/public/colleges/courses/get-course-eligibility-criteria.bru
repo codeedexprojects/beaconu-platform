@@ -5,45 +5,64 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/eligibility-criteria?student_type=indian&quota_category=government_quota
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/eligibility-criteria?student_type=indian&quota_category=quota_general
   body: none
   auth: none
 }
 
 params:query {
   student_type: indian
-  quota_category: government_quota
+  quota_category: quota_general
 }
 
 docs {
   Dedicated endpoint for course eligibility criteria — NOT the same as the
   generic GET .../courses/:courseId/tabs/eligibility_criteria endpoint.
-  That generic route returns the raw stored JSON verbatim (no
-  filters_applied). This endpoint additionally resolves filters_applied
-  from the query string.
+  That generic route returns the raw stored JSON verbatim (no resolution).
+  This endpoint resolves the actual criteria list for a student type
+  (and, for Indian students, a quota).
+
+  Indian students choose a quota and each quota has its own criteria.
+  Foreign students have no quota concept — they get one shared criteria
+  list.
 
   Path params:
   - collegeSlug: College subdomain slug
   - courseId: Course ID
 
   Query params (both optional):
-  - student_type: e.g. indian | foreign — defaults to the first option in
-    student_type_filter.options if omitted
-  - quota_category: e.g. government_quota | management_quota | nri_quota |
-    scholarship_quota | sports_quota — defaults to the first option in
-    quota_filter.options if omitted
+  - student_type: indian | foreign — no default; omitted/invalid means "no
+    selection yet"
+  - quota_category: a quota `id` from the `quotas` array below — only
+    relevant when student_type=indian; ignored for "foreign"
+
+  `criteria` is ONLY resolved once a real selection is made:
+  - student_type=foreign → criteria is the shared foreign_student list
+  - student_type=indian AND quota_category=<a real quota id> → criteria is
+    that quota's list
+  - student_type=indian with no/invalid quota_category → criteria is `[]`
+    (a quota hasn't been picked yet)
+  - no student_type at all → criteria is `[]` (nothing selected yet) —
+    `student_types` and `quotas` are still returned so the client can render
+    the filter UI before anything is picked
 
   Response:
   {
-    "id": "eligibility_criteria",
-    "title": "Eligibility Criteria",
-    "filters_applied": { "student_type", "quota_category" },
-    "student_type_filter": { "options": [{ "label", "value" }] },
-    "quota_filter": { "label", "options": [{ "label", "value" }] },
-    "check_eligibility_cta": { "label" },
-    "view_blogs_cta": { "label", "link" },
-    "criteria": [{ "icon", "heading", "description" }]
+    "student_types": [
+      { "value": "indian", "label": "Indian Student" },
+      { "value": "foreign", "label": "Foreign Student" }
+    ],
+    "quotas": [{ "id", "label" }],
+    "criteria": [{ "heading", "description" }],
+    "filters_applied": { "student_type", "quota_category" }
   }
+
+  `quotas` always lists the Indian-student quotas (for building a quota
+  dropdown), regardless of the current student_type/criteria resolution.
+  `filters_applied` echoes back exactly what was resolved (both null when
+  nothing was selected or selection didn't match anything real).
+  All text fields (`label`, `heading`, `description`, quota `id`) are
+  trimmed of leading/trailing whitespace.
 
   Response message: "Eligibility criteria fetched successfully" (distinct
   from the generic tabs endpoint's "College section fetched successfully").
