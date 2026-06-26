@@ -247,6 +247,7 @@ function normalizeKeyDateStatus(value: unknown): KeyDateStatus | "" {
 }
 
 const FEE_DETAIL_GENDERS = ["Boys", "Girls", "Other"] as const;
+const FINANCIAL_AID_DISCOUNT_TYPES = ["percentage", "amount"] as const;
 
 function normalizeAccreditationItems(
   value: unknown,
@@ -859,51 +860,38 @@ function normalizeAmount(val: unknown): string {
 function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
   const meritRaw = asRecord(raw.merit_scholarship);
   const calcRaw = asRecord(meritRaw.calculator);
-  const tcRaw = meritRaw.terms_and_conditions;
 
-  const portOfEntryRaw = asRecord(calcRaw.port_of_entry);
-  const rankRangeRaw = asRecord(calcRaw.rank_range);
+  const portEntries = Array.isArray(meritRaw.port_entries)
+    ? (meritRaw.port_entries as Record<string, unknown>[])
+    : [];
 
-  const portOfEntryOptions = Array.isArray(calcRaw.port_of_entry_options)
-    ? calcRaw.port_of_entry_options
-    : Array.isArray(portOfEntryRaw.options)
-      ? portOfEntryRaw.options
+  const transformedPortEntries = portEntries.map((entry) => {
+    const scoreRanges = Array.isArray(entry.score_ranges)
+      ? (entry.score_ranges as Record<string, unknown>[])
       : [];
 
-  const rankRangeOptions = Array.isArray(calcRaw.rank_range_options)
-    ? calcRaw.rank_range_options
-    : Array.isArray(rankRangeRaw.options)
-      ? rankRangeRaw.options
-      : [];
-
-  const tcItems = Array.isArray(tcRaw)
-    ? tcRaw
-    : Array.isArray(asRecord(tcRaw).items)
-      ? asRecord(tcRaw).items
-      : [];
+    return {
+      id: asText(entry.id),
+      name: asText(entry.name),
+      terms_and_conditions: asStringArray(entry.terms_and_conditions),
+      score_ranges: scoreRanges.map((range) => ({
+        id: asText(range.id),
+        range_label: asText(range.range_label),
+        discount_type:
+          asText(range.discount_type) === "amount" ? "amount" : "percentage",
+        discount_value: asNumber(range.discount_value),
+        max_scholarship_amount: normalizeAmount(range.max_scholarship_amount),
+        net_payable_amount: normalizeAmount(range.net_payable_amount),
+      })),
+    };
+  });
 
   const merit_scholarship = {
     title: asText(meritRaw.title) || "Merit Scholarship",
     calculator: {
       title: asText(calcRaw.title) || "Scholarship Calculator",
       icon: "https://cdn.iconsdb.example.com/icons/calculator-orange.png",
-      port_of_entry: {
-        icon: "https://cdn.iconsdb.example.com/icons/login-arrow-gray.png",
-        label: "Select Port of Entry",
-        selected: "",
-        options: portOfEntryOptions,
-      },
-      rank_range: {
-        icon: "https://cdn.iconsdb.example.com/icons/bar-chart-gray.png",
-        label: "Select Rank Range",
-        selected: "",
-        options: rankRangeOptions,
-      },
-    },
-    terms_and_conditions: {
-      title: "TERMS & CONDITIONS",
-      icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
-      items: tcItems,
+      port_entries: transformedPortEntries,
     },
   };
 
@@ -1649,6 +1637,63 @@ function validateFeesTabData(data: unknown): void {
   });
 }
 
+function validateFinancialAidTabData(data: unknown): void {
+  const record = asRecord(data);
+  const meritScholarship = asRecord(record.merit_scholarship);
+
+  asArray(meritScholarship.port_entries).forEach((item, idx) => {
+    const entry = asRecord(item);
+    const context = `Port Entry #${idx + 1}`;
+    const hasContent =
+      asStringArray(entry.terms_and_conditions).length > 0 ||
+      asArray(entry.score_ranges).length > 0;
+
+    if (hasContent && !asText(entry.name).trim()) {
+      throw new ValidationError(`${context}: name is required`);
+    }
+
+    asArray(entry.score_ranges).forEach((row, rIdx) => {
+      const range = asRecord(row);
+      const rangeContext = `${context} Score Range #${rIdx + 1}`;
+
+      assertCompleteOrEmpty(
+        range,
+        [
+          "range_label",
+          "discount_value",
+          "max_scholarship_amount",
+          "net_payable_amount",
+        ],
+        rangeContext,
+      );
+
+      if (
+        asText(range.discount_type) &&
+        !(FINANCIAL_AID_DISCOUNT_TYPES as readonly string[]).includes(
+          asText(range.discount_type),
+        )
+      ) {
+        throw new ValidationError(
+          `${rangeContext}: discount_type must be one of ${FINANCIAL_AID_DISCOUNT_TYPES.join(", ")}`,
+        );
+      }
+    });
+  });
+
+  const financialConcessions = asRecord(record.financial_concessions);
+  asArray(financialConcessions.items).forEach((item, idx) => {
+    const concession = asRecord(item);
+    const context = `Financial Concession #${idx + 1}`;
+
+    assertCompleteOrEmpty(concession, ["name", "discount_percent"], context);
+    assertCompleteOrEmpty(
+      asRecord(concession.details),
+      ["scholarship_amount", "net_payable"],
+      `${context} Details`,
+    );
+  });
+}
+
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
@@ -1713,6 +1758,84 @@ function normalizeSetupTabData(tabName: string, data: unknown): unknown {
       ...record,
       fee_structure_pdf: feeStructurePdf,
     });
+  }
+
+  if (tabName === "financial_aid") {
+    // A freshly-added score range defaults `discount_type` to "percentage"
+    // (so the Select has a value) — that default alone would otherwise make
+    // an entirely-untouched row look non-blank to isEffectivelyBlank and
+    // survive deepStripBlankEntries forever. Drop it (and any leftover `id`)
+    // before stripping whenever the row's actual content is empty.
+    const meritScholarshipRaw = asRecord(record.merit_scholarship);
+    const preStrippedPortEntries = Array.isArray(
+      meritScholarshipRaw.port_entries,
+    )
+      ? (meritScholarshipRaw.port_entries as Record<string, unknown>[]).map(
+          (entry) => ({
+            ...entry,
+            score_ranges: Array.isArray(entry.score_ranges)
+              ? (entry.score_ranges as Record<string, unknown>[]).map(
+                  (range) => {
+                    const hasContent = [
+                      range.range_label,
+                      range.discount_value,
+                      range.max_scholarship_amount,
+                      range.net_payable_amount,
+                    ].some((value) => !isEffectivelyBlank(value));
+                    if (hasContent) return range;
+                    const rest = { ...range };
+                    delete rest.discount_type;
+                    delete rest.id;
+                    return rest;
+                  },
+                )
+              : entry.score_ranges,
+          }),
+        )
+      : meritScholarshipRaw.port_entries;
+    const preStrippedRecord = {
+      ...record,
+      merit_scholarship: {
+        ...meritScholarshipRaw,
+        port_entries: preStrippedPortEntries,
+      },
+    };
+
+    // Strip blanks first, then assign IDs — otherwise a freshly-assigned
+    // `id` would make an otherwise-blank port entry/score range look
+    // non-blank.
+    const cleaned = deepStripBlankEntries(preStrippedRecord) as Record<
+      string,
+      unknown
+    >;
+    const meritScholarship = { ...asRecord(cleaned.merit_scholarship) };
+    // The old disconnected calculator.port_of_entry_options/rank_range_options
+    // lists and the top-level terms_and_conditions/final_summary were
+    // replaced by per-port-entry terms_and_conditions and score_ranges —
+    // drop the stale leftovers from older saves.
+    delete meritScholarship.calculator;
+    delete meritScholarship.terms_and_conditions;
+    delete meritScholarship.final_summary;
+    const portEntries = Array.isArray(meritScholarship.port_entries)
+      ? assignMissingIds(
+          meritScholarship.port_entries as Record<string, unknown>[],
+          "port",
+          "name",
+        ).map((entry) => ({
+          ...entry,
+          score_ranges: Array.isArray(entry.score_ranges)
+            ? assignMissingIds(
+                entry.score_ranges as Record<string, unknown>[],
+                "range",
+                "range_label",
+              )
+            : entry.score_ranges,
+        }))
+      : meritScholarship.port_entries;
+    return {
+      ...cleaned,
+      merit_scholarship: { ...meritScholarship, port_entries: portEntries },
+    };
   }
 
   return deepStripBlankEntries(data);
@@ -2002,6 +2125,9 @@ export class CourseTabsService {
       if (tabName === "fees") {
         validateFeesTabData(data);
       }
+      if (tabName === "financial_aid") {
+        validateFinancialAidTabData(data);
+      }
 
       const updated = await CourseTabsRepository.updateCourseSetupTabData(
         courseId,
@@ -2212,6 +2338,111 @@ export class CourseTabsService {
       filters_applied: {
         student_type: resolvedStudentType,
         quota_category: resolvedQuotaCategory,
+      },
+    };
+  }
+
+  /**
+   * Get the resolved scholarship calculator details for a course, by port
+   * of entry and (within it) score range — public. `port_entries` is always
+   * the FULL unfiltered list, each with its own nested `score_ranges` (id +
+   * range_label) — so the frontend can render the whole port-entry →
+   * score-range hierarchy from one call without a round-trip per selection.
+   * `details` is only resolved once a real port_entry_id + score_range_id
+   * selection is made — mirrors getPublicEligibilityCriteria's "no silent
+   * default" rule.
+   */
+  static async getPublicScholarshipDetails(
+    courseId: string,
+    collegeSlug: string,
+    query: { port_entry_id?: string; score_range_id?: string },
+  ) {
+    const course =
+      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+        courseId,
+        collegeSlug,
+      );
+    if (!course) throw new NotFoundError("Course not found");
+
+    const rawData = getSetupTabDataFromMetadata(
+      course.metadata,
+      "financial_aid",
+    );
+    const meritScholarship = asRecord(asRecord(rawData).merit_scholarship);
+
+    const trim = (value: unknown) => asText(value).trim();
+    const trimList = (value: unknown) =>
+      asStringArray(value).map((item) =>
+        item.replace(/\s*[\r\n]+\s*/g, " ").trim(),
+      );
+
+    const portEntryList = Array.isArray(meritScholarship.port_entries)
+      ? (meritScholarship.port_entries as Record<string, unknown>[])
+      : [];
+
+    // Each port entry carries its own nested score_ranges — not flattened —
+    // so the frontend can render the second dropdown's options scoped to
+    // whichever port entry the student picks.
+    const port_entries = portEntryList.map((entry) => ({
+      id: trim(entry.id),
+      name: trim(entry.name),
+      score_ranges: (Array.isArray(entry.score_ranges)
+        ? (entry.score_ranges as Record<string, unknown>[])
+        : []
+      ).map((range) => ({
+        id: trim(range.id),
+        range_label: trim(range.range_label),
+      })),
+    }));
+
+    // Details (criteria + discount + payable amount) are only resolved once
+    // both a real port entry AND a real score range within it are selected
+    // — no silently-defaulted "first range" fallback.
+    let details: {
+      criteria: string[];
+      discount_type: string;
+      discount_value: number;
+      max_scholarship_amount: string;
+      net_payable_amount: string;
+    } | null = null;
+    let resolvedPortEntryId: string | null = null;
+    let resolvedScoreRangeId: string | null = null;
+
+    const selectedPortEntry = query.port_entry_id
+      ? portEntryList.find((entry) => trim(entry.id) === query.port_entry_id)
+      : undefined;
+
+    if (selectedPortEntry && query.score_range_id) {
+      const scoreRangeList = Array.isArray(selectedPortEntry.score_ranges)
+        ? (selectedPortEntry.score_ranges as Record<string, unknown>[])
+        : [];
+      const selectedRange = scoreRangeList.find(
+        (range) => trim(range.id) === query.score_range_id,
+      );
+      if (selectedRange) {
+        resolvedPortEntryId = trim(selectedPortEntry.id);
+        resolvedScoreRangeId = trim(selectedRange.id);
+        details = {
+          criteria: trimList(selectedPortEntry.terms_and_conditions),
+          discount_type:
+            asText(selectedRange.discount_type) === "amount"
+              ? "amount"
+              : "percentage",
+          discount_value: asNumber(selectedRange.discount_value),
+          max_scholarship_amount: normalizeAmount(
+            selectedRange.max_scholarship_amount,
+          ),
+          net_payable_amount: normalizeAmount(selectedRange.net_payable_amount),
+        };
+      }
+    }
+
+    return {
+      port_entries,
+      details,
+      filters_applied: {
+        port_entry_id: resolvedPortEntryId,
+        score_range_id: resolvedScoreRangeId,
       },
     };
   }

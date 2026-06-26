@@ -828,10 +828,63 @@ export default function SetupAcademicsPage() {
       merit_scholarship: { ...getMeritScholarship(), ...patch },
     });
 
-  const updateMeritCalculator = (patch: any) =>
-    updateMeritScholarship({
-      calculator: { ...(getMeritScholarship().calculator || {}), ...patch },
-    });
+  const getPortEntries = (): any[] => getMeritScholarship().port_entries || [];
+
+  const updatePortEntries = (next: any[]) =>
+    updateMeritScholarship({ port_entries: next });
+
+  const addPortEntry = () =>
+    updatePortEntries([
+      ...getPortEntries(),
+      { id: "", name: "", terms_and_conditions: [], score_ranges: [] },
+    ]);
+
+  const removePortEntry = (idx: number) =>
+    updatePortEntries(getPortEntries().filter((_, i) => i !== idx));
+
+  const updatePortEntry = (idx: number, patch: any) => {
+    const next = [...getPortEntries()];
+    next[idx] = { ...next[idx], ...patch };
+    updatePortEntries(next);
+  };
+
+  const addScoreRange = (portIdx: number) => {
+    const entries = [...getPortEntries()];
+    entries[portIdx] = {
+      ...entries[portIdx],
+      score_ranges: [
+        ...(entries[portIdx].score_ranges || []),
+        {
+          id: "",
+          range_label: "",
+          discount_type: "percentage",
+          discount_value: "",
+          max_scholarship_amount: "",
+          net_payable_amount: "",
+        },
+      ],
+    };
+    updatePortEntries(entries);
+  };
+
+  const removeScoreRange = (portIdx: number, rangeIdx: number) => {
+    const entries = [...getPortEntries()];
+    entries[portIdx] = {
+      ...entries[portIdx],
+      score_ranges: (entries[portIdx].score_ranges || []).filter(
+        (_: any, i: number) => i !== rangeIdx,
+      ),
+    };
+    updatePortEntries(entries);
+  };
+
+  const updateScoreRange = (portIdx: number, rangeIdx: number, patch: any) => {
+    const entries = [...getPortEntries()];
+    const ranges = [...(entries[portIdx].score_ranges || [])];
+    ranges[rangeIdx] = { ...ranges[rangeIdx], ...patch };
+    entries[portIdx] = { ...entries[portIdx], score_ranges: ranges };
+    updatePortEntries(entries);
+  };
 
   const getConcessionItems = (): any[] =>
     getActiveTabPayload().financial_concessions?.items || [];
@@ -6941,85 +6994,262 @@ export default function SetupAcademicsPage() {
                               />
                             </div>
 
-                            {(
-                              [
-                                {
-                                  path: "port_of_entry_options" as const,
-                                  label: "Port of Entry Options",
-                                  placeholder: "e.g. JEE Main",
-                                  scope: "calculator" as const,
-                                },
-                                {
-                                  path: "rank_range_options" as const,
-                                  label: "Rank Range Options",
-                                  placeholder: "e.g. 1 - 1000",
-                                  scope: "calculator" as const,
-                                },
-                                {
-                                  path: "terms_and_conditions" as const,
-                                  label: "Terms & Conditions",
-                                  placeholder:
-                                    "e.g. Offered on first-come, first-serve basis",
-                                  scope: "root" as const,
-                                },
-                              ] as const
-                            ).map(({ path, label, placeholder, scope }) => {
-                              const list: string[] =
-                                (scope === "calculator"
-                                  ? getMeritScholarship().calculator?.[path]
-                                  : getMeritScholarship()[path]) || [];
-                              const setList = (next: string[]) =>
-                                scope === "calculator"
-                                  ? updateMeritCalculator({ [path]: next })
-                                  : updateMeritScholarship({ [path]: next });
-
-                              return (
-                                <div
-                                  key={path}
-                                  className="space-y-2 pt-2 border-t"
+                            <div className="space-y-3 pt-2 border-t">
+                              <div className="flex items-center justify-between">
+                                <Label className="font-bold">
+                                  Port Entries
+                                </Label>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={addPortEntry}
                                 >
-                                  <div className="flex items-center justify-between">
-                                    <Label className="font-bold">{label}</Label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setList([...list, ""])}
-                                    >
-                                      <Plus className="h-4 w-4 mr-1" /> Add
-                                    </Button>
-                                  </div>
-                                  {list.map((item, idx) => (
+                                  <Plus className="h-4 w-4 mr-1" /> Add Port
+                                  Entry
+                                </Button>
+                              </div>
+
+                              {getPortEntries().length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No port entries added yet.
+                                </p>
+                              ) : (
+                                getPortEntries().map(
+                                  (entry: any, portIdx: number) => (
                                     <div
-                                      key={idx}
-                                      className="flex gap-2 items-center"
+                                      key={portIdx}
+                                      className="space-y-3 rounded-md border p-3 bg-muted/5"
                                     >
-                                      <Input
-                                        placeholder={placeholder}
-                                        value={item}
-                                        onChange={(e) => {
-                                          const next = [...list];
-                                          next[idx] = e.target.value;
-                                          setList(next);
-                                        }}
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          setList(
-                                            list.filter((_, i) => i !== idx),
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
+                                      <div className="flex items-center justify-between gap-2">
+                                        <Input
+                                          placeholder="e.g. JEE Main"
+                                          value={entry.name || ""}
+                                          onChange={(e) =>
+                                            updatePortEntry(portIdx, {
+                                              name: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            removePortEntry(portIdx)
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+
+                                      <div className="space-y-2 pl-2 border-l-2">
+                                        <div className="flex items-center justify-between">
+                                          <Label className="text-xs font-semibold">
+                                            Terms &amp; Conditions
+                                          </Label>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              updatePortEntry(portIdx, {
+                                                terms_and_conditions: [
+                                                  ...(entry.terms_and_conditions ||
+                                                    []),
+                                                  "",
+                                                ],
+                                              })
+                                            }
+                                          >
+                                            <Plus className="h-4 w-4 mr-1" />{" "}
+                                            Add
+                                          </Button>
+                                        </div>
+                                        {(entry.terms_and_conditions || []).map(
+                                          (term: string, tIdx: number) => (
+                                            <div
+                                              key={tIdx}
+                                              className="flex gap-2 items-center"
+                                            >
+                                              <Input
+                                                placeholder="e.g. Offered on first-come, first-serve basis"
+                                                value={term}
+                                                onChange={(e) => {
+                                                  const next = [
+                                                    ...(entry.terms_and_conditions ||
+                                                      []),
+                                                  ];
+                                                  next[tIdx] = e.target.value;
+                                                  updatePortEntry(portIdx, {
+                                                    terms_and_conditions: next,
+                                                  });
+                                                }}
+                                              />
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                  updatePortEntry(portIdx, {
+                                                    terms_and_conditions: (
+                                                      entry.terms_and_conditions ||
+                                                      []
+                                                    ).filter(
+                                                      (_: string, i: number) =>
+                                                        i !== tIdx,
+                                                    ),
+                                                  })
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                              </Button>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+
+                                      <div className="space-y-2 pl-2 border-l-2">
+                                        <div className="flex items-center justify-between">
+                                          <Label className="text-xs font-semibold">
+                                            Score Ranges
+                                          </Label>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              addScoreRange(portIdx)
+                                            }
+                                          >
+                                            <Plus className="h-4 w-4 mr-1" />{" "}
+                                            Add Score Range
+                                          </Button>
+                                        </div>
+                                        {(entry.score_ranges || []).map(
+                                          (range: any, rangeIdx: number) => (
+                                            <div
+                                              key={rangeIdx}
+                                              className="grid gap-2 md:grid-cols-2 border rounded-md p-2"
+                                            >
+                                              <Input
+                                                placeholder="Range Label (e.g. 1 - 1000)"
+                                                value={range.range_label || ""}
+                                                onChange={(e) =>
+                                                  updateScoreRange(
+                                                    portIdx,
+                                                    rangeIdx,
+                                                    {
+                                                      range_label:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Select
+                                                value={
+                                                  range.discount_type ||
+                                                  "percentage"
+                                                }
+                                                onValueChange={(value) =>
+                                                  updateScoreRange(
+                                                    portIdx,
+                                                    rangeIdx,
+                                                    { discount_type: value },
+                                                  )
+                                                }
+                                              >
+                                                <SelectTrigger>
+                                                  <SelectValue placeholder="Discount Type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="percentage">
+                                                    Percentage
+                                                  </SelectItem>
+                                                  <SelectItem value="amount">
+                                                    Amount
+                                                  </SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <Input
+                                                type="number"
+                                                placeholder={
+                                                  range.discount_type ===
+                                                  "amount"
+                                                    ? "Discount Amount (e.g. 10000)"
+                                                    : "Discount Percentage (e.g. 25)"
+                                                }
+                                                value={
+                                                  range.discount_value ?? ""
+                                                }
+                                                onChange={(e) =>
+                                                  updateScoreRange(
+                                                    portIdx,
+                                                    rangeIdx,
+                                                    {
+                                                      discount_value:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                placeholder="Max Scholarship Amount (e.g. Rs 75,000)"
+                                                value={
+                                                  range.max_scholarship_amount ||
+                                                  ""
+                                                }
+                                                onChange={(e) =>
+                                                  updateScoreRange(
+                                                    portIdx,
+                                                    rangeIdx,
+                                                    {
+                                                      max_scholarship_amount:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <Input
+                                                placeholder="Net Payable Amount (e.g. Rs 3,20,000)"
+                                                value={
+                                                  range.net_payable_amount || ""
+                                                }
+                                                onChange={(e) =>
+                                                  updateScoreRange(
+                                                    portIdx,
+                                                    rangeIdx,
+                                                    {
+                                                      net_payable_amount:
+                                                        e.target.value,
+                                                    },
+                                                  )
+                                                }
+                                              />
+                                              <div className="flex items-end">
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  onClick={() =>
+                                                    removeScoreRange(
+                                                      portIdx,
+                                                      rangeIdx,
+                                                    )
+                                                  }
+                                                >
+                                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
                                     </div>
-                                  ))}
-                                </div>
-                              );
-                            })}
+                                  ),
+                                )
+                              )}
+                            </div>
                           </div>
 
                           <div className="space-y-4">
