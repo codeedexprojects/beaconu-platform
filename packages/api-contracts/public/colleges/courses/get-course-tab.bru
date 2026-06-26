@@ -106,10 +106,32 @@ docs {
           "calculator": {
             "title": "Scholarship Calculator",
             "icon": "...",
-            "port_of_entry": { "icon": "...", "label": "Select Port of Entry", "selected": "", "options": ["JEE Main", ...] },
-            "rank_range": { "icon": "...", "label": "Select Rank Range", "selected": "", "options": ["1 - 1000", ...] }
-          },
-          "terms_and_conditions": { "title": "TERMS & CONDITIONS", "icon": "...", "items": ["Students can avail 25%...", ...] }
+            "port_entries": [
+              {
+                "id": "port_jee_main",
+                "name": "JEE Main",
+                "terms_and_conditions": ["Students can avail scholarship based on the entered rank/score.", ...],
+                "score_ranges": [
+                  {
+                    "id": "range_1-1000",
+                    "range_label": "1 - 1000",
+                    "discount_type": "percentage",
+                    "discount_value": 25,
+                    "max_scholarship_amount": "₹75,000",
+                    "net_payable_amount": "₹3,20,000"
+                  },
+                  {
+                    "id": "range_1001-5000",
+                    "range_label": "1001 - 5000",
+                    "discount_type": "amount",
+                    "discount_value": 10000,
+                    "max_scholarship_amount": "₹10,000",
+                    "net_payable_amount": "₹3,85,000"
+                  }
+                ]
+              }
+            ]
+          }
         },
         "financial_concessions": {
           "title": "Financial Concessions",

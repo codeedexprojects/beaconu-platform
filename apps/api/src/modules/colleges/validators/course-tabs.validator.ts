@@ -83,6 +83,11 @@ export const eligibilityCriteriaQuerySchema = z.object({
   quota_category: z.string().trim().optional(),
 });
 
+export const scholarshipDetailsQuerySchema = z.object({
+  port_entry_id: z.string().trim().optional(),
+  score_range_id: z.string().trim().optional(),
+});
+
 export const reviewsQuerySchema = z.object({
   page: z
     .string()
@@ -141,6 +146,9 @@ export type PublicCourseDetailParam = z.infer<
 export type UpdateCourseTabData = z.infer<typeof updateCourseTabSchema>;
 export type EligibilityCriteriaQuery = z.infer<
   typeof eligibilityCriteriaQuerySchema
+>;
+export type ScholarshipDetailsQuery = z.infer<
+  typeof scholarshipDetailsQuerySchema
 >;
 export type OtherCoursesOfferedQuery = z.infer<
   typeof otherCoursesOfferedQuerySchema

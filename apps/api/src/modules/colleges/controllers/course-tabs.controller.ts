@@ -8,6 +8,7 @@ import {
   publicCourseDetailParamSchema,
   updateCourseTabSchema,
   eligibilityCriteriaQuerySchema,
+  scholarshipDetailsQuerySchema,
   reviewsQuerySchema,
   otherCoursesOfferedQuerySchema,
   clubsAssociationsQuerySchema,
@@ -379,6 +380,29 @@ export class CourseTabsController {
         ),
       );
   }
+
+  /**
+   * GET /public/colleges/by-slug/:slug/courses/:courseId/scholarship-details
+   * Returns the resolved scholarship calculator details (criteria, discount,
+   * payable amount) for a port of entry + score range selection.
+   */
+  static async getPublicScholarshipDetails(req: Request, res: Response) {
+    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
+    const { port_entry_id, score_range_id } =
+      scholarshipDetailsQuerySchema.parse(req.query);
+
+    const result = await CourseTabsService.getPublicScholarshipDetails(
+      courseId,
+      slug,
+      { port_entry_id, score_range_id },
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Scholarship details fetched successfully", result),
+      );
+  }
+
   /**
    * GET /public/colleges/by-slug/:slug/courses/:courseId/reviews
    * Paginated list of reviews for a course (public).
