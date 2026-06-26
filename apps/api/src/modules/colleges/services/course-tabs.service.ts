@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/shared/errors";
+import { NotFoundError, ValidationError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
 import { HostelService } from "./hostel.service";
 import {
@@ -306,20 +306,13 @@ function normalizeCurriculumSemesters(
 
 function normalizeCourseStructureSegments(
   value: unknown,
-): Array<{ color: string; label: string; details: string; credits: number }> {
-  const palette = ["#FF6B00", "#FFB27A", "#2E2E5C", "#4DD0C4", "#A8A8B3"];
-  return asArray(value).map((item, index) => {
+): Array<{ label: string; details: string; credits: number }> {
+  return asArray(value).map((item) => {
     if (typeof item === "string") {
-      return {
-        color: palette[index % palette.length],
-        label: item,
-        details: "",
-        credits: 0,
-      };
+      return { label: item, details: "", credits: 0 };
     }
     const rec = asRecord(item);
     return {
-      color: asText(rec.color) || palette[index % palette.length],
       label: asText(rec.label) || asText(rec.title),
       details: asText(rec.details),
       credits: toPositiveInt(rec.credits) || numberFromText(rec.details),
@@ -375,16 +368,15 @@ function normalizeValueAddedItems(value: unknown): Array<{
 
 function normalizeFlexibleExitItems(
   value: unknown,
-): Array<{ step: number; award: string; label: string }> {
-  return asArray(value).map((item, index) => {
+): Array<{ title: string; description: string }> {
+  return asArray(value).map((item) => {
     if (typeof item === "string") {
-      return { step: index + 1, award: item, label: `After ${index + 1} Year` };
+      return { title: item, description: "" };
     }
     const rec = asRecord(item);
     return {
-      step: toPositiveInt(rec.step) || index + 1,
-      award: asText(rec.award) || asText(rec.title),
-      label: asText(rec.label) || `After ${index + 1} Year`,
+      title: asText(rec.title) || asText(rec.award) || asText(rec.label),
+      description: asText(rec.description),
     };
   });
 }
@@ -452,7 +444,6 @@ function normalizeAlumniItems(value: unknown): Array<Record<string, unknown>> {
         const sr = asRecord(step);
         return {
           year: asText(sr.year),
-          tag_color: asText(sr.tag_color),
           description: asText(sr.description),
         };
       }),
@@ -653,20 +644,19 @@ function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
     curriculum: {
       title: asText(curriculumData.title) || "Curriculum",
       subtitle: asText(curriculumData.subtitle),
-      brochure:
-        Object.keys(curriculumBrochure).length > 0
-          ? {
-              url: asText(curriculumBrochure.url),
-              icon: asText(curriculumBrochure.icon),
-              label: asText(curriculumBrochure.label),
-            }
-          : {
-              url:
-                asText(curriculumData.brochure_link) ||
-                asText(curriculumData.brochure_upload),
-              icon: "",
-              label: "",
-            },
+      brochure: asText(curriculumBrochure.url)
+        ? {
+            url: asText(curriculumBrochure.url),
+            icon: asText(curriculumBrochure.icon),
+            label: asText(curriculumBrochure.label),
+          }
+        : {
+            url:
+              asText(curriculumData.brochure_link) ||
+              asText(curriculumData.brochure_upload),
+            icon: "",
+            label: "",
+          },
       semesters: curriculumSemesters,
     },
     courseStructure: {
@@ -1256,13 +1246,19 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
 }
 
 function getDefaultForTab(tabSlug: string): unknown {
+  if (tabSlug === "eligibility_criteria") {
+    return {
+      indian_student: { quotas: [] },
+      foreign_student: { criteria: [] },
+    };
+  }
+
   // Object-type tabs
   const objectTabs = [
     "course_structure",
     "higher_education_certifications",
     "class_timings",
     "exam_policy",
-    "eligibility_criteria",
     "demographics",
   ];
   if (objectTabs.includes(tabSlug)) return {};
@@ -1336,6 +1332,7 @@ function slugify(text: string): string {
 function assignMissingIds(
   items: Record<string, unknown>[],
   idPrefix: string,
+  nameField = "name",
 ): Record<string, unknown>[] {
   const usedIds = new Set(
     items.map((item) => asText(item.id)).filter((id) => id.length > 0),
@@ -1344,7 +1341,7 @@ function assignMissingIds(
   return items.map((item, index) => {
     if (asText(item.id)) return item;
 
-    const slug = slugify(asText(item.name)) || String(index + 1);
+    const slug = slugify(asText(item[nameField])) || String(index + 1);
     let candidate = `${idPrefix}_${slug}`;
     let suffix = 2;
     while (usedIds.has(candidate)) {
@@ -1392,14 +1389,24 @@ function cleanCourseInfoWriteData(data: unknown): unknown {
   // Student Forum was removed from the admin form — drop any leftover data.
   delete cleaned.student_forum;
 
-  // `details` was replaced by a dedicated numeric `credits` field on the
-  // Course Structure rows — drop the stale leftover from older saves.
+  // The admin form writes `curriculum.brochure_link` (flat string). A nested
+  // `curriculum.brochure` object is a leftover from the old write-time
+  // normalization bug — drop it so it can't shadow the real brochure_link.
+  if (Object.keys(asRecord(cleaned.curriculum)).length > 0) {
+    const curriculum = { ...asRecord(cleaned.curriculum) };
+    delete curriculum.brochure;
+    cleaned.curriculum = curriculum;
+  }
+
+  // `details` was replaced by a dedicated numeric `credits` field, and
+  // `color` is no longer part of the admin form — drop stale leftovers.
   if (Array.isArray(cleaned.course_structure)) {
     cleaned.course_structure = (
       cleaned.course_structure as Record<string, unknown>[]
     ).map((cs) => {
       const rest = { ...asRecord(cs) };
       delete rest.details;
+      delete rest.color;
       return rest;
     });
   }
@@ -1410,6 +1417,28 @@ function cleanCourseInfoWriteData(data: unknown): unknown {
     const rest = { ...asRecord(cleaned.bonus_certification) };
     delete rest.cta_label;
     cleaned.bonus_certification = rest;
+  }
+
+  // `tag_color` is no longer part of Featured Alumni career progression —
+  // drop the stale leftover from older saves.
+  const featuredAlumni = asRecord(cleaned.featuredAlumni);
+  if (Array.isArray(featuredAlumni.items)) {
+    cleaned.featuredAlumni = {
+      ...featuredAlumni,
+      items: (featuredAlumni.items as Record<string, unknown>[]).map((item) => {
+        const rec = { ...asRecord(item) };
+        if (Array.isArray(rec.career_progression)) {
+          rec.career_progression = (
+            rec.career_progression as Record<string, unknown>[]
+          ).map((step) => {
+            const rest = { ...asRecord(step) };
+            delete rest.tag_color;
+            return rest;
+          });
+        }
+        return rec;
+      }),
+    };
   }
 
   return cleaned;
@@ -1451,6 +1480,117 @@ function deepStripBlankEntries(value: unknown): unknown {
   return value;
 }
 
+// Eligibility Criteria is keyed by indian_student.quotas[] / foreign_student.criteria[].
+// Quota ids are auto-assigned from their label, then blank quotas/criteria
+// rows are dropped the same way as every other setup tab.
+function normalizeEligibilityCriteriaWriteData(data: unknown): unknown {
+  const record = asRecord(data);
+  const indianStudent = asRecord(record.indian_student);
+
+  const cleaned: Record<string, unknown> = { ...record };
+  if (Array.isArray(indianStudent.quotas)) {
+    cleaned.indian_student = {
+      ...indianStudent,
+      quotas: assignMissingIds(
+        indianStudent.quotas as Record<string, unknown>[],
+        "quota",
+        "label",
+      ),
+    };
+  }
+
+  return deepStripBlankEntries(cleaned);
+}
+
+// Throws if `requiredFields` on `rec` are partially filled — either all of
+// them are blank (not started yet, fine) or all of them are filled
+// (complete, fine). Anything in between is rejected so a half-filled
+// row can never be saved. Decorative fields (logos/icons/avatars/booleans)
+// are intentionally excluded from `requiredFields` by the caller.
+function assertCompleteOrEmpty(
+  rec: Record<string, unknown>,
+  requiredFields: string[],
+  context: string,
+): void {
+  const filled = requiredFields.filter(
+    (field) => asText(rec[field]).trim().length > 0,
+  );
+  if (filled.length > 0 && filled.length < requiredFields.length) {
+    const missing = requiredFields.filter((field) => !filled.includes(field));
+    throw new ValidationError(
+      `${context}: ${missing.join(", ")} ${missing.length > 1 ? "are" : "is"} required`,
+    );
+  }
+}
+
+function validatePlacementsTabData(data: unknown): void {
+  const record = asRecord(data);
+
+  asArray(record.summary_stats).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["label", "value"],
+      `Summary Stat #${idx + 1}`,
+    );
+  });
+
+  const notableOffers = asRecord(record.notable_offers);
+  asArray(notableOffers.items).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["company_name", "role", "package"],
+      `Notable Offer #${idx + 1}`,
+    );
+  });
+
+  const placementTrends = asRecord(record.placement_trends);
+  asArray(placementTrends.data_points).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["year", "avg_package"],
+      `Placement Trend #${idx + 1}`,
+    );
+  });
+  assertCompleteOrEmpty(
+    asRecord(placementTrends.footer),
+    ["label", "value"],
+    "Placement Trends Footer",
+  );
+
+  const allCompanyStatistics = asRecord(record.all_company_statistics);
+  asArray(allCompanyStatistics.rows).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["company_name", "avg_package", "max_package", "students_placed"],
+      `Company Statistic #${idx + 1}`,
+    );
+  });
+
+  const industrySalaryReport = asRecord(record.industry_salary_report);
+  asArray(industrySalaryReport.rows).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["industry", "avg_package", "max_package"],
+      `Industry Salary Report #${idx + 1}`,
+    );
+  });
+
+  const studentSuccess = asRecord(record.student_success);
+  asArray(studentSuccess.items).forEach((item, idx) => {
+    assertCompleteOrEmpty(
+      asRecord(item),
+      ["student_name", "placed_at", "quote"],
+      `Student Success Story #${idx + 1}`,
+    );
+  });
+
+  assertCompleteOrEmpty(
+    asRecord(record.download_report),
+    ["url", "label"],
+    "Download Report",
+  );
+}
+
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
@@ -1485,6 +1625,25 @@ function normalizeSetupTabData(tabName: string, data: unknown): unknown {
         "club",
       ),
     };
+  }
+
+  if (tabName === "placements") {
+    // The "Icon" field was dropped from both the Download Report and
+    // Summary Stats forms — drop stale leftovers from older saves.
+    const downloadReport = { ...asRecord(record.download_report) };
+    delete downloadReport.icon;
+    const summaryStats = Array.isArray(record.summary_stats)
+      ? (record.summary_stats as Record<string, unknown>[]).map((stat) => {
+          const rest = { ...asRecord(stat) };
+          delete rest.icon;
+          return rest;
+        })
+      : record.summary_stats;
+    return deepStripBlankEntries({
+      ...record,
+      download_report: downloadReport,
+      summary_stats: summaryStats,
+    });
   }
 
   return deepStripBlankEntries(data);
@@ -1768,6 +1927,10 @@ export class CourseTabsService {
     data: unknown,
   ) {
     if (isSetupTabName(tabName)) {
+      if (tabName === "placements") {
+        validatePlacementsTabData(data);
+      }
+
       const updated = await CourseTabsRepository.updateCourseSetupTabData(
         courseId,
         collegeId,
@@ -1783,12 +1946,16 @@ export class CourseTabsService {
     }
 
     const prismaField = mapTabNameToField(tabName);
+    const normalizedData =
+      tabName === "eligibility_criteria"
+        ? normalizeEligibilityCriteriaWriteData(data)
+        : data;
 
     const updated = await CourseTabsRepository.updateCourseTab(
       courseId,
       collegeId,
       prismaField,
-      data,
+      normalizedData,
     );
     if (!updated) throw new NotFoundError("Course not found");
 
@@ -1886,15 +2053,15 @@ export class CourseTabsService {
   }
 
   /**
-   * Get eligibility criteria for a course with filter state echoed back
-   * (public). The stored JSON is display-ready (options, criteria, CTAs);
-   * this just resolves `filters_applied` from the query string, falling
-   * back to each filter's first option when not provided.
+   * Get eligibility criteria for a course, resolved by student type and
+   * (for Indian students) quota (public). Indian students pick a quota and
+   * see that quota's criteria; foreign students have no quota concept and
+   * share one criteria list.
    */
   static async getPublicEligibilityCriteria(
     courseId: string,
     collegeSlug: string,
-    query: { student_type?: string; quota_category?: string },
+    query: { student_type?: "indian" | "foreign"; quota_category?: string },
   ) {
     const course = await CourseTabsRepository.findPublicCourseTabField(
       courseId,
@@ -1906,28 +2073,73 @@ export class CourseTabsService {
     const stored = asRecord(
       (course as Record<string, unknown>).eligibilityCriteria,
     );
+    const indianStudent = asRecord(stored.indian_student);
+    const foreignStudent = asRecord(stored.foreign_student);
 
-    const studentTypeOptions = Array.isArray(
-      asRecord(stored.student_type_filter).options,
-    )
-      ? (asRecord(stored.student_type_filter).options as unknown[])
-      : [];
-    const quotaOptions = Array.isArray(asRecord(stored.quota_filter).options)
-      ? (asRecord(stored.quota_filter).options as unknown[])
-      : [];
+    const trim = (value: unknown) => asText(value).trim();
+    // Heading/description are single-line fields — collapse any stray
+    // newlines (e.g. from older data entered before this was an Input
+    // instead of a Textarea) into spaces instead of leaking literal "\n".
+    const trimLine = (value: unknown) =>
+      asText(value)
+        .replace(/\s*[\r\n]+\s*/g, " ")
+        .trim();
+    const trimCriteria = (
+      value: unknown,
+    ): Array<{
+      heading: string;
+      description: string;
+    }> =>
+      asArray(value).map((item) => {
+        const rec = asRecord(item);
+        return {
+          heading: trimLine(rec.heading),
+          description: trimLine(rec.description),
+        };
+      });
 
-    const defaultStudentType =
-      studentTypeOptions.length > 0
-        ? asText(asRecord(studentTypeOptions[0]).value)
-        : "";
-    const defaultQuotaCategory =
-      quotaOptions.length > 0 ? asText(asRecord(quotaOptions[0]).value) : "";
+    const quotas = (
+      Array.isArray(indianStudent.quotas) ? indianStudent.quotas : []
+    ).map((q) => {
+      const rec = asRecord(q);
+      return { id: trim(rec.id), label: trim(rec.label) };
+    });
+
+    // Criteria is only resolved once a real selection is made: an explicit
+    // student_type, and — for "indian" — a quota_category that matches a
+    // real quota. No filter selected (or an indian selection with no/invalid
+    // quota) returns an empty criteria list, not a silently-defaulted one.
+    let criteria: Array<{ heading: string; description: string }> = [];
+    let resolvedStudentType: "indian" | "foreign" | null = null;
+    let resolvedQuotaCategory: string | null = null;
+
+    if (query.student_type === "foreign") {
+      resolvedStudentType = "foreign";
+      criteria = trimCriteria(foreignStudent.criteria);
+    } else if (query.student_type === "indian") {
+      resolvedStudentType = "indian";
+      const quotaList = Array.isArray(indianStudent.quotas)
+        ? (indianStudent.quotas as Record<string, unknown>[])
+        : [];
+      const selectedQuota = query.quota_category
+        ? quotaList.find((q) => trim(q.id) === query.quota_category)
+        : undefined;
+      if (selectedQuota) {
+        resolvedQuotaCategory = trim(selectedQuota.id);
+        criteria = trimCriteria(selectedQuota.criteria);
+      }
+    }
 
     return {
-      ...stored,
+      student_types: [
+        { value: "indian", label: "Indian Student" },
+        { value: "foreign", label: "Foreign Student" },
+      ],
+      quotas,
+      criteria,
       filters_applied: {
-        student_type: query.student_type || defaultStudentType,
-        quota_category: query.quota_category || defaultQuotaCategory,
+        student_type: resolvedStudentType,
+        quota_category: resolvedQuotaCategory,
       },
     };
   }

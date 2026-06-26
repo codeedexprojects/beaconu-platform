@@ -2960,7 +2960,7 @@ export default function SetupAcademicsPage() {
                                       const next = [
                                         ...(getActiveTabPayload()
                                           .flexible_exit_options || []),
-                                        "",
+                                        { title: "", description: "" },
                                       ];
                                       updateActiveTabPayload({
                                         flexible_exit_options: next,
@@ -2974,43 +2974,67 @@ export default function SetupAcademicsPage() {
                                 {(
                                   getActiveTabPayload().flexible_exit_options ||
                                   []
-                                ).map((feo: string, idx: number) => (
+                                ).map((feo: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex gap-2 items-center"
+                                    className="space-y-2 border p-3 rounded-lg bg-muted/5"
                                   >
-                                    <Input
-                                      placeholder="e.g. Diploma after 1 year, Advanced Diploma after 2 years"
-                                      value={feo || ""}
+                                    <div className="flex gap-2 items-center">
+                                      <Input
+                                        className="flex-1"
+                                        placeholder="Title (e.g. Diploma after 1 year)"
+                                        value={feo?.title || ""}
+                                        onChange={(e) => {
+                                          const next = [
+                                            ...(getActiveTabPayload()
+                                              .flexible_exit_options || []),
+                                          ];
+                                          next[idx] = {
+                                            ...next[idx],
+                                            title: e.target.value,
+                                          };
+                                          updateActiveTabPayload({
+                                            flexible_exit_options: next,
+                                          });
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const next = (
+                                            getActiveTabPayload()
+                                              .flexible_exit_options || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== idx,
+                                          );
+                                          updateActiveTabPayload({
+                                            flexible_exit_options: next,
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                    <Textarea
+                                      rows={2}
+                                      placeholder="Description"
+                                      value={feo?.description || ""}
                                       onChange={(e) => {
                                         const next = [
                                           ...(getActiveTabPayload()
                                             .flexible_exit_options || []),
                                         ];
-                                        next[idx] = e.target.value;
+                                        next[idx] = {
+                                          ...next[idx],
+                                          description: e.target.value,
+                                        };
                                         updateActiveTabPayload({
                                           flexible_exit_options: next,
                                         });
                                       }}
                                     />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        const next = (
-                                          getActiveTabPayload()
-                                            .flexible_exit_options || []
-                                        ).filter(
-                                          (_: any, i: number) => i !== idx,
-                                        );
-                                        updateActiveTabPayload({
-                                          flexible_exit_options: next,
-                                        });
-                                      }}
-                                    >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
                                   </div>
                                 ))}
                               </div>
@@ -4122,156 +4146,6 @@ export default function SetupAcademicsPage() {
                             </div>
                           </div>
 
-                          {/* Quota Options */}
-                          <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h4 className="font-bold text-sm text-foreground">
-                                  Quota Options
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                  Dropdown options for quota category filter.
-                                </p>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const qo =
-                                    getActiveTabPayload().quota_options || {};
-                                  const opts = Array.isArray(
-                                    (qo as any).options,
-                                  )
-                                    ? (qo as any).options
-                                    : [];
-                                  updateActiveTabPayload({
-                                    quota_options: {
-                                      ...(qo as any),
-                                      options: [
-                                        ...opts,
-                                        { label: "", value: "" },
-                                      ],
-                                    },
-                                  });
-                                }}
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Option
-                              </Button>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Dropdown Title</Label>
-                              <Input
-                                placeholder="e.g. Select Quota Category"
-                                value={
-                                  (getActiveTabPayload().quota_options as any)
-                                    ?.title || ""
-                                }
-                                onChange={(e) =>
-                                  updateActiveTabPayload({
-                                    quota_options: {
-                                      ...((getActiveTabPayload()
-                                        .quota_options as any) || {}),
-                                      title: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              {(Array.isArray(
-                                (getActiveTabPayload().quota_options as any)
-                                  ?.options,
-                              )
-                                ? (getActiveTabPayload().quota_options as any)
-                                    .options
-                                : []
-                              ).map((opt: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="flex gap-2 items-center"
-                                >
-                                  <Input
-                                    placeholder="Label (e.g. Government Quota)"
-                                    value={opt.label || ""}
-                                    onChange={(e) => {
-                                      const opts = [
-                                        ...((
-                                          getActiveTabPayload()
-                                            .quota_options as any
-                                        )?.options || []),
-                                      ];
-                                      opts[idx] = {
-                                        ...opts[idx],
-                                        label: e.target.value,
-                                      };
-                                      updateActiveTabPayload({
-                                        quota_options: {
-                                          ...((getActiveTabPayload()
-                                            .quota_options as any) || {}),
-                                          options: opts,
-                                        },
-                                      });
-                                    }}
-                                  />
-                                  <Input
-                                    placeholder="Value (e.g. government_quota)"
-                                    value={opt.value || ""}
-                                    onChange={(e) => {
-                                      const opts = [
-                                        ...((
-                                          getActiveTabPayload()
-                                            .quota_options as any
-                                        )?.options || []),
-                                      ];
-                                      opts[idx] = {
-                                        ...opts[idx],
-                                        value: e.target.value,
-                                      };
-                                      updateActiveTabPayload({
-                                        quota_options: {
-                                          ...((getActiveTabPayload()
-                                            .quota_options as any) || {}),
-                                          options: opts,
-                                        },
-                                      });
-                                    }}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      const opts = (
-                                        (
-                                          getActiveTabPayload()
-                                            .quota_options as any
-                                        )?.options || []
-                                      ).filter(
-                                        (_: any, i: number) => i !== idx,
-                                      );
-                                      updateActiveTabPayload({
-                                        quota_options: {
-                                          ...((getActiveTabPayload()
-                                            .quota_options as any) || {}),
-                                          options: opts,
-                                        },
-                                      });
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              ))}
-                              {!(getActiveTabPayload().quota_options as any)
-                                ?.options?.length && (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No quota options added yet.
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
                           {/* Entrance Exams Accepted */}
                           <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
                             <div className="flex justify-between items-center">
@@ -4700,210 +4574,249 @@ export default function SetupAcademicsPage() {
                       {/* ELIGIBILITY CRITERIA */}
                       {activeTab === "eligibility_criteria" && (
                         <div className="space-y-6">
+                          {/* Indian Students — quotas, each with its own criteria */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
                                 <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Student Type Filter Options
+                                  Indian Students
                                 </CardTitle>
                                 <CardDescription>
-                                  Options shown in the student-type dropdown
-                                  (e.g. Domestic, NRI, International).
+                                  Add a quota category (e.g. General,
+                                  Management, NRI) — each quota has its own
+                                  eligibility criteria.
                                 </CardDescription>
                               </div>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  addTabListItem(
-                                    "student_type_filter.options",
-                                    {
-                                      value: "",
-                                      label: "",
+                                onClick={() => {
+                                  const quotas =
+                                    getActiveTabPayload().indian_student
+                                      ?.quotas || [];
+                                  updateActiveTabPayload({
+                                    indian_student: {
+                                      ...(getActiveTabPayload()
+                                        .indian_student || {}),
+                                      quotas: [
+                                        ...quotas,
+                                        { id: "", label: "", criteria: [] },
+                                      ],
                                     },
-                                  )
-                                }
+                                  });
+                                }}
                               >
-                                <Plus className="h-4 w-4 mr-1" /> Add Option
+                                <Plus className="h-4 w-4 mr-1" /> Add Quota
                               </Button>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("student_type_filter.options")
-                                .length === 0 ? (
+                            <CardContent className="space-y-4">
+                              {(
+                                getActiveTabPayload().indian_student?.quotas ||
+                                []
+                              ).length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
-                                  No student type options added yet.
+                                  No quotas added yet.
                                 </p>
                               ) : (
-                                <div className="space-y-3">
-                                  {getTabList(
-                                    "student_type_filter.options",
-                                  ).map((item, idx) => (
+                                (
+                                  getActiveTabPayload().indian_student
+                                    ?.quotas || []
+                                ).map((quota: any, qIdx: number) => {
+                                  const updateQuota = (
+                                    patch: Record<string, unknown>,
+                                  ) => {
+                                    const quotas = [
+                                      ...(getActiveTabPayload().indian_student
+                                        ?.quotas || []),
+                                    ];
+                                    quotas[qIdx] = {
+                                      ...quotas[qIdx],
+                                      ...patch,
+                                    };
+                                    updateActiveTabPayload({
+                                      indian_student: {
+                                        ...(getActiveTabPayload()
+                                          .indian_student || {}),
+                                        quotas,
+                                      },
+                                    });
+                                  };
+                                  const removeQuota = () => {
+                                    const quotas = (
+                                      getActiveTabPayload().indian_student
+                                        ?.quotas || []
+                                    ).filter((_: any, i: number) => i !== qIdx);
+                                    updateActiveTabPayload({
+                                      indian_student: {
+                                        ...(getActiveTabPayload()
+                                          .indian_student || {}),
+                                        quotas,
+                                      },
+                                    });
+                                  };
+                                  const updateCriterion = (
+                                    cIdx: number,
+                                    patch: Record<string, unknown>,
+                                  ) => {
+                                    const criteria = [
+                                      ...(quota.criteria || []),
+                                    ];
+                                    criteria[cIdx] = {
+                                      ...criteria[cIdx],
+                                      ...patch,
+                                    };
+                                    updateQuota({ criteria });
+                                  };
+                                  const removeCriterion = (cIdx: number) => {
+                                    updateQuota({
+                                      criteria: (quota.criteria || []).filter(
+                                        (_: any, i: number) => i !== cIdx,
+                                      ),
+                                    });
+                                  };
+                                  return (
                                     <div
-                                      key={idx}
-                                      className="flex gap-2 items-center"
+                                      key={qIdx}
+                                      className="border p-3 rounded-lg space-y-3 bg-muted/5"
                                     >
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Value (e.g. domestic)"
-                                        value={item.value || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "student_type_filter.options",
-                                            idx,
-                                            { value: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Input
-                                        className="flex-1"
-                                        placeholder="Label (e.g. Domestic Student)"
-                                        value={item.label || ""}
-                                        onChange={(e) =>
-                                          updateTabListItem(
-                                            "student_type_filter.options",
-                                            idx,
-                                            { label: e.target.value },
-                                          )
-                                        }
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          removeTabListItem(
-                                            "student_type_filter.options",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-
-                          <Card className="border border-border/60 shadow-sm">
-                            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                              <div>
-                                <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Quota Filter Options
-                                </CardTitle>
-                                <CardDescription>
-                                  Options shown in the quota-category dropdown
-                                  (e.g. General, Management, NRI).
-                                </CardDescription>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  addTabListItem("quota_filter.options", {
-                                    value: "",
-                                    label: "",
-                                  })
-                                }
-                              >
-                                <Plus className="h-4 w-4 mr-1" /> Add Option
-                              </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {getTabList("quota_filter.options").length ===
-                              0 ? (
-                                <p className="text-xs text-muted-foreground italic">
-                                  No quota options added yet.
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {getTabList("quota_filter.options").map(
-                                    (item, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex gap-2 items-center"
-                                      >
+                                      <div className="flex gap-2 items-center">
                                         <Input
                                           className="flex-1"
-                                          placeholder="Value (e.g. management_quota)"
-                                          value={item.value || ""}
+                                          placeholder="Quota Label (e.g. General, Management Quota)"
+                                          value={quota.label || ""}
                                           onChange={(e) =>
-                                            updateTabListItem(
-                                              "quota_filter.options",
-                                              idx,
-                                              { value: e.target.value },
-                                            )
-                                          }
-                                        />
-                                        <Input
-                                          className="flex-1"
-                                          placeholder="Label (e.g. Management Quota)"
-                                          value={item.label || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem(
-                                              "quota_filter.options",
-                                              idx,
-                                              { label: e.target.value },
-                                            )
+                                            updateQuota({
+                                              label: e.target.value,
+                                            })
                                           }
                                         />
                                         <Button
                                           type="button"
                                           variant="ghost"
                                           size="icon"
-                                          onClick={() =>
-                                            removeTabListItem(
-                                              "quota_filter.options",
-                                              idx,
-                                            )
-                                          }
+                                          onClick={removeQuota}
                                         >
                                           <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                       </div>
-                                    ),
-                                  )}
-                                </div>
+                                      <div className="space-y-2 pl-2 border-l-2">
+                                        {(quota.criteria || []).map(
+                                          (crit: any, cIdx: number) => (
+                                            <div
+                                              key={cIdx}
+                                              className="flex gap-2 items-start"
+                                            >
+                                              <div className="flex-1 space-y-2">
+                                                <Input
+                                                  placeholder="Heading (e.g. Minimum Marks)"
+                                                  value={crit.heading || ""}
+                                                  onChange={(e) =>
+                                                    updateCriterion(cIdx, {
+                                                      heading: e.target.value,
+                                                    })
+                                                  }
+                                                />
+                                                <Input
+                                                  placeholder="Description (e.g. 60% aggregate in 10+2 with PCM)"
+                                                  value={crit.description || ""}
+                                                  onChange={(e) =>
+                                                    updateCriterion(cIdx, {
+                                                      description:
+                                                        e.target.value,
+                                                    })
+                                                  }
+                                                />
+                                              </div>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                  removeCriterion(cIdx)
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                              </Button>
+                                            </div>
+                                          ),
+                                        )}
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            updateQuota({
+                                              criteria: [
+                                                ...(quota.criteria || []),
+                                                {
+                                                  heading: "",
+                                                  description: "",
+                                                },
+                                              ],
+                                            })
+                                          }
+                                        >
+                                          <Plus className="h-4 w-4 mr-1" /> Add
+                                          Criterion
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })
                               )}
                             </CardContent>
                           </Card>
 
+                          {/* Foreign Students — no quota concept, one shared criteria list */}
                           <Card className="border border-border/60 shadow-sm">
                             <CardHeader className="pb-3 flex flex-row items-center justify-between">
                               <div>
                                 <CardTitle className="text-lg font-bold text-indigo-950">
-                                  Eligibility Criteria
+                                  Foreign Students
                                 </CardTitle>
                                 <CardDescription>
-                                  Qualification rules shown to students for this
-                                  course.
+                                  Eligibility criteria shown to foreign students
+                                  for this course (no quota selection needed).
                                 </CardDescription>
                               </div>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  addTabListItem("criteria", {
-                                    heading: "",
-                                    description: "",
-                                  })
-                                }
+                                onClick={() => {
+                                  const criteria =
+                                    getActiveTabPayload().foreign_student
+                                      ?.criteria || [];
+                                  updateActiveTabPayload({
+                                    foreign_student: {
+                                      ...(getActiveTabPayload()
+                                        .foreign_student || {}),
+                                      criteria: [
+                                        ...criteria,
+                                        { heading: "", description: "" },
+                                      ],
+                                    },
+                                  });
+                                }}
                               >
                                 <Plus className="h-4 w-4 mr-1" /> Add Criterion
                               </Button>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                              {getTabList("criteria").length === 0 ? (
+                              {(
+                                getActiveTabPayload().foreign_student
+                                  ?.criteria || []
+                              ).length === 0 ? (
                                 <p className="text-xs text-muted-foreground italic">
                                   No eligibility criteria added yet.
                                 </p>
                               ) : (
                                 <div className="space-y-3">
-                                  {getTabList("criteria").map((item, idx) => (
+                                  {(
+                                    getActiveTabPayload().foreign_student
+                                      ?.criteria || []
+                                  ).map((crit: any, idx: number) => (
                                     <div
                                       key={idx}
                                       className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
@@ -4911,31 +4824,68 @@ export default function SetupAcademicsPage() {
                                       <div className="flex-1 space-y-2">
                                         <Input
                                           placeholder="Heading (e.g. Minimum Marks)"
-                                          value={item.heading || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem("criteria", idx, {
+                                          value={crit.heading || ""}
+                                          onChange={(e) => {
+                                            const criteria = [
+                                              ...(getActiveTabPayload()
+                                                .foreign_student?.criteria ||
+                                                []),
+                                            ];
+                                            criteria[idx] = {
+                                              ...criteria[idx],
                                               heading: e.target.value,
-                                            })
-                                          }
+                                            };
+                                            updateActiveTabPayload({
+                                              foreign_student: {
+                                                ...(getActiveTabPayload()
+                                                  .foreign_student || {}),
+                                                criteria,
+                                              },
+                                            });
+                                          }}
                                         />
-                                        <Textarea
-                                          rows={2}
+                                        <Input
                                           placeholder="Description (e.g. 60% aggregate in 10+2 with PCM)"
-                                          value={item.description || ""}
-                                          onChange={(e) =>
-                                            updateTabListItem("criteria", idx, {
+                                          value={crit.description || ""}
+                                          onChange={(e) => {
+                                            const criteria = [
+                                              ...(getActiveTabPayload()
+                                                .foreign_student?.criteria ||
+                                                []),
+                                            ];
+                                            criteria[idx] = {
+                                              ...criteria[idx],
                                               description: e.target.value,
-                                            })
-                                          }
+                                            };
+                                            updateActiveTabPayload({
+                                              foreign_student: {
+                                                ...(getActiveTabPayload()
+                                                  .foreign_student || {}),
+                                                criteria,
+                                              },
+                                            });
+                                          }}
                                         />
                                       </div>
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() =>
-                                          removeTabListItem("criteria", idx)
-                                        }
+                                        onClick={() => {
+                                          const criteria = (
+                                            getActiveTabPayload()
+                                              .foreign_student?.criteria || []
+                                          ).filter(
+                                            (_: any, i: number) => i !== idx,
+                                          );
+                                          updateActiveTabPayload({
+                                            foreign_student: {
+                                              ...(getActiveTabPayload()
+                                                .foreign_student || {}),
+                                              criteria,
+                                            },
+                                          });
+                                        }}
                                       >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
@@ -5001,7 +4951,6 @@ export default function SetupAcademicsPage() {
                                     label: "",
                                     value: "",
                                     unit: "",
-                                    icon: "",
                                   })
                                 }
                               >
@@ -5069,45 +5018,6 @@ export default function SetupAcademicsPage() {
                                                 )
                                               }
                                             />
-                                          </div>
-                                          <div className="space-y-1 md:col-span-2">
-                                            <Label className="text-xs">
-                                              Icon (Upload or URL)
-                                            </Label>
-                                            <div className="flex gap-2">
-                                              <Input
-                                                placeholder="https://cdn.example.com/icon.png"
-                                                value={item.icon || ""}
-                                                onChange={(e) =>
-                                                  updateTabListItem(
-                                                    "summary_stats",
-                                                    idx,
-                                                    { icon: e.target.value },
-                                                  )
-                                                }
-                                              />
-                                              <Input
-                                                type="file"
-                                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                                                disabled={
-                                                  uploadingField ===
-                                                  `summary_stats_${idx}`
-                                                }
-                                                onChange={(e) =>
-                                                  handleCourseFieldUpload(
-                                                    e.target.files?.[0] ?? null,
-                                                    `summary_stats_${idx}`,
-                                                    `placements/summary_stats_${idx}`,
-                                                    (url) =>
-                                                      updateTabListItem(
-                                                        "summary_stats",
-                                                        idx,
-                                                        { icon: url },
-                                                      ),
-                                                  )
-                                                }
-                                              />
-                                            </div>
                                           </div>
                                           <div className="flex items-end">
                                             <Button
@@ -6484,53 +6394,6 @@ export default function SetupAcademicsPage() {
                                     })
                                   }
                                 />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs">
-                                  Icon (Upload or URL)
-                                </Label>
-                                <div className="flex gap-2">
-                                  <Input
-                                    placeholder="https://cdn.example.com/icons/pdf-document-purple.png"
-                                    value={
-                                      (
-                                        getActiveTabPayload()
-                                          .download_report as any
-                                      )?.icon || ""
-                                    }
-                                    onChange={(e) =>
-                                      updateActiveTabPayload({
-                                        download_report: {
-                                          ...((getActiveTabPayload()
-                                            .download_report as any) || {}),
-                                          icon: e.target.value,
-                                        },
-                                      })
-                                    }
-                                  />
-                                  <Input
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                                    disabled={
-                                      uploadingField === "download_report_icon"
-                                    }
-                                    onChange={(e) =>
-                                      handleCourseFieldUpload(
-                                        e.target.files?.[0] ?? null,
-                                        "download_report_icon",
-                                        "placements/download_report_icon",
-                                        (url) =>
-                                          updateActiveTabPayload({
-                                            download_report: {
-                                              ...((getActiveTabPayload()
-                                                .download_report as any) || {}),
-                                              icon: url,
-                                            },
-                                          }),
-                                      )
-                                    }
-                                  />
-                                </div>
                               </div>
                             </CardContent>
                           </Card>

@@ -79,7 +79,7 @@ export const publicCourseDetailParamSchema = z.object({
 });
 
 export const eligibilityCriteriaQuerySchema = z.object({
-  student_type: z.string().trim().optional(),
+  student_type: z.enum(["indian", "foreign"]).optional(),
   quota_category: z.string().trim().optional(),
 });
 
