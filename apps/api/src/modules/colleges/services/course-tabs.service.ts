@@ -246,6 +246,8 @@ function normalizeKeyDateStatus(value: unknown): KeyDateStatus | "" {
     : "";
 }
 
+const FEE_DETAIL_GENDERS = ["Boys", "Girls", "Other"] as const;
+
 function normalizeAccreditationItems(
   value: unknown,
 ): Array<{ tag: string; image: string; document: string; title: string }> {
@@ -1591,6 +1593,62 @@ function validatePlacementsTabData(data: unknown): void {
   );
 }
 
+function validateFeesTabData(data: unknown): void {
+  const record = asRecord(data);
+
+  asArray(record.fee_details).forEach((item, idx) => {
+    const detail = asRecord(item);
+    const context = `Fee Detail #${idx + 1}`;
+
+    assertCompleteOrEmpty(detail, ["quota", "gender"], context);
+    if (
+      asText(detail.gender) &&
+      !(FEE_DETAIL_GENDERS as readonly string[]).includes(asText(detail.gender))
+    ) {
+      throw new ValidationError(
+        `${context}: gender must be one of ${FEE_DETAIL_GENDERS.join(", ")}`,
+      );
+    }
+    assertCompleteOrEmpty(
+      asRecord(detail.fees_summary),
+      ["full_course_fee", "booking_amount"],
+      `${context} Fees Summary`,
+    );
+
+    asArray(detail.tuition_fees).forEach((row, rIdx) => {
+      assertCompleteOrEmpty(
+        asRecord(row),
+        ["year", "amount"],
+        `${context} Tuition Fee #${rIdx + 1}`,
+      );
+    });
+
+    asArray(detail.additional_fees).forEach((row, rIdx) => {
+      assertCompleteOrEmpty(
+        asRecord(row),
+        ["label", "amount"],
+        `${context} Additional Fee #${rIdx + 1}`,
+      );
+    });
+
+    asArray(detail.one_time_payable_fees).forEach((row, rIdx) => {
+      assertCompleteOrEmpty(
+        asRecord(row),
+        ["label", "amount"],
+        `${context} One-Time Payable Fee #${rIdx + 1}`,
+      );
+    });
+
+    asArray(detail.deadlines_and_installments).forEach((row, rIdx) => {
+      assertCompleteOrEmpty(
+        asRecord(row),
+        ["due", "label", "amount"],
+        `${context} Installment #${rIdx + 1}`,
+      );
+    });
+  });
+}
+
 function normalizeSetupTabData(tabName: string, data: unknown): unknown {
   const record = asRecord(data);
 
@@ -1643,6 +1701,17 @@ function normalizeSetupTabData(tabName: string, data: unknown): unknown {
       ...record,
       download_report: downloadReport,
       summary_stats: summaryStats,
+    });
+  }
+
+  if (tabName === "fees") {
+    // The "PDF Size" field was dropped from the Fee Structure PDF form —
+    // drop the stale leftover from older saves.
+    const feeStructurePdf = { ...asRecord(record.fee_structure_pdf) };
+    delete feeStructurePdf.size;
+    return deepStripBlankEntries({
+      ...record,
+      fee_structure_pdf: feeStructurePdf,
     });
   }
 
@@ -1929,6 +1998,9 @@ export class CourseTabsService {
     if (isSetupTabName(tabName)) {
       if (tabName === "placements") {
         validatePlacementsTabData(data);
+      }
+      if (tabName === "fees") {
+        validateFeesTabData(data);
       }
 
       const updated = await CourseTabsRepository.updateCourseSetupTabData(
