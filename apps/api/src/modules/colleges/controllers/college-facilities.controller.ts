@@ -4,7 +4,7 @@ import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError, BadRequestError } from "@/shared/errors";
 import { generateSlug } from "@/shared/utils";
-import { HostelService } from "../services/hostel.service";
+import { HostelService, buildHostelGallery } from "../services/hostel.service";
 import { LibraryService } from "../services/library.service";
 import {
   createHostelSchema,
@@ -35,23 +35,11 @@ export class CollegeFacilitiesController {
       },
       orderBy: { createdAt: "desc" },
     });
-    const serialized = hostels.map((hostel) => ({
-      ...hostel,
-      avgRating: Number(hostel.avgRating),
-      roomTypes: hostel.roomTypes.map((rt) => ({
-        ...rt,
-        annualPlanPrice:
-          rt.annualPlanPrice != null ? Number(rt.annualPlanPrice) : null,
-        monthlyPlanPrice:
-          rt.monthlyPlanPrice != null ? Number(rt.monthlyPlanPrice) : null,
-        admissionFee: Number(rt.admissionFee),
-        securityDeposit: Number(rt.securityDeposit),
-      })),
-      messPlans: hostel.messPlans.map((mp) => ({
-        ...mp,
-        priceMonthly: Number(mp.priceMonthly),
-      })),
-    }));
+    const serialized = hostels.map((hostel) =>
+      HostelService.serializeAdminHostel(
+        hostel as unknown as Record<string, unknown>,
+      ),
+    );
     return res
       .status(200)
       .json(ApiResponse.success("College hostels list fetched", serialized));
@@ -134,6 +122,12 @@ export class CollegeFacilitiesController {
         });
       }
 
+      const gallery = buildHostelGallery(body.coverImageUrl, body.roomTypes);
+      await tx.hostel.update({
+        where: { id: hostel.id },
+        data: { gallery },
+      });
+
       return tx.hostel.findUnique({
         where: { id: hostel.id },
         include: { roomTypes: true, messPlans: true, addonServices: true },
@@ -142,7 +136,14 @@ export class CollegeFacilitiesController {
 
     return res
       .status(201)
-      .json(ApiResponse.success("Hostel facility provisioned", result));
+      .json(
+        ApiResponse.success(
+          "Hostel facility provisioned",
+          HostelService.serializeAdminHostel(
+            result as unknown as Record<string, unknown>,
+          ),
+        ),
+      );
   }
 
   static async deleteHostel(req: Request, res: Response) {

@@ -9,9 +9,47 @@ function toNumberOrNull(value: unknown): number | null {
   return value == null ? null : Number(value);
 }
 
+function asGalleryUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
+}
+
+export function buildHostelGallery(
+  coverImageUrl: string | null | undefined,
+  roomTypes: Array<{ photos?: unknown }> | undefined,
+): string[] {
+  const gallery: string[] = [];
+  const cover = typeof coverImageUrl === "string" ? coverImageUrl.trim() : "";
+  if (cover) gallery.push(cover);
+
+  for (const roomType of roomTypes ?? []) {
+    for (const photo of asGalleryUrls(roomType.photos)) {
+      if (!gallery.includes(photo)) gallery.push(photo);
+    }
+  }
+
+  return gallery;
+}
+
+function resolveHostelGallery(hostel: Record<string, unknown>): string[] {
+  const stored = asGalleryUrls(hostel.gallery);
+  if (stored.length > 0) return stored;
+
+  return buildHostelGallery(
+    typeof hostel.coverImageUrl === "string" ? hostel.coverImageUrl : null,
+    Array.isArray(hostel.roomTypes)
+      ? (hostel.roomTypes as Array<{ photos?: unknown }>)
+      : undefined,
+  );
+}
+
 function serializeRoomType(roomType: Record<string, unknown>) {
   return {
     ...roomType,
+    photos: asGalleryUrls(roomType.photos),
     annualPlanPrice: toNumberOrNull(roomType.annualPlanPrice),
     monthlyPlanPrice: toNumberOrNull(roomType.monthlyPlanPrice),
     admissionFee:
@@ -30,7 +68,11 @@ function serializeMessPlan(messPlan: Record<string, unknown>) {
 }
 
 function serializeHostelSummary(hostel: Record<string, unknown>) {
-  return { ...hostel, avgRating: toNumber(hostel.avgRating) };
+  return {
+    ...hostel,
+    avgRating: toNumber(hostel.avgRating),
+    gallery: resolveHostelGallery(hostel),
+  };
 }
 
 function serializeHostelDetail(hostel: Record<string, unknown>) {
@@ -418,6 +460,7 @@ function buildPublicHostelDetail(
   return {
     id: asText(hostel.id),
     tab: "student_housing",
+    gallery: resolveHostelGallery(hostel),
     header: buildHeader(hostel),
     rooms_and_types: buildRoomsAndTypes(hostel),
     hostel_fees: buildHostelFees(hostel),
@@ -434,6 +477,20 @@ function buildPublicHostelDetail(
 }
 
 export class HostelService {
+  static serializeAdminHostel(hostel: Record<string, unknown>) {
+    return serializeHostelDetail(hostel);
+  }
+
+  private static async syncGallery(hostelId: string) {
+    const sources = await HostelRepository.findGallerySources(hostelId);
+    if (!sources) return;
+    const gallery = buildHostelGallery(
+      sources.coverImageUrl,
+      sources.roomTypes,
+    );
+    await HostelRepository.updateGallery(hostelId, gallery);
+  }
+
   // ── Public ────────────────────────────────────────────────────────────────
 
   static async getPublicHostelsByIds(collegeId: string, hostelIds: string[]) {
@@ -486,6 +543,14 @@ export class HostelService {
   ) {
     const hostel = await HostelRepository.updateHostel(id, collegeId, data);
     if (!hostel) throw new NotFoundError("Hostel not found");
+    if ("coverImageUrl" in data) {
+      await this.syncGallery(id);
+      const refreshed = await HostelRepository.findAdminDetailById(
+        id,
+        collegeId,
+      );
+      return serializeHostelDetail(refreshed ?? hostel);
+    }
     return serializeHostelDetail(hostel);
   }
 
@@ -496,6 +561,7 @@ export class HostelService {
   ) {
     await this.getAdminHostelDetail(hostelId, collegeId);
     const roomType = await HostelRepository.createRoomType(hostelId, data);
+    await this.syncGallery(hostelId);
     return serializeRoomType(roomType);
   }
 
@@ -508,6 +574,7 @@ export class HostelService {
     await this.getAdminHostelDetail(hostelId, collegeId);
     const roomType = await HostelRepository.updateRoomType(id, hostelId, data);
     if (!roomType) throw new NotFoundError("Room type not found");
+    await this.syncGallery(hostelId);
     return serializeRoomType(roomType);
   }
 
@@ -515,6 +582,7 @@ export class HostelService {
     await this.getAdminHostelDetail(hostelId, collegeId);
     const roomType = await HostelRepository.deleteRoomType(id, hostelId);
     if (!roomType) throw new NotFoundError("Room type not found");
+    await this.syncGallery(hostelId);
     return roomType;
   }
 
