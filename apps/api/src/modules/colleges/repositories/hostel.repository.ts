@@ -149,6 +149,26 @@ export class HostelRepository {
     });
   }
 
+  static async findGallerySources(hostelId: string) {
+    return prisma.hostel.findUnique({
+      where: { id: hostelId },
+      select: {
+        coverImageUrl: true,
+        roomTypes: {
+          where: { isActive: true },
+          select: { photos: true },
+        },
+      },
+    });
+  }
+
+  static async updateGallery(hostelId: string, gallery: string[]) {
+    return prisma.hostel.update({
+      where: { id: hostelId },
+      data: { gallery },
+    });
+  }
+
   static async updateHostel(
     id: string,
     collegeId: string,
