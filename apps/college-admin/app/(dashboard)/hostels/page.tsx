@@ -95,11 +95,6 @@ const essentialFormSchema = z.object({
   distance: z.string().trim().optional(),
 });
 
-const tagFormSchema = z.object({
-  label: z.string().trim().min(1, "Required"),
-  color: z.string().trim().optional().default(""),
-});
-
 const safetyFeatureFormSchema = z.object({
   label: z.string().trim().min(1, "Required"),
 });
@@ -114,7 +109,6 @@ const hostelSchema = z.object({
   totalBeds: z.coerce.number().int().positive("Must be > 0"),
   badge: z.string().trim().optional().default(""),
   safetyTier: z.string().trim().optional().default(""),
-  tags: z.array(tagFormSchema).optional().default([]),
   wardenName: z.string().trim().min(1, "Warden name is required"),
   wardenPhone: z.string().trim().min(1, "Warden phone is required"),
   wardenWhatsapp: z.string().optional(),
@@ -152,7 +146,6 @@ const DEFAULT_VALUES: HostelFormData = {
   totalBeds: 100,
   badge: "",
   safetyTier: "",
-  tags: [],
   wardenName: "",
   wardenPhone: "",
   wardenWhatsapp: "",
@@ -189,7 +182,7 @@ const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
   0: ["name", "hostelType", "totalBeds", "distanceFromCampus"],
   1: ["roomTypes"],
   2: ["messPlans", "addonServices"],
-  3: ["tags", "amenities", "rules"],
+  3: ["amenities", "rules"],
   4: [
     "wardenName",
     "wardenPhone",
@@ -212,7 +205,6 @@ const FIELD_TO_STEP: Partial<Record<keyof HostelFormData, number>> = {
   roomTypes: 1,
   messPlans: 2,
   addonServices: 2,
-  tags: 3,
   amenities: 3,
   rules: 3,
   wardenName: 4,
@@ -302,7 +294,6 @@ export default function HostelsPage() {
   const amenitiesArray = useFieldArray({ control, name: "amenities" });
   const rulesArray = useFieldArray({ control, name: "rules" });
   const essentialsArray = useFieldArray({ control, name: "nearbyEssentials" });
-  const tagsArray = useFieldArray({ control, name: "tags" });
   const safetyFeaturesArray = useFieldArray({
     control,
     name: "safetyFeatures",
@@ -359,7 +350,6 @@ export default function HostelsPage() {
       totalBeds: data.totalBeds,
       badge: data.badge || null,
       safetyTier: data.safetyTier || null,
-      tags: data.tags,
       roomTypes: data.roomTypes.map((rt) => ({
         ...rt,
         photos: (rt.photos || []).filter(Boolean),
@@ -1203,54 +1193,6 @@ export default function HostelsPage() {
             {step === 3 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-semibold">Tags</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => tagsArray.append({ label: "", color: "" })}
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Tag
-                    </Button>
-                  </div>
-                  {tagsArray.fields.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
-                      No tags yet (optional).
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {tagsArray.fields.map((field, idx) => (
-                      <div key={field.id} className="flex items-center gap-1">
-                        <div className="space-y-0.5">
-                          <Input
-                            placeholder="Label (e.g. On-Campus)"
-                            className="h-8 text-xs w-32"
-                            {...register(`tags.${idx}.label`)}
-                          />
-                          {errors.tags?.[idx]?.label && (
-                            <p className="text-xs text-destructive">
-                              {errors.tags[idx]?.label?.message}
-                            </p>
-                          )}
-                        </div>
-                        <Input
-                          placeholder="Color (e.g. blue)"
-                          className="h-8 text-xs w-24"
-                          {...register(`tags.${idx}.color`)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => tagsArray.remove(idx)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3 border-t pt-4 border-border/40">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">Amenities</Label>
                     <Button
