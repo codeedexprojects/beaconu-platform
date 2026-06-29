@@ -372,8 +372,6 @@ export default function SetupProfilePage() {
   }, [mapScriptLoaded, activeTab]);
 
   // Commute arrays
-  const commutePickupPoints =
-    watch("profileSections.commute.pickup_points") || [];
   const commuteRoutes = watch("profileSections.commute.routes") || [];
   const commuteRules =
     watch("profileSections.commute.rules_and_code_of_conduct.rules") || [];
@@ -2107,72 +2105,6 @@ export default function SetupProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  <div className="space-y-2">
-                    <Label className="font-semibold">
-                      Selected Pickup Point
-                    </Label>
-                    <Input
-                      placeholder="HSR Layout"
-                      {...register(
-                        "profileSections.commute.selected_pickup_point",
-                      )}
-                    />
-                  </div>
-
-                  {/* Pickup points */}
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Pickup Points
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setValue("profileSections.commute.pickup_points", [
-                            ...commutePickupPoints,
-                            "",
-                          ]);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Pickup Point
-                      </Button>
-                    </div>
-                    {commutePickupPoints.map((item: string, idx: number) => (
-                      <div key={idx} className="flex gap-2 items-center pl-2">
-                        <Input
-                          placeholder="Pickup point name"
-                          className="h-9 flex-1"
-                          value={item || ""}
-                          onChange={(e) => {
-                            const next = [...commutePickupPoints];
-                            next[idx] = e.target.value;
-                            setValue(
-                              "profileSections.commute.pickup_points",
-                              next,
-                            );
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setValue(
-                              "profileSections.commute.pickup_points",
-                              commutePickupPoints.filter(
-                                (_: any, i: number) => i !== idx,
-                              ),
-                            );
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-
                   {/* Routes */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
                     <div className="flex items-center justify-between">

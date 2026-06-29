@@ -10,6 +10,9 @@ export const publicHostelDetailParamSchema = z.object({
 });
 
 export const updateHostelSchema = z.object({
+  hostelType: z.enum(["boys", "girls", "co-ed"]).optional(),
+  isOnCampus: z.boolean().optional(),
+  distanceFromCampus: z.string().trim().optional().nullable(),
   description: z.string().trim().optional().nullable(),
   totalBeds: z.number().int().positive().optional().nullable(),
   coverImageUrl: z.string().trim().url().optional().nullable(),

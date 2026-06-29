@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: other_courses_offered
+  tabName: student_housing
 }
 
 docs {
@@ -326,7 +326,7 @@ docs {
       }
     }
   }
-
+  
   --- library tab response shape ---
   Libraries are no longer embedded in the course's tab data — the course
   stores only `libraryIds: string[]`, which are resolved against the

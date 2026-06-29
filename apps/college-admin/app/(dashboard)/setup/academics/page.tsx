@@ -5443,9 +5443,7 @@ export default function SetupAcademicsPage() {
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs">
-                                    Duration Filter
-                                  </Label>
+                                  <Label className="text-xs">Duration</Label>
                                   <Input
                                     placeholder="e.g. Last 5 Years"
                                     value={
@@ -11325,31 +11323,79 @@ export default function SetupAcademicsPage() {
                                   </div>
 
                                   <div className="grid grid-cols-3 gap-2">
-                                    <Input
-                                      placeholder="Category (e.g. SERVICE)"
-                                      value={c.category || ""}
-                                      onChange={(e) =>
-                                        updateClub({
-                                          category: e.target.value,
-                                        })
-                                      }
-                                    />
-                                    <Input
-                                      placeholder="https://cdn.example.com/cover.png"
-                                      value={c.cover_image || ""}
-                                      onChange={(e) =>
-                                        updateClub({
-                                          cover_image: e.target.value,
-                                        })
-                                      }
-                                    />
-                                    <Input
-                                      placeholder="https://cdn.example.com/logo.png"
-                                      value={c.logo || ""}
-                                      onChange={(e) =>
-                                        updateClub({ logo: e.target.value })
-                                      }
-                                    />
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">
+                                        Category
+                                      </Label>
+                                      <Input
+                                        placeholder="Category (e.g. SERVICE)"
+                                        value={c.category || ""}
+                                        onChange={(e) =>
+                                          updateClub({
+                                            category: e.target.value,
+                                          })
+                                        }
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">
+                                        Cover Image URL (banner shown on club
+                                        page)
+                                      </Label>
+                                      <Input
+                                        placeholder="https://cdn.example.com/cover.png"
+                                        value={c.cover_image || ""}
+                                        onChange={(e) =>
+                                          updateClub({
+                                            cover_image: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <Input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        disabled={
+                                          uploadingField ===
+                                          `club_cover_image_${idx}`
+                                        }
+                                        onChange={(e) =>
+                                          handleCourseFieldUpload(
+                                            e.target.files?.[0] ?? null,
+                                            `club_cover_image_${idx}`,
+                                            `clubs/${idx}/cover_image`,
+                                            (url) =>
+                                              updateClub({ cover_image: url }),
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">
+                                        Logo URL (small emblem/icon)
+                                      </Label>
+                                      <Input
+                                        placeholder="https://cdn.example.com/logo.png"
+                                        value={c.logo || ""}
+                                        onChange={(e) =>
+                                          updateClub({ logo: e.target.value })
+                                        }
+                                      />
+                                      <Input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        disabled={
+                                          uploadingField === `club_logo_${idx}`
+                                        }
+                                        onChange={(e) =>
+                                          handleCourseFieldUpload(
+                                            e.target.files?.[0] ?? null,
+                                            `club_logo_${idx}`,
+                                            `clubs/${idx}/logo`,
+                                            (url) => updateClub({ logo: url }),
+                                          )
+                                        }
+                                      />
+                                    </div>
                                   </div>
 
                                   <Textarea
@@ -11500,15 +11546,34 @@ export default function SetupAcademicsPage() {
                                               })
                                             }
                                           />
-                                          <Input
-                                            placeholder="Thumbnail image URL"
-                                            value={event.image || ""}
-                                            onChange={(e) =>
-                                              updateEvent({
-                                                image: e.target.value,
-                                              })
-                                            }
-                                          />
+                                          <div className="space-y-1">
+                                            <Input
+                                              placeholder="Thumbnail image URL"
+                                              value={event.image || ""}
+                                              onChange={(e) =>
+                                                updateEvent({
+                                                  image: e.target.value,
+                                                })
+                                              }
+                                            />
+                                            <Input
+                                              type="file"
+                                              accept="image/jpeg,image/png,image/webp"
+                                              disabled={
+                                                uploadingField ===
+                                                `club_event_image_${idx}_${eIdx}`
+                                              }
+                                              onChange={(e) =>
+                                                handleCourseFieldUpload(
+                                                  e.target.files?.[0] ?? null,
+                                                  `club_event_image_${idx}_${eIdx}`,
+                                                  `clubs/${idx}/events/${eIdx}`,
+                                                  (url) =>
+                                                    updateEvent({ image: url }),
+                                                )
+                                              }
+                                            />
+                                          </div>
                                           <Input
                                             placeholder="Event link"
                                             value={event.link || ""}
@@ -11665,24 +11730,71 @@ export default function SetupAcademicsPage() {
                                         </SelectItem>
                                       </SelectContent>
                                     </Select>
-                                    <Input
-                                      placeholder="https://cdn.example.com/cover.png"
-                                      value={a.cover_image || ""}
-                                      onChange={(e) =>
-                                        updateAlliance({
-                                          cover_image: e.target.value,
-                                        })
-                                      }
-                                    />
-                                    <Input
-                                      placeholder="https://cdn.example.com/logo.png"
-                                      value={a.logo || ""}
-                                      onChange={(e) =>
-                                        updateAlliance({
-                                          logo: e.target.value,
-                                        })
-                                      }
-                                    />
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">
+                                        Cover Image URL (banner shown on partner
+                                        page)
+                                      </Label>
+                                      <Input
+                                        placeholder="https://cdn.example.com/cover.png"
+                                        value={a.cover_image || ""}
+                                        onChange={(e) =>
+                                          updateAlliance({
+                                            cover_image: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <Input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        disabled={
+                                          uploadingField ===
+                                          `alliance_cover_image_${idx}`
+                                        }
+                                        onChange={(e) =>
+                                          handleCourseFieldUpload(
+                                            e.target.files?.[0] ?? null,
+                                            `alliance_cover_image_${idx}`,
+                                            `alliances/${idx}/cover_image`,
+                                            (url) =>
+                                              updateAlliance({
+                                                cover_image: url,
+                                              }),
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-muted-foreground">
+                                        Logo URL (small emblem/icon)
+                                      </Label>
+                                      <Input
+                                        placeholder="https://cdn.example.com/logo.png"
+                                        value={a.logo || ""}
+                                        onChange={(e) =>
+                                          updateAlliance({
+                                            logo: e.target.value,
+                                          })
+                                        }
+                                      />
+                                      <Input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        disabled={
+                                          uploadingField ===
+                                          `alliance_logo_${idx}`
+                                        }
+                                        onChange={(e) =>
+                                          handleCourseFieldUpload(
+                                            e.target.files?.[0] ?? null,
+                                            `alliance_logo_${idx}`,
+                                            `alliances/${idx}/logo`,
+                                            (url) =>
+                                              updateAlliance({ logo: url }),
+                                          )
+                                        }
+                                      />
+                                    </div>
                                   </div>
 
                                   <Textarea
@@ -11812,15 +11924,33 @@ export default function SetupAcademicsPage() {
                                               })
                                             }
                                           />
-                                          <Input
-                                            placeholder="Document URL"
-                                            value={doc.url || ""}
-                                            onChange={(e) =>
-                                              updateDoc({
-                                                url: e.target.value,
-                                              })
-                                            }
-                                          />
+                                          <div className="space-y-1">
+                                            <Input
+                                              placeholder="Document URL"
+                                              value={doc.url || ""}
+                                              onChange={(e) =>
+                                                updateDoc({
+                                                  url: e.target.value,
+                                                })
+                                              }
+                                            />
+                                            <Input
+                                              type="file"
+                                              accept="application/pdf"
+                                              disabled={
+                                                uploadingField ===
+                                                `alliance_legal_doc_${idx}_${dIdx}`
+                                              }
+                                              onChange={(e) =>
+                                                handleCourseFieldUpload(
+                                                  e.target.files?.[0] ?? null,
+                                                  `alliance_legal_doc_${idx}_${dIdx}`,
+                                                  `alliances/${idx}/legal_documents/${dIdx}`,
+                                                  (url) => updateDoc({ url }),
+                                                )
+                                              }
+                                            />
+                                          </div>
                                           <Button
                                             type="button"
                                             variant="ghost"
@@ -11915,15 +12045,36 @@ export default function SetupAcademicsPage() {
                                                 })
                                               }
                                             />
-                                            <Input
-                                              placeholder="Thumbnail image URL"
-                                              value={act.image || ""}
-                                              onChange={(e) =>
-                                                updateActivity({
-                                                  image: e.target.value,
-                                                })
-                                              }
-                                            />
+                                            <div className="space-y-1">
+                                              <Input
+                                                placeholder="Thumbnail image URL"
+                                                value={act.image || ""}
+                                                onChange={(e) =>
+                                                  updateActivity({
+                                                    image: e.target.value,
+                                                  })
+                                                }
+                                              />
+                                              <Input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                disabled={
+                                                  uploadingField ===
+                                                  `alliance_activity_image_${idx}_${acIdx}`
+                                                }
+                                                onChange={(e) =>
+                                                  handleCourseFieldUpload(
+                                                    e.target.files?.[0] ?? null,
+                                                    `alliance_activity_image_${idx}_${acIdx}`,
+                                                    `alliances/${idx}/activities/${acIdx}`,
+                                                    (url) =>
+                                                      updateActivity({
+                                                        image: url,
+                                                      }),
+                                                  )
+                                                }
+                                              />
+                                            </div>
                                             <Input
                                               placeholder="Activity link"
                                               value={act.link || ""}

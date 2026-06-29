@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
 import { getPortalPath, getCollegeSlugFromPath } from "@/lib/portal-path";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 
 import {
   useCollegeHostels,
@@ -46,20 +47,28 @@ import {
   useDeleteCollegeHostel,
 } from "@/hooks/use-facilities";
 
+const MAX_ROOM_PHOTOS = 4;
+
 // ── Form schema ───────────────────────────────────────────────────────────────
 
 const roomTypeFormSchema = z.object({
   name: z.string().trim().min(2, "Required"),
+  description: z.string().trim().optional().default(""),
   totalBeds: z.coerce.number().int().positive("Must be > 0"),
   annualPlanPrice: z.coerce.number().nonnegative().default(0),
   monthlyPlanPrice: z.coerce.number().nonnegative().default(0),
+  admissionFee: z.coerce.number().nonnegative().default(0),
   securityDeposit: z.coerce.number().nonnegative().default(0),
+  photos: z.array(z.string()).max(MAX_ROOM_PHOTOS).optional().default([]),
 });
 
 const messPlanFormSchema = z.object({
   name: z.string().trim().min(2, "Required"),
   priceMonthly: z.coerce.number().positive("Must be > 0"),
   mealsIncluded: z.string().trim().optional(),
+  duration: z.string().trim().optional().default("1 Month"),
+  dietaryOptions: z.string().trim().optional(),
+  isCompulsory: z.boolean().optional().default(false),
 });
 
 const addonServiceFormSchema = z.object({
@@ -68,6 +77,7 @@ const addonServiceFormSchema = z.object({
   planLabel: z.string().trim().min(1, "Required"),
   planPrice: z.coerce.number().nonnegative(),
   featureTags: z.string().trim().optional(),
+  notes: z.string().trim().optional().default(""),
 });
 
 const amenityFormSchema = z.object({
@@ -85,21 +95,44 @@ const essentialFormSchema = z.object({
   distance: z.string().trim().optional(),
 });
 
+const tagFormSchema = z.object({
+  label: z.string().trim().min(1, "Required"),
+  color: z.string().trim().optional().default(""),
+});
+
+const safetyFeatureFormSchema = z.object({
+  label: z.string().trim().min(1, "Required"),
+});
+
 const hostelSchema = z.object({
   name: z.string().trim().min(2, "Hostel name is required").max(255),
   hostelType: z.enum(["boys", "girls", "co-ed"]),
   isOnCampus: z.boolean(),
   distanceFromCampus: z.string().optional(),
   description: z.string().optional(),
+  coverImageUrl: z.string().optional().default(""),
   totalBeds: z.coerce.number().int().positive("Must be > 0"),
-  wardenName: z.string().optional(),
-  wardenPhone: z.string().optional(),
+  badge: z.string().trim().optional().default(""),
+  safetyTier: z.string().trim().optional().default(""),
+  tags: z.array(tagFormSchema).optional().default([]),
+  wardenName: z.string().trim().min(1, "Warden name is required"),
+  wardenPhone: z.string().trim().min(1, "Warden phone is required"),
   wardenWhatsapp: z.string().optional(),
   wardenEmail: z
     .union([z.string().trim().email("Invalid email"), z.literal("")])
     .optional(),
+  wardenPhoto: z.string().optional().default(""),
+  wardenDesignation: z.string().trim().optional().default(""),
+  safetyFeatures: z.array(safetyFeatureFormSchema).optional().default([]),
   address: z.string().optional(),
-  roomTypes: z.array(roomTypeFormSchema),
+  addressLine2: z.string().trim().optional().default(""),
+  latitude: z.string().trim().optional().default(""),
+  longitude: z.string().trim().optional().default(""),
+  mapLink: z.string().trim().optional().default(""),
+  mapThumbnail: z.string().trim().optional().default(""),
+  transportDescription: z.string().trim().optional().default(""),
+  busStopNote: z.string().trim().optional().default(""),
+  roomTypes: z.array(roomTypeFormSchema).min(1, "Add at least one room type"),
   messPlans: z.array(messPlanFormSchema),
   addonServices: z.array(addonServiceFormSchema),
   amenities: z.array(amenityFormSchema),
@@ -115,12 +148,26 @@ const DEFAULT_VALUES: HostelFormData = {
   isOnCampus: true,
   distanceFromCampus: "",
   description: "",
+  coverImageUrl: "",
   totalBeds: 100,
+  badge: "",
+  safetyTier: "",
+  tags: [],
   wardenName: "",
   wardenPhone: "",
   wardenWhatsapp: "",
   wardenEmail: "",
+  wardenPhoto: "",
+  wardenDesignation: "",
+  safetyFeatures: [],
   address: "",
+  addressLine2: "",
+  latitude: "",
+  longitude: "",
+  mapLink: "",
+  mapThumbnail: "",
+  transportDescription: "",
+  busStopNote: "",
   roomTypes: [],
   messPlans: [],
   addonServices: [],
@@ -143,7 +190,7 @@ const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
   1: ["roomTypes"],
   2: ["messPlans", "addonServices"],
   3: ["amenities", "rules"],
-  4: ["wardenEmail", "nearbyEssentials"],
+  4: ["wardenName", "wardenPhone", "wardenEmail", "nearbyEssentials"],
 };
 
 export default function HostelsPage() {
@@ -164,12 +211,14 @@ export default function HostelsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [step, setStep] = useState(0);
   const [expandedHostel, setExpandedHostel] = useState<string | null>(null);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const {
     register,
     control,
     handleSubmit,
     watch,
+    setValue,
     trigger,
     reset,
     formState: { errors },
@@ -180,12 +229,37 @@ export default function HostelsPage() {
 
   const isOnCampus = watch("isOnCampus");
 
+  const handleFieldUpload = async (
+    file: File | null,
+    fieldKey: string,
+    fieldPath: Parameters<typeof setValue>[0],
+    context: string,
+  ) => {
+    if (!file) return;
+    try {
+      setUploadingField(fieldKey);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      setValue(fieldPath, permanentUrl as never, { shouldDirty: true });
+      toast.success("Image uploaded");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   const roomTypesArray = useFieldArray({ control, name: "roomTypes" });
   const messPlansArray = useFieldArray({ control, name: "messPlans" });
   const addonServicesArray = useFieldArray({ control, name: "addonServices" });
   const amenitiesArray = useFieldArray({ control, name: "amenities" });
   const rulesArray = useFieldArray({ control, name: "rules" });
   const essentialsArray = useFieldArray({ control, name: "nearbyEssentials" });
+  const tagsArray = useFieldArray({ control, name: "tags" });
+  const safetyFeaturesArray = useFieldArray({
+    control,
+    name: "safetyFeatures",
+  });
 
   const handleOpenAdd = () => {
     if (!canManageHostels) return;
@@ -234,12 +308,25 @@ export default function HostelsPage() {
         ? null
         : data.distanceFromCampus || null,
       description: data.description || null,
+      coverImageUrl: data.coverImageUrl || null,
       totalBeds: data.totalBeds,
-      roomTypes: data.roomTypes,
+      badge: data.badge || null,
+      safetyTier: data.safetyTier || null,
+      tags: data.tags,
+      roomTypes: data.roomTypes.map((rt) => ({
+        ...rt,
+        photos: (rt.photos || []).filter(Boolean),
+      })),
       messPlans: data.messPlans.map((mp) => ({
         name: mp.name,
         priceMonthly: mp.priceMonthly,
         mealsIncluded: (mp.mealsIncluded ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        duration: mp.duration || "1 Month",
+        isCompulsory: mp.isCompulsory ?? false,
+        dietaryOptions: (mp.dietaryOptions ?? "")
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
@@ -257,17 +344,33 @@ export default function HostelsPage() {
               .filter(Boolean),
           },
         ],
+        notes: service.notes || undefined,
       })),
       wardenInfo: {
         name: data.wardenName || undefined,
         phone: data.wardenPhone || undefined,
         whatsapp: data.wardenWhatsapp || undefined,
         email: data.wardenEmail || undefined,
+        photo: data.wardenPhoto || undefined,
+        designation: data.wardenDesignation || undefined,
+        safetyFeatures: data.safetyFeatures,
       },
       amenities: data.amenities,
       rules: data.rules,
       locationInfo: {
         address: data.address || undefined,
+        addressLine2: data.addressLine2 || undefined,
+        latitude: data.latitude ? Number(data.latitude) : undefined,
+        longitude: data.longitude ? Number(data.longitude) : undefined,
+        mapLink: data.mapLink || undefined,
+        map: data.mapThumbnail ? { thumbnail: data.mapThumbnail } : undefined,
+        collegeTransport:
+          data.transportDescription || data.busStopNote
+            ? {
+                description: data.transportDescription || undefined,
+                busStopNote: data.busStopNote || undefined,
+              }
+            : undefined,
         nearbyEssentials: data.nearbyEssentials,
       },
     };
@@ -284,7 +387,14 @@ export default function HostelsPage() {
     });
   };
 
-  const onInvalid = () => {
+  const onInvalid = (formErrors: Record<string, unknown>) => {
+    const erroredFields = Object.keys(formErrors);
+    const firstInvalidStep = STEPS.findIndex((_, idx) =>
+      (STEP_FIELDS[idx] ?? []).some((field) => erroredFields.includes(field)),
+    );
+    if (firstInvalidStep !== -1) {
+      setStep(firstInvalidStep);
+    }
     toast.error("Please fix the highlighted fields before submitting");
   };
 
@@ -587,6 +697,58 @@ export default function HostelsPage() {
                     {...register("description")}
                   />
                 </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-badge">Verified Badge Text</Label>
+                    <Input
+                      id="hostel-badge"
+                      placeholder="Safe & Secure - Premium PG Partnered"
+                      {...register("badge")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-safety-tier">Safety Tier</Label>
+                    <Input
+                      id="hostel-safety-tier"
+                      placeholder="Premium"
+                      {...register("safetyTier")}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-cover">Cover Image</Label>
+                  <Input
+                    id="hostel-cover"
+                    placeholder="https://cdn.example.com/cover.jpg"
+                    className="h-8 text-xs"
+                    {...register("coverImageUrl")}
+                  />
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="h-8 text-xs"
+                      disabled={uploadingField === "coverImageUrl"}
+                      onChange={(e) =>
+                        handleFieldUpload(
+                          e.target.files?.[0] ?? null,
+                          "coverImageUrl",
+                          "coverImageUrl",
+                          "hostels/cover",
+                        )
+                      }
+                    />
+                    {watch("coverImageUrl") && (
+                      <img
+                        src={watch("coverImageUrl")}
+                        alt="Cover preview"
+                        className="h-10 w-16 rounded-md border object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -604,10 +766,13 @@ export default function HostelsPage() {
                     onClick={() =>
                       roomTypesArray.append({
                         name: "",
+                        description: "",
                         totalBeds: 10,
                         annualPlanPrice: 0,
                         monthlyPlanPrice: 0,
+                        admissionFee: 0,
                         securityDeposit: 0,
+                        photos: [],
                       })
                     }
                   >
@@ -618,7 +783,12 @@ export default function HostelsPage() {
                 {roomTypesArray.fields.length === 0 && (
                   <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">
                     No room categories yet. Click &quot;Add Room Type&quot; to
-                    define one (optional — can also be added later).
+                    define at least one — required to provision the hostel.
+                  </p>
+                )}
+                {errors.roomTypes?.message && (
+                  <p className="text-xs text-destructive">
+                    {errors.roomTypes.message}
                   </p>
                 )}
 
@@ -647,6 +817,14 @@ export default function HostelsPage() {
                             {errors.roomTypes[idx]?.name?.message}
                           </p>
                         )}
+                      </div>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">Description</Label>
+                        <Input
+                          placeholder="e.g. Spacious AC room with attached bath"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.description`)}
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Beds Capacity</Label>
@@ -678,12 +856,75 @@ export default function HostelsPage() {
                         />
                       </div>
                       <div className="space-y-1">
+                        <Label className="text-xs">Admission Fee</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.admissionFee`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
                         <Label className="text-xs">Security Deposit</Label>
                         <Input
                           type="number"
                           className="h-8 text-xs"
                           {...register(`roomTypes.${idx}.securityDeposit`)}
                         />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">
+                          Room Photos (up to {MAX_ROOM_PHOTOS})
+                        </Label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {Array.from({ length: MAX_ROOM_PHOTOS }).map(
+                            (_, slot) => {
+                              const photoUrl = watch(
+                                `roomTypes.${idx}.photos.${slot}`,
+                              );
+                              const uploadKey = `roomTypePhoto_${idx}_${slot}`;
+                              return (
+                                <div key={slot} className="space-y-1">
+                                  {photoUrl ? (
+                                    <div className="relative">
+                                      <img
+                                        src={photoUrl}
+                                        alt={`Room photo ${slot + 1}`}
+                                        className="h-16 w-full rounded-md border object-cover"
+                                      />
+                                      <button
+                                        type="button"
+                                        className="absolute -top-1.5 -right-1.5 rounded-full bg-background border text-destructive p-0.5"
+                                        onClick={() =>
+                                          setValue(
+                                            `roomTypes.${idx}.photos.${slot}`,
+                                            "",
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <Input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      className="h-16 text-[10px] p-1"
+                                      disabled={uploadingField === uploadKey}
+                                      onChange={(e) =>
+                                        handleFieldUpload(
+                                          e.target.files?.[0] ?? null,
+                                          uploadKey,
+                                          `roomTypes.${idx}.photos.${slot}`,
+                                          `hostels/room-types/${idx}/photo-${slot}`,
+                                        )
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -706,6 +947,9 @@ export default function HostelsPage() {
                           name: "",
                           priceMonthly: 0,
                           mealsIncluded: "",
+                          duration: "1 Month",
+                          dietaryOptions: "",
+                          isCompulsory: false,
                         })
                       }
                     >
@@ -766,6 +1010,31 @@ export default function HostelsPage() {
                             {...register(`messPlans.${idx}.mealsIncluded`)}
                           />
                         </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Duration</Label>
+                          <Input
+                            placeholder="e.g. 1 Month"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.duration`)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">
+                            Dietary Options (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="Veg, Non-Veg"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.dietaryOptions`)}
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs sm:col-span-2">
+                          <input
+                            type="checkbox"
+                            {...register(`messPlans.${idx}.isCompulsory`)}
+                          />
+                          Compulsory for all residents
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -787,6 +1056,7 @@ export default function HostelsPage() {
                           planLabel: "Monthly",
                           planPrice: 0,
                           featureTags: "",
+                          notes: "",
                         })
                       }
                     >
@@ -862,6 +1132,14 @@ export default function HostelsPage() {
                             {...register(`addonServices.${idx}.featureTags`)}
                           />
                         </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">Note</Label>
+                          <Input
+                            placeholder="e.g. Drop off on weekends"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.notes`)}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -873,6 +1151,47 @@ export default function HostelsPage() {
             {step === 3 && (
               <div className="space-y-6">
                 <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Tags</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => tagsArray.append({ label: "", color: "" })}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Tag
+                    </Button>
+                  </div>
+                  {tagsArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No tags yet (optional).
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {tagsArray.fields.map((field, idx) => (
+                      <div key={field.id} className="flex items-center gap-1">
+                        <Input
+                          placeholder="Label (e.g. On-Campus)"
+                          className="h-8 text-xs w-32"
+                          {...register(`tags.${idx}.label`)}
+                        />
+                        <Input
+                          placeholder="Color (e.g. blue)"
+                          className="h-8 text-xs w-24"
+                          {...register(`tags.${idx}.color`)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => tagsArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 border-t pt-4 border-border/40">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">Amenities</Label>
                     <Button
@@ -963,41 +1282,168 @@ export default function HostelsPage() {
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Warden Info</Label>
                   <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Name"
+                        className="h-8 text-xs"
+                        {...register("wardenName")}
+                      />
+                      {errors.wardenName && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenName.message}
+                        </p>
+                      )}
+                    </div>
                     <Input
-                      placeholder="Name"
+                      placeholder="Designation (e.g. Chief Warden)"
                       className="h-8 text-xs"
-                      {...register("wardenName")}
+                      {...register("wardenDesignation")}
                     />
-                    <Input
-                      placeholder="Phone"
-                      className="h-8 text-xs"
-                      {...register("wardenPhone")}
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Phone"
+                        className="h-8 text-xs"
+                        {...register("wardenPhone")}
+                      />
+                      {errors.wardenPhone && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenPhone.message}
+                        </p>
+                      )}
+                    </div>
                     <Input
                       placeholder="WhatsApp"
                       className="h-8 text-xs"
                       {...register("wardenWhatsapp")}
                     />
-                    <Input
-                      placeholder="Email"
-                      className="h-8 text-xs"
-                      {...register("wardenEmail")}
-                    />
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Email"
+                        className="h-8 text-xs"
+                        {...register("wardenEmail")}
+                      />
+                      {errors.wardenEmail && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenEmail.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  {errors.wardenEmail && (
-                    <p className="text-xs text-destructive">
-                      {errors.wardenEmail.message}
-                    </p>
-                  )}
+
+                  <div className="space-y-1">
+                    <Label className="text-xs">Warden Profile Photo</Label>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="h-8 text-xs"
+                        disabled={uploadingField === "wardenPhoto"}
+                        onChange={(e) =>
+                          handleFieldUpload(
+                            e.target.files?.[0] ?? null,
+                            "wardenPhoto",
+                            "wardenPhoto",
+                            "hostels/warden-photo",
+                          )
+                        }
+                      />
+                      {watch("wardenPhoto") && (
+                        <img
+                          src={watch("wardenPhoto")}
+                          alt="Warden preview"
+                          className="h-10 w-10 rounded-full border object-cover"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs text-muted-foreground">
+                        Safety Features
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          safetyFeaturesArray.append({ label: "" })
+                        }
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Feature
+                      </Button>
+                    </div>
+                    {safetyFeaturesArray.fields.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                        No safety features yet (optional).
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {safetyFeaturesArray.fields.map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-1">
+                          <Input
+                            placeholder="e.g. CCTV Coverage"
+                            className="h-8 text-xs w-44"
+                            {...register(`safetyFeatures.${idx}.label`)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => safetyFeaturesArray.remove(idx)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3 border-t pt-4 border-border/40">
                   <Label className="text-sm font-semibold">Location</Label>
-                  <Input
-                    placeholder="Address"
-                    className="h-8 text-xs"
-                    {...register("address")}
-                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Address line 1"
+                      className="h-8 text-xs"
+                      {...register("address")}
+                    />
+                    <Input
+                      placeholder="Address line 2"
+                      className="h-8 text-xs"
+                      {...register("addressLine2")}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Latitude"
+                      className="h-8 text-xs"
+                      {...register("latitude")}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Longitude"
+                      className="h-8 text-xs"
+                      {...register("longitude")}
+                    />
+                    <Input
+                      placeholder="Map link (https://maps.google.com/?q=...)"
+                      className="h-8 text-xs"
+                      {...register("mapLink")}
+                    />
+                    <Input
+                      placeholder="Map thumbnail URL"
+                      className="h-8 text-xs"
+                      {...register("mapThumbnail")}
+                    />
+                    <Input
+                      placeholder="College transport description"
+                      className="h-8 text-xs"
+                      {...register("transportDescription")}
+                    />
+                    <Input
+                      placeholder="Bus stop note (e.g. 50m from gate)"
+                      className="h-8 text-xs"
+                      {...register("busStopNote")}
+                    />
+                  </div>
 
                   <div className="flex justify-between items-center pt-2">
                     <Label className="text-xs text-muted-foreground">

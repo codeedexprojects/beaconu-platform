@@ -41,7 +41,10 @@ import {
   useDeleteCollegeLibrary,
   useCollegeDepartments,
 } from "@/hooks/use-facilities";
-import type { LibraryDto } from "@/lib/services/colleges.service";
+import {
+  uploadCollegeAdminFile,
+  type LibraryDto,
+} from "@/lib/services/colleges.service";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -53,14 +56,26 @@ const DAYS_OF_WEEK = [
   "Sunday",
 ] as const;
 
+const commaNumberSchema = (label: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .refine(
+      (value) =>
+        value === "" || Number.isFinite(Number(value.replace(/,/g, ""))),
+      { message: `${label} must be a valid number` },
+    );
+
 const statFormSchema = z.object({
-  value: z.string().optional().default(""),
+  value: commaNumberSchema("Value"),
   label: z.string().optional().default(""),
 });
 
 const resourceFormSchema = z.object({
   name: z.string().optional().default(""),
-  count: z.string().optional().default(""),
+  count: commaNumberSchema("Count"),
 });
 
 const hoursDayFormSchema = z.object({
@@ -160,6 +175,7 @@ export default function LibrariesPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const {
     register,
@@ -196,6 +212,26 @@ export default function LibrariesPage() {
   };
 
   const handleClose = () => setShowModal(false);
+
+  const handleImageUpload = async (
+    file: File | null,
+    fieldPath: `facilities.${number}.image`,
+    context: string,
+  ) => {
+    if (!file) return;
+
+    try {
+      setUploadingField(fieldPath);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      setValue(fieldPath, permanentUrl, { shouldDirty: true });
+      toast.success("Image uploaded");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageLibraries) return;
@@ -406,12 +442,20 @@ export default function LibrariesPage() {
                 </Button>
               </div>
               {statsArray.fields.map((field, idx) => (
-                <div key={field.id} className="flex gap-2 items-center">
+                <div key={field.id} className="flex gap-2 items-start">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Value (e.g. 21,786)"
+                      {...register(`stats.${idx}.value`)}
+                    />
+                    {errors.stats?.[idx]?.value && (
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.stats[idx]?.value?.message}
+                      </p>
+                    )}
+                  </div>
                   <Input
-                    placeholder="Value (e.g. 21,786)"
-                    {...register(`stats.${idx}.value`)}
-                  />
-                  <Input
+                    className="flex-1"
                     placeholder="Label (e.g. Sq Feet Area)"
                     {...register(`stats.${idx}.label`)}
                   />
@@ -441,16 +485,23 @@ export default function LibrariesPage() {
                 </Button>
               </div>
               {resourcesArray.fields.map((field, idx) => (
-                <div key={field.id} className="flex gap-2 items-center">
+                <div key={field.id} className="flex gap-2 items-start">
                   <Input
+                    className="flex-1"
                     placeholder="Resource name (e.g. E-Books)"
                     {...register(`resources.${idx}.name`)}
                   />
-                  <Input
-                    className="w-36"
-                    placeholder="Count (e.g. 195,809)"
-                    {...register(`resources.${idx}.count`)}
-                  />
+                  <div className="w-36">
+                    <Input
+                      placeholder="Count (e.g. 195,809)"
+                      {...register(`resources.${idx}.count`)}
+                    />
+                    {errors.resources?.[idx]?.count && (
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.resources[idx]?.count?.message}
+                      </p>
+                    )}
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -564,19 +615,40 @@ export default function LibrariesPage() {
                 </Button>
               </div>
               {facilitiesArray.fields.map((field, idx) => (
-                <div key={field.id} className="flex gap-2 items-center">
+                <div
+                  key={field.id}
+                  className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start"
+                >
                   <Input
+                    className="sm:flex-1"
                     placeholder="Facility name (e.g. Quiet Study Areas)"
                     {...register(`facilities.${idx}.name`)}
                   />
-                  <Input
-                    placeholder="Image URL"
-                    {...register(`facilities.${idx}.image`)}
-                  />
+                  <div className="flex flex-col gap-2 sm:flex-1 sm:flex-row">
+                    <Input
+                      className="sm:flex-1"
+                      placeholder="Image URL"
+                      {...register(`facilities.${idx}.image`)}
+                    />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sm:w-40"
+                      disabled={uploadingField === `facilities.${idx}.image`}
+                      onChange={(e) =>
+                        handleImageUpload(
+                          e.target.files?.[0] ?? null,
+                          `facilities.${idx}.image`,
+                          `libraries/facilities-${idx}`,
+                        )
+                      }
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
+                    className="self-end sm:self-start"
                     onClick={() => facilitiesArray.remove(idx)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />

@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Plus, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store";
 import { getPortalPath, getCollegeSlugFromPath } from "@/lib/portal-path";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 
 import {
   Card,
@@ -31,6 +32,7 @@ import {
 } from "@/hooks/use-facilities";
 
 const ADDON_SERVICE_TYPES = ["laundry", "gym", "parking", "other"] as const;
+const MAX_ROOM_PHOTOS = 4;
 
 export default function HostelDetailPage() {
   const params = useParams();
@@ -48,6 +50,11 @@ export default function HostelDetailPage() {
   const { mutate: updateHostel, isPending: isSavingProfile } =
     useUpdateCollegeHostel();
 
+  const [hostelType, setHostelType] = useState<"boys" | "girls" | "co-ed">(
+    "co-ed",
+  );
+  const [isOnCampus, setIsOnCampus] = useState(true);
+  const [distanceFromCampus, setDistanceFromCampus] = useState("");
   const [description, setDescription] = useState("");
   const [totalBeds, setTotalBeds] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -81,6 +88,9 @@ export default function HostelDetailPage() {
 
   useEffect(() => {
     if (!hostel) return;
+    setHostelType(hostel.hostelType || "co-ed");
+    setIsOnCampus(hostel.isOnCampus ?? true);
+    setDistanceFromCampus(hostel.distanceFromCampus || "");
     setDescription(hostel.description || "");
     setTotalBeds(hostel.totalBeds ? String(hostel.totalBeds) : "");
     setCoverImageUrl(hostel.coverImageUrl || "");
@@ -138,7 +148,10 @@ export default function HostelDetailPage() {
   const [roomMonthlyPrice, setRoomMonthlyPrice] = useState("");
   const [roomAdmissionFee, setRoomAdmissionFee] = useState("");
   const [roomDeposit, setRoomDeposit] = useState("");
-  const [roomPhotos, setRoomPhotos] = useState("");
+  const [roomPhotos, setRoomPhotos] = useState<string[]>(
+    Array(MAX_ROOM_PHOTOS).fill(""),
+  );
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   // Mess plans
   const { mutate: createMessPlan, isPending: isAddingMessPlan } =
@@ -186,11 +199,34 @@ export default function HostelDetailPage() {
     );
   }
 
+  const handleImageUpload = async (
+    file: File | null,
+    fieldKey: string,
+    context: string,
+    onSuccess: (url: string) => void,
+  ) => {
+    if (!file) return;
+    try {
+      setUploadingField(fieldKey);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      onSuccess(permanentUrl);
+      toast.success("Image uploaded");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   const saveProfile = () => {
     updateHostel(
       {
         id: hostel.id,
         data: {
+          hostelType,
+          isOnCampus,
+          distanceFromCampus: isOnCampus ? null : distanceFromCampus || null,
           description: description || null,
           totalBeds: totalBeds ? Number(totalBeds) : null,
           coverImageUrl: coverImageUrl || null,
@@ -301,10 +337,7 @@ export default function HostelDetailPage() {
           monthlyPlanPrice: roomMonthlyPrice ? Number(roomMonthlyPrice) : 0,
           admissionFee: roomAdmissionFee ? Number(roomAdmissionFee) : 0,
           securityDeposit: roomDeposit ? Number(roomDeposit) : 0,
-          photos: roomPhotos
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          photos: roomPhotos.filter(Boolean),
         },
       },
       {
@@ -317,7 +350,7 @@ export default function HostelDetailPage() {
           setRoomMonthlyPrice("");
           setRoomAdmissionFee("");
           setRoomDeposit("");
-          setRoomPhotos("");
+          setRoomPhotos(Array(MAX_ROOM_PHOTOS).fill(""));
         },
       },
     );
@@ -433,6 +466,38 @@ export default function HostelDetailPage() {
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Target Allocation</Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none"
+                value={hostelType}
+                onChange={(e) =>
+                  setHostelType(e.target.value as "boys" | "girls" | "co-ed")
+                }
+              >
+                <option value="co-ed">Co-Educational</option>
+                <option value="boys">Boys Only</option>
+                <option value="girls">Girls Only</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={isOnCampus}
+                  onChange={(e) => setIsOnCampus(e.target.checked)}
+                />
+                <Label className="!mb-0">Located On-Campus</Label>
+              </label>
+              {!isOnCampus && (
+                <Input
+                  placeholder="Distance from campus (km), e.g. 1.8"
+                  value={distanceFromCampus}
+                  onChange={(e) => setDistanceFromCampus(e.target.value)}
+                />
+              )}
+            </div>
             <div className="space-y-1 sm:col-span-2">
               <Label>Description</Label>
               <Textarea
@@ -456,6 +521,28 @@ export default function HostelDetailPage() {
                 onChange={(e) => setCoverImageUrl(e.target.value)}
                 placeholder="https://..."
               />
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploadingField === "coverImageUrl"}
+                  onChange={(e) =>
+                    handleImageUpload(
+                      e.target.files?.[0] ?? null,
+                      "coverImageUrl",
+                      `hostels/${hostel.id}/cover`,
+                      setCoverImageUrl,
+                    )
+                  }
+                />
+                {coverImageUrl && (
+                  <img
+                    src={coverImageUrl}
+                    alt="Cover preview"
+                    className="h-10 w-16 rounded-md border object-cover"
+                  />
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Verified Badge Text</Label>
@@ -543,6 +630,28 @@ export default function HostelDetailPage() {
                 value={wardenPhoto}
                 onChange={(e) => setWardenPhoto(e.target.value)}
               />
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploadingField === "wardenPhoto"}
+                  onChange={(e) =>
+                    handleImageUpload(
+                      e.target.files?.[0] ?? null,
+                      "wardenPhoto",
+                      `hostels/${hostel.id}/warden-photo`,
+                      setWardenPhoto,
+                    )
+                  }
+                />
+                {wardenPhoto && (
+                  <img
+                    src={wardenPhoto}
+                    alt="Warden preview"
+                    className="h-10 w-10 rounded-full border object-cover"
+                  />
+                )}
+              </div>
             </div>
             <div className="space-y-2 pt-2">
               <Label className="text-xs text-muted-foreground">
@@ -623,14 +732,17 @@ export default function HostelDetailPage() {
               {rules.map((r, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start justify-between border p-2.5 rounded-lg bg-muted/10 text-xs"
+                  className="flex items-start justify-between gap-2 border p-2.5 rounded-lg bg-muted/10 text-xs"
                 >
-                  <div>
-                    <p className="font-bold">{r.title}</p>
-                    <p className="text-muted-foreground">{r.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold break-words">{r.title}</p>
+                    <p className="text-muted-foreground break-words">
+                      {r.description}
+                    </p>
                   </div>
                   <button
                     type="button"
+                    className="shrink-0"
                     onClick={() => setRules(rules.filter((_, i) => i !== idx))}
                   >
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -705,13 +817,14 @@ export default function HostelDetailPage() {
               {nearbyEssentials.map((ne, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between border p-2 rounded-lg bg-muted/10 text-xs"
+                  className="flex items-center justify-between gap-2 border p-2 rounded-lg bg-muted/10 text-xs"
                 >
-                  <span>
+                  <span className="min-w-0 flex-1 break-words">
                     {ne.type}: {ne.name} ({ne.distance})
                   </span>
                   <button
                     type="button"
+                    className="shrink-0"
                     onClick={() =>
                       setNearbyEssentials(
                         nearbyEssentials.filter((_, i) => i !== idx),
@@ -779,11 +892,13 @@ export default function HostelDetailPage() {
               {hostel.roomTypes.map((rt) => (
                 <div
                   key={rt.id}
-                  className="flex items-center justify-between border p-3 rounded-lg bg-muted/10"
+                  className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
                 >
-                  <div>
-                    <p className="text-sm font-semibold">{rt.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold break-words">
+                      {rt.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground break-words">
                       {rt.totalBeds} beds &middot; {rt.availableBeds} available
                       &middot; ₹{rt.annualPlanPrice}/yr
                     </p>
@@ -792,6 +907,7 @@ export default function HostelDetailPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
+                    className="shrink-0"
                     onClick={() =>
                       deleteRoomType({ hostelId: hostel.id, id: rt.id })
                     }
@@ -845,12 +961,58 @@ export default function HostelDetailPage() {
               value={roomDeposit}
               onChange={(e) => setRoomDeposit(e.target.value)}
             />
-            <Input
-              placeholder="Photo URLs (comma separated)"
-              className="sm:col-span-2"
-              value={roomPhotos}
-              onChange={(e) => setRoomPhotos(e.target.value)}
-            />
+            <div className="space-y-1 sm:col-span-2">
+              <Label className="text-xs">
+                Room Photos (up to {MAX_ROOM_PHOTOS})
+              </Label>
+              <div className="grid grid-cols-4 gap-2">
+                {roomPhotos.map((photoUrl, slot) => {
+                  const uploadKey = `roomPhoto_${slot}`;
+                  return (
+                    <div key={slot} className="space-y-1">
+                      {photoUrl ? (
+                        <div className="relative">
+                          <img
+                            src={photoUrl}
+                            alt={`Room photo ${slot + 1}`}
+                            className="h-16 w-full rounded-md border object-cover"
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-1.5 -right-1.5 rounded-full bg-background border text-destructive p-0.5"
+                            onClick={() =>
+                              setRoomPhotos((prev) =>
+                                prev.map((p, i) => (i === slot ? "" : p)),
+                              )
+                            }
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="h-16 text-[10px] p-1"
+                          disabled={uploadingField === uploadKey}
+                          onChange={(e) =>
+                            handleImageUpload(
+                              e.target.files?.[0] ?? null,
+                              uploadKey,
+                              `hostels/${hostel.id}/room-types/photo-${slot}`,
+                              (url) =>
+                                setRoomPhotos((prev) =>
+                                  prev.map((p, i) => (i === slot ? url : p)),
+                                ),
+                            )
+                          }
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <Button
               type="button"
               variant="secondary"
@@ -880,11 +1042,13 @@ export default function HostelDetailPage() {
               {hostel.messPlans!.map((mp) => (
                 <div
                   key={mp.id}
-                  className="flex items-center justify-between border p-3 rounded-lg bg-muted/10"
+                  className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
                 >
-                  <div>
-                    <p className="text-sm font-semibold">{mp.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold break-words">
+                      {mp.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground break-words">
                       {mp.mealsIncluded.join(", ")} &middot; ₹{mp.priceMonthly}
                       /mo
                       {mp.isCompulsory ? " · Compulsory" : ""}
@@ -894,6 +1058,7 @@ export default function HostelDetailPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
+                    className="shrink-0"
                     onClick={() =>
                       deleteMessPlan({ hostelId: hostel.id, id: mp.id })
                     }
@@ -972,11 +1137,13 @@ export default function HostelDetailPage() {
                   {items.map((service) => (
                     <div
                       key={service.id}
-                      className="flex items-center justify-between border p-3 rounded-lg bg-muted/10"
+                      className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
                     >
-                      <div>
-                        <p className="text-sm font-semibold">{service.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold break-words">
+                          {service.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground break-words">
                           {service.plans
                             .map((p) => {
                               const base = `${p.label}: ₹${p.price}`;
@@ -993,6 +1160,7 @@ export default function HostelDetailPage() {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="shrink-0"
                         onClick={() =>
                           deleteAddonService({
                             hostelId: hostel.id,
