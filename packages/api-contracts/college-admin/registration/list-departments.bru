@@ -1,0 +1,21 @@
+meta {
+  name: List Departments
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/lookups/departments
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Lists active departments for the authenticated college (id, name only).
+  Used to populate the department picker when creating a Department Library
+  under Setup -> Libraries.
+}

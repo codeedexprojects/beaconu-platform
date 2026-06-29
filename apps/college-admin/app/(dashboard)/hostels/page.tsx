@@ -475,7 +475,10 @@ export default function HostelsPage() {
           if (!open) handleCloseModal();
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Provision Hostel Hall</DialogTitle>
             <DialogDescription>

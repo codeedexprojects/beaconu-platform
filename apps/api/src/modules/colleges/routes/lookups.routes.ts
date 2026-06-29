@@ -9,6 +9,11 @@ const staffAuth = [authenticate, authorizeUserType("staff_member")];
 
 router.get("/streams", ...staffAuth, CollegeRegistrationController.getStreams);
 router.get(
+  "/departments",
+  ...staffAuth,
+  CollegeRegistrationController.getDepartments,
+);
+router.get(
   "/study-levels",
   ...staffAuth,
   CollegeRegistrationController.getStudyLevels,

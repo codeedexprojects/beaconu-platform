@@ -16,6 +16,7 @@ import {
   Settings,
   LayoutDashboard,
   Star,
+  Library,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -192,6 +193,7 @@ export default function DashboardLayout({
     if (path.includes("/roles")) return "staff.view";
     if (path.includes("/staff")) return "staff.view";
     if (path.includes("/hostels")) return "hostel.view";
+    if (path.includes("/libraries")) return "library.view";
     if (path.includes("/commute")) return "commute.view";
     if (path.includes("/settings")) return "profile.view";
     if (path.includes("/ambassadors")) return "staff.view";
@@ -309,6 +311,12 @@ export default function DashboardLayout({
                     path: "/hostels",
                     icon: Home,
                     permission: "hostel.view",
+                  },
+                  {
+                    name: "Libraries",
+                    path: "/libraries",
+                    icon: Library,
+                    permission: "library.view",
                   },
                   {
                     name: "Bus Fleet & Commute",
@@ -519,6 +527,7 @@ export default function DashboardLayout({
                       { name: "Role Builder (RBAC)", path: "/roles" },
                       { name: "Staff Directory", path: "/staff" },
                       { name: "Hostels Occupancy", path: "/hostels" },
+                      { name: "Libraries", path: "/libraries" },
                       { name: "Bus Fleet & Commute", path: "/commute" },
                       { name: "Campus Ambassadors", path: "/ambassadors" },
                       { name: "Settings", path: "/settings" },

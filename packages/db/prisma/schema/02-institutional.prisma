@@ -128,8 +128,7 @@ model College {
   // Student Code of Conduct
   codeOfConduct Json @default("[]") @map("code_of_conduct") // [{order, rule}]
 
-  // Library, Clubs & Alliances
-  libraries Json @default("[]") // [{type, departmentId?, name, ...}]
+  // Clubs & Alliances
   clubs     Json @default("[]") // [{id, name, slug, category, ...}]
   alliances Json @default("[]") // [{id, partnerName, allianceType, ...}]
 
@@ -169,6 +168,7 @@ model College {
   documentRequests          DocumentRequest[]
   issuedDocuments           IssuedDocument[]
   hostels                   Hostel[]
+  libraries                 Library[]
   commuteRoutes             CommuteRoute[]
   newsAlerts                NewsAlert[]
   articles                  Article[]
@@ -275,6 +275,29 @@ model Department {
   @@map("departments")
 }
 
+model Library {
+  id           String   @id @default(dbgenerated("('LIB-'::text || (nextval('library_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
+  departmentId String?  @map("department_id")
+  type         String   @db.VarChar(20) // "central" | "department"
+  name         String   @db.VarChar(255)
+  stats        Json     @default("[]") // [{value, label}]
+  availableResources Json @default("{\"items\":[]}") @map("available_resources")
+  libraryHours Json     @default("{\"days\":[]}") @map("library_hours")
+  facilities   Json     @default("{\"items\":[]}")
+  status       String   @default("active") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  department Discipline? @relation(fields: [departmentId], references: [id])
+
+  @@index([collegeId], name: "idx_libraries_college")
+  @@index([departmentId], name: "idx_libraries_department")
+  @@map("libraries")
+}
+
 model Stream {
   id        String   @id @default(dbgenerated("('STR-'::text || (nextval('stream_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
@@ -303,6 +326,7 @@ model Discipline {
   // Relations
   stream  Stream   @relation(fields: [streamId], references: [id])
   courses Course[]
+  libraries Library[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")

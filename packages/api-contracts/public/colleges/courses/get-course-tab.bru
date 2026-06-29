@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: demo_graphics
+  tabName: other_courses_offered
 }
 
 docs {
@@ -323,6 +323,48 @@ docs {
             { "state": "Tamilnadu", "percent": 18 }
           ]
         }
+      }
+    }
+  }
+
+  --- library tab response shape ---
+  Libraries are no longer embedded in the course's tab data — the course
+  stores only `libraryIds: string[]`, which are resolved against the
+  college's own `Library` records (see College Admin > Libraries CRUD and
+  the public List/Get College Libraries routes). Removing a library from
+  the source has no special handling here; it's simply dropped from this
+  list.
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "sectionName": "library",
+      "sectionId": "library",
+      "sectionKey": "library",
+      "data": {
+        "tab": "library",
+        "libraries": [
+          {
+            "id": "LIB-1",
+            "type": "central",
+            "departmentId": null,
+            "name": "Central Library",
+            "stats": [{ "value": "21,786", "label": "Sq Feet Area" }],
+            "availableResources": { "items": [{ "name": "E-Books", "count": "195,809" }] },
+            "libraryHours": {
+              "days": [
+                {
+                  "day": "Monday",
+                  "working_hours_start": "09:00",
+                  "working_hours_end": "16:30",
+                  "transaction_hours_start": "09:00",
+                  "transaction_hours_end": "11:00"
+                }
+              ]
+            },
+            "facilities": { "items": [{ "name": "Quiet Study Areas", "image": "" }] }
+          }
+        ]
       }
     }
   }

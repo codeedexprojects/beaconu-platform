@@ -1,0 +1,22 @@
+meta {
+  name: Update Library
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/libraries/{{libraryId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Central Library (Updated)",
+    "stats": [{ "value": "22,000", "label": "Sq Feet Area" }]
+  }
+}

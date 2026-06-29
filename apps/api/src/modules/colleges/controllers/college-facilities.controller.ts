@@ -5,6 +5,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError, BadRequestError } from "@/shared/errors";
 import { generateSlug } from "@/shared/utils";
 import { HostelService } from "../services/hostel.service";
+import { LibraryService } from "../services/library.service";
 import {
   createHostelSchema,
   updateHostelSchema,
@@ -12,6 +13,10 @@ import {
   messPlanSchema,
   addonServiceSchema,
 } from "../validators/hostel.validator";
+import {
+  createLibrarySchema,
+  updateLibrarySchema,
+} from "../validators/library.validator";
 
 export class CollegeFacilitiesController {
   // ── Hostels Occupancy Inventory ────────────────────────────────────────────
@@ -473,5 +478,58 @@ export class CollegeFacilitiesController {
     return res
       .status(200)
       .json(ApiResponse.success("Commuter transit route removed", null));
+  }
+
+  // ── Libraries ────────────────────────────────────────────────────────────────
+
+  static async listLibraries(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const libraries = await LibraryService.listLibraries(collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("College libraries fetched", libraries));
+  }
+
+  static async createLibrary(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const body = createLibrarySchema.parse(req.body);
+    const library = await LibraryService.createLibrary(collegeId, body);
+    return res
+      .status(201)
+      .json(ApiResponse.success("Library created", library));
+  }
+
+  static async getLibraryDetail(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const library = await LibraryService.getLibraryDetail(id, collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Library fetched", library));
+  }
+
+  static async updateLibrary(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const body = updateLibrarySchema.parse(req.body);
+    const library = await LibraryService.updateLibrary(id, collegeId, body);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Library updated", library));
+  }
+
+  static async deleteLibrary(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await LibraryService.deleteLibrary(id, collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Library removed successfully", null));
   }
 }

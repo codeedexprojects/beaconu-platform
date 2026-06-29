@@ -17,59 +17,15 @@ auth:bearer {
 body:json {
   {
     "data": {
-      "tab": "library",
-      "name": "Central Library",
-      "overview_stats": [
-        { "label": "Sq Feet Area", "value": "21,786" },
-        { "label": "Total Seats", "value": "300" },
-        { "label": "Volumes", "value": "79,316" },
-        { "label": "Research Cabins", "value": "44" }
-      ],
-      "available_resources": [
-        { "label": "Encyclopaedias", "count": 50 },
-        { "label": "Journals (Print)", "count": 39 },
-        { "label": "Journals (Online)", "count": 6150 },
-        { "label": "Magazines (Print)", "count": 36 },
-        { "label": "Rare Books", "count": 1562 },
-        { "label": "Magazines & Papers", "count": 7500 },
-        { "label": "E-Books", "count": 195809 }
-      ],
-      "library_hours": [
-        {
-          "day": "Monday",
-          "working_hours": "09:00 AM - 04:30 PM",
-          "transaction_hours": "09:00 AM - 04:30 PM"
-        },
-        {
-          "day": "Tuesday",
-          "working_hours": "09:00 AM - 04:30 PM",
-          "transaction_hours": "09:00 AM - 04:30 PM"
-        },
-        {
-          "day": "Wednesday",
-          "working_hours": "09:00 AM - 04:30 PM",
-          "transaction_hours": "09:00 AM - 04:30 PM"
-        },
-        {
-          "day": "Sunday",
-          "working_hours": "09:00 AM - 04:30 PM",
-          "transaction_hours": ""
-        }
-      ],
-      "facilities": [
-        {
-          "title": "Quiet Study Areas",
-          "image": "damel1.jpg"
-        },
-        {
-          "title": "Quiet Study Areas",
-          "image": "damel1.jpg"
-        }
-      ]
+      "libraryIds": ["{{libraryId}}"]
     }
   }
 }
 
 docs {
-  Updates library tab with dynamic JSON data.
+  Links the college's libraries to this course. Libraries are managed
+  separately (see College Admin > Libraries CRUD) and are not embedded
+  here — this tab just stores which library IDs apply to this course.
+  The public Get Course Tab response resolves these IDs into full library
+  objects at read time.
 }

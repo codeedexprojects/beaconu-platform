@@ -438,6 +438,15 @@ export class CollegeRegistrationRepository {
 
   // ── Lookups ────────────────────────────────────────────────────────────────
 
+  static async getActiveDepartmentsByCollegeId(collegeId: string) {
+    void collegeId;
+    return prisma.discipline.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
   static async getStreamsWithDisciplines(allowedStreamIds?: string[]) {
     if (allowedStreamIds && allowedStreamIds.length === 0) {
       return [];

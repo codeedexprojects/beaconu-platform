@@ -739,6 +739,14 @@ export class CollegeRegistrationController {
     return res.status(200).json(ApiResponse.success("Streams fetched", result));
   }
 
+  static async getDepartments(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const result = await CollegeRegistrationService.getDepartments(collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Departments fetched", result));
+  }
+
   static async getStudyLevels(_req: Request, res: Response) {
     const result = await CollegeRegistrationService.getStudyLevels();
     return res
