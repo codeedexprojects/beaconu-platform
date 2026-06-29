@@ -14,6 +14,8 @@ export const QUERY_KEYS = {
   roles: ["college-roles"] as const,
   staff: ["college-staff"] as const,
   hostels: ["college-hostels"] as const,
+  libraries: ["college-libraries"] as const,
+  lookupsDepartments: ["lookups", "departments"] as const,
   commutes: ["college-commutes"] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,

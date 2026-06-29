@@ -67,7 +67,7 @@ import {
   useStreams,
   useStudyLevels,
 } from "@/hooks/use-lookups";
-import { useCollegeHostels } from "@/hooks/use-facilities";
+import { useCollegeHostels, useCollegeLibraries } from "@/hooks/use-facilities";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 // 19 course-specific tabs plus the basic configuration tab
@@ -215,6 +215,23 @@ const CLASS_TIMING_DAYS = [
   "Sunday",
 ];
 
+function sumPercent(items: Array<{ percent?: unknown }>): number {
+  return items.reduce((sum, item) => sum + (Number(item.percent) || 0), 0);
+}
+
+function PercentTotalBadge({ items }: { items: Array<{ percent?: unknown }> }) {
+  if (items.length === 0) return null;
+  const total = sumPercent(items);
+  const isComplete = total === 100;
+  return (
+    <span
+      className={`text-xs font-semibold ${isComplete ? "text-green-600" : "text-destructive"}`}
+    >
+      Total: {total} / 100
+    </span>
+  );
+}
+
 function SubjectTagInput({
   value,
   onChange,
@@ -283,7 +300,6 @@ export default function SetupAcademicsPage() {
   const [examPolicySubTab, setExamPolicySubTab] = useState<string>("patterns");
   const [examPolicyPatternIdx, setExamPolicyPatternIdx] = useState<number>(0);
   const [facultyExpandedIdx, setFacultyExpandedIdx] = useState<number>(0);
-  const [libraryExpandedIdx, setLibraryExpandedIdx] = useState<number>(0);
   const [uploadingBrochure, setUploadingBrochure] = useState(false);
   const [uploadingAlumniIndex, setUploadingAlumniIndex] = useState<
     number | null
@@ -305,7 +321,7 @@ export default function SetupAcademicsPage() {
         `courses/${editingCourse?.id || "draft"}/${s3PathSuffix}`,
       );
       onSuccess(permanentUrl);
-      toast.success("File uploaded to S3");
+      toast.success("File uploaded successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed";
       toast.error(message);
@@ -321,6 +337,7 @@ export default function SetupAcademicsPage() {
   const { data: programTypes = [] } = useProgramTypes();
   const { data: campuses = [] } = useCollegeCampuses();
   const { data: hostels = [] } = useCollegeHostels();
+  const { data: libraries = [] } = useCollegeLibraries();
 
   const { mutate: createCourse, isPending: isCreating } =
     useCreateCollegeCourse();
@@ -642,7 +659,7 @@ export default function SetupAcademicsPage() {
           brochure_link: permanentUrl,
         },
       });
-      toast.success("Brochure uploaded to S3");
+      toast.success("Brochure uploaded successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed";
       toast.error(message);
@@ -668,7 +685,7 @@ export default function SetupAcademicsPage() {
           items: next,
         },
       });
-      toast.success("Alumni image uploaded to S3");
+      toast.success("Alumni image uploaded successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed";
       toast.error(message);
@@ -808,7 +825,7 @@ export default function SetupAcademicsPage() {
           size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
         },
       });
-      toast.success("Fee structure PDF uploaded to S3");
+      toast.success("Fee structure PDF uploaded successfully");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed";
       toast.error(message);
@@ -11089,544 +11106,135 @@ export default function SetupAcademicsPage() {
                       {/* LIBRARY */}
                       {activeTab === "library" && (
                         <div className="space-y-6">
-                          <div className="flex justify-between items-center">
-                            <Label className="font-bold">Libraries</Label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const current =
-                                  getActiveTabPayload().libraries || [];
-                                const nextIdx = current.length;
-                                const next = [
-                                  ...current,
-                                  {
-                                    id: `library_${String(nextIdx + 1).padStart(3, "0")}`,
-                                    name: "",
-                                    stats: [],
-                                    available_resources: { items: [] },
-                                    library_hours: { days: [] },
-                                    facilities: { items: [] },
-                                  },
-                                ];
-                                updateActiveTabPayload({ libraries: next });
-                                setLibraryExpandedIdx(nextIdx);
-                              }}
-                            >
-                              <Plus className="h-4 w-4 mr-1" /> Add Library
-                            </Button>
-                          </div>
-
-                          {(getActiveTabPayload().libraries || []).length >
-                            0 && (
-                            <div className="flex gap-2 flex-wrap">
-                              {(getActiveTabPayload().libraries || []).map(
-                                (lib: any, idx: number) => (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => setLibraryExpandedIdx(idx)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                                      libraryExpandedIdx === idx
-                                        ? "bg-indigo-600 text-white border-indigo-600"
-                                        : "border-border text-muted-foreground hover:bg-muted"
-                                    }`}
-                                  >
-                                    {lib.name || `Library ${idx + 1}`}
-                                  </button>
-                                ),
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950">
+                                Linked Libraries
+                              </CardTitle>
+                              <CardDescription>
+                                Select which of the college&apos;s libraries
+                                apply to students of this course. Manage library
+                                details under Setup &rarr; Libraries.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {libraries.length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No libraries added yet &mdash; add one under
+                                  Setup &rarr; Libraries first.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {libraries.map((library) => {
+                                    const linkedIds: string[] =
+                                      getActiveTabPayload().libraryIds || [];
+                                    const isLinked = linkedIds.includes(
+                                      library.id,
+                                    );
+                                    return (
+                                      <label
+                                        key={library.id}
+                                        className="flex items-center gap-3 border p-3 rounded-lg bg-muted/5 cursor-pointer"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          className="h-4 w-4"
+                                          checked={isLinked}
+                                          onChange={() => {
+                                            const next = isLinked
+                                              ? linkedIds.filter(
+                                                  (id) => id !== library.id,
+                                                )
+                                              : [...linkedIds, library.id];
+                                            updateActiveTabPayload({
+                                              libraryIds: next,
+                                            });
+                                          }}
+                                        />
+                                        <div className="flex-1">
+                                          <p className="text-sm font-semibold">
+                                            {library.name}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {library.type === "central"
+                                              ? "Central Library"
+                                              : (library.department?.name ??
+                                                "Department Library")}
+                                          </p>
+                                        </div>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
                               )}
-                            </div>
-                          )}
+                            </CardContent>
+                          </Card>
 
-                          {(() => {
-                            const libs = getActiveTabPayload().libraries || [];
-                            const li = libraryExpandedIdx;
-                            if (li >= libs.length) return null;
-                            const lib = libs[li] || {};
-                            const updateLib = (updates: any) => {
-                              const next = [...libs];
-                              next[li] = { ...next[li], ...updates };
-                              updateActiveTabPayload({ libraries: next });
-                            };
-                            return (
-                              <div className="border p-4 rounded-xl space-y-6 bg-muted/5">
-                                {/* Basic info */}
-                                <div className="flex gap-4 items-start">
-                                  <div className="flex-1 grid gap-4 md:grid-cols-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">
-                                        Library ID
-                                      </Label>
-                                      <Input
-                                        placeholder="e.g. library_central"
-                                        value={lib.id || ""}
-                                        onChange={(e) =>
-                                          updateLib({ id: e.target.value })
-                                        }
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">
-                                        Library Name
-                                      </Label>
-                                      <Input
-                                        placeholder="e.g. Central Library"
-                                        value={lib.name || ""}
-                                        onChange={(e) =>
-                                          updateLib({ name: e.target.value })
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                      const next = libs.filter(
-                                        (_: any, i: number) => i !== li,
+                          <Card className="border border-border/60 shadow-sm">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-bold text-indigo-950">
+                                Currently Linked
+                              </CardTitle>
+                              <CardDescription>
+                                Libraries currently shown on this course&apos;s
+                                Library tab.
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {(getActiveTabPayload().libraryIds || [])
+                                .length === 0 ? (
+                                <p className="text-xs text-muted-foreground italic">
+                                  No libraries linked yet.
+                                </p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {(getActiveTabPayload().libraryIds || []).map(
+                                    (libraryId: string) => {
+                                      const library = libraries.find(
+                                        (l) => l.id === libraryId,
                                       );
-                                      updateActiveTabPayload({
-                                        libraries: next,
-                                      });
-                                      setLibraryExpandedIdx(
-                                        Math.max(0, li - 1),
-                                      );
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-
-                                {/* Stats */}
-                                <div className="border-t pt-4 space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <Label className="font-bold text-sm">
-                                      Stats
-                                    </Label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        updateLib({
-                                          stats: [
-                                            ...(lib.stats || []),
-                                            { value: "", label: "" },
-                                          ],
-                                        })
-                                      }
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" /> Add Stat
-                                    </Button>
-                                  </div>
-                                  {(lib.stats || []).map(
-                                    (stat: any, si: number) => (
-                                      <div
-                                        key={si}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          placeholder="Value (e.g. 21,786)"
-                                          value={stat.value || ""}
-                                          onChange={(e) => {
-                                            const next = [...(lib.stats || [])];
-                                            next[si] = {
-                                              ...next[si],
-                                              value: e.target.value,
-                                            };
-                                            updateLib({ stats: next });
-                                          }}
-                                        />
-                                        <Input
-                                          placeholder="Label (e.g. Sq Feet Area)"
-                                          value={stat.label || ""}
-                                          onChange={(e) => {
-                                            const next = [...(lib.stats || [])];
-                                            next[si] = {
-                                              ...next[si],
-                                              label: e.target.value,
-                                            };
-                                            updateLib({ stats: next });
-                                          }}
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            updateLib({
-                                              stats: (lib.stats || []).filter(
-                                                (_: any, i: number) => i !== si,
-                                              ),
-                                            })
-                                          }
+                                      if (!library) return null;
+                                      return (
+                                        <div
+                                          key={libraryId}
+                                          className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
                                         >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-
-                                {/* Available Resources */}
-                                <div className="border-t pt-4 space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <Label className="font-bold text-sm">
-                                      Available Resources
-                                    </Label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        updateLib({
-                                          available_resources: {
-                                            ...(lib.available_resources || {}),
-                                            items: [
-                                              ...(lib.available_resources
-                                                ?.items || []),
-                                              { name: "", count: "" },
-                                            ],
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" /> Add
-                                      Resource
-                                    </Button>
-                                  </div>
-                                  {(lib.available_resources?.items || []).map(
-                                    (res: any, ri: number) => (
-                                      <div
-                                        key={ri}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          placeholder="Resource name (e.g. E-Books)"
-                                          value={res.name || ""}
-                                          onChange={(e) => {
-                                            const items = [
-                                              ...(lib.available_resources
-                                                ?.items || []),
-                                            ];
-                                            items[ri] = {
-                                              ...items[ri],
-                                              name: e.target.value,
-                                            };
-                                            updateLib({
-                                              available_resources: {
-                                                ...(lib.available_resources ||
-                                                  {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Input
-                                          placeholder="Count (e.g. 195,809)"
-                                          className="w-36"
-                                          value={res.count || ""}
-                                          onChange={(e) => {
-                                            const items = [
-                                              ...(lib.available_resources
-                                                ?.items || []),
-                                            ];
-                                            items[ri] = {
-                                              ...items[ri],
-                                              count: e.target.value,
-                                            };
-                                            updateLib({
-                                              available_resources: {
-                                                ...(lib.available_resources ||
-                                                  {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            const items = (
-                                              lib.available_resources?.items ||
-                                              []
-                                            ).filter(
-                                              (_: any, i: number) => i !== ri,
-                                            );
-                                            updateLib({
-                                              available_resources: {
-                                                ...(lib.available_resources ||
-                                                  {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-
-                                {/* Library Hours */}
-                                <div className="border-t pt-4 space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <Label className="font-bold text-sm">
-                                      Library Hours
-                                    </Label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        updateLib({
-                                          library_hours: {
-                                            ...(lib.library_hours || {}),
-                                            days: [
-                                              ...(lib.library_hours?.days ||
-                                                []),
-                                              {
-                                                day: "",
-                                                working_hours: "",
-                                                transaction_hours: "",
-                                              },
-                                            ],
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" /> Add Day
-                                    </Button>
-                                  </div>
-                                  {(lib.library_hours?.days || []).map(
-                                    (d: any, di: number) => (
-                                      <div
-                                        key={di}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          placeholder="Day (e.g. Monday)"
-                                          className="w-32"
-                                          value={d.day || ""}
-                                          onChange={(e) => {
-                                            const days = [
-                                              ...(lib.library_hours?.days ||
-                                                []),
-                                            ];
-                                            days[di] = {
-                                              ...days[di],
-                                              day: e.target.value,
-                                            };
-                                            updateLib({
-                                              library_hours: {
-                                                ...(lib.library_hours || {}),
-                                                days,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Input
-                                          placeholder="Working hours (e.g. 09:00 AM - 04:30 PM)"
-                                          value={d.working_hours || ""}
-                                          onChange={(e) => {
-                                            const days = [
-                                              ...(lib.library_hours?.days ||
-                                                []),
-                                            ];
-                                            days[di] = {
-                                              ...days[di],
-                                              working_hours: e.target.value,
-                                            };
-                                            updateLib({
-                                              library_hours: {
-                                                ...(lib.library_hours || {}),
-                                                days,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Input
-                                          placeholder="Transaction hours (blank if closed)"
-                                          value={d.transaction_hours || ""}
-                                          onChange={(e) => {
-                                            const days = [
-                                              ...(lib.library_hours?.days ||
-                                                []),
-                                            ];
-                                            days[di] = {
-                                              ...days[di],
-                                              transaction_hours: e.target.value,
-                                            };
-                                            updateLib({
-                                              library_hours: {
-                                                ...(lib.library_hours || {}),
-                                                days,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            const days = (
-                                              lib.library_hours?.days || []
-                                            ).filter(
-                                              (_: any, i: number) => i !== di,
-                                            );
-                                            updateLib({
-                                              library_hours: {
-                                                ...(lib.library_hours || {}),
-                                                days,
-                                              },
-                                            });
-                                          }}
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-
-                                {/* Facilities */}
-                                <div className="border-t pt-4 space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <Label className="font-bold text-sm">
-                                      Facilities
-                                    </Label>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        updateLib({
-                                          facilities: {
-                                            ...(lib.facilities || {}),
-                                            items: [
-                                              ...(lib.facilities?.items || []),
-                                              { name: "", image: "" },
-                                            ],
-                                          },
-                                        })
-                                      }
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" /> Add
-                                      Facility
-                                    </Button>
-                                  </div>
-                                  {(lib.facilities?.items || []).map(
-                                    (fac: any, fci: number) => (
-                                      <div
-                                        key={fci}
-                                        className="flex gap-2 items-center"
-                                      >
-                                        <Input
-                                          placeholder="Facility name (e.g. Quiet Study Areas)"
-                                          value={fac.name || ""}
-                                          onChange={(e) => {
-                                            const items = [
-                                              ...(lib.facilities?.items || []),
-                                            ];
-                                            items[fci] = {
-                                              ...items[fci],
-                                              name: e.target.value,
-                                            };
-                                            updateLib({
-                                              facilities: {
-                                                ...(lib.facilities || {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        />
-                                        <div className="flex gap-2 w-full">
-                                          <Input
-                                            placeholder="Image URL"
-                                            value={fac.image || ""}
-                                            onChange={(e) => {
-                                              const items = [
-                                                ...(lib.facilities?.items ||
-                                                  []),
-                                              ];
-                                              items[fci] = {
-                                                ...items[fci],
-                                                image: e.target.value,
-                                              };
-                                              updateLib({
-                                                facilities: {
-                                                  ...(lib.facilities || {}),
-                                                  items,
-                                                },
+                                          <div>
+                                            <p className="text-sm font-semibold">
+                                              {library.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {library.type === "central"
+                                                ? "Central Library"
+                                                : (library.department?.name ??
+                                                  "Department Library")}
+                                            </p>
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                              const linkedIds: string[] =
+                                                getActiveTabPayload()
+                                                  .libraryIds || [];
+                                              updateActiveTabPayload({
+                                                libraryIds: linkedIds.filter(
+                                                  (id) => id !== libraryId,
+                                                ),
                                               });
                                             }}
-                                          />
-                                          <Input
-                                            type="file"
-                                            accept="image/jpeg,image/png,image/webp"
-                                            disabled={
-                                              uploadingField ===
-                                              `library_facility_${fci}`
-                                            }
-                                            onChange={(e) =>
-                                              handleCourseFieldUpload(
-                                                e.target.files?.[0] ?? null,
-                                                `library_facility_${fci}`,
-                                                `library/facility_${fci}`,
-                                                (url) => {
-                                                  const items = [
-                                                    ...(lib.facilities?.items ||
-                                                      []),
-                                                  ];
-                                                  items[fci] = {
-                                                    ...items[fci],
-                                                    image: url,
-                                                  };
-                                                  updateLib({
-                                                    facilities: {
-                                                      ...(lib.facilities || {}),
-                                                      items,
-                                                    },
-                                                  });
-                                                },
-                                              )
-                                            }
-                                          />
+                                          >
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                          </Button>
                                         </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => {
-                                            const items = (
-                                              lib.facilities?.items || []
-                                            ).filter(
-                                              (_: any, i: number) => i !== fci,
-                                            );
-                                            updateLib({
-                                              facilities: {
-                                                ...(lib.facilities || {}),
-                                                items,
-                                              },
-                                            });
-                                          }}
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    ),
+                                      );
+                                    },
                                   )}
                                 </div>
-                              </div>
-                            );
-                          })()}
+                              )}
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
 
@@ -12458,6 +12066,12 @@ export default function SetupAcademicsPage() {
                                 <Plus className="h-4 w-4 mr-1" /> Add
                               </Button>
                             </div>
+                            <PercentTotalBadge
+                              items={
+                                getActiveTabPayload().age_distribution?.items ||
+                                []
+                              }
+                            />
                             {(
                               getActiveTabPayload().age_distribution?.items ||
                               []
@@ -12489,6 +12103,7 @@ export default function SetupAcademicsPage() {
                                   }}
                                 />
                                 <Input
+                                  type="number"
                                   className="w-24"
                                   placeholder="% e.g. 64"
                                   value={item.percent ?? ""}
@@ -12563,6 +12178,12 @@ export default function SetupAcademicsPage() {
                                 <Plus className="h-4 w-4 mr-1" /> Add
                               </Button>
                             </div>
+                            <PercentTotalBadge
+                              items={
+                                getActiveTabPayload().gender_diversity
+                                  ?.segments || []
+                              }
+                            />
                             {(
                               getActiveTabPayload().gender_diversity
                                 ?.segments || []
@@ -12594,6 +12215,7 @@ export default function SetupAcademicsPage() {
                                   }}
                                 />
                                 <Input
+                                  type="number"
                                   className="w-24"
                                   placeholder="% e.g. 60"
                                   value={seg.percent ?? ""}
@@ -12673,6 +12295,12 @@ export default function SetupAcademicsPage() {
                                 <Plus className="h-4 w-4 mr-1" /> Add
                               </Button>
                             </div>
+                            <PercentTotalBadge
+                              items={
+                                getActiveTabPayload().work_experience?.items ||
+                                []
+                              }
+                            />
                             {(
                               getActiveTabPayload().work_experience?.items || []
                             ).map((item: any, idx: number) => {
@@ -12707,6 +12335,7 @@ export default function SetupAcademicsPage() {
                                       }
                                     />
                                     <Input
+                                      type="number"
                                       className="w-24"
                                       placeholder="% e.g. 45"
                                       value={item.percent ?? ""}
@@ -12785,6 +12414,12 @@ export default function SetupAcademicsPage() {
                                 <Plus className="h-4 w-4 mr-1" /> Add Country
                               </Button>
                             </div>
+                            <PercentTotalBadge
+                              items={
+                                getActiveTabPayload().international_presence
+                                  ?.items || []
+                              }
+                            />
                             {(
                               getActiveTabPayload().international_presence
                                 ?.items || []
@@ -12816,6 +12451,7 @@ export default function SetupAcademicsPage() {
                                   }}
                                 />
                                 <Input
+                                  type="number"
                                   className="w-24"
                                   placeholder="% e.g. 42"
                                   value={item.percent ?? ""}
@@ -12912,6 +12548,12 @@ export default function SetupAcademicsPage() {
                                 <Plus className="h-4 w-4 mr-1" /> Add State
                               </Button>
                             </div>
+                            <PercentTotalBadge
+                              items={
+                                getActiveTabPayload().national_presence
+                                  ?.items || []
+                              }
+                            />
                             {(
                               getActiveTabPayload().national_presence?.items ||
                               []
@@ -12943,6 +12585,7 @@ export default function SetupAcademicsPage() {
                                   }}
                                 />
                                 <Input
+                                  type="number"
                                   className="w-24"
                                   placeholder="% e.g. 42"
                                   value={item.percent ?? ""}

@@ -465,6 +465,48 @@ export interface HostelDto {
   addonServices?: HostelAddonServiceDto[];
 }
 
+export interface LibraryStatDto {
+  value?: string;
+  label?: string;
+}
+
+export interface LibraryResourceItemDto {
+  name?: string;
+  count?: string;
+}
+
+export interface LibraryHoursDayDto {
+  day?: string;
+  working_hours_start?: string;
+  working_hours_end?: string;
+  transaction_hours_start?: string;
+  transaction_hours_end?: string;
+}
+
+export interface LibraryFacilityItemDto {
+  name?: string;
+  image?: string;
+}
+
+export interface LibraryDto {
+  id: string;
+  collegeId: string;
+  departmentId: string | null;
+  type: "central" | "department";
+  name: string;
+  stats: LibraryStatDto[];
+  availableResources: { items: LibraryResourceItemDto[] };
+  libraryHours: { days: LibraryHoursDayDto[] };
+  facilities: { items: LibraryFacilityItemDto[] };
+  status: string;
+  department?: { id: string; name: string } | null;
+}
+
+export interface DepartmentDto {
+  id: string;
+  name: string;
+}
+
 export interface CommuteStopDto {
   id: string;
   stopName: string;
@@ -520,6 +562,33 @@ export async function updateCollegeHostel(
   data: any,
 ): Promise<HostelDto> {
   return api.patch<HostelDto>(`/api/v1/college-admin/hostels/${id}`, data);
+}
+
+export async function getCollegeLibraries(): Promise<LibraryDto[]> {
+  return api.get<LibraryDto[]>("/api/v1/college-admin/libraries");
+}
+
+export async function createCollegeLibrary(data: any): Promise<LibraryDto> {
+  return api.post<LibraryDto>("/api/v1/college-admin/libraries", data);
+}
+
+export async function getCollegeLibraryDetail(id: string): Promise<LibraryDto> {
+  return api.get<LibraryDto>(`/api/v1/college-admin/libraries/${id}`);
+}
+
+export async function updateCollegeLibrary(
+  id: string,
+  data: any,
+): Promise<LibraryDto> {
+  return api.patch<LibraryDto>(`/api/v1/college-admin/libraries/${id}`, data);
+}
+
+export async function deleteCollegeLibrary(id: string): Promise<void> {
+  return api.delete(`/api/v1/college-admin/libraries/${id}`);
+}
+
+export async function getCollegeDepartments(): Promise<DepartmentDto[]> {
+  return api.get<DepartmentDto[]>("/api/v1/college-admin/lookups/departments");
 }
 
 export async function createHostelRoomType(

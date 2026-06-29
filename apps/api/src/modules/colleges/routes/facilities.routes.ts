@@ -112,6 +112,42 @@ router.delete(
   CollegeFacilitiesController.deleteAddonService,
 );
 
+// ── Libraries ─────────────────────────────────────────────────────────────────
+router.get(
+  "/libraries",
+  ...staffAuth,
+  authorizeAny("library.view", "library.manage"),
+  CollegeFacilitiesController.listLibraries,
+);
+
+router.post(
+  "/libraries",
+  ...staffWriteAuth,
+  authorize("library.manage"),
+  CollegeFacilitiesController.createLibrary,
+);
+
+router.get(
+  "/libraries/:id",
+  ...staffAuth,
+  authorizeAny("library.view", "library.manage"),
+  CollegeFacilitiesController.getLibraryDetail,
+);
+
+router.patch(
+  "/libraries/:id",
+  ...staffWriteAuth,
+  authorize("library.manage"),
+  CollegeFacilitiesController.updateLibrary,
+);
+
+router.delete(
+  "/libraries/:id",
+  ...staffWriteAuth,
+  authorize("library.manage"),
+  CollegeFacilitiesController.deleteLibrary,
+);
+
 // ── Commute / Bus Fleet ───────────────────────────────────────────────────────
 router.get(
   "/commute",

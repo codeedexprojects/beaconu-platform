@@ -1,0 +1,15 @@
+meta {
+  name: Get College Library Detail
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/libraries/{{libraryId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns full library detail for public display. No auth required.
+}

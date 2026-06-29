@@ -14,6 +14,8 @@ const SYSTEM_COLLEGE_ROLES = [
       "academics.manage",
       "hostel.view",
       "hostel.manage",
+      "library.view",
+      "library.manage",
       "commute.view",
       "commute.manage",
       "staff.view",

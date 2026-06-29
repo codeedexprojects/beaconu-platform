@@ -1,6 +1,7 @@
 import { NotFoundError, ValidationError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
 import { HostelService } from "./hostel.service";
+import { LibraryService } from "./library.service";
 import {
   COURSE_SETUP_TAB_IDS,
   TAB_FIELD_MAP,
@@ -1108,36 +1109,6 @@ function transformPublicStudentHousingTab(
   };
 }
 
-function transformPublicLibraryTab(raw: Record<string, unknown>) {
-  const libraries = Array.isArray(raw.libraries)
-    ? (raw.libraries as Record<string, unknown>[]).map((lib) => {
-        const ar = asRecord(lib.available_resources);
-        const lh = asRecord(lib.library_hours);
-        const fac = asRecord(lib.facilities);
-        return {
-          ...lib,
-          available_resources: {
-            title: asText(ar.title) || "Available Resources",
-            items: Array.isArray(ar.items) ? ar.items : [],
-          },
-          library_hours: {
-            title: asText(lh.title) || "Library Hours",
-            icon:
-              asText(lh.icon) ||
-              "https://cdn.iconsdb.example.com/icons/clock-orange.png",
-            days: Array.isArray(lh.days) ? lh.days : [],
-          },
-          facilities: {
-            title: asText(fac.title) || "Facilities",
-            items: Array.isArray(fac.items) ? fac.items : [],
-          },
-        };
-      })
-    : [];
-
-  return { tab: "library", libraries };
-}
-
 function transformPublicFacultyTab(raw: unknown): unknown[] {
   if (Array.isArray(raw)) return raw;
   const record = asRecord(raw);
@@ -1530,6 +1501,73 @@ function stripIfNoContent(
   const rest = { ...row };
   defaultOnlyFields.forEach((field) => delete rest[field]);
   return rest;
+}
+
+// Rejects a percent value that isn't a real number (e.g. pasted text) and
+// returns it as a number; blank/missing counts as 0 for summation purposes.
+function assertValidPercent(value: unknown, context: string): number {
+  if (value === undefined || value === null || value === "") return 0;
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) {
+    throw new ValidationError(`${context}: percent must be a valid number`);
+  }
+  return num;
+}
+
+function validatePercentTotal(
+  items: Record<string, unknown>[],
+  context: string,
+): void {
+  if (items.length === 0) return;
+  const total = items.reduce(
+    (sum, item, idx) =>
+      sum + assertValidPercent(item.percent, `${context} #${idx + 1}`),
+    0,
+  );
+  if (Math.abs(total - 100) > 0.01) {
+    throw new ValidationError(
+      `${context}: percentages must total 100 (currently ${total})`,
+    );
+  }
+}
+
+function validateDemoGraphicsTabData(data: unknown): void {
+  const record = asRecord(data);
+  validatePercentTotal(
+    asArray(asRecord(record.age_distribution).items) as Record<
+      string,
+      unknown
+    >[],
+    "Age Distribution",
+  );
+  validatePercentTotal(
+    asArray(asRecord(record.gender_diversity).segments) as Record<
+      string,
+      unknown
+    >[],
+    "Gender Diversity",
+  );
+  validatePercentTotal(
+    asArray(asRecord(record.work_experience).items) as Record<
+      string,
+      unknown
+    >[],
+    "Work Experience",
+  );
+  validatePercentTotal(
+    asArray(asRecord(record.international_presence).items) as Record<
+      string,
+      unknown
+    >[],
+    "International Presence",
+  );
+  validatePercentTotal(
+    asArray(asRecord(record.national_presence).items) as Record<
+      string,
+      unknown
+    >[],
+    "National Presence",
+  );
 }
 
 // `marks`, `percent`, `grade_point`, `total_questions`, and `attempt` all
@@ -2461,6 +2499,9 @@ export class CourseTabsService {
       if (tabName === "exam_policy") {
         validateExamPolicyTabData(data);
       }
+      if (tabName === "demo_graphics") {
+        validateDemoGraphicsTabData(data);
+      }
 
       const updated = await CourseTabsRepository.updateCourseSetupTabData(
         courseId,
@@ -2840,11 +2881,21 @@ export class CourseTabsService {
       }
 
       if (tabName === "library") {
+        const raw = asRecord(rawData);
+        const libraryIds = Array.isArray(raw.libraryIds)
+          ? (raw.libraryIds as unknown[]).filter(
+              (id): id is string => typeof id === "string",
+            )
+          : [];
+        const libraries = await LibraryService.getPublicLibrariesByIds(
+          course.collegeId,
+          libraryIds,
+        );
         return {
           sectionName: tabName,
           sectionId: tabName,
           sectionKey: tabName,
-          data: transformPublicLibraryTab(asRecord(rawData)),
+          data: { tab: "library", libraries },
         };
       }
 

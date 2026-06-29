@@ -42,6 +42,14 @@ const COLLEGE_PERMISSIONS = [
       "Manage hostel room inventories, pricing plans, and bed allocations",
   },
   {
+    code: "library.view",
+    description: "View college and department libraries",
+  },
+  {
+    code: "library.manage",
+    description: "Create, update, and manage college and department libraries",
+  },
+  {
     code: "commute.view",
     description: "View commute routes, fleet, and transit logs",
   },

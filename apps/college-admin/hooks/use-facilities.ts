@@ -16,6 +16,11 @@ import {
   createHostelAddonService,
   updateHostelAddonService,
   deleteHostelAddonService,
+  getCollegeLibraries,
+  createCollegeLibrary,
+  updateCollegeLibrary,
+  deleteCollegeLibrary,
+  getCollegeDepartments,
   getCollegeCommuteRoutes,
   createCollegeCommuteRoute,
   deleteCollegeCommuteRoute,
@@ -225,6 +230,65 @@ export function useDeleteHostelAddonService() {
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
+  });
+}
+
+export function useCollegeLibraries(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.libraries,
+    queryFn: getCollegeLibraries,
+    enabled,
+  });
+}
+
+export function useCreateCollegeLibrary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => createCollegeLibrary(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.libraries });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateCollegeLibrary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      updateCollegeLibrary(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.libraries });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteCollegeLibrary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCollegeLibrary(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.libraries });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCollegeDepartments(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.lookupsDepartments,
+    queryFn: getCollegeDepartments,
+    enabled,
   });
 }
 

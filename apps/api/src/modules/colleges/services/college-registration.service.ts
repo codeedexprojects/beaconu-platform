@@ -849,6 +849,12 @@ export class CollegeRegistrationService {
     return CollegeRegistrationRepository.getStreamsWithDisciplines();
   }
 
+  static async getDepartments(collegeId: string) {
+    return CollegeRegistrationRepository.getActiveDepartmentsByCollegeId(
+      collegeId,
+    );
+  }
+
   static async getStudyLevels() {
     return CollegeRegistrationRepository.getStudyLevels();
   }
