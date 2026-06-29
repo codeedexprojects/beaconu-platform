@@ -135,41 +135,50 @@ function buildRoomsAndTypes(hostel: Record<string, unknown>) {
   };
 }
 
-function buildHostelFees(hostel: Record<string, unknown>) {
-  const roomTypes = asArray(hostel.roomTypes);
-  const primaryRoom = roomTypes[0] ?? {};
+function buildRoomTypeFeePlans(room: Record<string, unknown>) {
   const additionalCharges = [
-    `Admission: ₹${formatAmount(primaryRoom.admissionFee) || "0"}`,
-    `Deposit: ₹${formatAmount(primaryRoom.securityDeposit) || "0"}`,
+    `Admission: ₹${formatAmount(room.admissionFee) || "0"}`,
+    `Deposit: ₹${formatAmount(room.securityDeposit) || "0"}`,
   ];
 
   const plans: Record<string, unknown>[] = [];
-  if (primaryRoom.annualPlanPrice != null) {
+  if (room.annualPlanPrice != null) {
     plans.push({
       name: "Annual Plan",
       subtitle: "Best Value",
-      price: formatAmount(primaryRoom.annualPlanPrice),
+      price: formatAmount(room.annualPlanPrice),
       currency: "₹",
       period: "Per Year",
       additional_charges: additionalCharges,
     });
   }
-  if (primaryRoom.monthlyPlanPrice != null) {
+  if (room.monthlyPlanPrice != null) {
     plans.push({
       name: "Monthly Plan",
       subtitle: "Pay as you go",
-      price: formatAmount(primaryRoom.monthlyPlanPrice),
+      price: formatAmount(room.monthlyPlanPrice),
       currency: "₹",
       period: "Per Month",
       additional_charges: additionalCharges,
     });
   }
 
+  return plans;
+}
+
+function buildHostelFees(hostel: Record<string, unknown>) {
+  const roomTypes = asArray(hostel.roomTypes);
+
+  const roomTypeFees = roomTypes.map((room) => ({
+    room_type_id: asText(room.id),
+    room_type_label: asText(room.name),
+    plans: buildRoomTypeFeePlans(room),
+  }));
+
   return {
     step_number: 1,
     title: "HOSTEL FEES",
-    room_type_label: asText(primaryRoom.name),
-    plans,
+    room_types: roomTypeFees,
     note: "Security deposit is fully refundable at the end of the academic year subject to room condition.",
   };
 }

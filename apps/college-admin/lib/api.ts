@@ -8,10 +8,17 @@ interface RequestOptions extends RequestInit {
   suppress401Redirect?: boolean;
 }
 
+export interface ApiErrorDetail {
+  path: string;
+  message: string;
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly code?: string,
+    public readonly details?: ApiErrorDetail[],
   ) {
     super(message);
     this.name = "ApiError";
@@ -103,6 +110,8 @@ class ApiClient {
       throw new ApiError(
         response.status,
         result?.message || "Something went wrong. Please try again.",
+        result?.error?.code,
+        result?.error?.details,
       );
     }
 
@@ -134,6 +143,10 @@ export const api = new ApiClient();
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.details?.length) {
+      return error.details.map((detail) => detail.message).join(" ");
+    }
+
     switch (error.status) {
       case 401:
         return error.message || "Session expired. Please sign in again.";
