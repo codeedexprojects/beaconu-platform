@@ -189,9 +189,56 @@ const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
   0: ["name", "hostelType", "totalBeds", "distanceFromCampus"],
   1: ["roomTypes"],
   2: ["messPlans", "addonServices"],
-  3: ["amenities", "rules"],
-  4: ["wardenName", "wardenPhone", "wardenEmail", "nearbyEssentials"],
+  3: ["tags", "amenities", "rules"],
+  4: [
+    "wardenName",
+    "wardenPhone",
+    "wardenEmail",
+    "safetyFeatures",
+    "nearbyEssentials",
+  ],
 };
+
+const FIELD_TO_STEP: Partial<Record<keyof HostelFormData, number>> = {
+  name: 0,
+  hostelType: 0,
+  isOnCampus: 0,
+  distanceFromCampus: 0,
+  description: 0,
+  coverImageUrl: 0,
+  totalBeds: 0,
+  badge: 0,
+  safetyTier: 0,
+  roomTypes: 1,
+  messPlans: 2,
+  addonServices: 2,
+  tags: 3,
+  amenities: 3,
+  rules: 3,
+  wardenName: 4,
+  wardenPhone: 4,
+  wardenWhatsapp: 4,
+  wardenEmail: 4,
+  wardenPhoto: 4,
+  wardenDesignation: 4,
+  safetyFeatures: 4,
+  address: 4,
+  addressLine2: 4,
+  latitude: 4,
+  longitude: 4,
+  mapLink: 4,
+  mapThumbnail: 4,
+  transportDescription: 4,
+  busStopNote: 4,
+  nearbyEssentials: 4,
+};
+
+function getErroredRootFields(errors: Record<string, unknown>): string[] {
+  return Object.keys(errors).filter((key) => {
+    const value = errors[key];
+    return value !== null && value !== undefined && typeof value === "object";
+  });
+}
 
 export default function HostelsPage() {
   const user = useAuthStore((state) => state.user);
@@ -388,12 +435,12 @@ export default function HostelsPage() {
   };
 
   const onInvalid = (formErrors: Record<string, unknown>) => {
-    const erroredFields = Object.keys(formErrors);
-    const firstInvalidStep = STEPS.findIndex((_, idx) =>
-      (STEP_FIELDS[idx] ?? []).some((field) => erroredFields.includes(field)),
-    );
-    if (firstInvalidStep !== -1) {
-      setStep(firstInvalidStep);
+    const erroredFields = getErroredRootFields(formErrors);
+    const invalidSteps = erroredFields
+      .map((field) => FIELD_TO_STEP[field as keyof HostelFormData])
+      .filter((stepIndex): stepIndex is number => stepIndex !== undefined);
+    if (invalidSteps.length > 0) {
+      setStep(Math.min(...invalidSteps));
     }
     toast.error("Please fix the highlighted fields before submitting");
   };
@@ -1113,6 +1160,11 @@ export default function HostelsPage() {
                             className="h-8 text-xs"
                             {...register(`addonServices.${idx}.planLabel`)}
                           />
+                          {errors.addonServices?.[idx]?.planLabel && (
+                            <p className="text-xs text-destructive">
+                              {errors.addonServices[idx]?.planLabel?.message}
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Price</Label>
@@ -1170,11 +1222,18 @@ export default function HostelsPage() {
                   <div className="flex flex-wrap gap-2">
                     {tagsArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-center gap-1">
-                        <Input
-                          placeholder="Label (e.g. On-Campus)"
-                          className="h-8 text-xs w-32"
-                          {...register(`tags.${idx}.label`)}
-                        />
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Label (e.g. On-Campus)"
+                            className="h-8 text-xs w-32"
+                            {...register(`tags.${idx}.label`)}
+                          />
+                          {errors.tags?.[idx]?.label && (
+                            <p className="text-xs text-destructive">
+                              {errors.tags[idx]?.label?.message}
+                            </p>
+                          )}
+                        </div>
                         <Input
                           placeholder="Color (e.g. blue)"
                           className="h-8 text-xs w-24"
@@ -1211,11 +1270,18 @@ export default function HostelsPage() {
                   <div className="flex flex-wrap gap-2">
                     {amenitiesArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-center gap-1">
-                        <Input
-                          placeholder="e.g. High Speed Wi-Fi"
-                          className="h-8 text-xs w-44"
-                          {...register(`amenities.${idx}.name`)}
-                        />
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="e.g. High Speed Wi-Fi"
+                            className="h-8 text-xs w-44"
+                            {...register(`amenities.${idx}.name`)}
+                          />
+                          {errors.amenities?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.amenities[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => amenitiesArray.remove(idx)}
@@ -1259,16 +1325,30 @@ export default function HostelsPage() {
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
-                        <Input
-                          placeholder="Rule title (e.g. Curfew Time)"
-                          className="h-8 text-xs"
-                          {...register(`rules.${idx}.title`)}
-                        />
-                        <Input
-                          placeholder="Description"
-                          className="h-8 text-xs"
-                          {...register(`rules.${idx}.description`)}
-                        />
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Rule title (e.g. Curfew Time)"
+                            className="h-8 text-xs"
+                            {...register(`rules.${idx}.title`)}
+                          />
+                          {errors.rules?.[idx]?.title && (
+                            <p className="text-xs text-destructive">
+                              {errors.rules[idx]?.title?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Description"
+                            className="h-8 text-xs"
+                            {...register(`rules.${idx}.description`)}
+                          />
+                          {errors.rules?.[idx]?.description && (
+                            <p className="text-xs text-destructive">
+                              {errors.rules[idx]?.description?.message}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1381,11 +1461,18 @@ export default function HostelsPage() {
                     <div className="flex flex-wrap gap-2">
                       {safetyFeaturesArray.fields.map((field, idx) => (
                         <div key={field.id} className="flex items-center gap-1">
-                          <Input
-                            placeholder="e.g. CCTV Coverage"
-                            className="h-8 text-xs w-44"
-                            {...register(`safetyFeatures.${idx}.label`)}
-                          />
+                          <div className="space-y-0.5">
+                            <Input
+                              placeholder="e.g. CCTV Coverage"
+                              className="h-8 text-xs w-44"
+                              {...register(`safetyFeatures.${idx}.label`)}
+                            />
+                            {errors.safetyFeatures?.[idx]?.label && (
+                              <p className="text-xs text-destructive">
+                                {errors.safetyFeatures[idx]?.label?.message}
+                              </p>
+                            )}
+                          </div>
                           <button
                             type="button"
                             onClick={() => safetyFeaturesArray.remove(idx)}
@@ -1482,16 +1569,30 @@ export default function HostelsPage() {
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
-                        <Input
-                          placeholder="Type (e.g. Hospital)"
-                          className="h-8 text-xs"
-                          {...register(`nearbyEssentials.${idx}.type`)}
-                        />
-                        <Input
-                          placeholder="Name"
-                          className="h-8 text-xs"
-                          {...register(`nearbyEssentials.${idx}.name`)}
-                        />
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Type (e.g. Hospital)"
+                            className="h-8 text-xs"
+                            {...register(`nearbyEssentials.${idx}.type`)}
+                          />
+                          {errors.nearbyEssentials?.[idx]?.type && (
+                            <p className="text-xs text-destructive">
+                              {errors.nearbyEssentials[idx]?.type?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Name"
+                            className="h-8 text-xs"
+                            {...register(`nearbyEssentials.${idx}.name`)}
+                          />
+                          {errors.nearbyEssentials?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.nearbyEssentials[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
                         <Input
                           placeholder="Distance (e.g. 3.0 km)"
                           className="h-8 text-xs"
