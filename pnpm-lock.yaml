@@ -361,6 +361,9 @@ importers:
       "@beaconu/validation":
         specifier: workspace:*
         version: link:../../packages/validation
+      "@hookform/resolvers":
+        specifier: ^3.10.0
+        version: 3.10.0(react-hook-form@7.75.0(react@19.2.5))
       "@radix-ui/react-slot":
         specifier: ^1.1.2
         version: 1.2.4(@types/react@19.2.14)(react@19.2.5)
@@ -388,6 +391,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
+      react-hook-form:
+        specifier: ^7.54.2
+        version: 7.75.0(react@19.2.5)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -400,6 +406,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.9.0))
+      zod:
+        specifier: ^4.4.2
+        version: 4.4.2
       zustand:
         specifier: ^5.0.3
         version: 5.0.13(@types/react@19.2.14)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))

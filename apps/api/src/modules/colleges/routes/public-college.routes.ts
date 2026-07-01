@@ -3,6 +3,7 @@ import { PublicCollegeController } from "../controllers/public-college.controlle
 import { CourseTabsController } from "../controllers/course-tabs.controller";
 import { PublicHostelController } from "../controllers/public-hostel.controller";
 import { PublicLibraryController } from "../controllers/public-library.controller";
+import { PublicCampusVisitController } from "@/modules/campus-visits/controllers/public.controller";
 
 const router: Router = Router();
 
@@ -63,6 +64,10 @@ router.get(
   PublicLibraryController.listPublicLibraries,
 );
 
+router.get(
+  "/:collegeId/ambassadors",
+  PublicCampusVisitController.listAmbassadors,
+);
 router.get("/:id", PublicCollegeController.getCollegeById);
 router.get("/by-slug/:slug", PublicCollegeController.getCollegeBySlug);
 router.get("/by-slug/:slug/courses", PublicCollegeController.getCollegeCourses);

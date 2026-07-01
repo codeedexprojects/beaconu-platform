@@ -1,0 +1,23 @@
+meta {
+  name: Reschedule Campus Visit
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/campus-visits/{{campusVisitId}}/reschedule
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "proposed_date": "2026-08-20",
+    "proposed_time": "14:00"
+  }
+}
