@@ -21,4 +21,5 @@ export const QUERY_KEYS = {
   ambassadors: ["college-ambassadors"] as const,
   campusVisits: (filters?: object) =>
     filters ? ["college-campus-visits", filters] : ["college-campus-visits"],
+  campusVisit: (id: string) => ["college-campus-visits", id] as const,
 } as const;

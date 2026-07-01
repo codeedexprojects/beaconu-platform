@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "@/shared/errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { CampusVisitsRepository } from "../repositories/campus-visits.repository";
 import type {
   CreateCampusVisitInput,
@@ -13,6 +13,15 @@ const CANCELLABLE_STATUSES = ["pending", "confirmed"];
 
 export class CampusVisitsService {
   static async book(data: CreateCampusVisitInput, studentId: string) {
+    const existing = await CampusVisitsRepository.findActiveVisitOnDate(
+      studentId,
+      data.proposed_date,
+    );
+    if (existing) {
+      throw new ConflictError(
+        "You already have a visit scheduled on this date. Please choose a different date.",
+      );
+    }
     return CampusVisitsRepository.create({ ...data, studentId });
   }
 
@@ -28,6 +37,17 @@ export class CampusVisitsService {
     if (!RESCHEDULABLE_STATUSES.includes(visit.status)) {
       throw new ForbiddenError(
         `Cannot reschedule a visit with status '${visit.status}'`,
+      );
+    }
+
+    const conflicting = await CampusVisitsRepository.findActiveVisitOnDate(
+      visit.studentId,
+      data.proposed_date,
+      visitId,
+    );
+    if (conflicting) {
+      throw new ConflictError(
+        "You already have another visit scheduled on that date. Please choose a different date.",
       );
     }
 

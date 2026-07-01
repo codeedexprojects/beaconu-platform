@@ -1,5 +1,9 @@
 import { api } from "@/lib/api";
-import type { CampusVisitListItem, PaginationMeta } from "@beaconu/types";
+import type {
+  CampusVisit,
+  CampusVisitListItem,
+  PaginationMeta,
+} from "@beaconu/types";
 
 export interface AdminVisitFilters {
   status?: string;
@@ -20,4 +24,8 @@ export async function getCollegeCampusVisits(
   if (filters.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
   return api.get(`/api/v1/college-admin/campus-visits${qs ? `?${qs}` : ""}`);
+}
+
+export async function getCollegeCampusVisit(id: string): Promise<CampusVisit> {
+  return api.get(`/api/v1/college-admin/campus-visits/${id}`);
 }
