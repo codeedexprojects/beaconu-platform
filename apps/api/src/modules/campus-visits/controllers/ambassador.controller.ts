@@ -21,19 +21,27 @@ export class AmbassadorCampusVisitController {
   }
 
   static async accept(req: Request, res: Response) {
-    await CampusVisitsService.accept(req.params.visitId, req.userId!);
+    await CampusVisitsService.accept(req.params.visitId as string, req.userId!);
     return res.json(ApiResponse.success("Campus visit accepted", null));
   }
 
   static async reject(req: Request, res: Response) {
     const data = rejectCampusVisitSchema.parse(req.body);
-    await CampusVisitsService.reject(req.params.visitId, req.userId!, data);
+    await CampusVisitsService.reject(
+      req.params.visitId as string,
+      req.userId!,
+      data,
+    );
     return res.json(ApiResponse.success("Campus visit rejected", null));
   }
 
   static async reassign(req: Request, res: Response) {
     const data = reassignCampusVisitSchema.parse(req.body);
-    await CampusVisitsService.reassign(req.params.visitId, req.userId!, data);
+    await CampusVisitsService.reassign(
+      req.params.visitId as string,
+      req.userId!,
+      data,
+    );
     return res.json(ApiResponse.success("Campus visit reassigned", null));
   }
 }

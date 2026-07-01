@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { Calendar, Clock, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCollegeCampusVisits } from "@/hooks/use-campus-visits";
+import { useAmbassadors } from "@/hooks/use-ambassadors";
 import type { CampusVisitStatus } from "@beaconu/types";
 
 const STATUS_LABELS: Record<CampusVisitStatus, string> = {
@@ -47,20 +47,43 @@ const STATUS_VARIANTS: Record<
   rejected: "destructive",
 };
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export default function CampusVisitsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [ambassadorFilter, setAmbassadorFilter] = useState("");
   const [page, setPage] = useState(1);
+
+  const { data: ambassadorsData } = useAmbassadors();
+  const ambassadors = ambassadorsData ?? [];
 
   const { data, isLoading } = useCollegeCampusVisits({
     status: statusFilter || undefined,
     date: dateFilter || undefined,
+    ambassador_id: ambassadorFilter || undefined,
     page,
     limit: 20,
   });
 
   const visits = data?.visits ?? [];
   const meta = data?.meta;
+
+  const hasFilters = statusFilter || dateFilter || ambassadorFilter;
+
+  function clearFilters() {
+    setStatusFilter("");
+    setDateFilter("");
+    setAmbassadorFilter("");
+    setPage(1);
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -80,19 +103,19 @@ export default function CampusVisitsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-wrap gap-3">
         <Select
           value={statusFilter}
           onValueChange={(v) => {
-            setStatusFilter(v);
+            setStatusFilter(v === "all" ? "" : v);
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
@@ -109,19 +132,32 @@ export default function CampusVisitsPage() {
             setDateFilter(e.target.value);
             setPage(1);
           }}
-          className="w-full sm:w-44"
+          className="w-44"
         />
 
-        {(statusFilter || dateFilter) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setStatusFilter("");
-              setDateFilter("");
-              setPage(1);
-            }}
-          >
+        <Select
+          value={ambassadorFilter}
+          onValueChange={(v) => {
+            setAmbassadorFilter(v === "all" ? "" : v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="All ambassadors" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All ambassadors</SelectItem>
+            {ambassadors.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.fullName}
+                {a.campusCode ? ` · ${a.campusCode}` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
             Clear filters
           </Button>
         )}
@@ -135,7 +171,7 @@ export default function CampusVisitsPage() {
               <TableHead>Visitor</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Ambassador</TableHead>
-              <TableHead>Date & Time</TableHead>
+              <TableHead>Date &amp; Time</TableHead>
               <TableHead>Guests</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -166,9 +202,11 @@ export default function CampusVisitsPage() {
                   <TableCell>
                     <div>
                       <p className="font-medium">{visit.studentName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {visit.reasonForVisit}
-                      </p>
+                      {visit.reasonForVisit && (
+                        <p className="max-w-xs truncate text-xs text-muted-foreground">
+                          {visit.reasonForVisit}
+                        </p>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -182,7 +220,16 @@ export default function CampusVisitsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {visit.ambassador?.fullName ?? (
+                    {visit.ambassador ? (
+                      <div>
+                        <p>{visit.ambassador.fullName}</p>
+                        {visit.ambassador.campusCode && (
+                          <p className="text-xs text-muted-foreground">
+                            {visit.ambassador.campusCode}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
                       <span className="text-muted-foreground">Unassigned</span>
                     )}
                   </TableCell>
@@ -190,7 +237,7 @@ export default function CampusVisitsPage() {
                     <div className="flex flex-col gap-1 text-sm">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3 text-muted-foreground" />
-                        {format(new Date(visit.proposedDate), "dd MMM yyyy")}
+                        {formatDate(visit.proposedDate)}
                       </span>
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-3 w-3" />

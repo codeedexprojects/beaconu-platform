@@ -48,7 +48,9 @@ export class BlinkRepository {
         blinkRoleId: data.roleId,
         status: data.status,
         avatarUrl: data.avatarUrl ?? null,
-        profileMetadata: data.profileMetadata ?? {},
+        profileMetadata: data.profileMetadata as
+          | Record<string, string | number | boolean | null>
+          | undefined,
       },
       include: { blinkRole: true },
     });

@@ -14,13 +14,11 @@ export class StudentCampusVisitController {
   static async book(req: Request, res: Response) {
     const data = createCampusVisitSchema.parse(req.body);
     const visit = await CampusVisitsService.book(data, req.userId!);
-    return res
-      .status(201)
-      .json(
-        ApiResponse.success("Campus visit booked successfully", {
-          id: visit.id,
-        }),
-      );
+    return res.status(201).json(
+      ApiResponse.success("Campus visit booked successfully", {
+        id: visit.id,
+      }),
+    );
   }
 
   static async list(req: Request, res: Response) {
@@ -32,14 +30,20 @@ export class StudentCampusVisitController {
   }
 
   static async getOne(req: Request, res: Response) {
-    const visit = await CampusVisitsQuery.getDetail(req.params.visitId);
+    const visit = await CampusVisitsQuery.getDetail(
+      req.params.visitId as string,
+    );
     if (!visit) throw new NotFoundError("Campus visit not found");
     return res.json(ApiResponse.success("Campus visit fetched", visit));
   }
 
   static async reschedule(req: Request, res: Response) {
     const data = rescheduleCampusVisitSchema.parse(req.body);
-    await CampusVisitsService.reschedule(req.params.visitId, req.userId!, data);
+    await CampusVisitsService.reschedule(
+      req.params.visitId as string,
+      req.userId!,
+      data,
+    );
     return res.json(
       ApiResponse.success("Campus visit rescheduled successfully", null),
     );
@@ -47,7 +51,11 @@ export class StudentCampusVisitController {
 
   static async cancel(req: Request, res: Response) {
     const data = cancelCampusVisitSchema.parse(req.body);
-    await CampusVisitsService.cancel(req.params.visitId, req.userId!, data);
+    await CampusVisitsService.cancel(
+      req.params.visitId as string,
+      req.userId!,
+      data,
+    );
     return res.json(
       ApiResponse.success("Campus visit cancelled successfully", null),
     );
