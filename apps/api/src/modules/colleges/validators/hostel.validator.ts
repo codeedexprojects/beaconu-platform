@@ -82,6 +82,24 @@ export const updateHostelSchema = z.object({
           thumbnail: z.string().trim().url().optional(),
         })
         .optional(),
+      utilities: z
+        .array(
+          z.object({
+            category: z.string().trim().min(1),
+            provider: z.string().trim().min(1),
+            notes: z.string().trim().optional(),
+          }),
+        )
+        .optional(),
+      transit: z
+        .array(
+          z.object({
+            route: z.string().trim().min(1),
+            stop: z.string().trim().optional(),
+            timing: z.string().trim().optional(),
+          }),
+        )
+        .optional(),
     })
     .optional(),
 });

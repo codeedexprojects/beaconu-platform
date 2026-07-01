@@ -10,6 +10,7 @@ export interface HostelRoomTypeDto {
   admissionFee?: number;
   securityDeposit?: number;
   description?: string | null;
+  photos?: string[];
 }
 
 export interface HostelMessPlanDto {
@@ -38,11 +39,23 @@ export interface HostelAddonServiceDto {
   notes: string | null;
 }
 
+export interface HostelSafetyFeature {
+  label: string;
+}
+
 export interface HostelWardenInfo {
   name?: string;
   phone?: string;
   whatsapp?: string;
   email?: string;
+  photo?: string;
+  designation?: string;
+  safetyFeatures?: HostelSafetyFeature[];
+}
+
+export interface HostelTag {
+  label: string;
+  color?: string;
 }
 
 export interface HostelAmenity {
@@ -61,9 +74,38 @@ export interface HostelNearbyEssential {
   distance: string;
 }
 
+export interface HostelUtility {
+  category: string;
+  provider: string;
+  notes?: string;
+}
+
+export interface HostelTransitRoute {
+  route: string;
+  stop?: string;
+  timing?: string;
+}
+
+export interface HostelCollegeTransport {
+  description?: string;
+  busStopNote?: string;
+}
+
+export interface HostelMapInfo {
+  thumbnail?: string;
+}
+
 export interface HostelLocationInfo {
   address?: string;
+  addressLine2?: string;
+  latitude?: number;
+  longitude?: number;
+  mapLink?: string;
+  map?: HostelMapInfo;
   nearbyEssentials?: HostelNearbyEssential[];
+  collegeTransport?: HostelCollegeTransport;
+  utilities?: HostelUtility[];
+  transit?: HostelTransitRoute[];
 }
 
 export interface HostelSummaryDto {
@@ -82,6 +124,9 @@ export interface HostelSummaryDto {
 export interface HostelDetailDto extends HostelSummaryDto {
   description: string | null;
   gallery: string[];
+  tags?: HostelTag[];
+  badge?: string | null;
+  safetyTier?: string | null;
   wardenInfo: HostelWardenInfo;
   amenities: HostelAmenity[];
   rules: HostelRule[];

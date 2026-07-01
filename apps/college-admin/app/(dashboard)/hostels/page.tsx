@@ -99,6 +99,18 @@ const safetyFeatureFormSchema = z.object({
   label: z.string().trim().min(1, "Required"),
 });
 
+const utilityFormSchema = z.object({
+  category: z.string().trim().min(1, "Required"),
+  provider: z.string().trim().min(1, "Required"),
+  notes: z.string().trim().optional().default(""),
+});
+
+const transitFormSchema = z.object({
+  route: z.string().trim().min(1, "Required"),
+  stop: z.string().trim().optional().default(""),
+  timing: z.string().trim().optional().default(""),
+});
+
 const hostelSchema = z.object({
   name: z.string().trim().min(2, "Hostel name is required").max(255),
   hostelType: z.enum(["boys", "girls", "co-ed"]),
@@ -132,6 +144,8 @@ const hostelSchema = z.object({
   amenities: z.array(amenityFormSchema),
   rules: z.array(ruleFormSchema),
   nearbyEssentials: z.array(essentialFormSchema),
+  utilities: z.array(utilityFormSchema).optional().default([]),
+  transit: z.array(transitFormSchema).optional().default([]),
 });
 
 type HostelFormData = z.infer<typeof hostelSchema>;
@@ -167,6 +181,8 @@ const DEFAULT_VALUES: HostelFormData = {
   amenities: [],
   rules: [],
   nearbyEssentials: [],
+  utilities: [],
+  transit: [],
 };
 
 const STEPS = [
@@ -223,6 +239,8 @@ const FIELD_TO_STEP: Partial<Record<keyof HostelFormData, number>> = {
   transportDescription: 4,
   busStopNote: 4,
   nearbyEssentials: 4,
+  utilities: 4,
+  transit: 4,
 };
 
 function getErroredRootFields(errors: Record<string, unknown>): string[] {
@@ -294,6 +312,8 @@ export default function HostelsPage() {
   const amenitiesArray = useFieldArray({ control, name: "amenities" });
   const rulesArray = useFieldArray({ control, name: "rules" });
   const essentialsArray = useFieldArray({ control, name: "nearbyEssentials" });
+  const utilitiesArray = useFieldArray({ control, name: "utilities" });
+  const transitArray = useFieldArray({ control, name: "transit" });
   const safetyFeaturesArray = useFieldArray({
     control,
     name: "safetyFeatures",
@@ -409,6 +429,20 @@ export default function HostelsPage() {
               }
             : undefined,
         nearbyEssentials: data.nearbyEssentials,
+        utilities: data.utilities?.length
+          ? data.utilities.map((u) => ({
+              category: u.category,
+              provider: u.provider,
+              notes: u.notes || undefined,
+            }))
+          : undefined,
+        transit: data.transit?.length
+          ? data.transit.map((t) => ({
+              route: t.route,
+              stop: t.stop || undefined,
+              timing: t.timing || undefined,
+            }))
+          : undefined,
       },
     };
 
@@ -1539,6 +1573,145 @@ export default function HostelsPage() {
                           placeholder="Distance (e.g. 3.0 km)"
                           className="h-8 text-xs"
                           {...register(`nearbyEssentials.${idx}.distance`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Utilities */}
+                <div className="space-y-2 border-t pt-3 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs text-muted-foreground">
+                      Utilities
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        utilitiesArray.append({
+                          category: "",
+                          provider: "",
+                          notes: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Utility
+                    </Button>
+                  </div>
+                  {utilitiesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2 text-center border rounded-lg border-dashed">
+                      No utilities yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {utilitiesArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => utilitiesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Category (e.g. Electricity)"
+                            className="h-8 text-xs"
+                            {...register(`utilities.${idx}.category`)}
+                          />
+                          {errors.utilities?.[idx]?.category && (
+                            <p className="text-xs text-destructive">
+                              {errors.utilities[idx]?.category?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Provider (e.g. MSEB)"
+                            className="h-8 text-xs"
+                            {...register(`utilities.${idx}.provider`)}
+                          />
+                          {errors.utilities?.[idx]?.provider && (
+                            <p className="text-xs text-destructive">
+                              {errors.utilities[idx]?.provider?.message}
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="Notes (optional)"
+                          className="h-8 text-xs"
+                          {...register(`utilities.${idx}.notes`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transit */}
+                <div className="space-y-2 border-t pt-3 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs text-muted-foreground">
+                      Transit Routes
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        transitArray.append({
+                          route: "",
+                          stop: "",
+                          timing: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Route
+                    </Button>
+                  </div>
+                  {transitArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2 text-center border rounded-lg border-dashed">
+                      No transit routes yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {transitArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => transitArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Route (e.g. Bus 47 to Campus)"
+                            className="h-8 text-xs"
+                            {...register(`transit.${idx}.route`)}
+                          />
+                          {errors.transit?.[idx]?.route && (
+                            <p className="text-xs text-destructive">
+                              {errors.transit[idx]?.route?.message}
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="Stop (e.g. Gate 2)"
+                          className="h-8 text-xs"
+                          {...register(`transit.${idx}.stop`)}
+                        />
+                        <Input
+                          placeholder="Timing (e.g. Every 20 min)"
+                          className="h-8 text-xs"
+                          {...register(`transit.${idx}.timing`)}
                         />
                       </div>
                     ))}
