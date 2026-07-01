@@ -273,13 +273,18 @@ function buildAddonSection(
   const addons = asArray(hostel.addonServices).filter(
     (service) => service.serviceType === serviceType,
   );
-  const service = addons[0];
-  const plans = service ? asArray(service.plans as unknown) : [];
+  const allPlans = addons.flatMap((service) =>
+    asArray(service.plans as unknown),
+  );
+  const note = addons
+    .map((s) => asText(s.notes))
+    .filter(Boolean)
+    .join(". ");
 
   return {
     step_number: stepNumber,
     title,
-    plans: plans.map((plan) => {
+    plans: allPlans.map((plan) => {
       const label = asText(plan.label) || asText(plan.name);
       return {
         name: label,
@@ -292,7 +297,7 @@ function buildAddonSection(
         ),
       };
     }),
-    note: service ? asText(service.notes) : "",
+    note,
   };
 }
 
@@ -300,21 +305,26 @@ function buildParkingCharges(hostel: Record<string, unknown>) {
   const addons = asArray(hostel.addonServices).filter(
     (service) => service.serviceType === "parking",
   );
-  const service = addons[0];
-  const plans = service ? asArray(service.plans as unknown) : [];
+  const allPlans = addons.flatMap((service) =>
+    asArray(service.plans as unknown),
+  );
+  const note = addons
+    .map((s) => asText(s.notes))
+    .filter(Boolean)
+    .join(". ");
 
   return {
     step_number: 5,
     title: "PARKING CHARGES",
-    items: plans.map((plan) => ({
+    items: allPlans.map((plan) => ({
       name: asText(plan.label) || asText(plan.name),
       price: formatAmount(plan.price),
       currency: "₹",
-      period: inferPeriod(asText(plan.label)),
+      period: inferPeriod(asText(plan.label) || asText(plan.name)),
     })),
-    note: service
-      ? asText(service.notes)
-      : "Parking slots are limited and allotted on a first-come, first-served basis.",
+    note:
+      note ||
+      "Parking slots are limited and allotted on a first-come, first-served basis.",
   };
 }
 
@@ -420,6 +430,23 @@ function buildLocationAndAccess(hostel: Record<string, unknown>) {
   const collegeTransport = asRecord(locationInfo.collegeTransport);
   const mapInfo = asRecord(locationInfo.map);
 
+  const transitItems = asArray(locationInfo.transit as unknown);
+  const transitCategories = transitItems.map((t) => ({
+    title: asText(t.route),
+    details: [
+      {
+        name: asText(t.stop) || asText(t.route),
+        distance: asText(t.timing),
+      },
+    ],
+  }));
+
+  const utilityItems = asArray(locationInfo.utilities as unknown);
+  const utilityCategories = utilityItems.map((u) => ({
+    title: asText(u.category),
+    details: [{ name: asText(u.provider), distance: asText(u.notes) }],
+  }));
+
   return {
     title: "Location & Access",
     tabs: {
@@ -428,18 +455,16 @@ function buildLocationAndAccess(hostel: Record<string, unknown>) {
     },
     types: [
       { type: "Essentials", categories: essentialsCategories },
-      { type: "Transit", categories: [] },
-      { type: "Utility", categories: [] },
+      { type: "Transit", categories: transitCategories },
+      { type: "Utility", categories: utilityCategories },
     ],
     map: {
       thumbnail: asText(mapInfo.thumbnail),
       address: {
-        icon: "https://cdn.iconsdb.example.com/icons/location-pin-gray.png",
         line1: asText(locationInfo.address),
         line2: asText(locationInfo.addressLine2),
       },
       college_transport: {
-        icon: "https://cdn.iconsdb.example.com/icons/bus-gray.png",
         title: "College Transport",
         description: asText(collegeTransport.description),
         bus_stop_note: asText(collegeTransport.busStopNote),
@@ -468,6 +493,7 @@ function buildPublicHostelDetail(
     laundry_charges: buildAddonSection(hostel, "laundry", 3, "LAUNDRY CHARGES"),
     gym_packages: buildAddonSection(hostel, "gym", 4, "GYM PACKAGES"),
     parking_charges: buildParkingCharges(hostel),
+    other_charges: buildAddonSection(hostel, "other", 6, "OTHER CHARGES"),
     safety_and_warden: buildSafetyAndWarden(hostel),
     amenities: buildAmenities(hostel),
     rules: buildRules(hostel),

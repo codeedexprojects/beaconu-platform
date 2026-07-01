@@ -85,6 +85,12 @@ export default function HostelDetailPage() {
   const [nearbyEssentials, setNearbyEssentials] = useState<
     { type: string; name: string; distance: string }[]
   >([]);
+  const [utilities, setUtilities] = useState<
+    { category: string; provider: string; notes?: string }[]
+  >([]);
+  const [transit, setTransit] = useState<
+    { route: string; stop?: string; timing?: string }[]
+  >([]);
 
   useEffect(() => {
     if (!hostel) return;
@@ -125,6 +131,8 @@ export default function HostelDetailPage() {
     );
     setBusStopNote(hostel.locationInfo?.collegeTransport?.busStopNote || "");
     setNearbyEssentials(hostel.locationInfo?.nearbyEssentials || []);
+    setUtilities(hostel.locationInfo?.utilities || []);
+    setTransit(hostel.locationInfo?.transit || []);
   }, [hostel?.id]);
 
   const [newTagLabel, setNewTagLabel] = useState("");
@@ -136,6 +144,12 @@ export default function HostelDetailPage() {
   const [newEssentialType, setNewEssentialType] = useState("");
   const [newEssentialName, setNewEssentialName] = useState("");
   const [newEssentialDistance, setNewEssentialDistance] = useState("");
+  const [newUtilityCategory, setNewUtilityCategory] = useState("");
+  const [newUtilityProvider, setNewUtilityProvider] = useState("");
+  const [newUtilityNotes, setNewUtilityNotes] = useState("");
+  const [newTransitRoute, setNewTransitRoute] = useState("");
+  const [newTransitStop, setNewTransitStop] = useState("");
+  const [newTransitTiming, setNewTransitTiming] = useState("");
 
   // Room types
   const { mutate: createRoomType, isPending: isAddingRoomType } =
@@ -259,6 +273,8 @@ export default function HostelDetailPage() {
                   }
                 : undefined,
             nearbyEssentials,
+            utilities: utilities.length ? utilities : undefined,
+            transit: transit.length ? transit : undefined,
           },
         },
       },
@@ -319,6 +335,42 @@ export default function HostelDetailPage() {
     setNewEssentialType("");
     setNewEssentialName("");
     setNewEssentialDistance("");
+  };
+
+  const addUtility = () => {
+    if (!newUtilityCategory.trim() || !newUtilityProvider.trim()) {
+      toast.error("Please fill in utility category and provider");
+      return;
+    }
+    setUtilities([
+      ...utilities,
+      {
+        category: newUtilityCategory.trim(),
+        provider: newUtilityProvider.trim(),
+        notes: newUtilityNotes.trim() || undefined,
+      },
+    ]);
+    setNewUtilityCategory("");
+    setNewUtilityProvider("");
+    setNewUtilityNotes("");
+  };
+
+  const addTransitRoute = () => {
+    if (!newTransitRoute.trim()) {
+      toast.error("Please fill in route name");
+      return;
+    }
+    setTransit([
+      ...transit,
+      {
+        route: newTransitRoute.trim(),
+        stop: newTransitStop.trim() || undefined,
+        timing: newTransitTiming.trim() || undefined,
+      },
+    ]);
+    setNewTransitRoute("");
+    setNewTransitStop("");
+    setNewTransitTiming("");
   };
 
   const addRoomType = () => {
@@ -861,6 +913,137 @@ export default function HostelDetailPage() {
             >
               <Plus className="h-4 w-4 mr-1" /> Add Nearby Essential
             </Button>
+          </div>
+
+          {/* Utilities */}
+          <div className="space-y-2 border-t pt-4 border-border/40">
+            <Label className="text-sm font-semibold">Utilities</Label>
+            {utilities.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No utilities added yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {utilities.map((u, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold break-words">
+                        {u.category}
+                      </p>
+                      <p className="text-xs text-muted-foreground break-words">
+                        {u.provider}
+                        {u.notes ? ` — ${u.notes}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() =>
+                        setUtilities(utilities.filter((_, i) => i !== idx))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
+              <Input
+                placeholder="Category (e.g. Electricity)"
+                value={newUtilityCategory}
+                onChange={(e) => setNewUtilityCategory(e.target.value)}
+              />
+              <Input
+                placeholder="Provider (e.g. MSEB)"
+                value={newUtilityProvider}
+                onChange={(e) => setNewUtilityProvider(e.target.value)}
+              />
+              <Input
+                placeholder="Notes (optional)"
+                value={newUtilityNotes}
+                onChange={(e) => setNewUtilityNotes(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="sm:col-span-3"
+                onClick={addUtility}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Utility
+              </Button>
+            </div>
+          </div>
+
+          {/* Transit */}
+          <div className="space-y-2 border-t pt-4 border-border/40">
+            <Label className="text-sm font-semibold">Transit Routes</Label>
+            {transit.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No transit routes added yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {transit.map((t, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold break-words">
+                        {t.route}
+                      </p>
+                      <p className="text-xs text-muted-foreground break-words">
+                        {[t.stop, t.timing].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() =>
+                        setTransit(transit.filter((_, i) => i !== idx))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
+              <Input
+                placeholder="Route (e.g. Bus 47 to Campus)"
+                value={newTransitRoute}
+                onChange={(e) => setNewTransitRoute(e.target.value)}
+              />
+              <Input
+                placeholder="Stop (e.g. Gate 2)"
+                value={newTransitStop}
+                onChange={(e) => setNewTransitStop(e.target.value)}
+              />
+              <Input
+                placeholder="Timing (e.g. Every 20 min)"
+                value={newTransitTiming}
+                onChange={(e) => setNewTransitTiming(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="sm:col-span-3"
+                onClick={addTransitRoute}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Transit Route
+              </Button>
+            </div>
           </div>
 
           <div className="flex justify-end pt-4 border-t">

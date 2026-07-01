@@ -402,6 +402,18 @@ export interface HostelMapDto {
   thumbnail?: string;
 }
 
+export interface HostelUtilityDto {
+  category: string;
+  provider: string;
+  notes?: string;
+}
+
+export interface HostelTransitRouteDto {
+  route: string;
+  stop?: string;
+  timing?: string;
+}
+
 export interface HostelLocationInfoDto {
   address?: string;
   addressLine2?: string;
@@ -411,6 +423,8 @@ export interface HostelLocationInfoDto {
   nearbyEssentials?: HostelNearbyEssentialDto[];
   collegeTransport?: HostelCollegeTransportDto;
   map?: HostelMapDto;
+  utilities?: HostelUtilityDto[];
+  transit?: HostelTransitRouteDto[];
 }
 
 export interface HostelMessPlanDto {
