@@ -13,3 +13,4 @@ export * from "./events";
 export * from "./counselling";
 export * from "./blink";
 export * from "./hostels";
+export * from "./campus-visits";

@@ -12,6 +12,7 @@ import studentProfileRoutes from "@/modules/students/routes/student.routes";
 import studentUploadRoutes from "@/modules/upload/routes/student.routes";
 import studentCounsellingRoutes from "@/modules/counselling/routes/student.routes";
 import studentEventRoutes from "@/modules/events/routes/student.routes";
+import studentCampusVisitRoutes from "@/modules/campus-visits/routes/student.routes";
 
 const router: Router = Router();
 
@@ -29,6 +30,7 @@ router.use(
   studentEventRoutes,
 );
 router.use("/uploads", studentUploadRoutes);
+router.use("/campus-visits", studentCampusVisitRoutes);
 router.use("/", studentProfileRoutes);
 
 export default router;

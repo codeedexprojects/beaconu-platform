@@ -151,29 +151,38 @@ model BlinkWalletTransaction {
 }
 
 model CampusVisit {
-  id                 String   @id @default(dbgenerated("('CMV-'::text || (nextval('campus_visit_seq'::regclass))::text)"))
-  collegeId          String   @map("college_id")
-  studentId          String   @map("student_id")
-  ambassadorId       String   @map("ambassador_id")
-  studentName        String   @map("student_name") @db.VarChar(255)
-  courseInterest     String?  @map("course_interest") @db.VarChar(255)
-  department         String?  @db.VarChar(255)
-  proposedDate       DateTime @map("proposed_date") @db.Date
-  proposedTime       DateTime @map("proposed_time") @db.Time
-  status             String   @default("pending") @db.VarChar(20)
-  reassignedFrom     String?  @map("reassigned_from")
-  reassignmentReason String?  @map("reassignment_reason") @db.Text
-  visitNotes         String?  @map("visit_notes") @db.Text
-  visitRating        Int?     @map("visit_rating") @db.SmallInt
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                      String    @id @default(dbgenerated("('CMV-'::text || (nextval('campus_visit_seq'::regclass))::text)"))
+  collegeId               String    @map("college_id")
+  studentId               String    @map("student_id")
+  ambassadorId            String?   @map("ambassador_id")
+  studentName             String    @map("student_name") @db.VarChar(255)
+  email                   String?   @db.VarChar(255)
+  phoneNumber             String?   @map("phone_number") @db.VarChar(20)
+  courseInterest          String?   @map("course_interest") @db.VarChar(255)
+  department              String?   @db.VarChar(255)
+  additionalVisitorsCount Int       @default(0) @map("additional_visitors_count") @db.SmallInt
+  guests                  Json?
+  reasonForVisit          String?   @map("reason_for_visit") @db.Text
+  proposedDate            DateTime  @map("proposed_date") @db.Date
+  proposedTime            DateTime  @map("proposed_time") @db.Time
+  status                  String    @default("pending") @db.VarChar(20)
+  reassignedFrom          String?   @map("reassigned_from")
+  reassignmentReason      String?   @map("reassignment_reason") @db.Text
+  cancellationReason      String?   @map("cancellation_reason") @db.Text
+  rejectionReason         String?   @map("rejection_reason") @db.Text
+  previousProposedDate    DateTime? @map("previous_proposed_date") @db.Date
+  previousProposedTime    DateTime? @map("previous_proposed_time") @db.Time
+  rescheduledAt           DateTime? @map("rescheduled_at") @db.Timestamptz
+  visitNotes              String?   @map("visit_notes") @db.Text
+  visitRating             Int?      @map("visit_rating") @db.SmallInt
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college            College    @relation(fields: [collegeId], references: [id])
   student            Student    @relation(fields: [studentId], references: [id])
-  ambassador         BlinkUser  @relation("AmbassadorVisits", fields: [ambassadorId], references: [id])
+  ambassador         BlinkUser? @relation("AmbassadorVisits", fields: [ambassadorId], references: [id])
   previousAmbassador BlinkUser? @relation("ReassignedFrom", fields: [reassignedFrom], references: [id])
-  // staffCreator: creation tracked via audit_logs; ambassadorId FK is to blink_users
 
   @@index([collegeId], name: "idx_visits_college")
   @@index([ambassadorId], name: "idx_visits_ambassador")

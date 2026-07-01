@@ -1,0 +1,22 @@
+meta {
+  name: Reject Campus Visit (Ambassador)
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/ambassador/campus-visits/{{campusVisitId}}/reject
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "rejection_reason": "Unavailable on the requested date"
+  }
+}
