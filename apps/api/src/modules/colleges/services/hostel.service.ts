@@ -167,7 +167,7 @@ function buildRoomsAndTypes(hostel: Record<string, unknown>) {
         id: asText(room.id),
         name: asText(room.name),
         description: asText(room.description),
-        view_photos_cta: { label: "View Photos" },
+        photos: asGalleryUrls(room.photos),
         availability_label: availabilityLabel,
         price: formatAmount(room.monthlyPlanPrice ?? room.annualPlanPrice),
         currency: "₹",
@@ -482,10 +482,12 @@ function buildPublicHostelDetail(
   hostel: Record<string, unknown>,
   reviews: Record<string, unknown>[],
 ) {
+  const coverImage = asText(hostel.coverImageUrl);
+
   return {
     id: asText(hostel.id),
     tab: "student_housing",
-    gallery: resolveHostelGallery(hostel),
+    gallery: coverImage ? [coverImage] : [],
     header: buildHeader(hostel),
     rooms_and_types: buildRoomsAndTypes(hostel),
     hostel_fees: buildHostelFees(hostel),
