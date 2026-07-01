@@ -26,6 +26,10 @@ export const registerAmbassadorSchema = z
     college_id: z.string(),
     linked_student_id: z.string().optional(),
     ambassador_type: z.enum(["student", "teacher"]),
+    avatar_url: z.string().trim().url().optional().nullable(),
+    course: z.string().trim().optional(),
+    district: z.string().trim().optional(),
+    state: z.string().trim().optional(),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
   })
@@ -189,4 +193,6 @@ export interface BlinkUserCreateData {
   ambassadorType?: string;
   campusCode?: string;
   createdByStaffId?: string;
+  avatarUrl?: string | null;
+  profileMetadata?: Record<string, unknown>;
 }

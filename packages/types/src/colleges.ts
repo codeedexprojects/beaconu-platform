@@ -16,6 +16,9 @@ export interface CampusAmbassadorDto {
   campusCode: string | null;
   status: string;
   createdAt: string;
+  course: string | null;
+  district: string | null;
+  state: string | null;
 }
 
 export interface CreateCampusAmbassadorInput {
@@ -25,6 +28,10 @@ export interface CreateCampusAmbassadorInput {
   college_id: string;
   linked_student_id?: string;
   ambassador_type: "student" | "teacher";
+  avatar_url?: string | null;
+  course?: string;
+  district?: string;
+  state?: string;
   password: string;
   confirm_password: string;
 }

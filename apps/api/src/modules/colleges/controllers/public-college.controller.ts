@@ -264,7 +264,10 @@ export class PublicCollegeController {
     const isFeeSort =
       sortOption === "fees_high_to_low" || sortOption === "fees_low_to_high";
 
-    const filters: any = { status: "active" };
+    const filters: any = {
+      status: "active",
+      settings: { path: ["isListed"], equals: true },
+    };
 
     if (universityId) {
       filters.universityId = universityId as string;
