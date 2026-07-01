@@ -47,6 +47,8 @@ export class BlinkRepository {
         createdByStaffId: data.createdByStaffId,
         blinkRoleId: data.roleId,
         status: data.status,
+        avatarUrl: data.avatarUrl ?? null,
+        profileMetadata: data.profileMetadata ?? {},
       },
       include: { blinkRole: true },
     });
@@ -269,6 +271,7 @@ export class BlinkRepository {
         campusCode: true,
         status: true,
         createdAt: true,
+        profileMetadata: true,
       },
       orderBy: { createdAt: "desc" },
     });

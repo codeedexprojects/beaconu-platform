@@ -68,6 +68,7 @@ export interface UpdateCollegeProfileInput {
   registrationTabs?: string[];
   leadId?: string | null;
   addressFromLead?: boolean;
+  settings?: Record<string, unknown>;
 }
 
 export interface CreateCampusInput {

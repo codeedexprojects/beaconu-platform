@@ -86,6 +86,11 @@ export class BlinkService {
       BlinkRepository.getNextAmbassadorCode(),
     ]);
 
+    const profileMetadata: Record<string, unknown> = {};
+    if (data.course) profileMetadata.course = data.course;
+    if (data.district) profileMetadata.district = data.district;
+    if (data.state) profileMetadata.state = data.state;
+
     const user = await BlinkRepository.create({
       fullName: data.full_name,
       email: normalizedEmail,
@@ -94,6 +99,10 @@ export class BlinkService {
       collegeId: data.college_id,
       linkedStudentId: data.linked_student_id,
       ambassadorType: data.ambassador_type,
+      avatarUrl: data.avatar_url ?? null,
+      profileMetadata: Object.keys(profileMetadata).length
+        ? profileMetadata
+        : undefined,
       campusCode,
       createdByStaffId,
       roleId: role.id,
@@ -469,17 +478,28 @@ export class BlinkService {
   static async listCampusAmbassadors(collegeId: string) {
     const ambassadors =
       await BlinkRepository.findAmbassadorsByCollege(collegeId);
-    return ambassadors.map((a) => ({
-      id: a.id,
-      fullName: a.fullName,
-      email: a.email,
-      phoneNumber: a.phoneNumber,
-      avatarUrl: a.avatarUrl,
-      ambassadorType: a.ambassadorType,
-      campusCode: a.campusCode,
-      status: a.status,
-      createdAt: a.createdAt,
-    }));
+    return ambassadors.map((a) => {
+      const meta =
+        a.profileMetadata &&
+        typeof a.profileMetadata === "object" &&
+        !Array.isArray(a.profileMetadata)
+          ? (a.profileMetadata as Record<string, unknown>)
+          : {};
+      return {
+        id: a.id,
+        fullName: a.fullName,
+        email: a.email,
+        phoneNumber: a.phoneNumber,
+        avatarUrl: a.avatarUrl,
+        ambassadorType: a.ambassadorType,
+        campusCode: a.campusCode,
+        status: a.status,
+        createdAt: a.createdAt,
+        course: typeof meta.course === "string" ? meta.course : null,
+        district: typeof meta.district === "string" ? meta.district : null,
+        state: typeof meta.state === "string" ? meta.state : null,
+      };
+    });
   }
 
   static async listPublicCampusAmbassadors(collegeId: string) {

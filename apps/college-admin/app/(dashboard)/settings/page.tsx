@@ -13,6 +13,8 @@ import {
   Network,
   Copy,
   Building2,
+  Globe,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,6 +29,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { IndiaStateSelect } from "@/components/ui/india-state-select";
 import { IndiaDistrictSelect } from "@/components/ui/india-district-select";
 import { useAuthStore } from "@/store";
@@ -37,6 +47,7 @@ import {
   useMyInstitutionGroup,
   useJoinInstitutionGroup,
 } from "@/hooks/use-colleges";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 
 const settingsFormSchema = z.object({
   name: z.string().trim().min(2, "College name is required"),
@@ -66,6 +77,12 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [listingModal, setListingModal] = useState<{
+    open: boolean;
+    next: boolean;
+  }>({ open: false, next: false });
   const canEditProfile =
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("profile.edit") ?? false);
@@ -86,6 +103,37 @@ export default function SettingsPage() {
 
   const logoUrl = watch("logoUrl");
   const coverImageUrl = watch("coverImageUrl");
+
+  async function handleLogoUpload(file: File | null) {
+    if (!file) return;
+    try {
+      setUploadingLogo(true);
+      const url = await uploadCollegeAdminFile(file, "settings/logo");
+      setValue("logoUrl", url, { shouldDirty: true, shouldValidate: true });
+      toast.success("Logo uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  async function handleCoverUpload(file: File | null) {
+    if (!file) return;
+    try {
+      setUploadingCover(true);
+      const url = await uploadCollegeAdminFile(file, "settings/cover");
+      setValue("coverImageUrl", url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      toast.success("Cover image uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingCover(false);
+    }
+  }
 
   useEffect(() => {
     if (profile) {
@@ -171,7 +219,27 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="settings-logo-url">Logo URL</Label>
+                  <Label>Logo</Label>
+                  <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={uploadingLogo}
+                      onChange={(e) =>
+                        handleLogoUpload(e.target.files?.[0] ?? null)
+                      }
+                    />
+                    {uploadingLogo ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4" />
+                    )}
+                    {uploadingLogo ? "Uploading…" : "Upload logo file"}
+                  </label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Or paste a URL directly:
+                  </p>
                   <Input
                     id="settings-logo-url"
                     placeholder="https://example.com/logo.png"
@@ -216,7 +284,27 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="settings-cover-url">Cover Image URL</Label>
+                  <Label>Cover Image</Label>
+                  <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={uploadingCover}
+                      onChange={(e) =>
+                        handleCoverUpload(e.target.files?.[0] ?? null)
+                      }
+                    />
+                    {uploadingCover ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4" />
+                    )}
+                    {uploadingCover ? "Uploading…" : "Upload cover file"}
+                  </label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Or paste a URL directly:
+                  </p>
                   <Input
                     id="settings-cover-url"
                     placeholder="https://example.com/cover.png"
@@ -417,6 +505,130 @@ export default function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      {/* Public Listing Toggle */}
+      {(() => {
+        const isListed = profile?.settings?.isListed === true;
+        return (
+          <>
+            <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base font-bold flex items-center gap-2">
+                      {isListed ? (
+                        <Globe className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      Public Listing
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      {isListed
+                        ? "Your college is visible to students on the platform."
+                        : "Your college is hidden from public discovery."}
+                    </CardDescription>
+                  </div>
+
+                  {/* Toggle */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isListed}
+                    disabled={!canEditProfile || isPending}
+                    onClick={() =>
+                      setListingModal({ open: true, next: !isListed })
+                    }
+                    className={[
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "disabled:cursor-not-allowed disabled:opacity-50",
+                      isListed ? "bg-emerald-500" : "bg-input",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200",
+                        isListed ? "translate-x-5" : "translate-x-0",
+                      ].join(" ")}
+                    />
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className={[
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                    isListed
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                      : "bg-muted text-muted-foreground",
+                  ].join(" ")}
+                >
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                  {isListed
+                    ? "Students can find and view your college profile."
+                    : "College profile is unlisted. Toggle on to go live."}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Confirmation modal */}
+            <Dialog
+              open={listingModal.open}
+              onOpenChange={(open) => setListingModal((s) => ({ ...s, open }))}
+            >
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>
+                    {listingModal.next
+                      ? "Make college publicly listed?"
+                      : "Remove from public listing?"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {listingModal.next
+                      ? "Your college will become visible to students on the BeaconU platform. You can unpublish at any time."
+                      : "Your college will be hidden from public discovery. Existing links and direct URLs will return not found."}
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setListingModal({ open: false, next: false })
+                    }
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant={listingModal.next ? "default" : "destructive"}
+                    disabled={isPending}
+                    onClick={() => {
+                      updateProfile(
+                        { settings: { isListed: listingModal.next } },
+                        {
+                          onSuccess: () => {
+                            toast.success(
+                              listingModal.next
+                                ? "College is now publicly listed."
+                                : "College removed from public listing.",
+                            );
+                            setListingModal({ open: false, next: false });
+                          },
+                        },
+                      );
+                    }}
+                  >
+                    {isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {listingModal.next ? "Yes, publish" : "Yes, unpublish"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        );
+      })()}
     </div>
   );
 }
