@@ -53,7 +53,7 @@ export class BlinkService {
         email: user.email,
         fullName: user.fullName,
         status: user.status,
-        roleSlug: user.blinkRole.slug,
+        roleSlug: role.slug,
       },
       message:
         "Registration submitted. Your account is pending approval by your admin.",
@@ -116,7 +116,7 @@ export class BlinkService {
       collegeId: user.collegeId,
       ambassadorType: user.ambassadorType,
       campusCode: user.campusCode,
-      roleSlug: user.blinkRole.slug,
+      roleSlug: role.slug,
       status: user.status,
     };
   }
