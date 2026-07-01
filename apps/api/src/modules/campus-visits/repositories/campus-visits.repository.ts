@@ -50,6 +50,21 @@ export class CampusVisitsRepository {
     });
   }
 
+  static async findActiveVisitOnDate(
+    studentId: string,
+    date: string,
+    excludeVisitId?: string,
+  ) {
+    return prisma.campusVisit.findFirst({
+      where: {
+        studentId,
+        proposedDate: new Date(date + "T00:00:00Z"),
+        status: { in: ["pending", "confirmed"] },
+        ...(excludeVisitId ? { id: { not: excludeVisitId } } : {}),
+      },
+    });
+  }
+
   static async reschedule(
     id: string,
     proposedDate: Date,

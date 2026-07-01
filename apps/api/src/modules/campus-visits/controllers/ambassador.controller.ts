@@ -16,7 +16,10 @@ export class AmbassadorCampusVisitController {
       filters,
     );
     return res.json(
-      ApiResponse.success("Campus visits fetched", result.visits, result.meta),
+      ApiResponse.success("Campus visits fetched", {
+        visits: result.visits,
+        meta: result.meta,
+      }),
     );
   }
 
