@@ -13,6 +13,7 @@ import {
   RegisterAmbassadorInput,
   UpdateEmployeeStatusInput,
   UpdateAmbassadorInput,
+  AmbassadorProfileUpdateInput,
   BankDetailsInput,
   WithdrawalInput,
   UpdateServiceChargeInput,
@@ -49,6 +50,59 @@ function mapAmbassadorDto(a: {
     course: typeof meta.course === "string" ? meta.course : null,
     district: typeof meta.district === "string" ? meta.district : null,
     state: typeof meta.state === "string" ? meta.state : null,
+  };
+}
+
+function mapAmbassadorSelfProfile(
+  a: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string | null;
+    avatarUrl: string | null;
+    ambassadorType: string | null;
+    campusCode: string | null;
+    collegeId: string | null;
+    status: string;
+    createdAt: Date;
+    profileMetadata: unknown;
+  },
+  wallet: { bankDetails: unknown } | null,
+) {
+  const meta =
+    a.profileMetadata &&
+    typeof a.profileMetadata === "object" &&
+    !Array.isArray(a.profileMetadata)
+      ? (a.profileMetadata as Record<string, unknown>)
+      : {};
+
+  const rawBankDetails = wallet?.bankDetails as Record<string, string> | null;
+  const bankDetails =
+    rawBankDetails && Object.keys(rawBankDetails).length > 0
+      ? (rawBankDetails as {
+          accountHolderName: string;
+          accountNumber: string;
+          ifsc: string;
+          bankName: string;
+        })
+      : null;
+
+  return {
+    id: a.id,
+    fullName: a.fullName,
+    email: a.email,
+    phoneNumber: a.phoneNumber,
+    avatarUrl: a.avatarUrl,
+    ambassadorType: a.ambassadorType,
+    campusCode: a.campusCode,
+    collegeId: a.collegeId,
+    status: a.status,
+    createdAt: a.createdAt,
+    course: typeof meta.course === "string" ? meta.course : null,
+    language: typeof meta.language === "string" ? meta.language : null,
+    district: typeof meta.district === "string" ? meta.district : null,
+    state: typeof meta.state === "string" ? meta.state : null,
+    bankDetails,
   };
 }
 
@@ -577,6 +631,61 @@ export class BlinkService {
     });
 
     return mapAmbassadorDto(updated);
+  }
+
+  static async getAmbassadorProfile(ambassadorId: string) {
+    const [ambassador, wallet] = await Promise.all([
+      BlinkRepository.findById(ambassadorId),
+      BlinkRepository.getWalletByUserId(ambassadorId),
+    ]);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR
+    ) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+    return mapAmbassadorSelfProfile(ambassador, wallet);
+  }
+
+  static async updateAmbassadorProfile(
+    ambassadorId: string,
+    data: AmbassadorProfileUpdateInput,
+  ) {
+    const ambassador = await BlinkRepository.findById(ambassadorId);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR
+    ) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+
+    const existingMeta =
+      ambassador.profileMetadata &&
+      typeof ambassador.profileMetadata === "object" &&
+      !Array.isArray(ambassador.profileMetadata)
+        ? (ambassador.profileMetadata as Record<string, unknown>)
+        : {};
+    const profileMetadata: Record<string, string | number | boolean | null> = {
+      ...existingMeta,
+    } as Record<string, string | number | boolean | null>;
+    if (data.course !== undefined) profileMetadata.course = data.course;
+    if (data.language !== undefined) profileMetadata.language = data.language;
+    if (data.district !== undefined) profileMetadata.district = data.district;
+    if (data.state !== undefined) profileMetadata.state = data.state;
+
+    const updated = await BlinkRepository.updateProfile(ambassadorId, {
+      fullName: data.full_name,
+      phoneNumber: data.phone_number,
+      avatarUrl: data.avatar_url,
+      profileMetadata,
+    });
+
+    if (data.bank_details) {
+      await BlinkRepository.upsertBankDetails(ambassadorId, data.bank_details);
+    }
+
+    const wallet = await BlinkRepository.getWalletByUserId(ambassadorId);
+    return mapAmbassadorSelfProfile(updated, wallet);
   }
 
   static async listPublicCampusAmbassadors(collegeId: string) {

@@ -248,6 +248,15 @@ export class BlinkRepository {
     });
   }
 
+  /** Creates the wallet on first save if the user has no earnings history yet. */
+  static async upsertBankDetails(blinkUserId: string, bankDetails: object) {
+    return prisma.blinkWallet.upsert({
+      where: { blinkUserId },
+      create: { blinkUserId, bankDetails },
+      update: { bankDetails },
+    });
+  }
+
   static async processWithdrawal(
     blinkUserId: string,
     amount: number,

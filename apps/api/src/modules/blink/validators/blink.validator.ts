@@ -151,6 +151,21 @@ export type WalletTransactionQuery = z.infer<
   typeof walletTransactionQuerySchema
 >;
 
+export const ambassadorProfileUpdateSchema = z.object({
+  full_name: fullNameSchema.optional(),
+  phone_number: phoneNumberSchema.optional(),
+  avatar_url: z.string().trim().url().optional().nullable(),
+  course: z.string().trim().max(255).optional(),
+  language: z.string().trim().max(100).optional(),
+  district: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(100).optional(),
+  bank_details: bankDetailsSchema.optional(),
+});
+
+export type AmbassadorProfileUpdateInput = z.infer<
+  typeof ambassadorProfileUpdateSchema
+>;
+
 export const serviceChargeQuerySchema = z.object({
   collegeId: z.string().optional(),
   courseId: z.string().optional(),

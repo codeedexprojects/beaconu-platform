@@ -1,0 +1,40 @@
+meta {
+  name: Update Ambassador Profile
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/ambassador/profile
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "full_name": "Priya Sharma",
+    "phone_number": "+919900112233",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "course": "B.Tech Computer Science",
+    "language": "Malayalam, English",
+    "district": "Palakkad",
+    "state": "Kerala",
+    "bank_details": {
+      "accountHolderName": "Priya Sharma",
+      "accountNumber": "123456789012",
+      "ifsc": "SBIN0001234",
+      "bankName": "State Bank of India"
+    }
+  }
+}
+
+docs {
+  All fields optional — send only what changed. `bank_details` is all-or-nothing:
+  if provided, all four sub-fields are required and the wallet is created on
+  first save if the ambassador has no earnings history yet.
+}
