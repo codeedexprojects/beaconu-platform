@@ -16,11 +16,9 @@ export class StudentCampusVisitController {
   static async book(req: Request, res: Response) {
     const data = createCampusVisitSchema.parse(req.body);
     const visit = await CampusVisitsService.book(data, req.userId!);
-    return res.status(201).json(
-      ApiResponse.success("Campus visit booked successfully", {
-        id: visit.id,
-      }),
-    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Campus visit booked successfully", visit));
   }
 
   static async list(req: Request, res: Response) {

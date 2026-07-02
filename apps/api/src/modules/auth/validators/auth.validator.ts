@@ -38,21 +38,44 @@ export const registerCounsellorSchema = z
 
 export const registerAssociateAdminSchema = z
   .object({
-    full_name: z.string().trim().min(1),
+    full_name: z.string().trim().min(1).max(255),
     email: commonSchemas.email,
-    phone_number: z.string().trim().optional(),
-    country: z.string().trim().optional(),
-    agency_name: z.string().trim().min(1),
-    agency_reg_number: z.string().trim().min(1),
+    phone_number: commonSchemas.phoneNumber
+      .max(15, "Phone number must be under 15 characters")
+      .optional(),
+    country: z
+      .string()
+      .trim()
+      .max(100, "Country must be under 100 characters")
+      .optional(),
+    agency_name: z.string().trim().min(1).max(255),
+    agency_reg_number: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100, "Registration number must be under 100 characters"),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
-    companyPan: z.string().trim().min(1, "Company PAN is required"),
+    companyPan: z
+      .string()
+      .trim()
+      .min(1, "Company PAN is required")
+      .max(50, "Company PAN must be under 50 characters"),
     currentAccNo: z
       .string()
       .trim()
-      .min(1, "Current Account Number is required"),
-    ifsc: z.string().trim().min(1, "IFSC is required"),
-    gstin: z.string().trim().optional(),
+      .min(1, "Current Account Number is required")
+      .max(50, "Current Account Number must be under 50 characters"),
+    ifsc: z
+      .string()
+      .trim()
+      .min(1, "IFSC is required")
+      .max(20, "IFSC must be under 20 characters"),
+    gstin: z
+      .string()
+      .trim()
+      .max(50, "GSTIN must be under 50 characters")
+      .optional(),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
@@ -61,12 +84,18 @@ export const registerAssociateAdminSchema = z
 
 export const registerEmployeeSchema = z
   .object({
-    full_name: z.string().trim().min(1),
+    full_name: z.string().trim().min(1).max(255),
     email: commonSchemas.email,
-    agency_reg_number: z.string().trim().min(1),
+    agency_reg_number: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100, "Registration number must be under 100 characters"),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
-    phone_number: z.string().trim().optional(),
+    phone_number: commonSchemas.phoneNumber
+      .max(15, "Phone number must be under 15 characters")
+      .optional(),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
