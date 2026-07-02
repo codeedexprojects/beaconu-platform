@@ -1,0 +1,25 @@
+meta {
+  name: Set Campus Visit Availability (College Admin)
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/availability
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "weekday": 1,
+    "time": "10:30",
+    "max_capacity": 5,
+    "is_off": false
+  }
+}

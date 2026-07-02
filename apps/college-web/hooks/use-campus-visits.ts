@@ -51,6 +51,14 @@ export function useAmbassadors(collegeId: string) {
   });
 }
 
+export function useCampusVisitAvailability(collegeId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.campusVisitAvailability(collegeId),
+    queryFn: () => campusVisitsService.listAvailability(collegeId),
+    enabled: !!collegeId,
+  });
+}
+
 export function useBookCampusVisit() {
   const queryClient = useQueryClient();
   return useMutation({

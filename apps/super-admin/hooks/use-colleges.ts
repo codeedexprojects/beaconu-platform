@@ -1,5 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/query-keys";
+import { getErrorMessage } from "@/lib/api";
+import { toast } from "sonner";
 import {
   collegesService,
   type CollegesListResponse,
@@ -31,5 +33,24 @@ export function useCollegeById(id: string) {
     queryKey: QUERY_KEYS.college(id),
     queryFn: () => collegesService.getById(id),
     enabled: !!id,
+  });
+}
+
+export function useUpdateCollegeListing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      collegeId,
+      isListed,
+    }: {
+      collegeId: string;
+      isListed: boolean;
+    }) => collegesService.updateListingStatus(collegeId, isListed),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.colleges] });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
   });
 }

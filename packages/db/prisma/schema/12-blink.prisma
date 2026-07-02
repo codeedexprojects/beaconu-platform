@@ -192,6 +192,24 @@ model CampusVisit {
   @@map("campus_visits")
 }
 
+model CampusVisitAvailability {
+  id          String    @id @default(dbgenerated("('CVA-'::text || (nextval('campus_visit_availability_seq'::regclass))::text)"))
+  collegeId   String    @map("college_id")
+  weekday     Int       @db.SmallInt // 0 = Sunday ... 6 = Saturday
+  time        DateTime? @db.Time
+  maxCapacity Int       @default(1) @map("max_capacity")
+  isOff       Boolean   @default(false) @map("is_off")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([collegeId, weekday], name: "uq_visit_availability_college_weekday")
+  @@index([collegeId], name: "idx_visit_availability_college")
+  @@map("campus_visit_availability")
+}
+
 model MediaKit {
   id            String   @id @default(dbgenerated("('MDK-'::text || (nextval('media_kit_seq'::regclass))::text)"))
   collegeId     String   @map("college_id")

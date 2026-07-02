@@ -176,6 +176,7 @@ model College {
   serviceChargeConfigs      ServiceChargeConfig[]
   mediaKits                 MediaKit[]
   campusVisits              CampusVisit[]
+  campusVisitAvailabilities CampusVisitAvailability[]
   announcements             Announcement[]
   supportTickets            SupportTicket[]
   antiRaggingComplaints     AntiRaggingComplaint[]

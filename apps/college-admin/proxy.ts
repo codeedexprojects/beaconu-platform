@@ -17,6 +17,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "commute",
   "settings",
   "ambassadors",
+  "campus-visits",
 ]);
 
 export function proxy(request: NextRequest) {

@@ -8,6 +8,12 @@ const router: Router = Router();
 router.use(authenticate, authorizeUserType("staff_member"));
 
 router.get("/", CollegeAdminCampusVisitController.list);
+router.get("/stats", CollegeAdminCampusVisitController.getStats);
+router.get("/availability", CollegeAdminCampusVisitController.listAvailability);
+router.put(
+  "/availability",
+  CollegeAdminCampusVisitController.upsertAvailability,
+);
 router.get("/:visitId", CollegeAdminCampusVisitController.getOne);
 
 export default router;

@@ -13,7 +13,12 @@ import {
   useCampusVisits,
   useRescheduleCampusVisit,
   useCancelCampusVisit,
+  useCampusVisitAvailability,
 } from "@/hooks/use-campus-visits";
+import {
+  getBookableDates,
+  formatBookableDateLabel,
+} from "@/lib/campus-visit-availability";
 import type { CampusVisitListItem, CampusVisitStatus } from "@beaconu/types";
 
 const STATUS_LABELS: Record<CampusVisitStatus, string> = {
@@ -54,7 +59,10 @@ export default function MyVisitsPage() {
   const [rescheduleVisit, setRescheduleVisit] =
     useState<CampusVisitListItem | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
-  const [rescheduleTime, setRescheduleTime] = useState("");
+
+  const { data: availability = [], isLoading: isLoadingAvailability } =
+    useCampusVisitAvailability(student?.collegeId ?? "");
+  const availableDates = getBookableDates(availability);
 
   const [cancelVisit, setCancelVisit] = useState<CampusVisitListItem | null>(
     null,
@@ -88,18 +96,17 @@ export default function MyVisitsPage() {
   }
 
   function handleReschedule() {
-    if (!rescheduleVisit || !rescheduleDate || !rescheduleTime) return;
+    if (!rescheduleVisit || !rescheduleDate) return;
     reschedule(
       {
         visitId: rescheduleVisit.id,
-        data: { proposed_date: rescheduleDate, proposed_time: rescheduleTime },
+        data: { proposed_date: rescheduleDate },
       },
       {
         onSuccess: () => {
           toast.success("Visit rescheduled successfully");
           setRescheduleVisit(null);
           setRescheduleDate("");
-          setRescheduleTime("");
         },
       },
     );
@@ -257,8 +264,7 @@ export default function MyVisitsPage() {
                         variant="outline"
                         onClick={() => {
                           setRescheduleVisit(visit);
-                          setRescheduleDate(visit.proposedDate);
-                          setRescheduleTime(visit.proposedTime);
+                          setRescheduleDate("");
                         }}
                       >
                         <RotateCcw className="mr-1 h-3 w-3" /> Reschedule
@@ -290,24 +296,29 @@ export default function MyVisitsPage() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <Label>New Date</Label>
-                <Input
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
+                <select
                   value={rescheduleDate}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     setRescheduleDate(e.target.value)
                   }
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>New Time</Label>
-                <Input
-                  type="time"
-                  value={rescheduleTime}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setRescheduleTime(e.target.value)
+                  disabled={
+                    isLoadingAvailability || availableDates.length === 0
                   }
-                />
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="" disabled>
+                    {isLoadingAvailability
+                      ? "Loading available dates..."
+                      : availableDates.length === 0
+                        ? "No dates available right now"
+                        : "Select a date"}
+                  </option>
+                  {availableDates.map((d) => (
+                    <option key={d.date} value={d.date}>
+                      {formatBookableDateLabel(d.date, d.time)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
@@ -319,7 +330,7 @@ export default function MyVisitsPage() {
               </Button>
               <Button
                 onClick={handleReschedule}
-                disabled={isRescheduling || !rescheduleDate || !rescheduleTime}
+                disabled={isRescheduling || !rescheduleDate}
               >
                 {isRescheduling ? "Saving..." : "Confirm Reschedule"}
               </Button>
