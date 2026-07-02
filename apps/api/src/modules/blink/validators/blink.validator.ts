@@ -1,11 +1,17 @@
 import { z } from "zod";
 import { commonSchemas } from "@/shared/validators";
 
+const fullNameSchema = z.string().trim().min(1).max(255);
+const phoneNumberSchema = commonSchemas.phoneNumber.max(
+  15,
+  "Phone number must be under 15 characters",
+);
+
 export const registerAssociateEmployeeSchema = z
   .object({
-    full_name: z.string().min(1),
+    full_name: fullNameSchema,
     email: commonSchemas.email,
-    phone_number: z.string().optional(),
+    phone_number: phoneNumberSchema.optional(),
     associate_parent_id: z
       .string()
       .trim()
@@ -20,9 +26,9 @@ export const registerAssociateEmployeeSchema = z
 
 export const registerAmbassadorSchema = z
   .object({
-    full_name: z.string().min(1),
+    full_name: fullNameSchema,
     email: commonSchemas.email,
-    phone_number: z.string().optional(),
+    phone_number: phoneNumberSchema.optional(),
     college_id: z.string(),
     linked_student_id: z.string().optional(),
     ambassador_type: z.enum(["student", "teacher"]),
@@ -44,8 +50,8 @@ export const updateEmployeeStatusSchema = z.object({
 
 export const updateAmbassadorSchema = z
   .object({
-    full_name: z.string().min(1).optional(),
-    phone_number: z.string().optional(),
+    full_name: fullNameSchema.optional(),
+    phone_number: phoneNumberSchema.optional(),
     ambassador_type: z.enum(["student", "teacher"]).optional(),
     avatar_url: z.string().trim().url().optional().nullable(),
     course: z.string().trim().optional(),
