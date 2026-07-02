@@ -84,6 +84,23 @@ export class AuthService {
       }
     }
 
+    if (blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_EMPLOYEE) {
+      const parentRegNumber = blinkUser.associateParent?.agencyRegNumber;
+      if (
+        !data.agency_reg_number ||
+        !parentRegNumber ||
+        parentRegNumber !== data.agency_reg_number
+      ) {
+        throw new UnauthorizedError("Invalid agency registration number");
+      }
+    }
+
+    if (blinkUser.blinkRole.slug === BLINK_ROLES.CAMPUS_AMBASSADOR) {
+      if (!data.campus_code || blinkUser.campusCode !== data.campus_code) {
+        throw new UnauthorizedError("Invalid campus ambassador code");
+      }
+    }
+
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
       const isEmployee =
         blinkUser.blinkRole.slug === BLINK_ROLES.ASSOCIATE_EMPLOYEE;
@@ -174,6 +191,17 @@ export class AuthService {
       counsellor.passwordHash,
     );
     if (!isMatch) throw new UnauthorizedError("Invalid credentials");
+
+    // counsellorCode is only assigned to some accounts (not generated at
+    // registration) — only enforce the match once one has been set, so
+    // existing counsellors without a code aren't locked out.
+    if (
+      counsellor.counsellorCode &&
+      counsellor.counsellorCode !== data.counsellor_code
+    ) {
+      throw new UnauthorizedError("Invalid counsellor code");
+    }
+
     if (counsellor.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${counsellor.status}`);
     }
