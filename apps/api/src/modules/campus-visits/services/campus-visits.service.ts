@@ -67,6 +67,48 @@ async function assertDateBookable(collegeId: string, date: string) {
   return availability;
 }
 
+function mapBookingResponse(visit: {
+  id: string;
+  ambassador: {
+    id: string;
+    fullName: string;
+    phoneNumber: string | null;
+    avatarUrl: string | null;
+    campusCode: string | null;
+  } | null;
+  college: {
+    id: string;
+    name: string;
+    address: string | null;
+    city: string | null;
+    district: string | null;
+    state: string | null;
+    pinCode: string | null;
+  };
+}) {
+  return {
+    id: visit.id,
+    ambassador: visit.ambassador
+      ? {
+          id: visit.ambassador.id,
+          fullName: visit.ambassador.fullName,
+          phoneNumber: visit.ambassador.phoneNumber,
+          avatarUrl: visit.ambassador.avatarUrl,
+          campusCode: visit.ambassador.campusCode,
+        }
+      : null,
+    college: {
+      id: visit.college.id,
+      name: visit.college.name,
+      address: visit.college.address,
+      city: visit.college.city,
+      district: visit.college.district,
+      state: visit.college.state,
+      pinCode: visit.college.pinCode,
+    },
+  };
+}
+
 /** Best-effort push notifications for the campus-visit lifecycle — never throw. */
 async function notifyAmbassadorOfBooking(visit: {
   id: string;
@@ -242,7 +284,7 @@ export class CampusVisitsService {
     });
 
     await notifyAmbassadorOfBooking(visit);
-    return visit;
+    return mapBookingResponse(visit);
   }
 
   static async reschedule(

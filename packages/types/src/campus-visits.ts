@@ -20,6 +20,30 @@ export interface CampusVisitAmbassador {
   campusCode: string | null;
 }
 
+export interface CampusVisitAmbassadorContact {
+  id: string;
+  fullName: string;
+  phoneNumber: string | null;
+  avatarUrl: string | null;
+  campusCode: string | null;
+}
+
+export interface CampusVisitCollegeLocation {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  district: string | null;
+  state: string | null;
+  pinCode: string | null;
+}
+
+export interface BookCampusVisitResponse {
+  id: string;
+  ambassador: CampusVisitAmbassadorContact | null;
+  college: CampusVisitCollegeLocation;
+}
+
 export interface CampusVisit {
   id: string;
   collegeId: string;

@@ -24,7 +24,20 @@ export class CampusVisitsRepository {
         proposedTime: data.proposedTime,
         status: "pending",
       },
-      include: { ambassador: true },
+      include: {
+        ambassador: true,
+        college: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            district: true,
+            state: true,
+            pinCode: true,
+          },
+        },
+      },
     });
   }
 
