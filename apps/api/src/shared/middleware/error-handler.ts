@@ -75,7 +75,7 @@ export function errorHandler(
 
     const apiError = new ApiError(
       400,
-      "Validation failed",
+      details[0]?.message ?? "Validation failed",
       ErrorCode.VALIDATION_ERROR,
       details,
     );
