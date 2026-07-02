@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +17,7 @@ import {
   Hash,
   EyeOff,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { useAmbassadors, useCreateAmbassador } from "@/hooks/use-ambassadors";
@@ -410,6 +412,7 @@ export default function AmbassadorsPage() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead className="w-[80px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -434,12 +437,15 @@ export default function AmbassadorsPage() {
                     <TableCell>
                       <Skeleton className="h-4 w-[100px]" />
                     </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-14" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : ambassadors.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground"
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -510,6 +516,19 @@ export default function AmbassadorsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(a.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs"
+                        asChild
+                      >
+                        <Link href={`/ambassadors/${a.id}`}>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

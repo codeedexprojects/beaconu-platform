@@ -36,6 +36,33 @@ export interface CreateCampusAmbassadorInput {
   confirm_password: string;
 }
 
+export interface UpdateCampusAmbassadorInput {
+  full_name?: string;
+  phone_number?: string;
+  ambassador_type?: "student" | "teacher";
+  avatar_url?: string | null;
+  course?: string;
+  district?: string;
+  state?: string;
+  status?: "active" | "inactive";
+  password?: string;
+  confirm_password?: string;
+}
+
+export interface AmbassadorVisitStats {
+  total: number;
+  pending: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  rejected: number;
+  reassigned: number;
+}
+
+export interface CampusAmbassadorDetailDto extends CampusAmbassadorDto {
+  visitStats: AmbassadorVisitStats;
+}
+
 export interface CollegeProfileDetails {
   totalCourses: number;
   instituteType: string | null;

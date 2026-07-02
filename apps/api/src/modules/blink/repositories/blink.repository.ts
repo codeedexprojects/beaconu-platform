@@ -63,6 +63,25 @@ export class BlinkRepository {
     });
   }
 
+  static async updateProfile(
+    id: string,
+    data: {
+      fullName?: string;
+      phoneNumber?: string;
+      ambassadorType?: string;
+      avatarUrl?: string | null;
+      status?: string;
+      passwordHash?: string;
+      profileMetadata?: Record<string, string | number | boolean | null>;
+    },
+  ) {
+    return prisma.blinkUser.update({
+      where: { id },
+      data,
+      include: { blinkRole: true },
+    });
+  }
+
   static async findEmployeesByParent(
     associateParentId: string,
     status?: string,

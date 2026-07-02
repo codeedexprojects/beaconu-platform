@@ -12,10 +12,45 @@ import {
   RegisterAssociateEmployeeInput,
   RegisterAmbassadorInput,
   UpdateEmployeeStatusInput,
+  UpdateAmbassadorInput,
   BankDetailsInput,
   WithdrawalInput,
   UpdateServiceChargeInput,
 } from "../validators/blink.validator";
+
+function mapAmbassadorDto(a: {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  avatarUrl: string | null;
+  ambassadorType: string | null;
+  campusCode: string | null;
+  status: string;
+  createdAt: Date;
+  profileMetadata: unknown;
+}) {
+  const meta =
+    a.profileMetadata &&
+    typeof a.profileMetadata === "object" &&
+    !Array.isArray(a.profileMetadata)
+      ? (a.profileMetadata as Record<string, unknown>)
+      : {};
+  return {
+    id: a.id,
+    fullName: a.fullName,
+    email: a.email,
+    phoneNumber: a.phoneNumber,
+    avatarUrl: a.avatarUrl,
+    ambassadorType: a.ambassadorType,
+    campusCode: a.campusCode,
+    status: a.status,
+    createdAt: a.createdAt,
+    course: typeof meta.course === "string" ? meta.course : null,
+    district: typeof meta.district === "string" ? meta.district : null,
+    state: typeof meta.state === "string" ? meta.state : null,
+  };
+}
 
 export class BlinkService {
   static async registerAssociateEmployee(data: RegisterAssociateEmployeeInput) {
@@ -478,28 +513,70 @@ export class BlinkService {
   static async listCampusAmbassadors(collegeId: string) {
     const ambassadors =
       await BlinkRepository.findAmbassadorsByCollege(collegeId);
-    return ambassadors.map((a) => {
-      const meta =
-        a.profileMetadata &&
-        typeof a.profileMetadata === "object" &&
-        !Array.isArray(a.profileMetadata)
-          ? (a.profileMetadata as Record<string, unknown>)
-          : {};
-      return {
-        id: a.id,
-        fullName: a.fullName,
-        email: a.email,
-        phoneNumber: a.phoneNumber,
-        avatarUrl: a.avatarUrl,
-        ambassadorType: a.ambassadorType,
-        campusCode: a.campusCode,
-        status: a.status,
-        createdAt: a.createdAt,
-        course: typeof meta.course === "string" ? meta.course : null,
-        district: typeof meta.district === "string" ? meta.district : null,
-        state: typeof meta.state === "string" ? meta.state : null,
-      };
+    return ambassadors.map(mapAmbassadorDto);
+  }
+
+  static async getAmbassadorForCollege(
+    ambassadorId: string,
+    collegeId: string,
+  ) {
+    const ambassador = await BlinkRepository.findById(ambassadorId);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR
+    ) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+    if (ambassador.collegeId !== collegeId) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+    return mapAmbassadorDto(ambassador);
+  }
+
+  static async updateAmbassador(
+    ambassadorId: string,
+    collegeId: string,
+    data: UpdateAmbassadorInput,
+  ) {
+    const ambassador = await BlinkRepository.findById(ambassadorId);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR
+    ) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+    if (ambassador.collegeId !== collegeId) {
+      throw new NotFoundError("Campus ambassador not found");
+    }
+
+    const existingMeta =
+      ambassador.profileMetadata &&
+      typeof ambassador.profileMetadata === "object" &&
+      !Array.isArray(ambassador.profileMetadata)
+        ? (ambassador.profileMetadata as Record<string, unknown>)
+        : {};
+    const profileMetadata: Record<string, string | number | boolean | null> = {
+      ...existingMeta,
+    } as Record<string, string | number | boolean | null>;
+    if (data.course !== undefined) profileMetadata.course = data.course;
+    if (data.district !== undefined) profileMetadata.district = data.district;
+    if (data.state !== undefined) profileMetadata.state = data.state;
+
+    const passwordHash = data.password
+      ? await CryptoUtils.hash(data.password)
+      : undefined;
+
+    const updated = await BlinkRepository.updateProfile(ambassadorId, {
+      fullName: data.full_name,
+      phoneNumber: data.phone_number,
+      ambassadorType: data.ambassador_type,
+      avatarUrl: data.avatar_url,
+      status: data.status,
+      passwordHash,
+      profileMetadata,
     });
+
+    return mapAmbassadorDto(updated);
   }
 
   static async listPublicCampusAmbassadors(collegeId: string) {

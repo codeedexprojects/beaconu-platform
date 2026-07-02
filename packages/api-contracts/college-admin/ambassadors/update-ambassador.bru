@@ -1,0 +1,33 @@
+meta {
+  name: Update Campus Ambassador
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/ambassadors/{{ambassadorId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "full_name": "Priya Sharma",
+    "phone_number": "+919900112244",
+    "ambassador_type": "student",
+    "course": "B.Tech CSE",
+    "district": "Kozhikode",
+    "state": "Kerala",
+    "status": "active",
+    "password": "NewPassword@123",
+    "confirm_password": "NewPassword@123"
+  }
+}

@@ -11,6 +11,10 @@ import {
   startSlotCleanupJob,
   stopSlotCleanupJob,
 } from "@/modules/counselling/jobs/slot-cleanup.job";
+import {
+  startVisitReminderJob,
+  stopVisitReminderJob,
+} from "@/modules/campus-visits/jobs/visit-reminder.job";
 
 const JOBS = [
   {
@@ -27,6 +31,11 @@ const JOBS = [
     name: "Slot cleanup",
     start: startSlotCleanupJob,
     stop: stopSlotCleanupJob,
+  },
+  {
+    name: "Campus visit reminder",
+    start: startVisitReminderJob,
+    stop: stopVisitReminderJob,
   },
 ];
 
