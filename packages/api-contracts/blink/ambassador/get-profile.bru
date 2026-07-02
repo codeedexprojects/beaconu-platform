@@ -1,0 +1,23 @@
+meta {
+  name: Get Ambassador Profile
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/profile
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Self-service profile for the logged-in campus ambassador.
+  Requires: blink_ambassador userType access token.
+
+  Includes: personal info (incl. profile photo URL), bank account details,
+  academic details (course), language, and location (district, state).
+}

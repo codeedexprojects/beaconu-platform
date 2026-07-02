@@ -165,3 +165,32 @@ export interface ReferralStudentProfile {
     createdAt: string;
   };
 }
+
+export interface AmbassadorSelfProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  avatarUrl: string | null;
+  ambassadorType: string | null;
+  campusCode: string | null;
+  collegeId: string | null;
+  status: string;
+  createdAt: string;
+  course: string | null;
+  language: string | null;
+  district: string | null;
+  state: string | null;
+  bankDetails: BlinkBankDetails | null;
+}
+
+export interface UpdateAmbassadorProfileInput {
+  full_name?: string;
+  phone_number?: string;
+  avatar_url?: string | null;
+  course?: string;
+  language?: string;
+  district?: string;
+  state?: string;
+  bank_details?: BlinkBankDetails;
+}
