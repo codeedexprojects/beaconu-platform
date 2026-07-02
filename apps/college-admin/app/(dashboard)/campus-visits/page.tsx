@@ -6,6 +6,7 @@ import { Calendar, Clock, ExternalLink, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,7 +24,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCollegeCampusVisits } from "@/hooks/use-campus-visits";
+import {
+  useCollegeCampusVisits,
+  useCollegeCampusVisitStats,
+} from "@/hooks/use-campus-visits";
 import { useAmbassadors } from "@/hooks/use-ambassadors";
 import type { CampusVisitStatus } from "@beaconu/types";
 
@@ -66,6 +70,9 @@ export default function CampusVisitsPage() {
   const { data: ambassadorsData } = useAmbassadors();
   const ambassadors = ambassadorsData ?? [];
 
+  const { data: stats, isLoading: isLoadingStats } =
+    useCollegeCampusVisitStats();
+
   const { data, isLoading } = useCollegeCampusVisits({
     status: statusFilter || undefined,
     date: dateFilter || undefined,
@@ -96,12 +103,58 @@ export default function CampusVisitsPage() {
             All scheduled visits across your campus
           </p>
         </div>
-        {meta && (
-          <div className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>{meta.total} total visits</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {meta && (
+            <div className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{meta.total} total visits</span>
+            </div>
+          )}
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/campus-visits/availability">
+              <Calendar className="mr-1.5 h-3.5 w-3.5" />
+              Manage Availability
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Today&apos;s Visits</p>
+            {isLoadingStats ? (
+              <Skeleton className="mt-1 h-8 w-12" />
+            ) : (
+              <p className="mt-1 text-3xl font-bold">{stats?.today ?? 0}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Pending</p>
+            {isLoadingStats ? (
+              <Skeleton className="mt-1 h-8 w-12" />
+            ) : (
+              <p className="mt-1 text-3xl font-bold text-amber-500">
+                {stats?.pending ?? 0}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Confirmed</p>
+            {isLoadingStats ? (
+              <Skeleton className="mt-1 h-8 w-12" />
+            ) : (
+              <p className="mt-1 text-3xl font-bold text-emerald-500">
+                {stats?.confirmed ?? 0}
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}

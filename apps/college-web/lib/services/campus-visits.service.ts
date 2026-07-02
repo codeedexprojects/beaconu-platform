@@ -3,6 +3,7 @@ import type {
   CampusVisit,
   CampusVisitListItem,
   AmbassadorOption,
+  CampusVisitAvailabilityEntry,
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
   CancelCampusVisitInput,
@@ -36,6 +37,11 @@ export const campusVisitsService = {
   },
 
   getOne: (visitId: string) => api.get<CampusVisit>(`${BASE}/${visitId}`),
+
+  listAvailability: (collegeId: string) =>
+    api.get<CampusVisitAvailabilityEntry[]>(
+      `${BASE}/availability?college_id=${collegeId}`,
+    ),
 
   reschedule: (visitId: string, data: RescheduleCampusVisitInput) =>
     api.patch<null>(`${BASE}/${visitId}/reschedule`, data),

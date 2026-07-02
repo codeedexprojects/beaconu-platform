@@ -14,5 +14,12 @@ const adminAuth = [
 router.get("/", ...adminAuth, CollegeDashboardController.listColleges);
 router.get("/stats", ...adminAuth, CollegeDashboardController.getStats);
 router.get("/:id", ...adminAuth, CollegeDashboardController.getCollegeDetail);
+router.patch(
+  "/:id/listing",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("colleges.manage"),
+  CollegeDashboardController.updateListingStatus,
+);
 
 export default router;

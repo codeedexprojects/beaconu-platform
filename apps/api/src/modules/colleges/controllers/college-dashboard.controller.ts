@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { CollegeDashboardRepository } from "../repositories/college-dashboard.repository";
+import { CollegeListingService } from "../services/college-listing.service";
+import { updateListingStatusSchema } from "../validators/college-dashboard.validator";
 
 export class CollegeDashboardController {
   static async listColleges(req: Request, res: Response) {
@@ -32,6 +34,18 @@ export class CollegeDashboardController {
     return res
       .status(200)
       .json(ApiResponse.success("College detail fetched", college));
+  }
+
+  static async updateListingStatus(req: Request, res: Response) {
+    const { id } = req.params;
+    if (typeof id !== "string") {
+      throw new NotFoundError("College not found");
+    }
+    const { isListed } = updateListingStatusSchema.parse(req.body);
+    const result = await CollegeListingService.setPublicListing(id, isListed);
+    return res
+      .status(200)
+      .json(ApiResponse.success("College listing status updated", result));
   }
 
   static async getStats(req: Request, res: Response) {

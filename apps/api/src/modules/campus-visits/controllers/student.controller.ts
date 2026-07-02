@@ -8,6 +8,8 @@ import {
   cancelCampusVisitSchema,
   campusVisitListQuerySchema,
 } from "../validators/campus-visits.validator";
+import { studentAvailabilityQuerySchema } from "../validators/campus-visit-availability.validator";
+import { CampusVisitAvailabilityService } from "../services/campus-visit-availability.service";
 import { NotFoundError } from "@/shared/errors";
 
 export class StudentCampusVisitController {
@@ -29,6 +31,15 @@ export class StudentCampusVisitController {
         visits: result.visits,
         meta: result.meta,
       }),
+    );
+  }
+
+  static async listAvailability(req: Request, res: Response) {
+    const { college_id } = studentAvailabilityQuerySchema.parse(req.query);
+    const availability =
+      await CampusVisitAvailabilityService.listForCollege(college_id);
+    return res.json(
+      ApiResponse.success("Campus visit availability fetched", availability),
     );
   }
 

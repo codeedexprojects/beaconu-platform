@@ -2,6 +2,9 @@ import { api } from "@/lib/api";
 import type {
   CampusVisit,
   CampusVisitListItem,
+  CampusVisitAvailabilityEntry,
+  UpsertCampusVisitAvailabilityInput,
+  CampusVisitStats,
   PaginationMeta,
 } from "@beaconu/types";
 
@@ -28,4 +31,20 @@ export async function getCollegeCampusVisits(
 
 export async function getCollegeCampusVisit(id: string): Promise<CampusVisit> {
   return api.get(`/api/v1/college-admin/campus-visits/${id}`);
+}
+
+export async function getCollegeCampusVisitStats(): Promise<CampusVisitStats> {
+  return api.get(`/api/v1/college-admin/campus-visits/stats`);
+}
+
+export async function getCampusVisitAvailability(): Promise<
+  CampusVisitAvailabilityEntry[]
+> {
+  return api.get(`/api/v1/college-admin/campus-visits/availability`);
+}
+
+export async function upsertCampusVisitAvailability(
+  data: UpsertCampusVisitAvailabilityInput,
+): Promise<CampusVisitAvailabilityEntry> {
+  return api.put(`/api/v1/college-admin/campus-visits/availability`, data);
 }

@@ -11,15 +11,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store";
-import { useAmbassadors, useBookCampusVisit } from "@/hooks/use-campus-visits";
+import {
+  useAmbassadors,
+  useBookCampusVisit,
+  useCampusVisitAvailability,
+} from "@/hooks/use-campus-visits";
+import {
+  getBookableDates,
+  formatBookableDateLabel,
+} from "@/lib/campus-visit-availability";
 
 const bookingSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email is required"),
   phone_number: z.string().min(1, "Phone number is required"),
   ambassador_id: z.string().optional(),
-  proposed_date: z.string().min(1, "Date is required"),
-  proposed_time: z.string().min(1, "Time is required"),
+  proposed_date: z.string().min(1, "Please select an available date"),
   additional_visitors_count: z.coerce.number().int().min(0).default(0),
   guests: z
     .array(z.object({ name: z.string().min(1), relation: z.string().min(1) }))
@@ -36,6 +43,10 @@ export default function BookCampusVisitPage() {
 
   const { data: ambassadors = [] } = useAmbassadors(student?.collegeId ?? "");
   const { mutate: bookVisit, isPending } = useBookCampusVisit();
+
+  const { data: availability = [], isLoading: isLoadingAvailability } =
+    useCampusVisitAvailability(student?.collegeId ?? "");
+  const availableDates = getBookableDates(availability);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -152,34 +163,37 @@ export default function BookCampusVisitPage() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-[#1A2B44]">Schedule</h2>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="proposed_date">Preferred Date</Label>
-                <Input
-                  id="proposed_date"
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  {...form.register("proposed_date")}
-                />
-                {form.formState.errors.proposed_date && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.proposed_date.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="proposed_time">Preferred Time</Label>
-                <Input
-                  id="proposed_time"
-                  type="time"
-                  {...form.register("proposed_time")}
-                />
-                {form.formState.errors.proposed_time && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.proposed_time.message}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-1">
+              <Label htmlFor="proposed_date">Available Date</Label>
+              <select
+                id="proposed_date"
+                defaultValue=""
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  form.setValue("proposed_date", e.target.value, {
+                    shouldValidate: true,
+                  })
+                }
+                disabled={isLoadingAvailability || availableDates.length === 0}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="" disabled>
+                  {isLoadingAvailability
+                    ? "Loading available dates..."
+                    : availableDates.length === 0
+                      ? "No dates available right now"
+                      : "Select a date"}
+                </option>
+                {availableDates.map((d) => (
+                  <option key={d.date} value={d.date}>
+                    {formatBookableDateLabel(d.date, d.time)}
+                  </option>
+                ))}
+              </select>
+              {form.formState.errors.proposed_date && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.proposed_date.message}
+                </p>
+              )}
             </div>
 
             {ambassadors.length > 0 && (

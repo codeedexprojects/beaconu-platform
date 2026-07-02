@@ -1,5 +1,8 @@
+import { prisma } from "@beaconu/db";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
+import { BlinkService } from "@/modules/blink/services/blink.service";
 import { CampusVisitsRepository } from "../repositories/campus-visits.repository";
+import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
 import type {
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
@@ -10,6 +13,43 @@ import type {
 
 const RESCHEDULABLE_STATUSES = ["pending", "confirmed"];
 const CANCELLABLE_STATUSES = ["pending", "confirmed"];
+const MIN_ADVANCE_HOURS = 2;
+
+function weekdayOf(dateStr: string) {
+  return new Date(dateStr + "T00:00:00Z").getUTCDay();
+}
+
+function assertMinAdvanceNotice(dateStr: string, time: Date) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const visitUtcMs = Date.UTC(
+    y!,
+    m! - 1,
+    d!,
+    time.getUTCHours(),
+    time.getUTCMinutes(),
+  );
+  const minAllowedMs = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000;
+  if (visitUtcMs < minAllowedMs) {
+    throw new ConflictError(
+      `Visits must be booked at least ${MIN_ADVANCE_HOURS} hours in advance`,
+    );
+  }
+}
+
+async function assertDateBookable(collegeId: string, date: string) {
+  const availability =
+    await CampusVisitAvailabilityRepository.findByCollegeAndWeekday(
+      collegeId,
+      weekdayOf(date),
+    );
+  if (!availability || availability.isOff || !availability.time) {
+    throw new ConflictError(
+      "Selected date is not available for campus visits. Please choose a different date.",
+    );
+  }
+  assertMinAdvanceNotice(date, availability.time);
+  return availability;
+}
 
 export class CampusVisitsService {
   static async book(data: CreateCampusVisitInput, studentId: string) {
@@ -22,7 +62,42 @@ export class CampusVisitsService {
         "You already have a visit scheduled on this date. Please choose a different date.",
       );
     }
-    return CampusVisitsRepository.create({ ...data, studentId });
+
+    if (data.ambassador_id) {
+      await BlinkService.assertAmbassadorInCollege(
+        data.ambassador_id,
+        data.college_id,
+      );
+    }
+
+    const availability = await assertDateBookable(
+      data.college_id,
+      data.proposed_date,
+    );
+
+    return prisma.$transaction(async (tx) => {
+      await CampusVisitAvailabilityRepository.lockDateForBooking(
+        data.college_id,
+        data.proposed_date,
+        tx,
+      );
+      const bookedCount =
+        await CampusVisitAvailabilityRepository.countActiveBookingsForDate(
+          data.college_id,
+          data.proposed_date,
+          tx,
+        );
+      if (bookedCount >= availability.maxCapacity) {
+        throw new ConflictError(
+          "This date is fully booked. Please choose a different date.",
+        );
+      }
+
+      return CampusVisitsRepository.create(
+        { ...data, studentId, proposedTime: availability.time! },
+        tx,
+      );
+    });
   }
 
   static async reschedule(
@@ -51,16 +126,38 @@ export class CampusVisitsService {
       );
     }
 
-    const newDate = new Date(data.proposed_date);
-    const newTime = new Date(`1970-01-01T${data.proposed_time}:00Z`);
-
-    return CampusVisitsRepository.reschedule(
-      visitId,
-      newDate,
-      newTime,
-      visit.proposedDate,
-      visit.proposedTime,
+    const availability = await assertDateBookable(
+      visit.collegeId,
+      data.proposed_date,
     );
+
+    return prisma.$transaction(async (tx) => {
+      await CampusVisitAvailabilityRepository.lockDateForBooking(
+        visit.collegeId,
+        data.proposed_date,
+        tx,
+      );
+      const bookedCount =
+        await CampusVisitAvailabilityRepository.countActiveBookingsForDate(
+          visit.collegeId,
+          data.proposed_date,
+          tx,
+        );
+      if (bookedCount >= availability.maxCapacity) {
+        throw new ConflictError(
+          "This date is fully booked. Please choose a different date.",
+        );
+      }
+
+      return CampusVisitsRepository.reschedule(
+        visitId,
+        new Date(data.proposed_date),
+        availability.time!,
+        visit.proposedDate,
+        visit.proposedTime,
+        tx,
+      );
+    });
   }
 
   static async cancel(
@@ -132,6 +229,11 @@ export class CampusVisitsService {
     if (data.ambassador_id === ambassadorId) {
       throw new ForbiddenError("Cannot reassign to yourself");
     }
+
+    await BlinkService.assertAmbassadorInCollege(
+      data.ambassador_id,
+      visit.collegeId,
+    );
 
     return CampusVisitsRepository.updateStatus(visitId, "reassigned", {
       reassignmentReason: data.reassignment_reason,

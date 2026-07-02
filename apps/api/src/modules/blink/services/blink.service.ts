@@ -524,4 +524,24 @@ export class BlinkService {
       };
     });
   }
+
+  /** Throws unless the given user is an active campus ambassador belonging to collegeId. */
+  static async assertAmbassadorInCollege(
+    ambassadorId: string,
+    collegeId: string,
+  ) {
+    const ambassador = await BlinkRepository.findById(ambassadorId);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR ||
+      ambassador.status !== ACCOUNT_STATUS.ACTIVE
+    ) {
+      throw new NotFoundError("Selected ambassador not found");
+    }
+    if (ambassador.collegeId !== collegeId) {
+      throw new ForbiddenError(
+        "Selected ambassador does not belong to this college",
+      );
+    }
+  }
 }

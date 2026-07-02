@@ -35,7 +35,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useColleges, useCollegeStats } from "@/hooks/use-colleges";
+import {
+  useColleges,
+  useCollegeStats,
+  useUpdateCollegeListing,
+} from "@/hooks/use-colleges";
 import {
   useInstitutionGroup,
   useEnableInstitutionGroup,
@@ -407,8 +411,26 @@ export default function CollegesPage() {
     error,
   } = useColleges({ search, status, page, limit: 20 });
 
+  const { mutate: updateListing, isPending: isUpdatingListing } =
+    useUpdateCollegeListing();
+
   const colleges = result?.data ?? [];
   const meta = result?.meta;
+
+  function handleToggleListing(college: CollegeSummary, isListed: boolean) {
+    updateListing(
+      { collegeId: college.id, isListed },
+      {
+        onSuccess: () => {
+          toast.success(
+            isListed
+              ? "College is now publicly listed"
+              : "College removed from public listing",
+          );
+        },
+      },
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -528,6 +550,9 @@ export default function CollegesPage() {
                     <TableHead className="text-center">Courses</TableHead>
                     <TableHead className="text-center">Staff</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-center">
+                      Public Listing
+                    </TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -627,6 +652,19 @@ export default function CollegesPage() {
                             {statusConfig.icon}
                             {statusConfig.label}
                           </Badge>
+                        </TableCell>
+
+                        <TableCell
+                          className="text-center"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Switch
+                            checked={college.isListed}
+                            disabled={isUpdatingListing}
+                            onCheckedChange={(checked) =>
+                              handleToggleListing(college, checked)
+                            }
+                          />
                         </TableCell>
 
                         <TableCell onClick={(e) => e.stopPropagation()}>

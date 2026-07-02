@@ -207,6 +207,25 @@ export class CampusVisitsQuery {
     };
   }
 
+  static async getCollegeStats(collegeId: string) {
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const [today, pending, confirmed] = await Promise.all([
+      prisma.campusVisit.count({
+        where: { collegeId, proposedDate: todayStart },
+      }),
+      prisma.campusVisit.count({
+        where: { collegeId, status: "pending" },
+      }),
+      prisma.campusVisit.count({
+        where: { collegeId, status: "confirmed" },
+      }),
+    ]);
+
+    return { today, pending, confirmed };
+  }
+
   static async listAmbassadorsForCollege(collegeId: string) {
     return prisma.blinkUser.findMany({
       where: {

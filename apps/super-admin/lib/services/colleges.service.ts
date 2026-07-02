@@ -10,6 +10,7 @@ export interface CollegeSummary {
   status: "pending_setup" | "active" | string;
   logoUrl: string | null;
   createdAt: string;
+  isListed: boolean;
   university: { id: string; name: string } | null;
   _count: {
     campuses: number;
@@ -122,6 +123,12 @@ export const collegesService = {
     api.get<CollegeDetail>(`/api/v1/admin/colleges/${id}`),
 
   getStats: () => api.get<CollegeStats>("/api/v1/admin/colleges/stats"),
+
+  updateListingStatus: (collegeId: string, isListed: boolean) =>
+    api.patch<{ collegeId: string; isListed: boolean }>(
+      `/api/v1/admin/colleges/${collegeId}/listing`,
+      { isListed },
+    ),
 
   // ── Institution Group ─────────────────────────────────────────────────
   getGroup: (collegeId: string) =>

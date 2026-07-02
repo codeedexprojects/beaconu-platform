@@ -1,0 +1,21 @@
+meta {
+  name: List Available Campus Visit Dates
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/campus-visits/availability
+  body: none
+  auth: none
+}
+
+query {
+  college_id: {{collegeId}}
+  from: 2026-08-01
+  to: 2026-08-31
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

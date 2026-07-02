@@ -1,9 +1,14 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import type { CreateCampusVisitInput } from "../validators/campus-visits.validator";
 
+type TxClient = Prisma.TransactionClient | typeof prisma;
+
 export class CampusVisitsRepository {
-  static async create(data: CreateCampusVisitInput & { studentId: string }) {
-    return prisma.campusVisit.create({
+  static async create(
+    data: CreateCampusVisitInput & { studentId: string; proposedTime: Date },
+    tx: TxClient = prisma,
+  ) {
+    return tx.campusVisit.create({
       data: {
         collegeId: data.college_id,
         studentId: data.studentId,
@@ -16,7 +21,7 @@ export class CampusVisitsRepository {
         guests: data.guests ?? undefined,
         reasonForVisit: data.reason_for_visit,
         proposedDate: new Date(data.proposed_date),
-        proposedTime: new Date(`1970-01-01T${data.proposed_time}:00Z`),
+        proposedTime: data.proposedTime,
         status: "pending",
       },
       include: { ambassador: true },
@@ -39,8 +44,9 @@ export class CampusVisitsRepository {
       reassignmentReason?: string;
       ambassadorId?: string | null;
     },
+    tx: TxClient = prisma,
   ) {
-    return prisma.campusVisit.update({
+    return tx.campusVisit.update({
       where: { id },
       data: {
         status,
@@ -71,8 +77,9 @@ export class CampusVisitsRepository {
     proposedTime: Date,
     previousProposedDate: Date,
     previousProposedTime: Date,
+    tx: TxClient = prisma,
   ) {
-    return prisma.campusVisit.update({
+    return tx.campusVisit.update({
       where: { id },
       data: {
         proposedDate,
