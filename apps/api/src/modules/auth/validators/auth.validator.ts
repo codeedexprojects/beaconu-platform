@@ -8,6 +8,7 @@ export const loginSchema = z.object({
     .enum(["associate_admin", "associate_employee", "campus_ambassador"])
     .optional(),
   agency_reg_number: z.string().trim().optional(),
+  campus_code: z.string().trim().optional(),
   fcm_token: z.string().trim().optional(),
 });
 
@@ -121,6 +122,7 @@ export const counsellorLoginSchema = z.object({
   counsellor_type: z.enum(["academic", "mindcare"], {
     error: "counsellor_type must be 'academic' or 'mindcare'",
   }),
+  counsellor_code: z.string().trim().optional(),
   fcm_token: z.string().trim().optional(),
 });
 
