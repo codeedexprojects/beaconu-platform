@@ -26,6 +26,7 @@ function mapAmbassador(
 
 function mapToListItem(v: {
   id: string;
+  collegeId: string;
   studentName: string;
   email: string | null;
   phoneNumber: string | null;
@@ -44,6 +45,7 @@ function mapToListItem(v: {
 }): CampusVisitListItem {
   return {
     id: v.id,
+    collegeId: v.collegeId,
     studentName: v.studentName,
     email: v.email,
     phoneNumber: v.phoneNumber,
@@ -66,13 +68,14 @@ export class CampusVisitsQuery {
     studentId: string,
     filters: CampusVisitListQuery,
   ): Promise<CampusVisitListResponse> {
-    const { status, date, page, limit } = filters;
+    const { status, date, college_id, page, limit } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
       studentId,
       ...(status ? { status } : {}),
       ...(date ? { proposedDate: new Date(date) } : {}),
+      ...(college_id ? { collegeId: college_id } : {}),
     };
 
     const [total, rows] = await Promise.all([

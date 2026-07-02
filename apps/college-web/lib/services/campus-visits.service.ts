@@ -12,6 +12,7 @@ import type { PaginationMeta } from "@beaconu/types";
 const BASE = "/api/v1/student/campus-visits";
 
 export interface VisitListFilters {
+  college_id?: string;
   status?: string;
   date?: string;
   page?: number;
@@ -23,6 +24,7 @@ export const campusVisitsService = {
 
   list: (filters: VisitListFilters = {}) => {
     const params = new URLSearchParams();
+    if (filters.college_id) params.set("college_id", filters.college_id);
     if (filters.status) params.set("status", filters.status);
     if (filters.date) params.set("date", filters.date);
     if (filters.page) params.set("page", String(filters.page));
