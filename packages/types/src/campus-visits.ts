@@ -81,6 +81,7 @@ export interface ReassignCampusVisitInput {
 
 export interface CampusVisitListItem {
   id: string;
+  collegeId: string;
   studentName: string;
   email: string | null;
   phoneNumber: string | null;

@@ -62,6 +62,7 @@ export default function MyVisitsPage() {
   const [cancelReason, setCancelReason] = useState("");
 
   const { data, isLoading } = useCampusVisits({
+    college_id: student?.collegeId,
     status: statusFilter || undefined,
     date: dateFilter || undefined,
   });

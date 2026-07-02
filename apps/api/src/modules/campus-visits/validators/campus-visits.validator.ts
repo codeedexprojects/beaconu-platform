@@ -142,6 +142,7 @@ export const reassignCampusVisitSchema = z.object({
 });
 
 export const campusVisitListQuerySchema = z.object({
+  college_id: z.string().optional(),
   status: z
     .enum([
       "pending",
