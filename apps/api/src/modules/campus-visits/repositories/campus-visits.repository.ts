@@ -71,6 +71,42 @@ export class CampusVisitsRepository {
     });
   }
 
+  static async countByAmbassador(ambassadorId: string) {
+    return prisma.campusVisit.groupBy({
+      by: ["status"],
+      where: { ambassadorId },
+      _count: { _all: true },
+    });
+  }
+
+  /** Active visits proposed for today or tomorrow (UTC) — used by the reminder job. */
+  static async findUpcomingActiveVisits(nowUtc: Date) {
+    const todayStart = new Date(
+      Date.UTC(
+        nowUtc.getUTCFullYear(),
+        nowUtc.getUTCMonth(),
+        nowUtc.getUTCDate(),
+      ),
+    );
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+
+    return prisma.campusVisit.findMany({
+      where: {
+        status: { in: ["pending", "confirmed"] },
+        proposedDate: { in: [todayStart, tomorrowStart] },
+      },
+      select: {
+        id: true,
+        studentId: true,
+        ambassadorId: true,
+        studentName: true,
+        proposedDate: true,
+        proposedTime: true,
+      },
+    });
+  }
+
   static async reschedule(
     id: string,
     proposedDate: Date,

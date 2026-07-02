@@ -42,6 +42,24 @@ export const updateEmployeeStatusSchema = z.object({
   status: z.enum(["active", "inactive", "suspended", "rejected"]),
 });
 
+export const updateAmbassadorSchema = z
+  .object({
+    full_name: z.string().min(1).optional(),
+    phone_number: z.string().optional(),
+    ambassador_type: z.enum(["student", "teacher"]).optional(),
+    avatar_url: z.string().trim().url().optional().nullable(),
+    course: z.string().trim().optional(),
+    district: z.string().trim().optional(),
+    state: z.string().trim().optional(),
+    status: z.enum(["active", "inactive"]).optional(),
+    password: commonSchemas.password.optional(),
+    confirm_password: z.string().optional(),
+  })
+  .refine((data) => !data.password || data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
+
 export const employeeRankingQuerySchema = z
   .object({
     from: z.coerce.date().optional(),
@@ -95,6 +113,7 @@ export type RegisterAmbassadorInput = z.infer<typeof registerAmbassadorSchema>;
 export type UpdateEmployeeStatusInput = z.infer<
   typeof updateEmployeeStatusSchema
 >;
+export type UpdateAmbassadorInput = z.infer<typeof updateAmbassadorSchema>;
 export type ReferralListQuery = z.infer<typeof referralListQuerySchema>;
 
 export const bankDetailsSchema = z.object({

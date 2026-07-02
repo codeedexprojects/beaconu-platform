@@ -19,6 +19,7 @@ export const QUERY_KEYS = {
   commutes: ["college-commutes"] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,
+  ambassador: (id: string) => ["college-ambassadors", id] as const,
   campusVisits: (filters?: object) =>
     filters ? ["college-campus-visits", filters] : ["college-campus-visits"],
   campusVisit: (id: string) => ["college-campus-visits", id] as const,
