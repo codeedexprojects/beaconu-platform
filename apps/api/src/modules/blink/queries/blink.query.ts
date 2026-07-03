@@ -740,9 +740,10 @@ export class BlinkQuery {
           where: { isActive: true },
           select: {
             id: true,
-            quotaName: true,
-            seats: true,
             tuitionFeeOverride: true,
+            collegeQuota: {
+              select: { name: true, bucketType: true },
+            },
           },
         },
         feeStructures: {
@@ -802,8 +803,10 @@ export class BlinkQuery {
       faqs: course.faqs,
       quotas: course.quotas.map((q) => ({
         id: q.id,
-        quotaName: q.quotaName,
-        seats: q.seats,
+        quotaName: q.collegeQuota.name,
+        // Seats now live in the shared seat_matrix pool per admission cycle,
+        // not on the course-quota config; kept null to preserve DTO shape.
+        seats: null as number | null,
         tuitionFeeOverride: q.tuitionFeeOverride
           ? Number(q.tuitionFeeOverride)
           : null,

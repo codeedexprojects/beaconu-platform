@@ -25,7 +25,6 @@
     "migrate": "prisma migrate deploy --schema=./prisma/schema",
     "migrate:dev": "prisma migrate dev --schema=./prisma/schema",
     "seed": "tsx src/seed.ts",
-    "seed:demo": "tsx src/seed-demo.ts",
     "studio": "prisma studio",
     "push": "prisma db push --schema=./prisma/schema"
   },

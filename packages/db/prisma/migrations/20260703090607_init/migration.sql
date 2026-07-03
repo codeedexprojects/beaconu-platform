@@ -1,16 +1,14 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
+-- CreateSequences (required by dbgenerated ID defaults)
+-- Sequences for prefixed sequential IDs
 
--- CreateSequence
-CREATE SEQUENCE IF NOT EXISTS "admission_cycle_course_seq";
 CREATE SEQUENCE IF NOT EXISTS "admission_cycle_seq";
+CREATE SEQUENCE IF NOT EXISTS "admission_cycle_course_seq";
 CREATE SEQUENCE IF NOT EXISTS "admission_form_config_seq";
-CREATE SEQUENCE IF NOT EXISTS "ambassador_code_seq";
 CREATE SEQUENCE IF NOT EXISTS "announcement_seq";
 CREATE SEQUENCE IF NOT EXISTS "anti_ragging_complaint_seq";
+CREATE SEQUENCE IF NOT EXISTS "application_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_course_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_document_seq";
-CREATE SEQUENCE IF NOT EXISTS "application_seq";
 CREATE SEQUENCE IF NOT EXISTS "application_status_log_seq";
 CREATE SEQUENCE IF NOT EXISTS "article_seq";
 CREATE SEQUENCE IF NOT EXISTS "assessment_attempt_seq";
@@ -25,41 +23,43 @@ CREATE SEQUENCE IF NOT EXISTS "blink_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_user_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_wallet_seq";
 CREATE SEQUENCE IF NOT EXISTS "blink_wallet_transaction_seq";
-CREATE SEQUENCE IF NOT EXISTS "blog_author_seq";
 CREATE SEQUENCE IF NOT EXISTS "blog_seq";
+CREATE SEQUENCE IF NOT EXISTS "blog_author_seq";
 CREATE SEQUENCE IF NOT EXISTS "broadcast_notification_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_seq";
+CREATE SEQUENCE IF NOT EXISTS "campus_visit_availability_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_conversation_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_message_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_gallery_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_onboarding_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_payment_account_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_quota_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_review_seq";
-CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
-CREATE SEQUENCE IF NOT EXISTS "college_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
 CREATE SEQUENCE IF NOT EXISTS "commission_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_comment_like_seq";
+CREATE SEQUENCE IF NOT EXISTS "community_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_comment_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_post_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_post_vote_seq";
-CREATE SEQUENCE IF NOT EXISTS "community_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_bus_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_ride_history_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_route_seq";
 CREATE SEQUENCE IF NOT EXISTS "commute_route_stop_seq";
+CREATE SEQUENCE IF NOT EXISTS "counselling_refund_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "counselling_session_seq";
-CREATE SEQUENCE IF NOT EXISTS "counsellor_availability_seq";
-CREATE SEQUENCE IF NOT EXISTS "counsellor_code_seq";
-CREATE SEQUENCE IF NOT EXISTS "counsellor_registration_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_availability_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_seq";
 CREATE SEQUENCE IF NOT EXISTS "counsellor_wallet_transaction_seq";
-CREATE SEQUENCE IF NOT EXISTS "course_quota_seq";
+CREATE SEQUENCE IF NOT EXISTS "counsellor_registration_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_seq";
+CREATE SEQUENCE IF NOT EXISTS "course_quota_seq";
 CREATE SEQUENCE IF NOT EXISTS "course_switch_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "department_seq";
 CREATE SEQUENCE IF NOT EXISTS "discipline_seq";
@@ -69,22 +69,23 @@ CREATE SEQUENCE IF NOT EXISTS "document_upload_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "education_loan_seq";
 CREATE SEQUENCE IF NOT EXISTS "enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "entrance_exam_seq";
-CREATE SEQUENCE IF NOT EXISTS "event_registration_seq";
 CREATE SEQUENCE IF NOT EXISTS "event_seq";
+CREATE SEQUENCE IF NOT EXISTS "event_registration_seq";
 CREATE SEQUENCE IF NOT EXISTS "fee_structure_seq";
+CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_addon_service_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_mess_plan_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_review_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_room_type_seq";
-CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_wishlist_seq";
-CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
+CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_booking_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_reschedule_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_slot_seq";
 CREATE SEQUENCE IF NOT EXISTS "issued_document_seq";
+CREATE SEQUENCE IF NOT EXISTS "library_seq";
 CREATE SEQUENCE IF NOT EXISTS "media_kit_seq";
 CREATE SEQUENCE IF NOT EXISTS "news_alert_seq";
 CREATE SEQUENCE IF NOT EXISTS "notification_seq";
@@ -93,18 +94,19 @@ CREATE SEQUENCE IF NOT EXISTS "paper_question_seq";
 CREATE SEQUENCE IF NOT EXISTS "payment_receipt_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_admin_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_permission_seq";
-CREATE SEQUENCE IF NOT EXISTS "platform_role_permission_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_role_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_role_permission_seq";
 CREATE SEQUENCE IF NOT EXISTS "program_type_seq";
-CREATE SEQUENCE IF NOT EXISTS "question_course_mapping_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_seq";
+CREATE SEQUENCE IF NOT EXISTS "question_course_mapping_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_type_seq";
-CREATE SEQUENCE IF NOT EXISTS "referral_code_seq";
 CREATE SEQUENCE IF NOT EXISTS "referral_seq";
+CREATE SEQUENCE IF NOT EXISTS "referral_code_seq";
 CREATE SEQUENCE IF NOT EXISTS "refund_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_application_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_seq";
+CREATE SEQUENCE IF NOT EXISTS "seat_matrix_course_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_matrix_seq";
 CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";
@@ -112,11 +114,11 @@ CREATE SEQUENCE IF NOT EXISTS "squad_search_seq";
 CREATE SEQUENCE IF NOT EXISTS "staff_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "starter_guide_video_seq";
 CREATE SEQUENCE IF NOT EXISTS "stream_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_answer_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_bank_account_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_fee_ledger_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_lead_seq";
-CREATE SEQUENCE IF NOT EXISTS "student_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_wallet_transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "study_level_seq";
 CREATE SEQUENCE IF NOT EXISTS "support_ticket_seq";
@@ -304,6 +306,8 @@ CREATE TABLE "counsellors" (
     "known_languages" VARCHAR(255),
     "session_fee" DECIMAL(10,2) NOT NULL DEFAULT 0.0,
     "profile_metadata" JSONB NOT NULL DEFAULT '{}',
+    "upi_id" VARCHAR(100),
+    "bank_details" JSONB NOT NULL DEFAULT '{}',
     "last_login_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -432,6 +436,8 @@ CREATE TABLE "colleges" (
     "domain" VARCHAR(255),
     "logo_url" TEXT,
     "cover_image_url" TEXT,
+    "lead_id" VARCHAR(100),
+    "address_from_lead" BOOLEAN NOT NULL DEFAULT false,
     "state" VARCHAR(100),
     "city" VARCHAR(100),
     "district" VARCHAR(100),
@@ -439,6 +445,7 @@ CREATE TABLE "colleges" (
     "pin_code" VARCHAR(10),
     "status" VARCHAR(20) NOT NULL DEFAULT 'active',
     "requested_group_code" VARCHAR(30),
+    "registration_tabs" JSONB NOT NULL DEFAULT '[]',
     "profile_sections" JSONB NOT NULL DEFAULT '{}',
     "settings" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -458,7 +465,6 @@ CREATE TABLE "colleges" (
     "campus_reels" JSONB NOT NULL DEFAULT '[]',
     "view_360_url" TEXT,
     "code_of_conduct" JSONB NOT NULL DEFAULT '[]',
-    "libraries" JSONB NOT NULL DEFAULT '[]',
     "clubs" JSONB NOT NULL DEFAULT '[]',
     "alliances" JSONB NOT NULL DEFAULT '[]',
     "placement_data" JSONB NOT NULL DEFAULT '{}',
@@ -523,6 +529,24 @@ CREATE TABLE "departments" (
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "libraries" (
+    "id" TEXT NOT NULL DEFAULT ('LIB-'::text || (nextval('library_seq'::regclass))::text),
+    "college_id" TEXT NOT NULL,
+    "department_id" TEXT,
+    "type" VARCHAR(20) NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "stats" JSONB NOT NULL DEFAULT '[]',
+    "available_resources" JSONB NOT NULL DEFAULT '{"items":[]}',
+    "library_hours" JSONB NOT NULL DEFAULT '{"days":[]}',
+    "facilities" JSONB NOT NULL DEFAULT '{"items":[]}',
+    "status" VARCHAR(20) NOT NULL DEFAULT 'active',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "libraries_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -629,14 +653,31 @@ CREATE TABLE "courses" (
 CREATE TABLE "course_quotas" (
     "id" TEXT NOT NULL DEFAULT ('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text),
     "course_id" TEXT NOT NULL,
+    "college_quota_id" TEXT NOT NULL,
+    "app_fee_reduction_type" VARCHAR(10),
+    "app_fee_reduction_value" DECIMAL(10,2),
     "tuition_fee_override" DECIMAL(12,2),
-    "quota_name" VARCHAR(100) NOT NULL,
-    "seats" INTEGER NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "course_quotas_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "college_quotas" (
+    "id" TEXT NOT NULL DEFAULT ('CQT-'::text || (nextval('college_quota_seq'::regclass))::text),
+    "college_id" TEXT NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "slug" VARCHAR(100) NOT NULL,
+    "bucket_type" VARCHAR(20) NOT NULL,
+    "description" TEXT,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "sort_order" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "college_quotas_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -955,6 +996,7 @@ CREATE TABLE "application_courses" (
     "status" VARCHAR(30) NOT NULL DEFAULT 'draft',
     "rejection_reason" TEXT,
     "quota_id" TEXT,
+    "preference_order" SMALLINT NOT NULL DEFAULT 1,
     "status_history" JSONB NOT NULL DEFAULT '[]',
     "status_updated_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1092,15 +1134,24 @@ CREATE TABLE "document_upload_configs" (
 -- CreateTable
 CREATE TABLE "seat_matrix" (
     "id" TEXT NOT NULL DEFAULT ('SMX-'::text || (nextval('seat_matrix_seq'::regclass))::text),
-    "course_id" TEXT NOT NULL,
+    "college_quota_id" TEXT NOT NULL,
     "admission_cycle_id" TEXT NOT NULL,
-    "quota_id" TEXT NOT NULL,
     "total_seats" INTEGER NOT NULL,
     "open_seats" INTEGER NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "seat_matrix_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "seat_matrix_courses" (
+    "id" TEXT NOT NULL DEFAULT ('SMC-'::text || (nextval('seat_matrix_course_seq'::regclass))::text),
+    "seat_matrix_id" TEXT NOT NULL,
+    "course_id" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "seat_matrix_courses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1853,6 +1904,9 @@ CREATE TABLE "counsellor_availability" (
     "session_duration_mins" INTEGER NOT NULL DEFAULT 45,
     "is_booked" BOOLEAN NOT NULL DEFAULT false,
     "session_fee" DECIMAL(10,2) NOT NULL DEFAULT 0.0,
+    "meeting_url" TEXT,
+    "meeting_id" VARCHAR(50),
+    "google_event_id" VARCHAR(255),
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1930,11 +1984,33 @@ CREATE TABLE "counsellor_wallet_transactions" (
     "description" VARCHAR(255),
     "session_id" TEXT,
     "withdrawal_status" VARCHAR(20),
-    "bank_details" JSONB NOT NULL DEFAULT '{}',
+    "payout_details" JSONB NOT NULL DEFAULT '{}',
     "balance_after" DECIMAL(12,2) NOT NULL,
+    "reviewed_by" TEXT,
+    "review_remarks" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "counsellor_wallet_transactions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "counselling_refund_requests" (
+    "id" TEXT NOT NULL DEFAULT ('CRQ-'::text || (nextval('counselling_refund_request_seq'::regclass))::text),
+    "session_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "counsellor_id" TEXT NOT NULL,
+    "amount" DECIMAL(10,2) NOT NULL,
+    "upi_id" VARCHAR(100) NOT NULL,
+    "reason" TEXT NOT NULL,
+    "proof_url" TEXT,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+    "reviewed_by" TEXT,
+    "review_remarks" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "counselling_refund_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -2067,21 +2143,45 @@ CREATE TABLE "campus_visits" (
     "id" TEXT NOT NULL DEFAULT ('CMV-'::text || (nextval('campus_visit_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
-    "ambassador_id" TEXT NOT NULL,
+    "ambassador_id" TEXT,
     "student_name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255),
+    "phone_number" VARCHAR(20),
     "course_interest" VARCHAR(255),
     "department" VARCHAR(255),
+    "additional_visitors_count" SMALLINT NOT NULL DEFAULT 0,
+    "guests" JSONB,
+    "reason_for_visit" TEXT,
     "proposed_date" DATE NOT NULL,
     "proposed_time" TIME NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
     "reassigned_from" TEXT,
     "reassignment_reason" TEXT,
+    "cancellation_reason" TEXT,
+    "rejection_reason" TEXT,
+    "previous_proposed_date" DATE,
+    "previous_proposed_time" TIME,
+    "rescheduled_at" TIMESTAMPTZ,
     "visit_notes" TEXT,
     "visit_rating" SMALLINT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "campus_visits_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "campus_visit_availability" (
+    "id" TEXT NOT NULL DEFAULT ('CVA-'::text || (nextval('campus_visit_availability_seq'::regclass))::text),
+    "college_id" TEXT NOT NULL,
+    "weekday" SMALLINT NOT NULL,
+    "time" TIME,
+    "max_capacity" INTEGER NOT NULL DEFAULT 1,
+    "is_off" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "campus_visit_availability_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -2403,6 +2503,18 @@ CREATE TABLE "chat_messages" (
     CONSTRAINT "chat_messages_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "platform_configs" (
+    "id" VARCHAR(20) NOT NULL DEFAULT 'default',
+    "meeting_gst_percentage" DECIMAL(5,2) NOT NULL DEFAULT 18.00,
+    "counsellor_min_withdrawal_amount" DECIMAL(10,2) NOT NULL DEFAULT 500.00,
+    "updated_by_admin_id" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "platform_configs_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "students_email_key" ON "students"("email");
 
@@ -2644,6 +2756,12 @@ CREATE INDEX "idx_departments_campus" ON "departments"("campus_id");
 CREATE UNIQUE INDEX "departments_college_id_slug_key" ON "departments"("college_id", "slug");
 
 -- CreateIndex
+CREATE INDEX "idx_libraries_college" ON "libraries"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_libraries_department" ON "libraries"("department_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "streams_name_key" ON "streams"("name");
 
 -- CreateIndex
@@ -2695,7 +2813,22 @@ CREATE UNIQUE INDEX "courses_college_id_code_key" ON "courses"("college_id", "co
 CREATE INDEX "idx_quotas_course" ON "course_quotas"("course_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "course_quotas_course_id_quota_name_key" ON "course_quotas"("course_id", "quota_name");
+CREATE INDEX "idx_quotas_college_quota" ON "course_quotas"("college_quota_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "course_quotas_course_id_college_quota_id_key" ON "course_quotas"("course_id", "college_quota_id");
+
+-- CreateIndex
+CREATE INDEX "idx_college_quotas_college" ON "college_quotas"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_college_quotas_bucket" ON "college_quotas"("college_id", "bucket_type");
+
+-- CreateIndex
+CREATE INDEX "idx_college_quotas_active" ON "college_quotas"("college_id", "is_active");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "college_quotas_college_id_slug_key" ON "college_quotas"("college_id", "slug");
 
 -- CreateIndex
 CREATE INDEX "idx_gallery_college" ON "college_gallery"("college_id");
@@ -2887,6 +3020,9 @@ CREATE INDEX "idx_app_courses_course" ON "application_courses"("course_id");
 CREATE INDEX "idx_app_courses_status" ON "application_courses"("status");
 
 -- CreateIndex
+CREATE INDEX "idx_app_courses_preference" ON "application_courses"("application_id", "preference_order");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "application_courses_application_id_course_id_key" ON "application_courses"("application_id", "course_id");
 
 -- CreateIndex
@@ -2980,16 +3116,22 @@ CREATE INDEX "idx_duc_category" ON "document_upload_configs"("document_category"
 CREATE INDEX "idx_duc_active" ON "document_upload_configs"("college_id", "is_active");
 
 -- CreateIndex
-CREATE INDEX "idx_seat_matrix_course" ON "seat_matrix"("course_id");
+CREATE INDEX "idx_seat_matrix_college_quota" ON "seat_matrix"("college_quota_id");
 
 -- CreateIndex
 CREATE INDEX "idx_seat_matrix_cycle" ON "seat_matrix"("admission_cycle_id");
 
 -- CreateIndex
-CREATE INDEX "idx_seat_matrix_quota" ON "seat_matrix"("quota_id");
+CREATE UNIQUE INDEX "seat_matrix_college_quota_id_admission_cycle_id_key" ON "seat_matrix"("college_quota_id", "admission_cycle_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "seat_matrix_course_id_admission_cycle_id_quota_id_key" ON "seat_matrix"("course_id", "admission_cycle_id", "quota_id");
+CREATE INDEX "idx_smc_seat_matrix" ON "seat_matrix_courses"("seat_matrix_id");
+
+-- CreateIndex
+CREATE INDEX "idx_smc_course" ON "seat_matrix_courses"("course_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "seat_matrix_courses_seat_matrix_id_course_id_key" ON "seat_matrix_courses"("seat_matrix_id", "course_id");
 
 -- CreateIndex
 CREATE INDEX "idx_sections_college" ON "assessment_sections"("college_id");
@@ -3505,6 +3647,18 @@ CREATE INDEX "idx_wtxn_type" ON "counsellor_wallet_transactions"("type");
 CREATE INDEX "idx_wtxn_created" ON "counsellor_wallet_transactions"("created_at");
 
 -- CreateIndex
+CREATE INDEX "idx_refund_req_session" ON "counselling_refund_requests"("session_id");
+
+-- CreateIndex
+CREATE INDEX "idx_refund_req_student" ON "counselling_refund_requests"("student_id");
+
+-- CreateIndex
+CREATE INDEX "idx_refund_req_counsellor" ON "counselling_refund_requests"("counsellor_id");
+
+-- CreateIndex
+CREATE INDEX "idx_refund_req_status" ON "counselling_refund_requests"("status");
+
+-- CreateIndex
 CREATE INDEX "idx_counsellor_request_status" ON "counsellor_registration_requests"("status");
 
 -- CreateIndex
@@ -3593,6 +3747,12 @@ CREATE INDEX "idx_visits_date" ON "campus_visits"("proposed_date");
 
 -- CreateIndex
 CREATE INDEX "idx_visits_status" ON "campus_visits"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_visit_availability_college" ON "campus_visit_availability"("college_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "campus_visit_availability_college_id_weekday_key" ON "campus_visit_availability"("college_id", "weekday");
 
 -- CreateIndex
 CREATE INDEX "idx_media_college" ON "media_kits"("college_id");
@@ -3868,6 +4028,12 @@ ALTER TABLE "departments" ADD CONSTRAINT "departments_college_id_fkey" FOREIGN K
 ALTER TABLE "departments" ADD CONSTRAINT "departments_campus_id_fkey" FOREIGN KEY ("campus_id") REFERENCES "campuses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "libraries" ADD CONSTRAINT "libraries_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "libraries" ADD CONSTRAINT "libraries_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "disciplines"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "disciplines" ADD CONSTRAINT "disciplines_stream_id_fkey" FOREIGN KEY ("stream_id") REFERENCES "streams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -3890,6 +4056,12 @@ ALTER TABLE "courses" ADD CONSTRAINT "courses_program_type_id_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "course_quotas" ADD CONSTRAINT "course_quotas_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "course_quotas" ADD CONSTRAINT "course_quotas_college_quota_id_fkey" FOREIGN KEY ("college_quota_id") REFERENCES "college_quotas"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "college_quotas" ADD CONSTRAINT "college_quotas_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "college_gallery" ADD CONSTRAINT "college_gallery_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -4030,13 +4202,16 @@ ALTER TABLE "document_upload_configs" ADD CONSTRAINT "document_upload_configs_co
 ALTER TABLE "document_upload_configs" ADD CONSTRAINT "document_upload_configs_admission_cycle_id_fkey" FOREIGN KEY ("admission_cycle_id") REFERENCES "admission_cycles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_college_quota_id_fkey" FOREIGN KEY ("college_quota_id") REFERENCES "college_quotas"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_admission_cycle_id_fkey" FOREIGN KEY ("admission_cycle_id") REFERENCES "admission_cycles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "seat_matrix" ADD CONSTRAINT "seat_matrix_quota_id_fkey" FOREIGN KEY ("quota_id") REFERENCES "course_quotas"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "seat_matrix_courses" ADD CONSTRAINT "seat_matrix_courses_seat_matrix_id_fkey" FOREIGN KEY ("seat_matrix_id") REFERENCES "seat_matrix"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "seat_matrix_courses" ADD CONSTRAINT "seat_matrix_courses_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "assessment_sections" ADD CONSTRAINT "assessment_sections_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -4375,6 +4550,21 @@ ALTER TABLE "counsellor_wallet_transactions" ADD CONSTRAINT "counsellor_wallet_t
 ALTER TABLE "counsellor_wallet_transactions" ADD CONSTRAINT "counsellor_wallet_transactions_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "counselling_sessions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "counsellor_wallet_transactions" ADD CONSTRAINT "counsellor_wallet_transactions_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "counselling_refund_requests" ADD CONSTRAINT "counselling_refund_requests_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "counselling_sessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "counselling_refund_requests" ADD CONSTRAINT "counselling_refund_requests_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "counselling_refund_requests" ADD CONSTRAINT "counselling_refund_requests_counsellor_id_fkey" FOREIGN KEY ("counsellor_id") REFERENCES "counsellors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "counselling_refund_requests" ADD CONSTRAINT "counselling_refund_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "counsellor_registration_requests" ADD CONSTRAINT "counsellor_registration_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -4432,10 +4622,13 @@ ALTER TABLE "campus_visits" ADD CONSTRAINT "campus_visits_college_id_fkey" FOREI
 ALTER TABLE "campus_visits" ADD CONSTRAINT "campus_visits_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "campus_visits" ADD CONSTRAINT "campus_visits_ambassador_id_fkey" FOREIGN KEY ("ambassador_id") REFERENCES "blink_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "campus_visits" ADD CONSTRAINT "campus_visits_ambassador_id_fkey" FOREIGN KEY ("ambassador_id") REFERENCES "blink_users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "campus_visits" ADD CONSTRAINT "campus_visits_reassigned_from_fkey" FOREIGN KEY ("reassigned_from") REFERENCES "blink_users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "campus_visit_availability" ADD CONSTRAINT "campus_visit_availability_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "media_kits" ADD CONSTRAINT "media_kits_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -4514,3 +4707,6 @@ ALTER TABLE "ticket_messages" ADD CONSTRAINT "ticket_messages_ticket_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "chat_conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "platform_configs" ADD CONSTRAINT "platform_configs_updated_by_admin_id_fkey" FOREIGN KEY ("updated_by_admin_id") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
