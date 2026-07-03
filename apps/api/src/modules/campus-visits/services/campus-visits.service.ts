@@ -476,9 +476,13 @@ export class CampusVisitsService {
 
     const visits = await CampusVisitsRepository.findUpcomingActiveVisits(now);
 
-    let count = 0;
-    const REMINDER_TARGET_MS = 60 * 60 * 1000; // 1 hour
     const TOLERANCE_MS = 5 * 60 * 1000; // +/- 5 minutes, matched to the job's polling cadence
+    const REMINDER_TIERS = [
+      { key: "24h", targetMs: 24 * 60 * 60 * 1000, label: "24 hours" },
+      { key: "1h", targetMs: 60 * 60 * 1000, label: "1 hour" },
+    ] as const;
+
+    let count = 0;
 
     for (const visit of visits) {
       const visitInstantMs = Date.UTC(
@@ -490,37 +494,47 @@ export class CampusVisitsService {
       );
       const msUntilVisit = visitInstantMs - now.getTime();
 
-      if (Math.abs(msUntilVisit - REMINDER_TARGET_MS) > TOLERANCE_MS) continue;
+      for (const tier of REMINDER_TIERS) {
+        if (Math.abs(msUntilVisit - tier.targetMs) > TOLERANCE_MS) continue;
 
-      const redisKey = `campus-visit:reminder-sent:${visit.id}`;
-      const alreadySent = await redis.get(redisKey);
-      if (alreadySent) continue;
+        const redisKey = `campus-visit:reminder-${tier.key}-sent:${visit.id}`;
+        const alreadySent = await redis.get(redisKey);
+        if (alreadySent) continue;
 
-      // Mark before sending — best effort, prevents double-fire even if push throws
-      await redis.set(redisKey, "1", "EX", 24 * 60 * 60);
+        // Mark before sending — best effort, prevents double-fire even if push throws
+        await redis.set(redisKey, "1", "EX", 48 * 60 * 60);
 
-      const dateStr = formatDateStr(visit.proposedDate);
-      const timeStr = formatTime12h(visit.proposedTime);
+        const dateStr = formatDateStr(visit.proposedDate);
+        const timeStr = formatTime12h(visit.proposedTime);
 
-      const notifications = [
-        PushService.sendToUser(visit.studentId, "student", {
-          title: "Campus visit starting soon",
-          body: `Your campus visit is in about 1 hour, at ${timeStr} on ${dateStr}`,
-          data: { type: "campus_visit_reminder", visitId: visit.id },
-        }),
-      ];
-      if (visit.ambassadorId) {
-        notifications.push(
-          PushService.sendToUser(visit.ambassadorId, "blink_ambassador", {
+        const notifications = [
+          PushService.sendToUser(visit.studentId, "student", {
             title: "Campus visit starting soon",
-            body: `${visit.studentName}'s visit is in about 1 hour, at ${timeStr} on ${dateStr}`,
-            data: { type: "campus_visit_reminder", visitId: visit.id },
+            body: `Your campus visit is in about ${tier.label}, at ${timeStr} on ${dateStr}`,
+            data: {
+              type: "campus_visit_reminder",
+              visitId: visit.id,
+              tier: tier.key,
+            },
           }),
-        );
-      }
+        ];
+        if (visit.ambassadorId) {
+          notifications.push(
+            PushService.sendToUser(visit.ambassadorId, "blink_ambassador", {
+              title: "Campus visit starting soon",
+              body: `${visit.studentName}'s visit is in about ${tier.label}, at ${timeStr} on ${dateStr}`,
+              data: {
+                type: "campus_visit_reminder",
+                visitId: visit.id,
+                tier: tier.key,
+              },
+            }),
+          );
+        }
 
-      await Promise.allSettled(notifications);
-      count += 1;
+        await Promise.allSettled(notifications);
+        count += 1;
+      }
     }
 
     return count;

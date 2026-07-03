@@ -18,7 +18,7 @@ export async function startVisitReminderJob(): Promise<void> {
     if (count > 0) {
       logger.info(
         { count, module: "campus-visits", action: "VISIT_REMINDER_SENT" },
-        "Sent 1-hour campus visit reminders",
+        "Sent campus visit reminders (24-hour / 1-hour)",
       );
     }
   });
