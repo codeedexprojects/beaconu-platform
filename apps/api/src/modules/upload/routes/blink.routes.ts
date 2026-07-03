@@ -8,14 +8,14 @@ const router: Router = Router();
 router.post(
   "/avatar/presign",
   authenticate,
-  authorizeUserType("blink_associate", "blink_employee"),
+  authorizeUserType("blink_associate", "blink_employee", "blink_ambassador"),
   BlinkUploadController.presignAvatar,
 );
 
 router.post(
   "/avatar/verify",
   authenticate,
-  authorizeUserType("blink_associate", "blink_employee"),
+  authorizeUserType("blink_associate", "blink_employee", "blink_ambassador"),
   BlinkUploadController.verifyAvatar,
 );
 
