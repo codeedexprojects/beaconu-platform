@@ -13,13 +13,6 @@ export interface CampusVisitGuest {
   relation: string;
 }
 
-export interface CampusVisitAmbassador {
-  id: string;
-  fullName: string;
-  avatarUrl: string | null;
-  campusCode: string | null;
-}
-
 export interface CampusVisitAmbassadorContact {
   id: string;
   fullName: string;
@@ -48,7 +41,7 @@ export interface CampusVisit {
   id: string;
   collegeId: string;
   studentId: string;
-  ambassador: CampusVisitAmbassador | null;
+  ambassador: CampusVisitAmbassadorContact | null;
   studentName: string;
   email: string | null;
   phoneNumber: string | null;
@@ -104,10 +97,11 @@ export interface ReassignCampusVisitInput {
 export interface CampusVisitListItem {
   id: string;
   collegeId: string;
+  college: CampusVisitCollegeLocation;
   studentName: string;
   email: string | null;
   phoneNumber: string | null;
-  ambassador: CampusVisitAmbassador | null;
+  ambassador: CampusVisitAmbassadorContact | null;
   proposedDate: string;
   proposedTime: string;
   status: CampusVisitStatus;

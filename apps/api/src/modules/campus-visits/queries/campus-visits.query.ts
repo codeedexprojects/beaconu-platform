@@ -11,6 +11,7 @@ function mapAmbassador(
   ambassador: {
     id: string;
     fullName: string;
+    phoneNumber: string | null;
     avatarUrl: string | null;
     campusCode: string | null;
   } | null,
@@ -19,20 +20,51 @@ function mapAmbassador(
   return {
     id: ambassador.id,
     fullName: ambassador.fullName,
+    phoneNumber: ambassador.phoneNumber,
     avatarUrl: ambassador.avatarUrl,
     campusCode: ambassador.campusCode,
+  };
+}
+
+function mapCollege(college: {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  district: string | null;
+  state: string | null;
+  pinCode: string | null;
+}) {
+  return {
+    id: college.id,
+    name: college.name,
+    address: college.address,
+    city: college.city,
+    district: college.district,
+    state: college.state,
+    pinCode: college.pinCode,
   };
 }
 
 function mapToListItem(v: {
   id: string;
   collegeId: string;
+  college: {
+    id: string;
+    name: string;
+    address: string | null;
+    city: string | null;
+    district: string | null;
+    state: string | null;
+    pinCode: string | null;
+  };
   studentName: string;
   email: string | null;
   phoneNumber: string | null;
   ambassador: {
     id: string;
     fullName: string;
+    phoneNumber: string | null;
     avatarUrl: string | null;
     campusCode: string | null;
   } | null;
@@ -47,6 +79,7 @@ function mapToListItem(v: {
   return {
     id: v.id,
     collegeId: v.collegeId,
+    college: mapCollege(v.college),
     studentName: v.studentName,
     email: v.email,
     phoneNumber: v.phoneNumber,
@@ -62,7 +95,25 @@ function mapToListItem(v: {
 }
 
 const ambassadorInclude = {
-  select: { id: true, fullName: true, avatarUrl: true, campusCode: true },
+  select: {
+    id: true,
+    fullName: true,
+    phoneNumber: true,
+    avatarUrl: true,
+    campusCode: true,
+  },
+};
+
+const collegeInclude = {
+  select: {
+    id: true,
+    name: true,
+    address: true,
+    city: true,
+    district: true,
+    state: true,
+    pinCode: true,
+  },
 };
 
 export class CampusVisitsQuery {
@@ -87,7 +138,7 @@ export class CampusVisitsQuery {
         skip,
         take: limit,
         orderBy: { proposedDate: "asc" },
-        include: { ambassador: ambassadorInclude },
+        include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);
 
@@ -121,7 +172,7 @@ export class CampusVisitsQuery {
         skip,
         take: limit,
         orderBy: { proposedDate: "asc" },
-        include: { ambassador: ambassadorInclude },
+        include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);
 
@@ -156,7 +207,7 @@ export class CampusVisitsQuery {
         skip,
         take: limit,
         orderBy: { proposedDate: "asc" },
-        include: { ambassador: ambassadorInclude },
+        include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);
 
