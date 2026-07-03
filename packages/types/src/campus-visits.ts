@@ -113,6 +113,7 @@ export interface CampusVisitListItem {
   status: CampusVisitStatus;
   reasonForVisit: string | null;
   additionalVisitorsCount: number;
+  cancellationReason: string | null;
   createdAt: string;
 }
 

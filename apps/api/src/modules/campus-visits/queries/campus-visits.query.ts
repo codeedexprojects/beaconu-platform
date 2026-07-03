@@ -41,6 +41,7 @@ function mapToListItem(v: {
   status: string;
   reasonForVisit: string | null;
   additionalVisitorsCount: number;
+  cancellationReason: string | null;
   createdAt: Date;
 }): CampusVisitListItem {
   return {
@@ -55,6 +56,7 @@ function mapToListItem(v: {
     status: v.status as CampusVisitListItem["status"],
     reasonForVisit: v.reasonForVisit,
     additionalVisitorsCount: v.additionalVisitorsCount,
+    cancellationReason: v.cancellationReason,
     createdAt: v.createdAt.toISOString(),
   };
 }
