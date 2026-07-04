@@ -25,4 +25,12 @@ export const QUERY_KEYS = {
   campusVisit: (id: string) => ["college-campus-visits", id] as const,
   campusVisitStats: ["college-campus-visit-stats"] as const,
   campusVisitAvailability: ["college-campus-visit-availability"] as const,
+  submissionRequests: (filters?: object) =>
+    filters
+      ? ["college-submission-requests", filters]
+      : ["college-submission-requests"],
+  documentRequests: (filters?: object) =>
+    filters
+      ? ["college-document-requests", filters]
+      : ["college-document-requests"],
 } as const;

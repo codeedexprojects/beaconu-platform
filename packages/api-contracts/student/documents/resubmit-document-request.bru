@@ -1,0 +1,31 @@
+meta {
+  name: Resubmit Rejected Document Request
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/documents/requests/{{documentRequestId}}/resubmit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "document_name": "Bonafide Certificate (Updated)",
+    "description": "Re-uploaded with correct spelling of name",
+    "delivery_mode": "digital"
+  }
+}
+
+docs {
+  Only works when the request's status is "rejected". Resets it back to
+  "submitted", clears rejectionReason, and appends the previous
+  rejection + field values to resubmissionHistory. All body fields are
+  optional — only send what changed.
+}

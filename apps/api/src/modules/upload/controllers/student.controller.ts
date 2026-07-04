@@ -51,4 +51,26 @@ export class StudentUploadController {
     const result = await UploadService.verify(key);
     res.status(200).json(ApiResponse.success("Upload verified", result));
   }
+
+  static async presignDocument(req: Request, res: Response): Promise<void> {
+    const { mimeType } = presignBodySchema.parse(req.body);
+    const key = UploadService.buildKey(
+      ENTITY_TYPE,
+      req.userId!,
+      "documents",
+      mimeType as AllowedMimeType,
+    );
+    const result = await UploadService.presign(key, mimeType);
+    res.status(200).json(ApiResponse.success("Upload URL generated", result));
+  }
+
+  static async verifyDocument(req: Request, res: Response): Promise<void> {
+    const { key } = verifyBodySchema.parse(req.body);
+    const expectedPrefix = `${ENTITY_TYPE}/${req.userId!}/documents/`;
+    if (!key.startsWith(expectedPrefix)) {
+      throw new ValidationError("Invalid key: does not belong to this context");
+    }
+    const result = await UploadService.verify(key);
+    res.status(200).json(ApiResponse.success("Upload verified", result));
+  }
 }

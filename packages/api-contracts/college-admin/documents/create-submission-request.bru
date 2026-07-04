@@ -1,0 +1,41 @@
+meta {
+  name: Create Document Submission Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/documents/submission-requests
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "student_id": "{{studentId}}",
+    "document_category": "identification",
+    "document_name": "Aadhar Card",
+    "instructions": "Upload a clear scan of both sides",
+    "deadline": "2026-08-15"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("submissionRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  College admin requests a document from a specific student, with a document
+  type and deadline. Student sees this as a "pending" request and submits a
+  file against it.
+}

@@ -33,4 +33,18 @@ router.post(
   StudentUploadController.verifyRefundProof,
 );
 
+router.post(
+  "/document/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignDocument,
+);
+
+router.post(
+  "/document/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyDocument,
+);
+
 export default router;

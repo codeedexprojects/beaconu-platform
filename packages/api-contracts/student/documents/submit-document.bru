@@ -1,0 +1,29 @@
+meta {
+  name: Submit Requested Document
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/documents/submission-requests/{{submissionRequestId}}/submit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "file_url": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/students/{{studentId}}/documents/example.pdf",
+    "file_name": "aadhar-card.pdf",
+    "file_size_bytes": 153600
+  }
+}
+
+docs {
+  Upload the file first via POST /api/v1/student/uploads/document/presign + /verify,
+  then submit the returned permanent URL here. Moves the request to "under_review".
+}

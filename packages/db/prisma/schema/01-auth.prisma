@@ -51,6 +51,7 @@ model Student {
   supportTickets          SupportTicket[]
   documentRequests        DocumentRequest[]
   issuedDocs              IssuedDocument[]
+  documentSubmissionRequests DocumentSubmissionRequest[]
   campusVisits            CampusVisit[]
   studentFeeLedgers       StudentFeeLedger[]
   paymentReceipts         PaymentReceipt[]
@@ -208,6 +209,8 @@ model StaffMember {
   docRequestsAssigned         DocumentRequest[]        @relation("AssignedStaff")
   docRequestsProcessed        DocumentRequest[]        @relation("ProcessedByStaff")
   issuedDocuments             IssuedDocument[]
+  docSubmissionRequestsMade     DocumentSubmissionRequest[] @relation("DocSubReqRequestedBy")
+  docSubmissionRequestsReviewed DocumentSubmissionRequest[] @relation("DocSubReqReviewedBy")
   transactionsVerified        Transaction[]
   refundsProcessed            Refund[]
   antiRaggingAssigned         AntiRaggingComplaint[]

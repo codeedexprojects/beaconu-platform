@@ -1,0 +1,445 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Inbox,
+  ExternalLink,
+  Upload,
+  XCircle,
+  Loader2,
+  PlayCircle,
+  Send,
+  CheckCircle2,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useDocumentRequests,
+  useStartReviewDocumentRequest,
+  useSendForApprovalDocumentRequest,
+  useApproveDocumentRequest,
+  useIssueDocumentRequest,
+  useRejectDocumentRequest,
+} from "@/hooks/use-documents";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
+import { DocumentRequestStatus } from "@beaconu/types";
+
+const STATUS_LABELS: Record<DocumentRequestStatus, string> = {
+  submitted: "Submitted",
+  processing: "Processing",
+  awaiting_approval: "Awaiting Approval",
+  approved: "Approved",
+  rejected: "Rejected",
+  issued: "Issued",
+  collected: "Collected",
+};
+
+const STATUS_VARIANT: Record<
+  DocumentRequestStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  submitted: "secondary",
+  processing: "secondary",
+  awaiting_approval: "secondary",
+  approved: "default",
+  rejected: "destructive",
+  issued: "default",
+  collected: "outline",
+};
+
+export default function DocumentRequestsFromStudentsPage() {
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const { data, isLoading } = useDocumentRequests({
+    status: statusFilter || undefined,
+    page,
+    limit: 20,
+  });
+  const { mutate: startReview, isPending: isStartingReview } =
+    useStartReviewDocumentRequest();
+  const { mutate: sendForApproval, isPending: isSendingForApproval } =
+    useSendForApprovalDocumentRequest();
+  const { mutate: approve, isPending: isApproving } =
+    useApproveDocumentRequest();
+  const { mutate: issue, isPending: isIssuing } = useIssueDocumentRequest();
+  const { mutate: reject, isPending: isRejecting } = useRejectDocumentRequest();
+
+  const REJECTABLE_STATUSES: DocumentRequestStatus[] = [
+    DocumentRequestStatus.Submitted,
+    DocumentRequestStatus.Processing,
+    DocumentRequestStatus.AwaitingApproval,
+  ];
+
+  function handleStartReview(requestId: string) {
+    startReview(requestId, {
+      onSuccess: () => toast.success("Marked as under review"),
+    });
+  }
+
+  function handleSendForApproval(requestId: string) {
+    sendForApproval(requestId, {
+      onSuccess: () => toast.success("Sent for approval"),
+    });
+  }
+
+  function handleApprove(requestId: string) {
+    approve(requestId, {
+      onSuccess: () => toast.success("Document request approved"),
+    });
+  }
+
+  async function handleIssue(requestId: string, file: File | null) {
+    if (!file) return;
+    try {
+      setUploadingId(requestId);
+      const url = await uploadCollegeAdminFile(file, "documents/issued");
+      issue(
+        {
+          requestId,
+          data: {
+            document_url: url,
+            file_name: file.name,
+            file_size_bytes: file.size,
+          },
+        },
+        {
+          onSuccess: () => toast.success("Document issued to student"),
+        },
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingId(null);
+    }
+  }
+
+  function handleReject() {
+    if (!rejectingId || !rejectReason.trim()) return;
+    reject(
+      { requestId: rejectingId, data: { rejection_reason: rejectReason } },
+      {
+        onSuccess: () => {
+          toast.success("Document request rejected");
+          setRejectingId(null);
+          setRejectReason("");
+        },
+      },
+    );
+  }
+
+  const requests = data?.requests ?? [];
+  const meta = data?.meta;
+
+  return (
+    <div className="flex h-full flex-col gap-6 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Button variant="ghost" size="sm" className="mb-2 -ml-2" asChild>
+            <Link href="/documents">
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+              Back
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Documents Requested By Students
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Official documents (e.g. bonafide certificates) students have asked
+            for — upload the issued file or decline.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/documents">
+            <Inbox className="mr-1.5 h-3.5 w-3.5" />
+            Requests From College
+          </Link>
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => {
+            setStatusFilter(v === "all" ? "" : v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-9 w-48">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="awaiting_approval">Awaiting Approval</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="issued">Issued</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="collected">Collected</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex-1 overflow-hidden rounded-xl border shadow-sm">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="py-4 pl-6 text-xs font-semibold uppercase tracking-wide">
+                  Student
+                </TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
+                  Document
+                </TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
+                  Delivery
+                </TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
+                  Status
+                </TableHead>
+                <TableHead className="w-[220px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-b last:border-0">
+                    {Array.from({ length: 5 }).map((__, j) => (
+                      <TableCell key={j} className="py-4">
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : requests.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-20 text-center text-muted-foreground"
+                  >
+                    No document requests from students yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                requests.map((r) => (
+                  <TableRow
+                    key={r.id}
+                    className="border-b last:border-0 transition-colors hover:bg-muted/30"
+                  >
+                    <TableCell className="py-4 pl-6">
+                      <div className="space-y-0.5">
+                        <p className="font-medium text-sm">
+                          {r.student?.fullName ?? r.studentId}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.student?.email ?? ""}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium">{r.documentName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.requestNumber}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 text-sm capitalize text-muted-foreground">
+                      {r.deliveryMode}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <Badge variant={STATUS_VARIANT[r.status]}>
+                        {STATUS_LABELS[r.status]}
+                      </Badge>
+                      {r.status === "issued" && r.issuedDocumentUrl && (
+                        <a
+                          href={r.issuedDocumentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View issued file
+                        </a>
+                      )}
+                      {r.status === "rejected" && r.rejectionReason && (
+                        <p className="mt-1 max-w-[180px] truncate text-xs text-destructive">
+                          {r.rejectionReason}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4 pr-6 text-right">
+                      <div className="flex justify-end gap-2">
+                        {r.status === "submitted" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 text-xs"
+                            disabled={isStartingReview}
+                            onClick={() => handleStartReview(r.id)}
+                          >
+                            <PlayCircle className="h-3.5 w-3.5" />
+                            Start Review
+                          </Button>
+                        )}
+                        {r.status === "processing" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 text-xs"
+                            disabled={isSendingForApproval}
+                            onClick={() => handleSendForApproval(r.id)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            Send for Approval
+                          </Button>
+                        )}
+                        {r.status === "awaiting_approval" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-600"
+                            disabled={isApproving}
+                            onClick={() => handleApprove(r.id)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Approve
+                          </Button>
+                        )}
+                        {r.status === "approved" && (
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              className="sr-only"
+                              disabled={isIssuing || uploadingId === r.id}
+                              onChange={(e) =>
+                                handleIssue(r.id, e.target.files?.[0] ?? null)
+                              }
+                            />
+                            <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">
+                              {uploadingId === r.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
+                              Issue
+                            </span>
+                          </label>
+                        )}
+                        {REJECTABLE_STATUSES.includes(r.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+                            disabled={isRejecting}
+                            onClick={() => setRejectingId(r.id)}
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            Reject
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {meta && meta.total > 20 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            Page {meta.page} of {Math.ceil(meta.total / 20)} · {meta.total}{" "}
+            total
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!meta.hasNext}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold">
+              Reject Document Request
+            </h2>
+            <div className="space-y-1">
+              <Label>Reason for rejection</Label>
+              <textarea
+                rows={3}
+                placeholder="Let the student know why..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRejectingId(null);
+                  setRejectReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReject}
+                disabled={isRejecting || !rejectReason.trim()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isRejecting ? "Rejecting..." : "Confirm Rejection"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
