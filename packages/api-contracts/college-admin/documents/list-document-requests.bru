@@ -1,0 +1,27 @@
+meta {
+  name: List Document Requests From Students (College Admin)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/documents/requests
+  body: none
+  auth: none
+}
+
+query {
+  ~status: submitted
+  ~student_id: {{studentId}}
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Direction B — official documents (e.g. bonafide certificate) that students have
+  requested FROM the college. College admin fulfills via issue, or declines via reject.
+}

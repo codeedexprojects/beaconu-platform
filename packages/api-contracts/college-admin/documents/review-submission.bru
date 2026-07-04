@@ -1,0 +1,27 @@
+meta {
+  name: Review Document Submission (College Admin)
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/submission-requests/{{submissionRequestId}}/review
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "verified"
+  }
+}
+
+docs {
+  status: "verified" | "rejected". rejection_reason is required when rejecting.
+  Can only review a request that's currently "under_review" (i.e. student has submitted a file).
+}

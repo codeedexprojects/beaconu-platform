@@ -1,0 +1,34 @@
+meta {
+  name: Request Official Document From College
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/documents/requests
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "document_name": "Bonafide Certificate",
+    "description": "Needed for scholarship application",
+    "delivery_mode": "digital"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("documentRequestId", data.data.id);
+    }
+  }
+}

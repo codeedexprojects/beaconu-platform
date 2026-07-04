@@ -18,6 +18,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "settings",
   "ambassadors",
   "campus-visits",
+  "documents",
 ]);
 
 export function proxy(request: NextRequest) {
