@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
@@ -77,6 +77,10 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
+  // Guards the form-hydration effect below so a background refetch of
+  // `profile` (e.g. on window refocus) can't wipe in-progress edits —
+  // including an already-uploaded logo/cover URL — by re-running `reset()`.
+  const hasHydratedFormRef = useRef(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [listingModal, setListingModal] = useState<{
@@ -136,7 +140,8 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasHydratedFormRef.current) {
+      hasHydratedFormRef.current = true;
       reset({
         name: profile.name || "",
         code: profile.code || "",

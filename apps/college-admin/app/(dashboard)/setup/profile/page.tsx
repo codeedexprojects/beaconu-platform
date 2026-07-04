@@ -127,6 +127,10 @@ export default function SetupProfilePage() {
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
+  // Guards the form-hydration effect below so a background refetch of
+  // `profile` (e.g. on window refocus) can't wipe in-progress edits —
+  // including an already-uploaded logo/cover URL — by re-running `reset()`.
+  const hasHydratedFormRef = useRef(false);
 
   const {
     register,
@@ -145,7 +149,8 @@ export default function SetupProfilePage() {
   });
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasHydratedFormRef.current) {
+      hasHydratedFormRef.current = true;
       const commuteSection = (profile.profileSections?.commute as any) || {};
       const existingOverview =
         (profile.profileSections?.college_overview as Record<string, any>) ||
