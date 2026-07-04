@@ -1,0 +1,29 @@
+meta {
+  name: List Quotas
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/quotas?include_inactive=false
+  body: none
+  auth: bearer
+}
+
+params:query {
+  include_inactive: false
+  ~bucket_type: in_state
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("quotaId", data.data[0].id);
+    }
+  }
+}

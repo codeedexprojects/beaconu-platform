@@ -602,6 +602,56 @@ export async function deleteCollegeLibrary(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/libraries/${id}`);
 }
 
+export interface QuotaDto {
+  id: string;
+  collegeId: string;
+  name: string;
+  slug: string;
+  bucketType: "in_state" | "out_of_state";
+  description: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  usage: { courseCount: number; seatPoolCount: number };
+}
+
+export interface CreateQuotaInput {
+  name: string;
+  bucketType: "in_state" | "out_of_state";
+  description?: string | null;
+  sortOrder?: number;
+}
+
+export type UpdateQuotaInput = Partial<CreateQuotaInput> & {
+  isActive?: boolean;
+};
+
+export async function getCollegeQuotas(
+  includeInactive = true,
+): Promise<QuotaDto[]> {
+  return api.get<QuotaDto[]>(
+    `/api/v1/college-admin/quotas?include_inactive=${includeInactive}`,
+  );
+}
+
+export async function createCollegeQuota(
+  data: CreateQuotaInput,
+): Promise<QuotaDto> {
+  return api.post<QuotaDto>("/api/v1/college-admin/quotas", data);
+}
+
+export async function updateCollegeQuota(
+  id: string,
+  data: UpdateQuotaInput,
+): Promise<QuotaDto> {
+  return api.patch<QuotaDto>(`/api/v1/college-admin/quotas/${id}`, data);
+}
+
+export async function deleteCollegeQuota(id: string): Promise<void> {
+  return api.delete(`/api/v1/college-admin/quotas/${id}`);
+}
+
 export async function getCollegeDepartments(): Promise<DepartmentDto[]> {
   return api.get<DepartmentDto[]>("/api/v1/college-admin/lookups/departments");
 }

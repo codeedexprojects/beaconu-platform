@@ -18,6 +18,7 @@ import {
   Star,
   Library,
   CalendarDays,
+  Percent,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -191,6 +192,7 @@ export default function DashboardLayout({
     if (path.includes("/setup/profile")) return "profile.view";
     if (path.includes("/setup/campuses")) return "campuses.view";
     if (path.includes("/setup/academics")) return "academics.view";
+    if (path.includes("/quotas")) return "academics.view";
     if (path.includes("/roles")) return "staff.view";
     if (path.includes("/staff")) return "staff.view";
     if (path.includes("/hostels")) return "hostel.view";
@@ -294,6 +296,12 @@ export default function DashboardLayout({
                     name: "Academics Catalog",
                     path: "/setup/academics",
                     icon: BookOpen,
+                    permission: "academics.view",
+                  },
+                  {
+                    name: "Quota Catalogue",
+                    path: "/quotas",
+                    icon: Percent,
                     permission: "academics.view",
                   },
                   {
@@ -532,6 +540,7 @@ export default function DashboardLayout({
                       { name: "Overview Profile", path: "/setup/profile" },
                       { name: "Campuses Catalog", path: "/setup/campuses" },
                       { name: "Academics Catalog", path: "/setup/academics" },
+                      { name: "Quota Catalogue", path: "/quotas" },
                       { name: "Role Builder (RBAC)", path: "/roles" },
                       { name: "Staff Directory", path: "/staff" },
                       { name: "Hostels Occupancy", path: "/hostels" },
