@@ -105,6 +105,12 @@ export interface DocumentRequestResubmissionHistoryEntry {
   };
 }
 
+export interface SupportingDocument {
+  url: string;
+  name: string | null;
+  sizeBytes: number | null;
+}
+
 export interface DocumentRequestItem {
   id: string;
   requestNumber: string;
@@ -118,6 +124,7 @@ export interface DocumentRequestItem {
   rejectionReason: string | null;
   resubmissionCount: number;
   resubmissionHistory: DocumentRequestResubmissionHistoryEntry[];
+  supportingDocuments: SupportingDocument[];
   issuedDocumentUrl: string | null;
   issuedAt: string | null;
   createdAt: string;
@@ -130,11 +137,18 @@ export interface DocumentRequestListResponse {
   meta: PaginationMeta;
 }
 
+export interface SupportingDocumentInput {
+  url: string;
+  name?: string;
+  size_bytes?: number;
+}
+
 export interface CreateDocumentRequestInput {
   college_id: string;
   document_name: string;
   description?: string;
   delivery_mode: DocumentDeliveryMode;
+  supporting_documents?: SupportingDocumentInput[];
 }
 
 export interface IssueDocumentRequestInput {

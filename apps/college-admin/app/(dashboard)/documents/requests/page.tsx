@@ -13,6 +13,7 @@ import {
   PlayCircle,
   Send,
   CheckCircle2,
+  Paperclip,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -269,6 +270,22 @@ export default function DocumentRequestsFromStudentsPage() {
                         <p className="text-xs text-muted-foreground">
                           {r.requestNumber}
                         </p>
+                        {r.supportingDocuments.length > 0 && (
+                          <div className="mt-1 flex flex-col gap-0.5">
+                            {r.supportingDocuments.map((doc, i) => (
+                              <a
+                                key={i}
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                              >
+                                <Paperclip className="h-3 w-3" />
+                                {doc.name ?? `Attachment ${i + 1}`}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-4 text-sm capitalize text-muted-foreground">

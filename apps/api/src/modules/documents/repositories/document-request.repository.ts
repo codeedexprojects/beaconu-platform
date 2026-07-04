@@ -9,6 +9,14 @@ export class DocumentRequestRepository {
     collegeId: string,
     data: CreateDocumentRequestInput,
   ) {
+    const supportingDocuments: Prisma.InputJsonValue = (
+      data.supporting_documents ?? []
+    ).map((doc) => ({
+      url: doc.url,
+      name: doc.name ?? null,
+      sizeBytes: doc.size_bytes ?? null,
+    }));
+
     return prisma.documentRequest.create({
       data: {
         requestNumber: `DOC-${randomUUID().slice(0, 8).toUpperCase()}`,
@@ -17,6 +25,7 @@ export class DocumentRequestRepository {
         documentName: data.document_name,
         description: data.description ?? null,
         deliveryMode: data.delivery_mode,
+        supportingDocuments,
         status: "submitted",
       },
     });

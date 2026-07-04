@@ -12,10 +12,16 @@ get {
 
 query {
   ~status: pending
+  ~search: aadhar
   page: 1
   limit: 20
 }
 
 headers {
   Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  search (optional): case-insensitive match against document name or
+  category (e.g. "aadhar", "identification").
 }

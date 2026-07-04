@@ -44,6 +44,7 @@ export const submissionRequestListQuerySchema = z.object({
     .enum(["pending", "under_review", "verified", "rejected"])
     .optional(),
   student_id: z.string().trim().optional(),
+  search: z.string().trim().max(255).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -61,11 +62,18 @@ export type SubmissionRequestListQuery = z.infer<
 // Student creates the request (e.g. bonafide certificate), college admin
 // issues (uploads) it or rejects it.
 
+export const supportingDocumentSchema = z.object({
+  url: z.string().trim().url("A valid file URL is required"),
+  name: z.string().trim().max(255).optional(),
+  size_bytes: z.coerce.number().int().positive().optional(),
+});
+
 export const createDocumentRequestSchema = z.object({
   college_id: z.string().trim().min(1, "College is required"),
   document_name: z.string().trim().min(1, "Document name is required").max(255),
   description: z.string().trim().max(1000).optional(),
   delivery_mode: z.enum(["digital", "pickup", "courier"]),
+  supporting_documents: z.array(supportingDocumentSchema).max(5).optional(),
 });
 
 export const issueDocumentRequestSchema = z.object({
@@ -100,10 +108,12 @@ export const documentRequestListQuerySchema = z.object({
     ])
     .optional(),
   student_id: z.string().trim().optional(),
+  search: z.string().trim().max(255).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export type SupportingDocumentInput = z.infer<typeof supportingDocumentSchema>;
 export type CreateDocumentRequestInput = z.infer<
   typeof createDocumentRequestSchema
 >;
