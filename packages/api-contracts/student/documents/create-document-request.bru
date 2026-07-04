@@ -20,7 +20,14 @@ body:json {
     "college_id": "{{collegeId}}",
     "document_name": "Bonafide Certificate",
     "description": "Needed for scholarship application",
-    "delivery_mode": "digital"
+    "delivery_mode": "digital",
+    "supporting_documents": [
+      {
+        "url": "{{documentFileUrl}}",
+        "name": "Fee Receipt.pdf",
+        "size_bytes": 153600
+      }
+    ]
   }
 }
 
@@ -31,4 +38,11 @@ script:post-response {
       bru.setEnvVar("documentRequestId", data.data.id);
     }
   }
+}
+
+docs {
+  supporting_documents (optional, max 5): each file must be uploaded first
+  via POST /api/v1/student/uploads/document/presign + /verify (see the
+  Document folder under student/uploads), then passed here as
+  { url, name?, size_bytes? }. Visible to college admin on the request.
 }

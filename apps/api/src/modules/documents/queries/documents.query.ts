@@ -83,6 +83,7 @@ function mapDocumentRequest(row: {
   rejectionReason: string | null;
   resubmissionCount: number;
   resubmissionHistory: unknown;
+  supportingDocuments: unknown;
   issuedDocumentUrl: string | null;
   issuedAt: Date | null;
   createdAt: Date;
@@ -120,6 +121,9 @@ function mapDocumentRequest(row: {
     resubmissionHistory: Array.isArray(row.resubmissionHistory)
       ? row.resubmissionHistory
       : [],
+    supportingDocuments: Array.isArray(row.supportingDocuments)
+      ? row.supportingDocuments
+      : [],
     issuedDocumentUrl: row.issuedDocumentUrl,
     issuedAt: row.issuedAt ? row.issuedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
@@ -133,11 +137,29 @@ export class DocumentsQuery {
 
   static async listSubmissionRequestsForStudent(
     studentId: string,
-    filters: { status?: string; page: number; limit: number },
+    filters: { status?: string; search?: string; page: number; limit: number },
   ) {
     const where = {
       studentId,
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              {
+                documentName: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                documentCategory: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
     };
     const skip = (filters.page - 1) * filters.limit;
 
@@ -214,11 +236,35 @@ export class DocumentsQuery {
 
   static async listDocumentRequestsForStudent(
     studentId: string,
-    filters: { status?: string; page: number; limit: number },
+    filters: { status?: string; search?: string; page: number; limit: number },
   ) {
     const where = {
       studentId,
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              {
+                documentName: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                description: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                requestNumber: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
     };
     const skip = (filters.page - 1) * filters.limit;
 
