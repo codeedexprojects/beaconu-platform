@@ -4,6 +4,8 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { DocumentRequestRepository } from "../repositories/document-request.repository";
 import { DocumentTemplateRepository } from "../repositories/document-template.repository";
 import type {
@@ -19,6 +21,50 @@ function historyEntry(status: string, changedBy: string | null) {
 
 function appendHistory(existing: unknown, entry: Record<string, unknown>) {
   return [...(Array.isArray(existing) ? existing : []), entry];
+}
+
+/** Best-effort push notifications for the document-request lifecycle — never throw. */
+
+async function notifyStudentOfRejection(request: {
+  id: string;
+  studentId: string;
+  documentName: string;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(request.studentId, "student", {
+      title: "Document request rejected",
+      body: `Your request for "${request.documentName}" was rejected`,
+      data: { type: "document_request_rejected", requestId: request.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, requestId: request.id },
+      "Failed to notify student of document request rejection",
+    );
+  }
+}
+
+async function notifyStudentOfIssue(request: {
+  id: string;
+  studentId: string;
+  documentName: string;
+  deliveryMode: string;
+}): Promise<void> {
+  try {
+    const isPickup = request.deliveryMode === "pickup";
+    await PushService.sendToUser(request.studentId, "student", {
+      title: "Document ready",
+      body: isPickup
+        ? `"${request.documentName}" is ready for pickup at the college office`
+        : `"${request.documentName}" is ready to download`,
+      data: { type: "document_request_issued", requestId: request.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, requestId: request.id },
+      "Failed to notify student of document issue",
+    );
+  }
 }
 
 export class DocumentRequestService {
@@ -186,7 +232,7 @@ export class DocumentRequestService {
       );
     }
 
-    return DocumentRequestRepository.reject(
+    const rejected = await DocumentRequestRepository.reject(
       id,
       processedBy,
       data.rejection_reason,
@@ -195,6 +241,8 @@ export class DocumentRequestService {
         historyEntry("rejected", processedBy),
       ),
     );
+    await notifyStudentOfRejection(rejected);
+    return rejected;
   }
 
   static async issue(
@@ -217,18 +265,23 @@ export class DocumentRequestService {
       }
     }
 
-    const { issued } = await DocumentRequestRepository.issue(
-      id,
-      processedBy,
-      {
-        documentUrl: data.document_url,
-        fileName: data.file_name ?? null,
-        fileSizeBytes: data.file_size_bytes ?? null,
-        pickupInstructions: data.pickup_instructions ?? null,
-        officeContactPhone: data.office_contact_phone ?? null,
-      },
-      appendHistory(request.statusHistory, historyEntry("issued", processedBy)),
-    );
+    const { request: updatedRequest, issued } =
+      await DocumentRequestRepository.issue(
+        id,
+        processedBy,
+        {
+          documentUrl: data.document_url,
+          fileName: data.file_name ?? null,
+          fileSizeBytes: data.file_size_bytes ?? null,
+          pickupInstructions: data.pickup_instructions ?? null,
+          officeContactPhone: data.office_contact_phone ?? null,
+        },
+        appendHistory(
+          request.statusHistory,
+          historyEntry("issued", processedBy),
+        ),
+      );
+    await notifyStudentOfIssue(updatedRequest);
     return issued;
   }
 }
