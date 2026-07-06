@@ -14,8 +14,8 @@ import {
   Send,
   CheckCircle2,
   Paperclip,
-  History,
   Phone,
+  Eye,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -47,7 +53,10 @@ import {
   useRejectDocumentRequest,
 } from "@/hooks/use-documents";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
-import { DocumentRequestStatus } from "@beaconu/types";
+import {
+  DocumentRequestStatus,
+  type DocumentRequestItem,
+} from "@beaconu/types";
 
 const STATUS_LABELS: Record<DocumentRequestStatus, string> = {
   submitted: "Submitted",
@@ -78,9 +87,8 @@ export default function DocumentRequestsFromStudentsPage() {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(
-    null,
-  );
+  const [viewingRequest, setViewingRequest] =
+    useState<DocumentRequestItem | null>(null);
   const [pendingIssue, setPendingIssue] = useState<{
     requestId: string;
     file: File;
@@ -309,28 +317,14 @@ export default function DocumentRequestsFromStudentsPage() {
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4">
+                    <TableCell className="py-4 max-w-[220px]">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium">{r.documentName}</p>
+                        <p className="truncate text-sm font-medium">
+                          {r.documentName}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {r.requestNumber}
                         </p>
-                        {r.supportingDocuments.length > 0 && (
-                          <div className="mt-1 flex flex-col gap-0.5">
-                            {r.supportingDocuments.map((doc, i) => (
-                              <a
-                                key={i}
-                                href={doc.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                              >
-                                <Paperclip className="h-3 w-3" />
-                                {doc.name ?? `Attachment ${i + 1}`}
-                              </a>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-4 text-sm capitalize text-muted-foreground">
@@ -340,60 +334,18 @@ export default function DocumentRequestsFromStudentsPage() {
                       <Badge variant={STATUS_VARIANT[r.status]}>
                         {STATUS_LABELS[r.status]}
                       </Badge>
-                      {r.status === "issued" && r.issuedDocumentUrl && (
-                        <a
-                          href={r.issuedDocumentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          View issued file
-                        </a>
-                      )}
-                      {r.status === "issued" &&
-                        r.deliveryMode === "pickup" &&
-                        r.pickupInstructions && (
-                          <div className="mt-1 max-w-[220px] rounded-md bg-muted/50 p-2 text-xs">
-                            <p>{r.pickupInstructions}</p>
-                            {r.officeContactPhone && (
-                              <p className="mt-1 flex items-center gap-1 font-medium">
-                                <Phone className="h-3 w-3" />
-                                {r.officeContactPhone}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      {r.status === "rejected" && r.rejectionReason && (
-                        <p className="mt-1 max-w-[180px] truncate text-xs text-destructive">
-                          {r.rejectionReason}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExpandedHistoryId(
-                            expandedHistoryId === r.id ? null : r.id,
-                          )
-                        }
-                        className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:underline"
-                      >
-                        <History className="h-3 w-3" />
-                        History
-                      </button>
-                      {expandedHistoryId === r.id && (
-                        <ul className="mt-1 space-y-0.5 border-l pl-2 text-xs text-muted-foreground">
-                          {r.statusHistory.map((h, i) => (
-                            <li key={i}>
-                              <span className="font-medium">{h.status}</span> —{" "}
-                              {new Date(h.changedAt).toLocaleString("en-IN")}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </TableCell>
                     <TableCell className="py-4 pr-6 text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
+                          onClick={() => setViewingRequest(r)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Details
+                        </Button>
                         {r.status === "submitted" && (
                           <Button
                             size="sm"
@@ -502,6 +454,164 @@ export default function DocumentRequestsFromStudentsPage() {
           </div>
         </div>
       )}
+
+      {/* Details Dialog */}
+      <Dialog
+        open={!!viewingRequest}
+        onOpenChange={(v) => !v && setViewingRequest(null)}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Document Request Details</DialogTitle>
+          </DialogHeader>
+          {viewingRequest && (
+            <div className="divide-y text-sm">
+              <div className="space-y-1.5 pb-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Student
+                </p>
+                <p className="text-base font-medium leading-snug">
+                  {viewingRequest.student?.fullName ?? viewingRequest.studentId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {viewingRequest.student?.email ?? ""}
+                </p>
+              </div>
+
+              <div className="space-y-1.5 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Document
+                </p>
+                <p className="text-base font-medium leading-snug">
+                  {viewingRequest.documentName}
+                </p>
+                <p className="text-sm capitalize text-muted-foreground">
+                  {viewingRequest.requestNumber} · {viewingRequest.deliveryMode}
+                </p>
+                {viewingRequest.description && (
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {viewingRequest.description}
+                  </p>
+                )}
+              </div>
+
+              {viewingRequest.supportingDocuments.length > 0 && (
+                <div className="space-y-2 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Supporting Documents
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {viewingRequest.supportingDocuments.map((doc, i) => (
+                      <a
+                        key={i}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                      >
+                        <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                        {doc.name ?? `Attachment ${i + 1}`}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Status
+                </p>
+                <Badge variant={STATUS_VARIANT[viewingRequest.status]}>
+                  {STATUS_LABELS[viewingRequest.status]}
+                </Badge>
+                {viewingRequest.status === "issued" &&
+                  viewingRequest.issuedDocumentUrl && (
+                    <a
+                      href={viewingRequest.issuedDocumentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                      View issued file
+                    </a>
+                  )}
+              </div>
+
+              {viewingRequest.deliveryMode === "pickup" &&
+                viewingRequest.pickupInstructions && (
+                  <div className="py-5">
+                    <div className="space-y-2 rounded-md bg-muted/50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Pickup Instructions
+                      </p>
+                      <p className="whitespace-pre-wrap leading-relaxed">
+                        {viewingRequest.pickupInstructions}
+                      </p>
+                      {viewingRequest.officeContactPhone && (
+                        <p className="flex items-center gap-1.5 font-medium">
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          {viewingRequest.officeContactPhone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {viewingRequest.rejectionReason && (
+                <div className="space-y-1.5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Rejection Reason
+                  </p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-destructive">
+                    {viewingRequest.rejectionReason}
+                  </p>
+                </div>
+              )}
+
+              {viewingRequest.resubmissionCount > 0 && (
+                <div className="space-y-2 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Resubmission History ({viewingRequest.resubmissionCount})
+                  </p>
+                  <ul className="space-y-3 border-l-2 pl-4">
+                    {viewingRequest.resubmissionHistory.map((h, i) => (
+                      <li
+                        key={i}
+                        className="space-y-0.5 text-sm text-muted-foreground"
+                      >
+                        <p className="text-destructive">
+                          Rejected: {h.rejectionReason}
+                        </p>
+                        <p>
+                          Resubmitted{" "}
+                          {new Date(h.resubmittedAt).toLocaleString("en-IN")}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="space-y-2 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Status History
+                </p>
+                <ul className="space-y-1.5 border-l-2 pl-4 text-sm text-muted-foreground">
+                  {viewingRequest.statusHistory.map((h, i) => (
+                    <li key={i}>
+                      <span className="font-medium text-foreground">
+                        {h.status}
+                      </span>{" "}
+                      — {new Date(h.changedAt).toLocaleString("en-IN")}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Pickup Details Modal */}
       {pendingIssue && (
