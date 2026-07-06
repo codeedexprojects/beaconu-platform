@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Inbox,
+  Eye,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ import {
 import type {
   DocumentCategory,
   DocumentSubmissionStatus,
+  SubmissionRequestItem,
 } from "@beaconu/types";
 
 const STATUS_LABELS: Record<DocumentSubmissionStatus, string> = {
@@ -122,6 +124,8 @@ export default function DocumentSubmissionRequestsPage() {
   const [page, setPage] = useState(1);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [viewingRequest, setViewingRequest] =
+    useState<SubmissionRequestItem | null>(null);
 
   const { data, isLoading } = useSubmissionRequests({
     status: statusFilter || undefined,
@@ -395,10 +399,7 @@ export default function DocumentSubmissionRequestsPage() {
                 <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
                   Status
                 </TableHead>
-                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
-                  File
-                </TableHead>
-                <TableHead className="w-[200px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
+                <TableHead className="w-[260px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
                   Actions
                 </TableHead>
               </TableRow>
@@ -407,7 +408,7 @@ export default function DocumentSubmissionRequestsPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i} className="border-b last:border-0">
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 5 }).map((__, j) => (
                       <TableCell key={j} className="py-4">
                         <Skeleton className="h-4 w-24" />
                       </TableCell>
@@ -417,7 +418,7 @@ export default function DocumentSubmissionRequestsPage() {
               ) : requests.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     className="py-20 text-center text-muted-foreground"
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -442,9 +443,11 @@ export default function DocumentSubmissionRequestsPage() {
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4">
+                    <TableCell className="py-4 max-w-[200px]">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium">{r.documentName}</p>
+                        <p className="truncate text-sm font-medium">
+                          {r.documentName}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {CATEGORY_LABELS[r.documentCategory]}
                         </p>
@@ -457,52 +460,43 @@ export default function DocumentSubmissionRequestsPage() {
                       <Badge variant={STATUS_VARIANT[r.status]}>
                         {STATUS_LABELS[r.status]}
                       </Badge>
-                      {r.status === "rejected" && r.rejectionReason && (
-                        <p className="mt-1 max-w-[180px] truncate text-xs text-destructive">
-                          {r.rejectionReason}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-4 text-sm">
-                      {r.fileUrl ? (
-                        <a
-                          href={r.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          View
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
                     </TableCell>
                     <TableCell className="py-4 pr-6 text-right">
-                      {r.status === "under_review" && (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-600"
-                            disabled={isReviewing}
-                            onClick={() => handleVerify(r.id)}
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Verify
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
-                            disabled={isReviewing}
-                            onClick={() => setRejectingId(r.id)}
-                          >
-                            <XCircle className="h-3.5 w-3.5" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
+                          onClick={() => setViewingRequest(r)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Details
+                        </Button>
+                        {r.status === "under_review" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-600"
+                              disabled={isReviewing}
+                              onClick={() => handleVerify(r.id)}
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Verify
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+                              disabled={isReviewing}
+                              onClick={() => setRejectingId(r.id)}
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -538,6 +532,112 @@ export default function DocumentSubmissionRequestsPage() {
           </div>
         </div>
       )}
+
+      {/* Details Dialog */}
+      <Dialog
+        open={!!viewingRequest}
+        onOpenChange={(v) => !v && setViewingRequest(null)}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Document Request Details</DialogTitle>
+          </DialogHeader>
+          {viewingRequest && (
+            <div className="divide-y text-sm">
+              <div className="space-y-1.5 pb-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Student
+                </p>
+                <p className="text-base font-medium leading-snug">
+                  {viewingRequest.student?.fullName ?? viewingRequest.studentId}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {viewingRequest.student?.email ?? ""}
+                </p>
+              </div>
+
+              <div className="space-y-1.5 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Document
+                </p>
+                <p className="text-base font-medium leading-snug">
+                  {viewingRequest.documentName}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {CATEGORY_LABELS[viewingRequest.documentCategory]} · Due{" "}
+                  {formatDate(viewingRequest.deadline)}
+                </p>
+                {viewingRequest.instructions && (
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {viewingRequest.instructions}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Status
+                </p>
+                <Badge variant={STATUS_VARIANT[viewingRequest.status]}>
+                  {STATUS_LABELS[viewingRequest.status]}
+                </Badge>
+              </div>
+
+              {viewingRequest.fileUrl && (
+                <div className="space-y-1.5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Submitted File
+                  </p>
+                  <a
+                    href={viewingRequest.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    {viewingRequest.fileName ?? "View file"}
+                  </a>
+                  {viewingRequest.submittedAt && (
+                    <p className="text-sm text-muted-foreground">
+                      Submitted{" "}
+                      {new Date(viewingRequest.submittedAt).toLocaleString(
+                        "en-IN",
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {viewingRequest.rejectionReason && (
+                <div className="space-y-1.5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Rejection Reason
+                  </p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-destructive">
+                    {viewingRequest.rejectionReason}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Status History
+                </p>
+                <ul className="space-y-1.5 border-l-2 pl-4 text-sm text-muted-foreground">
+                  {viewingRequest.statusHistory.map((h, i) => (
+                    <li key={i}>
+                      <span className="font-medium text-foreground">
+                        {h.status}
+                      </span>{" "}
+                      — {new Date(h.changedAt).toLocaleString("en-IN")}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Reject Modal */}
       {rejectingId && (
