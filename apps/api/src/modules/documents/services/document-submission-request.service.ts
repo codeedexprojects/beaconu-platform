@@ -1,4 +1,6 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { DocumentSubmissionRequestRepository } from "../repositories/document-submission-request.repository";
 import type {
   CreateSubmissionRequestInput,
@@ -16,18 +18,70 @@ function appendHistory(existing: unknown, entry: Record<string, unknown>) {
   return [...(Array.isArray(existing) ? existing : []), entry];
 }
 
+/** Best-effort push notifications for the document-submission-request lifecycle — never throw. */
+
+async function notifyStudentOfNewRequest(request: {
+  id: string;
+  studentId: string;
+  documentName: string;
+  deadline: Date;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(request.studentId, "student", {
+      title: "Document requested",
+      body: `Your college has requested "${request.documentName}" — due ${request.deadline.toISOString().split("T")[0]}`,
+      data: { type: "document_submission_requested", requestId: request.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, requestId: request.id },
+      "Failed to notify student of new document submission request",
+    );
+  }
+}
+
+async function notifyStudentOfReview(
+  request: { id: string; studentId: string; documentName: string },
+  status: "verified" | "rejected",
+  rejectionReason: string | null,
+): Promise<void> {
+  try {
+    await PushService.sendToUser(request.studentId, "student", {
+      title: status === "verified" ? "Document verified" : "Document rejected",
+      body:
+        status === "verified"
+          ? `"${request.documentName}" has been verified`
+          : `"${request.documentName}" was rejected${rejectionReason ? `: ${rejectionReason}` : ""}`,
+      data: {
+        type:
+          status === "verified"
+            ? "document_submission_verified"
+            : "document_submission_rejected",
+        requestId: request.id,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, requestId: request.id },
+      "Failed to notify student of document submission review",
+    );
+  }
+}
+
 export class DocumentSubmissionRequestService {
   static async create(
     collegeId: string,
     requestedBy: string,
     data: CreateSubmissionRequestInput,
   ) {
-    return DocumentSubmissionRequestRepository.create(
+    const request = await DocumentSubmissionRequestRepository.create(
       collegeId,
       requestedBy,
       data,
       [historyEntry("pending", requestedBy)],
     );
+    await notifyStudentOfNewRequest(request);
+    return request;
   }
 
   static async submit(
@@ -74,7 +128,7 @@ export class DocumentSubmissionRequestService {
       );
     }
 
-    return DocumentSubmissionRequestRepository.review(
+    const reviewed = await DocumentSubmissionRequestRepository.review(
       id,
       reviewedBy,
       data.status,
@@ -84,5 +138,11 @@ export class DocumentSubmissionRequestService {
         historyEntry(data.status, reviewedBy),
       ),
     );
+    await notifyStudentOfReview(
+      reviewed,
+      data.status,
+      data.rejection_reason ?? null,
+    );
+    return reviewed;
   }
 }
