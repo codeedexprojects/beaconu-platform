@@ -20,6 +20,7 @@ function mapSubmissionRequest(row: {
   submittedAt: Date | null;
   rejectionReason: string | null;
   reviewedAt: Date | null;
+  statusHistory: unknown;
   createdAt: Date;
   student?: {
     id: string;
@@ -50,6 +51,7 @@ function mapSubmissionRequest(row: {
     submittedAt: row.submittedAt ? row.submittedAt.toISOString() : null,
     rejectionReason: row.rejectionReason,
     reviewedAt: row.reviewedAt ? row.reviewedAt.toISOString() : null,
+    statusHistory: Array.isArray(row.statusHistory) ? row.statusHistory : [],
     createdAt: row.createdAt.toISOString(),
     student: row.student ?? null,
     college: row.college ?? null,
@@ -84,6 +86,9 @@ function mapDocumentRequest(row: {
   resubmissionCount: number;
   resubmissionHistory: unknown;
   supportingDocuments: unknown;
+  statusHistory: unknown;
+  pickupInstructions: string | null;
+  officeContactPhone: string | null;
   issuedDocumentUrl: string | null;
   issuedAt: Date | null;
   createdAt: Date;
@@ -124,11 +129,48 @@ function mapDocumentRequest(row: {
     supportingDocuments: Array.isArray(row.supportingDocuments)
       ? row.supportingDocuments
       : [],
+    statusHistory: Array.isArray(row.statusHistory) ? row.statusHistory : [],
+    pickupInstructions: row.pickupInstructions,
+    officeContactPhone: row.officeContactPhone,
     issuedDocumentUrl: row.issuedDocumentUrl,
     issuedAt: row.issuedAt ? row.issuedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
     student: row.student ?? null,
     college: row.college ?? null,
+  };
+}
+
+function mapDocumentTemplate(row: {
+  id: string;
+  collegeId: string;
+  name: string;
+  slug: string;
+  category: string;
+  instructions: string | null;
+  description: string | null;
+  isStandard: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+}) {
+  return {
+    id: row.id,
+    collegeId: row.collegeId,
+    name: row.name,
+    slug: row.slug,
+    category: row.category as
+      | "academic"
+      | "identification"
+      | "financial"
+      | "medical"
+      | "administrative"
+      | "other",
+    instructions: row.instructions,
+    description: row.description,
+    isStandard: row.isStandard,
+    isActive: row.isActive,
+    sortOrder: row.sortOrder,
+    createdAt: row.createdAt.toISOString(),
   };
 }
 
@@ -346,5 +388,21 @@ export class DocumentsQuery {
     };
 
     return { requests: rows.map(mapDocumentRequest), meta };
+  }
+
+  // ── Document templates: catalog of requestable documents ────────────────
+
+  static async listTemplatesForCollege(
+    collegeId: string,
+    includeInactive: boolean,
+  ) {
+    const rows = await prisma.documentTemplate.findMany({
+      where: {
+        collegeId,
+        ...(includeInactive ? {} : { isActive: true }),
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+    return rows.map(mapDocumentTemplate);
   }
 }

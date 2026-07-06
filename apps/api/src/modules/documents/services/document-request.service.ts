@@ -1,5 +1,11 @@
-import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/shared/errors";
 import { DocumentRequestRepository } from "../repositories/document-request.repository";
+import { DocumentTemplateRepository } from "../repositories/document-template.repository";
 import type {
   CreateDocumentRequestInput,
   IssueDocumentRequestInput,
@@ -7,13 +13,45 @@ import type {
   ResubmitDocumentRequestInput,
 } from "../validators/documents.validator";
 
+function historyEntry(status: string, changedBy: string | null) {
+  return { status, changedAt: new Date().toISOString(), changedBy };
+}
+
+function appendHistory(existing: unknown, entry: Record<string, unknown>) {
+  return [...(Array.isArray(existing) ? existing : []), entry];
+}
+
 export class DocumentRequestService {
   static async create(
     studentId: string,
     collegeId: string,
     data: CreateDocumentRequestInput,
   ) {
-    return DocumentRequestRepository.create(studentId, collegeId, data);
+    let resolvedDocumentName = data.document_name;
+
+    if (data.document_template_id) {
+      const template = await DocumentTemplateRepository.findById(
+        data.document_template_id,
+      );
+      if (!template || template.collegeId !== collegeId || !template.isActive) {
+        throw new NotFoundError("Document template not found");
+      }
+      resolvedDocumentName = resolvedDocumentName ?? template.name;
+    }
+
+    if (!resolvedDocumentName) {
+      throw new ValidationError(
+        "Either document_template_id or document_name is required",
+      );
+    }
+
+    return DocumentRequestRepository.create(
+      studentId,
+      collegeId,
+      data,
+      resolvedDocumentName,
+      [historyEntry("submitted", null)],
+    );
   }
 
   static async resubmit(
@@ -32,7 +70,7 @@ export class DocumentRequestService {
       );
     }
 
-    const historyEntry = {
+    const resubmissionHistoryEntry = {
       rejectionReason: request.rejectionReason,
       rejectedAt: request.updatedAt.toISOString(),
       resubmittedAt: new Date().toISOString(),
@@ -42,7 +80,9 @@ export class DocumentRequestService {
         deliveryMode: request.deliveryMode,
       },
     };
-    const existingHistory = Array.isArray(request.resubmissionHistory)
+    const existingResubmissionHistory = Array.isArray(
+      request.resubmissionHistory,
+    )
       ? request.resubmissionHistory
       : [];
 
@@ -53,9 +93,10 @@ export class DocumentRequestService {
         description: data.description,
         deliveryMode: data.delivery_mode,
       },
-      historyEntry,
+      resubmissionHistoryEntry,
       request.resubmissionCount + 1,
-      existingHistory,
+      existingResubmissionHistory,
+      appendHistory(request.statusHistory, historyEntry("submitted", null)),
     );
   }
 
@@ -85,6 +126,10 @@ export class DocumentRequestService {
       id,
       "processing",
       processedBy,
+      appendHistory(
+        request.statusHistory,
+        historyEntry("processing", processedBy),
+      ),
     );
   }
 
@@ -103,6 +148,10 @@ export class DocumentRequestService {
       id,
       "awaiting_approval",
       processedBy,
+      appendHistory(
+        request.statusHistory,
+        historyEntry("awaiting_approval", processedBy),
+      ),
     );
   }
 
@@ -113,7 +162,15 @@ export class DocumentRequestService {
         `Cannot approve a request with status '${request.status}'`,
       );
     }
-    return DocumentRequestRepository.updateStatus(id, "approved", processedBy);
+    return DocumentRequestRepository.updateStatus(
+      id,
+      "approved",
+      processedBy,
+      appendHistory(
+        request.statusHistory,
+        historyEntry("approved", processedBy),
+      ),
+    );
   }
 
   static async reject(
@@ -133,6 +190,10 @@ export class DocumentRequestService {
       id,
       processedBy,
       data.rejection_reason,
+      appendHistory(
+        request.statusHistory,
+        historyEntry("rejected", processedBy),
+      ),
     );
   }
 
@@ -148,12 +209,26 @@ export class DocumentRequestService {
         `Cannot issue a document for a request with status '${request.status}'`,
       );
     }
+    if (request.deliveryMode === "pickup") {
+      if (!data.pickup_instructions || !data.office_contact_phone) {
+        throw new ValidationError(
+          "pickup_instructions and office_contact_phone are required when delivery mode is 'pickup'",
+        );
+      }
+    }
 
-    const { issued } = await DocumentRequestRepository.issue(id, processedBy, {
-      documentUrl: data.document_url,
-      fileName: data.file_name ?? null,
-      fileSizeBytes: data.file_size_bytes ?? null,
-    });
+    const { issued } = await DocumentRequestRepository.issue(
+      id,
+      processedBy,
+      {
+        documentUrl: data.document_url,
+        fileName: data.file_name ?? null,
+        fileSizeBytes: data.file_size_bytes ?? null,
+        pickupInstructions: data.pickup_instructions ?? null,
+        officeContactPhone: data.office_contact_phone ?? null,
+      },
+      appendHistory(request.statusHistory, historyEntry("issued", processedBy)),
+    );
     return issued;
   }
 }

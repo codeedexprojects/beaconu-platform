@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { DocumentsQuery } from "../queries/documents.query";
 import { DocumentSubmissionRequestService } from "../services/document-submission-request.service";
 import { DocumentRequestService } from "../services/document-request.service";
+import { DocumentTemplateService } from "../services/document-template.service";
 import {
   createSubmissionRequestSchema,
   reviewSubmissionSchema,
@@ -10,6 +11,9 @@ import {
   issueDocumentRequestSchema,
   rejectDocumentRequestSchema,
   documentRequestListQuerySchema,
+  createDocumentTemplateSchema,
+  updateDocumentTemplateSchema,
+  templateListQuerySchema,
 } from "../validators/documents.validator";
 
 export class CollegeAdminDocumentsController {
@@ -119,5 +123,54 @@ export class CollegeAdminDocumentsController {
       data,
     );
     return res.json(ApiResponse.success("Document request rejected", result));
+  }
+
+  // ── Document templates: catalog of requestable documents ────────────────
+
+  static async createTemplate(req: Request, res: Response) {
+    const data = createDocumentTemplateSchema.parse(req.body);
+    const result = await DocumentTemplateService.create(req.collegeId!, data);
+    return res
+      .status(201)
+      .json(ApiResponse.success("Document template created", result));
+  }
+
+  static async listTemplates(req: Request, res: Response) {
+    const filters = templateListQuerySchema.parse(req.query);
+    const result = await DocumentsQuery.listTemplatesForCollege(
+      req.collegeId!,
+      filters.include_inactive,
+    );
+    return res.json(ApiResponse.success("Document templates fetched", result));
+  }
+
+  static async updateTemplate(req: Request, res: Response) {
+    const data = updateDocumentTemplateSchema.parse(req.body);
+    const result = await DocumentTemplateService.update(
+      req.params.templateId as string,
+      req.collegeId!,
+      data,
+    );
+    return res.json(ApiResponse.success("Document template updated", result));
+  }
+
+  static async activateTemplate(req: Request, res: Response) {
+    const result = await DocumentTemplateService.setActive(
+      req.params.templateId as string,
+      req.collegeId!,
+      true,
+    );
+    return res.json(ApiResponse.success("Document template activated", result));
+  }
+
+  static async deactivateTemplate(req: Request, res: Response) {
+    const result = await DocumentTemplateService.setActive(
+      req.params.templateId as string,
+      req.collegeId!,
+      false,
+    );
+    return res.json(
+      ApiResponse.success("Document template deactivated", result),
+    );
   }
 }

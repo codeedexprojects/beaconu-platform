@@ -29,4 +29,7 @@ router.patch(
   StudentDocumentsController.resubmitDocumentRequest,
 );
 
+// Document templates — catalog of documents this college's students can request
+router.get("/templates", StudentDocumentsController.listTemplates);
+
 export default router;

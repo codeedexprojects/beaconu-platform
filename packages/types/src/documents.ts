@@ -20,6 +20,12 @@ export interface DocumentRequestPartyCollege {
   logoUrl: string | null;
 }
 
+export interface StatusHistoryEntry {
+  status: string;
+  changedAt: string;
+  changedBy: string | null;
+}
+
 // ── Direction A: college requests a document FROM a student ──────────────
 
 export type DocumentCategory =
@@ -45,6 +51,7 @@ export interface SubmissionRequestItem {
   submittedAt: string | null;
   rejectionReason: string | null;
   reviewedAt: string | null;
+  statusHistory: StatusHistoryEntry[];
   createdAt: string;
   student: DocumentRequestPartyStudent | null;
   college: DocumentRequestPartyCollege | null;
@@ -125,6 +132,9 @@ export interface DocumentRequestItem {
   resubmissionCount: number;
   resubmissionHistory: DocumentRequestResubmissionHistoryEntry[];
   supportingDocuments: SupportingDocument[];
+  statusHistory: StatusHistoryEntry[];
+  pickupInstructions: string | null;
+  officeContactPhone: string | null;
   issuedDocumentUrl: string | null;
   issuedAt: string | null;
   createdAt: string;
@@ -145,7 +155,8 @@ export interface SupportingDocumentInput {
 
 export interface CreateDocumentRequestInput {
   college_id: string;
-  document_name: string;
+  document_template_id?: string;
+  document_name?: string;
   description?: string;
   delivery_mode: DocumentDeliveryMode;
   supporting_documents?: SupportingDocumentInput[];
@@ -155,6 +166,8 @@ export interface IssueDocumentRequestInput {
   document_url: string;
   file_name?: string;
   file_size_bytes?: number;
+  pickup_instructions?: string;
+  office_contact_phone?: string;
 }
 
 export interface RejectDocumentRequestInput {
@@ -165,4 +178,36 @@ export interface ResubmitDocumentRequestInput {
   document_name?: string;
   description?: string;
   delivery_mode?: DocumentDeliveryMode;
+}
+
+// ── Document templates: catalog of documents students can request ────────
+
+export interface DocumentTemplateItem {
+  id: string;
+  collegeId: string;
+  name: string;
+  slug: string;
+  category: DocumentCategory;
+  instructions: string | null;
+  description: string | null;
+  isStandard: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface CreateDocumentTemplateInput {
+  name: string;
+  category: DocumentCategory;
+  instructions?: string;
+  description?: string;
+  sort_order?: number;
+}
+
+export interface UpdateDocumentTemplateInput {
+  name?: string;
+  category?: DocumentCategory;
+  instructions?: string;
+  description?: string;
+  sort_order?: number;
 }

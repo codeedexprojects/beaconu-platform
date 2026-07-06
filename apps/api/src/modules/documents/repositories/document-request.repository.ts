@@ -8,6 +8,8 @@ export class DocumentRequestRepository {
     studentId: string,
     collegeId: string,
     data: CreateDocumentRequestInput,
+    resolvedDocumentName: string,
+    initialStatusHistory: Prisma.InputJsonValue,
   ) {
     const supportingDocuments: Prisma.InputJsonValue = (
       data.supporting_documents ?? []
@@ -22,10 +24,12 @@ export class DocumentRequestRepository {
         requestNumber: `DOC-${randomUUID().slice(0, 8).toUpperCase()}`,
         studentId,
         collegeId,
-        documentName: data.document_name,
+        documentTemplateId: data.document_template_id ?? null,
+        documentName: resolvedDocumentName,
         description: data.description ?? null,
         deliveryMode: data.delivery_mode,
         supportingDocuments,
+        statusHistory: initialStatusHistory,
         status: "submitted",
       },
     });
@@ -39,10 +43,11 @@ export class DocumentRequestRepository {
     id: string,
     status: "processing" | "awaiting_approval" | "approved",
     processedBy: string,
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentRequest.update({
       where: { id },
-      data: { status, processedBy },
+      data: { status, processedBy, statusHistory },
     });
   }
 
@@ -50,10 +55,11 @@ export class DocumentRequestRepository {
     id: string,
     processedBy: string,
     rejectionReason: string,
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentRequest.update({
       where: { id },
-      data: { status: "rejected", rejectionReason, processedBy },
+      data: { status: "rejected", rejectionReason, processedBy, statusHistory },
     });
   }
 
@@ -64,9 +70,10 @@ export class DocumentRequestRepository {
       description?: string;
       deliveryMode?: string;
     },
-    historyEntry: Prisma.InputJsonValue,
+    resubmissionHistoryEntry: Prisma.InputJsonValue,
     resubmissionCount: number,
     resubmissionHistory: Prisma.JsonValue[],
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentRequest.update({
       where: { id },
@@ -86,8 +93,9 @@ export class DocumentRequestRepository {
         resubmissionCount,
         resubmissionHistory: [
           ...resubmissionHistory,
-          historyEntry,
+          resubmissionHistoryEntry,
         ] as Prisma.InputJsonValue,
+        statusHistory,
       },
     });
   }
@@ -99,7 +107,10 @@ export class DocumentRequestRepository {
       documentUrl: string;
       fileName: string | null;
       fileSizeBytes: number | null;
+      pickupInstructions: string | null;
+      officeContactPhone: string | null;
     },
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.$transaction(async (tx) => {
       const request = await tx.documentRequest.update({
@@ -109,6 +120,9 @@ export class DocumentRequestRepository {
           processedBy,
           issuedDocumentUrl: data.documentUrl,
           issuedAt: new Date(),
+          pickupInstructions: data.pickupInstructions,
+          officeContactPhone: data.officeContactPhone,
+          statusHistory,
         },
       });
 

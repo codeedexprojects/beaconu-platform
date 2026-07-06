@@ -1,0 +1,23 @@
+meta {
+  name: Update Document Template
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/templates/{{documentTemplateId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "description": "Confirms current enrollment status for scholarship/visa purposes",
+    "instructions": "Submit at least 5 working days before you need it"
+  }
+}

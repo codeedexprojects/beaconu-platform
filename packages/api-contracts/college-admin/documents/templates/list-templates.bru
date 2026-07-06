@@ -1,0 +1,24 @@
+meta {
+  name: List Document Templates (College Admin)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/documents/templates
+  body: none
+  auth: none
+}
+
+query {
+  ~include_inactive: true
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  include_inactive (optional, default false): set true to also see
+  deactivated templates for management purposes.
+}

@@ -44,4 +44,20 @@ router.patch(
   CollegeAdminDocumentsController.rejectDocumentRequest,
 );
 
+// Document templates — catalog of documents students can request
+router.post("/templates", CollegeAdminDocumentsController.createTemplate);
+router.get("/templates", CollegeAdminDocumentsController.listTemplates);
+router.patch(
+  "/templates/:templateId",
+  CollegeAdminDocumentsController.updateTemplate,
+);
+router.patch(
+  "/templates/:templateId/activate",
+  CollegeAdminDocumentsController.activateTemplate,
+);
+router.patch(
+  "/templates/:templateId/deactivate",
+  CollegeAdminDocumentsController.deactivateTemplate,
+);
+
 export default router;

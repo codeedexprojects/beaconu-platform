@@ -1,4 +1,5 @@
 import { prisma } from "@beaconu/db";
+import type { Prisma } from "@beaconu/db";
 import type { CreateSubmissionRequestInput } from "../validators/documents.validator";
 
 export class DocumentSubmissionRequestRepository {
@@ -6,6 +7,7 @@ export class DocumentSubmissionRequestRepository {
     collegeId: string,
     requestedBy: string,
     data: CreateSubmissionRequestInput,
+    initialStatusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentSubmissionRequest.create({
       data: {
@@ -17,6 +19,7 @@ export class DocumentSubmissionRequestRepository {
         instructions: data.instructions ?? null,
         deadline: new Date(data.deadline + "T00:00:00Z"),
         status: "pending",
+        statusHistory: initialStatusHistory,
       },
     });
   }
@@ -32,6 +35,7 @@ export class DocumentSubmissionRequestRepository {
       fileName: string | null;
       fileSizeBytes: number | null;
     },
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentSubmissionRequest.update({
       where: { id },
@@ -42,6 +46,7 @@ export class DocumentSubmissionRequestRepository {
         submittedAt: new Date(),
         status: "under_review",
         rejectionReason: null,
+        statusHistory,
       },
     });
   }
@@ -51,6 +56,7 @@ export class DocumentSubmissionRequestRepository {
     reviewedBy: string,
     status: "verified" | "rejected",
     rejectionReason: string | null,
+    statusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentSubmissionRequest.update({
       where: { id },
@@ -59,6 +65,7 @@ export class DocumentSubmissionRequestRepository {
         rejectionReason,
         reviewedBy,
         reviewedAt: new Date(),
+        statusHistory,
       },
     });
   }
