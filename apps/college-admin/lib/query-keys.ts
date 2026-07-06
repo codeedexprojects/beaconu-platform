@@ -33,4 +33,6 @@ export const QUERY_KEYS = {
     filters
       ? ["college-document-requests", filters]
       : ["college-document-requests"],
+  documentTemplates: (includeInactive?: boolean) =>
+    ["college-document-templates", includeInactive ?? false] as const,
 } as const;

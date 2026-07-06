@@ -18,7 +18,7 @@ headers {
 body:json {
   {
     "college_id": "{{collegeId}}",
-    "document_name": "Bonafide Certificate",
+    "document_template_id": "{{documentTemplateId}}",
     "description": "Needed for scholarship application",
     "delivery_mode": "digital",
     "supporting_documents": [
@@ -41,6 +41,10 @@ script:post-response {
 }
 
 docs {
+  Either document_template_id (from List Requestable Document Templates) or
+  document_name (free text) is required — provide whichever the student
+  chose. If a template is used its name is copied over automatically.
+
   supporting_documents (optional, max 5): each file must be uploaded first
   via POST /api/v1/student/uploads/document/presign + /verify (see the
   Document folder under student/uploads), then passed here as

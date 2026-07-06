@@ -3,18 +3,18 @@
 // ============================================================
 
 model DocumentTemplate {
-  id          String   @id @default(dbgenerated("('DTM-'::text || (nextval('document_template_seq'::regclass))::text)"))
-  collegeId   String   @map("college_id")
-  name        String   @db.VarChar(100)
-  slug        String   @db.VarChar(50)
-  description String?  @db.Text
-  isStandard  Boolean  @default(true) @map("is_standard")
-  isActive    Boolean  @default(true) @map("is_active")
-  hasFee      Boolean  @default(false) @map("has_fee")
-  feeAmount   Decimal  @default(0) @map("fee_amount") @db.Decimal(10, 2)
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("('DTM-'::text || (nextval('document_template_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
+  name         String   @db.VarChar(100)
+  slug         String   @db.VarChar(50)
+  category     String   @db.VarChar(50)
+  instructions String?  @db.Text
+  description  String?  @db.Text
+  isStandard   Boolean  @default(true) @map("is_standard")
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -46,6 +46,9 @@ model DocumentRequest {
   issuedAt            DateTime? @map("issued_at") @db.Timestamptz
   pickupDate          DateTime? @map("pickup_date") @db.Date
   pickupConfirmed     Boolean   @default(false) @map("pickup_confirmed")
+  pickupInstructions  String?   @map("pickup_instructions") @db.Text
+  officeContactPhone  String?   @map("office_contact_phone") @db.VarChar(20)
+  statusHistory       Json      @default("[]") @map("status_history")
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -113,6 +116,7 @@ model DocumentSubmissionRequest {
   rejectionReason String?   @map("rejection_reason") @db.Text
   reviewedBy      String?   @map("reviewed_by")
   reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz
+  statusHistory   Json      @default("[]") @map("status_history")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 

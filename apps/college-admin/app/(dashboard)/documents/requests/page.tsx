@@ -14,9 +14,12 @@ import {
   Send,
   CheckCircle2,
   Paperclip,
+  History,
+  Phone,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,6 +78,15 @@ export default function DocumentRequestsFromStudentsPage() {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(
+    null,
+  );
+  const [pendingIssue, setPendingIssue] = useState<{
+    requestId: string;
+    file: File;
+  } | null>(null);
+  const [pickupInstructions, setPickupInstructions] = useState("");
+  const [officeContactPhone, setOfficeContactPhone] = useState("");
 
   const { data, isLoading } = useDocumentRequests({
     status: statusFilter || undefined,
@@ -114,8 +126,11 @@ export default function DocumentRequestsFromStudentsPage() {
     });
   }
 
-  async function handleIssue(requestId: string, file: File | null) {
-    if (!file) return;
+  async function issueNow(
+    requestId: string,
+    file: File,
+    extra?: { pickup_instructions: string; office_contact_phone: string },
+  ) {
     try {
       setUploadingId(requestId);
       const url = await uploadCollegeAdminFile(file, "documents/issued");
@@ -126,6 +141,7 @@ export default function DocumentRequestsFromStudentsPage() {
             document_url: url,
             file_name: file.name,
             file_size_bytes: file.size,
+            ...extra,
           },
         },
         {
@@ -137,6 +153,35 @@ export default function DocumentRequestsFromStudentsPage() {
     } finally {
       setUploadingId(null);
     }
+  }
+
+  function handleIssue(
+    requestId: string,
+    file: File | null,
+    deliveryMode: string,
+  ) {
+    if (!file) return;
+    if (deliveryMode === "pickup") {
+      setPendingIssue({ requestId, file });
+      setPickupInstructions("");
+      setOfficeContactPhone("");
+      return;
+    }
+    void issueNow(requestId, file);
+  }
+
+  function handleConfirmPickupIssue() {
+    if (
+      !pendingIssue ||
+      !pickupInstructions.trim() ||
+      !officeContactPhone.trim()
+    ) {
+      return;
+    }
+    void issueNow(pendingIssue.requestId, pendingIssue.file, {
+      pickup_instructions: pickupInstructions,
+      office_contact_phone: officeContactPhone,
+    }).then(() => setPendingIssue(null));
   }
 
   function handleReject() {
@@ -306,10 +351,45 @@ export default function DocumentRequestsFromStudentsPage() {
                           View issued file
                         </a>
                       )}
+                      {r.status === "issued" &&
+                        r.deliveryMode === "pickup" &&
+                        r.pickupInstructions && (
+                          <div className="mt-1 max-w-[220px] rounded-md bg-muted/50 p-2 text-xs">
+                            <p>{r.pickupInstructions}</p>
+                            {r.officeContactPhone && (
+                              <p className="mt-1 flex items-center gap-1 font-medium">
+                                <Phone className="h-3 w-3" />
+                                {r.officeContactPhone}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       {r.status === "rejected" && r.rejectionReason && (
                         <p className="mt-1 max-w-[180px] truncate text-xs text-destructive">
                           {r.rejectionReason}
                         </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedHistoryId(
+                            expandedHistoryId === r.id ? null : r.id,
+                          )
+                        }
+                        className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:underline"
+                      >
+                        <History className="h-3 w-3" />
+                        History
+                      </button>
+                      {expandedHistoryId === r.id && (
+                        <ul className="mt-1 space-y-0.5 border-l pl-2 text-xs text-muted-foreground">
+                          {r.statusHistory.map((h, i) => (
+                            <li key={i}>
+                              <span className="font-medium">{h.status}</span> —{" "}
+                              {new Date(h.changedAt).toLocaleString("en-IN")}
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </TableCell>
                     <TableCell className="py-4 pr-6 text-right">
@@ -357,7 +437,11 @@ export default function DocumentRequestsFromStudentsPage() {
                               className="sr-only"
                               disabled={isIssuing || uploadingId === r.id}
                               onChange={(e) =>
-                                handleIssue(r.id, e.target.files?.[0] ?? null)
+                                handleIssue(
+                                  r.id,
+                                  e.target.files?.[0] ?? null,
+                                  r.deliveryMode,
+                                )
                               }
                             />
                             <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">
@@ -415,6 +499,57 @@ export default function DocumentRequestsFromStudentsPage() {
             >
               Next
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Pickup Details Modal */}
+      {pendingIssue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold">Pickup Details</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              This request is for in-person pickup — tell the student where and
+              how to collect it.
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label>Pickup instructions</Label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Visit the Admissions Office, Ground Floor, Mon-Fri 10am-4pm"
+                  value={pickupInstructions}
+                  onChange={(e) => setPickupInstructions(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Office contact phone</Label>
+                <Input
+                  placeholder="+91 9876543210"
+                  value={officeContactPhone}
+                  onChange={(e) => setOfficeContactPhone(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setPendingIssue(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmPickupIssue}
+                disabled={
+                  isIssuing ||
+                  uploadingId === pendingIssue.requestId ||
+                  !pickupInstructions.trim() ||
+                  !officeContactPhone.trim()
+                }
+              >
+                {uploadingId === pendingIssue.requestId
+                  ? "Issuing..."
+                  : "Confirm & Issue"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

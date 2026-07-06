@@ -46,6 +46,7 @@ import {
   useSubmissionRequests,
   useCreateSubmissionRequest,
   useReviewSubmission,
+  useDocumentTemplates,
 } from "@/hooks/use-documents";
 import type {
   DocumentCategory,
@@ -130,6 +131,7 @@ export default function DocumentSubmissionRequestsPage() {
   const { mutate: create, isPending: isCreating } =
     useCreateSubmissionRequest();
   const { mutate: review, isPending: isReviewing } = useReviewSubmission();
+  const { data: templates } = useDocumentTemplates(false);
 
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
@@ -141,6 +143,14 @@ export default function DocumentSubmissionRequestsPage() {
       deadline: "",
     },
   });
+
+  function applyTemplate(templateId: string) {
+    const template = templates?.find((t) => t.id === templateId);
+    if (!template) return;
+    form.setValue("document_category", template.category);
+    form.setValue("document_name", template.name);
+    form.setValue("instructions", template.instructions ?? "");
+  }
 
   function onSubmit(values: CreateForm) {
     create(
@@ -201,6 +211,12 @@ export default function DocumentSubmissionRequestsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
+            <Link href="/documents/templates">
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              Document Types
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/documents/requests">
               <Inbox className="mr-1.5 h-3.5 w-3.5" />
               Requests From Students
@@ -221,6 +237,26 @@ export default function DocumentSubmissionRequestsPage() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                {templates && templates.length > 0 && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="template">
+                      Use a Saved Document Type{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Select onValueChange={applyTemplate}>
+                      <SelectTrigger id="template">
+                        <SelectValue placeholder="Choose to auto-fill category, name & instructions" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label htmlFor="student_id">Student ID</Label>
                   <Input

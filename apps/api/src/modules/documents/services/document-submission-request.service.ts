@@ -8,6 +8,14 @@ import type {
 
 const SUBMITTABLE_STATUSES = ["pending", "rejected"];
 
+function historyEntry(status: string, changedBy: string | null) {
+  return { status, changedAt: new Date().toISOString(), changedBy };
+}
+
+function appendHistory(existing: unknown, entry: Record<string, unknown>) {
+  return [...(Array.isArray(existing) ? existing : []), entry];
+}
+
 export class DocumentSubmissionRequestService {
   static async create(
     collegeId: string,
@@ -18,6 +26,7 @@ export class DocumentSubmissionRequestService {
       collegeId,
       requestedBy,
       data,
+      [historyEntry("pending", requestedBy)],
     );
   }
 
@@ -37,11 +46,15 @@ export class DocumentSubmissionRequestService {
       );
     }
 
-    return DocumentSubmissionRequestRepository.submitDocument(id, {
-      fileUrl: data.file_url,
-      fileName: data.file_name ?? null,
-      fileSizeBytes: data.file_size_bytes ?? null,
-    });
+    return DocumentSubmissionRequestRepository.submitDocument(
+      id,
+      {
+        fileUrl: data.file_url,
+        fileName: data.file_name ?? null,
+        fileSizeBytes: data.file_size_bytes ?? null,
+      },
+      appendHistory(request.statusHistory, historyEntry("under_review", null)),
+    );
   }
 
   static async review(
@@ -66,6 +79,10 @@ export class DocumentSubmissionRequestService {
       reviewedBy,
       data.status,
       data.rejection_reason ?? null,
+      appendHistory(
+        request.statusHistory,
+        historyEntry(data.status, reviewedBy),
+      ),
     );
   }
 }

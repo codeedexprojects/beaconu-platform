@@ -6,6 +6,9 @@ import type {
   DocumentRequestItem,
   IssueDocumentRequestInput,
   RejectDocumentRequestInput,
+  DocumentTemplateItem,
+  CreateDocumentTemplateInput,
+  UpdateDocumentTemplateInput,
   PaginationMeta,
 } from "@beaconu/types";
 
@@ -87,4 +90,39 @@ export async function rejectDocumentRequest(
   data: RejectDocumentRequestInput,
 ): Promise<DocumentRequestItem> {
   return api.patch(`${BASE}/requests/${requestId}/reject`, data);
+}
+
+// ── Document templates: catalog of documents students can request ─────────
+
+export async function getDocumentTemplates(
+  includeInactive = false,
+): Promise<DocumentTemplateItem[]> {
+  return api.get(
+    `${BASE}/templates${includeInactive ? "?include_inactive=true" : ""}`,
+  );
+}
+
+export async function createDocumentTemplate(
+  data: CreateDocumentTemplateInput,
+): Promise<DocumentTemplateItem> {
+  return api.post(`${BASE}/templates`, data);
+}
+
+export async function updateDocumentTemplate(
+  templateId: string,
+  data: UpdateDocumentTemplateInput,
+): Promise<DocumentTemplateItem> {
+  return api.patch(`${BASE}/templates/${templateId}`, data);
+}
+
+export async function activateDocumentTemplate(
+  templateId: string,
+): Promise<DocumentTemplateItem> {
+  return api.patch(`${BASE}/templates/${templateId}/activate`, {});
+}
+
+export async function deactivateDocumentTemplate(
+  templateId: string,
+): Promise<DocumentTemplateItem> {
+  return api.patch(`${BASE}/templates/${templateId}/deactivate`, {});
 }

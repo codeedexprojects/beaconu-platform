@@ -1,0 +1,25 @@
+meta {
+  name: List Requestable Document Templates
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/documents/templates
+  body: none
+  auth: none
+}
+
+query {
+  college_id: {{collegeId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Active-only catalog of documents this college lets students request
+  (e.g. Bonafide Certificate, Transcript) — use to build the "Request
+  Official Document" form (document_template_id in Create Document Request).
+}

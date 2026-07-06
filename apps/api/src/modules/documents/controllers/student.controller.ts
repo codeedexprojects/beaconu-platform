@@ -10,6 +10,7 @@ import {
   createDocumentRequestSchema,
   documentRequestListQuerySchema,
   resubmitDocumentRequestSchema,
+  studentTemplateListQuerySchema,
 } from "../validators/documents.validator";
 
 export class StudentDocumentsController {
@@ -88,5 +89,14 @@ export class StudentDocumentsController {
     return res.json(
       ApiResponse.success("Document request resubmitted", result),
     );
+  }
+
+  static async listTemplates(req: Request, res: Response) {
+    const filters = studentTemplateListQuerySchema.parse(req.query);
+    const result = await DocumentsQuery.listTemplatesForCollege(
+      filters.college_id,
+      false,
+    );
+    return res.json(ApiResponse.success("Document templates fetched", result));
   }
 }
