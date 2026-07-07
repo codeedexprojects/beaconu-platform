@@ -63,4 +63,15 @@ export class PlatformAdminUploadController {
     const result = await UploadService.verify(key);
     res.status(200).json(ApiResponse.success("Upload verified", result));
   }
+
+  static async remove(req: Request, res: Response): Promise<void> {
+    const { key } = verifySchema.parse(req.body);
+    if (!key.startsWith("platform-admin/")) {
+      throw new ValidationError(
+        "Invalid key: must belong to platform-admin context",
+      );
+    }
+    const result = await UploadService.remove(key);
+    res.status(200).json(ApiResponse.success("File deleted", result));
+  }
 }

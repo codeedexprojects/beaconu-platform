@@ -351,140 +351,142 @@ export default function AntiRaggingPage() {
       {/* Details Dialog */}
       <Dialog open={!!viewingId} onOpenChange={(v) => !v && setViewingId(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Anti-Ragging Report Details</DialogTitle>
-          </DialogHeader>
-          {viewingComplaint && (
-            <div className="divide-y text-sm">
-              <div className="space-y-1.5 pb-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Student · {viewingComplaint.complaintNumber}
-                </p>
-                <p className="text-base font-medium leading-snug">
-                  {viewingComplaint.student?.fullName ??
-                    viewingComplaint.studentId}
-                </p>
-                <div className="flex flex-col gap-1 text-muted-foreground">
-                  {viewingComplaint.student?.phoneNumber && (
-                    <a
-                      href={`tel:${viewingComplaint.student.phoneNumber}`}
-                      className="flex items-center gap-1.5 text-blue-600 hover:underline"
-                    >
-                      <Phone className="h-3.5 w-3.5 shrink-0" />
-                      {viewingComplaint.student.phoneNumber}
-                    </a>
-                  )}
-                  {viewingComplaint.student?.email && (
-                    <a
-                      href={`mailto:${viewingComplaint.student.email}`}
-                      className="flex items-center gap-1.5 text-blue-600 hover:underline"
-                    >
-                      <Mail className="h-3.5 w-3.5 shrink-0" />
-                      {viewingComplaint.student.email}
-                    </a>
-                  )}
+          <div>
+            <DialogHeader>
+              <DialogTitle>Anti-Ragging Report Details</DialogTitle>
+            </DialogHeader>
+            {viewingComplaint && (
+              <div className="divide-y text-sm">
+                <div className="space-y-1.5 pb-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Student · {viewingComplaint.complaintNumber}
+                  </p>
+                  <p className="text-base font-medium leading-snug">
+                    {viewingComplaint.student?.fullName ??
+                      viewingComplaint.studentId}
+                  </p>
+                  <div className="flex flex-col gap-1 text-muted-foreground">
+                    {viewingComplaint.student?.phoneNumber && (
+                      <a
+                        href={`tel:${viewingComplaint.student.phoneNumber}`}
+                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                      >
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        {viewingComplaint.student.phoneNumber}
+                      </a>
+                    )}
+                    {viewingComplaint.student?.email && (
+                      <a
+                        href={`mailto:${viewingComplaint.student.email}`}
+                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                      >
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        {viewingComplaint.student.email}
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-1.5 py-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Incident
-                </p>
-                <p className="text-base font-medium leading-snug">
-                  {viewingComplaint.subject}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {INCIDENT_TYPE_LABELS[viewingComplaint.incidentType]} ·{" "}
-                  {viewingComplaint.incidentDate}
-                  {viewingComplaint.incidentTime &&
-                    ` at ${viewingComplaint.incidentTime}`}
-                </p>
-                <p className="whitespace-pre-wrap leading-relaxed">
-                  {viewingComplaint.description}
-                </p>
-              </div>
+                <div className="space-y-1.5 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Incident
+                  </p>
+                  <p className="text-base font-medium leading-snug">
+                    {viewingComplaint.subject}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {INCIDENT_TYPE_LABELS[viewingComplaint.incidentType]} ·{" "}
+                    {viewingComplaint.incidentDate}
+                    {viewingComplaint.incidentTime &&
+                      ` at ${viewingComplaint.incidentTime}`}
+                  </p>
+                  <p className="whitespace-pre-wrap leading-relaxed">
+                    {viewingComplaint.description}
+                  </p>
+                </div>
 
-              {viewingComplaint.individualsInvolved.length > 0 && (
+                {viewingComplaint.individualsInvolved.length > 0 && (
+                  <div className="space-y-2 py-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Individuals Involved
+                    </p>
+                    <ul className="space-y-2">
+                      {viewingComplaint.individualsInvolved.map((person, i) => (
+                        <li key={i} className="rounded-md border p-3">
+                          <p className="font-medium">{person.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {[person.department, person.year, person.class]
+                              .filter(Boolean)
+                              .join(" · ") || "No additional details"}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {viewingComplaint.attachments.length > 0 && (
+                  <div className="space-y-2 py-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Evidence
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {viewingComplaint.attachments.map((file, i) => (
+                        <a
+                          key={i}
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                        >
+                          <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                          {file.name ?? `Evidence ${i + 1}`}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2 py-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Individuals Involved
+                    Status
                   </p>
-                  <ul className="space-y-2">
-                    {viewingComplaint.individualsInvolved.map((person, i) => (
-                      <li key={i} className="rounded-md bg-muted/50 p-3">
-                        <p className="font-medium">{person.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {[person.department, person.year, person.class]
-                            .filter(Boolean)
-                            .join(" · ") || "No additional details"}
-                        </p>
+                  <Badge variant={STATUS_VARIANT[viewingComplaint.status]}>
+                    {STATUS_LABELS[viewingComplaint.status]}
+                  </Badge>
+                </div>
+
+                {viewingComplaint.resolution && (
+                  <div className="space-y-1.5 py-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Resolution
+                    </p>
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {viewingComplaint.resolution}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2 pt-5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Case Progress
+                  </p>
+                  <ul className="space-y-1.5 border-l-2 pl-4 text-sm text-muted-foreground">
+                    {viewingComplaint.statusHistory.map((h, i) => (
+                      <li key={i}>
+                        <span className="font-medium text-foreground">
+                          {STATUS_LABELS[
+                            h.status as AntiRaggingComplaintStatus
+                          ] ?? h.status}
+                        </span>{" "}
+                        — {formatDateTime(h.changedAt)}
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
-
-              {viewingComplaint.attachments.length > 0 && (
-                <div className="space-y-2 py-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Evidence
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {viewingComplaint.attachments.map((file, i) => (
-                      <a
-                        key={i}
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
-                      >
-                        <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                        {file.name ?? `Evidence ${i + 1}`}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2 py-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Status
-                </p>
-                <Badge variant={STATUS_VARIANT[viewingComplaint.status]}>
-                  {STATUS_LABELS[viewingComplaint.status]}
-                </Badge>
               </div>
-
-              {viewingComplaint.resolution && (
-                <div className="space-y-1.5 py-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Resolution
-                  </p>
-                  <p className="whitespace-pre-wrap leading-relaxed">
-                    {viewingComplaint.resolution}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-2 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Case Progress
-                </p>
-                <ul className="space-y-1.5 border-l-2 pl-4 text-sm text-muted-foreground">
-                  {viewingComplaint.statusHistory.map((h, i) => (
-                    <li key={i}>
-                      <span className="font-medium text-foreground">
-                        {STATUS_LABELS[
-                          h.status as AntiRaggingComplaintStatus
-                        ] ?? h.status}
-                      </span>{" "}
-                      — {formatDateTime(h.changedAt)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
