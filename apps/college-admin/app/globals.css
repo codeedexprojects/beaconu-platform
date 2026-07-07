@@ -124,15 +124,24 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
-/* Popovers & Modals */
+/* Popovers */
 [data-radix-popper-content-wrapper] > div,
 .bg-popover,
-.modal-content,
-[role="dialog"] > div {
+.modal-content {
   background-color: #FFFFFF !important;
   border: none !important;
   box-shadow: 0 10px 40px 0 rgba(15, 23, 42, 0.1) !important;
   border-radius: 16px !important;
+}
+
+/* Modal dialogs — single flat white surface, no nested frame.
+   DialogContent itself carries the one visible bg/shadow/radius (dialog.tsx);
+   direct-child divs (header, body, footer) stay transparent and unstyled. */
+[role="dialog"] > div {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* Table styling */

@@ -15,3 +15,7 @@ export const presignBodySchema = z.object({
 export const verifyBodySchema = z.object({
   key: z.string().min(1, "Key is required"),
 });
+
+export const removeBodySchema = z.object({
+  key: z.string().min(1, "Key is required"),
+});

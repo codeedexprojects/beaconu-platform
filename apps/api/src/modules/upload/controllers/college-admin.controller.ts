@@ -52,4 +52,17 @@ export class CollegeAdminUploadController {
     const result = await UploadService.verify(key);
     res.status(200).json(ApiResponse.success("Upload verified", result));
   }
+
+  static async remove(req: Request, res: Response): Promise<void> {
+    const collegeId = req.collegeId!;
+    const { key } = verifySchema.parse(req.body);
+    const expectedPrefix = `college/${collegeId}/`;
+
+    if (!key.startsWith(expectedPrefix)) {
+      throw new ValidationError("Invalid key: does not belong to this college");
+    }
+
+    const result = await UploadService.remove(key);
+    res.status(200).json(ApiResponse.success("File deleted", result));
+  }
 }

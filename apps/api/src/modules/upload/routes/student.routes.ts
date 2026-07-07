@@ -61,4 +61,11 @@ router.post(
   StudentUploadController.verifyAntiRaggingEvidence,
 );
 
+router.delete(
+  "/file",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.removeFile,
+);
+
 export default router;

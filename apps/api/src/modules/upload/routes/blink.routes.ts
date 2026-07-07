@@ -19,4 +19,11 @@ router.post(
   BlinkUploadController.verifyAvatar,
 );
 
+router.delete(
+  "/file",
+  authenticate,
+  authorizeUserType("blink_associate", "blink_employee", "blink_ambassador"),
+  BlinkUploadController.removeFile,
+);
+
 export default router;

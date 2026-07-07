@@ -3,6 +3,7 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   HeadObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/shared/config/env";
@@ -82,6 +83,12 @@ export async function objectExists(key: string): Promise<boolean> {
     if (status === 404) return false;
     throw err;
   }
+}
+
+export async function deleteObject(key: string): Promise<void> {
+  await getS3Client().send(
+    new DeleteObjectCommand({ Bucket: env.AWS_S3_BUCKET, Key: key }),
+  );
 }
 
 export function permanentUrl(key: string): string {

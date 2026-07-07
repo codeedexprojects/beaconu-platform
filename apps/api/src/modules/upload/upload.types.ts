@@ -9,3 +9,7 @@ export interface VerifyResponse {
   permanentUrl: string;
   viewUrl: string;
 }
+
+export interface RemoveResponse {
+  deleted: true;
+}
