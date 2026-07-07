@@ -1,0 +1,49 @@
+meta {
+  name: Verify Evidence Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/anti-ragging-evidence/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{antiRaggingEvidenceUploadKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.permanentUrl) {
+      bru.setEnvVar("antiRaggingEvidenceUrl", data.data.permanentUrl);
+    }
+  }
+}
+
+docs {
+  Step 3 of 3 — Confirm the evidence file was successfully uploaded to S3.
+
+  Saves `permanentUrl` to {{antiRaggingEvidenceUrl}} for use in
+  attachments[].url when reporting an incident.
+
+  Body:
+  - key (required): the S3 key returned by presign-evidence
+
+  Response:
+  - verified: true
+  - permanentUrl: permanent public S3 URL
+  - viewUrl: signed URL valid for 1 hour
+}

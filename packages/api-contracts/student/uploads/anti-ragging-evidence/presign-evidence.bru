@@ -1,0 +1,50 @@
+meta {
+  name: Presign Evidence Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/anti-ragging-evidence/presign
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "mimeType": "image/jpeg",
+    "fileSizeBytes": 204800
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.key) {
+      bru.setEnvVar("antiRaggingEvidenceUploadKey", data.data.key);
+      bru.setEnvVar("antiRaggingEvidenceUploadUrl", data.data.uploadUrl);
+    }
+  }
+}
+
+docs {
+  Step 1 of 2 — Request a pre-signed PUT URL to upload evidence (photo,
+  screenshot, audio, video, document) for an anti-ragging report.
+
+  After receiving the response:
+  1. PUT the file binary to `uploadUrl` with the matching Content-Type header
+  2. Call verify-evidence with the returned `key`
+  3. Pass the resulting `permanentUrl` in `attachments[].url` when reporting
+
+  Body:
+  - mimeType (required): image/jpeg | image/png | image/webp | application/pdf
+  - fileSizeBytes (required): file size in bytes, max 10 MB (10485760)
+}

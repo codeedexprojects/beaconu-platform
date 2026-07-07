@@ -1,0 +1,35 @@
+meta {
+  name: Upload Evidence To S3 (PUT)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{antiRaggingEvidenceUploadUrl}}
+  body: file
+  auth: none
+}
+
+headers {
+  Content-Type: image/jpeg
+}
+
+body:file {
+  @file:
+}
+
+docs {
+  Step 2 of 3 — PUT the evidence file directly to S3 using the pre-signed URL.
+
+  IMPORTANT:
+  - auth must be "none" — the presigned URL already contains AWS credentials in its query params.
+  - Content-Type must exactly match what was sent to the presign endpoint.
+  - Do NOT paste the URL manually — {{antiRaggingEvidenceUploadUrl}} is captured automatically by
+    presign-evidence.bru.
+
+  Setup:
+  1. Run presign-evidence first — it sets {{antiRaggingEvidenceUploadUrl}} in the environment
+  2. Click the body field and select your file
+  3. Run this request — expect HTTP 200 (no body) from S3
+  4. Run verify-evidence to confirm and get the permanent URL
+}

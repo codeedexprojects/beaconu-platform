@@ -35,4 +35,8 @@ export const QUERY_KEYS = {
       : ["college-document-requests"],
   documentTemplates: (includeInactive?: boolean) =>
     ["college-document-templates", includeInactive ?? false] as const,
+  antiRaggingComplaints: (filters?: object) =>
+    filters
+      ? ["college-anti-ragging-complaints", filters]
+      : ["college-anti-ragging-complaints"],
 } as const;

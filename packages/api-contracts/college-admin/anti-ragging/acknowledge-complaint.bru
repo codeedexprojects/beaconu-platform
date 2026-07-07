@@ -1,0 +1,25 @@
+meta {
+  name: Acknowledge Report
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/anti-ragging-complaints/{{antiRaggingComplaintId}}/acknowledge
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Moves the report from "submitted" to "acknowledged". Assigns the acting
+  staff member as the case owner.
+}
