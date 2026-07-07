@@ -94,11 +94,29 @@ function mapComplaintSummary(row: {
 export class AntiRaggingQuery {
   static async listForStudent(
     studentId: string,
-    filters: { status?: string; page: number; limit: number },
+    filters: { status?: string; search?: string; page: number; limit: number },
   ) {
     const where = {
       studentId,
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              {
+                subject: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                complaintNumber: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
     };
     const skip = (filters.page - 1) * filters.limit;
 
