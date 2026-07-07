@@ -47,4 +47,18 @@ router.post(
   StudentUploadController.verifyDocument,
 );
 
+router.post(
+  "/anti-ragging-evidence/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignAntiRaggingEvidence,
+);
+
+router.post(
+  "/anti-ragging-evidence/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyAntiRaggingEvidence,
+);
+
 export default router;

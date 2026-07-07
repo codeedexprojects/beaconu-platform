@@ -19,6 +19,7 @@ import {
   Library,
   CalendarDays,
   FileText,
+  ShieldAlert,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -201,6 +202,7 @@ export default function DashboardLayout({
     if (path.includes("/ambassadors")) return "staff.view";
     if (path.includes("/campus-visits")) return "staff.view";
     if (path.includes("/documents")) return "staff.view";
+    if (path.includes("/anti-ragging")) return "staff.view";
     return null;
   };
 
@@ -344,6 +346,12 @@ export default function DashboardLayout({
                     name: "Documents",
                     path: "/documents",
                     icon: FileText,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Anti-Ragging",
+                    path: "/anti-ragging",
+                    icon: ShieldAlert,
                     permission: "staff.view",
                   },
                   {
@@ -548,6 +556,7 @@ export default function DashboardLayout({
                       { name: "Campus Ambassadors", path: "/ambassadors" },
                       { name: "Campus Visits", path: "/campus-visits" },
                       { name: "Documents", path: "/documents" },
+                      { name: "Anti-Ragging", path: "/anti-ragging" },
                       { name: "Settings", path: "/settings" },
                     ].find((s) => appPathname.includes(s.path))?.name ||
                     "Overview"}

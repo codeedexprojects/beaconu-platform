@@ -1,0 +1,20 @@
+meta {
+  name: Get My Report Status
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/anti-ragging-complaints/{{antiRaggingComplaintId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Full detail including statusHistory timeline (submitted, acknowledged,
+  investigating, resolved) and resolution once resolved.
+}
