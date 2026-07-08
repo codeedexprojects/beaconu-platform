@@ -38,6 +38,7 @@ model Student {
   counsellingSessions     CounsellingSession[]
   hostelEnrollments       HostelEnrollment[]
   hostelWishlists         HostelWishlist[]
+  collegeWishlists        CollegeWishlist[]
   hostelReviews           HostelReview[]
   commuteEnrollments      CommuteEnrollment[]
   commuteRideHistory      CommuteRideHistory[]

@@ -11,4 +11,6 @@ export const QUERY_KEYS = {
   entranceExams: (params?: object) =>
     params ? ["entrance-exams", params] : (["entrance-exams"] as const),
   entranceExam: (id: string) => ["entrance-exams", id] as const,
+  wishlist: (page?: number) =>
+    page !== undefined ? ["wishlist", page] : (["wishlist"] as const),
 } as const;

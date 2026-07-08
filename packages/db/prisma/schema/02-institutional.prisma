@@ -191,12 +191,30 @@ model College {
   institutionGroupMember    InstitutionGroupMember?
   collegeOnboardingRequests CollegeOnboardingRequest[]
 
+  collegeWishlists          CollegeWishlist[]
+
   @@index([universityId], name: "idx_colleges_university")
   @@index([slug], name: "idx_colleges_slug")
   @@index([domain], name: "idx_colleges_domain")
   @@index([state], name: "idx_colleges_state")
   @@index([status], name: "idx_colleges_status")
   @@map("colleges")
+}
+
+model CollegeWishlist {
+  id        String   @id @default(dbgenerated("('CWL-'::text || (nextval('college_wishlist_seq'::regclass))::text)"))
+  studentId String   @map("student_id")
+  collegeId String   @map("college_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, collegeId], name: "uq_college_wishlist")
+  @@index([studentId], name: "idx_cwish_student")
+  @@index([collegeId], name: "idx_cwish_college")
+  @@map("college_wishlists")
 }
 
 model CollegeOnboardingRequest {

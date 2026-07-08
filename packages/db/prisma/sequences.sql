@@ -37,6 +37,7 @@ CREATE SEQUENCE IF NOT EXISTS "college_payment_account_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_review_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_wishlist_seq";
 CREATE SEQUENCE IF NOT EXISTS "commission_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_comment_seq";
