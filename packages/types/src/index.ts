@@ -17,3 +17,4 @@ export * from "./campus-visits";
 export * from "./documents";
 export * from "./anti-ragging";
 export * from "./wishlist";
+export * from "./admission-cycle";

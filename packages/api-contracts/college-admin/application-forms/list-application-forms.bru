@@ -1,0 +1,26 @@
+meta {
+  name: List Application Forms (College Admin)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms
+  body: none
+  auth: none
+}
+
+query {
+  ~application_type: Regular
+  ~program_level: undergraduate
+  ~admission_year: 2026
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Lists all application forms for the authenticated college, across every
+  status (open/closed/archived). All filters are optional.
+}

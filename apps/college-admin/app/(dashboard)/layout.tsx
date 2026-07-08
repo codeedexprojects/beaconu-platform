@@ -20,6 +20,7 @@ import {
   CalendarDays,
   FileText,
   ShieldAlert,
+  ClipboardList,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -349,6 +350,12 @@ export default function DashboardLayout({
                     permission: "staff.view",
                   },
                   {
+                    name: "Application Forms",
+                    path: "/application-forms",
+                    icon: ClipboardList,
+                    permission: "staff.view",
+                  },
+                  {
                     name: "Anti-Ragging",
                     path: "/anti-ragging",
                     icon: ShieldAlert,
@@ -556,6 +563,7 @@ export default function DashboardLayout({
                       { name: "Campus Ambassadors", path: "/ambassadors" },
                       { name: "Campus Visits", path: "/campus-visits" },
                       { name: "Documents", path: "/documents" },
+                      { name: "Application Forms", path: "/application-forms" },
                       { name: "Anti-Ragging", path: "/anti-ragging" },
                       { name: "Settings", path: "/settings" },
                     ].find((s) => appPathname.includes(s.path))?.name ||
