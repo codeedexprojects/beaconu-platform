@@ -1,0 +1,33 @@
+meta {
+  name: Add College to Wishlist
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/wishlist
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}"
+  }
+}
+
+docs {
+  Favorite a college. Idempotent — calling this again for a college already
+  in the wishlist has no additional effect.
+
+  Body:
+  - college_id (required)
+
+  Response:
+  - added: true
+}
