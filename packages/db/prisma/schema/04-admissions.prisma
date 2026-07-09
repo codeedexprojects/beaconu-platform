@@ -3,18 +3,19 @@
 // ============================================================
 
 model AdmissionCycle {
-  id            String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
-  collegeId     String    @map("college_id")
-  name          String    @db.VarChar(255)
-  slug          String    @db.VarChar(100)
-  programLevel  String    @map("program_level") @db.VarChar(30)
-  admissionYear String    @map("admission_year") @db.VarChar(10)
-  startsOn      DateTime  @map("starts_on") @db.Date
-  endsOn        DateTime? @map("ends_on") @db.Date
-  status        String    @default("open") @db.VarChar(20)
-  settings      Json      @default("{}")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
+  collegeId       String    @map("college_id")
+  applicationType String    @map("application_type") @db.VarChar(50)
+  name            String    @db.VarChar(255)
+  slug            String    @db.VarChar(100)
+  programLevel    String    @map("program_level") @db.VarChar(30)
+  admissionYear   String    @map("admission_year") @db.VarChar(10)
+  startsOn        DateTime  @map("starts_on") @db.Date
+  endsOn          DateTime? @map("ends_on") @db.Date
+  status          String    @default("open") @db.VarChar(20)
+  settings        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college               College                @relation(fields: [collegeId], references: [id])

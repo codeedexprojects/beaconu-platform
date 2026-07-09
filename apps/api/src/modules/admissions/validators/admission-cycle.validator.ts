@@ -1,0 +1,69 @@
+import { z } from "zod";
+
+export const createAdmissionCycleSchema = z
+  .object({
+    application_type: z
+      .string()
+      .trim()
+      .min(1, "Application type is required")
+      .max(50),
+    name: z.string().trim().min(1, "Application name is required").max(255),
+    admission_year: z
+      .string()
+      .trim()
+      .min(1, "Admission year is required")
+      .max(10),
+    program_level: z
+      .string()
+      .trim()
+      .min(1, "Program level is required")
+      .max(30),
+    starts_on: z.coerce.date(),
+    ends_on: z.coerce.date().optional(),
+  })
+  .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
+    message: "End date must be on or after the start date",
+    path: ["ends_on"],
+  });
+
+export const updateAdmissionCycleSchema = z
+  .object({
+    application_type: z.string().trim().min(1).max(50).optional(),
+    name: z.string().trim().min(1).max(255).optional(),
+    admission_year: z.string().trim().min(1).max(10).optional(),
+    program_level: z.string().trim().min(1).max(30).optional(),
+    starts_on: z.coerce.date().optional(),
+    ends_on: z.coerce.date().optional(),
+  })
+  .refine(
+    (data) =>
+      !data.ends_on || !data.starts_on || data.ends_on >= data.starts_on,
+    {
+      message: "End date must be on or after the start date",
+      path: ["ends_on"],
+    },
+  );
+
+export const admissionCycleListQuerySchema = z.object({
+  application_type: z.string().trim().optional(),
+  program_level: z.string().trim().optional(),
+  admission_year: z.string().trim().optional(),
+});
+
+export const studentAdmissionCycleListQuerySchema =
+  admissionCycleListQuerySchema.extend({
+    college_id: z.string().trim().min(1, "College is required"),
+  });
+
+export type CreateAdmissionCycleInput = z.infer<
+  typeof createAdmissionCycleSchema
+>;
+export type UpdateAdmissionCycleInput = z.infer<
+  typeof updateAdmissionCycleSchema
+>;
+export type AdmissionCycleListQuery = z.infer<
+  typeof admissionCycleListQuerySchema
+>;
+export type StudentAdmissionCycleListQuery = z.infer<
+  typeof studentAdmissionCycleListQuerySchema
+>;

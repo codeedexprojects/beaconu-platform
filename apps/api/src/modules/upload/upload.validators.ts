@@ -3,7 +3,8 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from "./upload.constants";
 
 export const presignBodySchema = z.object({
   mimeType: z.enum(ALLOWED_MIME_TYPES as [string, ...string[]], {
-    error: "Allowed types: image/jpeg, image/png, image/webp, application/pdf",
+    error:
+      "Allowed types: image/jpeg, image/png, image/webp, application/pdf, audio/mpeg, audio/mp4, audio/wav",
   }),
   fileSizeBytes: z
     .number()

@@ -1,0 +1,20 @@
+meta {
+  name: List Assessment Slots
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/slots
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Lists all slots for this template, including cancelled ones, ordered by
+  window_start.
+}

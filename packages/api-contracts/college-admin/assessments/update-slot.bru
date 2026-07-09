@@ -1,0 +1,27 @@
+meta {
+  name: Update Assessment Slot
+  type: http
+  seq: 25
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/slots/{{assessmentSlotId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "max_capacity": 150
+  }
+}
+
+docs {
+  All fields optional. If either window_start or window_end changes, the
+  resulting window is re-validated (end must be after start).
+}

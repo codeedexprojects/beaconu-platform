@@ -1,0 +1,20 @@
+meta {
+  name: Cancel Assessment Slot
+  type: http
+  seq: 26
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/slots/{{assessmentSlotId}}/cancel
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-cancels a slot (status -> cancelled). Cancelling an already-cancelled
+  slot returns a 409 ConflictError. Row is preserved, not deleted.
+}

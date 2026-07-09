@@ -698,6 +698,13 @@ export class CollegeRegistrationController {
     return res.status(200).json(ApiResponse.success("Courses fetched", result));
   }
 
+  static async listCoursesMinimal(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const result =
+      await CollegeRegistrationService.listCoursesMinimal(collegeId);
+    return res.status(200).json(ApiResponse.success("Courses fetched", result));
+  }
+
   static async addCourse(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const data = createCourseSchema.parse(req.body);

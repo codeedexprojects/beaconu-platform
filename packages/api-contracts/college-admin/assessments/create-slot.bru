@@ -1,0 +1,40 @@
+meta {
+  name: Create Assessment Slot
+  type: http
+  seq: 23
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/slots
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "slot_type": "window",
+    "window_start": "2026-08-01T09:00:00.000Z",
+    "window_end": "2026-08-01T18:00:00.000Z",
+    "max_capacity": 100
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentSlotId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Template must be status "active" (ConflictError otherwise). window_end
+  must be after window_start (ValidationError otherwise). max_capacity is
+  optional — omit for unlimited.
+}

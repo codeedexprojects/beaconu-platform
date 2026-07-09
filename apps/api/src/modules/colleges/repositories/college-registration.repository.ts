@@ -340,6 +340,14 @@ export class CollegeRegistrationRepository {
     });
   }
 
+  static async getCoursesMinimal(collegeId: string) {
+    return prisma.course.findMany({
+      where: { collegeId, status: "active" },
+      select: { id: true, name: true, code: true },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
   static async createCourse(collegeId: string, data: CreateCourseData) {
     const payloadTabData =
       data.tabData && typeof data.tabData === "object"
