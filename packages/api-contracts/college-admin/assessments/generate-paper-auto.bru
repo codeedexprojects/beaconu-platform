@@ -1,0 +1,38 @@
+meta {
+  name: Generate Paper (Auto)
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/papers
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "generation_type": "auto"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentPaperId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Auto-generates a paper by randomly sampling questionCount active questions
+  per section of the template. Template must be status "active". If the
+  template includes a course-specific (calculator) section, course_id is
+  required in the body — omit only when every section is core.
+}

@@ -1,0 +1,22 @@
+meta {
+  name: List Courses (Minimal)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/minimal
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Lightweight course list for pickers/multi-selects (e.g. mapping assessment
+  questions to courses). Returns only { id, name, code } per course instead
+  of the full List Courses payload (discipline/studyLevel/programType/campus
+  relations + all course metadata).
+}

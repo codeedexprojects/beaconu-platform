@@ -1,3 +1,9 @@
+export interface CourseMinimalItem {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export interface CampusAmbassador {
   id: string;
   fullName: string;

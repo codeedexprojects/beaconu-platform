@@ -10,7 +10,7 @@ import type { AllowedMimeType } from "../upload.constants";
 const presignSchema = z.object({
   mimeType: z.enum(ALLOWED_MIME_TYPES as [string, ...string[]], {
     error:
-      "Allowed: image/jpeg, image/png, image/webp, application/pdf, video/mp4, video/webm, video/quicktime",
+      "Allowed: image/jpeg, image/png, image/webp, application/pdf, video/mp4, video/webm, video/quicktime, audio/mpeg, audio/mp4, audio/wav",
   }),
   fileSizeBytes: z.number().int().positive(),
   context: z.string().trim().min(1).max(100),

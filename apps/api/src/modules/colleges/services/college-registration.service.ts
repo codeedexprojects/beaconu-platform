@@ -807,6 +807,10 @@ export class CollegeRegistrationService {
     return CollegeRegistrationRepository.getCourses(collegeId);
   }
 
+  static async listCoursesMinimal(collegeId: string) {
+    return CollegeRegistrationRepository.getCoursesMinimal(collegeId);
+  }
+
   static async addCourse(collegeId: string, data: CreateCourseData) {
     await this.ensureDisciplineAllowedForCollege(collegeId, data.disciplineId);
     return CollegeRegistrationRepository.createCourse(collegeId, data);

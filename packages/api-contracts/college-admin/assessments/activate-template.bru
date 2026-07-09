@@ -1,0 +1,20 @@
+meta {
+  name: Activate Assessment Template
+  type: http
+  seq: 15
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/activate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Flips status draft -> active. Fails with a 409 ConflictError if the
+  template has zero sections.
+}

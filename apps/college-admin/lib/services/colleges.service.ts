@@ -2,6 +2,7 @@ import { api } from "../api";
 import type {
   CollegePermissionDto,
   CollegeRoleDto,
+  CourseMinimalItem,
   CreateCollegeRoleInput,
   UpdateCollegeRoleInput,
 } from "@beaconu/types";
@@ -169,6 +170,10 @@ export async function createCollegeCampus(
 
 export async function getCollegeCourses(): Promise<Course[]> {
   return api.get<Course[]>("/api/v1/college-admin/courses");
+}
+
+export async function getCollegeCoursesMinimal(): Promise<CourseMinimalItem[]> {
+  return api.get<CourseMinimalItem[]>("/api/v1/college-admin/courses/minimal");
 }
 
 export async function createCollegeCourse(

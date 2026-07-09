@@ -1,0 +1,22 @@
+meta {
+  name: Delete Assessment Paper
+  type: http
+  seq: 22
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/papers/{{assessmentPaperId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes a paper (status -> deleted). Excluded from List Assessment
+  Papers afterwards; row is preserved, not hard-deleted. Fails with a 409
+  ConflictError if the paper is currently approved — approve a different
+  paper first (which auto-demotes this one to draft), then delete it.
+}

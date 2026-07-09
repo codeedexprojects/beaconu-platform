@@ -2,6 +2,7 @@ export const QUERY_KEYS = {
   profile: ["college-profile"] as const,
   campuses: ["college-campuses"] as const,
   courses: ["college-courses"] as const,
+  coursesMinimal: ["college-courses-minimal"] as const,
   lookupsStreams: ["lookups", "streams"] as const,
   lookupsStudyLevels: ["lookups", "study-levels"] as const,
   lookupsProgramTypes: ["lookups", "program-types"] as const,
@@ -39,6 +40,21 @@ export const QUERY_KEYS = {
     filters
       ? ["college-admission-cycles", filters]
       : ["college-admission-cycles"],
+  assessmentSections: ["college-assessment-sections"] as const,
+  assessmentTemplates: ["college-assessment-templates"] as const,
+  assessmentTemplate: (id: string) =>
+    ["college-assessment-templates", id] as const,
+  assessmentPapers: (templateId: string) =>
+    ["college-assessment-papers", templateId] as const,
+  assessmentPaper: (id: string) => ["college-assessment-paper", id] as const,
+  assessmentSlots: (templateId: string) =>
+    ["college-assessment-slots", templateId] as const,
+  assessmentQuestionTypes: (slug: string) =>
+    ["college-assessment-question-types", slug] as const,
+  assessmentQuestions: (slug: string, filters?: object) =>
+    filters
+      ? ["college-assessment-questions", slug, filters]
+      : ["college-assessment-questions", slug],
   antiRaggingComplaints: (filters?: object) =>
     filters
       ? ["college-anti-ragging-complaints", filters]

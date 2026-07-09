@@ -21,6 +21,7 @@ import {
   FileText,
   ShieldAlert,
   ClipboardList,
+  Mic,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -362,6 +363,12 @@ export default function DashboardLayout({
                     permission: "staff.view",
                   },
                   {
+                    name: "Assessments",
+                    path: "/assessments",
+                    icon: Mic,
+                    permission: "staff.view",
+                  },
+                  {
                     name: "Settings",
                     path: "/settings",
                     icon: Settings,
@@ -565,6 +572,7 @@ export default function DashboardLayout({
                       { name: "Documents", path: "/documents" },
                       { name: "Application Forms", path: "/application-forms" },
                       { name: "Anti-Ragging", path: "/anti-ragging" },
+                      { name: "Assessments", path: "/assessments" },
                       { name: "Settings", path: "/settings" },
                     ].find((s) => appPathname.includes(s.path))?.name ||
                     "Overview"}

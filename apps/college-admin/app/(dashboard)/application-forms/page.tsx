@@ -33,6 +33,7 @@ import {
   useUpdateAdmissionCycle,
   useDeleteAdmissionCycle,
 } from "@/hooks/use-admission-cycles";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { AdmissionCycleItem } from "@beaconu/types";
 
 const applicationFormSchema = z
@@ -79,11 +80,12 @@ function formatDate(value: string): string {
 export default function ApplicationFormsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdmissionCycleItem | null>(null);
+  const [deleting, setDeleting] = useState<AdmissionCycleItem | null>(null);
 
   const { data: forms, isLoading } = useAdmissionCycles();
   const { mutate: create, isPending: isCreating } = useCreateAdmissionCycle();
   const { mutate: update, isPending: isUpdating } = useUpdateAdmissionCycle();
-  const { mutate: remove } = useDeleteAdmissionCycle();
+  const { mutate: remove, isPending: isDeleting } = useDeleteAdmissionCycle();
 
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
@@ -134,12 +136,14 @@ export default function ApplicationFormsPage() {
     }
   }
 
-  function handleDelete(item: AdmissionCycleItem) {
-    if (confirm(`Delete application form "${item.name}"?`)) {
-      remove(item.id, {
-        onSuccess: () => toast.success("Application form deleted"),
-      });
-    }
+  function confirmDelete() {
+    if (!deleting) return;
+    remove(deleting.id, {
+      onSuccess: () => {
+        toast.success("Application form deleted");
+        setDeleting(null);
+      },
+    });
   }
 
   return (
@@ -369,7 +373,7 @@ export default function ApplicationFormsPage() {
                           size="sm"
                           variant="outline"
                           className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(item)}
+                          onClick={() => setDeleting(item)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           Delete
@@ -383,6 +387,20 @@ export default function ApplicationFormsPage() {
           </Table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(v) => !v && setDeleting(null)}
+        title="Delete application form?"
+        description={
+          deleting
+            ? `"${deleting.name}" will no longer be available to students. This can't be undone from here.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        isPending={isDeleting}
+      />
     </div>
   );
 }

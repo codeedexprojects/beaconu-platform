@@ -8,6 +8,7 @@ import {
   createCollegeCourse,
   getCollegeCampuses,
   getCollegeCourses,
+  getCollegeCoursesMinimal,
   getCollegeProfile,
   submitCollegeRegistration,
   updateCollegeProfile,
@@ -42,6 +43,14 @@ export function useCollegeCourses(enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.courses,
     queryFn: getCollegeCourses,
+    enabled,
+  });
+}
+
+export function useCollegeCoursesMinimal(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.coursesMinimal,
+    queryFn: getCollegeCoursesMinimal,
     enabled,
   });
 }

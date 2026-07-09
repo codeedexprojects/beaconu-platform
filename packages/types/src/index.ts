@@ -18,3 +18,4 @@ export * from "./documents";
 export * from "./anti-ragging";
 export * from "./wishlist";
 export * from "./admission-cycle";
+export * from "./assessment";
