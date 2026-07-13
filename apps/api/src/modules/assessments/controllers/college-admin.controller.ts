@@ -16,6 +16,7 @@ import {
   createTemplateSchema,
   updateTemplateSchema,
   generatePaperSchema,
+  renamePaperSchema,
   createSlotSchema,
   updateSlotSchema,
 } from "../validators/assessment.validator";
@@ -173,6 +174,16 @@ export class CollegeAdminAssessmentController {
       req.params.id as string,
     );
     return res.json(ApiResponse.success("Assessment paper approved", result));
+  }
+
+  static async renamePaper(req: Request, res: Response) {
+    const data = renamePaperSchema.parse(req.body);
+    const result = await PaperGenerationService.rename(
+      req.collegeId!,
+      req.params.id as string,
+      data.name,
+    );
+    return res.json(ApiResponse.success("Assessment paper renamed", result));
   }
 
   static async deletePaper(req: Request, res: Response) {

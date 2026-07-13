@@ -62,6 +62,30 @@ export class QuestionRepository {
     });
   }
 
+  private static buildSectionWhere(
+    collegeId: string,
+    sectionId: string,
+    filters: {
+      question_type_id?: string;
+      difficulty?: string;
+      status?: string;
+      course_id?: string;
+    },
+  ): Prisma.QuestionWhereInput {
+    return {
+      collegeId,
+      sectionId,
+      ...(filters.question_type_id && {
+        questionTypeId: filters.question_type_id,
+      }),
+      ...(filters.difficulty && { difficulty: filters.difficulty }),
+      status: filters.status ?? "active",
+      ...(filters.course_id && {
+        courseMappings: { some: { courseId: filters.course_id } },
+      }),
+    };
+  }
+
   static async listBySection(
     collegeId: string,
     sectionId: string,
@@ -71,23 +95,19 @@ export class QuestionRepository {
       status?: string;
       course_id?: string;
     },
+    pagination: { skip: number; take: number },
   ) {
-    return prisma.question.findMany({
-      where: {
-        collegeId,
-        sectionId,
-        ...(filters.question_type_id && {
-          questionTypeId: filters.question_type_id,
-        }),
-        ...(filters.difficulty && { difficulty: filters.difficulty }),
-        status: filters.status ?? "active",
-        ...(filters.course_id && {
-          courseMappings: { some: { courseId: filters.course_id } },
-        }),
-      },
-      include: { courseMappings: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const where = this.buildSectionWhere(collegeId, sectionId, filters);
+    return prisma.$transaction([
+      prisma.question.findMany({
+        where,
+        include: { courseMappings: true },
+        orderBy: { createdAt: "desc" },
+        skip: pagination.skip,
+        take: pagination.take,
+      }),
+      prisma.question.count({ where }),
+    ]);
   }
 
   static async listActivePoolForSection(

@@ -56,6 +56,10 @@ router.patch(
   "/papers/:id/approve",
   CollegeAdminAssessmentController.approvePaper,
 );
+router.patch(
+  "/papers/:id/rename",
+  CollegeAdminAssessmentController.renamePaper,
+);
 router.delete("/papers/:id", CollegeAdminAssessmentController.deletePaper);
 
 router.get(

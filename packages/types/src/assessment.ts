@@ -100,6 +100,8 @@ export interface QuestionListQuery {
   difficulty?: QuestionDifficulty;
   status?: QuestionStatus;
   course_id?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ToggleSectionInput {
@@ -184,6 +186,7 @@ export interface AssessmentPaperItem {
   id: string;
   templateId: string;
   paperCode: string;
+  name: string | null;
   generationType: PaperGenerationType;
   status: PaperStatus;
   generatedBy: string | null;
@@ -200,6 +203,7 @@ export interface ManualQuestionSelection {
 
 export interface GeneratePaperInput {
   generation_type: PaperGenerationType;
+  name?: string;
   course_id?: string;
   manual_selections?: ManualQuestionSelection[];
 }

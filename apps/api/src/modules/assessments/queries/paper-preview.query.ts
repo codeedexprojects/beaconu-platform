@@ -18,6 +18,7 @@ function mapPaper(row: PaperWithQuestions): AssessmentPaperItem {
     id: row.id,
     templateId: row.templateId,
     paperCode: row.paperCode,
+    name: row.name,
     generationType: row.generationType as PaperGenerationType,
     status: row.status as PaperStatus,
     generatedBy: row.generatedBy,

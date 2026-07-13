@@ -16,6 +16,8 @@ import {
   X,
   ArrowUp,
   ArrowDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -104,6 +106,8 @@ function newBlankId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+const PAGE_SIZE = 20;
+
 export default function AssessmentSectionQuestionsPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
@@ -122,10 +126,16 @@ export default function AssessmentSectionQuestionsPage() {
   const [blanks, setBlanks] = useState<QuestionBlank[]>([]);
   const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<QuestionItem | null>(null);
+  const [page, setPage] = useState(1);
 
   const { data: questionTypes, isLoading: typesLoading } =
     useQuestionTypes(slug);
-  const { data: questions, isLoading: questionsLoading } = useQuestions(slug);
+  const { data: questionsData, isLoading: questionsLoading } = useQuestions(
+    slug,
+    { page, limit: PAGE_SIZE },
+  );
+  const questions = questionsData?.questions;
+  const meta = questionsData?.meta;
   const { data: courses } = useCollegeCoursesMinimal();
   const { mutate: create, isPending: isCreating } = useCreateQuestion(slug);
   const { mutate: update, isPending: isUpdating } = useUpdateQuestion(slug);
@@ -331,6 +341,7 @@ export default function AssessmentSectionQuestionsPage() {
         onSuccess: () => {
           toast.success("Question created");
           setOpen(false);
+          setPage(1);
         },
       });
     }
@@ -342,6 +353,9 @@ export default function AssessmentSectionQuestionsPage() {
       onSuccess: () => {
         toast.success("Question deleted");
         setDeleting(null);
+        if (questions?.length === 1 && page > 1) {
+          setPage(page - 1);
+        }
       },
     });
   }
@@ -913,6 +927,41 @@ export default function AssessmentSectionQuestionsPage() {
           </Table>
         </div>
       </div>
+
+      {meta && meta.total > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <p>
+            Showing {(meta.page - 1) * meta.limit + 1}–
+            {Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 text-xs"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Previous
+            </Button>
+            <span className="text-xs">
+              Page {meta.page} of{" "}
+              {Math.max(1, Math.ceil(meta.total / meta.limit))}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 text-xs"
+              disabled={!meta.hasNext}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!deleting}
