@@ -65,6 +65,7 @@ export class PaperGenerationService {
 
     return PaperRepository.create(templateId, {
       paperCode,
+      name: data.name,
       generationType: data.generation_type,
       generatedBy: userId,
       questions,
@@ -188,6 +189,14 @@ export class PaperGenerationService {
       throw new ConflictError("Paper is already approved");
     }
     return PaperRepository.approve(paperId, paper.templateId, userId);
+  }
+
+  static async rename(collegeId: string, paperId: string, name: string) {
+    const paper = await PaperRepository.findById(paperId);
+    if (!paper || paper.template.collegeId !== collegeId) {
+      throw new NotFoundError("Assessment paper not found");
+    }
+    return PaperRepository.rename(paperId, name);
   }
 
   static async remove(collegeId: string, paperId: string) {

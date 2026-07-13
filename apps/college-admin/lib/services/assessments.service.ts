@@ -15,6 +15,7 @@ import type {
   AssessmentSlotItem,
   CreateSlotInput,
   UpdateSlotInput,
+  PaginationMeta,
 } from "@beaconu/types";
 
 const BASE = "/api/v1/college-admin/assessments";
@@ -104,6 +105,8 @@ function toQueryString(filters: QuestionListQuery): string {
   if (filters.difficulty) params.set("difficulty", filters.difficulty);
   if (filters.status) params.set("status", filters.status);
   if (filters.course_id) params.set("course_id", filters.course_id);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }
@@ -111,7 +114,7 @@ function toQueryString(filters: QuestionListQuery): string {
 export async function getQuestions(
   slug: string,
   filters: QuestionListQuery = {},
-): Promise<QuestionItem[]> {
+): Promise<{ questions: QuestionItem[]; meta: PaginationMeta }> {
   return api.get(`${BASE}/sections/${slug}/questions${toQueryString(filters)}`);
 }
 
@@ -200,6 +203,13 @@ export async function approveAssessmentPaper(
   id: string,
 ): Promise<AssessmentPaperItem> {
   return api.patch(`${BASE}/papers/${id}/approve`, {});
+}
+
+export async function renameAssessmentPaper(
+  id: string,
+  name: string,
+): Promise<AssessmentPaperItem> {
+  return api.patch(`${BASE}/papers/${id}/rename`, { name });
 }
 
 export async function deleteAssessmentPaper(

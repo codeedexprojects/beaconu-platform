@@ -11,6 +11,7 @@ export class PaperRepository {
     templateId: string,
     data: {
       paperCode: string;
+      name?: string;
       generationType: string;
       generatedBy?: string;
       questions: PaperQuestionCreateData[];
@@ -21,6 +22,7 @@ export class PaperRepository {
         data: {
           templateId,
           paperCode: data.paperCode,
+          name: data.name ?? null,
           generationType: data.generationType,
           status: "draft",
           generatedBy: data.generatedBy ?? null,
@@ -104,6 +106,13 @@ export class PaperRepository {
     return prisma.assessmentPaper.update({
       where: { id },
       data: { status: "deleted" },
+    });
+  }
+
+  static async rename(id: string, name: string) {
+    return prisma.assessmentPaper.update({
+      where: { id },
+      data: { name },
     });
   }
 }

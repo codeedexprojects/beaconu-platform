@@ -3,7 +3,12 @@ import { SectionRepository } from "../repositories/section.repository";
 import { QuestionRepository } from "../repositories/question.repository";
 import { QuestionTypeRepository } from "../repositories/question-type.repository";
 import { SECTION_SEEDS } from "../constants/section-seeds";
-import type { AnswerKey, QuestionContent, QuestionItem } from "@beaconu/types";
+import type {
+  AnswerKey,
+  PaginationMeta,
+  QuestionContent,
+  QuestionItem,
+} from "@beaconu/types";
 
 function mapQuestion(row: {
   id: string;
@@ -54,19 +59,28 @@ export class QuestionListQuery {
       difficulty?: string;
       status?: string;
       course_id?: string;
+      page: number;
+      limit: number;
     },
-  ): Promise<QuestionItem[]> {
+  ): Promise<{ questions: QuestionItem[]; meta: PaginationMeta }> {
     const section = await SectionRepository.findByCollegeAndSlug(
       collegeId,
       sectionSlug,
     );
     if (!section) throw new NotFoundError("Assessment section not found");
 
-    const rows = await QuestionRepository.listBySection(
+    const { page, limit } = filters;
+    const skip = (page - 1) * limit;
+    const [rows, total] = await QuestionRepository.listBySection(
       collegeId,
       section.id,
       filters,
+      { skip, take: limit },
     );
-    return rows.map(mapQuestion);
+
+    return {
+      questions: rows.map(mapQuestion),
+      meta: { total, page, limit, hasNext: skip + rows.length < total },
+    };
   }
 }

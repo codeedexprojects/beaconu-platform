@@ -20,6 +20,7 @@ import {
   getAssessmentPapers,
   getAssessmentPaper,
   approveAssessmentPaper,
+  renameAssessmentPaper,
   deleteAssessmentPaper,
   getAssessmentSlots,
   createAssessmentSlot,
@@ -231,6 +232,22 @@ export function useApproveAssessmentPaper(templateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => approveAssessmentPaper(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.assessmentPapers(templateId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useRenameAssessmentPaper(templateId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      renameAssessmentPaper(id, name),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.assessmentPapers(templateId),

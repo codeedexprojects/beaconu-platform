@@ -17,7 +17,8 @@ headers {
 
 body:json {
   {
-    "generation_type": "auto"
+    "generation_type": "auto",
+    "name": "Set A"
   }
 }
 
@@ -34,5 +35,7 @@ docs {
   Auto-generates a paper by randomly sampling questionCount active questions
   per section of the template. Template must be status "active". If the
   template includes a course-specific (calculator) section, course_id is
-  required in the body — omit only when every section is core.
+  required in the body — omit only when every section is core. name is
+  optional — an admin-facing label (e.g. "Set A", "Morning Batch");
+  paper_code is still always auto-generated and unique regardless of name.
 }

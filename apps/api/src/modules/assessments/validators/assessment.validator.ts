@@ -61,6 +61,8 @@ export const questionListQuerySchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   status: z.enum(["active", "inactive", "archived"]).optional(),
   course_id: z.string().trim().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
 export type ToggleSectionBody = z.infer<typeof toggleSectionSchema>;
@@ -111,11 +113,18 @@ const manualQuestionSelectionSchema = z.object({
 
 export const generatePaperSchema = z.object({
   generation_type: z.enum(["auto", "manual"]),
+  name: z.string().trim().min(1).max(255).optional(),
   course_id: z.string().trim().min(1).optional(),
   manual_selections: z.array(manualQuestionSelectionSchema).optional(),
 });
 
 export type GeneratePaperBody = z.infer<typeof generatePaperSchema>;
+
+export const renamePaperSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(255),
+});
+
+export type RenamePaperBody = z.infer<typeof renamePaperSchema>;
 
 export const createSlotSchema = z.object({
   slot_type: z.enum(["window", "fixed"]),

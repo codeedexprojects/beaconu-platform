@@ -154,6 +154,7 @@ model AssessmentPaper {
   id             String    @id @default(dbgenerated("('ASP-'::text || (nextval('assessment_paper_seq'::regclass))::text)"))
   templateId     String    @map("template_id")
   paperCode      String    @unique @map("paper_code") @db.VarChar(30)
+  name           String?   @db.VarChar(255)
   generationType String    @map("generation_type") @db.VarChar(10)
   status         String    @default("draft") @db.VarChar(20)
   generatedBy    String?   @map("generated_by")
