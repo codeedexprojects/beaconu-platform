@@ -79,6 +79,12 @@ interface SectionRow extends TemplateSectionInput {
   key: string;
 }
 
+interface InstructionRow {
+  key: string;
+  heading: string;
+  description: string;
+}
+
 const STATUS_VARIANT: Record<
   AssessmentTemplateItem["status"],
   "default" | "outline" | "secondary"
@@ -92,6 +98,7 @@ export default function AssessmentTemplatesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AssessmentTemplateItem | null>(null);
   const [rows, setRows] = useState<SectionRow[]>([]);
+  const [instructionRows, setInstructionRows] = useState<InstructionRow[]>([]);
   const [archiving, setArchiving] = useState<AssessmentTemplateItem | null>(
     null,
   );
@@ -117,6 +124,7 @@ export default function AssessmentTemplatesPage() {
     setEditing(null);
     form.reset(EMPTY_VALUES);
     setRows([]);
+    setInstructionRows([]);
     setOpen(true);
   }
 
@@ -137,7 +145,35 @@ export default function AssessmentTemplatesPage() {
         section_weightage: s.sectionWeightage ?? undefined,
       })),
     );
+    setInstructionRows(
+      item.instructions.map((ins, index) => ({
+        key: `${index}-${Math.random().toString(36).slice(2, 8)}`,
+        heading: ins.heading,
+        description: ins.description,
+      })),
+    );
     setOpen(true);
+  }
+
+  function addInstructionRow() {
+    setInstructionRows((prev) => [
+      ...prev,
+      {
+        key: Math.random().toString(36).slice(2, 10),
+        heading: "",
+        description: "",
+      },
+    ]);
+  }
+
+  function updateInstructionRow(key: string, patch: Partial<InstructionRow>) {
+    setInstructionRows((prev) =>
+      prev.map((r) => (r.key === key ? { ...r, ...patch } : r)),
+    );
+  }
+
+  function removeInstructionRow(key: string) {
+    setInstructionRows((prev) => prev.filter((r) => r.key !== key));
   }
 
   function addRow() {
@@ -178,9 +214,19 @@ export default function AssessmentTemplatesPage() {
       toast.error("Select a section for every row");
       return;
     }
+    if (
+      instructionRows.some((r) => !r.heading.trim() || !r.description.trim())
+    ) {
+      toast.error("Fill in both heading and description for every instruction");
+      return;
+    }
 
     const payload = {
       ...values,
+      instructions: instructionRows.map(({ heading, description }) => ({
+        heading,
+        description,
+      })),
       sections: rows.map(({ key: _key, ...rest }) => rest),
     };
 
@@ -321,6 +367,63 @@ export default function AssessmentTemplatesPage() {
                       <SelectItem value="proportional">Proportional</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Instructions</Label>
+                <p className="text-xs text-muted-foreground">
+                  Shown to students before they start the assessment — e.g. time
+                  limit, allowed materials, conduct rules.
+                </p>
+                <div className="space-y-2 rounded-md border p-2">
+                  {instructionRows.map((row) => (
+                    <div
+                      key={row.key}
+                      className="flex items-start gap-2 rounded-md border p-2"
+                    >
+                      <div className="flex-1 space-y-1.5">
+                        <Input
+                          className="h-8 text-xs"
+                          placeholder="Heading — e.g. Time Limit"
+                          value={row.heading}
+                          onChange={(e) =>
+                            updateInstructionRow(row.key, {
+                              heading: e.target.value,
+                            })
+                          }
+                        />
+                        <Input
+                          className="h-8 text-xs"
+                          placeholder="Description — e.g. You have 90 minutes to complete this assessment."
+                          value={row.description}
+                          onChange={(e) =>
+                            updateInstructionRow(row.key, {
+                              description: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => removeInstructionRow(row.key)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={addInstructionRow}
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add Instruction
+                  </Button>
                 </div>
               </div>
 

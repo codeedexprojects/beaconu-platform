@@ -11,6 +11,7 @@ import type {
 
 const CHOICE_FORMATS = ["single_choice", "multi_choice"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
+const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
 
 export class QuestionBankService {
   private static async loadSection(collegeId: string, sectionSlug: string) {
@@ -63,8 +64,10 @@ export class QuestionBankService {
     content: QuestionContent,
     answerKey: AnswerKey | undefined,
   ) {
-    if (questionType.hasAudio && !content.audioUrl) {
-      throw new ValidationError("This question type requires an audio upload");
+    const promptType =
+      content.promptType ?? (questionType.hasAudio ? "audio" : "text");
+    if (promptType === "audio" && !content.audioUrl) {
+      throw new ValidationError("Prompt type is audio — upload an audio file");
     }
     if (questionType.hasImage && !content.imageUrl) {
       throw new ValidationError("This question type requires an image upload");
@@ -72,6 +75,51 @@ export class QuestionBankService {
 
     const isChoice = CHOICE_FORMATS.includes(questionType.responseFormat);
     const isOrdered = ORDERED_FORMATS.includes(questionType.responseFormat);
+    const isFillBlank = FILL_BLANK_FORMATS.includes(
+      questionType.responseFormat,
+    );
+
+    if (isFillBlank) {
+      if (!content.options || content.options.length < 1) {
+        throw new ValidationError(
+          "This question type requires at least 1 word bank option",
+        );
+      }
+      if (!content.blanks || content.blanks.length < 1) {
+        throw new ValidationError(
+          "This question type requires at least 1 blank",
+        );
+      }
+
+      if (questionType.autoScorable) {
+        const optionIds = new Set(content.options.map((o) => o.id));
+        const blankIds = new Set(content.blanks.map((b) => b.id));
+        const blankAnswers = answerKey?.blankAnswers;
+
+        if (!blankAnswers || blankAnswers.length !== content.blanks.length) {
+          throw new ValidationError(
+            "Provide exactly one correct answer per blank",
+          );
+        }
+        const answeredBlankIds = new Set(blankAnswers.map((a) => a.blankId));
+        if (answeredBlankIds.size !== blankAnswers.length) {
+          throw new ValidationError("Each blank can only have one answer");
+        }
+        for (const answer of blankAnswers) {
+          if (!blankIds.has(answer.blankId)) {
+            throw new ValidationError(
+              `Blank id "${answer.blankId}" does not match any provided blank`,
+            );
+          }
+          if (!optionIds.has(answer.optionId)) {
+            throw new ValidationError(
+              `Option id "${answer.optionId}" does not match any provided option`,
+            );
+          }
+        }
+      }
+      return;
+    }
 
     if (isChoice || isOrdered) {
       if (!content.options || content.options.length < 2) {

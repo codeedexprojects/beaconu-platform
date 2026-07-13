@@ -3,6 +3,7 @@ import { TemplateRepository } from "../repositories/template.repository";
 import type {
   AssessmentTemplateItem,
   NegativeMarkingMode,
+  TemplateInstructionItem,
   TemplateStatus,
 } from "@beaconu/types";
 
@@ -24,6 +25,8 @@ function mapTemplate(row: TemplateWithSections): AssessmentTemplateItem {
     totalDurationMins: row.totalDurationMins,
     status: row.status as TemplateStatus,
     negativeMarkingMode: settings.negativeMarkingMode ?? "none",
+    instructions:
+      (row.instructions as unknown as TemplateInstructionItem[] | null) ?? [],
     sections: row.templateSections.map((ts) => ({
       id: ts.id,
       sectionId: ts.sectionId,

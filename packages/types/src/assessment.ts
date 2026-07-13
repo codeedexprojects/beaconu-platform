@@ -30,16 +30,31 @@ export interface QuestionOption {
   text: string;
 }
 
+export type PromptType = "text" | "audio";
+
+export interface QuestionBlank {
+  id: string;
+  label?: string;
+}
+
 export interface QuestionContent {
   text?: string;
   audioUrl?: string;
   imageUrl?: string;
   options?: QuestionOption[];
+  promptType?: PromptType;
+  blanks?: QuestionBlank[];
+}
+
+export interface BlankAnswer {
+  blankId: string;
+  optionId: string;
 }
 
 export interface AnswerKey {
   correctOptionIds?: string[];
   correctOrder?: string[];
+  blankAnswers?: BlankAnswer[];
 }
 
 export interface QuestionItem {
@@ -94,6 +109,11 @@ export interface ToggleSectionInput {
 export type TemplateStatus = "draft" | "active" | "archived";
 export type NegativeMarkingMode = "none" | "fixed" | "proportional";
 
+export interface TemplateInstructionItem {
+  heading: string;
+  description: string;
+}
+
 export interface TemplateSectionItem {
   id: string;
   sectionId: string;
@@ -114,6 +134,7 @@ export interface AssessmentTemplateItem {
   totalDurationMins: number;
   status: TemplateStatus;
   negativeMarkingMode: NegativeMarkingMode;
+  instructions: TemplateInstructionItem[];
   sections: TemplateSectionItem[];
   createdAt: string;
   updatedAt: string;
@@ -133,6 +154,7 @@ export interface CreateTemplateInput {
   total_marks: number;
   total_duration_mins: number;
   negative_marking_mode?: NegativeMarkingMode;
+  instructions?: TemplateInstructionItem[];
   sections: TemplateSectionInput[];
 }
 
@@ -142,6 +164,7 @@ export interface UpdateTemplateInput {
   total_marks?: number;
   total_duration_mins?: number;
   negative_marking_mode?: NegativeMarkingMode;
+  instructions?: TemplateInstructionItem[];
   sections?: TemplateSectionInput[];
 }
 

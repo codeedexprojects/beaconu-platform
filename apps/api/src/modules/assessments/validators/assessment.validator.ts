@@ -9,16 +9,29 @@ const questionOptionSchema = z.object({
   text: z.string().trim().min(1),
 });
 
+const questionBlankSchema = z.object({
+  id: z.string().trim().min(1),
+  label: z.string().trim().max(100).optional(),
+});
+
 const questionContentSchema = z.object({
   text: z.string().trim().max(2000).optional(),
   audioUrl: z.string().trim().url().optional(),
   imageUrl: z.string().trim().url().optional(),
   options: z.array(questionOptionSchema).optional(),
+  promptType: z.enum(["text", "audio"]).optional(),
+  blanks: z.array(questionBlankSchema).optional(),
+});
+
+const blankAnswerSchema = z.object({
+  blankId: z.string().trim().min(1),
+  optionId: z.string().trim().min(1),
 });
 
 const answerKeySchema = z.object({
   correctOptionIds: z.array(z.string().trim().min(1)).optional(),
   correctOrder: z.array(z.string().trim().min(1)).optional(),
+  blankAnswers: z.array(blankAnswerSchema).optional(),
 });
 
 export const createQuestionSchema = z.object({
@@ -55,6 +68,11 @@ export type CreateQuestionBody = z.infer<typeof createQuestionSchema>;
 export type UpdateQuestionBody = z.infer<typeof updateQuestionSchema>;
 export type QuestionListQueryParams = z.infer<typeof questionListQuerySchema>;
 
+const templateInstructionSchema = z.object({
+  heading: z.string().trim().min(1, "Heading is required").max(255),
+  description: z.string().trim().min(1, "Description is required").max(2000),
+});
+
 const templateSectionSchema = z.object({
   section_id: z.string().trim().min(1),
   question_count: z.coerce.number().int().positive(),
@@ -69,6 +87,7 @@ export const createTemplateSchema = z.object({
   total_marks: z.coerce.number().positive(),
   total_duration_mins: z.coerce.number().int().positive(),
   negative_marking_mode: z.enum(["none", "fixed", "proportional"]).optional(),
+  instructions: z.array(templateInstructionSchema).optional(),
   sections: z.array(templateSectionSchema).min(1),
 });
 
@@ -78,6 +97,7 @@ export const updateTemplateSchema = z.object({
   total_marks: z.coerce.number().positive().optional(),
   total_duration_mins: z.coerce.number().int().positive().optional(),
   negative_marking_mode: z.enum(["none", "fixed", "proportional"]).optional(),
+  instructions: z.array(templateInstructionSchema).optional(),
   sections: z.array(templateSectionSchema).min(1).optional(),
 });
 
