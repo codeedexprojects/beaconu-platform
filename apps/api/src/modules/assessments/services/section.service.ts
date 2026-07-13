@@ -14,20 +14,42 @@ export class SectionService {
     slug: string,
     isActive: boolean,
   ) {
-    const seed = SECTION_SEEDS[slug];
-    if (!seed) throw new NotFoundError("Unknown assessment section");
+    const seedEntry = SECTION_SEEDS[slug];
+    if (!seedEntry) throw new NotFoundError("Unknown assessment section");
 
-    let section = await SectionRepository.findByCollegeAndSlug(collegeId, slug);
+    const section = await SectionRepository.findByCollegeAndSlug(
+      collegeId,
+      slug,
+    );
 
     if (!section) {
       if (!isActive) {
         throw new NotFoundError("Assessment section not found");
       }
-      section = await this.seedSection(collegeId, slug);
-      return section;
+      return this.seedSection(collegeId, slug);
+    }
+
+    if (isActive) {
+      // Backfills any question types added to this section's seed after the
+      // college first enabled it — not just on first creation.
+      await this.syncQuestionTypes(collegeId, seedEntry.questionTypes);
     }
 
     return SectionRepository.setActive(section.id, isActive);
+  }
+
+  private static async syncQuestionTypes(
+    collegeId: string,
+    questionTypes: (typeof SECTION_SEEDS)[string]["questionTypes"],
+  ) {
+    for (const typeSeed of questionTypes) {
+      const existing = await prisma.questionType.findFirst({
+        where: { collegeId, slug: typeSeed.slug },
+      });
+      if (!existing) {
+        await QuestionTypeRepository.create(collegeId, typeSeed);
+      }
+    }
   }
 
   private static async seedSection(collegeId: string, slug: string) {

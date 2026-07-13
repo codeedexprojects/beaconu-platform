@@ -40,7 +40,8 @@ export const CORE_SECTIONS: CoreSectionMeta[] = [
   {
     slug: "listening-reading",
     name: "Listening & Reading",
-    description: "MCQ, True/False, Passage-Based Questions.",
+    description:
+      "Audio Comprehension, MCQ, True/False, Passage-Based Questions.",
   },
   {
     slug: "leadership-qualities",
