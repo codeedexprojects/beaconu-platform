@@ -114,6 +114,7 @@ model AssessmentTemplate {
   totalMarks        Decimal  @map("total_marks") @db.Decimal(7, 2)
   totalDurationMins Int      @map("total_duration_mins")
   status            String   @default("draft") @db.VarChar(20)
+  instructions      Json     @default("[]")
   settings          Json     @default("{}")
   createdBy         String?  @map("created_by")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz

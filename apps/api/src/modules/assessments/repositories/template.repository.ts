@@ -1,5 +1,9 @@
 import { prisma, Prisma } from "@beaconu/db";
-import type { NegativeMarkingMode, TemplateSectionInput } from "@beaconu/types";
+import type {
+  NegativeMarkingMode,
+  TemplateInstructionItem,
+  TemplateSectionInput,
+} from "@beaconu/types";
 
 export interface TemplateCreateData {
   name: string;
@@ -7,6 +11,7 @@ export interface TemplateCreateData {
   totalMarks: number;
   totalDurationMins: number;
   negativeMarkingMode: NegativeMarkingMode;
+  instructions?: TemplateInstructionItem[];
   sections: TemplateSectionInput[];
 }
 
@@ -27,6 +32,8 @@ export class TemplateRepository {
           totalMarks: data.totalMarks,
           totalDurationMins: data.totalDurationMins,
           status: "draft",
+          instructions: (data.instructions ??
+            []) as unknown as Prisma.InputJsonValue,
           settings: { negativeMarkingMode: data.negativeMarkingMode },
         },
       });
@@ -83,6 +90,7 @@ export class TemplateRepository {
       totalMarks: number;
       totalDurationMins: number;
       negativeMarkingMode: NegativeMarkingMode;
+      instructions: TemplateInstructionItem[];
       sections: TemplateSectionInput[];
     }>,
   ) {
@@ -95,6 +103,9 @@ export class TemplateRepository {
         updateData.totalMarks = data.totalMarks;
       if (data.totalDurationMins !== undefined)
         updateData.totalDurationMins = data.totalDurationMins;
+      if (data.instructions !== undefined)
+        updateData.instructions =
+          data.instructions as unknown as Prisma.InputJsonValue;
       if (data.negativeMarkingMode !== undefined) {
         updateData.settings = {
           negativeMarkingMode: data.negativeMarkingMode,

@@ -59,15 +59,21 @@ import {
   CORE_SECTIONS,
   CALCULATOR_SECTIONS,
 } from "@/lib/services/assessments.service";
-import type { QuestionItem, QuestionOption } from "@beaconu/types";
+import type {
+  QuestionItem,
+  QuestionOption,
+  QuestionBlank,
+} from "@beaconu/types";
 
 const CHOICE_FORMATS = ["single_choice", "multi_choice"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
+const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
 
 const questionSchema = z.object({
   question_type_id: z.string().trim().min(1, "Question type is required"),
   difficulty: z.enum(["easy", "medium", "hard"]),
   title: z.string().trim().optional(),
+  prompt_type: z.enum(["text", "audio"]),
   text: z.string().trim().optional(),
   audio_url: z.string().trim().optional(),
   image_url: z.string().trim().optional(),
@@ -81,6 +87,7 @@ const EMPTY_VALUES: QuestionFormValues = {
   question_type_id: "",
   difficulty: "medium",
   title: "",
+  prompt_type: "text",
   text: "",
   audio_url: "",
   image_url: "",
@@ -90,6 +97,10 @@ const EMPTY_VALUES: QuestionFormValues = {
 };
 
 function newOptionId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function newBlankId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
@@ -108,6 +119,8 @@ export default function AssessmentSectionQuestionsPage() {
   >(null);
   const [options, setOptions] = useState<QuestionOption[]>([]);
   const [correctOptionIds, setCorrectOptionIds] = useState<string[]>([]);
+  const [blanks, setBlanks] = useState<QuestionBlank[]>([]);
+  const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<QuestionItem | null>(null);
 
   const { data: questionTypes, isLoading: typesLoading } =
@@ -130,21 +143,28 @@ export default function AssessmentSectionQuestionsPage() {
     !!selectedType && CHOICE_FORMATS.includes(selectedType.responseFormat);
   const isOrdered =
     !!selectedType && ORDERED_FORMATS.includes(selectedType.responseFormat);
+  const isFillBlank =
+    !!selectedType && FILL_BLANK_FORMATS.includes(selectedType.responseFormat);
 
   function openCreate() {
     setEditing(null);
     form.reset(EMPTY_VALUES);
     setOptions([]);
     setCorrectOptionIds([]);
+    setBlanks([]);
+    setBlankAnswers({});
     setOpen(true);
   }
 
   function openEdit(item: QuestionItem) {
     setEditing(item);
+    const type = questionTypes?.find((t) => t.id === item.questionTypeId);
     form.reset({
       question_type_id: item.questionTypeId,
       difficulty: item.difficulty,
       title: item.title ?? "",
+      prompt_type:
+        item.content.promptType ?? (type?.hasAudio ? "audio" : "text"),
       text: item.content.text ?? "",
       audio_url: item.content.audioUrl ?? "",
       image_url: item.content.imageUrl ?? "",
@@ -154,7 +174,48 @@ export default function AssessmentSectionQuestionsPage() {
     });
     setOptions(item.content.options ?? []);
     setCorrectOptionIds(item.answerKey?.correctOptionIds ?? []);
+    setBlanks(item.content.blanks ?? []);
+    setBlankAnswers(
+      Object.fromEntries(
+        (item.answerKey?.blankAnswers ?? []).map((a) => [
+          a.blankId,
+          a.optionId,
+        ]),
+      ),
+    );
     setOpen(true);
+  }
+
+  function handleQuestionTypeChange(typeId: string) {
+    form.setValue("question_type_id", typeId);
+    const type = questionTypes?.find((t) => t.id === typeId);
+    if (type) {
+      form.setValue("prompt_type", type.hasAudio ? "audio" : "text");
+    }
+  }
+
+  function addBlank() {
+    setBlanks((prev) => [
+      ...prev,
+      { id: newBlankId(), label: `Blank ${prev.length + 1}` },
+    ]);
+  }
+
+  function updateBlankLabel(id: string, label: string) {
+    setBlanks((prev) => prev.map((b) => (b.id === id ? { ...b, label } : b)));
+  }
+
+  function removeBlank(id: string) {
+    setBlanks((prev) => prev.filter((b) => b.id !== id));
+    setBlankAnswers((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function setBlankAnswer(blankId: string, optionId: string) {
+    setBlankAnswers((prev) => ({ ...prev, [blankId]: optionId }));
   }
 
   async function handleFileChange(
@@ -215,6 +276,17 @@ export default function AssessmentSectionQuestionsPage() {
       return;
     }
 
+    if (isFillBlank) {
+      if (blanks.length === 0) {
+        toast.error("Add at least one blank");
+        return;
+      }
+      if (blanks.some((b) => !blankAnswers[b.id])) {
+        toast.error("Select the correct option for every blank");
+        return;
+      }
+    }
+
     const payload = {
       question_type_id: values.question_type_id,
       difficulty: values.difficulty,
@@ -224,12 +296,21 @@ export default function AssessmentSectionQuestionsPage() {
         audioUrl: values.audio_url || undefined,
         imageUrl: values.image_url || undefined,
         options: options.length > 0 ? options : undefined,
+        promptType: values.prompt_type,
+        blanks: isFillBlank ? blanks : undefined,
       },
-      answer_key: isChoice
-        ? { correctOptionIds }
-        : isOrdered
-          ? { correctOrder: options.map((o) => o.id) }
-          : undefined,
+      answer_key: isFillBlank
+        ? {
+            blankAnswers: blanks.map((b) => ({
+              blankId: b.id,
+              optionId: blankAnswers[b.id],
+            })),
+          }
+        : isChoice
+          ? { correctOptionIds }
+          : isOrdered
+            ? { correctOrder: options.map((o) => o.id) }
+            : undefined,
       marks: values.marks,
       negative_marks: values.negative_marks,
       course_ids: values.course_ids,
@@ -319,7 +400,7 @@ export default function AssessmentSectionQuestionsPage() {
                 <Label htmlFor="question_type_id">Question Type</Label>
                 <Select
                   value={form.watch("question_type_id")}
-                  onValueChange={(v) => form.setValue("question_type_id", v)}
+                  onValueChange={handleQuestionTypeChange}
                 >
                   <SelectTrigger id="question_type_id">
                     <SelectValue placeholder="Select a question type" />
@@ -370,8 +451,29 @@ export default function AssessmentSectionQuestionsPage() {
               </div>
 
               <div className="space-y-1.5">
+                <Label htmlFor="prompt_type">Prompt Type</Label>
+                <Select
+                  value={form.watch("prompt_type")}
+                  onValueChange={(v) =>
+                    form.setValue("prompt_type", v as "text" | "audio")
+                  }
+                >
+                  <SelectTrigger id="prompt_type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="audio">Audio File</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label htmlFor="text">
                   {isChoice || isOrdered ? "Prompt" : "Question Text"}
+                  {form.watch("prompt_type") === "audio" && (
+                    <span className="text-muted-foreground"> (optional)</span>
+                  )}
                 </Label>
                 <textarea
                   id="text"
@@ -382,7 +484,7 @@ export default function AssessmentSectionQuestionsPage() {
                 />
               </div>
 
-              {selectedType?.hasAudio && (
+              {form.watch("prompt_type") === "audio" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="audio_file">Audio Upload (required)</Label>
                   <Input
@@ -509,6 +611,109 @@ export default function AssessmentSectionQuestionsPage() {
                     </Button>
                   </div>
                 </div>
+              )}
+
+              {isFillBlank && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Word Bank</Label>
+                    <p className="text-xs text-muted-foreground">
+                      The choices students can pick from for each blank.
+                    </p>
+                    <div className="space-y-2 rounded-md border p-2">
+                      {options.map((opt, idx) => (
+                        <div key={opt.id} className="flex items-center gap-2">
+                          <Input
+                            value={opt.text}
+                            placeholder={`Option ${idx + 1}`}
+                            onChange={(e) =>
+                              updateOptionText(opt.id, e.target.value)
+                            }
+                            className="h-8 flex-1 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => removeOption(opt.id)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={addOption}
+                      >
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        Add Option
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Blanks</Label>
+                    <p className="text-xs text-muted-foreground">
+                      One row per blank in the passage — pick the correct
+                      word-bank option for each.
+                    </p>
+                    <div className="space-y-2 rounded-md border p-2">
+                      {blanks.map((blank, idx) => (
+                        <div key={blank.id} className="flex items-center gap-2">
+                          <Input
+                            value={blank.label ?? `Blank ${idx + 1}`}
+                            onChange={(e) =>
+                              updateBlankLabel(blank.id, e.target.value)
+                            }
+                            className="h-8 w-32 text-sm"
+                          />
+                          <Select
+                            value={blankAnswers[blank.id] ?? ""}
+                            onValueChange={(v) => setBlankAnswer(blank.id, v)}
+                          >
+                            <SelectTrigger className="h-8 flex-1 text-xs">
+                              <SelectValue placeholder="Correct option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.map((opt) => (
+                                <SelectItem key={opt.id} value={opt.id}>
+                                  {opt.text || "(untitled option)"}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => removeBlank(blank.id)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={addBlank}
+                        disabled={options.length === 0}
+                      >
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        Add Blank
+                      </Button>
+                      {options.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Add at least one word bank option first.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="grid grid-cols-2 gap-3">

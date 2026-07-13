@@ -60,6 +60,7 @@ export class TemplateService {
       totalMarks: data.total_marks,
       totalDurationMins: data.total_duration_mins,
       negativeMarkingMode: data.negative_marking_mode ?? "none",
+      instructions: data.instructions,
       sections: data.sections,
     });
   }
@@ -91,6 +92,7 @@ export class TemplateService {
       negativeMarkingMode: data.negative_marking_mode as
         | NegativeMarkingMode
         | undefined,
+      instructions: data.instructions,
       sections: data.sections,
     });
   }
