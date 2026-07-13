@@ -1,0 +1,31 @@
+import { NotFoundError } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { WishlistRepository } from "../repositories/wishlist.repository";
+
+export class WishlistService {
+  static async add(studentId: string, collegeId: string): Promise<void> {
+    const college = await WishlistRepository.findCollegeById(collegeId);
+    if (!college) throw new NotFoundError("College not found");
+
+    await WishlistRepository.add(studentId, collegeId);
+    logger.info({
+      action: "WISHLIST_ADDED",
+      module: "wishlist",
+      studentId,
+      collegeId,
+    });
+  }
+
+  static async remove(studentId: string, collegeId: string): Promise<void> {
+    const removed = await WishlistRepository.remove(studentId, collegeId);
+    if (removed === 0) {
+      throw new NotFoundError("College is not in your wishlist");
+    }
+    logger.info({
+      action: "WISHLIST_REMOVED",
+      module: "wishlist",
+      studentId,
+      collegeId,
+    });
+  }
+}

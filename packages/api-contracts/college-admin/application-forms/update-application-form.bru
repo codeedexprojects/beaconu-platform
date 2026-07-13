@@ -1,0 +1,28 @@
+meta {
+  name: Update Application Form
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "UG Admissions 2026 - Extended",
+    "ends_on": "2026-09-15"
+  }
+}
+
+docs {
+  Partially updates an application form. All fields optional; only send
+  what changed. Re-validates starts_on/ends_on ordering if either is sent.
+}

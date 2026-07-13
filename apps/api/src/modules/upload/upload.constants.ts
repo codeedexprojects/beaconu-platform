@@ -7,6 +7,9 @@ export const MIME_TO_EXT = {
   "video/mp4": "mp4",
   "video/webm": "webm",
   "video/quicktime": "mov",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/wav": "wav",
 } as const;
 
 export type AllowedMimeType = keyof typeof MIME_TO_EXT;
@@ -23,6 +26,12 @@ export const VIDEO_MIME_TYPES: AllowedMimeType[] = [
   "video/mp4",
   "video/webm",
   "video/quicktime",
+];
+
+export const AUDIO_MIME_TYPES: AllowedMimeType[] = [
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/wav",
 ];
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB  (images/PDFs)

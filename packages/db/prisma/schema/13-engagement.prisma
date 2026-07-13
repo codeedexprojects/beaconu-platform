@@ -215,20 +215,25 @@ model StudentWalletTransaction {
 }
 
 model AntiRaggingComplaint {
-  id              String    @id @default(dbgenerated("('ARC-'::text || (nextval('anti_ragging_complaint_seq'::regclass))::text)"))
-  studentId       String    @map("student_id")
-  collegeId       String    @map("college_id")
-  complaintNumber String    @unique @map("complaint_number") @db.VarChar(30)
-  subject         String    @db.VarChar(255)
-  description     String    @db.Text
-  isAnonymous     Boolean   @default(false) @map("is_anonymous")
-  attachments     Json      @default("[]")
-  status          String    @default("submitted") @db.VarChar(20)
-  assignedTo      String?   @map("assigned_to")
-  resolution      String?   @db.Text
-  resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("('ARC-'::text || (nextval('anti_ragging_complaint_seq'::regclass))::text)"))
+  studentId           String    @map("student_id")
+  collegeId           String    @map("college_id")
+  complaintNumber     String    @unique @map("complaint_number") @db.VarChar(30)
+  incidentType        String    @map("incident_type") @db.VarChar(20)
+  subject             String    @db.VarChar(255)
+  individualsInvolved Json      @default("[]") @map("individuals_involved")
+  incidentDate        DateTime  @map("incident_date") @db.Date
+  incidentTime        DateTime? @map("incident_time") @db.Time
+  description         String    @db.Text
+  isAnonymous         Boolean   @default(false) @map("is_anonymous")
+  attachments         Json      @default("[]")
+  status              String    @default("submitted") @db.VarChar(20)
+  statusHistory       Json      @default("[]") @map("status_history")
+  assignedTo          String?   @map("assigned_to")
+  resolution          String?   @db.Text
+  resolvedAt          DateTime? @map("resolved_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   student  Student      @relation(fields: [studentId], references: [id])

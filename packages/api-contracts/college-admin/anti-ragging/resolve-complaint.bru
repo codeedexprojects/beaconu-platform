@@ -1,0 +1,27 @@
+meta {
+  name: Resolve Report
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/anti-ragging-complaints/{{antiRaggingComplaintId}}/resolve
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "resolution": "Both students counselled; senior student issued a formal warning and moved to a different hostel block."
+  }
+}
+
+docs {
+  Moves the report from "investigating" to "resolved". Only valid from
+  "investigating".
+}

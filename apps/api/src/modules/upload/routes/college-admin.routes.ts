@@ -29,4 +29,11 @@ router.post(
   CollegeAdminUploadController.verify,
 );
 
+router.delete(
+  "/file",
+  ...staffWriteAuth,
+  authorizeAny("profile.edit", "academics.manage"),
+  CollegeAdminUploadController.remove,
+);
+
 export default router;

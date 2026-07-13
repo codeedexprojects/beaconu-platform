@@ -1,0 +1,59 @@
+meta {
+  name: Create Question (Fill in the Blanks, Aptitude & Logical Reasoning)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/aptitude-logical-reasoning/questions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "question_type_id": "{{questionTypeId}}",
+    "difficulty": "medium",
+    "title": "Complete the sentence",
+    "content": {
+      "text": "The ___ orbits the ___ once a year.",
+      "promptType": "text",
+      "options": [
+        { "id": "1", "text": "Earth" },
+        { "id": "2", "text": "Sun" },
+        { "id": "3", "text": "Moon" }
+      ],
+      "blanks": [
+        { "id": "b1", "label": "Blank 1" },
+        { "id": "b2", "label": "Blank 2" }
+      ]
+    },
+    "answer_key": {
+      "blankAnswers": [
+        { "blankId": "b1", "optionId": "1" },
+        { "blankId": "b2", "optionId": "2" }
+      ]
+    },
+    "marks": 2,
+    "negative_marks": 0,
+    "course_ids": []
+  }
+}
+
+docs {
+  Example of a fill-in-the-blanks question (works for both
+  "Fill in the Blanks - Drag & Drop" and "Fill in the Blanks - Drop Down"
+  question types — they share the same data shape, differing only in the
+  frontend interaction). content.options is the shared word bank;
+  content.blanks lists each blank; answer_key.blankAnswers maps each blank id
+  to the correct option id (options not referenced by any blank act as
+  distractors). promptType ("text" | "audio") is available on every question
+  type's content — when "audio", content.audioUrl is required instead of
+  content.text. First enable the section and fetch its question types to get
+  a real questionTypeId.
+}

@@ -1,0 +1,31 @@
+meta {
+  name: List Application Forms (Student)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms
+  body: none
+  auth: none
+}
+
+query {
+  college_id: {{collegeId}}
+  ~application_type: Regular
+  ~program_level: undergraduate
+  ~admission_year: 2026
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lists currently open application forms for a college. Read-only — students
+  cannot create/update/delete application forms.
+
+  Query:
+  - college_id (required)
+  - application_type, program_level, admission_year (all optional filters)
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Get Application Form (College Admin)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Fetches a single application form scoped to the authenticated college.
+}

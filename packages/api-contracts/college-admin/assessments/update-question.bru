@@ -1,0 +1,32 @@
+meta {
+  name: Update Question
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/questions/{{assessmentQuestionId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "marks": 6,
+    "content": {
+      "text": "Describe what you see in the image in 45 seconds."
+    }
+  }
+}
+
+docs {
+  Edits a question. This is a versioned edit — a new Question row is
+  created (parentQuestionId + version + 1) and the previous row is
+  archived, preserving historical assessment records. All fields optional;
+  content is merged with the existing content, not replaced wholesale.
+}

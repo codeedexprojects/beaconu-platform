@@ -2718,6 +2718,7 @@ async function seedAdmissionCycle(
     update: { status: "open" },
     create: {
       collegeId,
+      applicationType: "regular",
       name: "Admissions 2026-27",
       slug: "admissions-2026-27",
       programLevel: "all",

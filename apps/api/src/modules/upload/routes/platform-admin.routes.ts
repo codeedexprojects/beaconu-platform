@@ -19,4 +19,11 @@ router.post(
   PlatformAdminUploadController.verify,
 );
 
+router.delete(
+  "/file",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  PlatformAdminUploadController.remove,
+);
+
 export default router;

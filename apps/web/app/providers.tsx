@@ -19,7 +19,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    const handler = () => router.push("/login?reason=expired");
+    const handler = (e: Event) => {
+      const identity = (e as CustomEvent<{ identity?: string }>).detail
+        ?.identity;
+      const loginPath = identity === "blog-author" ? "/blog-login" : "/login";
+      router.push(`${loginPath}?reason=expired`);
+    };
     window.addEventListener("auth:session-expired", handler);
     return () => window.removeEventListener("auth:session-expired", handler);
   }, [router]);

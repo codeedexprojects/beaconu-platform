@@ -1,0 +1,36 @@
+meta {
+  name: Delete Uploaded File
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/uploads/file
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{uploadKey}}"
+  }
+}
+
+docs {
+  Delete a previously uploaded S3 object. Can only delete keys under the
+  `platform-admin/` prefix — any other key returns 400.
+
+  Body:
+  - key (required): the S3 key to delete
+
+  Response:
+  - deleted: true
+}

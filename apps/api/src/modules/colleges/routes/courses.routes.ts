@@ -23,6 +23,13 @@ router.get(
   CollegeRegistrationController.listCourses,
 );
 
+router.get(
+  "/minimal",
+  ...staffAuth,
+  authorizeAny("academics.view", "academics.manage"),
+  CollegeRegistrationController.listCoursesMinimal,
+);
+
 router.post(
   "/",
   ...staffWriteAuth,

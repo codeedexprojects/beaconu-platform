@@ -1,0 +1,22 @@
+meta {
+  name: Approve Assessment Paper
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/papers/{{assessmentPaperId}}/approve
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Flips status draft -> approved. Approving an already-approved paper
+  returns a 409 ConflictError. Only one paper per template can be approved
+  at a time — approving this one automatically demotes any other
+  currently-approved paper for the same template back to draft.
+}

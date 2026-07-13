@@ -1,0 +1,21 @@
+meta {
+  name: Delete Application Form
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deletes an application form (status -> archived). It is not returned
+  by the student-facing list/get endpoints afterwards, but the row is kept
+  for historical/audit purposes.
+}

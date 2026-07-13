@@ -1,0 +1,24 @@
+meta {
+  name: Start Investigation
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/anti-ragging-complaints/{{antiRaggingComplaintId}}/start-investigation
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Moves the report from "acknowledged" to "investigating".
+}

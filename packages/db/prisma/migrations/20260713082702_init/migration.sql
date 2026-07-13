@@ -39,6 +39,7 @@ CREATE SEQUENCE IF NOT EXISTS "college_quota_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_review_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_wishlist_seq";
 CREATE SEQUENCE IF NOT EXISTS "commission_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_comment_like_seq";
 CREATE SEQUENCE IF NOT EXISTS "community_seq";
@@ -64,6 +65,7 @@ CREATE SEQUENCE IF NOT EXISTS "course_switch_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "department_seq";
 CREATE SEQUENCE IF NOT EXISTS "discipline_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_request_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_submission_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_template_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_upload_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "education_loan_seq";
@@ -128,6 +130,12 @@ CREATE SEQUENCE IF NOT EXISTS "transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_type_seq";
 CREATE SEQUENCE IF NOT EXISTS "user_session_seq";
+
+-- Used by BlinkRepository.getNextAmbassadorCode (CA-<n> campus codes)
+CREATE SEQUENCE IF NOT EXISTS "ambassador_code_seq" START 1001;
+
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateTable
 CREATE TABLE "students" (
@@ -472,6 +480,16 @@ CREATE TABLE "colleges" (
     "demographics_refreshed_at" TIMESTAMPTZ,
 
     CONSTRAINT "colleges_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "college_wishlists" (
+    "id" TEXT NOT NULL DEFAULT ('CWL-'::text || (nextval('college_wishlist_seq'::regclass))::text),
+    "student_id" TEXT NOT NULL,
+    "college_id" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "college_wishlists_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -920,6 +938,7 @@ CREATE TABLE "starter_guide_videos" (
 CREATE TABLE "admission_cycles" (
     "id" TEXT NOT NULL DEFAULT ('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text),
     "college_id" TEXT NOT NULL,
+    "application_type" VARCHAR(50) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "program_level" VARCHAR(30) NOT NULL,
@@ -1232,6 +1251,7 @@ CREATE TABLE "assessment_templates" (
     "total_marks" DECIMAL(7,2) NOT NULL,
     "total_duration_mins" INTEGER NOT NULL,
     "status" VARCHAR(20) NOT NULL DEFAULT 'draft',
+    "instructions" JSONB NOT NULL DEFAULT '[]',
     "settings" JSONB NOT NULL DEFAULT '{}',
     "created_by" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1619,11 +1639,11 @@ CREATE TABLE "document_templates" (
     "college_id" TEXT NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "slug" VARCHAR(50) NOT NULL,
+    "category" VARCHAR(50) NOT NULL,
+    "instructions" TEXT,
     "description" TEXT,
     "is_standard" BOOLEAN NOT NULL DEFAULT true,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "has_fee" BOOLEAN NOT NULL DEFAULT false,
-    "fee_amount" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
@@ -1652,6 +1672,9 @@ CREATE TABLE "document_requests" (
     "issued_at" TIMESTAMPTZ,
     "pickup_date" DATE,
     "pickup_confirmed" BOOLEAN NOT NULL DEFAULT false,
+    "pickup_instructions" TEXT,
+    "office_contact_phone" VARCHAR(20),
+    "status_history" JSONB NOT NULL DEFAULT '[]',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -1673,6 +1696,31 @@ CREATE TABLE "issued_documents" (
     "issued_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "issued_documents_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "document_submission_requests" (
+    "id" TEXT NOT NULL DEFAULT ('DSR-'::text || (nextval('document_submission_request_seq'::regclass))::text),
+    "college_id" TEXT NOT NULL,
+    "student_id" TEXT NOT NULL,
+    "requested_by" TEXT NOT NULL,
+    "document_category" VARCHAR(50) NOT NULL,
+    "document_name" VARCHAR(255) NOT NULL,
+    "instructions" TEXT,
+    "deadline" DATE NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'pending',
+    "file_url" TEXT,
+    "file_name" VARCHAR(255),
+    "file_size_bytes" INTEGER,
+    "submitted_at" TIMESTAMPTZ,
+    "rejection_reason" TEXT,
+    "reviewed_by" TEXT,
+    "reviewed_at" TIMESTAMPTZ,
+    "status_history" JSONB NOT NULL DEFAULT '[]',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "document_submission_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -2364,11 +2412,16 @@ CREATE TABLE "anti_ragging_complaints" (
     "student_id" TEXT NOT NULL,
     "college_id" TEXT NOT NULL,
     "complaint_number" VARCHAR(30) NOT NULL,
+    "incident_type" VARCHAR(20) NOT NULL,
     "subject" VARCHAR(255) NOT NULL,
+    "individuals_involved" JSONB NOT NULL DEFAULT '[]',
+    "incident_date" DATE NOT NULL,
+    "incident_time" TIME,
     "description" TEXT NOT NULL,
     "is_anonymous" BOOLEAN NOT NULL DEFAULT false,
     "attachments" JSONB NOT NULL DEFAULT '[]',
     "status" VARCHAR(20) NOT NULL DEFAULT 'submitted',
+    "status_history" JSONB NOT NULL DEFAULT '[]',
     "assigned_to" TEXT,
     "resolution" TEXT,
     "resolved_at" TIMESTAMPTZ,
@@ -2736,6 +2789,15 @@ CREATE INDEX "idx_colleges_state" ON "colleges"("state");
 
 -- CreateIndex
 CREATE INDEX "idx_colleges_status" ON "colleges"("status");
+
+-- CreateIndex
+CREATE INDEX "idx_cwish_student" ON "college_wishlists"("student_id");
+
+-- CreateIndex
+CREATE INDEX "idx_cwish_college" ON "college_wishlists"("college_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "college_wishlists_student_id_college_id_key" ON "college_wishlists"("student_id", "college_id");
 
 -- CreateIndex
 CREATE INDEX "idx_onboard_status" ON "college_onboarding_requests"("status");
@@ -3491,6 +3553,15 @@ CREATE INDEX "idx_issued_student" ON "issued_documents"("student_id");
 CREATE INDEX "idx_issued_college" ON "issued_documents"("college_id");
 
 -- CreateIndex
+CREATE INDEX "idx_docsubreq_college" ON "document_submission_requests"("college_id");
+
+-- CreateIndex
+CREATE INDEX "idx_docsubreq_student" ON "document_submission_requests"("student_id");
+
+-- CreateIndex
+CREATE INDEX "idx_docsubreq_status" ON "document_submission_requests"("college_id", "status");
+
+-- CreateIndex
 CREATE INDEX "idx_hostels_college" ON "hostels"("college_id");
 
 -- CreateIndex
@@ -4013,6 +4084,12 @@ ALTER TABLE "institution_group_members" ADD CONSTRAINT "institution_group_member
 ALTER TABLE "colleges" ADD CONSTRAINT "colleges_university_id_fkey" FOREIGN KEY ("university_id") REFERENCES "universities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "college_wishlists" ADD CONSTRAINT "college_wishlists_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "college_wishlists" ADD CONSTRAINT "college_wishlists_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "college_onboarding_requests" ADD CONSTRAINT "college_onboarding_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -4448,6 +4525,18 @@ ALTER TABLE "issued_documents" ADD CONSTRAINT "issued_documents_college_id_fkey"
 ALTER TABLE "issued_documents" ADD CONSTRAINT "issued_documents_issued_by_fkey" FOREIGN KEY ("issued_by") REFERENCES "staff_members"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "document_submission_requests" ADD CONSTRAINT "document_submission_requests_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "document_submission_requests" ADD CONSTRAINT "document_submission_requests_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "document_submission_requests" ADD CONSTRAINT "document_submission_requests_requested_by_fkey" FOREIGN KEY ("requested_by") REFERENCES "staff_members"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "document_submission_requests" ADD CONSTRAINT "document_submission_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "staff_members"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "hostels" ADD CONSTRAINT "hostels_college_id_fkey" FOREIGN KEY ("college_id") REFERENCES "colleges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -4710,3 +4799,4 @@ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_conversation_id_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "platform_configs" ADD CONSTRAINT "platform_configs_updated_by_admin_id_fkey" FOREIGN KEY ("updated_by_admin_id") REFERENCES "platform_admins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

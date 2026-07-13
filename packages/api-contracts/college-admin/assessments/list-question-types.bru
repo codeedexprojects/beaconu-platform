@@ -1,0 +1,21 @@
+meta {
+  name: List Question Types (Verbal Communication)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/verbal-communication/question-types
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Lists the 5 fixed question types for this college's Verbal Communication
+  section. Requires the section to have been enabled at least once first
+  (see Toggle Verbal Communication Section).
+}

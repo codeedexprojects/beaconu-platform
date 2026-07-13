@@ -4,6 +4,7 @@ import {
   generateDownloadUrl,
   objectExists,
   permanentUrl,
+  deleteObject,
 } from "@/shared/lib/s3";
 import { NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
@@ -13,7 +14,11 @@ import {
   VIEW_URL_EXPIRY_SECONDS,
 } from "./upload.constants";
 import type { AllowedMimeType } from "./upload.constants";
-import type { PresignResponse, VerifyResponse } from "./upload.types";
+import type {
+  PresignResponse,
+  VerifyResponse,
+  RemoveResponse,
+} from "./upload.types";
 
 export class UploadService {
   static buildKey(
@@ -51,5 +56,11 @@ export class UploadService {
     const viewUrl = await generateDownloadUrl(key, VIEW_URL_EXPIRY_SECONDS);
     logger.info({ action: "UPLOAD_VERIFIED", module: "upload", key });
     return { verified: true, permanentUrl: permanentUrl(key), viewUrl };
+  }
+
+  static async remove(key: string): Promise<RemoveResponse> {
+    await deleteObject(key);
+    logger.info({ action: "UPLOAD_DELETED", module: "upload", key });
+    return { deleted: true };
   }
 }

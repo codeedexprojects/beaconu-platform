@@ -1,0 +1,67 @@
+meta {
+  name: Create Assessment Template
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Standard Admission Assessment",
+    "total_marks": 100,
+    "total_duration_mins": 90,
+    "negative_marking_mode": "none",
+    "instructions": [
+      {
+        "heading": "Time Limit",
+        "description": "You have 90 minutes to complete this assessment."
+      },
+      {
+        "heading": "Tab Switching",
+        "description": "Do not switch tabs or minimize the window during the test."
+      }
+    ],
+    "sections": [
+      {
+        "section_id": "{{assessmentSectionIdVerbal}}",
+        "question_count": 5,
+        "time_limit_mins": 15,
+        "section_weightage": 20
+      },
+      {
+        "section_id": "{{assessmentSectionIdAptitude}}",
+        "question_count": 10,
+        "time_limit_mins": 20,
+        "section_weightage": 80
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentTemplateId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a template in status "draft". total_questions is computed
+  server-side as the sum of each section's question_count. If
+  section_weightage is provided on every section, they must sum to 100; if
+  omitted entirely that's fine too, but partial (some sections with, some
+  without) is rejected. Get real section_id values from GET
+  /assessments/sections (enable a section first if needed).
+}

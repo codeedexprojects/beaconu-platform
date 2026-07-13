@@ -19,4 +19,11 @@ router.post(
   CounsellorUploadController.verifyAvatar,
 );
 
+router.delete(
+  "/file",
+  authenticate,
+  authorizeUserType("counsellor"),
+  CounsellorUploadController.removeFile,
+);
+
 export default router;

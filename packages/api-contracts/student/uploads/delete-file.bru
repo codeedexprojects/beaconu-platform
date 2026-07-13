@@ -1,0 +1,37 @@
+meta {
+  name: Delete Uploaded File
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/student/uploads/file
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{uploadKey}}"
+  }
+}
+
+docs {
+  Delete a previously uploaded S3 object (avatar, refund-proof, document, or
+  anti-ragging evidence). The student can only delete keys under their own
+  `students/{studentId}/` prefix — any other key returns 400.
+
+  Body:
+  - key (required): the S3 key to delete
+
+  Response:
+  - deleted: true
+}

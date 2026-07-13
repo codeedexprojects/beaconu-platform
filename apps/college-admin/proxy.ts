@@ -18,6 +18,10 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "settings",
   "ambassadors",
   "campus-visits",
+  "documents",
+  "anti-ragging",
+  "application-forms",
+  "assessments",
 ]);
 
 export function proxy(request: NextRequest) {

@@ -1,0 +1,52 @@
+meta {
+  name: Request Official Document From College
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/documents/requests
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "document_template_id": "{{documentTemplateId}}",
+    "description": "Needed for scholarship application",
+    "delivery_mode": "digital",
+    "supporting_documents": [
+      {
+        "url": "{{documentFileUrl}}",
+        "name": "Fee Receipt.pdf",
+        "size_bytes": 153600
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("documentRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Either document_template_id (from List Requestable Document Templates) or
+  document_name (free text) is required — provide whichever the student
+  chose. If a template is used its name is copied over automatically.
+
+  supporting_documents (optional, max 5): each file must be uploaded first
+  via POST /api/v1/student/uploads/document/presign + /verify (see the
+  Document folder under student/uploads), then passed here as
+  { url, name?, size_bytes? }. Visible to college admin on the request.
+}

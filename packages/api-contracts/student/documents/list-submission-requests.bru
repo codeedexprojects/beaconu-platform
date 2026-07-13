@@ -1,0 +1,27 @@
+meta {
+  name: List Documents Requested By College
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/documents/submission-requests
+  body: none
+  auth: none
+}
+
+query {
+  ~status: pending
+  ~search: aadhar
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  search (optional): case-insensitive match against document name or
+  category (e.g. "aadhar", "identification").
+}
