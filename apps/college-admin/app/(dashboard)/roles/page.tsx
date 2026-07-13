@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store";
 
@@ -62,11 +63,15 @@ export default function RolesBuilderPage() {
 
   const { mutate: createRole, isPending: creating } = useCreateCollegeRole();
   const { mutate: updateRole, isPending: updating } = useUpdateCollegeRole();
-  const { mutate: deleteRole } = useDeleteCollegeRole();
+  const { mutate: deleteRole, isPending: isDeleting } = useDeleteCollegeRole();
 
   // Mode & Modal states
   const [editingRole, setEditingRole] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const {
     register,
@@ -112,17 +117,17 @@ export default function RolesBuilderPage() {
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageStaff) return;
-    if (
-      confirm(
-        `Are you absolutely sure you want to delete the custom role "${name}"?`,
-      )
-    ) {
-      deleteRole(id, {
-        onSuccess: () => {
-          toast.success(`Role "${name}" deleted successfully`);
-        },
-      });
-    }
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteRole(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(`Role "${deleteTarget.name}" deleted successfully`);
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const onSubmit = (data: RoleFormData) => {
@@ -379,6 +384,21 @@ export default function RolesBuilderPage() {
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Role"
+        description={
+          deleteTarget
+            ? `Are you absolutely sure you want to delete the custom role "${deleteTarget.name}"?`
+            : ""
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

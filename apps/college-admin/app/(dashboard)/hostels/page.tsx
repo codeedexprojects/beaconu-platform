@@ -34,6 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -260,11 +261,16 @@ export default function HostelsPage() {
 
   const { mutate: createHostel, isPending: creating } =
     useCreateCollegeHostel();
-  const { mutate: deleteHostel } = useDeleteCollegeHostel();
+  const { mutate: deleteHostel, isPending: isDeleting } =
+    useDeleteCollegeHostel();
   const canManageHostels =
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("hostel.manage") ?? false);
 
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [step, setStep] = useState(0);
   const [expandedHostel, setExpandedHostel] = useState<string | null>(null);
@@ -344,17 +350,19 @@ export default function HostelsPage() {
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageHostels) return;
-    if (
-      confirm(
-        `Are you absolutely sure you want to remove hostel facility "${name}"?`,
-      )
-    ) {
-      deleteHostel(id, {
-        onSuccess: () => {
-          toast.success(`Hostel facility "${name}" removed successfully`);
-        },
-      });
-    }
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteHostel(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(
+          `Hostel facility "${deleteTarget.name}" removed successfully`,
+        );
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const onSubmit = (data: HostelFormData) => {
@@ -1755,6 +1763,21 @@ export default function HostelsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Hostel"
+        description={
+          deleteTarget
+            ? `Are you absolutely sure you want to remove hostel facility "${deleteTarget.name}"?`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

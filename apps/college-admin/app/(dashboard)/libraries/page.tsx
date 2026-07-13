@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store";
 import {
@@ -167,7 +168,8 @@ export default function LibrariesPage() {
     useCreateCollegeLibrary();
   const { mutate: updateLibrary, isPending: updating } =
     useUpdateCollegeLibrary();
-  const { mutate: deleteLibrary } = useDeleteCollegeLibrary();
+  const { mutate: deleteLibrary, isPending: isDeleting } =
+    useDeleteCollegeLibrary();
 
   const canManageLibraries =
     user?.roleSlug === "college_admin" ||
@@ -176,6 +178,10 @@ export default function LibrariesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const {
     register,
@@ -235,11 +241,17 @@ export default function LibrariesPage() {
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageLibraries) return;
-    if (confirm(`Are you sure you want to remove library "${name}"?`)) {
-      deleteLibrary(id, {
-        onSuccess: () => toast.success(`Library "${name}" removed`),
-      });
-    }
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteLibrary(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(`Library "${deleteTarget.name}" removed`);
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const onSubmit = (data: LibraryFormData) => {
@@ -671,6 +683,21 @@ export default function LibrariesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Library"
+        description={
+          deleteTarget
+            ? `Are you sure you want to remove library "${deleteTarget.name}"?`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

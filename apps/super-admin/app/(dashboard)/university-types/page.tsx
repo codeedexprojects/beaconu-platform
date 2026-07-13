@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export default function UniversityTypesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<UniversityType | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", sort_order: 0 });
+  const [deleteTarget, setDeleteTarget] = useState<UniversityType | null>(null);
 
   const filteredTypes = useMemo(() => {
     return types.filter(
@@ -66,12 +68,18 @@ export default function UniversityTypesPage() {
     );
   }, [search, types]);
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this university type?")) {
-      removeMutation.mutate(id, {
-        onSuccess: () => toast.success("Type deleted successfully"),
-      });
-    }
+  const handleDelete = (type: UniversityType) => {
+    setDeleteTarget(type);
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    removeMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Type deleted successfully");
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const handleToggleStatus = (id: string, currentStatus: boolean) => {
@@ -271,7 +279,7 @@ export default function UniversityTypesPage() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="gap-2 text-destructive focus:text-destructive"
-                                onClick={() => handleDelete(type.id)}
+                                onClick={() => handleDelete(type)}
                               >
                                 <Trash2 className="h-4 w-4" />
                                 Delete
@@ -432,6 +440,21 @@ export default function UniversityTypesPage() {
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete University Type"
+        description={
+          deleteTarget
+            ? `Are you sure you want to delete "${deleteTarget.name}"? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={removeMutation.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

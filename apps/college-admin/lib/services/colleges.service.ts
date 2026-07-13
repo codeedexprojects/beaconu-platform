@@ -652,6 +652,71 @@ export async function deleteCollegeQuota(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/quotas/${id}`);
 }
 
+export interface CourseQuotaDto {
+  id: string;
+  courseId: string;
+  collegeQuotaId: string;
+  appFeeReductionType: "flat" | "percentage" | null;
+  appFeeReductionValue: string | null;
+  tuitionFeeOverride: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  quotaName: string;
+  quotaSlug: string;
+  bucketType: "in_state" | "out_of_state";
+  quotaIsActive: boolean;
+}
+
+export interface AttachCourseQuotaInput {
+  collegeQuotaId: string;
+  appFeeReductionType?: "flat" | "percentage" | null;
+  appFeeReductionValue?: number | null;
+  tuitionFeeOverride?: number | null;
+}
+
+export type UpdateCourseQuotaInput = Partial<
+  Omit<AttachCourseQuotaInput, "collegeQuotaId">
+> & { isActive?: boolean };
+
+export async function getCourseQuotas(
+  courseId: string,
+): Promise<CourseQuotaDto[]> {
+  return api.get<CourseQuotaDto[]>(
+    `/api/v1/college-admin/courses/${courseId}/quotas`,
+  );
+}
+
+export async function attachCourseQuota(
+  courseId: string,
+  data: AttachCourseQuotaInput,
+): Promise<CourseQuotaDto> {
+  return api.post<CourseQuotaDto>(
+    `/api/v1/college-admin/courses/${courseId}/quotas`,
+    data,
+  );
+}
+
+export async function updateCourseQuota(
+  courseId: string,
+  courseQuotaId: string,
+  data: UpdateCourseQuotaInput,
+): Promise<CourseQuotaDto> {
+  return api.patch<CourseQuotaDto>(
+    `/api/v1/college-admin/courses/${courseId}/quotas/${courseQuotaId}`,
+    data,
+  );
+}
+
+export async function detachCourseQuota(
+  courseId: string,
+  courseQuotaId: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/courses/${courseId}/quotas/${courseQuotaId}`,
+  );
+}
+
 export async function getCollegeDepartments(): Promise<DepartmentDto[]> {
   return api.get<DepartmentDto[]>("/api/v1/college-admin/lookups/departments");
 }

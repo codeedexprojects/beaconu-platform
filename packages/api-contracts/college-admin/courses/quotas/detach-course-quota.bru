@@ -1,0 +1,15 @@
+meta {
+  name: Detach Quota from Course
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/quotas/{{courseQuotaId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

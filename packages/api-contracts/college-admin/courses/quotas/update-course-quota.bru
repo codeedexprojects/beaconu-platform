@@ -1,0 +1,24 @@
+meta {
+  name: Update Course Quota
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/quotas/{{courseQuotaId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "appFeeReductionType": "percentage",
+    "appFeeReductionValue": 10,
+    "tuitionFeeOverride": null,
+    "isActive": true
+  }
+}

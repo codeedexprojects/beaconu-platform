@@ -602,6 +602,52 @@ if (error) return <InlineError message={getErrorMessage(error)} />;
 
 ---
 
+## Confirmation Dialogs
+
+Never use the browser's native `confirm()` or `alert()`. Use the app's `ConfirmDialog` component
+(`components/ui/confirm-dialog.tsx`) instead — it's portaled to `document.body`, matches the
+app's design system, and is themeable/testable, none of which `window.confirm` supports.
+
+```tsx
+const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+const { mutate: deleteItem, isPending } = useDeleteItem();
+
+function handleDelete(item: Item) {
+  setDeleteTarget(item);
+}
+
+function confirmDelete() {
+  if (!deleteTarget) return;
+  deleteItem(deleteTarget.id, {
+    onSuccess: () => {
+      toast.success(`"${deleteTarget.name}" removed`);
+      setDeleteTarget(null);
+    },
+  });
+}
+
+<ConfirmDialog
+  open={deleteTarget !== null}
+  title="Remove Item"
+  description={
+    deleteTarget ? `Remove "${deleteTarget.name}"? This cannot be undone.` : ""
+  }
+  confirmLabel="Remove"
+  variant="destructive"
+  loading={isPending}
+  onCancel={() => setDeleteTarget(null)}
+  onConfirm={confirmDelete}
+/>;
+```
+
+- One local `useState<T | null>` holds the pending target; `null` means the dialog is closed
+- `variant="destructive"` for deletes/irreversible actions, `variant="default"` otherwise
+- `loading` wires to the mutation's `isPending` so the buttons disable and show a spinner mid-request
+- `onSuccess` clears the target (closes the dialog) — don't close it before the mutation resolves
+- If `components/ui/confirm-dialog.tsx` doesn't exist yet in an app, copy it from `apps/super-admin/components/ui/confirm-dialog.tsx` rather than inventing a new pattern
+
+---
+
 ## RBAC
 
 ```tsx
@@ -694,6 +740,7 @@ Never commit as default.
 | `toast.success` inside a hook                        | `toast.success` in the component `onSuccess`             |
 | `toast.error` manually in a component                | `toast.error(getErrorMessage(error))` in `onError`       |
 | `window.location.href = '/login'`                    | `auth:session-expired` event + router in `providers.tsx` |
+| `window.confirm()` / `alert()`                       | `ConfirmDialog` component (see Confirmation Dialogs)     |
 | `isAuthenticated` as stored boolean                  | `token !== null` computed in selector                    |
 | `const { admin } = useAuthStore()`                   | `const admin = useAuthStore(s => s.admin)`               |
 | API response data in Zustand                         | TanStack Query cache                                     |

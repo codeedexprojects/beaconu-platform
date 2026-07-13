@@ -36,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useCollegeQuotas,
   useCreateQuota,
@@ -76,10 +77,11 @@ export default function QuotasPage() {
   const { data: quotas, isLoading, error } = useCollegeQuotas();
   const { mutate: createQuota, isPending: isCreating } = useCreateQuota();
   const { mutate: updateQuota, isPending: isUpdating } = useUpdateQuota();
-  const { mutate: deleteQuota } = useDeleteQuota();
+  const { mutate: deleteQuota, isPending: isDeleting } = useDeleteQuota();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuota, setEditingQuota] = useState<QuotaDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<QuotaDto | null>(null);
 
   const form = useForm<QuotaFormData>({
     resolver: zodResolver(quotaFormSchema as any),
@@ -153,10 +155,15 @@ export default function QuotasPage() {
       );
       return;
     }
-    if (!confirm(`Remove the quota "${quota.name}"?`)) return;
-    deleteQuota(quota.id, {
+    setDeleteTarget(quota);
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    deleteQuota(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Quota removed");
+        setDeleteTarget(null);
       },
     });
   }
@@ -404,6 +411,21 @@ export default function QuotasPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Quota"
+        description={
+          deleteTarget
+            ? `Remove the quota "${deleteTarget.name}"? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
