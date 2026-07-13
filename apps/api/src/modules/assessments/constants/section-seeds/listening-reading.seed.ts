@@ -10,6 +10,16 @@ export const LISTENING_READING: SectionSeedEntry = {
   },
   questionTypes: [
     {
+      slug: "audio-comprehension",
+      name: "Audio Comprehension",
+      category: "listening_reading",
+      responseFormat: "audio_response",
+      hasAudio: true,
+      hasImage: false,
+      hasPassage: false,
+      autoScorable: false,
+    },
+    {
       slug: "mcq",
       name: "MCQ",
       category: "listening_reading",
