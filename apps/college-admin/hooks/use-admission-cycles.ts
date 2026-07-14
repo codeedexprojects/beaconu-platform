@@ -7,11 +7,23 @@ import {
   createAdmissionCycle,
   updateAdmissionCycle,
   deleteAdmissionCycle,
+  getAdmissionCycleCourses,
+  attachAdmissionCycleCourse,
+  updateAdmissionCycleCourse,
+  detachAdmissionCycleCourse,
+  getSeatPools,
+  createSeatPool,
+  updateSeatPool,
+  deleteSeatPool,
   type AdmissionCycleListFilters,
 } from "@/lib/services/admission-cycles.service";
 import type {
+  AttachAdmissionCycleCourseInput,
   CreateAdmissionCycleInput,
+  CreateSeatPoolInput,
+  UpdateAdmissionCycleCourseInput,
   UpdateAdmissionCycleInput,
+  UpdateSeatPoolInput,
 } from "@beaconu/types";
 
 export function useAdmissionCycles(filters: AdmissionCycleListFilters = {}) {
@@ -59,6 +71,122 @@ export function useDeleteAdmissionCycle() {
     mutationFn: (id: string) => deleteAdmissionCycle(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admissionCycles() });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useAdmissionCycleCourses(admissionCycleId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.admissionCycleCourses(admissionCycleId ?? ""),
+    queryFn: () => getAdmissionCycleCourses(admissionCycleId as string),
+    enabled: !!admissionCycleId,
+  });
+}
+
+export function useAttachAdmissionCycleCourse(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AttachAdmissionCycleCourseInput) =>
+      attachAdmissionCycleCourse(admissionCycleId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.admissionCycleCourses(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateAdmissionCycleCourse(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateAdmissionCycleCourseInput;
+    }) => updateAdmissionCycleCourse(admissionCycleId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.admissionCycleCourses(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDetachAdmissionCycleCourse(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      detachAdmissionCycleCourse(admissionCycleId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.admissionCycleCourses(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useSeatPools(admissionCycleId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.seatPools(admissionCycleId ?? ""),
+    queryFn: () => getSeatPools(admissionCycleId as string),
+    enabled: !!admissionCycleId,
+  });
+}
+
+export function useCreateSeatPool(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateSeatPoolInput) =>
+      createSeatPool(admissionCycleId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.seatPools(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateSeatPool(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSeatPoolInput }) =>
+      updateSeatPool(admissionCycleId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.seatPools(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteSeatPool(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteSeatPool(admissionCycleId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.seatPools(admissionCycleId),
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

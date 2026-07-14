@@ -42,6 +42,10 @@ export const QUERY_KEYS = {
     filters
       ? ["college-admission-cycles", filters]
       : ["college-admission-cycles"],
+  admissionCycleCourses: (admissionCycleId: string) =>
+    ["college-admission-cycle-courses", admissionCycleId] as const,
+  seatPools: (admissionCycleId: string) =>
+    ["college-seat-pools", admissionCycleId] as const,
   assessmentSections: ["college-assessment-sections"] as const,
   assessmentTemplates: ["college-assessment-templates"] as const,
   assessmentTemplate: (id: string) =>

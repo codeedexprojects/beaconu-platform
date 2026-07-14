@@ -1,0 +1,29 @@
+meta {
+  name: Update Seat Pool
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools/{{seatMatrixId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "total_seats": 75
+  }
+}
+
+docs {
+  Updates a seat pool's total_seats and/or course_ids. Changing total_seats
+  currently also resets open_seats to match (no seat-consumption flow is
+  live yet — once applications can consume seats, this will instead
+  preserve the already-consumed count).
+}

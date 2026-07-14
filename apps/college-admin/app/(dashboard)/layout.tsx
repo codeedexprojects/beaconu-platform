@@ -608,9 +608,7 @@ export default function DashboardLayout({
           </header>
 
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto max-w-4xl">
-              {hasAccess ? children : renderAccessDenied()}
-            </div>
+            {hasAccess ? children : renderAccessDenied()}
           </div>
         </main>
       </div>

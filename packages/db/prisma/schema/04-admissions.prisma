@@ -336,6 +336,7 @@ model SeatMatrix {
   admissionCycleId String   @map("admission_cycle_id")
   totalSeats       Int      @map("total_seats")
   openSeats        Int      @map("open_seats")
+  isActive         Boolean  @default(true) @map("is_active")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

@@ -1,0 +1,44 @@
+meta {
+  name: Attach Course to Application Form
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "course_id": "{{courseId}}",
+    "application_fee": 1500,
+    "interview_required": true,
+    "assessment_required": true,
+    "token_payment_stage": "after_shortlisting",
+    "work_experience_required": false
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("admissionCycleCourseId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Attaches a course to this application form with its own fee/requirements
+  config. token_payment_stage is "before_assessment" | "after_shortlisting" |
+  omitted. If this course was previously detached from this same application
+  form, the existing row is reactivated with the new config instead of
+  erroring — only a currently-active attachment returns 409.
+}

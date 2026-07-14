@@ -1,0 +1,32 @@
+meta {
+  name: List Seat Pools
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("seatMatrixId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists seat pools for this application form. Each pool is one quota's
+  total/open seats for this cycle, pooled and shared across the courses
+  listed in `courses`. Includes soft-deactivated pools (isActive: false) —
+  the college-admin UI filters those out; they're returned so a future
+  create with the same quota can detect and reactivate the row.
+}

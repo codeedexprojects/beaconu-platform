@@ -1,0 +1,27 @@
+meta {
+  name: Update Application Form Course
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{admissionCycleCourseId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "application_fee": 2000,
+    "interview_required": false
+  }
+}
+
+docs {
+  Partially updates a course's config within this application form.
+}

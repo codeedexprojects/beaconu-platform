@@ -1,0 +1,21 @@
+meta {
+  name: Detach Course from Application Form
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{admissionCycleCourseId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-detaches a course from this application form (isActive: false).
+  The row is kept so re-attaching reuses it instead of erroring, and so
+  historical applications submitted under this course+cycle stay valid.
+}

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ import {
   useDeleteAdmissionCycle,
 } from "@/hooks/use-admission-cycles";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ManageCoursesDialog } from "@/components/application-forms/manage-courses-dialog";
+import { ManageSeatPoolsDialog } from "@/components/application-forms/manage-seat-pools-dialog";
 import type { AdmissionCycleItem } from "@beaconu/types";
 
 const applicationFormSchema = z
@@ -81,6 +83,10 @@ export default function ApplicationFormsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdmissionCycleItem | null>(null);
   const [deleting, setDeleting] = useState<AdmissionCycleItem | null>(null);
+  const [managingCourses, setManagingCourses] =
+    useState<AdmissionCycleItem | null>(null);
+  const [managingSeatPools, setManagingSeatPools] =
+    useState<AdmissionCycleItem | null>(null);
 
   const { data: forms, isLoading } = useAdmissionCycles();
   const { mutate: create, isPending: isCreating } = useCreateAdmissionCycle();
@@ -364,6 +370,24 @@ export default function ApplicationFormsPage() {
                           size="sm"
                           variant="outline"
                           className="h-8 gap-1.5 text-xs"
+                          onClick={() => setManagingCourses(item)}
+                        >
+                          <BookOpen className="h-3.5 w-3.5" />
+                          Courses
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
+                          onClick={() => setManagingSeatPools(item)}
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                          Seat Pools
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
                           onClick={() => openEdit(item)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -400,6 +424,16 @@ export default function ApplicationFormsPage() {
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         isPending={isDeleting}
+      />
+
+      <ManageCoursesDialog
+        cycle={managingCourses}
+        onClose={() => setManagingCourses(null)}
+      />
+
+      <ManageSeatPoolsDialog
+        cycle={managingSeatPools}
+        onClose={() => setManagingSeatPools(null)}
       />
     </div>
   );

@@ -1,0 +1,20 @@
+meta {
+  name: Delete Seat Pool
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools/{{seatMatrixId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deactivates a seat pool (isActive: false). The row is kept so
+  re-creating a pool for the same quota reuses it.
+}

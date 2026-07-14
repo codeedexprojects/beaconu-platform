@@ -1,0 +1,44 @@
+meta {
+  name: Create Seat Pool
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_quota_id": "{{quotaId}}",
+    "total_seats": 50,
+    "course_ids": ["{{courseId}}"]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("seatMatrixId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a pooled seat allocation for a quota within this application form.
+  `course_ids` must each be actively attached to this application form
+  (see application-forms/courses) — otherwise 400. `open_seats` is
+  initialized equal to `total_seats`.
+
+  If this quota previously had a pool that was deleted, the existing row is
+  reactivated with the new total_seats/course_ids instead of erroring —
+  only a currently-active pool for the same quota returns 409.
+}
