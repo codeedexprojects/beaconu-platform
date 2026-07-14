@@ -25,6 +25,23 @@ router.delete(
 );
 
 router.get(
+  "/:id/courses/:courseId/quotas",
+  CollegeAdminAdmissionCycleController.listCourseQuotas,
+);
+router.post(
+  "/:id/courses/:courseId/quotas",
+  CollegeAdminAdmissionCycleController.attachCourseQuota,
+);
+router.patch(
+  "/:id/courses/:courseId/quotas/:quotaSeatId",
+  CollegeAdminAdmissionCycleController.updateCourseQuota,
+);
+router.delete(
+  "/:id/courses/:courseId/quotas/:quotaSeatId",
+  CollegeAdminAdmissionCycleController.detachCourseQuota,
+);
+
+router.get(
   "/:id/seat-pools",
   CollegeAdminAdmissionCycleController.listSeatPools,
 );

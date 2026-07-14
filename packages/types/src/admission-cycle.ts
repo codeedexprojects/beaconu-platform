@@ -102,3 +102,33 @@ export interface UpdateSeatPoolInput {
   course_ids?: string[];
   is_active?: boolean;
 }
+
+// A course's quota+seat config within one application form — either
+// exclusive to that course (its own totalSeats/openSeats) or pooled, sharing
+// seats with other courses via a SeatPool (isPooled: true, totalSeats/
+// openSeats resolved from the pool).
+export interface CourseQuotaSeatsItem {
+  id: string;
+  admissionCycleCourseId: string;
+  collegeQuotaId: string;
+  seatPoolId: string | null;
+  totalSeats: number | null;
+  openSeats: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  quotaName: string;
+  quotaSlug: string;
+  bucketType: QuotaBucketType;
+  isPooled: boolean;
+}
+
+export interface AttachCourseQuotaInput {
+  college_quota_id: string;
+  total_seats: number;
+}
+
+export interface UpdateCourseQuotaSeatsInput {
+  total_seats?: number;
+  is_active?: boolean;
+}

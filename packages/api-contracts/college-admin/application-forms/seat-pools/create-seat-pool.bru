@@ -27,7 +27,7 @@ script:post-response {
   if (res.status === 201) {
     const data = res.getBody();
     if (data.data && data.data.id) {
-      bru.setEnvVar("seatMatrixId", data.data.id);
+      bru.setEnvVar("seatPoolId", data.data.id);
     }
   }
 }
@@ -38,7 +38,8 @@ docs {
   (see application-forms/courses) — otherwise 400. `open_seats` is
   initialized equal to `total_seats`.
 
-  If this quota previously had a pool that was deleted, the existing row is
-  reactivated with the new total_seats/course_ids instead of erroring —
-  only a currently-active pool for the same quota returns 409.
+  A quota can have multiple independent pools in the same cycle, as long as
+  their course sets don't overlap — if any course_id already has active
+  seats configured for this quota (exclusively or in another pool), this
+  returns 409 listing which courses conflict.
 }

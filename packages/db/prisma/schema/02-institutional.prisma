@@ -447,7 +447,6 @@ model Course {
   mediaKits              MediaKit[]
   enrollments            Enrollment[]
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
-  seatMatrixCourses      SeatMatrixCourse[]
   newsAlerts             NewsAlert[]
   collegeReviews         CollegeReview[]
 
@@ -497,9 +496,10 @@ model CollegeQuota {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  courseQuotas CourseQuota[]
-  seatMatrices SeatMatrix[]
+  college          College            @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  courseQuotas     CourseQuota[]
+  seatPools        SeatPool[]
+  courseQuotaSeats CourseQuotaSeats[]
 
   @@unique([collegeId, slug], name: "uq_college_quota_slug")
   @@index([collegeId], name: "idx_college_quotas_college")

@@ -3,11 +3,14 @@ import type {
   AdmissionCycleItem,
   AdmissionCycleCourseItem,
   AttachAdmissionCycleCourseInput,
+  AttachCourseQuotaInput,
+  CourseQuotaSeatsItem,
   CreateAdmissionCycleInput,
   CreateSeatPoolInput,
   SeatPoolItem,
   UpdateAdmissionCycleCourseInput,
   UpdateAdmissionCycleInput,
+  UpdateCourseQuotaSeatsInput,
   UpdateSeatPoolInput,
 } from "@beaconu/types";
 
@@ -81,6 +84,46 @@ export async function detachAdmissionCycleCourse(
   id: string,
 ): Promise<AdmissionCycleCourseItem> {
   return api.delete(`${BASE}/${admissionCycleId}/courses/${id}`);
+}
+
+export async function getCourseQuotaSeats(
+  admissionCycleId: string,
+  courseId: string,
+): Promise<CourseQuotaSeatsItem[]> {
+  return api.get(`${BASE}/${admissionCycleId}/courses/${courseId}/quotas`);
+}
+
+export async function attachCourseQuota(
+  admissionCycleId: string,
+  courseId: string,
+  data: AttachCourseQuotaInput,
+): Promise<CourseQuotaSeatsItem> {
+  return api.post(
+    `${BASE}/${admissionCycleId}/courses/${courseId}/quotas`,
+    data,
+  );
+}
+
+export async function updateCourseQuotaSeats(
+  admissionCycleId: string,
+  courseId: string,
+  id: string,
+  data: UpdateCourseQuotaSeatsInput,
+): Promise<CourseQuotaSeatsItem> {
+  return api.patch(
+    `${BASE}/${admissionCycleId}/courses/${courseId}/quotas/${id}`,
+    data,
+  );
+}
+
+export async function detachCourseQuota(
+  admissionCycleId: string,
+  courseId: string,
+  id: string,
+): Promise<CourseQuotaSeatsItem> {
+  return api.delete(
+    `${BASE}/${admissionCycleId}/courses/${courseId}/quotas/${id}`,
+  );
 }
 
 export async function getSeatPools(

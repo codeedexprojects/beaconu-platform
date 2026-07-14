@@ -109,10 +109,11 @@ export function ManageSeatPoolsDialog({
 
   const activePools = (pools ?? []).filter((p) => p.isActive);
   const activeCycleCourses = (cycleCourses ?? []).filter((c) => c.isActive);
-  const pooledQuotaIds = new Set(activePools.map((p) => p.collegeQuotaId));
-  const availableQuotas = (quotas ?? []).filter(
-    (q) => q.isActive && !pooledQuotaIds.has(q.id),
-  );
+  // A quota can back multiple independent pools in the same cycle, as long
+  // as their course sets don't overlap — the backend rejects overlapping
+  // courses with a clear conflict message, so every active quota stays
+  // selectable here rather than being hidden after its first pool.
+  const availableQuotas = (quotas ?? []).filter((q) => q.isActive);
 
   function resetForm() {
     setSelectedQuotaId("");
@@ -244,9 +245,7 @@ export function ManageSeatPoolsDialog({
               <h4 className="font-bold text-sm">Create a Seat Pool</h4>
               {availableQuotas.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {(quotas ?? []).length === 0
-                    ? "No quotas in your catalogue yet."
-                    : "Every active quota already has a seat pool in this application form."}
+                  No active quotas in your catalogue yet.
                 </p>
               ) : (
                 <div className="space-y-3">

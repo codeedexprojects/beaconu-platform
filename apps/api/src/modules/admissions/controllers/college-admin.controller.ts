@@ -4,7 +4,8 @@ import { NotFoundError } from "@/shared/errors";
 import { AdmissionCycleService } from "../services/admission-cycle.service";
 import { AdmissionCycleQuery } from "../queries/admission-cycle.query";
 import { AdmissionCycleCourseService } from "../services/admission-cycle-course.service";
-import { SeatMatrixService } from "../services/seat-matrix.service";
+import { SeatPoolService } from "../services/seat-pool.service";
+import { CourseQuotaSeatsService } from "../services/course-quota-seats.service";
 import {
   createAdmissionCycleSchema,
   updateAdmissionCycleSchema,
@@ -17,7 +18,11 @@ import {
 import {
   createSeatPoolSchema,
   updateSeatPoolSchema,
-} from "../validators/seat-matrix.validator";
+} from "../validators/seat-pool.validator";
+import {
+  attachCourseQuotaSchema,
+  updateCourseQuotaSeatsSchema,
+} from "../validators/course-quota-seats.validator";
 
 export class CollegeAdminAdmissionCycleController {
   static async create(req: Request, res: Response) {
@@ -112,10 +117,58 @@ export class CollegeAdminAdmissionCycleController {
     );
   }
 
+  // ── Quota seats for one course attached to this application form ──────────
+
+  static async listCourseQuotas(req: Request, res: Response) {
+    const result = await CourseQuotaSeatsService.listForCourse(
+      req.params.id as string,
+      req.params.courseId as string,
+      req.collegeId!,
+    );
+    return res.json(ApiResponse.success("Course quota seats fetched", result));
+  }
+
+  static async attachCourseQuota(req: Request, res: Response) {
+    const data = attachCourseQuotaSchema.parse(req.body);
+    const result = await CourseQuotaSeatsService.attachQuota(
+      req.params.id as string,
+      req.params.courseId as string,
+      req.collegeId!,
+      data,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Quota seats added to course", result));
+  }
+
+  static async updateCourseQuota(req: Request, res: Response) {
+    const data = updateCourseQuotaSeatsSchema.parse(req.body);
+    const result = await CourseQuotaSeatsService.updateQuotaSeats(
+      req.params.id as string,
+      req.params.courseId as string,
+      req.collegeId!,
+      req.params.quotaSeatId as string,
+      data,
+    );
+    return res.json(ApiResponse.success("Course quota seats updated", result));
+  }
+
+  static async detachCourseQuota(req: Request, res: Response) {
+    const result = await CourseQuotaSeatsService.detachQuota(
+      req.params.id as string,
+      req.params.courseId as string,
+      req.collegeId!,
+      req.params.quotaSeatId as string,
+    );
+    return res.json(
+      ApiResponse.success("Quota seats removed from course", result),
+    );
+  }
+
   // ── Seat pools for this application form ───────────────────────────────────
 
   static async listSeatPools(req: Request, res: Response) {
-    const result = await SeatMatrixService.listPools(
+    const result = await SeatPoolService.listPools(
       req.params.id as string,
       req.collegeId!,
     );
@@ -124,7 +177,7 @@ export class CollegeAdminAdmissionCycleController {
 
   static async createSeatPool(req: Request, res: Response) {
     const data = createSeatPoolSchema.parse(req.body);
-    const result = await SeatMatrixService.createPool(
+    const result = await SeatPoolService.createPool(
       req.params.id as string,
       req.collegeId!,
       data,
@@ -136,7 +189,7 @@ export class CollegeAdminAdmissionCycleController {
 
   static async updateSeatPool(req: Request, res: Response) {
     const data = updateSeatPoolSchema.parse(req.body);
-    const result = await SeatMatrixService.updatePool(
+    const result = await SeatPoolService.updatePool(
       req.params.id as string,
       req.collegeId!,
       req.params.poolId as string,
@@ -146,7 +199,7 @@ export class CollegeAdminAdmissionCycleController {
   }
 
   static async deleteSeatPool(req: Request, res: Response) {
-    const result = await SeatMatrixService.deletePool(
+    const result = await SeatPoolService.deletePool(
       req.params.id as string,
       req.collegeId!,
       req.params.poolId as string,

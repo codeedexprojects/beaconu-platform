@@ -11,6 +11,10 @@ import {
   attachAdmissionCycleCourse,
   updateAdmissionCycleCourse,
   detachAdmissionCycleCourse,
+  getCourseQuotaSeats,
+  attachCourseQuota,
+  updateCourseQuotaSeats,
+  detachCourseQuota,
   getSeatPools,
   createSeatPool,
   updateSeatPool,
@@ -19,10 +23,12 @@ import {
 } from "@/lib/services/admission-cycles.service";
 import type {
   AttachAdmissionCycleCourseInput,
+  AttachCourseQuotaInput,
   CreateAdmissionCycleInput,
   CreateSeatPoolInput,
   UpdateAdmissionCycleCourseInput,
   UpdateAdmissionCycleInput,
+  UpdateCourseQuotaSeatsInput,
   UpdateSeatPoolInput,
 } from "@beaconu/types";
 
@@ -139,6 +145,83 @@ export function useDetachAdmissionCycleCourse(admissionCycleId: string) {
   });
 }
 
+export function useCourseQuotaSeats(
+  admissionCycleId?: string,
+  courseId?: string,
+) {
+  return useQuery({
+    queryKey: QUERY_KEYS.courseQuotaSeats(
+      admissionCycleId ?? "",
+      courseId ?? "",
+    ),
+    queryFn: () =>
+      getCourseQuotaSeats(admissionCycleId as string, courseId as string),
+    enabled: !!admissionCycleId && !!courseId,
+  });
+}
+
+export function useAttachCourseQuota(
+  admissionCycleId: string,
+  courseId: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AttachCourseQuotaInput) =>
+      attachCourseQuota(admissionCycleId, courseId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.courseQuotaSeats(admissionCycleId, courseId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateCourseQuotaSeats(
+  admissionCycleId: string,
+  courseId: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateCourseQuotaSeatsInput;
+    }) => updateCourseQuotaSeats(admissionCycleId, courseId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.courseQuotaSeats(admissionCycleId, courseId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDetachCourseQuota(
+  admissionCycleId: string,
+  courseId: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      detachCourseQuota(admissionCycleId, courseId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.courseQuotaSeats(admissionCycleId, courseId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
 export function useSeatPools(admissionCycleId?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.seatPools(admissionCycleId ?? ""),
@@ -156,6 +239,11 @@ export function useCreateSeatPool(admissionCycleId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
       });
+      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
+      // every course's quota-seats view for this cycle, not just the pool.
+      queryClient.invalidateQueries({
+        queryKey: ["college-course-quota-seats", admissionCycleId],
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -172,6 +260,11 @@ export function useUpdateSeatPool(admissionCycleId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
       });
+      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
+      // every course's quota-seats view for this cycle, not just the pool.
+      queryClient.invalidateQueries({
+        queryKey: ["college-course-quota-seats", admissionCycleId],
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -186,6 +279,11 @@ export function useDeleteSeatPool(admissionCycleId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
+      });
+      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
+      // every course's quota-seats view for this cycle, not just the pool.
+      queryClient.invalidateQueries({
+        queryKey: ["college-course-quota-seats", admissionCycleId],
       });
     },
     onError: (error) => {

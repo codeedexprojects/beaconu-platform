@@ -2729,10 +2729,13 @@ async function seedAdmissionCycle(
     },
   });
 
+  // Track each course's AdmissionCycleCourse id — CourseQuotaSeats rows key
+  // off this (course-in-this-cycle), not off the course directly.
+  const cycleCourseIds: Record<string, string> = {};
   for (const c of courseDefs) {
     const courseId = courseIds[c.code];
     if (!courseId) continue;
-    await prisma.admissionCycleCourse.upsert({
+    const cycleCourse = await prisma.admissionCycleCourse.upsert({
       where: { uq_cycle_course: { admissionCycleId: cycle.id, courseId } },
       update: { applicationFee: c.applicationFee, isActive: true },
       create: {
@@ -2745,36 +2748,49 @@ async function seedAdmissionCycle(
         isActive: true,
       },
     });
+    cycleCourseIds[c.code] = cycleCourse.id;
   }
 
-  // Seat pools: one SeatMatrix per (college quota, cycle); courses share pools
-  // via seat_matrix_courses.
+  // Seat pools: courses sharing a quota's seats get one SeatPool, each
+  // fronted by a CourseQuotaSeats row pointing at it. SeatPool has no unique
+  // constraint on (quota, cycle) — reuse an existing active pool for this
+  // quota+cycle if the seed has already run, instead of creating a duplicate.
   for (const pool of seatPools) {
     const collegeQuotaId = collegeQuotaIds[pool.quotaSlug];
     if (!collegeQuotaId) continue;
 
-    const matrix = await prisma.seatMatrix.upsert({
-      where: {
-        uq_seat_matrix: { collegeQuotaId, admissionCycleId: cycle.id },
-      },
-      update: { totalSeats: pool.totalSeats },
-      create: {
-        collegeQuotaId,
-        admissionCycleId: cycle.id,
-        totalSeats: pool.totalSeats,
-        openSeats: pool.totalSeats,
-      },
+    let seatPool = await prisma.seatPool.findFirst({
+      where: { collegeQuotaId, admissionCycleId: cycle.id, isActive: true },
     });
+    if (seatPool) {
+      await prisma.seatPool.update({
+        where: { id: seatPool.id },
+        data: { totalSeats: pool.totalSeats, openSeats: pool.totalSeats },
+      });
+    } else {
+      seatPool = await prisma.seatPool.create({
+        data: {
+          collegeQuotaId,
+          admissionCycleId: cycle.id,
+          totalSeats: pool.totalSeats,
+          openSeats: pool.totalSeats,
+        },
+      });
+    }
 
     for (const code of pool.courseCodes) {
-      const courseId = courseIds[code];
-      if (!courseId) continue;
-      await prisma.seatMatrixCourse.upsert({
+      const admissionCycleCourseId = cycleCourseIds[code];
+      if (!admissionCycleCourseId) continue;
+      await prisma.courseQuotaSeats.upsert({
         where: {
-          uq_seat_matrix_course: { seatMatrixId: matrix.id, courseId },
+          uq_cycle_course_quota: { admissionCycleCourseId, collegeQuotaId },
         },
-        update: {},
-        create: { seatMatrixId: matrix.id, courseId },
+        update: { seatPoolId: seatPool.id, isActive: true },
+        create: {
+          admissionCycleCourseId,
+          collegeQuotaId,
+          seatPoolId: seatPool.id,
+        },
       });
     }
   }

@@ -1,0 +1,28 @@
+meta {
+  name: Update Course Quota Seats
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{courseId}}/quotas/{{courseQuotaSeatId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "total_seats": 65
+  }
+}
+
+docs {
+  Updates an exclusive quota-seat config's total_seats and/or is_active.
+  Returns 409 if this row is pooled (seatPoolId set) and total_seats is
+  given — pooled seats can only be edited from the seat pool itself.
+}

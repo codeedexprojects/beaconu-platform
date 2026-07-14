@@ -24,7 +24,7 @@ model AdmissionCycle {
   enrollments           Enrollment[]
   admissionFormConfigs  AdmissionFormConfig[]
   documentUploadConfigs DocumentUploadConfig[]
-  seatMatrices          SeatMatrix[]
+  seatPools             SeatPool[]
 
   @@unique([collegeId, slug], name: "uq_cycle_slug_college")
   @@index([collegeId], name: "idx_cycles_college")
@@ -46,13 +46,40 @@ model AdmissionCycleCourse {
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  admissionCycle AdmissionCycle @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
-  course         Course         @relation(fields: [courseId], references: [id])
+  admissionCycle AdmissionCycle     @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  course         Course             @relation(fields: [courseId], references: [id])
+  quotaSeats     CourseQuotaSeats[]
 
   @@unique([admissionCycleId, courseId], name: "uq_cycle_course")
   @@index([admissionCycleId], name: "idx_cycle_courses_cycle")
   @@index([courseId], name: "idx_cycle_courses_course")
   @@map("admission_cycle_courses")
+}
+
+// Seats for one course's quota, within one admission cycle. Entered right
+// alongside attaching the quota to the course. Either holds its own
+// totalSeats (exclusive to this course) or defers to a shared SeatPool.
+model CourseQuotaSeats {
+  id                     String   @id @default(dbgenerated("('CQS-'::text || (nextval('course_quota_seats_seq'::regclass))::text)"))
+  admissionCycleCourseId String   @map("admission_cycle_course_id")
+  collegeQuotaId         String   @map("college_quota_id")
+  seatPoolId             String?  @map("seat_pool_id")
+  totalSeats             Int?     @map("total_seats")
+  openSeats              Int?     @map("open_seats")
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  admissionCycleCourse AdmissionCycleCourse @relation(fields: [admissionCycleCourseId], references: [id], onDelete: Cascade)
+  collegeQuota         CollegeQuota         @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
+  seatPool             SeatPool?            @relation(fields: [seatPoolId], references: [id], onDelete: SetNull)
+
+  @@unique([admissionCycleCourseId, collegeQuotaId], name: "uq_cycle_course_quota")
+  @@index([admissionCycleCourseId], name: "idx_cqs_cycle_course")
+  @@index([collegeQuotaId], name: "idx_cqs_quota")
+  @@index([seatPoolId], name: "idx_cqs_seat_pool")
+  @@map("course_quota_seats")
 }
 
 model Application {
@@ -330,8 +357,11 @@ model DocumentUploadConfig {
   @@map("document_upload_configs")
 }
 
-model SeatMatrix {
-  id               String   @id @default(dbgenerated("('SMX-'::text || (nextval('seat_matrix_seq'::regclass))::text)"))
+// An optional shared bucket of seats. A CourseQuotaSeats row can either hold
+// its own totalSeats (exclusive to that course) or point at a SeatPool here
+// to share seats with other courses' CourseQuotaSeats rows for the same quota.
+model SeatPool {
+  id               String   @id @default(dbgenerated("('SPL-'::text || (nextval('seat_pool_seq'::regclass))::text)"))
   collegeQuotaId   String   @map("college_quota_id")
   admissionCycleId String   @map("admission_cycle_id")
   totalSeats       Int      @map("total_seats")
@@ -341,28 +371,11 @@ model SeatMatrix {
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  collegeQuota      CollegeQuota       @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
-  admissionCycle    AdmissionCycle     @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
-  seatMatrixCourses SeatMatrixCourse[]
+  collegeQuota   CollegeQuota            @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
+  admissionCycle AdmissionCycle          @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  courseQuotas   CourseQuotaSeats[]
 
-  @@unique([collegeQuotaId, admissionCycleId], name: "uq_seat_matrix")
-  @@index([collegeQuotaId], name: "idx_seat_matrix_college_quota")
-  @@index([admissionCycleId], name: "idx_seat_matrix_cycle")
-  @@map("seat_matrix")
-}
-
-model SeatMatrixCourse {
-  id           String   @id @default(dbgenerated("('SMC-'::text || (nextval('seat_matrix_course_seq'::regclass))::text)"))
-  seatMatrixId String   @map("seat_matrix_id")
-  courseId     String   @map("course_id")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  // Relations
-  seatMatrix SeatMatrix @relation(fields: [seatMatrixId], references: [id], onDelete: Cascade)
-  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@unique([seatMatrixId, courseId], name: "uq_seat_matrix_course")
-  @@index([seatMatrixId], name: "idx_smc_seat_matrix")
-  @@index([courseId], name: "idx_smc_course")
-  @@map("seat_matrix_courses")
+  @@index([collegeQuotaId], name: "idx_seat_pool_college_quota")
+  @@index([admissionCycleId], name: "idx_seat_pool_cycle")
+  @@map("seat_pools")
 }

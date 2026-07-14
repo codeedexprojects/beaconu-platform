@@ -14,7 +14,7 @@ const ADMIN_SELECT = {
   _count: {
     select: {
       courseQuotas: { where: { isActive: true } },
-      seatMatrices: true,
+      seatPools: true,
     },
   },
 } as const;

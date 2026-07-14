@@ -23,7 +23,7 @@ function toQuotaDto(quota: QuotaRow) {
     ...rest,
     usage: {
       courseCount: _count.courseQuotas,
-      seatPoolCount: _count.seatMatrices,
+      seatPoolCount: _count.seatPools,
     },
   };
 }

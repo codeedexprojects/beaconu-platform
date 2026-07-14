@@ -5,7 +5,7 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools/{{seatMatrixId}}
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools/{{seatPoolId}}
   body: none
   auth: none
 }
@@ -15,6 +15,7 @@ headers {
 }
 
 docs {
-  Soft-deactivates a seat pool (isActive: false). The row is kept so
-  re-creating a pool for the same quota reuses it.
+  Soft-deactivates a seat pool (isActive: false) and detaches every course
+  currently sharing it (their CourseQuotaSeats rows are soft-deactivated and
+  their seat_pool_id cleared).
 }

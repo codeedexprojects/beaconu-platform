@@ -1,0 +1,21 @@
+meta {
+  name: Detach Quota from Course
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{courseId}}/quotas/{{courseQuotaSeatId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-detaches a quota's seat config from this course (isActive: false).
+  Works whether the row was exclusive or pooled — if pooled, this only
+  removes this course's membership, the pool itself is untouched.
+}
