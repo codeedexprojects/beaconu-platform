@@ -699,13 +699,8 @@ export default function SetupProfilePage() {
                         htmlFor="logoUrl"
                         className="font-semibold text-foreground"
                       >
-                        Logo Image URL
+                        Logo Image
                       </Label>
-                      <Input
-                        id="logoUrl"
-                        placeholder="https://example.com/logo.png"
-                        {...register("logoUrl")}
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -725,13 +720,8 @@ export default function SetupProfilePage() {
                         htmlFor="coverImageUrl"
                         className="font-semibold text-foreground"
                       >
-                        Cover Image URL
+                        Cover Image
                       </Label>
-                      <Input
-                        id="coverImageUrl"
-                        placeholder="https://example.com/cover.png"
-                        {...register("coverImageUrl")}
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -877,13 +867,6 @@ export default function SetupProfilePage() {
                               className="flex-1"
                               {...register(
                                 `profileSections.college_overview.accolades.${idx}.title`,
-                              )}
-                            />
-                            <Input
-                              placeholder="Image Url"
-                              className="flex-1"
-                              {...register(
-                                `profileSections.college_overview.accolades.${idx}.image`,
                               )}
                             />
                             <Input
@@ -1167,14 +1150,7 @@ export default function SetupProfilePage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs">Icon Url / Key</Label>
-                              <Input
-                                placeholder="Icon URL"
-                                className="h-9"
-                                {...register(
-                                  `profileSections.college_overview.inside_campus_facilities.${idx}.icon`,
-                                )}
-                              />
+                              <Label className="text-xs">Icon</Label>
                               <Input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/svg+xml"
@@ -1581,14 +1557,7 @@ export default function SetupProfilePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Thumbnail URL</Label>
-                          <Input
-                            placeholder="Thumbnail image URL"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.campus_reels.${idx}.thumbnail`,
-                            )}
-                          />
+                          <Label className="text-xs">Thumbnail</Label>
                           <Input
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
@@ -1860,15 +1829,7 @@ export default function SetupProfilePage() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs">
-                                  Image Link URL
-                                </Label>
-                                <Input
-                                  placeholder="https://example.com/image.jpg"
-                                  {...register(
-                                    `profileSections.happenings.happenings.${idx}.image`,
-                                  )}
-                                />
+                                <Label className="text-xs">Image</Label>
                                 <Input
                                   type="file"
                                   accept="image/jpeg,image/png,image/webp"
@@ -2043,13 +2004,6 @@ export default function SetupProfilePage() {
                                     className="flex-1"
                                     {...register(
                                       `profileSections.institutions_across_world.institutions.${idx}.country`,
-                                    )}
-                                  />
-                                  <Input
-                                    placeholder="Logo URL"
-                                    className="flex-1"
-                                    {...register(
-                                      `profileSections.institutions_across_world.institutions.${idx}.logo`,
                                     )}
                                   />
                                   <Input

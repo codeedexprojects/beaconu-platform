@@ -119,17 +119,8 @@ export function ClubsGroupsTab({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Cover Image URL (banner shown on club page)
+                  Cover Image (banner shown on club page)
                 </Label>
-                <Input
-                  placeholder="https://cdn.example.com/cover.png"
-                  value={c.cover_image || ""}
-                  onChange={(e) =>
-                    updateClub({
-                      cover_image: e.target.value,
-                    })
-                  }
-                />
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -146,13 +137,8 @@ export function ClubsGroupsTab({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Logo URL (small emblem/icon)
+                  Logo (small emblem/icon)
                 </Label>
-                <Input
-                  placeholder="https://cdn.example.com/logo.png"
-                  value={c.logo || ""}
-                  onChange={(e) => updateClub({ logo: e.target.value })}
-                />
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -299,15 +285,6 @@ export function ClubsGroupsTab({
                       }
                     />
                     <div className="space-y-1">
-                      <Input
-                        placeholder="Thumbnail image URL"
-                        value={event.image || ""}
-                        onChange={(e) =>
-                          updateEvent({
-                            image: e.target.value,
-                          })
-                        }
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"

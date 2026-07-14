@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 import {
   useCollegeHostels,
@@ -567,12 +568,7 @@ export default function HostelDetailPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Cover Image URL</Label>
-              <Input
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                placeholder="https://..."
-              />
+              <Label>Cover Image</Label>
               <div className="flex items-center gap-3">
                 <Input
                   type="file"
@@ -676,11 +672,6 @@ export default function HostelDetailPage() {
                 placeholder="Email"
                 value={wardenEmail}
                 onChange={(e) => setWardenEmail(e.target.value)}
-              />
-              <Input
-                placeholder="Photo URL"
-                value={wardenPhoto}
-                onChange={(e) => setWardenPhoto(e.target.value)}
               />
               <div className="flex items-center gap-3 sm:col-span-2">
                 <Input
@@ -849,10 +840,10 @@ export default function HostelDetailPage() {
                 value={mapLink}
                 onChange={(e) => setMapLink(e.target.value)}
               />
-              <Input
-                placeholder="Map thumbnail URL"
+              <ImageUpload
                 value={mapThumbnail}
-                onChange={(e) => setMapThumbnail(e.target.value)}
+                onChange={setMapThumbnail}
+                context={`hostels/${hostel.id}/map-thumbnail`}
               />
               <Input
                 placeholder="College transport description"

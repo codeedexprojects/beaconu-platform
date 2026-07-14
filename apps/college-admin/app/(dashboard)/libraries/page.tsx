@@ -638,11 +638,6 @@ export default function LibrariesPage() {
                   />
                   <div className="flex flex-col gap-2 sm:flex-1 sm:flex-row">
                     <Input
-                      className="sm:flex-1"
-                      placeholder="Image URL"
-                      {...register(`facilities.${idx}.image`)}
-                    />
-                    <Input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       className="sm:w-40"

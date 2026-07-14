@@ -34,7 +34,11 @@ script:post-response {
 }
 
 docs {
-  Template must be status "active" (ConflictError otherwise). window_end
-  must be after window_start (ValidationError otherwise). max_capacity is
-  optional — omit for unlimited.
+  Template must be status "active" (ConflictError otherwise). window_end is
+  required for slot_type "window" and must be after window_start
+  (ValidationError otherwise). For slot_type "fixed", omit window_end
+  entirely — it's derived server-side from window_start + the template's
+  total_duration_mins (a fixed slot only has one start time; the end is
+  whatever the template's duration works out to, always kept in sync).
+  max_capacity is optional — omit for unlimited.
 }

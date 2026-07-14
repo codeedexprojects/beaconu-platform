@@ -798,12 +798,6 @@ export default function HostelsPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="hostel-cover">Cover Image</Label>
-                  <Input
-                    id="hostel-cover"
-                    placeholder="https://cdn.example.com/cover.jpg"
-                    className="h-8 text-xs"
-                    {...register("coverImageUrl")}
-                  />
                   <div className="flex items-center gap-3">
                     <Input
                       type="file"
@@ -1500,9 +1494,18 @@ export default function HostelsPage() {
                       {...register("mapLink")}
                     />
                     <Input
-                      placeholder="Map thumbnail URL"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
                       className="h-8 text-xs"
-                      {...register("mapThumbnail")}
+                      disabled={uploadingField === "mapThumbnail"}
+                      onChange={(e) =>
+                        handleFieldUpload(
+                          e.target.files?.[0] ?? null,
+                          "mapThumbnail",
+                          "mapThumbnail",
+                          "hostels/map-thumbnail",
+                        )
+                      }
                     />
                     <Input
                       placeholder="College transport description"

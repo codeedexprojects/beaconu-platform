@@ -126,15 +126,23 @@ export const renamePaperSchema = z.object({
 
 export type RenamePaperBody = z.infer<typeof renamePaperSchema>;
 
-export const createSlotSchema = z.object({
-  slot_type: z.enum(["window", "fixed"]),
-  window_start: z.coerce.date(),
-  window_end: z.coerce.date(),
-  max_capacity: z.preprocess(
-    (v) => (v === "" || v === null ? undefined : v),
-    z.coerce.number().int().positive().optional(),
-  ),
-});
+export const createSlotSchema = z
+  .object({
+    slot_type: z.enum(["window", "fixed"]),
+    window_start: z.coerce.date(),
+    // Required for "window" (defines the latest start time); for "fixed"
+    // it's derived server-side from window_start + the template's
+    // totalDurationMins, since a fixed slot only ever has one start time.
+    window_end: z.coerce.date().optional(),
+    max_capacity: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : v),
+      z.coerce.number().int().positive().optional(),
+    ),
+  })
+  .refine((data) => data.slot_type !== "window" || data.window_end, {
+    message: "window_end is required for window slots",
+    path: ["window_end"],
+  });
 
 export const updateSlotSchema = z.object({
   slot_type: z.enum(["window", "fixed"]).optional(),

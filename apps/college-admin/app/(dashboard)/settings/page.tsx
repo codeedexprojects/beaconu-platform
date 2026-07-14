@@ -242,14 +242,6 @@ export default function SettingsPage() {
                     )}
                     {uploadingLogo ? "Uploading…" : "Upload logo file"}
                   </label>
-                  <p className="text-[10px] text-muted-foreground">
-                    Or paste a URL directly:
-                  </p>
-                  <Input
-                    id="settings-logo-url"
-                    placeholder="https://example.com/logo.png"
-                    {...register("logoUrl")}
-                  />
                   {errors.logoUrl && (
                     <p className="text-xs text-destructive">
                       {errors.logoUrl.message}
@@ -307,14 +299,6 @@ export default function SettingsPage() {
                     )}
                     {uploadingCover ? "Uploading…" : "Upload cover file"}
                   </label>
-                  <p className="text-[10px] text-muted-foreground">
-                    Or paste a URL directly:
-                  </p>
-                  <Input
-                    id="settings-cover-url"
-                    placeholder="https://example.com/cover.png"
-                    {...register("coverImageUrl")}
-                  />
                   {errors.coverImageUrl && (
                     <p className="text-xs text-destructive">
                       {errors.coverImageUrl.message}
