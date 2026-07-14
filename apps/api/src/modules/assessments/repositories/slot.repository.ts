@@ -10,15 +10,22 @@ export class SlotRepository {
     templateId: string,
     data: CreateSlotBody,
   ) {
-    return prisma.assessmentSlot.create({
-      data: {
-        collegeId,
-        templateId,
-        slotType: data.slot_type,
-        windowStart: data.window_start,
-        windowEnd: data.window_end,
-        maxCapacity: data.max_capacity ?? null,
-      },
+    return prisma.$transaction(async (tx) => {
+      await tx.assessmentSlot.updateMany({
+        where: { templateId, status: "active" },
+        data: { status: "inactive" },
+      });
+
+      return tx.assessmentSlot.create({
+        data: {
+          collegeId,
+          templateId,
+          slotType: data.slot_type,
+          windowStart: data.window_start,
+          windowEnd: data.window_end,
+          maxCapacity: data.max_capacity ?? null,
+        },
+      });
     });
   }
 
@@ -51,10 +58,17 @@ export class SlotRepository {
     });
   }
 
-  static async cancel(id: string) {
+  static async setActive(id: string, isActive: boolean) {
     return prisma.assessmentSlot.update({
       where: { id },
-      data: { status: "cancelled" },
+      data: { status: isActive ? "active" : "inactive" },
+    });
+  }
+
+  static async deactivateOtherActive(templateId: string, excludeId: string) {
+    return prisma.assessmentSlot.updateMany({
+      where: { templateId, status: "active", id: { not: excludeId } },
+      data: { status: "inactive" },
     });
   }
 }

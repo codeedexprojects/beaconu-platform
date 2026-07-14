@@ -209,7 +209,7 @@ export interface GeneratePaperInput {
 }
 
 export type SlotType = "window" | "fixed";
-export type SlotStatus = "active" | "cancelled";
+export type SlotStatus = "active" | "inactive";
 
 export interface AssessmentSlotItem {
   id: string;
@@ -235,4 +235,37 @@ export interface UpdateSlotInput {
   window_start?: string;
   window_end?: string;
   max_capacity?: number;
+}
+
+export interface ToggleSlotInput {
+  is_active: boolean;
+}
+
+export interface AssessmentStartSectionSummary {
+  id: string;
+  name: string;
+  questionCount: number;
+  timeLimitMins: number;
+}
+
+export interface AssessmentStartInfo {
+  slot: {
+    id: string;
+    slotType: SlotType;
+    windowStart: string;
+    windowEnd: string;
+    status: SlotStatus;
+  };
+  template: {
+    id: string;
+    name: string;
+    totalQuestions: number;
+    totalMarks: number;
+    totalDurationMins: number;
+    negativeMarkingMode: NegativeMarkingMode;
+    instructions: TemplateInstructionItem[];
+    sections: AssessmentStartSectionSummary[];
+  };
+  isWithinWindow: boolean;
+  hasWindowPassed: boolean;
 }
