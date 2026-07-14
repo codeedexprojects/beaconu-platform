@@ -17,6 +17,7 @@ export const QUERY_KEYS = {
   hostels: ["college-hostels"] as const,
   libraries: ["college-libraries"] as const,
   quotas: ["college-quotas"] as const,
+  quotaUsage: (id: string) => ["college-quota-usage", id] as const,
   courseQuotas: (courseId: string) => ["course-quotas", courseId] as const,
   lookupsDepartments: ["lookups", "departments"] as const,
   commutes: ["college-commutes"] as const,

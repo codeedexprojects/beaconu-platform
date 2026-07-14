@@ -657,6 +657,32 @@ export async function deleteCollegeQuota(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/quotas/${id}`);
 }
 
+export interface QuotaUsageCourseRef {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface QuotaUsageSeatPool {
+  id: string;
+  totalSeats: number;
+  openSeats: number;
+  cycleId: string;
+  cycleName: string;
+  courses: QuotaUsageCourseRef[];
+}
+
+export interface QuotaUsageDetail {
+  courses: QuotaUsageCourseRef[];
+  seatPools: QuotaUsageSeatPool[];
+}
+
+export async function getCollegeQuotaUsage(
+  id: string,
+): Promise<QuotaUsageDetail> {
+  return api.get<QuotaUsageDetail>(`/api/v1/college-admin/quotas/${id}/usage`);
+}
+
 export interface CourseQuotaDto {
   id: string;
   courseId: string;

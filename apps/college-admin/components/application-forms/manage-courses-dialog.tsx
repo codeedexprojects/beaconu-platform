@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useCollegeCoursesMinimal } from "@/hooks/use-colleges";
 import { useCollegeQuotas } from "@/hooks/use-quotas";
+import { useCourseQuotas } from "@/hooks/use-course-quotas";
 import {
   useAdmissionCycleCourses,
   useAttachAdmissionCycleCourse,
@@ -59,6 +60,7 @@ function CourseQuotaSeatsPanel({
   courseId: string;
 }) {
   const { data: quotas } = useCollegeQuotas();
+  const { data: courseQuotaConfigs } = useCourseQuotas(courseId);
   const { data: quotaSeats, isLoading } = useCourseQuotaSeats(
     cycleId,
     courseId,
@@ -84,8 +86,19 @@ function CourseQuotaSeatsPanel({
   const configuredQuotaIds = new Set(
     activeRows.map((row) => row.collegeQuotaId),
   );
+  // Only quotas already linked to this course in Academics Catalog →
+  // Quotas & Fees can get cycle-scoped seats — Academics Catalog is the
+  // source of truth for which quotas a course accepts at all.
+  const courseAcceptedQuotaIds = new Set(
+    (courseQuotaConfigs ?? [])
+      .filter((cq) => cq.isActive)
+      .map((cq) => cq.collegeQuotaId),
+  );
   const availableQuotas = (quotas ?? []).filter(
-    (q) => q.isActive && !configuredQuotaIds.has(q.id),
+    (q) =>
+      q.isActive &&
+      courseAcceptedQuotaIds.has(q.id) &&
+      !configuredQuotaIds.has(q.id),
   );
 
   function handleAttach() {
@@ -212,7 +225,7 @@ function CourseQuotaSeatsPanel({
         </div>
       )}
 
-      {availableQuotas.length > 0 && (
+      {availableQuotas.length > 0 ? (
         <div className="flex items-end gap-2">
           <div className="space-y-1 flex-1">
             <Label className="text-xs">Add Quota</Label>
@@ -253,6 +266,17 @@ function CourseQuotaSeatsPanel({
             )}
           </Button>
         </div>
+      ) : courseAcceptedQuotaIds.size === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          This course has no quotas configured in Academics Catalog → Quotas
+          &amp; Fees yet. Add quotas there first, then come back here to set
+          seats for this cycle.
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          All of this course&apos;s configured quotas already have seats set for
+          this cycle.
+        </p>
       )}
 
       <ConfirmDialog
@@ -291,6 +315,7 @@ export function ManageCoursesDialog({
 
   const [detachTarget, setDetachTarget] =
     useState<AdmissionCycleCourseItem | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [applicationFee, setApplicationFee] = useState("0");
   const [interviewRequired, setInterviewRequired] = useState(true);
@@ -403,6 +428,24 @@ export function ManageCoursesDialog({
         setDetachTarget(null);
       },
     });
+  }
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function requirementsSummary(row: AdmissionCycleCourseItem) {
+    const parts = [
+      row.interviewRequired && "Interview",
+      row.assessmentRequired && "Assessment",
+      row.workExperienceRequired && "Work Exp.",
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "No requirements";
   }
 
   return (
@@ -543,131 +586,166 @@ export function ManageCoursesDialog({
                 activeAttached.map((row) => {
                   const feeDraft = getFeeDraft(row);
                   const feeDirty = feeDraft !== row.applicationFee;
+                  const isExpanded = expandedIds.has(row.id);
                   return (
                     <div
                       key={row.id}
-                      className="border p-4 rounded-xl space-y-3 bg-card"
+                      className="border rounded-xl bg-card overflow-hidden"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">
-                          {row.courseName}{" "}
-                          <span className="text-muted-foreground font-normal">
-                            ({row.courseCode})
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleExpanded(row.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleExpanded(row.id);
+                          }
+                        }}
+                        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/20 transition-colors cursor-pointer"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-semibold text-sm">
+                            {row.courseName}{" "}
+                            <span className="text-muted-foreground font-normal">
+                              ({row.courseCode})
+                            </span>
                           </span>
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDetachTarget(row)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="grid gap-3 md:grid-cols-4 items-end">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Application Fee</Label>
-                          <div className="flex gap-1.5">
-                            <Input
-                              type="number"
-                              min={0}
-                              value={feeDraft}
-                              onChange={(e) =>
-                                setRowDrafts((prev) => ({
-                                  ...prev,
-                                  [row.id]: { applicationFee: e.target.value },
-                                }))
-                              }
-                            />
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={feeDirty ? "default" : "outline"}
-                              disabled={!feeDirty}
-                              onClick={() => handleSaveFee(row)}
-                            >
-                              Save
-                            </Button>
-                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            ₹{row.applicationFee} · {requirementsSummary(row)}
+                          </p>
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Token Payment Stage</Label>
-                          <Select
-                            value={row.tokenPaymentStage ?? "none"}
-                            onValueChange={(v) =>
-                              handleTokenStageChange(
-                                row,
-                                v as "none" | TokenPaymentStage,
-                              )
-                            }
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDetachTarget(row);
+                            }}
                           >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(TOKEN_STAGE_LABELS).map(
-                                ([value, label]) => (
-                                  <SelectItem key={value} value={value}>
-                                    {label}
-                                  </SelectItem>
-                                ),
-                              )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center gap-4 md:col-span-2">
-                          <label className="flex items-center gap-2 text-xs">
-                            <input
-                              type="checkbox"
-                              checked={row.interviewRequired}
-                              onChange={() =>
-                                handleToggle(
-                                  row,
-                                  "interviewRequired",
-                                  "interview_required",
-                                )
-                              }
-                            />
-                            Interview
-                          </label>
-                          <label className="flex items-center gap-2 text-xs">
-                            <input
-                              type="checkbox"
-                              checked={row.assessmentRequired}
-                              onChange={() =>
-                                handleToggle(
-                                  row,
-                                  "assessmentRequired",
-                                  "assessment_required",
-                                )
-                              }
-                            />
-                            Assessment
-                          </label>
-                          <label className="flex items-center gap-2 text-xs">
-                            <input
-                              type="checkbox"
-                              checked={row.workExperienceRequired}
-                              onChange={() =>
-                                handleToggle(
-                                  row,
-                                  "workExperienceRequired",
-                                  "work_experience_required",
-                                )
-                              }
-                            />
-                            Work Exp.
-                          </label>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
                       </div>
 
-                      {cycleId && (
-                        <CourseQuotaSeatsPanel
-                          cycleId={cycleId}
-                          courseId={row.courseId}
-                        />
+                      {isExpanded && (
+                        <div className="p-4 pt-0 space-y-3">
+                          <div className="grid gap-3 md:grid-cols-4 items-end">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Application Fee</Label>
+                              <div className="flex gap-1.5">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={feeDraft}
+                                  onChange={(e) =>
+                                    setRowDrafts((prev) => ({
+                                      ...prev,
+                                      [row.id]: {
+                                        applicationFee: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={feeDirty ? "default" : "outline"}
+                                  disabled={!feeDirty}
+                                  onClick={() => handleSaveFee(row)}
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">
+                                Token Payment Stage
+                              </Label>
+                              <Select
+                                value={row.tokenPaymentStage ?? "none"}
+                                onValueChange={(v) =>
+                                  handleTokenStageChange(
+                                    row,
+                                    v as "none" | TokenPaymentStage,
+                                  )
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(TOKEN_STAGE_LABELS).map(
+                                    ([value, label]) => (
+                                      <SelectItem key={value} value={value}>
+                                        {label}
+                                      </SelectItem>
+                                    ),
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex items-center gap-4 md:col-span-2">
+                              <label className="flex items-center gap-2 text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={row.interviewRequired}
+                                  onChange={() =>
+                                    handleToggle(
+                                      row,
+                                      "interviewRequired",
+                                      "interview_required",
+                                    )
+                                  }
+                                />
+                                Interview
+                              </label>
+                              <label className="flex items-center gap-2 text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={row.assessmentRequired}
+                                  onChange={() =>
+                                    handleToggle(
+                                      row,
+                                      "assessmentRequired",
+                                      "assessment_required",
+                                    )
+                                  }
+                                />
+                                Assessment
+                              </label>
+                              <label className="flex items-center gap-2 text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={row.workExperienceRequired}
+                                  onChange={() =>
+                                    handleToggle(
+                                      row,
+                                      "workExperienceRequired",
+                                      "work_experience_required",
+                                    )
+                                  }
+                                />
+                                Work Exp.
+                              </label>
+                            </div>
+                          </div>
+
+                          {cycleId && (
+                            <CourseQuotaSeatsPanel
+                              cycleId={cycleId}
+                              courseId={row.courseId}
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
                   );

@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
   getCollegeQuotas,
+  getCollegeQuotaUsage,
   createCollegeQuota,
   updateCollegeQuota,
   deleteCollegeQuota,
@@ -15,6 +16,14 @@ export function useCollegeQuotas(enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.quotas,
     queryFn: () => getCollegeQuotas(true),
+    enabled,
+  });
+}
+
+export function useQuotaUsage(id: string, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.quotaUsage(id),
+    queryFn: () => getCollegeQuotaUsage(id),
     enabled,
   });
 }

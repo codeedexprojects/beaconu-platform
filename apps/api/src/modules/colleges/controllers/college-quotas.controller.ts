@@ -48,4 +48,13 @@ export class CollegeQuotasController {
       .status(200)
       .json(ApiResponse.success("Quota removed successfully", null));
   }
+
+  static async getQuotaUsage(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const { id } = quotaIdParamSchema.parse(req.params);
+    const usage = await QuotaService.getQuotaUsage(id, collegeId);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Quota usage fetched", usage));
+  }
 }

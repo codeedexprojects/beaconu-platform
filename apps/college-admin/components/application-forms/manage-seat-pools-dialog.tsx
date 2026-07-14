@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { useCollegeQuotas } from "@/hooks/use-quotas";
+import { useCollegeQuotas, useQuotaUsage } from "@/hooks/use-quotas";
 import {
   useAdmissionCycleCourses,
   useSeatPools,
@@ -36,7 +43,29 @@ const BUCKET_LABELS: Record<"in_state" | "out_of_state", string> = {
   out_of_state: "Out-of-State",
 };
 
-function CourseCheckboxList({
+/** Only courses already linked to this quota in Academics Catalog → Quotas
+ * & Fees, intersected with courses actually attached to this cycle —
+ * Academics Catalog is the source of truth for which courses a quota
+ * applies to at all. */
+function useQuotaEligibleCourses(
+  quotaId: string,
+  cycleCourses: {
+    id: string;
+    courseId: string;
+    courseName: string;
+    courseCode: string;
+  }[],
+) {
+  const { data: usage } = useQuotaUsage(quotaId, !!quotaId);
+  if (!quotaId) return { courses: [], hasQuotaConfig: true };
+  const acceptedCourseIds = new Set((usage?.courses ?? []).map((c) => c.id));
+  return {
+    courses: cycleCourses.filter((c) => acceptedCourseIds.has(c.courseId)),
+    hasQuotaConfig: (usage?.courses.length ?? 0) > 0,
+  };
+}
+
+function CourseChipPicker({
   courses,
   selected,
   onToggle,
@@ -59,20 +88,149 @@ function CourseCheckboxList({
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
-      {courses.map((c) => (
-        <label
-          key={c.courseId}
-          className="flex items-center gap-2 text-xs cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            checked={selected.has(c.courseId)}
-            onChange={() => onToggle(c.courseId)}
-          />
-          {c.courseName} ({c.courseCode})
-        </label>
-      ))}
+    <div className="flex flex-wrap gap-1.5">
+      {courses.map((c) => {
+        const isSelected = selected.has(c.courseId);
+        return (
+          <button
+            key={c.courseId}
+            type="button"
+            onClick={() => onToggle(c.courseId)}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+              isSelected
+                ? "border-primary bg-primary/10 text-primary font-medium"
+                : "border-border text-muted-foreground hover:bg-muted/40"
+            }`}
+          >
+            {isSelected && <Check className="h-3 w-3" />}
+            {c.courseCode}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SeatPoolCard({
+  pool,
+  activeCycleCourses,
+  isExpanded,
+  draft,
+  dirty,
+  onToggleExpand,
+  onDelete,
+  onTotalSeatsChange,
+  onToggleCourse,
+  onSave,
+}: {
+  pool: SeatPoolItem;
+  activeCycleCourses: {
+    id: string;
+    courseId: string;
+    courseName: string;
+    courseCode: string;
+  }[];
+  isExpanded: boolean;
+  draft: { totalSeats: string; courseIds: Set<string> };
+  dirty: boolean;
+  onToggleExpand: () => void;
+  onDelete: () => void;
+  onTotalSeatsChange: (value: string) => void;
+  onToggleCourse: (courseId: string) => void;
+  onSave: () => void;
+}) {
+  const eligible = useQuotaEligibleCourses(
+    pool.collegeQuotaId,
+    activeCycleCourses,
+  );
+
+  return (
+    <div className="border rounded-xl bg-card overflow-hidden">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggleExpand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggleExpand();
+          }
+        }}
+        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/20 transition-colors cursor-pointer"
+      >
+        <div className="min-w-0 flex items-center gap-2">
+          <span className="font-semibold text-sm">{pool.quotaName}</span>
+          <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+            {BUCKET_LABELS[pool.bucketType]}
+          </span>
+          <span className="text-xs text-muted-foreground truncate">
+            {pool.openSeats}/{pool.totalSeats} open · {pool.courses.length}{" "}
+            {pool.courses.length === 1 ? "course" : "courses"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-4 pt-0 space-y-3">
+          <div className="grid gap-3 md:grid-cols-3 items-end">
+            <div className="space-y-1">
+              <Label className="text-xs">Total Seats</Label>
+              <Input
+                type="number"
+                min={0}
+                value={draft.totalSeats}
+                onChange={(e) => onTotalSeatsChange(e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={dirty ? "default" : "outline"}
+                disabled={!dirty}
+                onClick={onSave}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Courses Sharing This Pool</Label>
+            {eligible.courses.length === 0 && !eligible.hasQuotaConfig ? (
+              <p className="text-xs text-muted-foreground">
+                No courses have this quota configured in Academics Catalog →
+                Quotas &amp; Fees anymore.
+              </p>
+            ) : (
+              <CourseChipPicker
+                courses={eligible.courses}
+                selected={draft.courseIds}
+                onToggle={onToggleCourse}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -97,6 +255,7 @@ export function ManageSeatPoolsDialog({
   );
 
   const [deleteTarget, setDeleteTarget] = useState<SeatPoolItem | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedQuotaId, setSelectedQuotaId] = useState("");
   const [totalSeats, setTotalSeats] = useState("0");
   const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
@@ -114,6 +273,10 @@ export function ManageSeatPoolsDialog({
   // courses with a clear conflict message, so every active quota stays
   // selectable here rather than being hidden after its first pool.
   const availableQuotas = (quotas ?? []).filter((q) => q.isActive);
+  const selectedQuotaCourses = useQuotaEligibleCourses(
+    selectedQuotaId,
+    activeCycleCourses,
+  );
 
   function resetForm() {
     setSelectedQuotaId("");
@@ -126,6 +289,15 @@ export function ManageSeatPoolsDialog({
       const next = new Set(prev);
       if (next.has(courseId)) next.delete(courseId);
       else next.add(courseId);
+      return next;
+    });
+  }
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -230,18 +402,17 @@ export function ManageSeatPoolsDialog({
   return (
     <>
       <Dialog open={!!cycle} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Seat Pools — {cycle?.name}</DialogTitle>
             <DialogDescription>
-              Allocate total seats per quota for this application form. A
-              pool&apos;s seats are shared across every course selected below —
-              one pool can cover multiple courses.
+              Allocate total seats per quota. A pool&apos;s seats are shared
+              across every course selected below.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 pt-2">
-            <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+          <div className="space-y-5 pt-2">
+            <div className="border p-4 rounded-xl space-y-3 bg-muted/10">
               <h4 className="font-bold text-sm">Create a Seat Pool</h4>
               {availableQuotas.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
@@ -278,13 +449,24 @@ export function ManageSeatPoolsDialog({
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <Label className="text-xs">Courses Sharing This Pool</Label>
-                    <CourseCheckboxList
-                      courses={activeCycleCourses}
-                      selected={selectedCourseIds}
-                      onToggle={toggleNewCourse}
-                    />
+                    {!selectedQuotaId ? (
+                      <p className="text-xs text-muted-foreground">
+                        Select a quota first.
+                      </p>
+                    ) : !selectedQuotaCourses.hasQuotaConfig ? (
+                      <p className="text-xs text-muted-foreground">
+                        No courses have this quota configured in Academics
+                        Catalog → Quotas &amp; Fees yet. Add it there first.
+                      </p>
+                    ) : (
+                      <CourseChipPicker
+                        courses={selectedQuotaCourses.courses}
+                        selected={selectedCourseIds}
+                        onToggle={toggleNewCourse}
+                      />
+                    )}
                   </div>
                   <Button
                     type="button"
@@ -317,87 +499,25 @@ export function ManageSeatPoolsDialog({
                   this application form.
                 </div>
               ) : (
-                activePools.map((pool) => {
-                  const draft = getDraft(pool);
-                  const dirty = isDirty(pool);
-                  return (
-                    <div
-                      key={pool.id}
-                      className="border p-4 rounded-xl space-y-3 bg-card"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">
-                            {pool.quotaName}
-                          </span>
-                          <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {BUCKET_LABELS[pool.bucketType]}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {pool.openSeats}/{pool.totalSeats} open
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget(pool)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="grid gap-3 md:grid-cols-3 items-end">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Total Seats</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={draft.totalSeats}
-                            onChange={(e) =>
-                              setDraft(pool, { totalSeats: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div className="md:col-span-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={dirty ? "default" : "outline"}
-                            disabled={!dirty}
-                            onClick={() => handleSave(pool)}
-                          >
-                            Save Changes
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs">
-                          Courses Sharing This Pool
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2 max-h-28 overflow-y-auto border rounded-md p-2">
-                          {activeCycleCourses.map((c) => (
-                            <label
-                              key={c.courseId}
-                              className="flex items-center gap-2 text-xs cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={draft.courseIds.has(c.courseId)}
-                                onChange={() =>
-                                  toggleDraftCourse(pool, c.courseId)
-                                }
-                              />
-                              {c.courseName} ({c.courseCode})
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                activePools.map((pool) => (
+                  <SeatPoolCard
+                    key={pool.id}
+                    pool={pool}
+                    activeCycleCourses={activeCycleCourses}
+                    isExpanded={expandedIds.has(pool.id)}
+                    draft={getDraft(pool)}
+                    dirty={isDirty(pool)}
+                    onToggleExpand={() => toggleExpanded(pool.id)}
+                    onDelete={() => setDeleteTarget(pool)}
+                    onTotalSeatsChange={(value) =>
+                      setDraft(pool, { totalSeats: value })
+                    }
+                    onToggleCourse={(courseId) =>
+                      toggleDraftCourse(pool, courseId)
+                    }
+                    onSave={() => handleSave(pool)}
+                  />
+                ))
               )}
             </div>
           </div>
