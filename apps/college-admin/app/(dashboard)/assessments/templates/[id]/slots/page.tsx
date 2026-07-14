@@ -7,10 +7,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Ban } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Ban, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,9 +42,8 @@ import {
   useAssessmentSlots,
   useCreateAssessmentSlot,
   useUpdateAssessmentSlot,
-  useCancelAssessmentSlot,
+  useToggleAssessmentSlot,
 } from "@/hooks/use-assessments";
-import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { AssessmentSlotItem, SlotType } from "@beaconu/types";
 
 const slotSchema = z
@@ -51,7 +51,10 @@ const slotSchema = z
     slot_type: z.enum(["window", "fixed"]),
     window_start: z.string().trim().min(1, "Start is required"),
     window_end: z.string().trim().min(1, "End is required"),
-    max_capacity: z.coerce.number().int().positive().optional(),
+    max_capacity: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : v),
+      z.coerce.number().int().positive().optional(),
+    ),
   })
   .refine((data) => data.window_end > data.window_start, {
     message: "End must be after start",
@@ -71,7 +74,7 @@ const STATUS_VARIANT: Record<
   "default" | "outline" | "secondary"
 > = {
   active: "default",
-  cancelled: "secondary",
+  inactive: "secondary",
 };
 
 function toDatetimeLocal(iso: string): string {
@@ -94,16 +97,19 @@ export default function AssessmentSlotsPage() {
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AssessmentSlotItem | null>(null);
-  const [cancelling, setCancelling] = useState<AssessmentSlotItem | null>(null);
 
   const { data: template } = useAssessmentTemplate(templateId);
   const { data: slots, isLoading } = useAssessmentSlots(templateId);
+  const activeSlot = slots?.find((s) => s.status === "active");
   const { mutate: create, isPending: isCreating } =
     useCreateAssessmentSlot(templateId);
   const { mutate: update, isPending: isUpdating } =
     useUpdateAssessmentSlot(templateId);
-  const { mutate: cancel, isPending: isCancelling } =
-    useCancelAssessmentSlot(templateId);
+  const {
+    mutate: toggle,
+    isPending: isToggling,
+    variables: toggleVars,
+  } = useToggleAssessmentSlot(templateId);
 
   const form = useForm<SlotFormValues>({
     resolver: zodResolver(slotSchema),
@@ -155,14 +161,15 @@ export default function AssessmentSlotsPage() {
     }
   }
 
-  function confirmCancel() {
-    if (!cancelling) return;
-    cancel(cancelling.id, {
-      onSuccess: () => {
-        toast.success("Slot cancelled");
-        setCancelling(null);
+  function handleToggle(slot: AssessmentSlotItem, isActive: boolean) {
+    toggle(
+      { id: slot.id, isActive },
+      {
+        onSuccess: () => {
+          toast.success(isActive ? "Slot activated" : "Slot deactivated");
+        },
       },
-    });
+    );
   }
 
   return (
@@ -200,6 +207,14 @@ export default function AssessmentSlotsPage() {
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Slot" : "Add Slot"}</DialogTitle>
             </DialogHeader>
+            {!editing && activeSlot && (
+              <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                A template can only have one active slot at a time — creating
+                this will automatically cancel the current active slot (
+                {formatDateTime(activeSlot.windowStart)} –{" "}
+                {formatDateTime(activeSlot.windowEnd)}).
+              </p>
+            )}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="slot_type">Slot Type</Label>
@@ -222,13 +237,17 @@ export default function AssessmentSlotsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="window_start">Starts At</Label>
-                  <Input
+                  <DateTimePicker
                     id="window_start"
-                    type="datetime-local"
-                    {...form.register("window_start")}
+                    value={form.watch("window_start")}
+                    onChange={(v) =>
+                      form.setValue("window_start", v, {
+                        shouldValidate: true,
+                      })
+                    }
                   />
                   {form.formState.errors.window_start && (
                     <p className="text-xs text-destructive">
@@ -238,10 +257,14 @@ export default function AssessmentSlotsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="window_end">Ends At</Label>
-                  <Input
+                  <DateTimePicker
                     id="window_end"
-                    type="datetime-local"
-                    {...form.register("window_end")}
+                    value={form.watch("window_end")}
+                    onChange={(v) =>
+                      form.setValue("window_end", v, {
+                        shouldValidate: true,
+                      })
+                    }
                   />
                   {form.formState.errors.window_end && (
                     <p className="text-xs text-destructive">
@@ -352,8 +375,8 @@ export default function AssessmentSlotsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4 pr-6 text-right">
-                      {slot.status === "active" && (
-                        <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2">
+                        {slot.status === "active" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -363,17 +386,31 @@ export default function AssessmentSlotsPage() {
                             <Pencil className="h-3.5 w-3.5" />
                             Edit
                           </Button>
+                        )}
+                        {slot.status === "active" ? (
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
-                            onClick={() => setCancelling(slot)}
+                            disabled={isToggling && toggleVars?.id === slot.id}
+                            onClick={() => handleToggle(slot, false)}
                           >
                             <Ban className="h-3.5 w-3.5" />
-                            Cancel
+                            Deactivate
                           </Button>
-                        </div>
-                      )}
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1.5 text-xs"
+                            disabled={isToggling && toggleVars?.id === slot.id}
+                            onClick={() => handleToggle(slot, true)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Activate
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -382,16 +419,6 @@ export default function AssessmentSlotsPage() {
           </Table>
         </div>
       </div>
-
-      <ConfirmDialog
-        open={!!cancelling}
-        onOpenChange={(v) => !v && setCancelling(null)}
-        title="Cancel slot?"
-        description="Students will no longer be able to be scheduled into this slot. This can't be undone from here."
-        confirmLabel="Cancel Slot"
-        onConfirm={confirmCancel}
-        isPending={isCancelling}
-      />
     </div>
   );
 }

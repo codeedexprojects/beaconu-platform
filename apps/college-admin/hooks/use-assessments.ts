@@ -25,7 +25,7 @@ import {
   getAssessmentSlots,
   createAssessmentSlot,
   updateAssessmentSlot,
-  cancelAssessmentSlot,
+  toggleAssessmentSlot,
 } from "@/lib/services/assessments.service";
 import type {
   CreateQuestionInput,
@@ -313,10 +313,11 @@ export function useUpdateAssessmentSlot(templateId: string) {
   });
 }
 
-export function useCancelAssessmentSlot(templateId: string) {
+export function useToggleAssessmentSlot(templateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => cancelAssessmentSlot(id),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      toggleAssessmentSlot(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.assessmentSlots(templateId),

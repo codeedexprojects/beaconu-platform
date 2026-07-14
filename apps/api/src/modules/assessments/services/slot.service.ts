@@ -55,11 +55,21 @@ export class SlotService {
     return SlotRepository.update(id, data);
   }
 
-  static async cancel(collegeId: string, id: string) {
+  static async setActive(collegeId: string, id: string, isActive: boolean) {
     const slot = await this.loadForCollege(id, collegeId);
-    if (slot.status === "cancelled") {
-      throw new ConflictError("Slot is already cancelled");
+    if (isActive && slot.status === "active") {
+      throw new ConflictError("Slot is already active");
     }
-    return SlotRepository.cancel(id);
+    if (!isActive && slot.status === "inactive") {
+      throw new ConflictError("Slot is already inactive");
+    }
+
+    if (isActive) {
+      // Only one active slot per template — activating this one
+      // deactivates whichever slot currently holds that spot.
+      await SlotRepository.deactivateOtherActive(slot.templateId, id);
+    }
+
+    return SlotRepository.setActive(id, isActive);
   }
 }

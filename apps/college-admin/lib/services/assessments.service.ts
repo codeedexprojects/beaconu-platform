@@ -238,8 +238,9 @@ export async function updateAssessmentSlot(
   return api.patch(`${BASE}/slots/${id}`, data);
 }
 
-export async function cancelAssessmentSlot(
+export async function toggleAssessmentSlot(
   id: string,
+  isActive: boolean,
 ): Promise<AssessmentSlotItem> {
-  return api.patch(`${BASE}/slots/${id}/cancel`, {});
+  return api.patch(`${BASE}/slots/${id}/toggle`, { is_active: isActive });
 }

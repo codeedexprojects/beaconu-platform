@@ -17,6 +17,7 @@ import studentDocumentsRoutes from "@/modules/documents/routes/student.routes";
 import studentAntiRaggingRoutes from "@/modules/anti-ragging/routes/student.routes";
 import studentWishlistRoutes from "@/modules/wishlist/routes/student.routes";
 import studentAdmissionCycleRoutes from "@/modules/admissions/routes/student.routes";
+import studentAssessmentRoutes from "@/modules/assessments/routes/student.routes";
 
 const router: Router = Router();
 
@@ -39,6 +40,7 @@ router.use("/documents", studentDocumentsRoutes);
 router.use("/anti-ragging-complaints", studentAntiRaggingRoutes);
 router.use("/wishlist", studentWishlistRoutes);
 router.use("/application-forms", studentAdmissionCycleRoutes);
+router.use("/assessments", studentAssessmentRoutes);
 router.use("/", studentProfileRoutes);
 
 export default router;

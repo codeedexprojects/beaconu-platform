@@ -130,15 +130,27 @@ export const createSlotSchema = z.object({
   slot_type: z.enum(["window", "fixed"]),
   window_start: z.coerce.date(),
   window_end: z.coerce.date(),
-  max_capacity: z.coerce.number().int().positive().optional(),
+  max_capacity: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.coerce.number().int().positive().optional(),
+  ),
 });
 
 export const updateSlotSchema = z.object({
   slot_type: z.enum(["window", "fixed"]).optional(),
   window_start: z.coerce.date().optional(),
   window_end: z.coerce.date().optional(),
-  max_capacity: z.coerce.number().int().positive().optional(),
+  max_capacity: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.coerce.number().int().positive().optional(),
+  ),
 });
 
 export type CreateSlotBody = z.infer<typeof createSlotSchema>;
 export type UpdateSlotBody = z.infer<typeof updateSlotSchema>;
+
+export const toggleSlotSchema = z.object({
+  is_active: z.boolean(),
+});
+
+export type ToggleSlotBody = z.infer<typeof toggleSlotSchema>;
