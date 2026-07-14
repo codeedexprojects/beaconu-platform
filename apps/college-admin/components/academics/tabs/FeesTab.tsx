@@ -137,21 +137,6 @@ export function FeesTab({
       <div className="space-y-3 border p-4 rounded-xl bg-muted/10">
         <h4 className="font-bold text-sm">Fee Structure PDF</h4>
         <div className="space-y-1">
-          <Label className="text-xs">PDF URL</Label>
-          <Input
-            placeholder="https://example.com/fee-structure.pdf"
-            value={getActiveTabPayload().fee_structure_pdf?.url || ""}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                fee_structure_pdf: {
-                  ...(getActiveTabPayload().fee_structure_pdf || {}),
-                  url: e.target.value,
-                },
-              })
-            }
-          />
-        </div>
-        <div className="space-y-1">
           <Label className="text-xs">Upload PDF File</Label>
           <Input
             type="file"
@@ -159,6 +144,11 @@ export function FeesTab({
             disabled={uploadingFeePdf}
             onChange={(e) => handleFeePdfUpload(e.target.files?.[0] ?? null)}
           />
+          {getActiveTabPayload().fee_structure_pdf?.url && (
+            <p className="text-xs text-muted-foreground truncate">
+              Current file: {getActiveTabPayload().fee_structure_pdf?.url}
+            </p>
+          )}
         </div>
       </div>
 

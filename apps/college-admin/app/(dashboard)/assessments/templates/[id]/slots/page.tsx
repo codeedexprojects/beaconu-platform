@@ -50,16 +50,25 @@ const slotSchema = z
   .object({
     slot_type: z.enum(["window", "fixed"]),
     window_start: z.string().trim().min(1, "Start is required"),
-    window_end: z.string().trim().min(1, "End is required"),
+    // Only required for "window" — a "fixed" slot's end time is derived
+    // server-side from window_start + the template's duration.
+    window_end: z.string().trim().optional(),
     max_capacity: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
       z.coerce.number().int().positive().optional(),
     ),
   })
-  .refine((data) => data.window_end > data.window_start, {
-    message: "End must be after start",
+  .refine((data) => data.slot_type !== "window" || !!data.window_end, {
+    message: "End is required",
     path: ["window_end"],
-  });
+  })
+  .refine(
+    (data) =>
+      data.slot_type !== "window" ||
+      !data.window_end ||
+      data.window_end > data.window_start,
+    { message: "End must be after start", path: ["window_end"] },
+  );
 type SlotFormValues = z.infer<typeof slotSchema>;
 
 const EMPTY_VALUES: SlotFormValues = {
@@ -137,7 +146,10 @@ export default function AssessmentSlotsPage() {
     const payload = {
       slot_type: values.slot_type,
       window_start: new Date(values.window_start).toISOString(),
-      window_end: new Date(values.window_end).toISOString(),
+      window_end:
+        values.slot_type === "window" && values.window_end
+          ? new Date(values.window_end).toISOString()
+          : undefined,
       max_capacity: values.max_capacity,
     };
 
@@ -239,7 +251,11 @@ export default function AssessmentSlotsPage() {
               </div>
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="window_start">Starts At</Label>
+                  <Label htmlFor="window_start">
+                    {form.watch("slot_type") === "fixed"
+                      ? "Starts At (duration comes from the template)"
+                      : "Starts At"}
+                  </Label>
                   <DateTimePicker
                     id="window_start"
                     value={form.watch("window_start")}
@@ -255,23 +271,25 @@ export default function AssessmentSlotsPage() {
                     </p>
                   )}
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="window_end">Ends At</Label>
-                  <DateTimePicker
-                    id="window_end"
-                    value={form.watch("window_end")}
-                    onChange={(v) =>
-                      form.setValue("window_end", v, {
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                  {form.formState.errors.window_end && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.window_end.message}
-                    </p>
-                  )}
-                </div>
+                {form.watch("slot_type") === "window" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="window_end">Ends At</Label>
+                    <DateTimePicker
+                      id="window_end"
+                      value={form.watch("window_end") ?? ""}
+                      onChange={(v) =>
+                        form.setValue("window_end", v, {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {form.formState.errors.window_end && (
+                      <p className="text-xs text-destructive">
+                        {form.formState.errors.window_end.message}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="max_capacity">

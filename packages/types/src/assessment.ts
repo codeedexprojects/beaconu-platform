@@ -226,7 +226,9 @@ export interface AssessmentSlotItem {
 export interface CreateSlotInput {
   slot_type: SlotType;
   window_start: string;
-  window_end: string;
+  // Only required for "window" — a "fixed" slot's end time is derived
+  // server-side from window_start + the template's duration.
+  window_end?: string;
   max_capacity?: number;
 }
 

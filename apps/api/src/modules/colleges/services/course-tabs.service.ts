@@ -792,22 +792,22 @@ function transformPublicFeeTab(raw: Record<string, unknown>) {
           },
           one_time_payable_fees: {
             title: "One-time Payable Fees",
-            icon: "https://cdn.iconsdb.example.com/icons/wallet-orange.png",
+            icon: "",
             items: mapItems(detail.one_time_payable_fees),
           },
           additional_fees: {
             title: "Additional Fees",
-            icon: "https://cdn.iconsdb.example.com/icons/document-orange.png",
+            icon: "",
             items: mapItems(detail.additional_fees),
           },
           deadlines_and_installments: {
             title: "Deadlines & Installments",
-            icon: "https://cdn.iconsdb.example.com/icons/calendar-orange.png",
+            icon: "",
             items: installments,
           },
           fees_summary: {
             title: "Fees Summary",
-            icon: "https://cdn.iconsdb.example.com/icons/document-text-orange.png",
+            icon: "",
             full_course_fee: {
               label: "Full course fee",
               amount: asText(summary.full_course_fee),
@@ -828,27 +828,27 @@ function transformPublicFeeTab(raw: Record<string, unknown>) {
     tab: "fees",
     title: "Tuition Fees",
     fee_structure_pdf: {
-      icon: "https://cdn.iconsdb.example.com/icons/pdf-document-red.png",
+      icon: "",
       label: "Download Fee Structure",
       subtitle: `Detailed breakdown PDF${pdfSize ? ` (${pdfSize})` : ""}`,
       size: pdfSize,
-      download_icon: "https://cdn.iconsdb.example.com/icons/download-gray.png",
+      download_icon: "",
       url: asText(pdfRaw.url),
     },
     fee_details: feeDetails,
     whats_included: {
       title: "WHAT'S INCLUDED",
-      icon: "https://cdn.iconsdb.example.com/icons/check-circle-green.png",
+      icon: "",
       items: Array.isArray(raw.whats_included) ? raw.whats_included : [],
     },
     whats_excluded: {
       title: "WHAT'S EXCLUDED",
-      icon: "https://cdn.iconsdb.example.com/icons/x-circle-red.png",
+      icon: "",
       items: Array.isArray(raw.whats_excluded) ? raw.whats_excluded : [],
     },
     refund_policy: {
       title: "Refund Policy",
-      icon: "https://cdn.iconsdb.example.com/icons/info-circle-gray.png",
+      icon: "",
       items: Array.isArray(raw.refund_policy) ? raw.refund_policy : [],
     },
   };
@@ -891,7 +891,7 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
     title: asText(meritRaw.title) || "Merit Scholarship",
     calculator: {
       title: asText(calcRaw.title) || "Scholarship Calculator",
-      icon: "https://cdn.iconsdb.example.com/icons/calculator-orange.png",
+      icon: "",
       port_entries: transformedPortEntries,
     },
   };
@@ -928,9 +928,7 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
 
     const detailsCta = {
       label: asText(detailsCtaRaw.label) || "SHOW LESS",
-      icon:
-        asText(detailsCtaRaw.icon) ||
-        "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
+      icon: asText(detailsCtaRaw.icon) || "",
     };
 
     return {
@@ -946,12 +944,12 @@ function transformPublicFinancialAidTab(raw: Record<string, unknown>) {
           items: criteria,
         },
         scholarship: {
-          icon: "https://cdn.iconsdb.example.com/icons/star-purple.png",
+          icon: "",
           label: "SCHOLARSHIP",
           amount: scholarshipAmt === "₹" ? "" : scholarshipAmt,
         },
         net_payable: {
-          icon: "https://cdn.iconsdb.example.com/icons/document-teal.png",
+          icon: "",
           label: "NET PAYABLE",
           amount: netPayableAmt === "₹" ? "" : netPayableAmt,
         },
@@ -1142,20 +1140,15 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
       ? (raw.review_categories as Record<string, unknown>[])
       : [];
   const categoryIcons: Record<string, string> = {
-    "Faculty & Course":
-      "https://cdn.iconsdb.example.com/icons/book-faculty-orange.png",
-    "Campus Life":
-      "https://cdn.iconsdb.example.com/icons/graduation-cap-orange.png",
-    Infrastructure: "https://cdn.iconsdb.example.com/icons/building-orange.png",
-    Placements: "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+    "Faculty & Course": "",
+    "Campus Life": "",
+    Infrastructure: "",
+    Placements: "",
   };
   const categoryRatingItems = categoryRatings.map((item) => {
     const label = asText(item.label) || asText(item.name);
     return {
-      icon:
-        asText(item.icon) ||
-        categoryIcons[label] ||
-        "https://cdn.iconsdb.example.com/icons/star-orange.png",
+      icon: asText(item.icon) || categoryIcons[label] || "",
       label,
       rating: asNumber(item.rating) || asNumber(item.average_rating) || 4,
     };
@@ -1168,10 +1161,7 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
   const recentReviewItems = reviews.slice(0, 5).map((r, idx) => ({
     id: asText(r.id) || `review_${String(idx + 1).padStart(3, "0")}`,
     reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
-    reviewer_avatar:
-      asText(r.avatar) ||
-      asText(r.reviewer_avatar) ||
-      "https://cdn.iconsdb.example.com/icons/avatar-placeholder-orange.png",
+    reviewer_avatar: asText(r.avatar) || asText(r.reviewer_avatar) || "",
     date: asText(r.date),
     rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
     comment: asText(r.comment),
@@ -2253,8 +2243,7 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
       legal_and_documentation: {
         items: legalDocs.map((doc) => ({
           title: asText(doc.title),
-          download_icon:
-            "https://cdn.iconsdb.example.com/icons/download-gray.png",
+          download_icon: "",
           url: asText(doc.url),
         })),
       },
@@ -2335,9 +2324,7 @@ function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
     },
     work_experience: {
       items: workExp.map((item) => ({
-        icon:
-          asText(item.icon) ||
-          "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+        icon: asText(item.icon) || "",
         label: asText(item.label),
         subtitle: asText(item.description) || asText(item.subtitle),
         percent: asNumber(item.percent),
@@ -2345,9 +2332,7 @@ function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
     },
     international_presence: {
       items: intlPresence.map((item) => ({
-        flag:
-          asText(item.flag) ||
-          "https://cdn.flagicons.example.com/flags/default.png",
+        flag: asText(item.flag) || "",
         country: asText(item.country),
         percent: asNumber(item.percent),
       })),
@@ -3021,10 +3006,7 @@ export class CourseTabsService {
     const reviews = pageSlice.map((r, idx) => ({
       id: asText(r.id) || `review_${String(start + idx + 1).padStart(3, "0")}`,
       reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
-      reviewer_avatar:
-        asText(r.avatar) ||
-        asText(r.reviewer_avatar) ||
-        "https://cdn.iconsdb.example.com/icons/avatar-placeholder-orange.png",
+      reviewer_avatar: asText(r.avatar) || asText(r.reviewer_avatar) || "",
       date: asText(r.date),
       rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
       comment: asText(r.comment),

@@ -311,20 +311,8 @@ export function FacilitiesTimingsTab({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Link / URL (Upload or URL)</Label>
+            <Label className="text-xs">Certification File</Label>
             <div className="flex gap-2">
-              <Input
-                placeholder="https://example.com/certifications/tally-prime"
-                value={getActiveTabPayload().bonus_certification?.link || ""}
-                onChange={(e) =>
-                  updateActiveTabPayload({
-                    bonus_certification: {
-                      ...(getActiveTabPayload().bonus_certification || {}),
-                      link: e.target.value,
-                    },
-                  })
-                }
-              />
               <Input
                 type="file"
                 accept="application/pdf,image/jpeg,image/png,image/webp"

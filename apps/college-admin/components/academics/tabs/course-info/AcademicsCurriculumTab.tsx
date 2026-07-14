@@ -26,19 +26,7 @@ export function AcademicsCurriculumTab({
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <Label>Brochure Link</Label>
-          <Input
-            placeholder="https://example.com/brochure.pdf"
-            value={getActiveTabPayload().curriculum?.brochure_link || ""}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                curriculum: {
-                  ...(getActiveTabPayload().curriculum || {}),
-                  brochure_link: e.target.value,
-                },
-              })
-            }
-          />
+          <Label>Brochure</Label>
           <Input
             type="file"
             accept="application/pdf,image/jpeg,image/png,image/webp"

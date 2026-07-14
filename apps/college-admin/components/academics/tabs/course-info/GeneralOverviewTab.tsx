@@ -280,28 +280,8 @@ export function GeneralOverviewTab({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Image (Upload or URL)</Label>
+                  <Label className="text-xs">Image</Label>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder="Image URL"
-                      value={item.image || ""}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().accreditations?.items ||
-                            []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          image: e.target.value,
-                        };
-                        updateActiveTabPayload({
-                          accreditations: {
-                            ...(getActiveTabPayload().accreditations || {}),
-                            items: next,
-                          },
-                        });
-                      }}
-                    />
                     <Input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/svg+xml"
@@ -333,30 +313,8 @@ export function GeneralOverviewTab({
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs">
-                    Certificate (Upload PDF or URL)
-                  </Label>
+                  <Label className="text-xs">Certificate (PDF)</Label>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder="Document URL"
-                      value={item.document || ""}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().accreditations?.items ||
-                            []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          document: e.target.value,
-                        };
-                        updateActiveTabPayload({
-                          accreditations: {
-                            ...(getActiveTabPayload().accreditations || {}),
-                            items: next,
-                          },
-                        });
-                      }}
-                    />
                     <Input
                       type="file"
                       accept="application/pdf"

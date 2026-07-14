@@ -254,19 +254,8 @@ export function PlacementsTab({
                       />
                     </div>
                     <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">
-                        Company Logo (Upload or URL)
-                      </Label>
+                      <Label className="text-xs">Company Logo</Label>
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="https://cdn.example.com/logo.png"
-                          value={item.company_logo || ""}
-                          onChange={(e) =>
-                            updateTabListItem("notable_offers.items", idx, {
-                              company_logo: e.target.value,
-                            })
-                          }
-                        />
                         <Input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,image/svg+xml"
@@ -650,23 +639,8 @@ export function PlacementsTab({
                       />
                     </div>
                     <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">
-                        Company Logo (Upload or URL)
-                      </Label>
+                      <Label className="text-xs">Company Logo</Label>
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="https://cdn.example.com/logo.png"
-                          value={item.company_logo || ""}
-                          onChange={(e) =>
-                            updateTabListItem(
-                              "all_company_statistics.rows",
-                              idx,
-                              {
-                                company_logo: e.target.value,
-                              },
-                            )
-                          }
-                        />
                         <Input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,image/svg+xml"
@@ -1067,19 +1041,8 @@ export function PlacementsTab({
                       />
                     </div>
                     <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">
-                        Student Avatar (Upload or URL)
-                      </Label>
+                      <Label className="text-xs">Student Avatar</Label>
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="https://cdn.example.com/photo.jpg"
-                          value={item.student_avatar || ""}
-                          onChange={(e) =>
-                            updateTabListItem("student_success.items", idx, {
-                              student_avatar: e.target.value,
-                            })
-                          }
-                        />
                         <Input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
@@ -1101,19 +1064,8 @@ export function PlacementsTab({
                       </div>
                     </div>
                     <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">
-                        Thumbnail (Upload or URL)
-                      </Label>
+                      <Label className="text-xs">Thumbnail</Label>
                       <div className="flex gap-2">
-                        <Input
-                          placeholder="https://cdn.example.com/thumb.jpg"
-                          value={item.thumbnail || ""}
-                          onChange={(e) =>
-                            updateTabListItem("student_success.items", idx, {
-                              thumbnail: e.target.value,
-                            })
-                          }
-                        />
                         <Input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
@@ -1152,23 +1104,8 @@ export function PlacementsTab({
                         </>
                       ) : (
                         <>
-                          <Label className="text-xs">
-                            MP4 Video (Upload or URL)
-                          </Label>
+                          <Label className="text-xs">MP4 Video</Label>
                           <div className="flex gap-2">
-                            <Input
-                              placeholder="https://cdn.example.com/video.mp4"
-                              value={item.video_url || ""}
-                              onChange={(e) =>
-                                updateTabListItem(
-                                  "student_success.items",
-                                  idx,
-                                  {
-                                    video_url: e.target.value,
-                                  },
-                                )
-                              }
-                            />
                             <Input
                               type="file"
                               accept="video/mp4"
@@ -1225,22 +1162,8 @@ export function PlacementsTab({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1">
-            <Label className="text-xs">Report File (Upload or URL)</Label>
+            <Label className="text-xs">Report File</Label>
             <div className="flex gap-2">
-              <Input
-                placeholder="https://cdn.example.com/placement-report-2024.pdf"
-                value={
-                  (getActiveTabPayload().download_report as any)?.url || ""
-                }
-                onChange={(e) =>
-                  updateActiveTabPayload({
-                    download_report: {
-                      ...((getActiveTabPayload().download_report as any) || {}),
-                      url: e.target.value,
-                    },
-                  })
-                }
-              />
               <Input
                 type="file"
                 accept="application/pdf,image/jpeg,image/png,image/webp"

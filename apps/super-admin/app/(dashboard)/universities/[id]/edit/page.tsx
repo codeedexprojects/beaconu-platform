@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { FileUpload } from "@/components/ui/file-upload";
 import { VideoListEditor } from "@/components/universities/video-list-editor";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -564,12 +565,12 @@ export default function EditUniversityPage() {
             key={`${key}-${index}`}
             className="grid gap-2 md:grid-cols-2 xl:grid-cols-5"
           >
-            <Input
+            <ImageUpload
               value={member.userPhotoUrl}
-              onChange={(e) =>
-                updateMember(key, index, "userPhotoUrl", e.target.value)
-              }
-              placeholder="User photo URL"
+              onChange={(url) => updateMember(key, index, "userPhotoUrl", url)}
+              context={`universities/governance/${key}`}
+              aspect={1}
+              className="md:col-span-1"
             />
             <Input
               value={member.name}
@@ -855,9 +856,9 @@ export default function EditUniversityPage() {
                           key={`edit-accolade-${index}`}
                           className="grid gap-2 md:grid-cols-3 xl:grid-cols-5"
                         >
-                          <Input
+                          <ImageUpload
                             value={accolade.image}
-                            onChange={(e) =>
+                            onChange={(url) =>
                               setMetaForm((prev) => ({
                                 ...prev,
                                 overview: {
@@ -865,13 +866,13 @@ export default function EditUniversityPage() {
                                   accolades: prev.overview.accolades.map(
                                     (item, i) =>
                                       i === index
-                                        ? { ...item, image: e.target.value }
+                                        ? { ...item, image: url }
                                         : item,
                                   ),
                                 },
                               }))
                             }
-                            placeholder="Accolades image URL"
+                            context={`universities/overview/accolades-${index}`}
                           />
                           <Input
                             value={accolade.description}
@@ -1073,18 +1074,18 @@ export default function EditUniversityPage() {
                       }
                       placeholder="Title"
                     />
-                    <Input
+                    <FileUpload
                       value={govForm.organizational_organogram.fileUrl}
-                      onChange={(e) =>
+                      onChange={(url) =>
                         setGovForm((prev) => ({
                           ...prev,
                           organizational_organogram: {
                             ...prev.organizational_organogram,
-                            fileUrl: e.target.value,
+                            fileUrl: url,
                           },
                         }))
                       }
-                      placeholder="File URL (PDF)"
+                      context="universities/governance/organogram"
                     />
                     <Input
                       value={govForm.organizational_organogram.description}

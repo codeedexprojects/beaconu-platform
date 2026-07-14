@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export function FacultyDirectoryTab({
   payload,
@@ -130,15 +131,11 @@ export function FacultyDirectoryTab({
                   />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <Label className="text-xs">Photo URL</Label>
-                  <Input
-                    placeholder="https://cdn.example.com/photos/faculty.jpg"
+                  <Label className="text-xs">Photo</Label>
+                  <ImageUpload
                     value={f.photo || ""}
-                    onChange={(e) =>
-                      updateFaculty({
-                        photo: e.target.value,
-                      })
-                    }
+                    onChange={(url) => updateFaculty({ photo: url })}
+                    context={`faculty-directory/photo-${fi}`}
                   />
                 </div>
               </div>

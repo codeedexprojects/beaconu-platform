@@ -8,7 +8,7 @@ export class SlotRepository {
   static async create(
     collegeId: string,
     templateId: string,
-    data: CreateSlotBody,
+    data: Omit<CreateSlotBody, "window_end"> & { window_end: Date },
   ) {
     return prisma.$transaction(async (tx) => {
       await tx.assessmentSlot.updateMany({

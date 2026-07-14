@@ -118,7 +118,7 @@ export function FinancialAidTab({
         expanded: true,
         details_cta: {
           label: "SHOW LESS",
-          icon: "https://cdn.iconsdb.example.com/icons/chevron-up-gray.png",
+          icon: "",
         },
         details: {
           eligibility_criteria: [],
