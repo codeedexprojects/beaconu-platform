@@ -20,11 +20,12 @@ import {
   getAssessmentPapers,
   getAssessmentPaper,
   approveAssessmentPaper,
+  renameAssessmentPaper,
   deleteAssessmentPaper,
   getAssessmentSlots,
   createAssessmentSlot,
   updateAssessmentSlot,
-  cancelAssessmentSlot,
+  toggleAssessmentSlot,
 } from "@/lib/services/assessments.service";
 import type {
   CreateQuestionInput,
@@ -242,6 +243,22 @@ export function useApproveAssessmentPaper(templateId: string) {
   });
 }
 
+export function useRenameAssessmentPaper(templateId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      renameAssessmentPaper(id, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.assessmentPapers(templateId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
 export function useDeleteAssessmentPaper(templateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -296,10 +313,11 @@ export function useUpdateAssessmentSlot(templateId: string) {
   });
 }
 
-export function useCancelAssessmentSlot(templateId: string) {
+export function useToggleAssessmentSlot(templateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => cancelAssessmentSlot(id),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      toggleAssessmentSlot(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.assessmentSlots(templateId),

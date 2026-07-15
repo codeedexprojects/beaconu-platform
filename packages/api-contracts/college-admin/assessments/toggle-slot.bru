@@ -1,0 +1,31 @@
+meta {
+  name: Toggle Assessment Slot
+  type: http
+  seq: 26
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/slots/{{assessmentSlotId}}/toggle
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "is_active": false
+  }
+}
+
+docs {
+  Reversible active/inactive toggle (status -> active | inactive), same
+  pattern as the section enable/disable toggle — not a permanent cancel.
+  Setting is_active true deactivates any other active slot for the same
+  template first (only one active slot per template). Toggling to a
+  status the slot is already in returns a 409 ConflictError. Row is
+  always preserved, never deleted.
+}

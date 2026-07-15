@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PercentTotalBadge } from "@/components/academics/shared/PercentTotalBadge";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export function DemographicsTab({
   payload,
@@ -290,10 +291,10 @@ export function DemographicsTab({
                   value={item.subtitle || ""}
                   onChange={(e) => updateWe({ subtitle: e.target.value })}
                 />
-                <Input
-                  placeholder="Icon URL"
+                <ImageUpload
                   value={item.icon || ""}
-                  onChange={(e) => updateWe({ icon: e.target.value })}
+                  onChange={(url) => updateWe({ icon: url })}
+                  context={`demographics/work-experience-icon-${idx}`}
                 />
               </div>
             );
@@ -372,18 +373,17 @@ export function DemographicsTab({
                   });
                 }}
               />
-              <Input
+              <ImageUpload
                 className="flex-1"
-                placeholder="Flag URL"
                 value={item.flag || ""}
-                onChange={(e) => {
+                onChange={(url) => {
                   const next = [
                     ...(getActiveTabPayload().international_presence?.items ||
                       []),
                   ];
                   next[idx] = {
                     ...next[idx],
-                    flag: e.target.value,
+                    flag: url,
                   };
                   updateActiveTabPayload({
                     international_presence: {
@@ -392,6 +392,7 @@ export function DemographicsTab({
                     },
                   });
                 }}
+                context={`demographics/international-flag-${idx}`}
               />
               <Button
                 type="button"

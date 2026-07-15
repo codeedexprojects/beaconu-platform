@@ -13,6 +13,13 @@ export class SlotService {
     }
   }
 
+  private static computeFixedWindowEnd(
+    windowStart: Date,
+    totalDurationMins: number,
+  ): Date {
+    return new Date(windowStart.getTime() + totalDurationMins * 60_000);
+  }
+
   static async create(
     collegeId: string,
     templateId: string,
@@ -26,9 +33,20 @@ export class SlotService {
       throw new ConflictError("Activate the template before scheduling slots");
     }
 
-    this.validateWindow(data.window_start, data.window_end);
+    const windowEnd =
+      data.slot_type === "fixed"
+        ? this.computeFixedWindowEnd(
+            data.window_start,
+            template.totalDurationMins,
+          )
+        : data.window_end!;
 
-    return SlotRepository.create(collegeId, templateId, data);
+    this.validateWindow(data.window_start, windowEnd);
+
+    return SlotRepository.create(collegeId, templateId, {
+      ...data,
+      window_end: windowEnd,
+    });
   }
 
   static async listByTemplate(collegeId: string, templateId: string) {
@@ -46,20 +64,44 @@ export class SlotService {
   static async update(collegeId: string, id: string, data: UpdateSlotBody) {
     const existing = await this.loadForCollege(id, collegeId);
 
+    const slotType = data.slot_type ?? existing.slotType;
     const start = data.window_start ?? existing.windowStart;
-    const end = data.window_end ?? existing.windowEnd;
-    if (data.window_start !== undefined || data.window_end !== undefined) {
+
+    let end = data.window_end ?? existing.windowEnd;
+    if (
+      slotType === "fixed" &&
+      (data.window_start !== undefined || data.slot_type === "fixed")
+    ) {
+      const template = await TemplateRepository.findById(existing.templateId);
+      end = this.computeFixedWindowEnd(start, template!.totalDurationMins);
+    }
+
+    if (
+      data.window_start !== undefined ||
+      data.window_end !== undefined ||
+      end !== existing.windowEnd
+    ) {
       this.validateWindow(start, end);
     }
 
-    return SlotRepository.update(id, data);
+    return SlotRepository.update(id, { ...data, window_end: end });
   }
 
-  static async cancel(collegeId: string, id: string) {
+  static async setActive(collegeId: string, id: string, isActive: boolean) {
     const slot = await this.loadForCollege(id, collegeId);
-    if (slot.status === "cancelled") {
-      throw new ConflictError("Slot is already cancelled");
+    if (isActive && slot.status === "active") {
+      throw new ConflictError("Slot is already active");
     }
-    return SlotRepository.cancel(id);
+    if (!isActive && slot.status === "inactive") {
+      throw new ConflictError("Slot is already inactive");
+    }
+
+    if (isActive) {
+      // Only one active slot per template — activating this one
+      // deactivates whichever slot currently holds that spot.
+      await SlotRepository.deactivateOtherActive(slot.templateId, id);
+    }
+
+    return SlotRepository.setActive(id, isActive);
   }
 }

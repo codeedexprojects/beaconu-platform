@@ -100,6 +100,8 @@ export interface QuestionListQuery {
   difficulty?: QuestionDifficulty;
   status?: QuestionStatus;
   course_id?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ToggleSectionInput {
@@ -184,6 +186,7 @@ export interface AssessmentPaperItem {
   id: string;
   templateId: string;
   paperCode: string;
+  name: string | null;
   generationType: PaperGenerationType;
   status: PaperStatus;
   generatedBy: string | null;
@@ -200,12 +203,13 @@ export interface ManualQuestionSelection {
 
 export interface GeneratePaperInput {
   generation_type: PaperGenerationType;
+  name?: string;
   course_id?: string;
   manual_selections?: ManualQuestionSelection[];
 }
 
 export type SlotType = "window" | "fixed";
-export type SlotStatus = "active" | "cancelled";
+export type SlotStatus = "active" | "inactive";
 
 export interface AssessmentSlotItem {
   id: string;
@@ -222,7 +226,9 @@ export interface AssessmentSlotItem {
 export interface CreateSlotInput {
   slot_type: SlotType;
   window_start: string;
-  window_end: string;
+  // Only required for "window" — a "fixed" slot's end time is derived
+  // server-side from window_start + the template's duration.
+  window_end?: string;
   max_capacity?: number;
 }
 
@@ -231,4 +237,37 @@ export interface UpdateSlotInput {
   window_start?: string;
   window_end?: string;
   max_capacity?: number;
+}
+
+export interface ToggleSlotInput {
+  is_active: boolean;
+}
+
+export interface AssessmentStartSectionSummary {
+  id: string;
+  name: string;
+  questionCount: number;
+  timeLimitMins: number;
+}
+
+export interface AssessmentStartInfo {
+  slot: {
+    id: string;
+    slotType: SlotType;
+    windowStart: string;
+    windowEnd: string;
+    status: SlotStatus;
+  };
+  template: {
+    id: string;
+    name: string;
+    totalQuestions: number;
+    totalMarks: number;
+    totalDurationMins: number;
+    negativeMarkingMode: NegativeMarkingMode;
+    instructions: TemplateInstructionItem[];
+    sections: AssessmentStartSectionSummary[];
+  };
+  isWithinWindow: boolean;
+  hasWindowPassed: boolean;
 }

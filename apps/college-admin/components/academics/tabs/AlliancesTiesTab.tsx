@@ -140,17 +140,8 @@ export function AlliancesTiesTab({
               </Select>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Cover Image URL (banner shown on partner page)
+                  Cover Image (banner shown on partner page)
                 </Label>
-                <Input
-                  placeholder="https://cdn.example.com/cover.png"
-                  value={a.cover_image || ""}
-                  onChange={(e) =>
-                    updateAlliance({
-                      cover_image: e.target.value,
-                    })
-                  }
-                />
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -170,17 +161,8 @@ export function AlliancesTiesTab({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">
-                  Logo URL (small emblem/icon)
+                  Logo (small emblem/icon)
                 </Label>
-                <Input
-                  placeholder="https://cdn.example.com/logo.png"
-                  value={a.logo || ""}
-                  onChange={(e) =>
-                    updateAlliance({
-                      logo: e.target.value,
-                    })
-                  }
-                />
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -310,15 +292,6 @@ export function AlliancesTiesTab({
                     />
                     <div className="space-y-1">
                       <Input
-                        placeholder="Document URL"
-                        value={doc.url || ""}
-                        onChange={(e) =>
-                          updateDoc({
-                            url: e.target.value,
-                          })
-                        }
-                      />
-                      <Input
                         type="file"
                         accept="application/pdf"
                         disabled={
@@ -423,15 +396,6 @@ export function AlliancesTiesTab({
                       }
                     />
                     <div className="space-y-1">
-                      <Input
-                        placeholder="Thumbnail image URL"
-                        value={act.image || ""}
-                        onChange={(e) =>
-                          updateActivity({
-                            image: e.target.value,
-                          })
-                        }
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"

@@ -1,0 +1,25 @@
+meta {
+  name: Get Assessment Start Info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/slots/{{assessmentSlotId}}/start
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Assessment starting page: returns the slot's timing window, the
+  template's duration/marks/section breakdown, and its instructions
+  (heading + description list) — everything the student sees before
+  clicking "Start". `isWithinWindow` tells the frontend whether the slot
+  can be started right now; `hasWindowPassed` distinguishes "too early"
+  from "missed it". Does not create or touch an AssessmentAttempt — that
+  comes later once Application/ApplicationCourse exists.
+}

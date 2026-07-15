@@ -56,6 +56,10 @@ router.patch(
   "/papers/:id/approve",
   CollegeAdminAssessmentController.approvePaper,
 );
+router.patch(
+  "/papers/:id/rename",
+  CollegeAdminAssessmentController.renamePaper,
+);
 router.delete("/papers/:id", CollegeAdminAssessmentController.deletePaper);
 
 router.get(
@@ -67,6 +71,6 @@ router.post(
   CollegeAdminAssessmentController.createSlot,
 );
 router.patch("/slots/:id", CollegeAdminAssessmentController.updateSlot);
-router.patch("/slots/:id/cancel", CollegeAdminAssessmentController.cancelSlot);
+router.patch("/slots/:id/toggle", CollegeAdminAssessmentController.toggleSlot);
 
 export default router;

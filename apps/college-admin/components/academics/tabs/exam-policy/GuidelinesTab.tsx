@@ -259,31 +259,8 @@ export function GuidelinesTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">
-                    Icon (Upload or URL, optional)
-                  </Label>
+                  <Label className="text-xs">Icon (optional)</Label>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder="https://cdn.example.com/icon.png"
-                      value={policy.icon || ""}
-                      onChange={(e) => {
-                        const policies = [
-                          ...(getActiveTabPayload().important_guidelines_banner
-                            ?.academic_policies || []),
-                        ];
-                        policies[pi] = {
-                          ...policies[pi],
-                          icon: e.target.value,
-                        };
-                        updateActiveTabPayload({
-                          important_guidelines_banner: {
-                            ...(getActiveTabPayload()
-                              .important_guidelines_banner || {}),
-                            academic_policies: policies,
-                          },
-                        });
-                      }}
-                    />
                     <Input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/svg+xml"

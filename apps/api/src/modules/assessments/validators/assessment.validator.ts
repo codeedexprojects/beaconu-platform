@@ -61,6 +61,8 @@ export const questionListQuerySchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   status: z.enum(["active", "inactive", "archived"]).optional(),
   course_id: z.string().trim().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
 export type ToggleSectionBody = z.infer<typeof toggleSectionSchema>;
@@ -111,25 +113,52 @@ const manualQuestionSelectionSchema = z.object({
 
 export const generatePaperSchema = z.object({
   generation_type: z.enum(["auto", "manual"]),
+  name: z.string().trim().min(1).max(255).optional(),
   course_id: z.string().trim().min(1).optional(),
   manual_selections: z.array(manualQuestionSelectionSchema).optional(),
 });
 
 export type GeneratePaperBody = z.infer<typeof generatePaperSchema>;
 
-export const createSlotSchema = z.object({
-  slot_type: z.enum(["window", "fixed"]),
-  window_start: z.coerce.date(),
-  window_end: z.coerce.date(),
-  max_capacity: z.coerce.number().int().positive().optional(),
+export const renamePaperSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(255),
 });
+
+export type RenamePaperBody = z.infer<typeof renamePaperSchema>;
+
+export const createSlotSchema = z
+  .object({
+    slot_type: z.enum(["window", "fixed"]),
+    window_start: z.coerce.date(),
+    // Required for "window" (defines the latest start time); for "fixed"
+    // it's derived server-side from window_start + the template's
+    // totalDurationMins, since a fixed slot only ever has one start time.
+    window_end: z.coerce.date().optional(),
+    max_capacity: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : v),
+      z.coerce.number().int().positive().optional(),
+    ),
+  })
+  .refine((data) => data.slot_type !== "window" || data.window_end, {
+    message: "window_end is required for window slots",
+    path: ["window_end"],
+  });
 
 export const updateSlotSchema = z.object({
   slot_type: z.enum(["window", "fixed"]).optional(),
   window_start: z.coerce.date().optional(),
   window_end: z.coerce.date().optional(),
-  max_capacity: z.coerce.number().int().positive().optional(),
+  max_capacity: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.coerce.number().int().positive().optional(),
+  ),
 });
 
 export type CreateSlotBody = z.infer<typeof createSlotSchema>;
 export type UpdateSlotBody = z.infer<typeof updateSlotSchema>;
+
+export const toggleSlotSchema = z.object({
+  is_active: z.boolean(),
+});
+
+export type ToggleSlotBody = z.infer<typeof toggleSlotSchema>;
