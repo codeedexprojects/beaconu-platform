@@ -74,6 +74,7 @@ model CourseQuotaSeats {
   admissionCycleCourse AdmissionCycleCourse @relation(fields: [admissionCycleCourseId], references: [id], onDelete: Cascade)
   collegeQuota         CollegeQuota         @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
   seatPool             SeatPool?            @relation(fields: [seatPoolId], references: [id], onDelete: SetNull)
+  applicationCourses   ApplicationCourse[]
 
   @@unique([admissionCycleCourseId, collegeQuotaId], name: "uq_cycle_course_quota")
   @@index([admissionCycleCourseId], name: "idx_cqs_cycle_course")
@@ -137,20 +138,20 @@ model ApplicationCourse {
   id              String    @id @default(dbgenerated("('APC-'::text || (nextval('application_course_seq'::regclass))::text)"))
   applicationId   String    @map("application_id")
   courseId        String    @map("course_id")
-  applicationFee  Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
-  status          String    @default("draft") @db.VarChar(30)
-  rejectionReason String?   @map("rejection_reason") @db.Text
-  quotaId         String?   @map("quota_id")
-  preferenceOrder Int       @default(1) @map("preference_order") @db.SmallInt
-  statusHistory   Json      @default("[]") @map("status_history")
-  statusUpdatedAt DateTime? @map("status_updated_at") @db.Timestamptz
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  applicationFee     Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
+  status             String    @default("draft") @db.VarChar(30)
+  rejectionReason    String?   @map("rejection_reason") @db.Text
+  courseQuotaSeatId  String?   @map("course_quota_seat_id")
+  preferenceOrder    Int       @default(1) @map("preference_order") @db.SmallInt
+  statusHistory      Json      @default("[]") @map("status_history")
+  statusUpdatedAt    DateTime? @map("status_updated_at") @db.Timestamptz
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   application             Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   course                  Course                   @relation(fields: [courseId], references: [id])
-  quota                   CourseQuota?             @relation(fields: [quotaId], references: [id])
+  courseQuotaSeat         CourseQuotaSeats?        @relation(fields: [courseQuotaSeatId], references: [id])
   statusLogs              ApplicationStatusLog[]
   assessmentAttempts      AssessmentAttempt[]
   interviewBooking        InterviewBooking?
@@ -330,31 +331,67 @@ model AdmissionFormConfig {
   @@map("admission_form_configs")
 }
 
+// A document a student must upload for a given admission cycle. Empty
+// courses/quotas join = applies to every course/quota in the cycle;
+// populated = restricted to just those. appliesToNationalities stays JSON —
+// nationality is free-text on the student profile, no entity to reference.
 model DocumentUploadConfig {
   id                     String   @id @default(dbgenerated("('DUC-'::text || (nextval('document_upload_config_seq'::regclass))::text)"))
   collegeId              String   @map("college_id")
-  admissionCycleId       String?  @map("admission_cycle_id")
+  admissionCycleId       String   @map("admission_cycle_id")
   documentType           String   @map("document_type") @db.VarChar(50)
   documentCategory       String   @map("document_category") @db.VarChar(30)
   documentLabel          String   @map("document_label") @db.VarChar(100)
   isRequired             Boolean  @default(true) @map("is_required")
-  appliesToQuotas        Json?    @map("applies_to_quotas")
   appliesToNationalities Json?    @map("applies_to_nationalities")
-  appliesToCourses       Json?    @map("applies_to_courses")
   sortOrder              Int      @default(0) @map("sort_order")
   isActive               Boolean  @default(true) @map("is_active")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college        College         @relation(fields: [collegeId], references: [id])
-  admissionCycle AdmissionCycle? @relation(fields: [admissionCycleId], references: [id])
+  college        College                      @relation(fields: [collegeId], references: [id])
+  admissionCycle AdmissionCycle               @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  courses        DocumentUploadConfigCourse[]
+  quotas         DocumentUploadConfigQuota[]
 
   @@index([collegeId], name: "idx_duc_college")
   @@index([admissionCycleId], name: "idx_duc_cycle")
   @@index([documentCategory], name: "idx_duc_category")
   @@index([collegeId, isActive], name: "idx_duc_active")
   @@map("document_upload_configs")
+}
+
+model DocumentUploadConfigCourse {
+  id                     String   @id @default(dbgenerated("('DCC-'::text || (nextval('document_upload_config_course_seq'::regclass))::text)"))
+  documentUploadConfigId String   @map("document_upload_config_id")
+  courseId               String   @map("course_id")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  documentUploadConfig DocumentUploadConfig @relation(fields: [documentUploadConfigId], references: [id], onDelete: Cascade)
+  course               Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([documentUploadConfigId, courseId], name: "uq_duc_course")
+  @@index([documentUploadConfigId], name: "idx_ducc_config")
+  @@index([courseId], name: "idx_ducc_course")
+  @@map("document_upload_config_courses")
+}
+
+model DocumentUploadConfigQuota {
+  id                     String   @id @default(dbgenerated("('DCQ-'::text || (nextval('document_upload_config_quota_seq'::regclass))::text)"))
+  documentUploadConfigId String   @map("document_upload_config_id")
+  collegeQuotaId         String   @map("college_quota_id")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  documentUploadConfig DocumentUploadConfig @relation(fields: [documentUploadConfigId], references: [id], onDelete: Cascade)
+  collegeQuota         CollegeQuota         @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
+
+  @@unique([documentUploadConfigId, collegeQuotaId], name: "uq_duc_quota")
+  @@index([documentUploadConfigId], name: "idx_ducq_config")
+  @@index([collegeQuotaId], name: "idx_ducq_quota")
+  @@map("document_upload_config_quotas")
 }
 
 // An optional shared bucket of seats. A CourseQuotaSeats row can either hold

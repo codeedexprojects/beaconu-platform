@@ -68,6 +68,8 @@ CREATE SEQUENCE IF NOT EXISTS "document_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_submission_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_template_seq";
 CREATE SEQUENCE IF NOT EXISTS "document_upload_config_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_upload_config_course_seq";
+CREATE SEQUENCE IF NOT EXISTS "document_upload_config_quota_seq";
 CREATE SEQUENCE IF NOT EXISTS "education_loan_seq";
 CREATE SEQUENCE IF NOT EXISTS "enrollment_seq";
 CREATE SEQUENCE IF NOT EXISTS "entrance_exam_seq";

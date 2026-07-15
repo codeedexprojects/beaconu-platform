@@ -66,6 +66,15 @@ JWT: `{ userId, userType, collegeId?, roleId?, permissions[], sessionId }`
 `main` → production | `develop` → staging | `feature/*` → work
 Branch per feature. Small PRs. Merge frequently.
 
+## Database Migrations
+
+**Never hand-write a migration's SQL file from scratch, and never edit one that has already been applied.** Migration files under `packages/db/prisma/migrations/` must always originate from the Prisma CLI's schema diff, never authored by Claude directly.
+
+- Generate + apply: run `pnpm db:migrate:dev` from the repo root and let the **user** run it in their own terminal — it's interactive (prompts for a migration name, confirms destructive changes) and Claude's shell cannot answer those prompts.
+- Non-interactive generation only (no schema apply yet): `prisma migrate dev --create-only --name X` followed by `prisma migrate deploy` — both are real Prisma CLI invocations against the schema, not hand-written SQL.
+- **`CREATE SEQUENCE` for `dbgenerated()` ID defaults is the one real exception.** Prisma's diff engine never emits these automatically — not even if the sequence already exists on the target dev DB — so a migration that adds a `dbgenerated()` column with a new sequence will always fail shadow-DB validation (P3006, "relation ... does not exist") unless the `CREATE SEQUENCE IF NOT EXISTS` line is added directly into that migration's SQL file. This is safe to do **only while the migration is still unapplied** (check `finished_at IS NULL` in `_prisma_migrations` first) — add the matching entry to `packages/db/prisma/sequences.sql` too, for the record and for bootstrapping fresh environments, but the migration file itself still needs the line physically present.
+- Editing a migration file that has **already** been applied (`finished_at` set) breaks Prisma's checksum tracking and forces a full `prisma migrate reset` (destructive, wipes local dev data) — this has happened before from doing exactly this. Don't repeat it.
+
 ## Bruno API Contracts (`packages/api-contracts/`)
 
 Every API route change must be reflected in `packages/api-contracts/` in the same session.

@@ -449,6 +449,7 @@ model Course {
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
   newsAlerts             NewsAlert[]
   collegeReviews         CollegeReview[]
+  documentUploadConfigCourses DocumentUploadConfigCourse[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
@@ -473,9 +474,8 @@ model CourseQuota {
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  collegeQuota       CollegeQuota        @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
-  applicationCourses ApplicationCourse[]
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  collegeQuota CollegeQuota @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, collegeQuotaId], name: "uq_course_college_quota")
   @@index([courseId], name: "idx_quotas_course")
@@ -496,10 +496,11 @@ model CollegeQuota {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college          College            @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  courseQuotas     CourseQuota[]
-  seatPools        SeatPool[]
-  courseQuotaSeats CourseQuotaSeats[]
+  college                    College                      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  courseQuotas               CourseQuota[]
+  seatPools                  SeatPool[]
+  courseQuotaSeats           CourseQuotaSeats[]
+  documentUploadConfigQuotas DocumentUploadConfigQuota[]
 
   @@unique([collegeId, slug], name: "uq_college_quota_slug")
   @@index([collegeId], name: "idx_college_quotas_college")
