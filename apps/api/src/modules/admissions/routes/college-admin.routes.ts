@@ -58,4 +58,21 @@ router.delete(
   CollegeAdminAdmissionCycleController.deleteSeatPool,
 );
 
+router.get(
+  "/:id/documents",
+  CollegeAdminAdmissionCycleController.listDocumentRequirements,
+);
+router.post(
+  "/:id/documents",
+  CollegeAdminAdmissionCycleController.createDocumentRequirement,
+);
+router.patch(
+  "/:id/documents/:requirementId",
+  CollegeAdminAdmissionCycleController.updateDocumentRequirement,
+);
+router.delete(
+  "/:id/documents/:requirementId",
+  CollegeAdminAdmissionCycleController.deleteDocumentRequirement,
+);
+
 export default router;

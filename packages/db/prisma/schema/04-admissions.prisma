@@ -344,6 +344,11 @@ model DocumentUploadConfig {
   documentLabel          String   @map("document_label") @db.VarChar(100)
   isRequired             Boolean  @default(true) @map("is_required")
   appliesToNationalities Json?    @map("applies_to_nationalities")
+  // Subset of the platform's ALLOWED_MIME_TYPES relevant to documents
+  // (images + PDF) — null means the upload module's document-default set
+  // applies. Not an entity, so JSON is correct here (same reasoning as
+  // appliesToNationalities).
+  acceptedMimeTypes      Json?    @map("accepted_mime_types")
   sortOrder              Int      @default(0) @map("sort_order")
   isActive               Boolean  @default(true) @map("is_active")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz

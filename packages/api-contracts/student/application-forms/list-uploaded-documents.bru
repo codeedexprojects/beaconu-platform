@@ -1,0 +1,22 @@
+meta {
+  name: List Uploaded Documents (Student)
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/documents
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lists every document the student has uploaded to their own application,
+  regardless of whether it's still an applicable requirement (e.g. if the
+  admin later scoped it away). For rendering a checklist against current
+  requirements, prefer "List Required Documents" instead.
+}

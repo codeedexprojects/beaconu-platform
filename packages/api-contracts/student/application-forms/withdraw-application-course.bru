@@ -1,0 +1,22 @@
+meta {
+  name: Withdraw Application Course (Student)
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/courses/{{applicationCourseId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Withdraws a course selection from the student's own draft application
+  (soft — sets status to "withdrawn", never a hard delete, so the fee
+  history survives). Recomputes the parent Application's
+  totalApplicationFee. 409 if the application has already been submitted.
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Get My Application (Student)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Fetches the authenticated student's own application (draft or submitted)
+  for this admission cycle. 404 if they haven't started one yet.
+}

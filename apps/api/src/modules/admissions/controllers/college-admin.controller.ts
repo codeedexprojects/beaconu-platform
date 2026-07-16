@@ -6,6 +6,7 @@ import { AdmissionCycleQuery } from "../queries/admission-cycle.query";
 import { AdmissionCycleCourseService } from "../services/admission-cycle-course.service";
 import { SeatPoolService } from "../services/seat-pool.service";
 import { CourseQuotaSeatsService } from "../services/course-quota-seats.service";
+import { DocumentUploadConfigService } from "../services/document-upload-config.service";
 import {
   createAdmissionCycleSchema,
   updateAdmissionCycleSchema,
@@ -23,6 +24,10 @@ import {
   attachCourseQuotaSchema,
   updateCourseQuotaSeatsSchema,
 } from "../validators/course-quota-seats.validator";
+import {
+  createDocumentRequirementSchema,
+  updateDocumentRequirementSchema,
+} from "../validators/document-upload-config.validator";
 
 export class CollegeAdminAdmissionCycleController {
   static async create(req: Request, res: Response) {
@@ -205,5 +210,53 @@ export class CollegeAdminAdmissionCycleController {
       req.params.poolId as string,
     );
     return res.json(ApiResponse.success("Seat pool removed", result));
+  }
+
+  // ── Document requirements for this application form ────────────────────────
+
+  static async listDocumentRequirements(req: Request, res: Response) {
+    const result = await DocumentUploadConfigService.listForCycle(
+      req.params.id as string,
+      req.collegeId!,
+    );
+    return res.json(
+      ApiResponse.success("Document requirements fetched", result),
+    );
+  }
+
+  static async createDocumentRequirement(req: Request, res: Response) {
+    const data = createDocumentRequirementSchema.parse(req.body);
+    const result = await DocumentUploadConfigService.createRequirement(
+      req.params.id as string,
+      req.collegeId!,
+      data,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Document requirement created", result));
+  }
+
+  static async updateDocumentRequirement(req: Request, res: Response) {
+    const data = updateDocumentRequirementSchema.parse(req.body);
+    const result = await DocumentUploadConfigService.updateRequirement(
+      req.params.id as string,
+      req.collegeId!,
+      req.params.requirementId as string,
+      data,
+    );
+    return res.json(
+      ApiResponse.success("Document requirement updated", result),
+    );
+  }
+
+  static async deleteDocumentRequirement(req: Request, res: Response) {
+    const result = await DocumentUploadConfigService.deleteRequirement(
+      req.params.id as string,
+      req.collegeId!,
+      req.params.requirementId as string,
+    );
+    return res.json(
+      ApiResponse.success("Document requirement removed", result),
+    );
   }
 }

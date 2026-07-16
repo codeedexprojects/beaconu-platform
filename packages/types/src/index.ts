@@ -19,3 +19,4 @@ export * from "./anti-ragging";
 export * from "./wishlist";
 export * from "./admission-cycle";
 export * from "./assessment";
+export * from "./application";

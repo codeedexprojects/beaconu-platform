@@ -6,11 +6,14 @@ import type {
   AttachCourseQuotaInput,
   CourseQuotaSeatsItem,
   CreateAdmissionCycleInput,
+  CreateDocumentRequirementInput,
   CreateSeatPoolInput,
+  DocumentRequirementItem,
   SeatPoolItem,
   UpdateAdmissionCycleCourseInput,
   UpdateAdmissionCycleInput,
   UpdateCourseQuotaSeatsInput,
+  UpdateDocumentRequirementInput,
   UpdateSeatPoolInput,
 } from "@beaconu/types";
 
@@ -152,4 +155,32 @@ export async function deleteSeatPool(
   id: string,
 ): Promise<SeatPoolItem> {
   return api.delete(`${BASE}/${admissionCycleId}/seat-pools/${id}`);
+}
+
+export async function getDocumentRequirements(
+  admissionCycleId: string,
+): Promise<DocumentRequirementItem[]> {
+  return api.get(`${BASE}/${admissionCycleId}/documents`);
+}
+
+export async function createDocumentRequirement(
+  admissionCycleId: string,
+  data: CreateDocumentRequirementInput,
+): Promise<DocumentRequirementItem> {
+  return api.post(`${BASE}/${admissionCycleId}/documents`, data);
+}
+
+export async function updateDocumentRequirement(
+  admissionCycleId: string,
+  id: string,
+  data: UpdateDocumentRequirementInput,
+): Promise<DocumentRequirementItem> {
+  return api.patch(`${BASE}/${admissionCycleId}/documents/${id}`, data);
+}
+
+export async function deleteDocumentRequirement(
+  admissionCycleId: string,
+  id: string,
+): Promise<DocumentRequirementItem> {
+  return api.delete(`${BASE}/${admissionCycleId}/documents/${id}`);
 }

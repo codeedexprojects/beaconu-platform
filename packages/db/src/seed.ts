@@ -2687,9 +2687,10 @@ async function seedCourses(
           courseId: course.id,
           collegeQuotaId,
           isActive: true,
-          // Government quota → flat app-fee reduction; NRI → tuition override
+          // Government quota → flat app-fee discount; NRI → tuition override.
+          // Negative appFeeAdjustmentValue discounts, positive surcharges.
           ...(quotaSlug === "government_quota"
-            ? { appFeeReductionType: "flat", appFeeReductionValue: 500 }
+            ? { appFeeAdjustmentType: "flat", appFeeAdjustmentValue: -500 }
             : {}),
           ...(quotaSlug === "nri_quota" ? { tuitionFeeOverride: 1500000 } : {}),
         },

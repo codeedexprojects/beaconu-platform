@@ -19,16 +19,22 @@ import {
   createSeatPool,
   updateSeatPool,
   deleteSeatPool,
+  getDocumentRequirements,
+  createDocumentRequirement,
+  updateDocumentRequirement,
+  deleteDocumentRequirement,
   type AdmissionCycleListFilters,
 } from "@/lib/services/admission-cycles.service";
 import type {
   AttachAdmissionCycleCourseInput,
   AttachCourseQuotaInput,
   CreateAdmissionCycleInput,
+  CreateDocumentRequirementInput,
   CreateSeatPoolInput,
   UpdateAdmissionCycleCourseInput,
   UpdateAdmissionCycleInput,
   UpdateCourseQuotaSeatsInput,
+  UpdateDocumentRequirementInput,
   UpdateSeatPoolInput,
 } from "@beaconu/types";
 
@@ -284,6 +290,66 @@ export function useDeleteSeatPool(admissionCycleId: string) {
       // every course's quota-seats view for this cycle, not just the pool.
       queryClient.invalidateQueries({
         queryKey: ["college-course-quota-seats", admissionCycleId],
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDocumentRequirements(admissionCycleId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.documentRequirements(admissionCycleId ?? ""),
+    queryFn: () => getDocumentRequirements(admissionCycleId as string),
+    enabled: !!admissionCycleId,
+  });
+}
+
+export function useCreateDocumentRequirement(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateDocumentRequirementInput) =>
+      createDocumentRequirement(admissionCycleId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.documentRequirements(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useUpdateDocumentRequirement(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateDocumentRequirementInput;
+    }) => updateDocumentRequirement(admissionCycleId, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.documentRequirements(admissionCycleId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteDocumentRequirement(admissionCycleId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteDocumentRequirement(admissionCycleId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.documentRequirements(admissionCycleId),
       });
     },
     onError: (error) => {

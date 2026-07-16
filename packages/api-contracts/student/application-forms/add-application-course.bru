@@ -1,0 +1,44 @@
+meta {
+  name: Add Course to Application (Student)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/courses
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "course_id": "{{courseId}}",
+    "course_quota_seat_id": null,
+    "preference_order": 1
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("applicationCourseId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Adds a course (optionally with a quota) to the student's own draft
+  application. Requires the application to still be in "draft" status (409
+  otherwise). `course_quota_seat_id` is optional — omit for "no quota,"
+  which charges the course's base application fee. When given, the fee
+  snapshot on the resulting ApplicationCourse row includes the quota's
+  bidirectional fee adjustment, and seat availability is checked (not
+  reserved — actual decrement happens at final submit). Recomputes the
+  parent Application's totalApplicationFee.
+}

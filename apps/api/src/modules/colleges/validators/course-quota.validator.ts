@@ -1,44 +1,39 @@
 import { z } from "zod";
 
-export const FEE_REDUCTION_TYPES = ["flat", "percentage"] as const;
+export const FEE_ADJUSTMENT_TYPES = ["flat", "percentage"] as const;
 
-const feeReductionRefinement = (
+// Bidirectional: positive appFeeAdjustmentValue surcharges the application
+// fee (e.g. NRI Quota), negative discounts it. "flat" | "percentage"
+// describes how the value is applied, not its direction.
+const feeAdjustmentRefinement = (
   data: {
-    appFeeReductionType?: string | null;
-    appFeeReductionValue?: number | null;
+    appFeeAdjustmentType?: string | null;
+    appFeeAdjustmentValue?: number | null;
   },
   ctx: z.RefinementCtx,
 ) => {
-  const hasType = data.appFeeReductionType != null;
-  const hasValue = data.appFeeReductionValue != null;
+  const hasType = data.appFeeAdjustmentType != null;
+  const hasValue = data.appFeeAdjustmentValue != null;
 
   if (hasType !== hasValue) {
     ctx.addIssue({
       code: "custom",
       message:
-        "appFeeReductionType and appFeeReductionValue must be set together, or both left empty",
-      path: ["appFeeReductionValue"],
+        "appFeeAdjustmentType and appFeeAdjustmentValue must be set together, or both left empty",
+      path: ["appFeeAdjustmentValue"],
     });
     return;
   }
 
   if (
     hasValue &&
-    data.appFeeReductionType === "percentage" &&
-    (data.appFeeReductionValue! < 0 || data.appFeeReductionValue! > 100)
+    data.appFeeAdjustmentType === "percentage" &&
+    (data.appFeeAdjustmentValue! < -100 || data.appFeeAdjustmentValue! > 100)
   ) {
     ctx.addIssue({
       code: "custom",
-      message: "Percentage reduction must be between 0 and 100",
-      path: ["appFeeReductionValue"],
-    });
-  }
-
-  if (hasValue && data.appFeeReductionValue! < 0) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Reduction value cannot be negative",
-      path: ["appFeeReductionValue"],
+      message: "Percentage adjustment must be between -100 and 100",
+      path: ["appFeeAdjustmentValue"],
     });
   }
 };
@@ -46,30 +41,30 @@ const feeReductionRefinement = (
 export const attachCourseQuotaSchema = z
   .object({
     collegeQuotaId: z.string().min(1, "collegeQuotaId is required"),
-    appFeeReductionType: z.enum(FEE_REDUCTION_TYPES).optional().nullable(),
-    appFeeReductionValue: z.number().optional().nullable(),
+    appFeeAdjustmentType: z.enum(FEE_ADJUSTMENT_TYPES).optional().nullable(),
+    appFeeAdjustmentValue: z.number().optional().nullable(),
     tuitionFeeOverride: z.number().min(0).optional().nullable(),
   })
-  .superRefine(feeReductionRefinement);
+  .superRefine(feeAdjustmentRefinement);
 
 export type AttachCourseQuotaInput = z.infer<typeof attachCourseQuotaSchema>;
 
 export const updateCourseQuotaSchema = z
   .object({
-    appFeeReductionType: z.enum(FEE_REDUCTION_TYPES).optional().nullable(),
-    appFeeReductionValue: z.number().optional().nullable(),
+    appFeeAdjustmentType: z.enum(FEE_ADJUSTMENT_TYPES).optional().nullable(),
+    appFeeAdjustmentValue: z.number().optional().nullable(),
     tuitionFeeOverride: z.number().min(0).optional().nullable(),
     isActive: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     // Only enforce the paired-fields rule when the caller is touching either field.
     if (
-      data.appFeeReductionType === undefined &&
-      data.appFeeReductionValue === undefined
+      data.appFeeAdjustmentType === undefined &&
+      data.appFeeAdjustmentValue === undefined
     ) {
       return;
     }
-    feeReductionRefinement(data, ctx);
+    feeAdjustmentRefinement(data, ctx);
   });
 
 export type UpdateCourseQuotaInput = z.infer<typeof updateCourseQuotaSchema>;

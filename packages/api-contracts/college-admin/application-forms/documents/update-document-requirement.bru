@@ -1,0 +1,29 @@
+meta {
+  name: Update Document Requirement
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/documents/{{documentRequirementId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "is_required": false
+  }
+}
+
+docs {
+  Updates a document requirement. Any of document_type/document_category/
+  document_label/is_required/applies_to_nationalities/sort_order/is_active/
+  course_ids/quota_ids can be given. Passing course_ids or quota_ids fully
+  replaces the existing set for that field (delete + recreate).
+}

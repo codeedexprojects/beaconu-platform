@@ -1,0 +1,37 @@
+meta {
+  name: Update Qualification Details (Student)
+  type: http
+  seq: 12
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/qualification-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "qualifications": [
+      {
+        "level": "12th",
+        "board_or_university": "CBSE",
+        "institution_name": "DPS Bangalore",
+        "year_of_passing": 2024,
+        "percentage_or_cgpa": 92.5,
+        "subjects": "PCB"
+      }
+    ]
+  }
+}
+
+docs {
+  Full-replace write of the qualification-details step (409 if already
+  submitted). At least one qualification entry is required. Advances
+  currentStep to at least 6.
+}

@@ -132,3 +132,70 @@ export interface UpdateCourseQuotaSeatsInput {
   total_seats?: number;
   is_active?: boolean;
 }
+
+export interface DocumentRequirementCourseRef {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface DocumentRequirementQuotaRef {
+  id: string;
+  name: string;
+  slug: string;
+  bucketType: QuotaBucketType;
+}
+
+// Documents only ever need images or PDFs — matches the API's
+// DOCUMENT_MIME_TYPES (a subset of the platform's general upload mime types).
+export type DocumentMimeType =
+  | "image/jpeg"
+  | "image/png"
+  | "image/webp"
+  | "image/svg+xml"
+  | "application/pdf";
+
+// A document a student must upload for this application form. Empty
+// courses/quotas = applies to every course/quota in the cycle; populated =
+// restricted to just those. documentType is an internal key auto-derived
+// from documentLabel by the backend — never set directly by an admin.
+export interface DocumentRequirementItem {
+  id: string;
+  collegeId: string;
+  admissionCycleId: string;
+  documentType: string;
+  documentCategory: string;
+  documentLabel: string;
+  isRequired: boolean;
+  appliesToNationalities: string[] | null;
+  acceptedMimeTypes: DocumentMimeType[];
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  courses: DocumentRequirementCourseRef[];
+  quotas: DocumentRequirementQuotaRef[];
+}
+
+export interface CreateDocumentRequirementInput {
+  document_category: string;
+  document_label: string;
+  is_required: boolean;
+  applies_to_nationalities?: string[];
+  accepted_mime_types?: DocumentMimeType[];
+  sort_order?: number;
+  course_ids?: string[];
+  quota_ids?: string[];
+}
+
+export interface UpdateDocumentRequirementInput {
+  document_category?: string;
+  document_label?: string;
+  is_required?: boolean;
+  applies_to_nationalities?: string[] | null;
+  accepted_mime_types?: DocumentMimeType[] | null;
+  sort_order?: number;
+  is_active?: boolean;
+  course_ids?: string[];
+  quota_ids?: string[];
+}

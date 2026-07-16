@@ -1,0 +1,36 @@
+meta {
+  name: Update Address Details (Student)
+  type: http
+  seq: 11
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/address-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "permanent": {
+      "address_line1": "12 MG Road",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "pin_code": "560001",
+      "country": "India"
+    },
+    "same_as_permanent": true,
+    "current": null
+  }
+}
+
+docs {
+  Full-replace write of the address-details step (409 if already
+  submitted). `current` is required (and validated) only when
+  `same_as_permanent` is false. Advances currentStep to at least 5.
+}

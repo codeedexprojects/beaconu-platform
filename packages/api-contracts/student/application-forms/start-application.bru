@@ -1,0 +1,49 @@
+meta {
+  name: Start Application (Student)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "nationality": "Indian",
+    "state_of_domicile": "Karnataka",
+    "passport_country": null,
+    "passport_number": null,
+    "campus_id": null
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("applicationId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a draft Application for the authenticated student against this
+  admission cycle (404 if the cycle doesn't exist, 409 if it's not
+  currently "open"). Idempotent: calling this again for the same
+  student+cycle returns the existing draft instead of erroring, since
+  (studentId, admissionCycleId) is unique.
+
+  `nationality` is required and drives NRI-style application-fee surcharges
+  applied later at course+quota selection. `state_of_domicile` /
+  `passport_country` / `passport_number` are optional, relevant mainly for
+  foreign-nationality applicants. `campus_id` is optional and must belong to
+  the cycle's college if given.
+}

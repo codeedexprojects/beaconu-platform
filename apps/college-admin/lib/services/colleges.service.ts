@@ -687,8 +687,8 @@ export interface CourseQuotaDto {
   id: string;
   courseId: string;
   collegeQuotaId: string;
-  appFeeReductionType: "flat" | "percentage" | null;
-  appFeeReductionValue: string | null;
+  appFeeAdjustmentType: "flat" | "percentage" | null;
+  appFeeAdjustmentValue: string | null;
   tuitionFeeOverride: string | null;
   isActive: boolean;
   createdAt: string;
@@ -701,8 +701,8 @@ export interface CourseQuotaDto {
 
 export interface AttachCourseQuotaInput {
   collegeQuotaId: string;
-  appFeeReductionType?: "flat" | "percentage" | null;
-  appFeeReductionValue?: number | null;
+  appFeeAdjustmentType?: "flat" | "percentage" | null;
+  appFeeAdjustmentValue?: number | null;
   tuitionFeeOverride?: number | null;
 }
 
