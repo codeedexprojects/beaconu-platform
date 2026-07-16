@@ -7,17 +7,21 @@ meta {
 get {
   url: {{baseUrl}}/api/v1/college-admin/application-forms
   body: none
-  auth: none
+  auth: bearer
 }
 
-query {
+params:query {
   ~application_type: Regular
   ~program_level: undergraduate
   ~admission_year: 2026
 }
 
 headers {
-  Authorization: Bearer {{accessToken}}
+  Authorization: Bearer {{staffToken}}
+}
+
+auth:bearer {
+  token: {{staffToken}}
 }
 
 docs {

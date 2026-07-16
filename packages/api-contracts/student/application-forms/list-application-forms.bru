@@ -5,12 +5,12 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/application-forms
+  url: {{baseUrl}}/api/v1/student/application-forms?college_id={{collegeId}}
   body: none
   auth: none
 }
 
-query {
+params:query {
   college_id: {{collegeId}}
   ~application_type: Regular
   ~program_level: undergraduate
@@ -24,7 +24,7 @@ headers {
 docs {
   Lists currently open application forms for a college. Read-only — students
   cannot create/update/delete application forms.
-
+  
   Query:
   - college_id (required)
   - application_type, program_level, admission_year (all optional filters)
