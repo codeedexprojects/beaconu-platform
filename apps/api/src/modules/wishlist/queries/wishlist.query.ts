@@ -83,4 +83,17 @@ export class WishlistQuery {
     });
     return !!row;
   }
+
+  static async getWishlistedCollegeIds(
+    studentId: string,
+    collegeIds: string[],
+  ): Promise<Set<string>> {
+    if (collegeIds.length === 0) return new Set();
+
+    const rows = await prisma.collegeWishlist.findMany({
+      where: { studentId, collegeId: { in: collegeIds } },
+      select: { collegeId: true },
+    });
+    return new Set(rows.map((row) => row.collegeId));
+  }
 }

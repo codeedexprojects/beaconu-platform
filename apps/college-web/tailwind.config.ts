@@ -17,27 +17,6 @@ const config: Config = {
     },
     extend: {
       colors: {
-        navy: {
-          DEFAULT: "#0F172A",
-          dark: "#1A1A2E",
-        },
-        gold: {
-          DEFAULT: "#B6904F",
-          pale: "#FBEFD6",
-        },
-        cream: {
-          DEFAULT: "#FDFBF7",
-        },
-        lavender: {
-          DEFAULT: "#C4C4F7",
-        },
-        gray: {
-          label: "#6B7280",
-          sidebar: "#8B93A7",
-        },
-        success: {
-          DEFAULT: "#22C55E",
-        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -71,14 +50,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -87,7 +58,6 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", ...fontFamily.sans],
-        serif: ["Playfair Display", "Lora", "serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -98,15 +68,10 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "fade-in": {
-          from: { opacity: "0", transform: "translateY(6px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.25s ease-out",
       },
     },
   },

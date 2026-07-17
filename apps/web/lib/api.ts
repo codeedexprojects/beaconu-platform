@@ -21,7 +21,17 @@ interface ApiResponse<T> {
 type Identity = "student" | "blog-author";
 
 function identityFor(path: string): Identity {
-  return path.startsWith("/api/v1/student") ? "student" : "blog-author";
+  // Public college listing/detail routes accept an optional student Bearer
+  // token to personalize the response (isWishlisted) — attach it when present,
+  // but the routes never 401 on a missing/invalid token, so this is safe even
+  // for logged-out visitors.
+  if (
+    path.startsWith("/api/v1/student") ||
+    path.startsWith("/api/v1/public/colleges")
+  ) {
+    return "student";
+  }
+  return "blog-author";
 }
 
 function getToken(identity: Identity): string | null {

@@ -135,3 +135,159 @@ export interface HostelDetailDto extends HostelSummaryDto {
   messPlans: HostelMessPlanDto[];
   addonServices: HostelAddonServiceDto[];
 }
+
+// ── Public hostel endpoints (college-web) ────────────────────────────────────
+// UI-ready shapes built by buildPublicHostelDetail — distinct from the admin
+// DTOs above, which mirror the raw DB columns.
+
+export interface PublicHostelSummary extends HostelSummaryDto {
+  gallery: string[];
+}
+
+export interface PublicHostelPlan {
+  name?: string;
+  subtitle?: string;
+  price?: string;
+  currency?: string;
+  period?: string;
+  additional_charges?: string[];
+  feature_tags?: string[];
+  meal_tags?: string[];
+}
+
+export interface PublicHostelRoomTypeFees {
+  room_type_id?: string;
+  room_type_label?: string;
+  plans?: PublicHostelPlan[];
+}
+
+export interface PublicHostelFeeBlock {
+  step_number?: number;
+  title?: string;
+  room_types?: PublicHostelRoomTypeFees[];
+  note?: string;
+}
+
+export interface PublicHostelSimplePlanBlock {
+  step_number?: number;
+  title?: string;
+  status_badge?: string;
+  plans?: PublicHostelPlan[];
+  note?: string;
+}
+
+export interface PublicHostelParkingBlock {
+  step_number?: number;
+  title?: string;
+  items?: {
+    name?: string;
+    price?: string;
+    currency?: string;
+    period?: string;
+  }[];
+  note?: string;
+}
+
+export interface PublicHostelRoomItem {
+  id?: string;
+  name?: string;
+  description?: string;
+  photos?: string[];
+  availability_label?: string;
+  price?: string;
+  currency?: string;
+  period?: string;
+}
+
+export interface PublicHostelHeader {
+  cover_image?: string;
+  tags?: { color?: string; label?: string }[];
+  rating_badge?: { rating?: number; review_count?: number };
+  name?: string;
+  verified_badge?: { text?: string };
+}
+
+export interface PublicHostelSafetyWarden {
+  title?: string;
+  warden?: { photo?: string; name?: string; designation?: string };
+  features?: { label?: string }[];
+}
+
+export interface PublicHostelAmenities {
+  title?: string;
+  items?: { label?: string; selected?: boolean }[];
+}
+
+export interface PublicHostelRules {
+  title?: string;
+  items?: { number?: number; title?: string; description?: string }[];
+}
+
+export interface PublicHostelReviewItem {
+  id?: string;
+  reviewer_initials?: string;
+  reviewer_name?: string;
+  rating?: number;
+  posted?: string;
+  comment?: string;
+}
+
+export interface PublicHostelReviews {
+  title?: string;
+  summary?: { average?: number; total_reviews_label?: string };
+  items?: PublicHostelReviewItem[];
+}
+
+export interface PublicHostelLocationCategoryDetail {
+  name?: string;
+  distance?: string;
+}
+
+export interface PublicHostelLocationCategory {
+  title?: string;
+  details?: PublicHostelLocationCategoryDetail[];
+}
+
+export interface PublicHostelLocationType {
+  type?: string;
+  categories?: PublicHostelLocationCategory[];
+}
+
+export interface PublicHostelLocationAndAccess {
+  title?: string;
+  tabs?: { selected?: string; options?: string[] };
+  types?: PublicHostelLocationType[];
+  map?: {
+    thumbnail?: string;
+    address?: { line1?: string; line2?: string };
+    college_transport?: {
+      title?: string;
+      description?: string;
+      bus_stop_note?: string;
+    };
+    open_map_cta?: { latitude?: number; longitude?: number; link?: string };
+  };
+}
+
+export interface PublicHostelDetail {
+  id: string;
+  tab?: string;
+  gallery?: string[];
+  header?: PublicHostelHeader;
+  rooms_and_types?: {
+    title?: string;
+    total_intake_label?: string;
+    items?: PublicHostelRoomItem[];
+  };
+  hostel_fees?: PublicHostelFeeBlock;
+  mess_plan?: PublicHostelSimplePlanBlock;
+  laundry_charges?: PublicHostelSimplePlanBlock;
+  gym_packages?: PublicHostelSimplePlanBlock;
+  parking_charges?: PublicHostelParkingBlock;
+  other_charges?: PublicHostelSimplePlanBlock;
+  safety_and_warden?: PublicHostelSafetyWarden;
+  amenities?: PublicHostelAmenities;
+  rules?: PublicHostelRules;
+  reviews_and_ratings?: PublicHostelReviews;
+  location_and_access?: PublicHostelLocationAndAccess;
+}

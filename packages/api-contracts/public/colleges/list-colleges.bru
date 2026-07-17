@@ -36,6 +36,10 @@ script:post-response {
 docs {
   Returns a lightweight list of active colleges with optional taxonomy and location filters.
 
+  Auth: none required. If a valid student `Authorization: Bearer <token>` header is
+  sent, each college includes `isWishlisted` for that student; otherwise `isWishlisted`
+  is always `false`. An invalid/expired token is ignored (never causes a 401).
+
   Query parameters (all optional):
   - universityId: Filter by university UUID
   - streamId: Filter by stream UUID (ignored if disciplineId is set)
@@ -56,6 +60,7 @@ docs {
   - university: { id, name, logoUrl, universityType: { id, name, slug } }
   - campuses: full active campus list [{ id, collegeId, name, address, city, state,
     pinCode, latitude, longitude, isMainCampus, status, createdAt, updatedAt }]
+  - isWishlisted: boolean (see Auth note above)
 
   Note: tabs and profileSections are NOT included in the list response.
   Use Get College By Id for college details with tab listing.
