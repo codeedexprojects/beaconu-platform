@@ -29,11 +29,11 @@ export function HostelRoomsSection({
         {items.map((room) => (
           <div
             key={room.id}
-            className="rounded-2xl border border-border/60 p-4"
+            className="min-w-0 rounded-2xl border border-border/60 p-4"
           >
-            <p className="text-sm font-semibold">{room.name}</p>
+            <p className="break-words text-sm font-semibold">{room.name}</p>
             {room.description ? (
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 break-words text-sm text-muted-foreground">
                 {room.description}
               </p>
             ) : null}

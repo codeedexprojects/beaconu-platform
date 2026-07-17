@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Search,
-  RefreshCw,
-  Mail,
-  Shield,
-  MoreVertical,
-  Building2,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, RefreshCw, Mail, Shield, Eye, Building2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminProfiles } from "@/hooks/use-admins";
 
 export default function BlinkUsersPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
 
   const { data, isLoading, refetch } = useAdminProfiles();
@@ -115,7 +110,8 @@ export default function BlinkUsersPage() {
                   filteredUsers.map((user) => (
                     <TableRow
                       key={user.id}
-                      className="group hover:bg-muted/30 transition-colors"
+                      className="group cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => router.push(`/blink/users/${user.id}`)}
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -162,8 +158,16 @@ export default function BlinkUsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/blink/users/${user.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
