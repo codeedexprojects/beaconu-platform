@@ -13,6 +13,10 @@ get {
 docs {
   Returns full public details for a college by its ID.
 
+  Auth: none required. If a valid student `Authorization: Bearer <token>` header is
+  sent, `collegeDetails.isWishlisted` reflects that student's wishlist; otherwise
+  it is always `false`. An invalid/expired token is ignored (never causes a 401).
+
   Response shape:
   {
     "collegeDetails": {
@@ -27,7 +31,8 @@ docs {
       "district": "...",
       "pinCode": "...",
       "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { "id": "...", "name": "...", "slug": "..." } },
-      "campuses": [...]
+      "campuses": [...],
+      "isWishlisted": false
     },
     "tabs": [
       { "id": "college_overview", "name": "College Overview" },

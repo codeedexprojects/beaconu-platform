@@ -1,0 +1,18 @@
+meta {
+  name: Get College Scholarships
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/scholarships
+  body: none
+  auth: none
+}
+
+docs {
+  Returns active scholarships configured for a college by its subdomain
+  slug: id, name, scholarshipType, discountType, discountValue,
+  discountDisplay, displayLabel, applicableYears, termsAndConditions.
+  No auth required.
+}

@@ -1,217 +1,94 @@
-// Server-safe fetch — no auth store, no localStorage, works in RSC.
-const SERVER_API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { cache } from "react";
+import { api } from "@/lib/api";
+import type {
+  PublicCollegeBySlugResponse,
+  PublicCollegeOverviewSection,
+  PublicCollegeSectionResponse,
+  PublicCourseListItem,
+  PublicScholarship,
+  PublicGalleryItem,
+  PublicCollegeReview,
+  PublicInstitutionsAcrossWorldSection,
+  PublicCommuteSection,
+  PublicHappeningsSection,
+  PublicCodeOfConductSection,
+  AmbassadorOption,
+} from "@beaconu/types";
 
-async function publicFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${SERVER_API_BASE}${path}`, {
-    cache: "no-store",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(
-      (body as { message?: string }).message ?? `Request failed: ${res.status}`,
-    );
-  }
-
-  const body = await res.json();
-  return (body as { data: T }).data;
-}
-
-export interface PublicCampus {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  pinCode: string;
-  isMainCampus: boolean;
-}
-
-export interface PublicCourse {
-  id: string;
-  name: string;
-  code: string;
-  duration?: string | null;
-  durationMonths?: number | null;
-  eligibility?: string | null;
-  intakeCapacity?: number | null;
-  discipline: {
-    id: string;
-    name: string;
-    slug: string;
-    stream: { id: string; name: string; slug: string };
-  };
-  studyLevel: { id: string; name: string; slug: string };
-  programType: { id: string; name: string; slug: string };
-  studyMode: string;
-  tuitionFee?: number | null;
-  campus?: {
-    id: string;
-    name: string;
-    address: string | null;
-    city: string | null;
-    state: string | null;
-  } | null;
-}
-
-export interface PublicCollege {
-  id: string;
-  name: string;
-  code: string;
-  slug: string;
-  domain: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  district: string | null;
-  pinCode: string | null;
-  logoUrl: string | null;
-  coverImageUrl: string | null;
-  profileSections: Record<string, any>;
-  university: {
-    id: string;
-    name: string;
-    logoUrl: string | null;
-    universityType: { id: string; name: string; slug: string } | null;
-  } | null;
-  campuses: PublicCampus[];
-  courses: PublicCourse[];
-  campusAmbassadors?: {
-    id: string;
-    fullName: string;
-    email: string;
-    avatarUrl: string | null;
-    phoneNumber: string | null;
-  }[];
-  institutionGroups?: {
-    members: {
-      college: {
-        id: string;
-        name: string;
-        slug: string;
-        logoUrl: string | null;
-        city: string | null;
-        state: string | null;
-      };
-    }[];
-  }[];
-  institutionGroupMember?: {
-    group: {
-      members: {
-        college: {
-          id: string;
-          name: string;
-          slug: string;
-          logoUrl: string | null;
-          city: string | null;
-          state: string | null;
-        };
-      }[];
-    };
-  } | null;
-  tabs?: { id: string; name: string }[];
-  totalCourses?: number;
-  instituteType?: string | null;
-}
-
-type PublicCollegeApiResponse =
-  | PublicCollege
-  | {
-      collegeDetails: PublicCollege;
-      tabs?: { id: string; name: string }[];
-      totalCourses?: number;
-      instituteType?: string | null;
-      campusAmbassadors?: PublicCollege["campusAmbassadors"];
-    };
-
-function normalizeCollegePayload(
-  payload: PublicCollegeApiResponse,
-): PublicCollege {
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "collegeDetails" in payload &&
-    payload.collegeDetails
-  ) {
-    return {
-      ...payload.collegeDetails,
-      tabs: payload.tabs,
-      totalCourses: payload.totalCourses,
-      instituteType: payload.instituteType,
-      campusAmbassadors:
-        payload.campusAmbassadors ?? payload.collegeDetails.campusAmbassadors,
-    };
-  }
-
-  return payload as PublicCollege;
-}
-
-export interface PublicCollegeSectionResponse {
-  sectionName: string;
-  sectionId?: string;
-  sectionKey: string;
-  data: unknown;
-}
-
-export interface PublicCollegeSummaryQuery {
-  universityId?: string;
-  streamId?: string;
-  disciplineId?: string;
-  studyLevelId?: string;
-  programTypeId?: string;
-}
-
-export interface PublicCollegeSummary {
-  college: {
-    id: string;
-    name: string;
-    slug: string;
-    code: string;
-    logoUrl: string | null;
-    coverImageUrl: string | null;
-    domain: string | null;
-    location: {
-      address: string | null;
-      city: string | null;
-      state: string | null;
-      district: string | null;
-      pinCode: string | null;
-    };
-  };
-  course: PublicCourse;
-  tabListing: { id: string; name: string }[];
-}
-
-function buildQueryString(query: PublicCollegeSummaryQuery) {
-  const params = new URLSearchParams();
-
-  if (query.universityId) params.set("universityId", query.universityId);
-  if (query.streamId) params.set("streamId", query.streamId);
-  if (query.disciplineId) params.set("disciplineId", query.disciplineId);
-  if (query.studyLevelId) params.set("studyLevelId", query.studyLevelId);
-  if (query.programTypeId) params.set("programTypeId", query.programTypeId);
-
-  const serialized = params.toString();
-  return serialized ? `?${serialized}` : "";
-}
-
-export const publicCollegeService = {
-  getBySlug: async (slug: string) => {
-    const payload = await publicFetch<PublicCollegeApiResponse>(
-      `/api/v1/public/colleges/by-slug/${slug}`,
-    );
-    return normalizeCollegePayload(payload);
+// Cached: called from the [subdomain] layout AND from each page under it
+// (home + every tab subpage) in the same render pass — React.cache() dedupes
+// those into a single request per navigation instead of one per component.
+export const getCollegeBySlug = cache(
+  async (slug: string): Promise<PublicCollegeBySlugResponse> => {
+    return api.get(`/api/v1/public/colleges/by-slug/${slug}`);
   },
+);
 
-  getSection: (collegeId: string, sectionName: string) =>
-    publicFetch<PublicCollegeSectionResponse>(
-      `/api/v1/public/colleges/${collegeId}/section/${encodeURIComponent(sectionName)}`,
-    ),
+export async function getCollegeOverviewSection(
+  collegeId: string,
+): Promise<PublicCollegeSectionResponse<PublicCollegeOverviewSection>> {
+  return api.get(
+    `/api/v1/public/colleges/${collegeId}/section/college_overview`,
+  );
+}
 
-  getSummary: (collegeId: string, query: PublicCollegeSummaryQuery = {}) =>
-    publicFetch<PublicCollegeSummary>(
-      `/api/v1/public/colleges/${collegeId}/summary${buildQueryString(query)}`,
-    ),
-};
+export async function getCollegeCourses(
+  slug: string,
+): Promise<PublicCourseListItem[]> {
+  return api.get(`/api/v1/public/colleges/by-slug/${slug}/courses`);
+}
+
+export async function getCollegeScholarships(
+  slug: string,
+): Promise<PublicScholarship[]> {
+  return api.get(`/api/v1/public/colleges/by-slug/${slug}/scholarships`);
+}
+
+export async function getCollegeGallery(
+  slug: string,
+): Promise<PublicGalleryItem[]> {
+  return api.get(`/api/v1/public/colleges/by-slug/${slug}/gallery`);
+}
+
+export async function getCollegeReviews(
+  slug: string,
+  limit = 10,
+): Promise<PublicCollegeReview[]> {
+  return api.get(
+    `/api/v1/public/colleges/by-slug/${slug}/reviews?limit=${limit}`,
+  );
+}
+
+export async function getInstitutionsAcrossWorldSection(
+  collegeId: string,
+): Promise<PublicCollegeSectionResponse<PublicInstitutionsAcrossWorldSection>> {
+  return api.get(
+    `/api/v1/public/colleges/${collegeId}/section/institutions_across_world`,
+  );
+}
+
+export async function getCommuteSection(
+  collegeId: string,
+): Promise<PublicCollegeSectionResponse<PublicCommuteSection>> {
+  return api.get(`/api/v1/public/colleges/${collegeId}/section/commute`);
+}
+
+export async function getHappeningsSection(
+  collegeId: string,
+): Promise<PublicCollegeSectionResponse<PublicHappeningsSection>> {
+  return api.get(`/api/v1/public/colleges/${collegeId}/section/happenings`);
+}
+
+export async function getCodeOfConductSection(
+  collegeId: string,
+): Promise<PublicCollegeSectionResponse<PublicCodeOfConductSection>> {
+  return api.get(
+    `/api/v1/public/colleges/${collegeId}/section/student_code_of_conduct`,
+  );
+}
+
+export async function getCampusAmbassadors(
+  collegeId: string,
+): Promise<AmbassadorOption[]> {
+  return api.get(`/api/v1/public/colleges/${collegeId}/ambassadors`);
+}

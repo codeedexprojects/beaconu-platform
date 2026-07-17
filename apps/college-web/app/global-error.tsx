@@ -22,8 +22,8 @@ export default function GlobalError({
           alignItems: "center",
           justifyContent: "center",
           fontFamily: "sans-serif",
-          background: "#fcfbf7",
-          color: "#1b1b1b",
+          background: "#0b0f1a",
+          color: "#e2e8f0",
         }}
       >
         <div style={{ textAlign: "center", padding: "2rem" }}>
@@ -36,7 +36,7 @@ export default function GlobalError({
           >
             Something went wrong
           </h1>
-          <p style={{ color: "#666", marginBottom: "1.5rem" }}>
+          <p style={{ color: "#94a3b8", marginBottom: "1.5rem" }}>
             {error.digest && (
               <span
                 style={{
@@ -54,11 +54,11 @@ export default function GlobalError({
           <button
             onClick={reset}
             style={{
-              background: "#f97316",
+              background: "#3b82f6",
               color: "#fff",
               border: "none",
               padding: "0.625rem 1.5rem",
-              borderRadius: "9999px",
+              borderRadius: "8px",
               cursor: "pointer",
               fontWeight: 600,
             }}
