@@ -60,6 +60,10 @@ export const publicCollegeSchemas = {
       .optional()
       .transform((v) => v || undefined),
   }),
+
+  reviewsQuery: z.object({
+    limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+  }),
 };
 
 export type PublicCollegeListQuery = z.output<

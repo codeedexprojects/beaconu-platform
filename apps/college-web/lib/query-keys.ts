@@ -1,10 +1,9 @@
 export const QUERY_KEYS = {
-  campusVisits: (filters?: object) =>
-    filters ? ["campus-visits", filters] : ["campus-visits"],
-  campusVisit: (id: string) => ["campus-visits", id],
-  ambassadors: (collegeId: string) => ["ambassadors", collegeId],
-  campusVisitAvailability: (collegeId: string) => [
-    "campus-visit-availability",
-    collegeId,
-  ],
+  publicCollegeBySlug: (slug: string) => ["public-colleges", slug] as const,
+  campusAmbassadors: (collegeId: string) =>
+    ["campus-ambassadors", collegeId] as const,
+  campusVisitAvailability: (collegeId: string) =>
+    ["campus-visit-availability", collegeId] as const,
+  myCampusVisits: (collegeId: string) =>
+    ["my-campus-visits", collegeId] as const,
 } as const;

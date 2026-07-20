@@ -33,11 +33,11 @@ import type { CampusVisitStatus } from "@beaconu/types";
 
 const STATUS_LABELS: Record<CampusVisitStatus, string> = {
   pending: "Pending",
+  arrived: "Arrived",
   confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
   reassigned: "Reassigned",
-  rejected: "Rejected",
 };
 
 const STATUS_VARIANTS: Record<
@@ -45,11 +45,11 @@ const STATUS_VARIANTS: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   pending: "secondary",
+  arrived: "secondary",
   confirmed: "default",
   completed: "outline",
   cancelled: "destructive",
   reassigned: "secondary",
-  rejected: "destructive",
 };
 
 function formatDate(dateStr: string) {
@@ -120,7 +120,7 @@ export default function CampusVisitsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <p className="text-sm text-muted-foreground">Today&apos;s Visits</p>
@@ -139,6 +139,20 @@ export default function CampusVisitsPage() {
             ) : (
               <p className="mt-1 text-3xl font-bold text-amber-500">
                 {stats?.pending ?? 0}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">
+              Arrived · Awaiting Ambassador
+            </p>
+            {isLoadingStats ? (
+              <Skeleton className="mt-1 h-8 w-12" />
+            ) : (
+              <p className="mt-1 text-3xl font-bold text-orange-500">
+                {stats?.arrived ?? 0}
               </p>
             )}
           </CardContent>
@@ -172,10 +186,10 @@ export default function CampusVisitsPage() {
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="arrived">Arrived</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
             <SelectItem value="reassigned">Reassigned</SelectItem>
           </SelectContent>
         </Select>

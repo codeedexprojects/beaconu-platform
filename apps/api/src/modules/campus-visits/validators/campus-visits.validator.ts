@@ -7,7 +7,6 @@ const guestSchema = z.object({
 
 export const createCampusVisitSchema = z.object({
   college_id: z.string().min(1, "College is required"),
-  ambassador_id: z.string().optional(),
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email is required"),
   phone_number: z
@@ -38,10 +37,6 @@ export const cancelCampusVisitSchema = z.object({
   cancellation_reason: z.string().min(1, "Cancellation reason is required"),
 });
 
-export const rejectCampusVisitSchema = z.object({
-  rejection_reason: z.string().min(1, "Rejection reason is required"),
-});
-
 export const reassignCampusVisitSchema = z.object({
   ambassador_id: z.string().min(1, "Ambassador is required"),
   reassignment_reason: z.string().optional(),
@@ -52,11 +47,11 @@ export const campusVisitListQuerySchema = z.object({
   status: z
     .enum([
       "pending",
+      "arrived",
       "confirmed",
       "completed",
       "cancelled",
       "reassigned",
-      "rejected",
     ])
     .optional(),
   date: z.string().date().optional(),
@@ -70,7 +65,6 @@ export type RescheduleCampusVisitInput = z.infer<
   typeof rescheduleCampusVisitSchema
 >;
 export type CancelCampusVisitInput = z.infer<typeof cancelCampusVisitSchema>;
-export type RejectCampusVisitInput = z.infer<typeof rejectCampusVisitSchema>;
 export type ReassignCampusVisitInput = z.infer<
   typeof reassignCampusVisitSchema
 >;

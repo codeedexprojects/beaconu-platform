@@ -1,92 +1,44 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import {
-  campusVisitsService,
-  type VisitListFilters,
-} from "@/lib/services/campus-visits.service";
 import { QUERY_KEYS } from "@/lib/query-keys";
-import { ApiError } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
+import {
+  arriveCampusVisit,
+  bookCampusVisit,
+  cancelCampusVisit,
+  getVisitAvailability,
+  listMyCampusVisits,
+  rescheduleCampusVisit,
+} from "@/lib/services/campus-visit.service";
+import { toast } from "sonner";
 import type {
+  CancelCampusVisitInput,
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
-  CancelCampusVisitInput,
 } from "@beaconu/types";
 
-function getErrorMessage(error: unknown): string {
-  if (!(error instanceof ApiError))
-    return "Something went wrong. Please try again.";
-  switch (error.status) {
-    case 403:
-      return "You don't have permission to do this";
-    case 404:
-      return "Visit not found";
-    case 409:
-    case 422:
-      return error.message;
-    default:
-      return "Something went wrong. Please try again.";
-  }
-}
-
-export function useCampusVisits(filters: VisitListFilters = {}) {
-  return useQuery({
-    queryKey: QUERY_KEYS.campusVisits(filters),
-    queryFn: () => campusVisitsService.list(filters),
-  });
-}
-
-export function useCampusVisit(visitId: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.campusVisit(visitId),
-    queryFn: () => campusVisitsService.getOne(visitId),
-    enabled: !!visitId,
-  });
-}
-
-export function useAmbassadors(collegeId: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.ambassadors(collegeId),
-    queryFn: () => campusVisitsService.listAmbassadors(collegeId),
-    enabled: !!collegeId,
-  });
-}
-
-export function useCampusVisitAvailability(collegeId: string) {
+export function useVisitAvailability(collegeId: string, enabled: boolean) {
   return useQuery({
     queryKey: QUERY_KEYS.campusVisitAvailability(collegeId),
-    queryFn: () => campusVisitsService.listAvailability(collegeId),
-    enabled: !!collegeId,
+    queryFn: () => getVisitAvailability(collegeId),
+    enabled,
   });
 }
 
-export function useBookCampusVisit() {
+export function useMyCampusVisits(collegeId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.myCampusVisits(collegeId),
+    queryFn: () => listMyCampusVisits({ college_id: collegeId, limit: 50 }),
+    enabled,
+  });
+}
+
+export function useBookCampusVisit(collegeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateCampusVisitInput) =>
-      campusVisitsService.book(data),
+    mutationFn: (input: CreateCampusVisitInput) => bookCampusVisit(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.campusVisits() });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-  });
-}
-
-export function useRescheduleCampusVisit() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      visitId,
-      data,
-    }: {
-      visitId: string;
-      data: RescheduleCampusVisitInput;
-    }) => campusVisitsService.reschedule(visitId, data),
-    onSuccess: (_data, { visitId }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.campusVisits() });
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.campusVisit(visitId),
+        queryKey: QUERY_KEYS.myCampusVisits(collegeId),
       });
     },
     onError: (error) => {
@@ -95,20 +47,55 @@ export function useRescheduleCampusVisit() {
   });
 }
 
-export function useCancelCampusVisit() {
+export function useRescheduleCampusVisit(collegeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       visitId,
-      data,
+      input,
     }: {
       visitId: string;
-      data: CancelCampusVisitInput;
-    }) => campusVisitsService.cancel(visitId, data),
-    onSuccess: (_data, { visitId }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.campusVisits() });
+      input: RescheduleCampusVisitInput;
+    }) => rescheduleCampusVisit(visitId, input),
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.campusVisit(visitId),
+        queryKey: QUERY_KEYS.myCampusVisits(collegeId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useArriveCampusVisit(collegeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (visitId: string) => arriveCampusVisit(visitId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.myCampusVisits(collegeId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useCancelCampusVisit(collegeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      visitId,
+      input,
+    }: {
+      visitId: string;
+      input: CancelCampusVisitInput;
+    }) => cancelCampusVisit(visitId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.myCampusVisits(collegeId),
       });
     },
     onError: (error) => {

@@ -6,17 +6,18 @@ import { BlinkService } from "@/modules/blink/services/blink.service";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { CampusVisitsRepository } from "../repositories/campus-visits.repository";
 import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
+import { CampusVisitsQuery } from "../queries/campus-visits.query";
 import type {
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
   CancelCampusVisitInput,
-  RejectCampusVisitInput,
   ReassignCampusVisitInput,
 } from "../validators/campus-visits.validator";
 
 const RESCHEDULABLE_STATUSES = ["pending", "confirmed"];
-const CANCELLABLE_STATUSES = ["pending", "confirmed"];
+const CANCELLABLE_STATUSES = ["pending", "confirmed", "arrived"];
 const MIN_ADVANCE_HOURS = 2;
+const REBROADCAST_AFTER_MS = 5 * 60 * 1000; // re-notify ambassadors if still unclaimed after 5 min
 
 function weekdayOf(dateStr: string) {
   return new Date(dateStr + "T00:00:00Z").getUTCDay();
@@ -110,24 +111,31 @@ function mapBookingResponse(visit: {
 }
 
 /** Best-effort push notifications for the campus-visit lifecycle — never throw. */
-async function notifyAmbassadorOfBooking(visit: {
+async function notifyAmbassadorsOfArrival(visit: {
   id: string;
-  ambassadorId: string | null;
+  collegeId: string;
   studentName: string;
   proposedDate: Date;
   proposedTime: Date;
 }): Promise<void> {
-  if (!visit.ambassadorId) return;
   try {
-    await PushService.sendToUser(visit.ambassadorId, "blink_ambassador", {
-      title: "New campus visit booked",
-      body: `${visit.studentName} booked a visit on ${formatDateStr(visit.proposedDate)} at ${formatTime12h(visit.proposedTime)}`,
-      data: { type: "campus_visit_booked", visitId: visit.id },
-    });
+    const ambassadors = await CampusVisitsQuery.listAmbassadorsForCollege(
+      visit.collegeId,
+    );
+    if (ambassadors.length === 0) return;
+
+    await PushService.sendToUsers(
+      ambassadors.map((a) => ({ userId: a.id, userType: "blink_ambassador" })),
+      {
+        title: "Student arrived for campus visit",
+        body: `${visit.studentName} has arrived for their visit at ${formatTime12h(visit.proposedTime)}. First to accept gets it.`,
+        data: { type: "campus_visit_arrived", visitId: visit.id },
+      },
+    );
   } catch (error) {
     logger.error(
       { err: error, visitId: visit.id },
-      "Failed to notify ambassador of new campus visit booking",
+      "Failed to notify ambassadors of campus visit arrival",
     );
   }
 }
@@ -148,24 +156,6 @@ async function notifyStudentOfAcceptance(visit: {
     logger.error(
       { err: error, visitId: visit.id },
       "Failed to notify student of campus visit confirmation",
-    );
-  }
-}
-
-async function notifyStudentOfRejection(
-  visit: { id: string; studentId: string },
-  reason: string,
-): Promise<void> {
-  try {
-    await PushService.sendToUser(visit.studentId, "student", {
-      title: "Campus visit declined",
-      body: `Your campus visit request was declined: ${reason}`,
-      data: { type: "campus_visit_rejected", visitId: visit.id },
-    });
-  } catch (error) {
-    logger.error(
-      { err: error, visitId: visit.id },
-      "Failed to notify student of campus visit rejection",
     );
   }
 }
@@ -247,13 +237,6 @@ export class CampusVisitsService {
       );
     }
 
-    if (data.ambassador_id) {
-      await BlinkService.assertAmbassadorInCollege(
-        data.ambassador_id,
-        data.college_id,
-      );
-    }
-
     const availability = await assertDateBookable(
       data.college_id,
       data.proposed_date,
@@ -283,7 +266,6 @@ export class CampusVisitsService {
       );
     });
 
-    await notifyAmbassadorOfBooking(visit);
     return mapBookingResponse(visit);
   }
 
@@ -374,47 +356,61 @@ export class CampusVisitsService {
     return cancelled;
   }
 
+  static async arrive(visitId: string, studentId: string) {
+    const visit = await CampusVisitsRepository.findById(visitId);
+    if (!visit) throw new NotFoundError("Campus visit not found");
+    if (visit.studentId !== studentId)
+      throw new ForbiddenError("Not your visit");
+    if (visit.status !== "pending") {
+      throw new ForbiddenError(
+        `Cannot mark arrival for a visit with status '${visit.status}'`,
+      );
+    }
+    if (formatDateStr(new Date()) !== formatDateStr(visit.proposedDate)) {
+      throw new ConflictError(
+        "You can only mark arrival on the day of your visit",
+      );
+    }
+
+    const { count } = await CampusVisitsRepository.markArrived(
+      visitId,
+      new Date(),
+    );
+    if (count === 0) {
+      throw new ConflictError(
+        `Cannot mark arrival for a visit with status '${visit.status}'`,
+      );
+    }
+
+    const arrived = await CampusVisitsRepository.findById(visitId);
+    await notifyAmbassadorsOfArrival(arrived!);
+    return arrived;
+  }
+
   static async accept(visitId: string, ambassadorId: string) {
     const visit = await CampusVisitsRepository.findById(visitId);
     if (!visit) throw new NotFoundError("Campus visit not found");
-    if (visit.ambassadorId !== ambassadorId)
-      throw new ForbiddenError("This visit is not assigned to you");
-    if (visit.status !== "pending") {
+    if (visit.status !== "arrived") {
       throw new ForbiddenError(
         `Cannot accept a visit with status '${visit.status}'`,
       );
     }
 
-    const confirmed = await CampusVisitsRepository.updateStatus(
-      visitId,
-      "confirmed",
-    );
-    await notifyStudentOfAcceptance(confirmed);
-    return confirmed;
-  }
+    await BlinkService.assertAmbassadorInCollege(ambassadorId, visit.collegeId);
 
-  static async reject(
-    visitId: string,
-    ambassadorId: string,
-    data: RejectCampusVisitInput,
-  ) {
-    const visit = await CampusVisitsRepository.findById(visitId);
-    if (!visit) throw new NotFoundError("Campus visit not found");
-    if (visit.ambassadorId !== ambassadorId)
-      throw new ForbiddenError("This visit is not assigned to you");
-    if (visit.status !== "pending") {
-      throw new ForbiddenError(
-        `Cannot reject a visit with status '${visit.status}'`,
+    const { count } = await CampusVisitsRepository.claimByAmbassador(
+      visitId,
+      ambassadorId,
+    );
+    if (count === 0) {
+      throw new ConflictError(
+        "This visit has already been accepted by another ambassador",
       );
     }
 
-    const rejected = await CampusVisitsRepository.updateStatus(
-      visitId,
-      "rejected",
-      { rejectionReason: data.rejection_reason },
-    );
-    await notifyStudentOfRejection(rejected, data.rejection_reason);
-    return rejected;
+    const confirmed = await CampusVisitsRepository.findById(visitId);
+    await notifyStudentOfAcceptance(confirmed!);
+    return confirmed;
   }
 
   static async reassign(
@@ -465,7 +461,6 @@ export class CampusVisitsService {
       confirmed: byStatus.confirmed ?? 0,
       completed: byStatus.completed ?? 0,
       cancelled: byStatus.cancelled ?? 0,
-      rejected: byStatus.rejected ?? 0,
       reassigned: byStatus.reassigned ?? 0,
     };
   }
@@ -535,6 +530,38 @@ export class CampusVisitsService {
         await Promise.allSettled(notifications);
         count += 1;
       }
+    }
+
+    return count;
+  }
+
+  /**
+   * Visits stuck in "arrived" with no ambassador after REBROADCAST_AFTER_MS get re-notified.
+   * The redis key's own TTL (= the rebroadcast interval) is the throttle — once it expires,
+   * the visit is eligible again on the next job tick, so this naturally repeats until claimed.
+   */
+  static async rebroadcastStaleArrivals(): Promise<number> {
+    const redis = getRedisClient();
+    const cutoff = new Date(Date.now() - REBROADCAST_AFTER_MS);
+
+    const staleVisits =
+      await CampusVisitsRepository.findStaleArrivedVisits(cutoff);
+
+    let count = 0;
+    for (const visit of staleVisits) {
+      const redisKey = `campus-visit:rebroadcast-sent:${visit.id}`;
+      const alreadySent = await redis.get(redisKey);
+      if (alreadySent) continue;
+
+      await redis.set(
+        redisKey,
+        "1",
+        "EX",
+        Math.floor(REBROADCAST_AFTER_MS / 1000),
+      );
+
+      await notifyAmbassadorsOfArrival(visit);
+      count += 1;
     }
 
     return count;

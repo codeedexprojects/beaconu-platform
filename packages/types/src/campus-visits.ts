@@ -2,11 +2,11 @@ import type { PaginationMeta } from "./api";
 
 export type CampusVisitStatus =
   | "pending"
+  | "arrived"
   | "confirmed"
   | "completed"
   | "cancelled"
-  | "reassigned"
-  | "rejected";
+  | "reassigned";
 
 export interface CampusVisitGuest {
   name: string;
@@ -58,6 +58,7 @@ export interface CampusVisit {
   previousProposedDate: string | null;
   previousProposedTime: string | null;
   rescheduledAt: string | null;
+  arrivedAt: string | null;
   visitNotes: string | null;
   visitRating: number | null;
   createdAt: string;
@@ -66,7 +67,6 @@ export interface CampusVisit {
 
 export interface CreateCampusVisitInput {
   college_id: string;
-  ambassador_id?: string;
   full_name: string;
   email: string;
   phone_number: string;
@@ -83,10 +83,6 @@ export interface RescheduleCampusVisitInput {
 
 export interface CancelCampusVisitInput {
   cancellation_reason: string;
-}
-
-export interface RejectCampusVisitInput {
-  rejection_reason: string;
 }
 
 export interface ReassignCampusVisitInput {
@@ -119,6 +115,7 @@ export interface CampusVisitListResponse {
 export interface CampusVisitStats {
   today: number;
   pending: number;
+  arrived: number;
   confirmed: number;
 }
 

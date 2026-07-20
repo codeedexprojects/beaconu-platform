@@ -23,6 +23,10 @@ docs {
   Returns full public details for a college by its subdomain slug.
   Same response shape as Get College By Id.
 
+  Auth: none required. If a valid student `Authorization: Bearer <token>` header is
+  sent, `collegeDetails.isWishlisted` reflects that student's wishlist; otherwise
+  it is always `false`. An invalid/expired token is ignored (never causes a 401).
+
   Response shape:
   {
     "collegeDetails": {
@@ -30,9 +34,9 @@ docs {
       "name": "...",
       "slug": "...",
       "logoUrl": "...",
-      "coverImageUrl": "...",
       "university": { "id": "...", "name": "...", "logoUrl": "...", "universityType": { ... } },
-      "campuses": [...]
+      "campuses": [...],
+      "isWishlisted": false
     },
     "tabs": [
       { "id": "college_overview", "name": "College Overview" },

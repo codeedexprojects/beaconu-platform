@@ -12,7 +12,7 @@ export class CampusVisitsRepository {
       data: {
         collegeId: data.college_id,
         studentId: data.studentId,
-        ambassadorId: data.ambassador_id ?? null,
+        ambassadorId: null,
         studentName: data.full_name,
         email: data.email,
         phoneNumber: data.phone_number,
@@ -53,9 +53,9 @@ export class CampusVisitsRepository {
     status: string,
     extra?: {
       cancellationReason?: string;
-      rejectionReason?: string;
       reassignmentReason?: string;
       ambassadorId?: string | null;
+      arrivedAt?: Date;
     },
     tx: TxClient = prisma,
   ) {
@@ -66,6 +66,22 @@ export class CampusVisitsRepository {
         ...extra,
       },
       include: { ambassador: true },
+    });
+  }
+
+  /** Atomic first-accept-wins claim: only succeeds if the visit is still unclaimed. */
+  static async claimByAmbassador(id: string, ambassadorId: string) {
+    return prisma.campusVisit.updateMany({
+      where: { id, status: "arrived", ambassadorId: null },
+      data: { status: "confirmed", ambassadorId },
+    });
+  }
+
+  /** Atomic pending -> arrived transition: only succeeds if still pending (guards double-submit). */
+  static async markArrived(id: string, arrivedAt: Date) {
+    return prisma.campusVisit.updateMany({
+      where: { id, status: "pending" },
+      data: { status: "arrived", arrivedAt },
     });
   }
 
@@ -113,6 +129,24 @@ export class CampusVisitsRepository {
         id: true,
         studentId: true,
         ambassadorId: true,
+        studentName: true,
+        proposedDate: true,
+        proposedTime: true,
+      },
+    });
+  }
+
+  /** Visits still unclaimed a while after arrival — used to re-broadcast to ambassadors. */
+  static async findStaleArrivedVisits(olderThan: Date) {
+    return prisma.campusVisit.findMany({
+      where: {
+        status: "arrived",
+        ambassadorId: null,
+        arrivedAt: { lte: olderThan },
+      },
+      select: {
+        id: true,
+        collegeId: true,
         studentName: true,
         proposedDate: true,
         proposedTime: true,

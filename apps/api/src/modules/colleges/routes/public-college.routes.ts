@@ -4,10 +4,11 @@ import { CourseTabsController } from "../controllers/course-tabs.controller";
 import { PublicHostelController } from "../controllers/public-hostel.controller";
 import { PublicLibraryController } from "../controllers/public-library.controller";
 import { PublicCampusVisitController } from "@/modules/campus-visits/controllers/public.controller";
+import { authenticateOptional } from "@/shared/middleware/authenticate-optional";
 
 const router: Router = Router();
 
-router.get("/", PublicCollegeController.getColleges);
+router.get("/", authenticateOptional, PublicCollegeController.getColleges);
 router.get(
   "/:collegeId/section/:sectionName",
   PublicCollegeController.getCollegeSection,
@@ -68,8 +69,24 @@ router.get(
   "/:collegeId/ambassadors",
   PublicCampusVisitController.listAmbassadors,
 );
-router.get("/:id", PublicCollegeController.getCollegeById);
-router.get("/by-slug/:slug", PublicCollegeController.getCollegeBySlug);
+// ── Profile extras (public) ───────────────────────────────────────────────────
+router.get(
+  "/by-slug/:slug/scholarships",
+  PublicCollegeController.getCollegeScholarships,
+);
+router.get("/by-slug/:slug/gallery", PublicCollegeController.getCollegeGallery);
+router.get("/by-slug/:slug/reviews", PublicCollegeController.getCollegeReviews);
+
+router.get(
+  "/:id",
+  authenticateOptional,
+  PublicCollegeController.getCollegeById,
+);
+router.get(
+  "/by-slug/:slug",
+  authenticateOptional,
+  PublicCollegeController.getCollegeBySlug,
+);
 router.get("/by-slug/:slug/courses", PublicCollegeController.getCollegeCourses);
 
 export default router;
