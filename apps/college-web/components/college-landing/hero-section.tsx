@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApplyNowButton } from "@/components/college-landing/apply-now-button";
 
 interface HeroSectionProps {
   collegeName: string;
@@ -10,7 +11,6 @@ interface HeroSectionProps {
   locationText: string;
   universityTypeName: string | null;
   establishedYear: number | null;
-  applyHref: string;
   campusVisitHref: string;
 }
 
@@ -21,7 +21,6 @@ export function HeroSection({
   locationText,
   universityTypeName,
   establishedYear,
-  applyHref,
   campusVisitHref,
 }: HeroSectionProps) {
   return (
@@ -62,9 +61,7 @@ export function HeroSection({
         </div>
 
         <div className="mt-7 flex flex-wrap gap-3">
-          <Button size="lg" asChild>
-            <Link href={applyHref}>Start Application</Link>
-          </Button>
+          <ApplyNowButton size="lg">Start Application</ApplyNowButton>
           <Button size="lg" variant="outline" asChild>
             <Link href={campusVisitHref}>Book Campus Visit</Link>
           </Button>

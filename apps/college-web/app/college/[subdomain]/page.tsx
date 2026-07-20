@@ -46,7 +46,6 @@ export default async function CollegeLandingPage({
   );
 
   const overviewData = overview?.data;
-  const applyHref = `/college/${subdomain}/login`;
   const campusVisitHref = `/college/${subdomain}/campus-visit`;
   const locationText = [collegeDetails.city, collegeDetails.state]
     .filter(Boolean)
@@ -82,7 +81,6 @@ export default async function CollegeLandingPage({
         locationText={locationText}
         universityTypeName={universityTypeName}
         establishedYear={collegeDetails.establishedYear}
-        applyHref={applyHref}
         campusVisitHref={campusVisitHref}
       />
 
@@ -125,7 +123,6 @@ export default async function CollegeLandingPage({
 
       <CtaFooter
         collegeName={collegeDetails.name}
-        applyHref={applyHref}
         campusVisitHref={campusVisitHref}
         social={overviewData?.social ?? []}
       />
