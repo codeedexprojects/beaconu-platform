@@ -136,6 +136,24 @@ export class CampusVisitsRepository {
     });
   }
 
+  /** Visits still unclaimed a while after arrival — used to re-broadcast to ambassadors. */
+  static async findStaleArrivedVisits(olderThan: Date) {
+    return prisma.campusVisit.findMany({
+      where: {
+        status: "arrived",
+        ambassadorId: null,
+        arrivedAt: { lte: olderThan },
+      },
+      select: {
+        id: true,
+        collegeId: true,
+        studentName: true,
+        proposedDate: true,
+        proposedTime: true,
+      },
+    });
+  }
+
   static async reschedule(
     id: string,
     proposedDate: Date,

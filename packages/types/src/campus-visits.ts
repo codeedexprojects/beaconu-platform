@@ -115,6 +115,7 @@ export interface CampusVisitListResponse {
 export interface CampusVisitStats {
   today: number;
   pending: number;
+  arrived: number;
   confirmed: number;
 }
 

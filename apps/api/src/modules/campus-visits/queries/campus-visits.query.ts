@@ -265,7 +265,7 @@ export class CampusVisitsQuery {
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
 
-    const [today, pending, confirmed] = await Promise.all([
+    const [today, pending, arrived, confirmed] = await Promise.all([
       prisma.campusVisit.count({
         where: { collegeId, proposedDate: todayStart },
       }),
@@ -273,11 +273,14 @@ export class CampusVisitsQuery {
         where: { collegeId, status: "pending" },
       }),
       prisma.campusVisit.count({
+        where: { collegeId, status: "arrived" },
+      }),
+      prisma.campusVisit.count({
         where: { collegeId, status: "confirmed" },
       }),
     ]);
 
-    return { today, pending, confirmed };
+    return { today, pending, arrived, confirmed };
   }
 
   static async listAmbassadorsForCollege(collegeId: string) {

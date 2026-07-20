@@ -17,6 +17,7 @@ import type {
 const RESCHEDULABLE_STATUSES = ["pending", "confirmed"];
 const CANCELLABLE_STATUSES = ["pending", "confirmed", "arrived"];
 const MIN_ADVANCE_HOURS = 2;
+const REBROADCAST_AFTER_MS = 5 * 60 * 1000; // re-notify ambassadors if still unclaimed after 5 min
 
 function weekdayOf(dateStr: string) {
   return new Date(dateStr + "T00:00:00Z").getUTCDay();
@@ -457,7 +458,6 @@ export class CampusVisitsService {
     return {
       total: rows.reduce((sum, row) => sum + row._count._all, 0),
       pending: byStatus.pending ?? 0,
-      arrived: byStatus.arrived ?? 0,
       confirmed: byStatus.confirmed ?? 0,
       completed: byStatus.completed ?? 0,
       cancelled: byStatus.cancelled ?? 0,
@@ -530,6 +530,38 @@ export class CampusVisitsService {
         await Promise.allSettled(notifications);
         count += 1;
       }
+    }
+
+    return count;
+  }
+
+  /**
+   * Visits stuck in "arrived" with no ambassador after REBROADCAST_AFTER_MS get re-notified.
+   * The redis key's own TTL (= the rebroadcast interval) is the throttle — once it expires,
+   * the visit is eligible again on the next job tick, so this naturally repeats until claimed.
+   */
+  static async rebroadcastStaleArrivals(): Promise<number> {
+    const redis = getRedisClient();
+    const cutoff = new Date(Date.now() - REBROADCAST_AFTER_MS);
+
+    const staleVisits =
+      await CampusVisitsRepository.findStaleArrivedVisits(cutoff);
+
+    let count = 0;
+    for (const visit of staleVisits) {
+      const redisKey = `campus-visit:rebroadcast-sent:${visit.id}`;
+      const alreadySent = await redis.get(redisKey);
+      if (alreadySent) continue;
+
+      await redis.set(
+        redisKey,
+        "1",
+        "EX",
+        Math.floor(REBROADCAST_AFTER_MS / 1000),
+      );
+
+      await notifyAmbassadorsOfArrival(visit);
+      count += 1;
     }
 
     return count;

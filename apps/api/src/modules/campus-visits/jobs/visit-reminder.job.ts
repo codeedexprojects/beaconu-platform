@@ -21,6 +21,19 @@ export async function startVisitReminderJob(): Promise<void> {
         "Sent campus visit reminders (24-hour / 1-hour)",
       );
     }
+
+    const rebroadcastCount =
+      await CampusVisitsService.rebroadcastStaleArrivals();
+    if (rebroadcastCount > 0) {
+      logger.info(
+        {
+          count: rebroadcastCount,
+          module: "campus-visits",
+          action: "VISIT_ARRIVAL_REBROADCAST",
+        },
+        "Re-notified ambassadors of unclaimed arrived campus visits",
+      );
+    }
   });
 
   await queue.add(
