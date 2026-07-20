@@ -120,7 +120,7 @@ export default function CampusVisitsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <p className="text-sm text-muted-foreground">Today&apos;s Visits</p>
@@ -139,6 +139,20 @@ export default function CampusVisitsPage() {
             ) : (
               <p className="mt-1 text-3xl font-bold text-amber-500">
                 {stats?.pending ?? 0}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">
+              Arrived · Awaiting Ambassador
+            </p>
+            {isLoadingStats ? (
+              <Skeleton className="mt-1 h-8 w-12" />
+            ) : (
+              <p className="mt-1 text-3xl font-bold text-orange-500">
+                {stats?.arrived ?? 0}
               </p>
             )}
           </CardContent>
