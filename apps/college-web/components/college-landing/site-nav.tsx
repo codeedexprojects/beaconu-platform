@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronDown, LogOut, Menu, User2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ApplyNowButton } from "@/components/college-landing/apply-now-button";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
 
@@ -18,7 +18,6 @@ interface NavLink {
 interface SiteNavProps {
   collegeName: string;
   logoUrl: string | null;
-  applyHref: string;
   sections: NavLink[];
   moreSections?: NavLink[];
 }
@@ -74,7 +73,7 @@ function MoreMenu({ items }: { items: NavLink[] }) {
   );
 }
 
-function AccountMenu({ applyHref }: { applyHref: string }) {
+function AccountMenu() {
   const router = useRouter();
   const params = useParams<{ subdomain: string }>();
   const student = useAuthStore((s) => s.student);
@@ -97,11 +96,7 @@ function AccountMenu({ applyHref }: { applyHref: string }) {
   if (!hasHydrated) return null;
 
   if (!student) {
-    return (
-      <Button size="sm" asChild>
-        <Link href={applyHref}>Apply Now</Link>
-      </Button>
-    );
+    return <ApplyNowButton size="sm">Apply Now</ApplyNowButton>;
   }
 
   function handleLogout() {
@@ -149,7 +144,6 @@ function AccountMenu({ applyHref }: { applyHref: string }) {
 export function SiteNav({
   collegeName,
   logoUrl,
-  applyHref,
   sections,
   moreSections = [],
 }: SiteNavProps) {
@@ -187,7 +181,7 @@ export function SiteNav({
         </nav>
 
         <div className="hidden lg:block">
-          <AccountMenu applyHref={applyHref} />
+          <AccountMenu />
         </div>
 
         <button
@@ -214,9 +208,9 @@ export function SiteNav({
               </Link>
             ))}
           </nav>
-          <Button size="sm" className="mt-3 w-full" asChild>
-            <Link href={applyHref}>Apply Now</Link>
-          </Button>
+          <ApplyNowButton size="sm" className="mt-3 w-full">
+            Apply Now
+          </ApplyNowButton>
         </div>
       ) : null}
     </header>

@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApplyNowButton } from "@/components/college-landing/apply-now-button";
 import type { PublicCollegeOverviewSocial } from "@beaconu/types";
 
 interface CtaFooterProps {
   collegeName: string;
-  applyHref: string;
   campusVisitHref: string;
   social: PublicCollegeOverviewSocial[];
 }
 
 export function CtaFooter({
   collegeName,
-  applyHref,
   campusVisitHref,
   social,
 }: CtaFooterProps) {
@@ -26,11 +25,9 @@ export function CtaFooter({
           Take the first step toward studying at {collegeName}.
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <Button size="lg" asChild>
-            <Link href={applyHref}>
-              Start Application <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Link>
-          </Button>
+          <ApplyNowButton size="lg">
+            Start Application <ArrowRight className="ml-1.5 h-4 w-4" />
+          </ApplyNowButton>
           <Button size="lg" variant="outline" asChild>
             <Link href={campusVisitHref}>Book Campus Visit</Link>
           </Button>

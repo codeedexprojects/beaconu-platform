@@ -48,7 +48,6 @@ export default async function CollegeLayout({
   }
 
   const homeHref = `/college/${subdomain}`;
-  const applyHref = `${homeHref}/login`;
 
   const coreLinks = CORE_SECTIONS.map((section) => ({
     id: section.id,
@@ -78,7 +77,6 @@ export default async function CollegeLayout({
       <SiteNav
         collegeName={collegeDetails.name}
         logoUrl={collegeDetails.logoUrl}
-        applyHref={applyHref}
         sections={coreLinks}
         moreSections={[...tabLinks, ...extraLinks]}
       />
