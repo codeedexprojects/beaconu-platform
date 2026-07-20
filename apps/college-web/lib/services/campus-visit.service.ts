@@ -58,3 +58,10 @@ export async function cancelCampusVisit(
 ): Promise<void> {
   await api.patch(`/api/v1/student/campus-visits/${visitId}/cancel`, input);
 }
+
+export async function arriveCampusVisit(visitId: string): Promise<CampusVisit> {
+  return api.patch(
+    `/api/v1/student/campus-visits/${visitId}/arrive`,
+    undefined,
+  );
+}

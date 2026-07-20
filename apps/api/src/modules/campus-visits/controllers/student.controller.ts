@@ -72,4 +72,12 @@ export class StudentCampusVisitController {
       ApiResponse.success("Campus visit cancelled successfully", null),
     );
   }
+
+  static async arrive(req: Request, res: Response) {
+    const visit = await CampusVisitsService.arrive(
+      req.params.visitId as string,
+      req.userId!,
+    );
+    return res.json(ApiResponse.success("Marked as arrived", visit));
+  }
 }

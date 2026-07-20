@@ -13,5 +13,6 @@ router.get("/availability", StudentCampusVisitController.listAvailability);
 router.get("/:visitId", StudentCampusVisitController.getOne);
 router.patch("/:visitId/reschedule", StudentCampusVisitController.reschedule);
 router.patch("/:visitId/cancel", StudentCampusVisitController.cancel);
+router.patch("/:visitId/arrive", StudentCampusVisitController.arrive);
 
 export default router;

@@ -491,11 +491,9 @@ export default function AmbassadorDetailPage() {
           <CardContent className="flex items-center gap-3 pt-4">
             <Ban className="h-5 w-5 text-destructive" />
             <div>
-              <p className="text-sm text-muted-foreground">
-                Cancelled / Rejected
-              </p>
+              <p className="text-sm text-muted-foreground">Cancelled</p>
               <p className="text-2xl font-bold text-destructive">
-                {stats.cancelled + stats.rejected}
+                {stats.cancelled}
               </p>
             </div>
           </CardContent>

@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/api";
-import { getCampusAmbassadors } from "@/lib/services/public-college.service";
 import {
+  arriveCampusVisit,
   bookCampusVisit,
   cancelCampusVisit,
   getVisitAvailability,
@@ -15,14 +15,6 @@ import type {
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
 } from "@beaconu/types";
-
-export function useCampusAmbassadors(collegeId: string, enabled: boolean) {
-  return useQuery({
-    queryKey: QUERY_KEYS.campusAmbassadors(collegeId),
-    queryFn: () => getCampusAmbassadors(collegeId),
-    enabled,
-  });
-}
 
 export function useVisitAvailability(collegeId: string, enabled: boolean) {
   return useQuery({
@@ -65,6 +57,21 @@ export function useRescheduleCampusVisit(collegeId: string) {
       visitId: string;
       input: RescheduleCampusVisitInput;
     }) => rescheduleCampusVisit(visitId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.myCampusVisits(collegeId),
+      });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useArriveCampusVisit(collegeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (visitId: string) => arriveCampusVisit(visitId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.myCampusVisits(collegeId),
