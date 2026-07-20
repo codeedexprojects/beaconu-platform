@@ -1,0 +1,15 @@
+meta {
+  name: Mark Arrived (Student)
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/campus-visits/{{campusVisitId}}/arrive
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

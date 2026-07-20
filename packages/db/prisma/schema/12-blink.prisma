@@ -173,6 +173,7 @@ model CampusVisit {
   previousProposedDate    DateTime? @map("previous_proposed_date") @db.Date
   previousProposedTime    DateTime? @map("previous_proposed_time") @db.Time
   rescheduledAt           DateTime? @map("rescheduled_at") @db.Timestamptz
+  arrivedAt               DateTime? @map("arrived_at") @db.Timestamptz
   visitNotes              String?   @map("visit_notes") @db.Text
   visitRating             Int?      @map("visit_rating") @db.SmallInt
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz

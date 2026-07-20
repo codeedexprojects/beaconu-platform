@@ -9,7 +9,6 @@ router.use(authenticate, authorizeUserType("blink_ambassador"));
 
 router.get("/", AmbassadorCampusVisitController.list);
 router.patch("/:visitId/accept", AmbassadorCampusVisitController.accept);
-router.patch("/:visitId/reject", AmbassadorCampusVisitController.reject);
 router.patch("/:visitId/reassign", AmbassadorCampusVisitController.reassign);
 
 export default router;

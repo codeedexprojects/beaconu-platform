@@ -253,6 +253,7 @@ export class CampusVisitsQuery {
         ? v.previousProposedTime.toISOString().split("T")[1].slice(0, 5)
         : null,
       rescheduledAt: v.rescheduledAt ? v.rescheduledAt.toISOString() : null,
+      arrivedAt: v.arrivedAt ? v.arrivedAt.toISOString() : null,
       visitNotes: v.visitNotes,
       visitRating: v.visitRating,
       createdAt: v.createdAt.toISOString(),

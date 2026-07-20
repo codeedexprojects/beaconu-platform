@@ -58,10 +58,10 @@ export interface UpdateCampusAmbassadorInput {
 export interface AmbassadorVisitStats {
   total: number;
   pending: number;
+  arrived: number;
   confirmed: number;
   completed: number;
   cancelled: number;
-  rejected: number;
   reassigned: number;
 }
 

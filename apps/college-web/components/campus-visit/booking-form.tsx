@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { AvailabilityStrip } from "@/components/campus-visit/availability-strip";
 import {
   useBookCampusVisit,
-  useCampusAmbassadors,
   useVisitAvailability,
 } from "@/hooks/use-campus-visits";
 import type { StudentUser } from "@/store";
@@ -26,7 +25,6 @@ const bookingSchema = z.object({
   full_name: z.string().trim().min(1, "Full name is required"),
   email: z.string().trim().email("Enter a valid email"),
   phone_number: z.string().trim().min(10, "Enter a valid phone number").max(15),
-  ambassador_id: z.string().optional(),
   course_interest: z.string().trim().optional(),
   additional_visitors_count: z.coerce.number().int().min(0).max(10),
   guests: z.array(guestSchema).max(10),
@@ -55,7 +53,6 @@ export function BookingForm({
   student,
 }: BookingFormProps) {
   const router = useRouter();
-  const { data: ambassadors } = useCampusAmbassadors(collegeId, true);
   const { data: availability } = useVisitAvailability(collegeId, true);
   const { mutate: book, isPending } = useBookCampusVisit(collegeId);
   const [showGuests, setShowGuests] = useState(false);
@@ -66,7 +63,6 @@ export function BookingForm({
       full_name: student.fullName,
       email: student.email ?? "",
       phone_number: "",
-      ambassador_id: "",
       course_interest: "",
       additional_visitors_count: 0,
       guests: [],
@@ -91,7 +87,6 @@ export function BookingForm({
     book(
       {
         college_id: collegeId,
-        ambassador_id: data.ambassador_id || undefined,
         full_name: data.full_name,
         email: data.email,
         phone_number: data.phone_number,
@@ -174,22 +169,6 @@ export function BookingForm({
             ) : null}
           </div>
         </div>
-
-        {(ambassadors?.length ?? 0) > 0 ? (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">
-              Preferred Ambassador (optional)
-            </label>
-            <select className={inputCls} {...form.register("ambassador_id")}>
-              <option value="">No preference</option>
-              {ambassadors?.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">

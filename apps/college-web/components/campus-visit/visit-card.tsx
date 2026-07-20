@@ -6,22 +6,25 @@ import { Loader2, User2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AvailabilityStrip } from "@/components/campus-visit/availability-strip";
 import {
+  useArriveCampusVisit,
   useCancelCampusVisit,
   useRescheduleCampusVisit,
   useVisitAvailability,
 } from "@/hooks/use-campus-visits";
 import type { CampusVisitListItem } from "@beaconu/types";
 
-const ACTIONABLE_STATUSES = new Set(["pending", "confirmed"]);
+const RESCHEDULABLE_STATUSES = new Set(["pending", "confirmed"]);
+const CANCELLABLE_STATUSES = new Set(["pending", "confirmed", "arrived"]);
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   pending: "outline",
+  arrived: "secondary",
   confirmed: "default",
   completed: "secondary",
   cancelled: "outline",
-  rejected: "outline",
   reassigned: "secondary",
 };
 
@@ -45,6 +48,7 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
   const [mode, setMode] = useState<"none" | "reschedule" | "cancel">("none");
   const [newDate, setNewDate] = useState("");
   const [cancelReason, setCancelReason] = useState("");
+  const [arriveDialogOpen, setArriveDialogOpen] = useState(false);
 
   const { data: availability } = useVisitAvailability(
     collegeId,
@@ -54,9 +58,25 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
     useRescheduleCampusVisit(collegeId);
   const { mutate: cancel, isPending: isCancelling } =
     useCancelCampusVisit(collegeId);
+  const { mutate: arrive, isPending: isArriving } =
+    useArriveCampusVisit(collegeId);
 
-  const canAct = ACTIONABLE_STATUSES.has(visit.status);
+  const canReschedule = RESCHEDULABLE_STATUSES.has(visit.status);
+  const canCancel = CANCELLABLE_STATUSES.has(visit.status);
+  const canAct = canReschedule || canCancel;
   const today = new Date().toISOString().split("T")[0];
+  const canArrive = visit.status === "pending" && visit.proposedDate === today;
+
+  function submitArrive() {
+    arrive(visit.id, {
+      onSuccess: () => {
+        toast.success(
+          "You're marked as arrived — nearby ambassadors have been notified",
+        );
+        setArriveDialogOpen(false);
+      },
+    });
+  }
 
   function submitReschedule() {
     if (!newDate) {
@@ -142,21 +162,30 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
       {canAct ? (
         <div className="mt-4 border-t border-border/60 pt-4">
           {mode === "none" ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMode("reschedule")}
-              >
-                Reschedule
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMode("cancel")}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-wrap gap-2">
+              {canArrive ? (
+                <Button size="sm" onClick={() => setArriveDialogOpen(true)}>
+                  I&apos;ve arrived
+                </Button>
+              ) : null}
+              {canReschedule ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMode("reschedule")}
+                >
+                  Reschedule
+                </Button>
+              ) : null}
+              {canCancel ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMode("cancel")}
+                >
+                  Cancel
+                </Button>
+              ) : null}
             </div>
           ) : mode === "reschedule" ? (
             <div className="space-y-4">
@@ -223,6 +252,16 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
           )}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={arriveDialogOpen}
+        title="Mark yourself as arrived?"
+        description="This will notify nearby campus ambassadors so one of them can come meet you."
+        confirmLabel="I've arrived"
+        loading={isArriving}
+        onCancel={() => setArriveDialogOpen(false)}
+        onConfirm={submitArrive}
+      />
     </div>
   );
 }

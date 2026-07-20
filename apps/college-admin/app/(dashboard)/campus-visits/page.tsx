@@ -33,11 +33,11 @@ import type { CampusVisitStatus } from "@beaconu/types";
 
 const STATUS_LABELS: Record<CampusVisitStatus, string> = {
   pending: "Pending",
+  arrived: "Arrived",
   confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
   reassigned: "Reassigned",
-  rejected: "Rejected",
 };
 
 const STATUS_VARIANTS: Record<
@@ -45,11 +45,11 @@ const STATUS_VARIANTS: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   pending: "secondary",
+  arrived: "secondary",
   confirmed: "default",
   completed: "outline",
   cancelled: "destructive",
   reassigned: "secondary",
-  rejected: "destructive",
 };
 
 function formatDate(dateStr: string) {
@@ -172,10 +172,10 @@ export default function CampusVisitsPage() {
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="arrived">Arrived</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
             <SelectItem value="reassigned">Reassigned</SelectItem>
           </SelectContent>
         </Select>
