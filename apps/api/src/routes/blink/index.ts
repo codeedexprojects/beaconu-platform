@@ -7,6 +7,8 @@ import blinkEmployeeRoutes from "@/modules/blink/routes/associate-employee.route
 import blinkSharedRoutes from "@/modules/blink/routes/shared.routes";
 import blinkUploadRoutes from "@/modules/upload/routes/blink.routes";
 import blinkAmbassadorVisitRoutes from "@/modules/campus-visits/routes/ambassador.routes";
+import blinkAmbassadorMediaKitRoutes from "@/modules/media-kit/routes/ambassador.routes";
+import blinkMediaKitRoutes from "@/modules/media-kit/routes/associate.routes";
 
 const router: Router = Router();
 
@@ -17,5 +19,7 @@ router.use("/employee", blinkEmployeeRoutes);
 router.use("/colleges", blinkSharedRoutes);
 router.use("/uploads", blinkUploadRoutes);
 router.use("/ambassador/campus-visits", blinkAmbassadorVisitRoutes);
+router.use("/ambassador/media-kit", blinkAmbassadorMediaKitRoutes);
+router.use("/media-kit", blinkMediaKitRoutes);
 
 export default router;
