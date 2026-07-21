@@ -70,4 +70,7 @@ export const QUERY_KEYS = {
     filters
       ? ["college-anti-ragging-complaints", filters]
       : ["college-anti-ragging-complaints"],
+  mediaKits: (filters?: object) =>
+    filters ? ["college-media-kit", filters] : ["college-media-kit"],
+  mediaKit: (id: string) => ["college-media-kit", id] as const,
 } as const;

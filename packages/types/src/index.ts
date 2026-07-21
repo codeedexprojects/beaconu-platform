@@ -21,3 +21,4 @@ export * from "./wishlist";
 export * from "./admission-cycle";
 export * from "./assessment";
 export * from "./application";
+export * from "./media-kit";

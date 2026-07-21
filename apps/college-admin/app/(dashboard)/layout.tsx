@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   ClipboardList,
   Mic,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -205,6 +206,7 @@ export default function DashboardLayout({
     if (path.includes("/settings")) return "profile.view";
     if (path.includes("/ambassadors")) return "staff.view";
     if (path.includes("/campus-visits")) return "staff.view";
+    if (path.includes("/media-kit")) return "staff.view";
     if (path.includes("/documents")) return "staff.view";
     if (path.includes("/anti-ragging")) return "staff.view";
     return null;
@@ -350,6 +352,12 @@ export default function DashboardLayout({
                     name: "Campus Visits",
                     path: "/campus-visits",
                     icon: CalendarDays,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Media Kit",
+                    path: "/media-kit",
+                    icon: ImageIcon,
                     permission: "staff.view",
                   },
                   {
@@ -578,6 +586,7 @@ export default function DashboardLayout({
                       { name: "Bus Fleet & Commute", path: "/commute" },
                       { name: "Campus Ambassadors", path: "/ambassadors" },
                       { name: "Campus Visits", path: "/campus-visits" },
+                      { name: "Media Kit", path: "/media-kit" },
                       { name: "Documents", path: "/documents" },
                       { name: "Application Forms", path: "/application-forms" },
                       { name: "Anti-Ragging", path: "/anti-ragging" },
