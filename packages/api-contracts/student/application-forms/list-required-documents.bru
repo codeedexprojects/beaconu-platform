@@ -1,0 +1,24 @@
+meta {
+  name: List Required Documents (Student)
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/documents/required
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lists the document requirements applicable to the student's own
+  application — filtered by the cycle's active DocumentUploadConfig rows
+  scoped to the student's nationality and their selected courses/quotas
+  (empty scope on a requirement means "applies to everyone"). Each entry
+  includes the student's own upload, if any, so the client can render
+  upload/re-upload state without a second round-trip.
+}

@@ -447,9 +447,9 @@ model Course {
   mediaKits              MediaKit[]
   enrollments            Enrollment[]
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
-  seatMatrixCourses      SeatMatrixCourse[]
   newsAlerts             NewsAlert[]
   collegeReviews         CollegeReview[]
+  documentUploadConfigCourses DocumentUploadConfigCourse[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
@@ -466,17 +466,19 @@ model CourseQuota {
   id                   String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
   courseId             String   @map("course_id")
   collegeQuotaId       String   @map("college_quota_id")
-  appFeeReductionType  String?  @map("app_fee_reduction_type") @db.VarChar(10) // "flat" | "percentage"
-  appFeeReductionValue Decimal? @map("app_fee_reduction_value") @db.Decimal(10, 2)
+  // Bidirectional: positive value surcharges the application fee (e.g. NRI
+  // Quota), negative discounts it. "flat" | "percentage" describes how the
+  // value is applied, not its direction.
+  appFeeAdjustmentType  String?  @map("app_fee_adjustment_type") @db.VarChar(10)
+  appFeeAdjustmentValue Decimal? @map("app_fee_adjustment_value") @db.Decimal(10, 2)
   tuitionFeeOverride   Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
   isActive             Boolean  @default(true) @map("is_active")
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  collegeQuota       CollegeQuota        @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
-  applicationCourses ApplicationCourse[]
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  collegeQuota CollegeQuota @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, collegeQuotaId], name: "uq_course_college_quota")
   @@index([courseId], name: "idx_quotas_course")
@@ -497,9 +499,11 @@ model CollegeQuota {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  courseQuotas CourseQuota[]
-  seatMatrices SeatMatrix[]
+  college                    College                      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  courseQuotas               CourseQuota[]
+  seatPools                  SeatPool[]
+  courseQuotaSeats           CourseQuotaSeats[]
+  documentUploadConfigQuotas DocumentUploadConfigQuota[]
 
   @@unique([collegeId, slug], name: "uq_college_quota_slug")
   @@index([collegeId], name: "idx_college_quotas_college")

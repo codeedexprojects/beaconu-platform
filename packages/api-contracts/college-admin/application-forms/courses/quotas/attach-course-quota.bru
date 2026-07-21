@@ -1,0 +1,40 @@
+meta {
+  name: Attach Quota to Course
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{courseId}}/quotas
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "college_quota_id": "{{quotaId}}",
+    "total_seats": 50
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("courseQuotaSeatId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Adds a quota to this course with its own exclusive seat count, scoped to
+  this application form. If this (course, quota) pair was previously
+  detached, the existing row is reactivated with the new total_seats
+  instead of erroring — only a currently-active config (exclusive or
+  pooled) for the same quota returns 409.
+}

@@ -1,0 +1,30 @@
+meta {
+  name: List Application Form Courses
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("admissionCycleCourseId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists courses attached to this application form (admission cycle), each
+  with its own applicationFee/interview/assessment/tokenPaymentStage
+  configuration. Soft-detached rows are excluded.
+}

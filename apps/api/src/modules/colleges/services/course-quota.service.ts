@@ -70,8 +70,8 @@ export class CourseQuotaService {
         throw new ConflictError("This quota is already attached to the course");
       }
       const row = await CourseQuotaRepository.reactivate(existing.id, {
-        appFeeReductionType: body.appFeeReductionType ?? null,
-        appFeeReductionValue: body.appFeeReductionValue ?? null,
+        appFeeAdjustmentType: body.appFeeAdjustmentType ?? null,
+        appFeeAdjustmentValue: body.appFeeAdjustmentValue ?? null,
         tuitionFeeOverride: body.tuitionFeeOverride ?? null,
       });
       return toCourseQuotaDto(row);
@@ -80,8 +80,8 @@ export class CourseQuotaService {
     const row = await CourseQuotaRepository.create({
       courseId,
       collegeQuotaId: body.collegeQuotaId,
-      appFeeReductionType: body.appFeeReductionType ?? null,
-      appFeeReductionValue: body.appFeeReductionValue ?? null,
+      appFeeAdjustmentType: body.appFeeAdjustmentType ?? null,
+      appFeeAdjustmentValue: body.appFeeAdjustmentValue ?? null,
       tuitionFeeOverride: body.tuitionFeeOverride ?? null,
     });
     return toCourseQuotaDto(row);
@@ -96,11 +96,11 @@ export class CourseQuotaService {
     await assertCourseInCollege(courseId, collegeId);
 
     const data: Record<string, unknown> = {};
-    if (body.appFeeReductionType !== undefined) {
-      data.appFeeReductionType = body.appFeeReductionType;
+    if (body.appFeeAdjustmentType !== undefined) {
+      data.appFeeAdjustmentType = body.appFeeAdjustmentType;
     }
-    if (body.appFeeReductionValue !== undefined) {
-      data.appFeeReductionValue = body.appFeeReductionValue;
+    if (body.appFeeAdjustmentValue !== undefined) {
+      data.appFeeAdjustmentValue = body.appFeeAdjustmentValue;
     }
     if (body.tuitionFeeOverride !== undefined) {
       data.tuitionFeeOverride = body.tuitionFeeOverride;

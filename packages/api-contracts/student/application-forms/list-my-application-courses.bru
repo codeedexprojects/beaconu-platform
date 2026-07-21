@@ -1,0 +1,21 @@
+meta {
+  name: List My Application Courses (Student)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/courses
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lists the courses (+ quota selections, fee snapshots) the student has
+  added to their own draft application for this cycle. Excludes withdrawn
+  selections.
+}

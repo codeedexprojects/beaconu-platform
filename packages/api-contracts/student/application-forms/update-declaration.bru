@@ -1,0 +1,31 @@
+meta {
+  name: Update Declaration (Student)
+  type: http
+  seq: 16
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/declaration
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "accepted": true,
+    "full_name_confirmation": "Rahul Sharma"
+  }
+}
+
+docs {
+  Records the student's declaration acceptance (409 if already submitted).
+  `accepted` must be true — false is rejected by validation, it isn't
+  meant as an "un-accept" toggle. Server stamps `accepted_at` itself: the
+  client cannot set it. Required before Submit will succeed. Advances
+  currentStep to at least 8.
+}

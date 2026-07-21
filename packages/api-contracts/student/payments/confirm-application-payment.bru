@@ -1,0 +1,41 @@
+meta {
+  name: Confirm Application Payment (Student)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/applications/{{applicationId}}/confirm
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{transactionId}}",
+    "provider_payment_id": "mock_pay_test123",
+    "provider_signature": null
+  }
+}
+
+docs {
+  Confirms a payment against the transaction created by Initiate — call
+  this after the gateway checkout completes. With the mock provider,
+  verification always succeeds regardless of what `provider_payment_id` /
+  `provider_signature` you send; with a real gateway plugged in later,
+  these get checked for real (Razorpay standard/RazorpayX verify a
+  payment_id + signature; Razorpay Route would follow the same shape).
+
+  Idempotent: re-confirming an already-completed transaction just returns
+  it unchanged rather than erroring.
+
+  On success: Transaction.status -> "completed", the StudentFeeLedger
+  entry -> "paid", and Application.feePaymentStatus -> "paid" — which is
+  what unlocks every other student endpoint on this application (course
+  additions, detail steps, documents, declaration, submit).
+}

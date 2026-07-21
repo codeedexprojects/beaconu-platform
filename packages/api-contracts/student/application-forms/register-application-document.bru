@@ -1,0 +1,44 @@
+meta {
+  name: Register Application Document (Student)
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/documents
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "document_type": "neet_scorecard",
+    "file_url": "{{permanentUrl}}",
+    "file_name": "scorecard.png",
+    "file_size_bytes": 102400,
+    "mime_type": "image/png"
+  }
+}
+
+docs {
+  Registers an uploaded file against a specific document requirement on the
+  student's own draft application (409 if already submitted). The file
+  itself must already be uploaded via the existing generic student upload
+  flow first: POST /api/v1/student/uploads/document/presign -> PUT to the
+  returned uploadUrl -> POST /api/v1/student/uploads/document/verify ->
+  use the returned permanentUrl as file_url here.
+
+  `document_type` must match a document requirement currently applicable to
+  this application (404 otherwise — e.g. inactive, or scoped to a
+  course/quota/nationality the student doesn't have). `mime_type` must be
+  one of that requirement's acceptedMimeTypes (400 otherwise).
+
+  Upsert semantics: registering the same document_type again replaces the
+  prior file (not a duplicate row) and resets verificationStatus back to
+  "pending".
+}

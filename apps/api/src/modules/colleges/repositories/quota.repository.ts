@@ -14,7 +14,7 @@ const ADMIN_SELECT = {
   _count: {
     select: {
       courseQuotas: { where: { isActive: true } },
-      seatMatrices: true,
+      seatPools: { where: { isActive: true } },
     },
   },
 } as const;
@@ -89,6 +89,45 @@ export class QuotaRepository {
       where: { id },
       data: { isActive: false },
       select: ADMIN_SELECT,
+    });
+  }
+
+  /** Everything currently referencing this quota — which courses have it in
+   * their catalogue fee config, and which seat pools (with cycle + course
+   * context) allocate seats for it — so an admin can see what to detach
+   * before deactivating. */
+  static async findUsageById(id: string, collegeId: string) {
+    return prisma.collegeQuota.findFirst({
+      where: { id, collegeId },
+      select: {
+        id: true,
+        courseQuotas: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            course: { select: { id: true, name: true, code: true } },
+          },
+        },
+        seatPools: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            totalSeats: true,
+            openSeats: true,
+            admissionCycle: { select: { id: true, name: true } },
+            courseQuotas: {
+              where: { isActive: true },
+              select: {
+                admissionCycleCourse: {
+                  select: {
+                    course: { select: { id: true, name: true, code: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

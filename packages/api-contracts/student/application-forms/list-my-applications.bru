@@ -1,0 +1,24 @@
+meta {
+  name: List My Applications (Student)
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Flat list of every application the student has started, across all
+  colleges/cycles — for the student dashboard. Each entry includes the
+  parent cycle's name/status/year and the college's name/slug/logo so the
+  dashboard can render without extra round-trips. Registered before the
+  cycle-browsing "/:id" route so the literal "my-applications" segment
+  isn't swallowed by it.
+}

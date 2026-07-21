@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
-import { Percent, Plus, Trash2, Pencil, Loader2 } from "lucide-react";
+import {
+  Percent,
+  Plus,
+  Pencil,
+  Loader2,
+  Power,
+  PowerOff,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,12 +45,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useCollegeQuotas,
   useCreateQuota,
   useUpdateQuota,
-  useDeleteQuota,
+  useQuotaUsage,
 } from "@/hooks/use-quotas";
 import type { QuotaDto } from "@/lib/services/colleges.service";
 
@@ -73,15 +81,95 @@ const BUCKET_LABELS: Record<QuotaDto["bucketType"], string> = {
   out_of_state: "Out-of-State",
 };
 
+function CourseChips({
+  courses,
+}: {
+  courses: { id: string; name: string; code: string }[];
+}) {
+  if (courses.length === 0) {
+    return <span className="text-xs text-muted-foreground">None</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {courses.map((c) => (
+        <span
+          key={c.id}
+          className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground"
+          title={c.name}
+        >
+          {c.code}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function QuotaUsagePanel({ quotaId }: { quotaId: string }) {
+  const { data: usage, isLoading } = useQuotaUsage(quotaId);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-16 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!usage) return null;
+
+  return (
+    <div className="space-y-4 py-2">
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">
+          Courses using this quota ({usage.courses.length})
+        </Label>
+        <CourseChips courses={usage.courses} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">
+          Seat pools using this quota ({usage.seatPools.length})
+        </Label>
+        {usage.seatPools.length === 0 ? (
+          <span className="text-xs text-muted-foreground">None</span>
+        ) : (
+          <div className="space-y-2">
+            {usage.seatPools.map((pool) => (
+              <div
+                key={pool.id}
+                className="rounded-lg border bg-card p-2.5 space-y-1.5"
+              >
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-medium">{pool.cycleName}</span>
+                  <span className="text-muted-foreground">
+                    {pool.openSeats}/{pool.totalSeats} open
+                  </span>
+                </div>
+                <CourseChips courses={pool.courses} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {(usage.courses.length > 0 || usage.seatPools.length > 0) && (
+        <p className="text-xs text-muted-foreground">
+          Detach these from the Academics Catalog (course fee config) or
+          Application Forms → Seat Pools if this quota should no longer apply to
+          them. Deactivating this quota doesn&apos;t require detaching first.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function QuotasPage() {
   const { data: quotas, isLoading, error } = useCollegeQuotas();
   const { mutate: createQuota, isPending: isCreating } = useCreateQuota();
   const { mutate: updateQuota, isPending: isUpdating } = useUpdateQuota();
-  const { mutate: deleteQuota, isPending: isDeleting } = useDeleteQuota();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuota, setEditingQuota] = useState<QuotaDto | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<QuotaDto | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const form = useForm<QuotaFormData>({
     resolver: zodResolver(quotaFormSchema as any),
@@ -148,23 +236,12 @@ export default function QuotasPage() {
     );
   }
 
-  function handleDelete(quota: QuotaDto) {
-    if (quota.usage.courseCount > 0 || quota.usage.seatPoolCount > 0) {
-      toast.error(
-        "This quota is used by courses or seat pools. Deactivate it instead.",
-      );
-      return;
-    }
-    setDeleteTarget(quota);
-  }
-
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    deleteQuota(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Quota removed");
-        setDeleteTarget(null);
-      },
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }
 
@@ -222,6 +299,7 @@ export default function QuotasPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8" />
                     <TableHead>Name</TableHead>
                     <TableHead>Bucket</TableHead>
                     <TableHead>Description</TableHead>
@@ -232,78 +310,103 @@ export default function QuotasPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((quota) => (
-                    <TableRow
-                      key={quota.id}
-                      className={quota.isActive ? "" : "opacity-60"}
-                    >
-                      <TableCell>
-                        <div className="font-medium">{quota.name}</div>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          {quota.slug}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            quota.bucketType === "in_state"
-                              ? "default"
-                              : "secondary"
-                          }
+                  {rows.map((quota) => {
+                    const isExpanded = expandedIds.has(quota.id);
+                    return (
+                      <Fragment key={quota.id}>
+                        <TableRow
+                          className={quota.isActive ? "" : "opacity-60"}
                         >
-                          {BUCKET_LABELS[quota.bucketType]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <span className="text-sm text-muted-foreground line-clamp-2">
-                          {quota.description || "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {quota.usage.courseCount}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {quota.usage.seatPoolCount}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleActive(quota)}
-                          title={
-                            quota.isActive
-                              ? "Click to deactivate"
-                              : "Click to activate"
-                          }
-                        >
-                          <Badge
-                            variant={quota.isActive ? "default" : "outline"}
-                            className="cursor-pointer"
-                          >
-                            {quota.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(quota)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDelete(quota)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => toggleExpanded(quota.id)}
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{quota.name}</div>
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {quota.slug}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                quota.bucketType === "in_state"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                            >
+                              {BUCKET_LABELS[quota.bucketType]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <span className="text-sm text-muted-foreground line-clamp-2">
+                              {quota.description || "—"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {quota.usage.courseCount}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {quota.usage.seatPoolCount}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge
+                              variant={quota.isActive ? "default" : "outline"}
+                            >
+                              {quota.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs"
+                                onClick={() => handleToggleActive(quota)}
+                              >
+                                {quota.isActive ? (
+                                  <>
+                                    <PowerOff className="h-3.5 w-3.5" />
+                                    Deactivate
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="h-3.5 w-3.5" />
+                                    Activate
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEdit(quota)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && (
+                          <TableRow key={`${quota.id}-usage`}>
+                            <TableCell colSpan={8} className="bg-muted/10">
+                              <QuotaUsagePanel quotaId={quota.id} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -411,21 +514,6 @@ export default function QuotasPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        title="Remove Quota"
-        description={
-          deleteTarget
-            ? `Remove the quota "${deleteTarget.name}"? This cannot be undone.`
-            : ""
-        }
-        confirmLabel="Remove"
-        variant="destructive"
-        loading={isDeleting}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-      />
     </div>
   );
 }

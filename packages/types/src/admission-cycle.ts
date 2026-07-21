@@ -32,3 +32,170 @@ export interface UpdateAdmissionCycleInput {
   starts_on?: string;
   ends_on?: string;
 }
+
+export type TokenPaymentStage = "before_assessment" | "after_shortlisting";
+
+export interface AdmissionCycleCourseItem {
+  id: string;
+  admissionCycleId: string;
+  courseId: string;
+  applicationFee: string;
+  interviewRequired: boolean;
+  assessmentRequired: boolean;
+  tokenPaymentStage: TokenPaymentStage | null;
+  workExperienceRequired: boolean;
+  isActive: boolean;
+  createdAt: string;
+  courseName: string;
+  courseCode: string;
+}
+
+export interface AttachAdmissionCycleCourseInput {
+  course_id: string;
+  application_fee: number;
+  interview_required: boolean;
+  assessment_required: boolean;
+  token_payment_stage?: TokenPaymentStage | null;
+  work_experience_required: boolean;
+}
+
+export interface UpdateAdmissionCycleCourseInput {
+  application_fee?: number;
+  interview_required?: boolean;
+  assessment_required?: boolean;
+  token_payment_stage?: TokenPaymentStage | null;
+  work_experience_required?: boolean;
+  is_active?: boolean;
+}
+
+export type QuotaBucketType = "in_state" | "out_of_state";
+
+export interface SeatPoolCourseRef {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface SeatPoolItem {
+  id: string;
+  collegeQuotaId: string;
+  admissionCycleId: string;
+  totalSeats: number;
+  openSeats: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  quotaName: string;
+  quotaSlug: string;
+  bucketType: QuotaBucketType;
+  courses: SeatPoolCourseRef[];
+}
+
+export interface CreateSeatPoolInput {
+  college_quota_id: string;
+  total_seats: number;
+  course_ids: string[];
+}
+
+export interface UpdateSeatPoolInput {
+  total_seats?: number;
+  course_ids?: string[];
+  is_active?: boolean;
+}
+
+// A course's quota+seat config within one application form — either
+// exclusive to that course (its own totalSeats/openSeats) or pooled, sharing
+// seats with other courses via a SeatPool (isPooled: true, totalSeats/
+// openSeats resolved from the pool).
+export interface CourseQuotaSeatsItem {
+  id: string;
+  admissionCycleCourseId: string;
+  collegeQuotaId: string;
+  seatPoolId: string | null;
+  totalSeats: number | null;
+  openSeats: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  quotaName: string;
+  quotaSlug: string;
+  bucketType: QuotaBucketType;
+  isPooled: boolean;
+}
+
+export interface AttachCourseQuotaInput {
+  college_quota_id: string;
+  total_seats: number;
+}
+
+export interface UpdateCourseQuotaSeatsInput {
+  total_seats?: number;
+  is_active?: boolean;
+}
+
+export interface DocumentRequirementCourseRef {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface DocumentRequirementQuotaRef {
+  id: string;
+  name: string;
+  slug: string;
+  bucketType: QuotaBucketType;
+}
+
+// Documents only ever need images or PDFs — matches the API's
+// DOCUMENT_MIME_TYPES (a subset of the platform's general upload mime types).
+export type DocumentMimeType =
+  | "image/jpeg"
+  | "image/png"
+  | "image/webp"
+  | "image/svg+xml"
+  | "application/pdf";
+
+// A document a student must upload for this application form. Empty
+// courses/quotas = applies to every course/quota in the cycle; populated =
+// restricted to just those. documentType is an internal key auto-derived
+// from documentLabel by the backend — never set directly by an admin.
+export interface DocumentRequirementItem {
+  id: string;
+  collegeId: string;
+  admissionCycleId: string;
+  documentType: string;
+  documentCategory: string;
+  documentLabel: string;
+  isRequired: boolean;
+  appliesToNationalities: string[] | null;
+  acceptedMimeTypes: DocumentMimeType[];
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  courses: DocumentRequirementCourseRef[];
+  quotas: DocumentRequirementQuotaRef[];
+}
+
+export interface CreateDocumentRequirementInput {
+  document_category: string;
+  document_label: string;
+  is_required: boolean;
+  applies_to_nationalities?: string[];
+  accepted_mime_types?: DocumentMimeType[];
+  sort_order?: number;
+  course_ids?: string[];
+  quota_ids?: string[];
+}
+
+export interface UpdateDocumentRequirementInput {
+  document_category?: string;
+  document_label?: string;
+  is_required?: boolean;
+  applies_to_nationalities?: string[] | null;
+  accepted_mime_types?: DocumentMimeType[] | null;
+  sort_order?: number;
+  is_active?: boolean;
+  course_ids?: string[];
+  quota_ids?: string[];
+}

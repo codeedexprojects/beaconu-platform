@@ -119,7 +119,7 @@ Central `errorHandler` formats all responses. No try/catch in controllers.
 **Concurrent booking:** `prisma.$transaction` + atomic decrement. Check availability inside tx.
 **Webhook idempotency:** Redis `payment-processed:{paymentId}` 24h TTL. Check before processing. Flow: verify sig → idempotency check → update txn → transfer → update ledger → receipt → notify.
 **File uploads:** S3 pre-signed URLs. Path: `/{collegeId}/{module}/{entityId}/{filename}`. 5MB (configurable).
-**Fee calc:** Lookup `application_fee_configs` (cycle + course + quota + nationality) → fallback to `admission_cycle_courses.application_fee`.
+**Fee calc:** `admission_cycle_courses.application_fee` is the base; `course_quotas.app_fee_adjustment_type/value` (flat|percentage, positive surcharges e.g. NRI Quota, negative discounts) applies on top when the student's selected quota has one set. Tuition fee: `course_quotas.tuition_fee_override` fully replaces the base `fee_structures` tuition when set. Token fee (`offer_letters.token_amount`) is set manually by staff at offer stage — not quota/nationality-linked.
 **Referral:** localStorage + cookie 30-day. Set on registration. `applications.referral_code_id` on apply.
 **SSO (BeaconU → College Web):** Short-lived JWT (5 min) via redirect URL.
 

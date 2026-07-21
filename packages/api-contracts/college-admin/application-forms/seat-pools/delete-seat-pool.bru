@@ -1,0 +1,21 @@
+meta {
+  name: Delete Seat Pool
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/seat-pools/{{seatPoolId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Soft-deactivates a seat pool (isActive: false) and detaches every course
+  currently sharing it (their CourseQuotaSeats rows are soft-deactivated and
+  their seat_pool_id cleared).
+}

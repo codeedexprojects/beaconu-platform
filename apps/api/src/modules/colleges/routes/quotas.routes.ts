@@ -34,6 +34,13 @@ router.get(
   CollegeQuotasController.getQuota,
 );
 
+router.get(
+  "/:id/usage",
+  ...staffAuth,
+  authorizeAny("academics.view", "academics.manage"),
+  CollegeQuotasController.getQuotaUsage,
+);
+
 router.patch(
   "/:id",
   ...staffWriteAuth,

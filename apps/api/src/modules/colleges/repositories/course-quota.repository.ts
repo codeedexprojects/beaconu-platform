@@ -4,8 +4,8 @@ const ADMIN_SELECT = {
   id: true,
   courseId: true,
   collegeQuotaId: true,
-  appFeeReductionType: true,
-  appFeeReductionValue: true,
+  appFeeAdjustmentType: true,
+  appFeeAdjustmentValue: true,
   tuitionFeeOverride: true,
   isActive: true,
   createdAt: true,
@@ -63,8 +63,8 @@ export class CourseQuotaRepository {
   static async reactivate(
     courseQuotaId: string,
     data: {
-      appFeeReductionType: string | null;
-      appFeeReductionValue: number | null;
+      appFeeAdjustmentType: string | null;
+      appFeeAdjustmentValue: number | null;
       tuitionFeeOverride: number | null;
     },
   ) {
@@ -85,8 +85,8 @@ export class CourseQuotaRepository {
   static async create(data: {
     courseId: string;
     collegeQuotaId: string;
-    appFeeReductionType: string | null;
-    appFeeReductionValue: number | null;
+    appFeeAdjustmentType: string | null;
+    appFeeAdjustmentValue: number | null;
     tuitionFeeOverride: number | null;
   }) {
     return prisma.courseQuota.create({ data, select: ADMIN_SELECT });

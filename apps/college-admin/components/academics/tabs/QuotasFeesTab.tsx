@@ -41,10 +41,10 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
     NonNullable<typeof attached>[number] | null
   >(null);
   const [selectedQuotaId, setSelectedQuotaId] = useState("");
-  const [reductionType, setReductionType] = useState<
+  const [adjustmentType, setAdjustmentType] = useState<
     "none" | "flat" | "percentage"
   >("none");
-  const [reductionValue, setReductionValue] = useState("");
+  const [adjustmentValue, setAdjustmentValue] = useState("");
   const [tuitionOverride, setTuitionOverride] = useState("");
 
   // Row-level edit drafts, keyed by CourseQuota.id
@@ -52,8 +52,8 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
     Record<
       string,
       {
-        reductionType: "none" | "flat" | "percentage";
-        reductionValue: string;
+        adjustmentType: "none" | "flat" | "percentage";
+        adjustmentValue: string;
         tuitionOverride: string;
       }
     >
@@ -80,8 +80,8 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
 
   function resetAttachForm() {
     setSelectedQuotaId("");
-    setReductionType("none");
-    setReductionValue("");
+    setAdjustmentType("none");
+    setAdjustmentValue("");
     setTuitionOverride("");
   }
 
@@ -90,17 +90,17 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
       toast.error("Select a quota to attach");
       return;
     }
-    if (reductionType !== "none" && reductionValue.trim() === "") {
-      toast.error("Enter a reduction value or set reduction to None");
+    if (adjustmentType !== "none" && adjustmentValue.trim() === "") {
+      toast.error("Enter an adjustment value or set adjustment to None");
       return;
     }
 
     attachQuota(
       {
         collegeQuotaId: selectedQuotaId,
-        appFeeReductionType: reductionType === "none" ? null : reductionType,
-        appFeeReductionValue:
-          reductionType === "none" ? null : Number(reductionValue),
+        appFeeAdjustmentType: adjustmentType === "none" ? null : adjustmentType,
+        appFeeAdjustmentValue:
+          adjustmentType === "none" ? null : Number(adjustmentValue),
         tuitionFeeOverride:
           tuitionOverride.trim() === "" ? null : Number(tuitionOverride),
       },
@@ -116,11 +116,11 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
   function getRowDraft(row: NonNullable<typeof attached>[number]) {
     return (
       rowDrafts[row.id] ?? {
-        reductionType: (row.appFeeReductionType ?? "none") as
+        adjustmentType: (row.appFeeAdjustmentType ?? "none") as
           | "none"
           | "flat"
           | "percentage",
-        reductionValue: row.appFeeReductionValue ?? "",
+        adjustmentValue: row.appFeeAdjustmentValue ?? "",
         tuitionOverride: row.tuitionFeeOverride ?? "",
       }
     );
@@ -129,8 +129,8 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
   function setRowDraft(
     row: NonNullable<typeof attached>[number],
     patch: Partial<{
-      reductionType: "none" | "flat" | "percentage";
-      reductionValue: string;
+      adjustmentType: "none" | "flat" | "percentage";
+      adjustmentValue: string;
       tuitionOverride: string;
     }>,
   ) {
@@ -142,8 +142,8 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
 
   function handleSaveRow(row: NonNullable<typeof attached>[number]) {
     const draft = getRowDraft(row);
-    if (draft.reductionType !== "none" && draft.reductionValue === "") {
-      toast.error("Enter a reduction value or set reduction to None");
+    if (draft.adjustmentType !== "none" && draft.adjustmentValue === "") {
+      toast.error("Enter an adjustment value or set adjustment to None");
       return;
     }
 
@@ -151,12 +151,12 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
       {
         courseQuotaId: row.id,
         data: {
-          appFeeReductionType:
-            draft.reductionType === "none" ? null : draft.reductionType,
-          appFeeReductionValue:
-            draft.reductionType === "none"
+          appFeeAdjustmentType:
+            draft.adjustmentType === "none" ? null : draft.adjustmentType,
+          appFeeAdjustmentValue:
+            draft.adjustmentType === "none"
               ? null
-              : Number(draft.reductionValue),
+              : Number(draft.adjustmentValue),
           tuitionFeeOverride:
             draft.tuitionOverride === "" ? null : Number(draft.tuitionOverride),
         },
@@ -228,11 +228,11 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">App Fee Reduction</Label>
+              <Label className="text-xs">App Fee Adjustment</Label>
               <Select
-                value={reductionType}
+                value={adjustmentType}
                 onValueChange={(v) =>
-                  setReductionType(v as typeof reductionType)
+                  setAdjustmentType(v as typeof adjustmentType)
                 }
               >
                 <SelectTrigger>
@@ -247,17 +247,16 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">
-                {reductionType === "percentage"
-                  ? "Reduction %"
-                  : "Reduction Amount"}
+                {adjustmentType === "percentage"
+                  ? "Adjustment % (+ surcharge / − discount)"
+                  : "Adjustment Amount (+ surcharge / − discount)"}
               </Label>
               <Input
                 type="number"
-                min={0}
-                disabled={reductionType === "none"}
-                value={reductionValue}
-                onChange={(e) => setReductionValue(e.target.value)}
-                placeholder={reductionType === "none" ? "—" : "0"}
+                disabled={adjustmentType === "none"}
+                value={adjustmentValue}
+                onChange={(e) => setAdjustmentValue(e.target.value)}
+                placeholder={adjustmentType === "none" ? "—" : "0"}
               />
             </div>
             <div className="space-y-1">
@@ -302,8 +301,8 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
           activeAttachedRows.map((row) => {
             const draft = getRowDraft(row);
             const isDirty =
-              draft.reductionType !== (row.appFeeReductionType ?? "none") ||
-              draft.reductionValue !== (row.appFeeReductionValue ?? "") ||
+              draft.adjustmentType !== (row.appFeeAdjustmentType ?? "none") ||
+              draft.adjustmentValue !== (row.appFeeAdjustmentValue ?? "") ||
               draft.tuitionOverride !== (row.tuitionFeeOverride ?? "");
 
             return (
@@ -333,12 +332,12 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
 
                 <div className="grid gap-3 md:grid-cols-4 items-end">
                   <div className="space-y-1">
-                    <Label className="text-xs">App Fee Reduction</Label>
+                    <Label className="text-xs">App Fee Adjustment</Label>
                     <Select
-                      value={draft.reductionType}
+                      value={draft.adjustmentType}
                       onValueChange={(v) =>
                         setRowDraft(row, {
-                          reductionType: v as typeof draft.reductionType,
+                          adjustmentType: v as typeof draft.adjustmentType,
                         })
                       }
                     >
@@ -354,19 +353,18 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">
-                      {draft.reductionType === "percentage"
-                        ? "Reduction %"
-                        : "Reduction Amount"}
+                      {draft.adjustmentType === "percentage"
+                        ? "Adjustment % (+ surcharge / − discount)"
+                        : "Adjustment Amount (+ surcharge / − discount)"}
                     </Label>
                     <Input
                       type="number"
-                      min={0}
-                      disabled={draft.reductionType === "none"}
-                      value={draft.reductionValue}
+                      disabled={draft.adjustmentType === "none"}
+                      value={draft.adjustmentValue}
                       onChange={(e) =>
-                        setRowDraft(row, { reductionValue: e.target.value })
+                        setRowDraft(row, { adjustmentValue: e.target.value })
                       }
-                      placeholder={draft.reductionType === "none" ? "—" : "0"}
+                      placeholder={draft.adjustmentType === "none" ? "—" : "0"}
                     />
                   </div>
                   <div className="space-y-1">

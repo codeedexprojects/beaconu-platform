@@ -1,0 +1,21 @@
+meta {
+  name: Get My Application By ID (Student)
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Fetches one of the student's own applications directly by its
+  application id (rather than nesting under a known admission cycle id) —
+  useful once the id is already known from "List My Applications."
+}

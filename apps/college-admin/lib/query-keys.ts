@@ -17,6 +17,7 @@ export const QUERY_KEYS = {
   hostels: ["college-hostels"] as const,
   libraries: ["college-libraries"] as const,
   quotas: ["college-quotas"] as const,
+  quotaUsage: (id: string) => ["college-quota-usage", id] as const,
   courseQuotas: (courseId: string) => ["course-quotas", courseId] as const,
   lookupsDepartments: ["lookups", "departments"] as const,
   commutes: ["college-commutes"] as const,
@@ -42,6 +43,14 @@ export const QUERY_KEYS = {
     filters
       ? ["college-admission-cycles", filters]
       : ["college-admission-cycles"],
+  admissionCycleCourses: (admissionCycleId: string) =>
+    ["college-admission-cycle-courses", admissionCycleId] as const,
+  courseQuotaSeats: (admissionCycleId: string, courseId: string) =>
+    ["college-course-quota-seats", admissionCycleId, courseId] as const,
+  seatPools: (admissionCycleId: string) =>
+    ["college-seat-pools", admissionCycleId] as const,
+  documentRequirements: (admissionCycleId: string) =>
+    ["college-document-requirements", admissionCycleId] as const,
   assessmentSections: ["college-assessment-sections"] as const,
   assessmentTemplates: ["college-assessment-templates"] as const,
   assessmentTemplate: (id: string) =>

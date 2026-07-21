@@ -1,0 +1,49 @@
+meta {
+  name: Create Document Requirement
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/documents
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "document_category": "academic",
+    "document_label": "NEET Scorecard",
+    "is_required": true,
+    "applies_to_nationalities": ["India"],
+    "accepted_mime_types": ["image/jpeg", "image/png", "application/pdf"],
+    "sort_order": 0,
+    "course_ids": [],
+    "quota_ids": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("documentRequirementId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a document requirement for this application form. `document_type`
+  (the internal key, e.g. "neet_scorecard") is auto-derived from
+  `document_label` by the backend — never sent by the client. `course_ids`
+  and `quota_ids` must belong to this cycle/college if given — leave both
+  empty arrays for "applies to everyone." `applies_to_nationalities` stays a
+  free JSON string array (no entity to validate it against).
+  `accepted_mime_types` restricts uploads to a subset of image/PDF mime
+  types — omit to fall back to the full document-default set.
+}

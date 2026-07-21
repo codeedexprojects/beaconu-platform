@@ -1,0 +1,19 @@
+meta {
+  name: Delete Document Requirement
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/documents/{{documentRequirementId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Soft-deactivates a document requirement (isActive: false).
+}

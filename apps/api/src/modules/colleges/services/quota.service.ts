@@ -23,7 +23,7 @@ function toQuotaDto(quota: QuotaRow) {
     ...rest,
     usage: {
       courseCount: _count.courseQuotas,
-      seatPoolCount: _count.seatMatrices,
+      seatPoolCount: _count.seatPools,
     },
   };
 }
@@ -95,5 +95,30 @@ export class QuotaService {
     const quota = await QuotaRepository.softDeleteById(id, collegeId);
     if (!quota) throw new NotFoundError("Quota not found");
     return toQuotaDto(quota);
+  }
+
+  static async getQuotaUsage(id: string, collegeId: string) {
+    const quota = await QuotaRepository.findUsageById(id, collegeId);
+    if (!quota) throw new NotFoundError("Quota not found");
+
+    return {
+      courses: quota.courseQuotas.map((cq) => ({
+        id: cq.course.id,
+        name: cq.course.name,
+        code: cq.course.code,
+      })),
+      seatPools: quota.seatPools.map((pool) => ({
+        id: pool.id,
+        totalSeats: pool.totalSeats,
+        openSeats: pool.openSeats,
+        cycleId: pool.admissionCycle.id,
+        cycleName: pool.admissionCycle.name,
+        courses: pool.courseQuotas.map((cq) => ({
+          id: cq.admissionCycleCourse.course.id,
+          name: cq.admissionCycleCourse.course.name,
+          code: cq.admissionCycleCourse.course.code,
+        })),
+      })),
+    };
   }
 }

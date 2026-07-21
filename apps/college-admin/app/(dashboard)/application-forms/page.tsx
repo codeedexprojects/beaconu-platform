@@ -5,7 +5,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  BookOpen,
+  Users,
+  FileText,
+  Settings2,
+  ChevronDown,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +28,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -34,6 +49,9 @@ import {
   useDeleteAdmissionCycle,
 } from "@/hooks/use-admission-cycles";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ManageCoursesDialog } from "@/components/application-forms/manage-courses-dialog";
+import { ManageSeatPoolsDialog } from "@/components/application-forms/manage-seat-pools-dialog";
+import { ManageDocumentsDialog } from "@/components/application-forms/manage-documents-dialog";
 import type { AdmissionCycleItem } from "@beaconu/types";
 
 const applicationFormSchema = z
@@ -81,6 +99,12 @@ export default function ApplicationFormsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdmissionCycleItem | null>(null);
   const [deleting, setDeleting] = useState<AdmissionCycleItem | null>(null);
+  const [managingCourses, setManagingCourses] =
+    useState<AdmissionCycleItem | null>(null);
+  const [managingSeatPools, setManagingSeatPools] =
+    useState<AdmissionCycleItem | null>(null);
+  const [managingDocuments, setManagingDocuments] =
+    useState<AdmissionCycleItem | null>(null);
 
   const { data: forms, isLoading } = useAdmissionCycles();
   const { mutate: create, isPending: isCreating } = useCreateAdmissionCycle();
@@ -306,7 +330,7 @@ export default function ApplicationFormsPage() {
                 <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
                   Status
                 </TableHead>
-                <TableHead className="w-[140px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
+                <TableHead className="py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
                   Actions
                 </TableHead>
               </TableRow>
@@ -359,24 +383,57 @@ export default function ApplicationFormsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4 pr-6 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end items-center gap-1.5">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs"
+                            >
+                              <Settings2 className="h-3.5 w-3.5" />
+                              Configure
+                              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={() => setManagingCourses(item)}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              Courses
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setManagingSeatPools(item)}
+                            >
+                              <Users className="h-4 w-4" />
+                              Seat Pools
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setManagingDocuments(item)}
+                            >
+                              <FileText className="h-4 w-4" />
+                              Documents
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 gap-1.5 text-xs"
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          title="Edit"
                           onClick={() => openEdit(item)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
-                          Edit
                         </Button>
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete"
                           onClick={() => setDeleting(item)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete
                         </Button>
                       </div>
                     </TableCell>
@@ -400,6 +457,21 @@ export default function ApplicationFormsPage() {
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         isPending={isDeleting}
+      />
+
+      <ManageCoursesDialog
+        cycle={managingCourses}
+        onClose={() => setManagingCourses(null)}
+      />
+
+      <ManageSeatPoolsDialog
+        cycle={managingSeatPools}
+        onClose={() => setManagingSeatPools(null)}
+      />
+
+      <ManageDocumentsDialog
+        cycle={managingDocuments}
+        onClose={() => setManagingDocuments(null)}
       />
     </div>
   );
