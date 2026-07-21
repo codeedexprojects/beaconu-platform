@@ -12,6 +12,7 @@ export class AmbassadorCampusVisitController {
     const filters = campusVisitListQuerySchema.parse(req.query);
     const result = await CampusVisitsQuery.listByAmbassador(
       req.userId!,
+      req.collegeId!,
       filters,
     );
     return res.json(

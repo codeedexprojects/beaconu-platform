@@ -271,16 +271,6 @@ export default function CampusVisitDetailPage() {
               </p>
             </div>
           )}
-          {visit.rejectionReason && (
-            <div>
-              <p className="mb-1 text-xs text-muted-foreground">
-                Rejection Reason
-              </p>
-              <p className="text-sm text-destructive">
-                {visit.rejectionReason}
-              </p>
-            </div>
-          )}
           {visit.visitNotes && (
             <div>
               <p className="mb-1 text-xs text-muted-foreground">Visit Notes</p>
