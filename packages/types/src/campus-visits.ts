@@ -53,7 +53,6 @@ export interface CampusVisit {
   proposedTime: string;
   status: CampusVisitStatus;
   cancellationReason: string | null;
-  rejectionReason: string | null;
   reassignmentReason: string | null;
   previousProposedDate: string | null;
   previousProposedTime: string | null;

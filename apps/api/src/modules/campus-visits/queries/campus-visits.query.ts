@@ -154,15 +154,21 @@ export class CampusVisitsQuery {
 
   static async listByAmbassador(
     ambassadorId: string,
+    collegeId: string,
     filters: CampusVisitListQuery,
   ): Promise<CampusVisitListResponse> {
     const { status, date, page, limit } = filters;
     const skip = (page - 1) * limit;
 
+    // Own assigned visits, plus college-wide unclaimed "arrived" visits any
+    // ambassador can claim (arrived visits have no ambassadorId until accepted).
     const where = {
-      ambassadorId,
       ...(status ? { status } : {}),
       ...(date ? { proposedDate: new Date(date) } : {}),
+      OR: [
+        { ambassadorId },
+        { status: "arrived", ambassadorId: null, collegeId },
+      ],
     };
 
     const [total, rows] = await Promise.all([
@@ -244,7 +250,6 @@ export class CampusVisitsQuery {
       proposedTime: v.proposedTime.toISOString().split("T")[1].slice(0, 5),
       status: v.status as CampusVisit["status"],
       cancellationReason: v.cancellationReason,
-      rejectionReason: v.rejectionReason,
       reassignmentReason: v.reassignmentReason,
       previousProposedDate: v.previousProposedDate
         ? v.previousProposedDate.toISOString().split("T")[0]
