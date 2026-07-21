@@ -18,6 +18,8 @@ headers {
 body:json {
   {
     "nationality": "Indian",
+    "course_id": "{{courseId}}",
+    "course_quota_seat_id": "{{courseQuotaSeatId}}",
     "state_of_domicile": "Karnataka",
     "passport_country": null,
     "passport_number": null,
@@ -42,8 +44,16 @@ docs {
   (studentId, admissionCycleId) is unique.
 
   `nationality` is required and drives NRI-style application-fee surcharges
-  applied later at course+quota selection. `state_of_domicile` /
-  `passport_country` / `passport_number` are optional, relevant mainly for
-  foreign-nationality applicants. `campus_id` is optional and must belong to
-  the cycle's college if given.
+  applied on the primary course's fee. `course_id` is REQUIRED — this
+  becomes the application's primary course, and its fee is what payment
+  gates before the rest of the flow (details, documents, declaration,
+  submit) unlocks. `course_quota_seat_id` is optional (omit for "no
+  quota," base fee). `state_of_domicile` / `passport_country` /
+  `passport_number` are optional, relevant mainly for foreign-nationality
+  applicants. `campus_id` is optional and must belong to the cycle's
+  college if given.
+
+  Next step: POST /payments/applications/{{applicationId}}/initiate to pay
+  the primary course's fee — nothing else on the application unlocks until
+  that payment is confirmed.
 }

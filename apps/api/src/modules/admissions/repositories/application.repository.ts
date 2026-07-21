@@ -104,7 +104,12 @@ export class ApplicationRepository {
   static async findOwnDraft(id: string, studentId: string) {
     return prisma.application.findFirst({
       where: { id, studentId },
-      select: { id: true, formStatus: true, currentStep: true },
+      select: {
+        id: true,
+        formStatus: true,
+        currentStep: true,
+        feePaymentStatus: true,
+      },
     });
   }
 
@@ -145,7 +150,12 @@ export class ApplicationRepository {
   static async findOwnDraftForSubmit(id: string, studentId: string) {
     return prisma.application.findFirst({
       where: { id, studentId },
-      select: { id: true, formStatus: true, declaration: true },
+      select: {
+        id: true,
+        formStatus: true,
+        feePaymentStatus: true,
+        declaration: true,
+      },
     });
   }
 
@@ -159,6 +169,26 @@ export class ApplicationRepository {
       },
       select: { id: true },
     });
+  }
+
+  /** Compensating rollback for Start Application only: if primary-course
+   * creation fails after the draft Application row was already created
+   * (bad course/quota id, no seats), the half-created draft must not
+   * survive — the idempotent "existing draft" check on retry would
+   * otherwise return this broken, course-less row forever, permanently
+   * blocking the student from starting over. This is not a general delete
+   * capability; the row being removed never became a real business
+   * record. */
+  static async markFeePaid(id: string) {
+    return prisma.application.update({
+      where: { id },
+      data: { feePaymentStatus: "paid" },
+      select: { id: true },
+    });
+  }
+
+  static async hardDeleteFailedDraft(id: string) {
+    await prisma.application.delete({ where: { id } });
   }
 
   static async findAllForStudent(studentId: string) {

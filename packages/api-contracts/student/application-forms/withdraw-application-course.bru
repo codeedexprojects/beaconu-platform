@@ -15,8 +15,10 @@ headers {
 }
 
 docs {
-  Withdraws a course selection from the student's own draft application
-  (soft — sets status to "withdrawn", never a hard delete, so the fee
-  history survives). Recomputes the parent Application's
-  totalApplicationFee. 409 if the application has already been submitted.
+  Withdraws a NON-primary course selection from the student's own draft
+  application (soft — sets status to "withdrawn", never a hard delete, so
+  the fee history survives). Recomputes the parent Application's
+  totalApplicationFee. 409 if the application has already been submitted,
+  or if the target is the primary course — the one paid for at Start
+  Application can never be withdrawn.
 }

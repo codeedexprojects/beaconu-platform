@@ -7,6 +7,7 @@ const APPLICATION_COURSE_SELECT = {
   applicationFee: true,
   status: true,
   courseQuotaSeatId: true,
+  isPrimary: true,
   preferenceOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -20,7 +21,12 @@ export class ApplicationCourseRepository {
   ) {
     return prisma.application.findFirst({
       where: { id: applicationId, studentId },
-      select: { id: true, admissionCycleId: true, formStatus: true },
+      select: {
+        id: true,
+        admissionCycleId: true,
+        formStatus: true,
+        feePaymentStatus: true,
+      },
     });
   }
 
@@ -85,6 +91,13 @@ export class ApplicationCourseRepository {
     });
   }
 
+  static async findPrimaryForApplication(applicationId: string) {
+    return prisma.applicationCourse.findFirst({
+      where: { applicationId, isPrimary: true },
+      select: { id: true, applicationFee: true, courseId: true },
+    });
+  }
+
   static async findExistingSelection(applicationId: string, courseId: string) {
     return prisma.applicationCourse.findUnique({
       where: { uq_application_course: { applicationId, courseId } },
@@ -97,6 +110,7 @@ export class ApplicationCourseRepository {
     courseId: string;
     applicationFee: number;
     courseQuotaSeatId: string | null;
+    isPrimary: boolean;
     preferenceOrder: number;
   }) {
     return prisma.applicationCourse.create({
@@ -107,7 +121,10 @@ export class ApplicationCourseRepository {
 
   /** A prior withdraw soft-deletes (status: "withdrawn") rather than
    * removing the row, so re-adding the same course must reactivate that row
-   * instead of violating the (applicationId, courseId) unique constraint. */
+   * instead of violating the (applicationId, courseId) unique constraint.
+   * isPrimary is intentionally not part of the reactivate payload — a
+   * withdrawn-then-re-added course never reclaims primary status; the
+   * primary slot is fixed at Start Application. */
   static async reactivate(
     id: string,
     data: {

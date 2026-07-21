@@ -99,6 +99,11 @@ export class ApplicationDocumentService {
         "This application has already been submitted and can no longer be edited",
       );
     }
+    if (application.feePaymentStatus !== "paid") {
+      throw new ConflictError(
+        "Complete payment for your primary course before uploading documents",
+      );
+    }
 
     const { courseIds, collegeQuotaIds } =
       await ApplicationDocumentRepository.findSelectedCourseAndQuotaIds(

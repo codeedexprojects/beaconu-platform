@@ -2,6 +2,7 @@ import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
+import { ApplicationCourseService } from "./application-course.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -91,12 +92,40 @@ export class ApplicationService {
       cycle.admissionYear,
       created.id,
     );
-    const finalized = await ApplicationRepository.setApplicationNumber(
+    await ApplicationRepository.setApplicationNumber(
       created.id,
       applicationNumber,
     );
 
-    return toDto(finalized);
+    // The primary course — its fee is what gates payment, and payment is
+    // what gates the rest of the flow. Created via the same course-selection
+    // logic as any other course (fee calc, seat-availability check),
+    // marked isPrimary so it can never be withdrawn and so the payments
+    // module knows which selection to charge.
+    try {
+      await ApplicationCourseService.addCourse(
+        created.id,
+        studentId,
+        {
+          course_id: body.course_id,
+          course_quota_seat_id: body.course_quota_seat_id ?? null,
+          preference_order: 1,
+        },
+        { isPrimary: true },
+      );
+    } catch (error) {
+      // Compensating rollback — see hardDeleteFailedDraft's doc comment.
+      // Without this, a bad course/quota id or a lost seat-availability
+      // race would leave a permanently broken, course-less draft behind.
+      await ApplicationRepository.hardDeleteFailedDraft(created.id);
+      throw error;
+    }
+
+    const row = await ApplicationRepository.findByIdForStudent(
+      created.id,
+      studentId,
+    );
+    return toDto(row!);
   }
 
   static async getMine(studentId: string, admissionCycleId: string) {
@@ -120,6 +149,11 @@ export class ApplicationService {
     if (application.formStatus !== "draft") {
       throw new ConflictError(
         "This application has already been submitted and can no longer be edited",
+      );
+    }
+    if (application.feePaymentStatus !== "paid") {
+      throw new ConflictError(
+        "Complete payment for your primary course before continuing",
       );
     }
   }
@@ -219,6 +253,13 @@ export class ApplicationService {
     return toDto(row);
   }
 
+  /** No seat decrement happens here. Until a college admin reviews and
+   * approves the application, this is only ever a request — like an
+   * allotment in real college admissions, a seat is never actually
+   * consumed just by applying for it. Seat decrement belongs to a future
+   * admin-approval action (not yet built); the atomic decrement helpers
+   * already exist on ApplicationCourseRepository (decrementExclusiveSeat,
+   * decrementPoolSeat, findSeatPoolLink) for that to call directly. */
   static async submit(applicationId: string, studentId: string) {
     const application = await ApplicationRepository.findOwnDraftForSubmit(
       applicationId,
@@ -227,6 +268,11 @@ export class ApplicationService {
     if (!application) throw new NotFoundError("Application");
     if (application.formStatus !== "draft") {
       throw new ConflictError("This application has already been submitted");
+    }
+    if (application.feePaymentStatus !== "paid") {
+      throw new ConflictError(
+        "Complete payment for your primary course before submitting",
+      );
     }
 
     const declaration = application.declaration as {
@@ -246,27 +292,6 @@ export class ApplicationService {
 
     await prisma.$transaction(async (tx) => {
       for (const course of courses) {
-        if (course.courseQuotaSeatId) {
-          const seatLink = await ApplicationCourseRepository.findSeatPoolLink(
-            tx,
-            course.courseQuotaSeatId,
-          );
-          const decremented = seatLink?.seatPoolId
-            ? await ApplicationCourseRepository.decrementPoolSeat(
-                tx,
-                seatLink.seatPoolId,
-              )
-            : await ApplicationCourseRepository.decrementExclusiveSeat(
-                tx,
-                course.courseQuotaSeatId,
-              );
-          if (decremented.count === 0) {
-            throw new ConflictError(
-              "A selected quota no longer has seats available. Please review your course selections.",
-            );
-          }
-        }
-
         await ApplicationCourseRepository.markSubmitted(tx, course.id);
         await ApplicationCourseRepository.createStatusLog(tx, {
           applicationCourseId: course.id,
@@ -305,6 +330,14 @@ export class ApplicationService {
         collegeLogoUrl: college.logoUrl,
       };
     });
+  }
+
+  /** Called by the payments module after it confirms the primary course's
+   * fee was paid — cross-module write kept inside admissions' own
+   * repository per the "repos serve their own service only" rule; the
+   * payments module never touches the applications table directly. */
+  static async markFeePaid(applicationId: string) {
+    await ApplicationRepository.markFeePaid(applicationId);
   }
 
   static async getById(applicationId: string, studentId: string) {

@@ -19,7 +19,7 @@ function toDto(row: ApplicationCourseRow) {
 /** Bidirectional: positive appFeeAdjustmentValue surcharges the base fee
  * (e.g. NRI Quota), negative discounts it — mirrors CourseQuota's semantics.
  * Clamped at 0 so a discount can never push the fee negative. */
-function applyFeeAdjustment(
+export function applyFeeAdjustment(
   baseFee: number,
   type: string | null | undefined,
   value: unknown,
@@ -33,9 +33,15 @@ function applyFeeAdjustment(
   return Math.max(0, adjusted);
 }
 
+/** requirePayment defaults to true for every normal call site (adding more
+ * courses, filling details, documents, declaration). The one exception is
+ * ApplicationService.start() creating the PRIMARY course immediately after
+ * the draft Application itself is created — payment can't exist yet at
+ * that point, so it passes requirePayment: false. */
 async function assertOwnDraftApplication(
   applicationId: string,
   studentId: string,
+  requirePayment = true,
 ) {
   const application =
     await ApplicationCourseRepository.findApplicationForStudent(
@@ -46,6 +52,11 @@ async function assertOwnDraftApplication(
   if (application.formStatus !== "draft") {
     throw new ConflictError(
       "This application has already been submitted and can no longer be edited",
+    );
+  }
+  if (requirePayment && application.feePaymentStatus !== "paid") {
+    throw new ConflictError(
+      "Complete payment for your primary course before continuing",
     );
   }
   return application;
@@ -105,7 +116,10 @@ export class ApplicationCourseService {
   }
 
   static async list(applicationId: string, studentId: string) {
-    await assertOwnDraftApplication(applicationId, studentId);
+    // Read-only — allowed even before payment so the student can review
+    // their primary course selection while they're still on the payment
+    // step.
+    await assertOwnDraftApplication(applicationId, studentId, false);
     const rows =
       await ApplicationCourseRepository.findByApplicationId(applicationId);
     return rows.map(toDto);
@@ -115,10 +129,13 @@ export class ApplicationCourseService {
     applicationId: string,
     studentId: string,
     body: AddApplicationCourseInput,
+    options: { isPrimary?: boolean } = {},
   ) {
+    const isPrimary = options.isPrimary ?? false;
     const application = await assertOwnDraftApplication(
       applicationId,
       studentId,
+      !isPrimary,
     );
 
     const cycleCourse =
@@ -187,6 +204,7 @@ export class ApplicationCourseService {
             courseId: body.course_id,
             applicationFee: finalFee,
             courseQuotaSeatId,
+            isPrimary,
             preferenceOrder: body.preference_order ?? 1,
           });
 
@@ -211,6 +229,11 @@ export class ApplicationCourseService {
       id,
     );
     if (!existing) throw new NotFoundError("Course selection not found");
+    if (existing.isPrimary) {
+      throw new ConflictError(
+        "The primary course you paid for can't be withdrawn",
+      );
+    }
 
     await ApplicationCourseRepository.withdraw(id);
     await ApplicationCourseService.recalculateTotalFee(applicationId);

@@ -26,6 +26,7 @@ export class ApplicationDocumentRepository {
         admissionCycleId: true,
         nationality: true,
         formStatus: true,
+        feePaymentStatus: true,
       },
     });
   }

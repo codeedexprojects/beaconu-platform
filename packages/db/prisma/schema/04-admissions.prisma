@@ -142,6 +142,10 @@ model ApplicationCourse {
   status             String    @default("draft") @db.VarChar(30)
   rejectionReason    String?   @map("rejection_reason") @db.Text
   courseQuotaSeatId  String?   @map("course_quota_seat_id")
+  // The course selected at Start Application — its fee gates the rest of
+  // the flow. Exactly one per application; additional courses added later
+  // are isPrimary: false and don't block anything on their own payment.
+  isPrimary          Boolean   @default(false) @map("is_primary")
   preferenceOrder    Int       @default(1) @map("preference_order") @db.SmallInt
   statusHistory      Json      @default("[]") @map("status_history")
   statusUpdatedAt    DateTime? @map("status_updated_at") @db.Timestamptz

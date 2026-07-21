@@ -23,6 +23,10 @@ export interface StudentApplicationDto {
 
 export interface StartApplicationInput {
   nationality: string;
+  // The primary course — required, since payment (and everything after
+  // it) is gated on this specific selection.
+  course_id: string;
+  course_quota_seat_id?: string | null;
   campus_id?: string | null;
   state_of_domicile?: string | null;
   passport_country?: string | null;
@@ -53,6 +57,7 @@ export interface ApplicationCourseDto {
   applicationFee: string;
   status: string;
   courseQuotaSeatId: string | null;
+  isPrimary: boolean;
   preferenceOrder: number;
   courseName: string;
   courseCode: string;
@@ -175,4 +180,22 @@ export interface StudentApplicationListItemDto extends StudentApplicationDto {
   collegeName: string;
   collegeSlug: string;
   collegeLogoUrl: string | null;
+}
+
+export interface ApplicationPaymentDto {
+  id: string;
+  transactionNumber: string;
+  amount: string;
+  currency: string;
+  status: string;
+  providerOrderId: string | null;
+  providerPaymentId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface ConfirmPaymentInput {
+  transaction_id: string;
+  provider_payment_id: string;
+  provider_signature?: string;
 }
