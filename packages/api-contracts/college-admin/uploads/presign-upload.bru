@@ -1,0 +1,51 @@
+meta {
+  name: Presign Upload
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/uploads/presign
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "mimeType": "image/jpeg",
+    "fileSizeBytes": 245678,
+    "context": "media-kit"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.key) {
+      bru.setEnvVar("uploadKey", data.data.key);
+    }
+  }
+}
+
+docs {
+  Generates an S3 pre-signed PUT URL. Requires `profile.edit` or
+  `academics.manage` permission; sub_admin role is denied.
+
+  `context` is a free-form string used as the S3 key's folder segment
+  (e.g. "media-kit", "avatars") — not an enum, caller chooses it.
+
+  Size limit is picked by mimeType: video/mp4, video/webm, video/quicktime
+  are allowed up to 50 MB (MAX_VIDEO_SIZE_BYTES); everything else (images,
+  PDF, audio) is capped at 10 MB (MAX_FILE_SIZE_BYTES). Videos also get a
+  longer presign expiry (15 min vs 5 min) since larger uploads take longer.
+
+  Response: { uploadUrl, key, expiresIn }
+}

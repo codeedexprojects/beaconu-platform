@@ -64,6 +64,10 @@ export const publicCollegeSchemas = {
   reviewsQuery: z.object({
     limit: z.coerce.number().int().min(1).max(50).optional().default(10),
   }),
+
+  coursesMinimalQuery: z.object({
+    college_id: optionalUuidFromQuery,
+  }),
 };
 
 export type PublicCollegeListQuery = z.output<

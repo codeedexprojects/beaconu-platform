@@ -4,6 +4,12 @@ meta {
   seq: 1
 }
 
+docs {
+  Run after the upload chain (Presign Upload -> PUT the file to the
+  returned uploadUrl -> Verify Upload) so {{permanentUrl}} is populated.
+  Running this standalone will post file_url as a literal, un-uploaded URL.
+}
+
 post {
   url: {{baseUrl}}/api/v1/college-admin/media-kit
   body: json
@@ -20,7 +26,7 @@ body:json {
     "title": "Campus Poster 2026",
     "asset_type": "poster",
     "scope": "campus_wide",
-    "file_url": "https://example-bucket.s3.amazonaws.com/college/{{collegeId}}/media-kit/sample.jpg",
+    "file_url": "{{permanentUrl}}",
     "file_name": "sample.jpg",
     "file_size_bytes": 245678
   }
