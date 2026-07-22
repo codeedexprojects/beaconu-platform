@@ -10,18 +10,9 @@ const IGNORE_DIRS = new Set([
   "dist",
   "build",
   "coverage",
-  ".next",
 ]);
 
-const ALLOWED_EXTENSIONS = new Set([
-  ".ts",
-  ".js",
-  ".json",
-  ".env",
-  ".md",
-  ".sql",
-  ".prisma",
-]);
+const ALLOWED_EXTENSIONS = new Set([".ts", ".js", ".json", ".env", ".md"]);
 
 function walk(dir: string, fileList: string[] = []): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });

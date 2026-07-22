@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { useCollegeRoles } from "@/hooks/use-roles";
 import {
@@ -74,10 +75,16 @@ export default function StaffDirectoryPage() {
   const isSelf = (memberId: string) => memberId === user?.id;
 
   const { mutate: inviteStaff, isPending: inviting } = useInviteStaffMember();
-  const { mutate: updateStaff } = useUpdateStaffMember();
+  const { mutate: updateStaff, isPending: isUpdatingStaff } =
+    useUpdateStaffMember();
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showStaffPassword, setShowStaffPassword] = useState(false);
+  const [statusTarget, setStatusTarget] = useState<{
+    id: string;
+    name: string;
+    nextStatus: "active" | "inactive";
+  } | null>(null);
 
   const {
     register,
@@ -102,22 +109,22 @@ export default function StaffDirectoryPage() {
   ) => {
     if (!canManageStaff || isSelf(id)) return;
     const nextStatus = currentStatus === "active" ? "inactive" : "active";
-    if (
-      confirm(
-        `Are you sure you want to mark staff member "${name}" as ${nextStatus === "active" ? "ACTIVE" : "SUSPENDED"}?`,
-      )
-    ) {
-      updateStaff(
-        { id, data: { status: nextStatus } },
-        {
-          onSuccess: () => {
-            toast.success(
-              `Staff status for "${name}" updated to ${nextStatus}`,
-            );
-          },
+    setStatusTarget({ id, name, nextStatus });
+  };
+
+  const confirmToggleStatus = () => {
+    if (!statusTarget) return;
+    updateStaff(
+      { id: statusTarget.id, data: { status: statusTarget.nextStatus } },
+      {
+        onSuccess: () => {
+          toast.success(
+            `Staff status for "${statusTarget.name}" updated to ${statusTarget.nextStatus}`,
+          );
+          setStatusTarget(null);
         },
-      );
-    }
+      },
+    );
   };
 
   const handleRoleChange = (id: string, roleId: string, name: string) => {
@@ -434,6 +441,23 @@ export default function StaffDirectoryPage() {
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        open={statusTarget !== null}
+        title="Update Staff Status"
+        description={
+          statusTarget
+            ? `Are you sure you want to mark staff member "${statusTarget.name}" as ${statusTarget.nextStatus === "active" ? "ACTIVE" : "SUSPENDED"}?`
+            : ""
+        }
+        confirmLabel="Confirm"
+        variant={
+          statusTarget?.nextStatus === "inactive" ? "destructive" : "default"
+        }
+        loading={isUpdatingStaff}
+        onCancel={() => setStatusTarget(null)}
+        onConfirm={confirmToggleStatus}
+      />
     </div>
   );
 }

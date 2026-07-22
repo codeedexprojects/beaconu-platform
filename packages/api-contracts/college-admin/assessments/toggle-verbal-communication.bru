@@ -1,0 +1,31 @@
+meta {
+  name: Toggle Verbal Communication Section
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/verbal-communication/toggle
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "is_active": true
+  }
+}
+
+docs {
+  Enables or disables the Verbal Communication assessment section for this
+  college. The first time it's enabled (is_active: true) for a college, the
+  section and its 5 fixed question types (Audio Comprehension, Repeat
+  Sentence, Read Aloud, Respond to a Situation, Describe Image) are
+  auto-created — idempotent, safe to call again. Disabling only flips
+  is_active to false; nothing is deleted.
+}

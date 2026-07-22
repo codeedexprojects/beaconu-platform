@@ -1,0 +1,23 @@
+meta {
+  name: List Media Kit (Associate)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/media-kit
+  body: none
+  auth: none
+}
+
+query {
+  ~college_id: {{collegeId}}
+  ~asset_type: poster
+  ~scope: campus_wide
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

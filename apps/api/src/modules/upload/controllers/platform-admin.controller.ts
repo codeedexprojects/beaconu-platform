@@ -8,6 +8,7 @@ import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
   MAX_VIDEO_SIZE_BYTES,
+  MIME_TO_EXT,
   VIDEO_MIME_TYPES,
   VIDEO_PRESIGN_EXPIRY_SECONDS,
 } from "../upload.constants";
@@ -42,7 +43,8 @@ export class PlatformAdminUploadController {
     }
 
     const expiresIn = isVideo ? VIDEO_PRESIGN_EXPIRY_SECONDS : undefined;
-    const key = `platform-admin/${context}/${randomUUID()}`;
+    const ext = MIME_TO_EXT[mimeType as AllowedMimeType];
+    const key = `platform-admin/${context}/${randomUUID()}.${ext}`;
     const result = await UploadService.presign(
       key,
       mimeType as AllowedMimeType,
@@ -60,5 +62,16 @@ export class PlatformAdminUploadController {
     }
     const result = await UploadService.verify(key);
     res.status(200).json(ApiResponse.success("Upload verified", result));
+  }
+
+  static async remove(req: Request, res: Response): Promise<void> {
+    const { key } = verifySchema.parse(req.body);
+    if (!key.startsWith("platform-admin/")) {
+      throw new ValidationError(
+        "Invalid key: must belong to platform-admin context",
+      );
+    }
+    const result = await UploadService.remove(key);
+    res.status(200).json(ApiResponse.success("File deleted", result));
   }
 }

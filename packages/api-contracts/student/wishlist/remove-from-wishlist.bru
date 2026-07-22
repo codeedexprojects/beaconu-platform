@@ -1,0 +1,23 @@
+meta {
+  name: Remove College from Wishlist
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/student/wishlist/{{collegeId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Remove a college from the student's wishlist. Returns 404 if the college
+  was not in the wishlist.
+
+  Response:
+  - removed: true
+}

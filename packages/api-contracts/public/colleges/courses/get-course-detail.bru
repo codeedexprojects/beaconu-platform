@@ -1,5 +1,5 @@
 meta {
-  name: Get Course Detail (with Tabs)
+  name: Get Course Detail (With Tabs)
   type: http
   seq: 2
 }
@@ -18,6 +18,16 @@ docs {
   higherEducationCertifications, flexibleExitOptions, classTimings,
   industryTools, labFacilities, roomFacilities, featuredAlumni, faqs,
   studentForum and certifications.
+
+  highlights, keyDates, curriculum, courseStructure, valueAddedCourses,
+  careerOpportunities, higherEducationCertifications, flexibleExitOptions,
+  classTimings, industryTools, labFacilities, roomFacilities, featuredAlumni,
+  and faqs each fall back to the equivalent value nested inside the
+  course_info setup tab whenever their dedicated column is empty — the
+  college-admin dashboard only has an editor for the bundled course_info tab,
+  not for these individually, so this is normally where their data comes
+  from. accreditations does not fall back; it has its own standalone admin
+  editor and dedicated column.
 
   Path params:
   - collegeSlug: College subdomain slug

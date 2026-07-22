@@ -1,0 +1,114 @@
+meta {
+  name: Tab - Clubs & Associations (Update)
+  type: http
+  seq: 12
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/clubs_associations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "tab": "club_and_associations",
+      "clubs": [
+        {
+          "id": "nss",
+          "name": "National Service Scheme",
+          "short_name": "NSS",
+          "category": "Service",
+          "logo": "https://cdn.clubphotos.example.com/clubs/nss-logo.png",
+          "cover_image": "https://cdn.clubphotos.example.com/clubs/nss-cover.jpg",
+          "short_description": "National Service Scheme. Encouraging social service and community building among students.",
+          "details": {
+            "category": "Service",
+            "full_name": "National Service Scheme (NSS)",
+            "logo": "https://cdn.clubphotos.example.com/clubs/nss-logo.png",
+            "cover_image": "https://cdn.clubphotos.example.com/clubs/nss-cover.jpg",
+            "about": "The National Service Scheme (NSS) is an Indian government-sponsored public service program conducted by the Ministry of Youth Affairs and Sports. Our college chapter is dedicated to fostering social responsibility and community engagement among students.",
+            "mission": "The motto of NSS \"Not Me But You\", reflects the essence of democratic living and upholds the need for self-less service. We aim to identify the needs and problems of the community and involve students in problem-solving.",
+            "key_activities": [
+              "Blood Donation Camps",
+              "Tree Plantation Drives",
+              "Rural Development Projects",
+              "Health & Hygiene Awareness"
+            ],
+            "recent_events": {
+              "happenings_link": "https://example.com/clubs/nss/happenings",
+              "events": [
+                {
+                  "title": "Blood Donation Camp",
+                  "image": "https://cdn.clubphotos.example.com/clubs/nss-blood-donation-camp.jpg",
+                  "link": "https://example.com/clubs/nss/events/blood-donation-camp"
+                },
+                {
+                  "title": "Tree Plantation Drive",
+                  "image": "https://cdn.clubphotos.example.com/clubs/nss-tree-plantation.jpg",
+                  "link": "https://example.com/clubs/nss/events/tree-plantation-drive"
+                },
+                {
+                  "title": "Swachh Bharat Abhiyan",
+                  "image": "https://cdn.clubphotos.example.com/clubs/nss-swachh-bharat.jpg",
+                  "link": "https://example.com/clubs/nss/events/swachh-bharat"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "iste",
+          "name": "Indian Society for Technical Education",
+          "short_name": "ISTE",
+          "category": "Professional",
+          "logo": "https://cdn.clubphotos.example.com/clubs/iste-logo.png",
+          "cover_image": "https://cdn.clubphotos.example.com/clubs/iste-cover.jpg",
+          "short_description": "Promoting technical education and professional development among students.",
+          "details": {
+            "category": "Professional",
+            "full_name": "Indian Society for Technical Education (ISTE)",
+            "logo": "https://cdn.clubphotos.example.com/clubs/iste-logo.png",
+            "cover_image": "https://cdn.clubphotos.example.com/clubs/iste-cover.jpg",
+            "about": "ISTE is a professional body that promotes technical education and professional development. Our college chapter organizes workshops, seminars, and technical competitions.",
+            "mission": "To advance technical education and foster innovation among engineering and technical students.",
+            "key_activities": [
+              "Technical Workshops",
+              "Seminars and Conferences",
+              "Coding Competitions",
+              "Industry Visits"
+            ],
+            "recent_events": {
+              "happenings_link": "https://example.com/clubs/iste/happenings",
+              "events": [
+                {
+                  "title": "Technical Workshop on AI/ML",
+                  "image": "https://cdn.clubphotos.example.com/clubs/iste-ai-workshop.jpg",
+                  "link": "https://example.com/clubs/iste/events/ai-workshop"
+                },
+                {
+                  "title": "Coding Competition",
+                  "image": "https://cdn.clubphotos.example.com/clubs/iste-coding-comp.jpg",
+                  "link": "https://example.com/clubs/iste/events/coding-competition"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+docs {
+  Updates clubs_associations tab with dynamic JSON data.
+
+  Each club's "id" is optional — if omitted, the backend auto-generates a
+  unique id from the club name (e.g. "club_national-service-scheme"). Pass an
+  explicit "id" only to keep an existing club's id stable across edits.
+}

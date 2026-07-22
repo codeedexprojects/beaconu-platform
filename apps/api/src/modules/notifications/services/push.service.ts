@@ -44,6 +44,29 @@ export class PushService {
     return PushService.sendToEntries(entries, payload);
   }
 
+  static async sendToUsers(
+    recipients: { userId: string; userType: string }[],
+    payload: PushPayload,
+  ): Promise<PushResult> {
+    if (recipients.length === 0) {
+      return { sentCount: 0, failedCount: 0, totalTokens: 0 };
+    }
+
+    const entries =
+      await NotificationsRepository.getActiveFcmTokensForUsers(recipients);
+
+    if (entries.length === 0) {
+      logger.info({
+        action: "PUSH_NO_TOKENS",
+        module: "notifications",
+        recipientCount: recipients.length,
+      });
+      return { sentCount: 0, failedCount: 0, totalTokens: 0 };
+    }
+
+    return PushService.sendToEntries(entries, payload);
+  }
+
   private static async sendToEntries(
     entries: { sessionId: string; token: string }[],
     payload: PushPayload,

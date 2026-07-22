@@ -18,14 +18,13 @@
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
-    "clean": "rm -rf dist generated",
+    "clean": "rm -rf dist generated *.tsbuildinfo",
     "type-check": "tsc --noEmit",
     "lint": "eslint src",
     "generate": "prisma generate --schema=./prisma/schema",
     "migrate": "prisma migrate deploy --schema=./prisma/schema",
     "migrate:dev": "prisma migrate dev --schema=./prisma/schema",
     "seed": "tsx src/seed.ts",
-    "seed:demo": "tsx src/seed-demo.ts",
     "studio": "prisma studio",
     "push": "prisma db push --schema=./prisma/schema"
   },

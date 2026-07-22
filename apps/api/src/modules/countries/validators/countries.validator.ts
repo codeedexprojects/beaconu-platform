@@ -7,3 +7,16 @@ export const listCountriesQuerySchema = z.object({
 });
 
 export type ListCountriesQueryInput = z.infer<typeof listCountriesQuerySchema>;
+
+export const listStatesParamsSchema = z.object({
+  countryCode: z.string().min(2).max(3),
+});
+
+export type ListStatesParamsInput = z.infer<typeof listStatesParamsSchema>;
+
+export const listCitiesParamsSchema = z.object({
+  countryCode: z.string().min(2).max(3),
+  stateCode: z.string().min(1).max(10),
+});
+
+export type ListCitiesParamsInput = z.infer<typeof listCitiesParamsSchema>;

@@ -1,0 +1,46 @@
+meta {
+  name: Create Question (MCQ, Aptitude & Logical Reasoning)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/aptitude-logical-reasoning/questions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "question_type_id": "{{questionTypeId}}",
+    "difficulty": "medium",
+    "title": "Percentage calculation",
+    "content": {
+      "text": "40% of 250 is?",
+      "options": [
+        { "id": "a", "text": "80" },
+        { "id": "b", "text": "100" },
+        { "id": "c", "text": "120" },
+        { "id": "d", "text": "150" }
+      ]
+    },
+    "answer_key": {
+      "correctOptionIds": ["b"]
+    },
+    "marks": 2,
+    "negative_marks": 0.5,
+    "course_ids": []
+  }
+}
+
+docs {
+  Example of a single_choice, autoScorable question type (MCQ). content.options
+  requires >=2 entries; answer_key.correctOptionIds must reference existing
+  option ids. First enable the "Aptitude & Logical Reasoning" section and
+  fetch its question types to get a real questionTypeId.
+}

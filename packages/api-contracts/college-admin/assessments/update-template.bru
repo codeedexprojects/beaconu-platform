@@ -1,0 +1,28 @@
+meta {
+  name: Update Assessment Template
+  type: http
+  seq: 14
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "total_duration_mins": 100
+  }
+}
+
+docs {
+  All fields optional. If `sections` is provided, it wholesale-replaces the
+  existing TemplateSection rows (delete + recreate) — there's no per-section
+  patch, always send the full section list when changing any section.
+}

@@ -1,0 +1,41 @@
+meta {
+  name: Initiate Application Payment (Student)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/applications/{{applicationId}}/initiate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("transactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a payment order for the application's primary course fee. 404 if
+  the application doesn't exist or has no primary course; 409 if the
+  primary course's fee has already been paid.
+
+  The fee ledger entry (StudentFeeLedger, feeCategory "application_fee")
+  is created lazily on first call here, using the primary
+  ApplicationCourse's stored fee snapshot — not at Start Application.
+
+  Behind a PaymentProvider interface (apps/api/src/modules/payments/lib/) —
+  today this returns a fabricated order id from a mock provider with no
+  real money movement. A real gateway (Razorpay standard, RazorpayX, or
+  Razorpay Route) plugs in later as a second implementation of the same
+  interface; nothing about this endpoint's contract changes when that
+  happens, only what `providerOrderId` actually is.
+}

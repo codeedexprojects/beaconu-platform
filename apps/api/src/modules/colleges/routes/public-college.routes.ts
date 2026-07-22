@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { PublicCollegeController } from "../controllers/public-college.controller";
 import { CourseTabsController } from "../controllers/course-tabs.controller";
+import { PublicHostelController } from "../controllers/public-hostel.controller";
+import { PublicLibraryController } from "../controllers/public-library.controller";
+import { PublicCampusVisitController } from "@/modules/campus-visits/controllers/public.controller";
+import { authenticateOptional } from "@/shared/middleware/authenticate-optional";
 
 const router: Router = Router();
 
-router.get("/", PublicCollegeController.getColleges);
+router.get("/", authenticateOptional, PublicCollegeController.getColleges);
+router.get("/courses/minimal", PublicCollegeController.listCoursesMinimal);
 router.get(
   "/:collegeId/section/:sectionName",
   PublicCollegeController.getCollegeSection,
@@ -16,16 +21,73 @@ router.get(
   CourseTabsController.getPublicCourseTab,
 );
 router.get(
+  "/by-slug/:slug/courses/:courseId/reviews",
+  CourseTabsController.listPublicCourseReviews,
+);
+router.get(
+  "/by-slug/:slug/courses/:courseId/other-courses-offered",
+  CourseTabsController.listPublicOtherCoursesOffered,
+);
+router.get(
+  "/by-slug/:slug/courses/:courseId/clubs-associations/:clubId",
+  CourseTabsController.getPublicClubDetail,
+);
+router.get(
+  "/by-slug/:slug/courses/:courseId/clubs-associations",
+  CourseTabsController.listPublicClubsAssociations,
+);
+router.get(
   "/by-slug/:slug/courses/:courseId/eligibility-criteria",
   CourseTabsController.getPublicEligibilityCriteria,
+);
+router.get(
+  "/by-slug/:slug/courses/:courseId/scholarship-details",
+  CourseTabsController.getPublicScholarshipDetails,
 );
 router.get(
   "/by-slug/:slug/courses/:courseId",
   CourseTabsController.getPublicCourseDetail,
 );
 
-router.get("/:id", PublicCollegeController.getCollegeById);
-router.get("/by-slug/:slug", PublicCollegeController.getCollegeBySlug);
+// ── Hostels (public) ──────────────────────────────────────────────────────────
+router.get(
+  "/by-slug/:slug/hostels/:hostelId",
+  PublicHostelController.getPublicHostelDetail,
+);
+router.get("/by-slug/:slug/hostels", PublicHostelController.listPublicHostels);
+
+// ── Libraries (public) ────────────────────────────────────────────────────────
+router.get(
+  "/by-slug/:slug/libraries/:libraryId",
+  PublicLibraryController.getPublicLibraryDetail,
+);
+router.get(
+  "/by-slug/:slug/libraries",
+  PublicLibraryController.listPublicLibraries,
+);
+
+router.get(
+  "/:collegeId/ambassadors",
+  PublicCampusVisitController.listAmbassadors,
+);
+// ── Profile extras (public) ───────────────────────────────────────────────────
+router.get(
+  "/by-slug/:slug/scholarships",
+  PublicCollegeController.getCollegeScholarships,
+);
+router.get("/by-slug/:slug/gallery", PublicCollegeController.getCollegeGallery);
+router.get("/by-slug/:slug/reviews", PublicCollegeController.getCollegeReviews);
+
+router.get(
+  "/:id",
+  authenticateOptional,
+  PublicCollegeController.getCollegeById,
+);
+router.get(
+  "/by-slug/:slug",
+  authenticateOptional,
+  PublicCollegeController.getCollegeBySlug,
+);
 router.get("/by-slug/:slug/courses", PublicCollegeController.getCollegeCourses);
 
 export default router;

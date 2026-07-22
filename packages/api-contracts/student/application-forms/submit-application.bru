@@ -1,0 +1,30 @@
+meta {
+  name: Submit Application (Student)
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/submit
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Final submit. Does NOT decrement any seats — like a real college
+  admission, submitting is only a request; a seat is never consumed just
+  by applying. Seat decrement happens later, when a college admin approves
+  the application (that admin-side action doesn't exist yet — this is
+  intentional, not an oversight).
+
+  Requires: application still in "draft" status, primary course's fee paid
+  (feePaymentStatus === "paid" — see the payments endpoints), declaration
+  accepted, and at least one active course selection. Runs atomically
+  inside a single DB transaction: each ApplicationCourse.status ->
+  "submitted" with a status log entry, then Application.formStatus ->
+  "submitted" and submittedAt is set.
+}

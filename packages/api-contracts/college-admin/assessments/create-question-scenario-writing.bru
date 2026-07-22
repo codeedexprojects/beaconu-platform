@@ -1,0 +1,36 @@
+meta {
+  name: Create Question (Scenario Writing, Leadership Qualities)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/leadership-qualities/questions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "question_type_id": "{{questionTypeId}}",
+    "difficulty": "medium",
+    "title": "Handling a missed deadline",
+    "content": {
+      "text": "Your team missed a critical deadline due to a dependency outside your control. Describe how you would communicate this to stakeholders and what you'd do next."
+    },
+    "marks": 5,
+    "negative_marks": 0,
+    "course_ids": []
+  }
+}
+
+docs {
+  Example of a text_response, non-autoScorable question type. No answer_key
+  is required or accepted for this type — it's evaluator-scored manually
+  during the (not-yet-built) evaluation phase.
+}

@@ -1,0 +1,40 @@
+meta {
+  name: Create Document Template
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/documents/templates
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Bonafide Certificate",
+    "category": "academic",
+    "instructions": "Submit at least 3 working days before you need it",
+    "description": "Confirms current enrollment status",
+    "sort_order": 1
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("documentTemplateId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Defines a document type students can request from this college (shows up
+  in the student app's request form via List Document Templates).
+}

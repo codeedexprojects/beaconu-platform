@@ -1,0 +1,25 @@
+meta {
+  name: Send Document Request For Approval (College Admin)
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/requests/{{documentRequestId}}/send-for-approval
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Moves a document request from "processing" to "awaiting_approval". Only
+  valid while the request status is "processing".
+}

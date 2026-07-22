@@ -1,0 +1,15 @@
+meta {
+  name: Get Assessment Template
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}

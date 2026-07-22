@@ -1,0 +1,33 @@
+meta {
+  name: Create Quota
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/quotas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Sports Quota",
+    "bucketType": "in_state",
+    "description": "Seats reserved for state/national level sports achievers",
+    "sortOrder": 5
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("quotaId", data.data.id);
+    }
+  }
+}

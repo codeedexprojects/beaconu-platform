@@ -1,0 +1,23 @@
+meta {
+  name: Update Quota
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/quotas/{{quotaId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "description": "Updated quota description",
+    "sortOrder": 6,
+    "isActive": true
+  }
+}

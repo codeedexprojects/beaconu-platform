@@ -1,0 +1,41 @@
+meta {
+  name: Update Personal Details (Student)
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/personal-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "full_name": "Rahul Sharma",
+    "date_of_birth": "2005-06-15",
+    "gender": "male",
+    "category": "General",
+    "blood_group": "O+",
+    "religion": "Hindu",
+    "mother_tongue": "Hindi",
+    "marital_status": "single",
+    "aadhar_number": "123456789012",
+    "profile_photo_url": null,
+    "whatsapp_country_code": "+91",
+    "whatsapp_number": "9876543210"
+  }
+}
+
+docs {
+  Full-replace write of the personal-details step (409 if the application
+  has already been submitted). `profile_photo_url` / `whatsapp_country_code`
+  / `whatsapp_number` are stored as top-level Application columns, not
+  inside the JSON blob, but accepted together here since they're
+  conceptually part of "personal info." Advances currentStep to at least 3.
+}

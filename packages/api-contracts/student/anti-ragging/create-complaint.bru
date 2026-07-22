@@ -1,0 +1,57 @@
+meta {
+  name: Report Anti-Ragging Incident
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/anti-ragging-complaints
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "incident_type": "verbal",
+    "subject": "Repeated verbal harassment in hostel corridor",
+    "individuals_involved": [
+      {
+        "name": "Unknown Senior Student",
+        "department": "Mechanical Engineering",
+        "year": "3rd Year",
+        "class": "ME-C"
+      }
+    ],
+    "incident_date": "2026-07-01",
+    "incident_time": "21:30",
+    "description": "Detailed account of what happened, who was present, and how it escalated.",
+    "attachments": [
+      {
+        "url": "{{antiRaggingEvidenceUrl}}",
+        "name": "recording.mp3",
+        "size_bytes": 204800
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("antiRaggingComplaintId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Upload evidence first via POST /api/v1/student/uploads/anti-ragging-evidence/presign + /verify,
+  then pass the returned permanent URL(s) in attachments. attachments is optional, max 10 files.
+  individuals_involved requires at least one entry; add more by appending to the array.
+}

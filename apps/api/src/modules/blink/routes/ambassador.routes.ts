@@ -16,4 +16,18 @@ router.post(
   AmbassadorController.register,
 );
 
+router.get(
+  "/profile",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.getProfile,
+);
+
+router.patch(
+  "/profile",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.updateProfile,
+);
+
 export default router;

@@ -1,0 +1,20 @@
+meta {
+  name: Activate Document Template
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/templates/{{documentTemplateId}}/activate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {}
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Rename Assessment Paper
+  type: http
+  seq: 22
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/papers/{{assessmentPaperId}}/rename
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "name": "Set A"
+  }
+}
+
+docs {
+  Updates the admin-facing name on a paper. Allowed regardless of status
+  (draft, approved, or deleted) — this is a label change only, it does not
+  affect paper_code, questions, or approval state.
+}

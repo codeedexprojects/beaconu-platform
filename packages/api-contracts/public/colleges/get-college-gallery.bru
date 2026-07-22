@@ -1,0 +1,16 @@
+meta {
+  name: Get College Gallery
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/gallery
+  body: none
+  auth: none
+}
+
+docs {
+  Returns gallery media for a college by its subdomain slug, ordered by
+  sortOrder: id, mediaType, url, caption, sortOrder. No auth required.
+}

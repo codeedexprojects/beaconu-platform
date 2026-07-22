@@ -411,14 +411,32 @@ export class CollegeRegistrationService {
       this.buildDynamicInstitutionsSection(collegeId),
     ]);
 
+    const storedCommute = this.isRecord(sections.commute)
+      ? (sections.commute as Record<string, unknown>)
+      : {};
+
+    // Stored data wins over live-computed commute so manually saved entries persist.
+    // Live data only fills fields not yet set by the user.
+    const mergedCommute = {
+      ...commuteSection,
+      ...storedCommute,
+      // Always reflect live route_count from DB, but only override routes/pickup_points
+      // from live data when the user has never saved any (empty stored arrays).
+      routes:
+        Array.isArray(storedCommute.routes) && storedCommute.routes.length > 0
+          ? storedCommute.routes
+          : commuteSection.routes,
+      pickup_points:
+        Array.isArray(storedCommute.pickup_points) &&
+        storedCommute.pickup_points.length > 0
+          ? storedCommute.pickup_points
+          : commuteSection.pickup_points,
+      route_count: commuteSection.route_count,
+    };
+
     return {
       ...sections,
-      commute: {
-        ...(this.isRecord(sections.commute)
-          ? (sections.commute as Record<string, unknown>)
-          : {}),
-        ...commuteSection,
-      },
+      commute: mergedCommute,
       institutions_across_world: {
         ...(this.isRecord(sections.institutions_across_world)
           ? (sections.institutions_across_world as Record<string, unknown>)
@@ -789,6 +807,10 @@ export class CollegeRegistrationService {
     return CollegeRegistrationRepository.getCourses(collegeId);
   }
 
+  static async listCoursesMinimal(collegeId: string) {
+    return CollegeRegistrationRepository.getCoursesMinimal(collegeId);
+  }
+
   static async addCourse(collegeId: string, data: CreateCourseData) {
     await this.ensureDisciplineAllowedForCollege(collegeId, data.disciplineId);
     return CollegeRegistrationRepository.createCourse(collegeId, data);
@@ -829,6 +851,12 @@ export class CollegeRegistrationService {
   static async getStreams(collegeId: string) {
     void collegeId;
     return CollegeRegistrationRepository.getStreamsWithDisciplines();
+  }
+
+  static async getDepartments(collegeId: string) {
+    return CollegeRegistrationRepository.getActiveDepartmentsByCollegeId(
+      collegeId,
+    );
   }
 
   static async getStudyLevels() {

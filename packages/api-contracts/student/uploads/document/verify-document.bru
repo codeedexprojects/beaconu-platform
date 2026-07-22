@@ -1,0 +1,49 @@
+meta {
+  name: Verify Document Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/document/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{documentUploadKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.permanentUrl) {
+      bru.setEnvVar("documentFileUrl", data.data.permanentUrl);
+    }
+  }
+}
+
+docs {
+  Step 3 of 3 — Confirm the document file was successfully uploaded to S3.
+
+  Saves `permanentUrl` to {{documentFileUrl}} for use as `file_url` in
+  Submit Document (submission-requests/:id/submit).
+
+  Body:
+  - key (required): the S3 key returned by presign-document
+
+  Response:
+  - verified: true
+  - permanentUrl: permanent public S3 URL
+  - viewUrl: signed URL valid for 1 hour
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Deactivate Document Template
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/templates/{{documentTemplateId}}/deactivate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Soft-hides the template from the student app without deleting it (no hard
+  deletes per project convention).
+}

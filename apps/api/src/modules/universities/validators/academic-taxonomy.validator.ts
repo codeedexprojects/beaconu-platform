@@ -69,7 +69,7 @@ export const academicTaxonomySchemas = {
     logo_url: z
       .string()
       .url()
-      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
       .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
@@ -82,7 +82,8 @@ export const academicTaxonomySchemas = {
       logo_url: z
         .string()
         .url()
-        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .nullable()
         .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),
@@ -98,7 +99,7 @@ export const academicTaxonomySchemas = {
     logo_url: z
       .string()
       .url()
-      .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+      .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
       .optional(),
     sort_order: z.number().int().min(0).optional().default(0),
     is_active: z.boolean().optional().default(true),
@@ -112,7 +113,8 @@ export const academicTaxonomySchemas = {
       logo_url: z
         .string()
         .url()
-        .regex(/\.svg$/i, "Logo must be an SVG file (1:1 ratio)")
+        .regex(/^(?!.*\.svg$).+$/i, "Icon must not be an SVG file")
+        .nullable()
         .optional(),
       sort_order: z.number().int().min(0).optional(),
       is_active: z.boolean().optional(),

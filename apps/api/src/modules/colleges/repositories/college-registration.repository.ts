@@ -340,6 +340,14 @@ export class CollegeRegistrationRepository {
     });
   }
 
+  static async getCoursesMinimal(collegeId: string) {
+    return prisma.course.findMany({
+      where: { collegeId, status: "active" },
+      select: { id: true, name: true, code: true },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
   static async createCourse(collegeId: string, data: CreateCourseData) {
     const payloadTabData =
       data.tabData && typeof data.tabData === "object"
@@ -437,6 +445,15 @@ export class CollegeRegistrationRepository {
   }
 
   // ── Lookups ────────────────────────────────────────────────────────────────
+
+  static async getActiveDepartmentsByCollegeId(collegeId: string) {
+    void collegeId;
+    return prisma.discipline.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+  }
 
   static async getStreamsWithDisciplines(allowedStreamIds?: string[]) {
     if (allowedStreamIds && allowedStreamIds.length === 0) {

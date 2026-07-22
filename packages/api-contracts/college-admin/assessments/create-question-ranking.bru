@@ -1,0 +1,46 @@
+meta {
+  name: Create Question (Ranking, Leadership Qualities)
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/leadership-qualities/questions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "question_type_id": "{{questionTypeId}}",
+    "difficulty": "hard",
+    "title": "Prioritize these tasks",
+    "content": {
+      "text": "Rank the following tasks in the order you would tackle them as team lead.",
+      "options": [
+        { "id": "1", "text": "Resolve a conflict between two teammates" },
+        { "id": "2", "text": "Submit the weekly status report" },
+        { "id": "3", "text": "Review a blocked pull request" },
+        { "id": "4", "text": "Plan next sprint's tasks" }
+      ]
+    },
+    "answer_key": {
+      "correctOrder": ["1", "3", "4", "2"]
+    },
+    "marks": 4,
+    "negative_marks": 0,
+    "course_ids": []
+  }
+}
+
+docs {
+  Example of a ranking, autoScorable question type. answer_key.correctOrder
+  must be a permutation of the option ids in content.options. First enable
+  the "Leadership Qualities" section and fetch its question types to get a
+  real questionTypeId (the Ranking Questions type).
+}

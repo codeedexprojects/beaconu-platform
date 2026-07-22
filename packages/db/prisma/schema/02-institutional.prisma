@@ -128,8 +128,7 @@ model College {
   // Student Code of Conduct
   codeOfConduct Json @default("[]") @map("code_of_conduct") // [{order, rule}]
 
-  // Library, Clubs & Alliances
-  libraries Json @default("[]") // [{type, departmentId?, name, ...}]
+  // Clubs & Alliances
   clubs     Json @default("[]") // [{id, name, slug, category, ...}]
   alliances Json @default("[]") // [{id, partnerName, allianceType, ...}]
 
@@ -168,7 +167,9 @@ model College {
   documentTemplates         DocumentTemplate[]
   documentRequests          DocumentRequest[]
   issuedDocuments           IssuedDocument[]
+  documentSubmissionRequests DocumentSubmissionRequest[]
   hostels                   Hostel[]
+  libraries                 Library[]
   commuteRoutes             CommuteRoute[]
   newsAlerts                NewsAlert[]
   articles                  Article[]
@@ -176,6 +177,7 @@ model College {
   serviceChargeConfigs      ServiceChargeConfig[]
   mediaKits                 MediaKit[]
   campusVisits              CampusVisit[]
+  campusVisitAvailabilities CampusVisitAvailability[]
   announcements             Announcement[]
   supportTickets            SupportTicket[]
   antiRaggingComplaints     AntiRaggingComplaint[]
@@ -188,6 +190,9 @@ model College {
   institutionGroups         InstitutionGroup[]
   institutionGroupMember    InstitutionGroupMember?
   collegeOnboardingRequests CollegeOnboardingRequest[]
+  collegeQuotas             CollegeQuota[]
+
+  collegeWishlists          CollegeWishlist[]
 
   @@index([universityId], name: "idx_colleges_university")
   @@index([slug], name: "idx_colleges_slug")
@@ -195,6 +200,22 @@ model College {
   @@index([state], name: "idx_colleges_state")
   @@index([status], name: "idx_colleges_status")
   @@map("colleges")
+}
+
+model CollegeWishlist {
+  id        String   @id @default(dbgenerated("('CWL-'::text || (nextval('college_wishlist_seq'::regclass))::text)"))
+  studentId String   @map("student_id")
+  collegeId String   @map("college_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, collegeId], name: "uq_college_wishlist")
+  @@index([studentId], name: "idx_cwish_student")
+  @@index([collegeId], name: "idx_cwish_college")
+  @@map("college_wishlists")
 }
 
 model CollegeOnboardingRequest {
@@ -275,6 +296,29 @@ model Department {
   @@map("departments")
 }
 
+model Library {
+  id           String   @id @default(dbgenerated("('LIB-'::text || (nextval('library_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
+  departmentId String?  @map("department_id")
+  type         String   @db.VarChar(20) // "central" | "department"
+  name         String   @db.VarChar(255)
+  stats        Json     @default("[]") // [{value, label}]
+  availableResources Json @default("{\"items\":[]}") @map("available_resources")
+  libraryHours Json     @default("{\"days\":[]}") @map("library_hours")
+  facilities   Json     @default("{\"items\":[]}")
+  status       String   @default("active") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  department Discipline? @relation(fields: [departmentId], references: [id])
+
+  @@index([collegeId], name: "idx_libraries_college")
+  @@index([departmentId], name: "idx_libraries_department")
+  @@map("libraries")
+}
+
 model Stream {
   id        String   @id @default(dbgenerated("('STR-'::text || (nextval('stream_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
@@ -303,6 +347,7 @@ model Discipline {
   // Relations
   stream  Stream   @relation(fields: [streamId], references: [id])
   courses Course[]
+  libraries Library[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")
@@ -402,9 +447,9 @@ model Course {
   mediaKits              MediaKit[]
   enrollments            Enrollment[]
   courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
-  seatMatrices           SeatMatrix[]
   newsAlerts             NewsAlert[]
   collegeReviews         CollegeReview[]
+  documentUploadConfigCourses DocumentUploadConfigCourse[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")
@@ -418,23 +463,53 @@ model Course {
 }
 
 model CourseQuota {
-  id                 String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
-  courseId           String   @map("course_id")
-  tuitionFeeOverride Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
-  quotaName          String   @map("quota_name") @db.VarChar(100)
-  seats              Int
-  isActive           Boolean  @default(true) @map("is_active")
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                   String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
+  courseId             String   @map("course_id")
+  collegeQuotaId       String   @map("college_quota_id")
+  // Bidirectional: positive value surcharges the application fee (e.g. NRI
+  // Quota), negative discounts it. "flat" | "percentage" describes how the
+  // value is applied, not its direction.
+  appFeeAdjustmentType  String?  @map("app_fee_adjustment_type") @db.VarChar(10)
+  appFeeAdjustmentValue Decimal? @map("app_fee_adjustment_value") @db.Decimal(10, 2)
+  tuitionFeeOverride   Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  course             Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  applicationCourses ApplicationCourse[]
-  seatMatrices       SeatMatrix[]
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  collegeQuota CollegeQuota @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
 
-  @@unique([courseId, quotaName], name: "uq_course_quota")
+  @@unique([courseId, collegeQuotaId], name: "uq_course_college_quota")
   @@index([courseId], name: "idx_quotas_course")
+  @@index([collegeQuotaId], name: "idx_quotas_college_quota")
   @@map("course_quotas")
+}
+
+model CollegeQuota {
+  id          String   @id @default(dbgenerated("('CQT-'::text || (nextval('college_quota_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
+  name        String   @db.VarChar(100)
+  slug        String   @db.VarChar(100)
+  bucketType  String   @map("bucket_type") @db.VarChar(20) // "in_state" | "out_of_state"
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college                    College                      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  courseQuotas               CourseQuota[]
+  seatPools                  SeatPool[]
+  courseQuotaSeats           CourseQuotaSeats[]
+  documentUploadConfigQuotas DocumentUploadConfigQuota[]
+
+  @@unique([collegeId, slug], name: "uq_college_quota_slug")
+  @@index([collegeId], name: "idx_college_quotas_college")
+  @@index([collegeId, bucketType], name: "idx_college_quotas_bucket")
+  @@index([collegeId, isActive], name: "idx_college_quotas_active")
+  @@map("college_quotas")
 }
 
 model CollegeGallery {

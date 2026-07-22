@@ -1,0 +1,34 @@
+meta {
+  name: Update Family Details (Student)
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/family-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "father_name": "Suresh Sharma",
+    "father_occupation": "Engineer",
+    "father_phone": "9876500001",
+    "mother_name": "Anita Sharma",
+    "mother_occupation": "Teacher",
+    "mother_phone": "9876500002",
+    "annual_family_income": 1200000,
+    "number_of_siblings": 1
+  }
+}
+
+docs {
+  Full-replace write of the family-details step (409 if already submitted).
+  Advances currentStep to at least 4.
+}

@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 
 export class CollegeDashboardRepository {
   static async listColleges(filters: {
@@ -37,6 +37,7 @@ export class CollegeDashboardRepository {
           status: true,
           logoUrl: true,
           createdAt: true,
+          settings: true,
           university: { select: { id: true, name: true } },
           _count: {
             select: {
@@ -52,7 +53,10 @@ export class CollegeDashboardRepository {
     ]);
 
     return {
-      data: colleges,
+      data: colleges.map(({ settings, ...college }) => ({
+        ...college,
+        isListed: isSettingsListed(settings),
+      })),
       meta: {
         total,
         page,
@@ -63,7 +67,7 @@ export class CollegeDashboardRepository {
   }
 
   static async getCollegeDetail(id: string) {
-    return prisma.college.findUnique({
+    const college = await prisma.college.findUnique({
       where: { id },
       include: {
         university: { select: { id: true, name: true, slug: true } },
@@ -103,6 +107,25 @@ export class CollegeDashboardRepository {
         },
       },
     });
+
+    if (!college) return null;
+
+    return { ...college, isListed: isSettingsListed(college.settings) };
+  }
+
+  static async getSettings(id: string) {
+    const college = await prisma.college.findUnique({
+      where: { id },
+      select: { settings: true },
+    });
+    return college ? college.settings : null;
+  }
+
+  static async updateSettings(id: string, settings: Record<string, unknown>) {
+    return prisma.college.update({
+      where: { id },
+      data: { settings: settings as Prisma.InputJsonValue },
+    });
   }
 
   static async getCollegeStats() {
@@ -113,4 +136,9 @@ export class CollegeDashboardRepository {
     ]);
     return { total, pending, active };
   }
+}
+
+function isSettingsListed(settings: unknown): boolean {
+  if (typeof settings !== "object" || settings === null) return false;
+  return (settings as Record<string, unknown>).isListed === true;
 }

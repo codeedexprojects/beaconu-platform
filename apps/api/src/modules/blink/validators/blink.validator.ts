@@ -1,11 +1,17 @@
 import { z } from "zod";
 import { commonSchemas } from "@/shared/validators";
 
+const fullNameSchema = z.string().trim().min(1).max(255);
+const phoneNumberSchema = commonSchemas.phoneNumber.max(
+  15,
+  "Phone number must be under 15 characters",
+);
+
 export const registerAssociateEmployeeSchema = z
   .object({
-    full_name: z.string().min(1),
+    full_name: fullNameSchema,
     email: commonSchemas.email,
-    phone_number: z.string().optional(),
+    phone_number: phoneNumberSchema.optional(),
     associate_parent_id: z
       .string()
       .trim()
@@ -20,12 +26,16 @@ export const registerAssociateEmployeeSchema = z
 
 export const registerAmbassadorSchema = z
   .object({
-    full_name: z.string().min(1),
+    full_name: fullNameSchema,
     email: commonSchemas.email,
-    phone_number: z.string().optional(),
+    phone_number: phoneNumberSchema.optional(),
     college_id: z.string(),
     linked_student_id: z.string().optional(),
     ambassador_type: z.enum(["student", "teacher"]),
+    avatar_url: z.string().trim().url().optional().nullable(),
+    course: z.string().trim().optional(),
+    district: z.string().trim().optional(),
+    state: z.string().trim().optional(),
     password: commonSchemas.password,
     confirm_password: commonSchemas.password,
   })
@@ -37,6 +47,24 @@ export const registerAmbassadorSchema = z
 export const updateEmployeeStatusSchema = z.object({
   status: z.enum(["active", "inactive", "suspended", "rejected"]),
 });
+
+export const updateAmbassadorSchema = z
+  .object({
+    full_name: fullNameSchema.optional(),
+    phone_number: phoneNumberSchema.optional(),
+    ambassador_type: z.enum(["student", "teacher"]).optional(),
+    avatar_url: z.string().trim().url().optional().nullable(),
+    course: z.string().trim().optional(),
+    district: z.string().trim().optional(),
+    state: z.string().trim().optional(),
+    status: z.enum(["active", "inactive"]).optional(),
+    password: commonSchemas.password.optional(),
+    confirm_password: z.string().optional(),
+  })
+  .refine((data) => !data.password || data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
 
 export const employeeRankingQuerySchema = z
   .object({
@@ -91,6 +119,7 @@ export type RegisterAmbassadorInput = z.infer<typeof registerAmbassadorSchema>;
 export type UpdateEmployeeStatusInput = z.infer<
   typeof updateEmployeeStatusSchema
 >;
+export type UpdateAmbassadorInput = z.infer<typeof updateAmbassadorSchema>;
 export type ReferralListQuery = z.infer<typeof referralListQuerySchema>;
 
 export const bankDetailsSchema = z.object({
@@ -120,6 +149,21 @@ export type BankDetailsInput = z.infer<typeof bankDetailsSchema>;
 export type WithdrawalInput = z.infer<typeof withdrawalSchema>;
 export type WalletTransactionQuery = z.infer<
   typeof walletTransactionQuerySchema
+>;
+
+export const ambassadorProfileUpdateSchema = z.object({
+  full_name: fullNameSchema.optional(),
+  phone_number: phoneNumberSchema.optional(),
+  avatar_url: z.string().trim().url().optional().nullable(),
+  course: z.string().trim().max(255).optional(),
+  language: z.string().trim().max(100).optional(),
+  district: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(100).optional(),
+  bank_details: bankDetailsSchema.optional(),
+});
+
+export type AmbassadorProfileUpdateInput = z.infer<
+  typeof ambassadorProfileUpdateSchema
 >;
 
 export const serviceChargeQuerySchema = z.object({
@@ -189,4 +233,6 @@ export interface BlinkUserCreateData {
   ambassadorType?: string;
   campusCode?: string;
   createdByStaffId?: string;
+  avatarUrl?: string | null;
+  profileMetadata?: Record<string, unknown>;
 }

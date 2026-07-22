@@ -1,0 +1,36 @@
+meta {
+  name: Issue Requested Document (College Admin)
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/requests/{{documentRequestId}}/issue
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "document_url": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/college/CLG-5/documents/issued/example.pdf",
+    "file_name": "bonafide-certificate.pdf",
+    "file_size_bytes": 204800,
+    "pickup_instructions": "Visit the Admissions Office, Ground Floor, Block A, Mon-Fri 10am-4pm",
+    "office_contact_phone": "+91 9876543210"
+  }
+}
+
+docs {
+  Fulfills a student's document request by uploading the issued file.
+  Only valid while the request status is "approved" (after start-review →
+  send-for-approval → approve).
+
+  pickup_instructions and office_contact_phone are REQUIRED when the
+  request's delivery_mode is "pickup" (400 otherwise) — ignored for
+  digital/courier requests.
+}

@@ -11,7 +11,7 @@ get {
 }
 
 vars:pre-request {
-  tabName: exam_policy
+  tabName: student_housing
 }
 
 docs {
@@ -35,6 +35,28 @@ docs {
     accreditations, key_dates, demographics
   
   Returns 404 if the tab name is invalid or the course is not found.
+  
+  --- other_courses_offered tab response shape ---
+  Grouped by study level. Capped at the first 10 other active courses
+  offered by the college (inline preview only). For the full paginated +
+  searchable list, use List Other Courses Offered.
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "sectionName": "other_courses_offered",
+      "sectionId": "other_courses_offered",
+      "sectionKey": "other_courses_offered",
+      "list": [
+        {
+          "studyLevel": { "id": "SVL-1", "name": "Short term", "slug": "short-term" },
+          "courses": [
+            { "id": "CRS-1", "name": "Bachelor of Computer Application (BCA)", "duration": "3 Years", "fee": "INR 45,000" }
+          ]
+        }
+      ]
+    }
+  }
   
   --- fees tab response shape ---
   {
@@ -68,6 +90,7 @@ docs {
     }
   }
   
+  
   --- financial_aid tab response shape ---
   {
     "success": true,
@@ -83,14 +106,31 @@ docs {
           "calculator": {
             "title": "Scholarship Calculator",
             "icon": "...",
-            "port_of_entry": { "icon": "...", "label": "Select Port of Entry", "selected": "", "options": ["JEE Main", ...] },
-            "rank_range": { "icon": "...", "label": "Select Rank Range", "selected": "", "options": ["1 - 1000", ...] }
-          },
-          "terms_and_conditions": { "title": "TERMS & CONDITIONS", "icon": "...", "items": ["Students can avail 25%...", ...] },
-          "final_summary": {
-            "title": "FINAL SUMMARY",
-            "max_scholarship": { "icon": "...", "label": "MAX SCHOLARSHIP", "amount": "₹1,50,000" },
-            "net_payable_fees": { "icon": "...", "label": "NET PAYABLE FEES", "amount": "₹2,45,000" }
+            "port_entries": [
+              {
+                "id": "port_jee_main",
+                "name": "JEE Main",
+                "terms_and_conditions": ["Students can avail scholarship based on the entered rank/score.", ...],
+                "score_ranges": [
+                  {
+                    "id": "range_1-1000",
+                    "range_label": "1 - 1000",
+                    "discount_type": "percentage",
+                    "discount_value": 25,
+                    "max_scholarship_amount": "₹75,000",
+                    "net_payable_amount": "₹3,20,000"
+                  },
+                  {
+                    "id": "range_1001-5000",
+                    "range_label": "1001 - 5000",
+                    "discount_type": "amount",
+                    "discount_value": 10000,
+                    "max_scholarship_amount": "₹10,000",
+                    "net_payable_amount": "₹3,85,000"
+                  }
+                ]
+              }
+            ]
           }
         },
         "financial_concessions": {
@@ -126,6 +166,205 @@ docs {
             }
           ]
         }
+      }
+    }
+  }
+  
+  --- clubs_associations tab response shape ---
+  Capped at the first 10 active clubs (inline preview only) with a trimmed
+  field set (id, name, category, cover_image, logo, about). For the full
+  paginated + searchable list, use List Clubs & Associations. For a single
+  club's full detail view (includes mission, key_activities, recent_events),
+  use Get Club Detail.
+  {
+    "success": true,
+    "message": "Club detail fetched successfully",
+    "data": {
+      "sectionName": "clubs_associations",
+      "sectionId": "clubs_associations",
+      "sectionKey": "clubs_associations",
+      "data": [
+        {
+          "id": "club_nss",
+          "name": "National Service Scheme (NSS)",
+          "category": "SERVICE",
+          "cover_image": "https://cdn.clubphotos.example.com/clubs/nss-cover.jpg",
+          "logo": "",
+          "about": {
+            "description": "The National Service Scheme (NSS) is an Indian government-sponsored public service program conducted by the Ministry of Youth Affairs and Sports. Our college chapter is dedicated to fostering social responsibility and community engagement among students."
+          }
+        }
+      ]
+    }
+  }
+  
+  --- alliance tab response shape ---
+  {
+    "success": true,
+    "message": "Alliance detail fetched successfully",
+    "data": {
+      "sectionName": "alliance",
+      "sectionId": "alliance",
+      "sectionKey": "alliance",
+      "data": [
+        {
+          "id": "alliance_bmh",
+          "name": "Baby Memorial Hospital (BMH)",
+          "category": "INDUSTRIAL COLLABORATION",
+          "category_color": "blue",
+          "cover_image": "https://cdn.alliancephotos.example.com/alliances/bmh-cover.jpg",
+          "logo": "https://cdn.alliancephotos.example.com/alliances/bmh-logo.png",
+          "about": {
+            "description": "The alliance with Baby Memorial Hospital (BMH) represents a significant milestone..."
+          },
+          "collaboration_impact": {
+            "description": "Through this strategic collaboration, students gain hands-on experience..."
+          },
+          "key_focus_areas": {
+            "items": [
+              "Clinical Rotations for Nursing Students",
+              "Joint Biomedical Research",
+              "Internship Opportunities",
+              "Continuing Medical Education (CME) Seminars"
+            ]
+          },
+          "legal_and_documentation": {
+            "items": [
+              {
+                "title": "Memorandum of Understanding",
+                "download_icon": "https://cdn.iconsdb.example.com/icons/download-gray.png",
+                "url": "https://cdn.documents.example.com/alliances/bmh-mou.pdf"
+              }
+            ]
+          },
+          "alliance_activities": {
+            "view_all_cta": {
+              "label": "View Happenings",
+              "link": "https://example.com/alliances/bmh/happenings"
+            },
+            "items": [
+              {
+                "id": "activity_1",
+                "title": "Clinical Training Session",
+                "thumbnail": "https://cdn.alliancephotos.example.com/alliances/bmh-clinical-training.jpg",
+                "link": "https://example.com/alliances/bmh/activities/clinical-training-session"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+  
+  --- demo_graphics tab response shape ---
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "sectionName": "demo_graphics",
+      "sectionId": "demo_graphics",
+      "sectionKey": "demo_graphics",
+      "data": {
+        "tab": "demo_graphics",
+        "age_distribution": {
+          "items": [
+            { "label": "18 - 22 years", "percent": 64 },
+            { "label": "23 - 26 years", "percent": 22 },
+            { "label": "27 - 30 years", "percent": 10 },
+            { "label": "30+ years", "percent": 4 }
+          ]
+        },
+        "gender_diversity": {
+          "segments": [
+            { "label": "Male", "percent": 60 },
+            { "label": "Others", "percent": 2 },
+            { "label": "Female", "percent": 38 }
+          ]
+        },
+        "work_experience": {
+          "items": [
+            {
+              "icon": "https://cdn.iconsdb.example.com/icons/graduate-cap-people-orange.png",
+              "label": "Freshers",
+              "subtitle": "Directly after undergrad",
+              "percent": 45
+            },
+            {
+              "icon": "https://cdn.iconsdb.example.com/icons/briefcase-orange.png",
+              "label": "1 - 3 Years",
+              "subtitle": "Junior professionals",
+              "percent": 35
+            },
+            {
+              "icon": "https://cdn.iconsdb.example.com/icons/star-orange.png",
+              "label": "4+ Years",
+              "subtitle": "Senior/Leadership roles",
+              "percent": 20
+            }
+          ]
+        },
+        "international_presence": {
+          "items": [
+            {
+              "flag": "https://cdn.flagicons.example.com/flags/india.png",
+              "country": "India",
+              "percent": 42
+            },
+            {
+              "flag": "https://cdn.flagicons.example.com/flags/uae.png",
+              "country": "UAE",
+              "percent": 18
+            }
+          ]
+        },
+        "national_presence": {
+          "items": [
+            { "state": "Kerala", "percent": 42 },
+            { "state": "Tamilnadu", "percent": 18 }
+          ]
+        }
+      }
+    }
+  }
+  
+  --- library tab response shape ---
+  Libraries are no longer embedded in the course's tab data — the course
+  stores only `libraryIds: string[]`, which are resolved against the
+  college's own `Library` records (see College Admin > Libraries CRUD and
+  the public List/Get College Libraries routes). Removing a library from
+  the source has no special handling here; it's simply dropped from this
+  list.
+  {
+    "success": true,
+    "message": "Course tab fetched",
+    "data": {
+      "sectionName": "library",
+      "sectionId": "library",
+      "sectionKey": "library",
+      "data": {
+        "tab": "library",
+        "libraries": [
+          {
+            "id": "LIB-1",
+            "type": "central",
+            "departmentId": null,
+            "name": "Central Library",
+            "stats": [{ "value": "21,786", "label": "Sq Feet Area" }],
+            "availableResources": { "items": [{ "name": "E-Books", "count": "195,809" }] },
+            "libraryHours": {
+              "days": [
+                {
+                  "day": "Monday",
+                  "working_hours_start": "09:00",
+                  "working_hours_end": "16:30",
+                  "transaction_hours_start": "09:00",
+                  "transaction_hours_end": "11:00"
+                }
+              ]
+            },
+            "facilities": { "items": [{ "name": "Quiet Study Areas", "image": "" }] }
+          }
+        ]
       }
     }
   }

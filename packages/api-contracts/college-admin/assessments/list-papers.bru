@@ -1,0 +1,19 @@
+meta {
+  name: List Assessment Papers
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/papers
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Lists all papers generated from this template, newest first.
+}

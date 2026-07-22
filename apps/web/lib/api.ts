@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/store";
+import { useAuthStore, useStudentAuthStore } from "@/store";
 import { API_BASE } from "./constants";
 
 export class ApiError extends Error {
@@ -18,9 +18,60 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-let refreshPromise: Promise<void> | null = null;
+type Identity = "student" | "blog-author";
 
-async function tryRefreshToken(): Promise<void> {
+function identityFor(path: string): Identity {
+  // Public college listing/detail routes accept an optional student Bearer
+  // token to personalize the response (isWishlisted) — attach it when present,
+  // but the routes never 401 on a missing/invalid token, so this is safe even
+  // for logged-out visitors.
+  if (
+    path.startsWith("/api/v1/student") ||
+    path.startsWith("/api/v1/public/colleges")
+  ) {
+    return "student";
+  }
+  return "blog-author";
+}
+
+function getToken(identity: Identity): string | null {
+  return identity === "student"
+    ? useStudentAuthStore.getState().token
+    : useAuthStore.getState().token;
+}
+
+function clearAuth(identity: Identity): void {
+  if (identity === "student") {
+    useStudentAuthStore.getState().clearAuth();
+  } else {
+    useAuthStore.getState().clearAuth();
+  }
+}
+
+const refreshPromises: Record<Identity, Promise<void> | null> = {
+  student: null,
+  "blog-author": null,
+};
+
+async function tryRefreshToken(identity: Identity): Promise<void> {
+  if (identity === "student") {
+    const res = await fetch(`${API_BASE}/api/v1/student/auth/refresh-token`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      throw new ApiError(401, "Session expired. Please sign in again.");
+    }
+    const body = (await res.json()) as ApiResponse<{ accessToken: string }>;
+    const { user } = useStudentAuthStore.getState();
+    if (!user) {
+      throw new ApiError(401, "Session expired. Please sign in again.");
+    }
+    useStudentAuthStore.getState().setAuth(user, body.data.accessToken);
+    return;
+  }
+
   const res = await fetch(`${API_BASE}/api/v1/blog/auth/refresh`, {
     method: "POST",
     credentials: "include",
@@ -42,7 +93,8 @@ async function requestWithRetry<T>(
   options: RequestInit,
   retried: boolean,
 ): Promise<T> {
-  const token = useAuthStore.getState().token;
+  const identity = identityFor(path);
+  const token = getToken(identity);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -57,25 +109,29 @@ async function requestWithRetry<T>(
 
   if (res.status === 401) {
     if (retried) {
-      useAuthStore.getState().clearAuth();
+      clearAuth(identity);
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("auth:session-expired"));
+        window.dispatchEvent(
+          new CustomEvent("auth:session-expired", { detail: { identity } }),
+        );
       }
       throw new ApiError(401, "Session expired. Please sign in again.");
     }
 
-    if (!refreshPromise) {
-      refreshPromise = tryRefreshToken().finally(() => {
-        refreshPromise = null;
+    if (!refreshPromises[identity]) {
+      refreshPromises[identity] = tryRefreshToken(identity).finally(() => {
+        refreshPromises[identity] = null;
       });
     }
 
     try {
-      await refreshPromise;
+      await refreshPromises[identity];
     } catch {
-      useAuthStore.getState().clearAuth();
+      clearAuth(identity);
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("auth:session-expired"));
+        window.dispatchEvent(
+          new CustomEvent("auth:session-expired", { detail: { identity } }),
+        );
       }
       throw new ApiError(401, "Session expired. Please sign in again.");
     }

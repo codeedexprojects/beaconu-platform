@@ -1,0 +1,20 @@
+meta {
+  name: Delete Question
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/questions/{{assessmentQuestionId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Soft-deletes a question (status -> inactive). Excluded from new
+  assessments but preserved for historical records — never a hard delete.
+}

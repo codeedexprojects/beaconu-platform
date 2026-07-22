@@ -1,0 +1,38 @@
+meta {
+  name: Create Addon Service
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/{{hostelId}}/addon-services
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "serviceType": "laundry",
+    "name": "Laundry Charges",
+    "description": "Weekly laundry pickup and delivery.",
+    "isOptional": true,
+    "plans": [
+      { "label": "Monthly", "price": 500 },
+      { "label": "Per Wash", "price": 50 }
+    ],
+    "notes": "Excludes dry cleaning."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("addonServiceId", data.data.id);
+    }
+  }
+}

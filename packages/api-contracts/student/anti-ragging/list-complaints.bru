@@ -1,0 +1,28 @@
+meta {
+  name: List My Reports
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/anti-ragging-complaints
+  body: none
+  auth: none
+}
+
+query {
+  ~status: submitted
+  ~search: 
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Trimmed list — each item has only: id, complaintNumber, subject,
+  incidentDate, status. Call Get My Report Status (by id) for full detail
+  (description, individuals involved, evidence, resolution, status timeline).
+}

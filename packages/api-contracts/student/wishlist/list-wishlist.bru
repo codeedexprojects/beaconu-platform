@@ -1,0 +1,28 @@
+meta {
+  name: List Wishlisted Colleges
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/wishlist?page=1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  List the authenticated student's wishlisted colleges, most recently added first.
+
+  Response:
+  - colleges: [{ id, name, slug, logoUrl, coverImageUrl, city, state, avgRating, reviewCount, wishlistedAt }]
+  - meta: { total, page, limit, hasNext }
+}

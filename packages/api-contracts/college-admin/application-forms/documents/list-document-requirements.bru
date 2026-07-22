@@ -1,0 +1,31 @@
+meta {
+  name: List Document Requirements
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/documents
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("documentRequirementId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists document requirements configured for this application form, ordered
+  by sortOrder. Each requirement carries `courses` and `quotas` arrays —
+  empty means it applies to every course/quota in the cycle, populated means
+  it's restricted to just those.
+}

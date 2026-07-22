@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import Link from "next/link";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
-import * as z from "zod";
+import { z } from "zod";
 import {
   Home,
   Plus,
@@ -15,22 +16,31 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
+import { getPortalPath, getCollegeSlugFromPath } from "@/lib/portal-path";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 
 import {
   useCollegeHostels,
@@ -38,122 +48,433 @@ import {
   useDeleteCollegeHostel,
 } from "@/hooks/use-facilities";
 
+const MAX_ROOM_PHOTOS = 4;
+
+// ── Form schema ───────────────────────────────────────────────────────────────
+
+const roomTypeFormSchema = z.object({
+  name: z.string().trim().min(2, "Required"),
+  description: z.string().trim().optional().default(""),
+  totalBeds: z.coerce.number().int().positive("Must be > 0"),
+  annualPlanPrice: z.coerce.number().nonnegative().default(0),
+  monthlyPlanPrice: z.coerce.number().nonnegative().default(0),
+  admissionFee: z.coerce.number().nonnegative().default(0),
+  securityDeposit: z.coerce.number().nonnegative().default(0),
+  photos: z.array(z.string()).max(MAX_ROOM_PHOTOS).optional().default([]),
+});
+
+const messPlanFormSchema = z.object({
+  name: z.string().trim().min(2, "Required"),
+  priceMonthly: z.coerce.number().positive("Must be > 0"),
+  mealsIncluded: z.string().trim().optional(),
+  duration: z.string().trim().optional().default("1 Month"),
+  dietaryOptions: z.string().trim().optional(),
+  isCompulsory: z.boolean().optional().default(false),
+});
+
+const addonServiceFormSchema = z.object({
+  serviceType: z.enum(["laundry", "gym", "parking", "other"]),
+  name: z.string().trim().min(2, "Required"),
+  planLabel: z.string().trim().min(1, "Required"),
+  planPrice: z.coerce.number().nonnegative(),
+  featureTags: z.string().trim().optional(),
+  notes: z.string().trim().optional().default(""),
+});
+
+const amenityFormSchema = z.object({
+  name: z.string().trim().min(1, "Required"),
+});
+
+const ruleFormSchema = z.object({
+  title: z.string().trim().min(1, "Required"),
+  description: z.string().trim().min(1, "Required"),
+});
+
+const essentialFormSchema = z.object({
+  type: z.string().trim().min(1, "Required"),
+  name: z.string().trim().min(1, "Required"),
+  distance: z.string().trim().optional(),
+});
+
+const safetyFeatureFormSchema = z.object({
+  label: z.string().trim().min(1, "Required"),
+});
+
+const utilityFormSchema = z.object({
+  category: z.string().trim().min(1, "Required"),
+  provider: z.string().trim().min(1, "Required"),
+  notes: z.string().trim().optional().default(""),
+});
+
+const transitFormSchema = z.object({
+  route: z.string().trim().min(1, "Required"),
+  stop: z.string().trim().optional().default(""),
+  timing: z.string().trim().optional().default(""),
+});
+
 const hostelSchema = z.object({
   name: z.string().trim().min(2, "Hostel name is required").max(255),
   hostelType: z.enum(["boys", "girls", "co-ed"]),
-  isOnCampus: z.boolean().default(true),
-  distanceFromCampus: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  totalBeds: z.preprocess(
-    (val) => Number(val),
-    z.number().int().positive("Beds count must be positive"),
-  ),
+  isOnCampus: z.boolean(),
+  distanceFromCampus: z.string().optional(),
+  description: z.string().optional(),
+  coverImageUrl: z.string().optional().default(""),
+  totalBeds: z.coerce.number().int().positive("Must be > 0"),
+  badge: z.string().trim().optional().default(""),
+  safetyTier: z.string().trim().optional().default(""),
+  wardenName: z.string().trim().min(1, "Warden name is required"),
+  wardenPhone: z.string().trim().min(1, "Warden phone is required"),
+  wardenWhatsapp: z.string().optional(),
+  wardenEmail: z
+    .union([z.string().trim().email("Invalid email"), z.literal("")])
+    .optional(),
+  wardenPhoto: z.string().optional().default(""),
+  wardenDesignation: z.string().trim().optional().default(""),
+  safetyFeatures: z.array(safetyFeatureFormSchema).optional().default([]),
+  address: z.string().optional(),
+  addressLine2: z.string().trim().optional().default(""),
+  latitude: z.string().trim().optional().default(""),
+  longitude: z.string().trim().optional().default(""),
+  mapLink: z.string().trim().optional().default(""),
+  mapThumbnail: z.string().trim().optional().default(""),
+  transportDescription: z.string().trim().optional().default(""),
+  busStopNote: z.string().trim().optional().default(""),
+  roomTypes: z.array(roomTypeFormSchema).min(1, "Add at least one room type"),
+  messPlans: z.array(messPlanFormSchema),
+  addonServices: z.array(addonServiceFormSchema),
+  amenities: z.array(amenityFormSchema),
+  rules: z.array(ruleFormSchema),
+  nearbyEssentials: z.array(essentialFormSchema),
+  utilities: z.array(utilityFormSchema).optional().default([]),
+  transit: z.array(transitFormSchema).optional().default([]),
 });
 
 type HostelFormData = z.infer<typeof hostelSchema>;
 
+const DEFAULT_VALUES: HostelFormData = {
+  name: "",
+  hostelType: "co-ed",
+  isOnCampus: true,
+  distanceFromCampus: "",
+  description: "",
+  coverImageUrl: "",
+  totalBeds: 100,
+  badge: "",
+  safetyTier: "",
+  wardenName: "",
+  wardenPhone: "",
+  wardenWhatsapp: "",
+  wardenEmail: "",
+  wardenPhoto: "",
+  wardenDesignation: "",
+  safetyFeatures: [],
+  address: "",
+  addressLine2: "",
+  latitude: "",
+  longitude: "",
+  mapLink: "",
+  mapThumbnail: "",
+  transportDescription: "",
+  busStopNote: "",
+  roomTypes: [],
+  messPlans: [],
+  addonServices: [],
+  amenities: [],
+  rules: [],
+  nearbyEssentials: [],
+  utilities: [],
+  transit: [],
+};
+
+const STEPS = [
+  { key: "basics", label: "Basic Info" },
+  { key: "rooms", label: "Room Types" },
+  { key: "facilities", label: "Mess & Addons" },
+  { key: "rules", label: "Amenities & Rules" },
+  { key: "location", label: "Warden & Location" },
+] as const;
+
+// Fields validated before advancing past each step.
+const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
+  0: ["name", "hostelType", "totalBeds", "distanceFromCampus"],
+  1: ["roomTypes"],
+  2: ["messPlans", "addonServices"],
+  3: ["amenities", "rules"],
+  4: [
+    "wardenName",
+    "wardenPhone",
+    "wardenEmail",
+    "safetyFeatures",
+    "nearbyEssentials",
+  ],
+};
+
+const FIELD_TO_STEP: Partial<Record<keyof HostelFormData, number>> = {
+  name: 0,
+  hostelType: 0,
+  isOnCampus: 0,
+  distanceFromCampus: 0,
+  description: 0,
+  coverImageUrl: 0,
+  totalBeds: 0,
+  badge: 0,
+  safetyTier: 0,
+  roomTypes: 1,
+  messPlans: 2,
+  addonServices: 2,
+  amenities: 3,
+  rules: 3,
+  wardenName: 4,
+  wardenPhone: 4,
+  wardenWhatsapp: 4,
+  wardenEmail: 4,
+  wardenPhoto: 4,
+  wardenDesignation: 4,
+  safetyFeatures: 4,
+  address: 4,
+  addressLine2: 4,
+  latitude: 4,
+  longitude: 4,
+  mapLink: 4,
+  mapThumbnail: 4,
+  transportDescription: 4,
+  busStopNote: 4,
+  nearbyEssentials: 4,
+  utilities: 4,
+  transit: 4,
+};
+
+function getErroredRootFields(errors: Record<string, unknown>): string[] {
+  return Object.keys(errors).filter((key) => {
+    const value = errors[key];
+    return value !== null && value !== undefined && typeof value === "object";
+  });
+}
+
 export default function HostelsPage() {
   const user = useAuthStore((state) => state.user);
+  const collegeSlug =
+    typeof window === "undefined"
+      ? null
+      : getCollegeSlugFromPath(window.location.pathname, window.location.host);
   const { data: hostels = [], isLoading: loadingHostels } = useCollegeHostels();
+
   const { mutate: createHostel, isPending: creating } =
     useCreateCollegeHostel();
-  const { mutate: deleteHostel } = useDeleteCollegeHostel();
+  const { mutate: deleteHostel, isPending: isDeleting } =
+    useDeleteCollegeHostel();
   const canManageHostels =
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("hostel.manage") ?? false);
 
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [step, setStep] = useState(0);
   const [expandedHostel, setExpandedHostel] = useState<string | null>(null);
-
-  // Custom states for interactive additions of room types rows inside modal
-  const [roomTypes, setRoomTypes] = useState<
-    {
-      name: string;
-      totalBeds: number;
-      annualPlanPrice: number;
-      securityDeposit: number;
-    }[]
-  >([]);
-  const [newRoomName, setNewRoomName] = useState("");
-  const [newRoomBeds, setNewRoomBeds] = useState("");
-  const [newRoomPrice, setNewRoomPrice] = useState("");
-  const [newRoomDeposit, setNewRoomDeposit] = useState("");
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
+    setValue,
+    trigger,
     reset,
     formState: { errors },
   } = useForm<HostelFormData>({
     resolver: zodResolver(hostelSchema),
-    defaultValues: {
-      name: "",
-      hostelType: "co-ed",
-      isOnCampus: true,
-      distanceFromCampus: "",
-      description: "",
-      totalBeds: 100,
-    },
+    defaultValues: DEFAULT_VALUES,
   });
 
   const isOnCampus = watch("isOnCampus");
 
-  const addRoomType = () => {
-    if (newRoomName.trim() && newRoomBeds.trim()) {
-      setRoomTypes([
-        ...roomTypes,
-        {
-          name: newRoomName.trim(),
-          totalBeds: parseInt(newRoomBeds) || 0,
-          annualPlanPrice: parseFloat(newRoomPrice) || 0,
-          securityDeposit: parseFloat(newRoomDeposit) || 0,
-        },
-      ]);
-      setNewRoomName("");
-      setNewRoomBeds("");
-      setNewRoomPrice("");
-      setNewRoomDeposit("");
-    } else {
-      toast.error("Please fill in room category name and beds capacity");
+  const handleFieldUpload = async (
+    file: File | null,
+    fieldKey: string,
+    fieldPath: Parameters<typeof setValue>[0],
+    context: string,
+  ) => {
+    if (!file) return;
+    try {
+      setUploadingField(fieldKey);
+      const permanentUrl = await uploadCollegeAdminFile(file, context);
+      setValue(fieldPath, permanentUrl as never, { shouldDirty: true });
+      toast.success("Image uploaded");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingField(null);
     }
   };
+
+  const roomTypesArray = useFieldArray({ control, name: "roomTypes" });
+  const messPlansArray = useFieldArray({ control, name: "messPlans" });
+  const addonServicesArray = useFieldArray({ control, name: "addonServices" });
+  const amenitiesArray = useFieldArray({ control, name: "amenities" });
+  const rulesArray = useFieldArray({ control, name: "rules" });
+  const essentialsArray = useFieldArray({ control, name: "nearbyEssentials" });
+  const utilitiesArray = useFieldArray({ control, name: "utilities" });
+  const transitArray = useFieldArray({ control, name: "transit" });
+  const safetyFeaturesArray = useFieldArray({
+    control,
+    name: "safetyFeatures",
+  });
 
   const handleOpenAdd = () => {
     if (!canManageHostels) return;
-    setRoomTypes([]);
-    reset();
+    reset(DEFAULT_VALUES);
+    setStep(0);
     setShowAddModal(true);
   };
 
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+  };
+
+  const goNext = async () => {
+    const fieldsToValidate = STEP_FIELDS[step] ?? [];
+    const valid = await trigger(fieldsToValidate);
+    if (!valid) {
+      toast.error("Please fix the highlighted fields before continuing");
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
   const handleDelete = (id: string, name: string) => {
     if (!canManageHostels) return;
-    if (
-      confirm(
-        `Are you absolutely sure you want to remove hostel facility "${name}"?`,
-      )
-    ) {
-      deleteHostel(id, {
-        onSuccess: () => {
-          toast.success(`Hostel facility "${name}" removed successfully`);
-        },
-      });
-    }
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteHostel(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(
+          `Hostel facility "${deleteTarget.name}" removed successfully`,
+        );
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const onSubmit = (data: HostelFormData) => {
     const payload = {
-      ...data,
-      roomTypes: roomTypes,
+      name: data.name,
+      hostelType: data.hostelType,
+      isOnCampus: data.isOnCampus,
+      distanceFromCampus: data.isOnCampus
+        ? null
+        : data.distanceFromCampus || null,
+      description: data.description || null,
+      coverImageUrl: data.coverImageUrl || null,
+      totalBeds: data.totalBeds,
+      badge: data.badge || null,
+      safetyTier: data.safetyTier || null,
+      roomTypes: data.roomTypes.map((rt) => ({
+        ...rt,
+        photos: (rt.photos || []).filter(Boolean),
+      })),
+      messPlans: data.messPlans.map((mp) => ({
+        name: mp.name,
+        priceMonthly: mp.priceMonthly,
+        mealsIncluded: (mp.mealsIncluded ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        duration: mp.duration || "1 Month",
+        isCompulsory: mp.isCompulsory ?? false,
+        dietaryOptions: (mp.dietaryOptions ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      })),
+      addonServices: data.addonServices.map((service) => ({
+        serviceType: service.serviceType,
+        name: service.name,
+        plans: [
+          {
+            label: service.planLabel,
+            price: service.planPrice,
+            feature_tags: (service.featureTags ?? "")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          },
+        ],
+        notes: service.notes || undefined,
+      })),
+      wardenInfo: {
+        name: data.wardenName || undefined,
+        phone: data.wardenPhone || undefined,
+        whatsapp: data.wardenWhatsapp || undefined,
+        email: data.wardenEmail || undefined,
+        photo: data.wardenPhoto || undefined,
+        designation: data.wardenDesignation || undefined,
+        safetyFeatures: data.safetyFeatures,
+      },
+      amenities: data.amenities,
+      rules: data.rules,
+      locationInfo: {
+        address: data.address || undefined,
+        addressLine2: data.addressLine2 || undefined,
+        latitude: data.latitude ? Number(data.latitude) : undefined,
+        longitude: data.longitude ? Number(data.longitude) : undefined,
+        mapLink: data.mapLink || undefined,
+        map: data.mapThumbnail ? { thumbnail: data.mapThumbnail } : undefined,
+        collegeTransport:
+          data.transportDescription || data.busStopNote
+            ? {
+                description: data.transportDescription || undefined,
+                busStopNote: data.busStopNote || undefined,
+              }
+            : undefined,
+        nearbyEssentials: data.nearbyEssentials,
+        utilities: data.utilities?.length
+          ? data.utilities.map((u) => ({
+              category: u.category,
+              provider: u.provider,
+              notes: u.notes || undefined,
+            }))
+          : undefined,
+        transit: data.transit?.length
+          ? data.transit.map((t) => ({
+              route: t.route,
+              stop: t.stop || undefined,
+              timing: t.timing || undefined,
+            }))
+          : undefined,
+      },
     };
 
     createHostel(payload, {
       onSuccess: () => {
         toast.success("Hostel facility provisioned successfully");
-        setShowAddModal(false);
-        reset();
+        handleCloseModal();
+        reset(DEFAULT_VALUES);
+      },
+      onError: (error) => {
+        console.error("[CreateHostel] failed", error);
       },
     });
+  };
+
+  const onInvalid = (formErrors: Record<string, unknown>) => {
+    const erroredFields = getErroredRootFields(formErrors);
+    const invalidSteps = erroredFields
+      .map((field) => FIELD_TO_STEP[field as keyof HostelFormData])
+      .filter((stepIndex): stepIndex is number => stepIndex !== undefined);
+    if (invalidSteps.length > 0) {
+      setStep(Math.min(...invalidSteps));
+    }
+    toast.error("Please fix the highlighted fields before submitting");
   };
 
   if (loadingHostels) {
@@ -202,7 +523,7 @@ export default function HostelsPage() {
                       {hostel.name}
                     </CardTitle>
                   </div>
-                  <CardDescription className="text-xs flex items-center gap-2 mt-1">
+                  <div className="text-xs flex items-center gap-2 mt-1">
                     <Badge
                       variant="secondary"
                       className="text-[10px] uppercase font-semibold"
@@ -215,17 +536,26 @@ export default function HostelsPage() {
                         ? "On-Campus"
                         : `Off-Campus (${hostel.distanceFromCampus || "0"} km)`}
                     </span>
-                  </CardDescription>
+                  </div>
                 </div>
-                {canManageHostels ? (
-                  <button
-                    type="button"
-                    className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
-                    onClick={() => handleDelete(hostel.id, hostel.name)}
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={getPortalPath(collegeSlug, `/hostels/${hostel.id}`)}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
+                    <Button variant="outline" size="sm" className="h-8 text-xs">
+                      Manage
+                    </Button>
+                  </Link>
+                  {canManageHostels ? (
+                    <button
+                      type="button"
+                      className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
+                      onClick={() => handleDelete(hostel.id, hostel.name)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -327,34 +657,63 @@ export default function HostelsPage() {
         )}
       </div>
 
-      {/* Hostel Provisioning Modal form sheet */}
-      {showAddModal && canManageHostels && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg shadow-2xl border-border bg-card/90 my-8">
-            <CardHeader>
-              <CardTitle>Provision Hostel Hall</CardTitle>
-              <CardDescription>
-                Define operational capacities, residence rules, and pricing
-                templates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="hostel-name">Hostel Hall Name</Label>
-                    <Input
-                      id="hostel-name"
-                      placeholder="e.g. CV Raman Boys Hostel"
-                      {...register("name")}
-                    />
-                    {errors.name && (
-                      <p className="text-xs text-destructive">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
+      {/* Hostel Provisioning Wizard */}
+      <Dialog
+        open={showAddModal && canManageHostels}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal();
+        }}
+      >
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Provision Hostel Hall</DialogTitle>
+            <DialogDescription>
+              Step {step + 1} of {STEPS.length} &middot; {STEPS[step].label}
+            </DialogDescription>
+          </DialogHeader>
 
+          {/* Step progress indicator */}
+          <div className="flex items-center gap-1.5">
+            {STEPS.map((s, idx) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => idx <= step && setStep(idx)}
+                disabled={idx > step}
+                className={cn(
+                  "flex-1 h-1.5 rounded-full transition-colors",
+                  idx <= step ? "bg-primary" : "bg-muted",
+                )}
+                title={s.label}
+              />
+            ))}
+          </div>
+
+          <form
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
+            className="space-y-5"
+          >
+            {/* STEP 0: Basic Info */}
+            {step === 0 && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-name">Hostel Hall Name</Label>
+                  <Input
+                    id="hostel-name"
+                    placeholder="e.g. CV Raman Boys Hostel"
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <p className="text-xs text-destructive">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="hostel-type">Target Allocation</Label>
                     <select
@@ -382,145 +741,1046 @@ export default function HostelsPage() {
                       </p>
                     )}
                   </div>
+                </div>
 
-                  <div className="space-y-1.5 flex items-center gap-2 mt-6">
-                    <input
-                      type="checkbox"
-                      id="hostel-campus"
-                      className="h-4.5 w-4.5 rounded border-gray-300 text-primary focus:ring-primary"
-                      {...register("isOnCampus")}
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="hostel-campus"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    {...register("isOnCampus")}
+                  />
+                  <Label htmlFor="hostel-campus" className="!mb-0">
+                    Located On-Campus
+                  </Label>
+                </label>
+
+                {!isOnCampus && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-dist">
+                      Distance from campus (km)
+                    </Label>
+                    <Input
+                      id="hostel-dist"
+                      placeholder="e.g. 1.8"
+                      {...register("distanceFromCampus")}
                     />
-                    <Label htmlFor="hostel-campus">Located On-Campus</Label>
                   </div>
+                )}
 
-                  {!isOnCampus && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="hostel-dist">
-                        Distance from campus (km)
-                      </Label>
-                      <Input
-                        id="hostel-dist"
-                        placeholder="e.g. 1.8"
-                        {...register("distanceFromCampus")}
-                      />
-                    </div>
-                  )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-desc">Description</Label>
+                  <Textarea
+                    id="hostel-desc"
+                    placeholder="Modern rooms with laundry facility..."
+                    {...register("description")}
+                  />
+                </div>
 
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="hostel-desc">Description</Label>
-                    <Textarea
-                      id="hostel-desc"
-                      placeholder="Modern rooms with laundry facility..."
-                      {...register("description")}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-badge">Verified Badge Text</Label>
+                    <Input
+                      id="hostel-badge"
+                      placeholder="Safe & Secure - Premium PG Partnered"
+                      {...register("badge")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="hostel-safety-tier">Safety Tier</Label>
+                    <Input
+                      id="hostel-safety-tier"
+                      placeholder="Premium"
+                      {...register("safetyTier")}
                     />
                   </div>
                 </div>
 
-                {/* Dynamic Room Categories Builder */}
-                <div className="border-t pt-4 border-border/40 space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="hostel-cover">Cover Image</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="h-8 text-xs"
+                      disabled={uploadingField === "coverImageUrl"}
+                      onChange={(e) =>
+                        handleFieldUpload(
+                          e.target.files?.[0] ?? null,
+                          "coverImageUrl",
+                          "coverImageUrl",
+                          "hostels/cover",
+                        )
+                      }
+                    />
+                    {watch("coverImageUrl") && (
+                      <img
+                        src={watch("coverImageUrl")}
+                        alt="Cover preview"
+                        className="h-10 w-16 rounded-md border object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 1: Room Types */}
+            {step === 1 && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-semibold">
+                    Room Categories & Pricing Plans
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      roomTypesArray.append({
+                        name: "",
+                        description: "",
+                        totalBeds: 10,
+                        annualPlanPrice: 0,
+                        monthlyPlanPrice: 0,
+                        admissionFee: 0,
+                        securityDeposit: 0,
+                        photos: [],
+                      })
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Room Type
+                  </Button>
+                </div>
+
+                {roomTypesArray.fields.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center border rounded-lg border-dashed">
+                    No room categories yet. Click &quot;Add Room Type&quot; to
+                    define at least one — required to provision the hostel.
+                  </p>
+                )}
+                {errors.roomTypes?.message && (
+                  <p className="text-xs text-destructive">
+                    {errors.roomTypes.message}
+                  </p>
+                )}
+
+                <div className="space-y-3">
+                  {roomTypesArray.fields.map((field, idx) => (
+                    <div
+                      key={field.id}
+                      className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                    >
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 text-destructive"
+                        onClick={() => roomTypesArray.remove(idx)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">Category Name</Label>
+                        <Input
+                          placeholder="e.g. Double AC Sharing"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.name`)}
+                        />
+                        {errors.roomTypes?.[idx]?.name && (
+                          <p className="text-xs text-destructive">
+                            {errors.roomTypes[idx]?.name?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">Description</Label>
+                        <Input
+                          placeholder="e.g. Spacious AC room with attached bath"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.description`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Beds Capacity</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.totalBeds`)}
+                        />
+                        {errors.roomTypes?.[idx]?.totalBeds && (
+                          <p className="text-xs text-destructive">
+                            {errors.roomTypes[idx]?.totalBeds?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Annual Price</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.annualPlanPrice`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Monthly Price</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.monthlyPlanPrice`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Admission Fee</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.admissionFee`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Security Deposit</Label>
+                        <Input
+                          type="number"
+                          className="h-8 text-xs"
+                          {...register(`roomTypes.${idx}.securityDeposit`)}
+                        />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1">
+                        <Label className="text-xs">
+                          Room Photos (up to {MAX_ROOM_PHOTOS})
+                        </Label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {Array.from({ length: MAX_ROOM_PHOTOS }).map(
+                            (_, slot) => {
+                              const photoUrl = watch(
+                                `roomTypes.${idx}.photos.${slot}`,
+                              );
+                              const uploadKey = `roomTypePhoto_${idx}_${slot}`;
+                              return (
+                                <div key={slot} className="space-y-1">
+                                  {photoUrl ? (
+                                    <div className="relative">
+                                      <img
+                                        src={photoUrl}
+                                        alt={`Room photo ${slot + 1}`}
+                                        className="h-16 w-full rounded-md border object-cover"
+                                      />
+                                      <button
+                                        type="button"
+                                        className="absolute -top-1.5 -right-1.5 rounded-full bg-background border text-destructive p-0.5"
+                                        onClick={() =>
+                                          setValue(
+                                            `roomTypes.${idx}.photos.${slot}`,
+                                            "",
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <Input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      className="h-16 text-[10px] p-1"
+                                      disabled={uploadingField === uploadKey}
+                                      onChange={(e) =>
+                                        handleFieldUpload(
+                                          e.target.files?.[0] ?? null,
+                                          uploadKey,
+                                          `roomTypes.${idx}.photos.${slot}`,
+                                          `hostels/room-types/${idx}/photo-${slot}`,
+                                        )
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Mess Plans & Addon Services */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Mess Plans</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        messPlansArray.append({
+                          name: "",
+                          priceMonthly: 0,
+                          mealsIncluded: "",
+                          duration: "1 Month",
+                          dietaryOptions: "",
+                          isCompulsory: false,
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Mess Plan
+                    </Button>
+                  </div>
+                  {messPlansArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No mess plans yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-3">
+                    {messPlansArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => messPlansArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="sm:col-span-2 space-y-1">
+                          <Label className="text-xs">Plan Name</Label>
+                          <Input
+                            placeholder="e.g. Standard Plan"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.name`)}
+                          />
+                          {errors.messPlans?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.messPlans[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Monthly Price</Label>
+                          <Input
+                            type="number"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.priceMonthly`)}
+                          />
+                          {errors.messPlans?.[idx]?.priceMonthly && (
+                            <p className="text-xs text-destructive">
+                              {errors.messPlans[idx]?.priceMonthly?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">
+                            Meals (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="Breakfast, Lunch, Dinner"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.mealsIncluded`)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Duration</Label>
+                          <Input
+                            placeholder="e.g. 1 Month"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.duration`)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">
+                            Dietary Options (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="Veg, Non-Veg"
+                            className="h-8 text-xs"
+                            {...register(`messPlans.${idx}.dietaryOptions`)}
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs sm:col-span-2">
+                          <input
+                            type="checkbox"
+                            {...register(`messPlans.${idx}.isCompulsory`)}
+                          />
+                          Compulsory for all residents
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 border-t pt-4 border-border/40">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">
-                      Room Categories & Pricing Plans
+                      Addon Services (Laundry / Gym / Parking)
                     </Label>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {roomTypes.length} configured
-                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        addonServicesArray.append({
+                          serviceType: "laundry",
+                          name: "",
+                          planLabel: "Monthly",
+                          planPrice: 0,
+                          featureTags: "",
+                          notes: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Service
+                    </Button>
                   </div>
-
-                  {/* Configured Room types checklist */}
-                  <div className="space-y-2">
-                    {roomTypes.map((rt, idx) => (
+                  {addonServicesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No addon services yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-3">
+                    {addonServicesArray.fields.map((field, idx) => (
                       <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
                       >
-                        <div>
-                          <span className="font-bold">{rt.name}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2">
-                            ({rt.totalBeds} beds)
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-blue-600 font-bold">
-                            ${rt.annualPlanPrice}/yr
-                          </span>
-                          <button
-                            type="button"
-                            className="text-destructive hover:scale-105"
-                            onClick={() =>
-                              setRoomTypes(
-                                roomTypes.filter((_, i) => i !== idx),
-                              )
-                            }
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => addonServicesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Type</Label>
+                          <select
+                            className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                            {...register(`addonServices.${idx}.serviceType`)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            <option value="laundry">Laundry</option>
+                            <option value="gym">Gym</option>
+                            <option value="parking">Parking</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Service Name</Label>
+                          <Input
+                            placeholder="e.g. Laundry Charges"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.name`)}
+                          />
+                          {errors.addonServices?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.addonServices[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Plan Label</Label>
+                          <Input
+                            placeholder="e.g. Monthly"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.planLabel`)}
+                          />
+                          {errors.addonServices?.[idx]?.planLabel && (
+                            <p className="text-xs text-destructive">
+                              {errors.addonServices[idx]?.planLabel?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Price</Label>
+                          <Input
+                            type="number"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.planPrice`)}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">
+                            Feature Tags (comma separated)
+                          </Label>
+                          <Input
+                            placeholder="e.g. Detergent, Ironing"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.featureTags`)}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-xs">Note</Label>
+                          <Input
+                            placeholder="e.g. Drop off on weekends"
+                            className="h-8 text-xs"
+                            {...register(`addonServices.${idx}.notes`)}
+                          />
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
 
-                  {/* Add room type fields grid */}
-                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Category (e.g. Double AC Sharing)"
-                      className="h-8 text-xs sm:col-span-2"
-                      value={newRoomName}
-                      onChange={(e) => setNewRoomName(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Beds Capacity"
-                      className="h-8 text-xs"
-                      value={newRoomBeds}
-                      onChange={(e) => setNewRoomBeds(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Annual Fee Plan ($)"
-                      className="h-8 text-xs"
-                      value={newRoomPrice}
-                      onChange={(e) => setNewRoomPrice(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Security Deposit ($)"
-                      className="h-8 text-xs"
-                      value={newRoomDeposit}
-                      onChange={(e) => setNewRoomDeposit(e.target.value)}
-                    />
+            {/* STEP 3: Amenities & Rules */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Amenities</Label>
                     <Button
                       type="button"
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
-                      className="sm:col-span-2 h-8 text-xs"
-                      onClick={addRoomType}
+                      onClick={() => amenitiesArray.append({ name: "" })}
                     >
-                      Configure Room Category
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Amenity
                     </Button>
+                  </div>
+                  {amenitiesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No amenities yet (optional).
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {amenitiesArray.fields.map((field, idx) => (
+                      <div key={field.id} className="flex items-center gap-1">
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="e.g. High Speed Wi-Fi"
+                            className="h-8 text-xs w-44"
+                            {...register(`amenities.${idx}.name`)}
+                          />
+                          {errors.amenities?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.amenities[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => amenitiesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddModal(false)}
-                  >
-                    Cancel
+                <div className="space-y-3 border-t pt-4 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">Rules</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        rulesArray.append({ title: "", description: "" })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Rule
+                    </Button>
+                  </div>
+                  {rulesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No rules yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {rulesArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => rulesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Rule title (e.g. Curfew Time)"
+                            className="h-8 text-xs"
+                            {...register(`rules.${idx}.title`)}
+                          />
+                          {errors.rules?.[idx]?.title && (
+                            <p className="text-xs text-destructive">
+                              {errors.rules[idx]?.title?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Description"
+                            className="h-8 text-xs"
+                            {...register(`rules.${idx}.description`)}
+                          />
+                          {errors.rules?.[idx]?.description && (
+                            <p className="text-xs text-destructive">
+                              {errors.rules[idx]?.description?.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Warden & Location */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Warden Info</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Name"
+                        className="h-8 text-xs"
+                        {...register("wardenName")}
+                      />
+                      {errors.wardenName && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenName.message}
+                        </p>
+                      )}
+                    </div>
+                    <Input
+                      placeholder="Designation (e.g. Chief Warden)"
+                      className="h-8 text-xs"
+                      {...register("wardenDesignation")}
+                    />
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Phone"
+                        className="h-8 text-xs"
+                        {...register("wardenPhone")}
+                      />
+                      {errors.wardenPhone && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenPhone.message}
+                        </p>
+                      )}
+                    </div>
+                    <Input
+                      placeholder="WhatsApp"
+                      className="h-8 text-xs"
+                      {...register("wardenWhatsapp")}
+                    />
+                    <div className="space-y-1">
+                      <Input
+                        placeholder="Email"
+                        className="h-8 text-xs"
+                        {...register("wardenEmail")}
+                      />
+                      {errors.wardenEmail && (
+                        <p className="text-xs text-destructive">
+                          {errors.wardenEmail.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs">Warden Profile Photo</Label>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="h-8 text-xs"
+                        disabled={uploadingField === "wardenPhoto"}
+                        onChange={(e) =>
+                          handleFieldUpload(
+                            e.target.files?.[0] ?? null,
+                            "wardenPhoto",
+                            "wardenPhoto",
+                            "hostels/warden-photo",
+                          )
+                        }
+                      />
+                      {watch("wardenPhoto") && (
+                        <img
+                          src={watch("wardenPhoto")}
+                          alt="Warden preview"
+                          className="h-10 w-10 rounded-full border object-cover"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs text-muted-foreground">
+                        Safety Features
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          safetyFeaturesArray.append({ label: "" })
+                        }
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Feature
+                      </Button>
+                    </div>
+                    {safetyFeaturesArray.fields.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                        No safety features yet (optional).
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {safetyFeaturesArray.fields.map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-1">
+                          <div className="space-y-0.5">
+                            <Input
+                              placeholder="e.g. CCTV Coverage"
+                              className="h-8 text-xs w-44"
+                              {...register(`safetyFeatures.${idx}.label`)}
+                            />
+                            {errors.safetyFeatures?.[idx]?.label && (
+                              <p className="text-xs text-destructive">
+                                {errors.safetyFeatures[idx]?.label?.message}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => safetyFeaturesArray.remove(idx)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 border-t pt-4 border-border/40">
+                  <Label className="text-sm font-semibold">Location</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Address line 1"
+                      className="h-8 text-xs"
+                      {...register("address")}
+                    />
+                    <Input
+                      placeholder="Address line 2"
+                      className="h-8 text-xs"
+                      {...register("addressLine2")}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Latitude"
+                      className="h-8 text-xs"
+                      {...register("latitude")}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Longitude"
+                      className="h-8 text-xs"
+                      {...register("longitude")}
+                    />
+                    <Input
+                      placeholder="Map link (https://maps.google.com/?q=...)"
+                      className="h-8 text-xs"
+                      {...register("mapLink")}
+                    />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="h-8 text-xs"
+                      disabled={uploadingField === "mapThumbnail"}
+                      onChange={(e) =>
+                        handleFieldUpload(
+                          e.target.files?.[0] ?? null,
+                          "mapThumbnail",
+                          "mapThumbnail",
+                          "hostels/map-thumbnail",
+                        )
+                      }
+                    />
+                    <Input
+                      placeholder="College transport description"
+                      className="h-8 text-xs"
+                      {...register("transportDescription")}
+                    />
+                    <Input
+                      placeholder="Bus stop note (e.g. 50m from gate)"
+                      className="h-8 text-xs"
+                      {...register("busStopNote")}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Nearby Essentials
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        essentialsArray.append({
+                          type: "",
+                          name: "",
+                          distance: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Essential
+                    </Button>
+                  </div>
+                  {essentialsArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-3 text-center border rounded-lg border-dashed">
+                      No nearby essentials yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {essentialsArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => essentialsArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Type (e.g. Hospital)"
+                            className="h-8 text-xs"
+                            {...register(`nearbyEssentials.${idx}.type`)}
+                          />
+                          {errors.nearbyEssentials?.[idx]?.type && (
+                            <p className="text-xs text-destructive">
+                              {errors.nearbyEssentials[idx]?.type?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Name"
+                            className="h-8 text-xs"
+                            {...register(`nearbyEssentials.${idx}.name`)}
+                          />
+                          {errors.nearbyEssentials?.[idx]?.name && (
+                            <p className="text-xs text-destructive">
+                              {errors.nearbyEssentials[idx]?.name?.message}
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="Distance (e.g. 3.0 km)"
+                          className="h-8 text-xs"
+                          {...register(`nearbyEssentials.${idx}.distance`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Utilities */}
+                <div className="space-y-2 border-t pt-3 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs text-muted-foreground">
+                      Utilities
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        utilitiesArray.append({
+                          category: "",
+                          provider: "",
+                          notes: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Utility
+                    </Button>
+                  </div>
+                  {utilitiesArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2 text-center border rounded-lg border-dashed">
+                      No utilities yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {utilitiesArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => utilitiesArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Category (e.g. Electricity)"
+                            className="h-8 text-xs"
+                            {...register(`utilities.${idx}.category`)}
+                          />
+                          {errors.utilities?.[idx]?.category && (
+                            <p className="text-xs text-destructive">
+                              {errors.utilities[idx]?.category?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Provider (e.g. MSEB)"
+                            className="h-8 text-xs"
+                            {...register(`utilities.${idx}.provider`)}
+                          />
+                          {errors.utilities?.[idx]?.provider && (
+                            <p className="text-xs text-destructive">
+                              {errors.utilities[idx]?.provider?.message}
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="Notes (optional)"
+                          className="h-8 text-xs"
+                          {...register(`utilities.${idx}.notes`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transit */}
+                <div className="space-y-2 border-t pt-3 border-border/40">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs text-muted-foreground">
+                      Transit Routes
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        transitArray.append({
+                          route: "",
+                          stop: "",
+                          timing: "",
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add Route
+                    </Button>
+                  </div>
+                  {transitArray.fields.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic py-2 text-center border rounded-lg border-dashed">
+                      No transit routes yet (optional).
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {transitArray.fields.map((field, idx) => (
+                      <div
+                        key={field.id}
+                        className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/10 border-border/40 relative"
+                      >
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 text-destructive"
+                          onClick={() => transitArray.remove(idx)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="space-y-0.5">
+                          <Input
+                            placeholder="Route (e.g. Bus 47 to Campus)"
+                            className="h-8 text-xs"
+                            {...register(`transit.${idx}.route`)}
+                          />
+                          {errors.transit?.[idx]?.route && (
+                            <p className="text-xs text-destructive">
+                              {errors.transit[idx]?.route?.message}
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          placeholder="Stop (e.g. Gate 2)"
+                          className="h-8 text-xs"
+                          {...register(`transit.${idx}.stop`)}
+                        />
+                        <Input
+                          placeholder="Timing (e.g. Every 20 min)"
+                          className="h-8 text-xs"
+                          {...register(`transit.${idx}.timing`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="pt-2 border-t border-border/40 sm:justify-between">
+              <div className="flex gap-2">
+                {step > 0 && (
+                  <Button type="button" variant="outline" onClick={goBack}>
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Back
                   </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCloseModal}
+                >
+                  Cancel
+                </Button>
+                {step < STEPS.length - 1 ? (
+                  <Button type="button" onClick={goNext}>
+                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                ) : (
                   <Button type="submit" disabled={creating}>
-                    {creating && (
+                    {creating ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-2 h-4 w-4" />
                     )}
                     Provision Hostel
                   </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                )}
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Hostel"
+        description={
+          deleteTarget
+            ? `Are you absolutely sure you want to remove hostel facility "${deleteTarget.name}"?`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

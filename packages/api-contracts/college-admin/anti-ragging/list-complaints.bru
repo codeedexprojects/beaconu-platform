@@ -1,0 +1,23 @@
+meta {
+  name: List Anti-Ragging Reports (College Admin)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/anti-ragging-complaints
+  body: none
+  auth: none
+}
+
+query {
+  ~status: submitted
+  ~incident_type: verbal
+  ~search: hostel
+  page: 1
+  limit: 20
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}

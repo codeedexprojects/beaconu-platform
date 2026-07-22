@@ -1,0 +1,27 @@
+meta {
+  name: List States
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/countries/{{countryCode}}/states
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  countryCode: IN
+}
+
+docs {
+  Returns all states/provinces for a given country.
+  No authentication required.
+  
+  Path params:
+  - countryCode: ISO 3166-1 alpha-2 code (e.g. IN, US, GB)
+  
+  Response: { code: string, name: string }[]
+  
+  Data source: country-state-city package — no DB query.
+}

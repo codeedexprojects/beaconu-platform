@@ -1,0 +1,15 @@
+meta {
+  name: Delete Media Kit Item (College Admin)
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/media-kit/{{mediaKitId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
@@ -15,7 +16,10 @@ import {
   Eye,
   Hash,
   EyeOff,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { useAmbassadors, useCreateAmbassador } from "@/hooks/use-ambassadors";
 import { useAuthStore } from "@/store";
 import { Button } from "@/components/ui/button";
@@ -55,6 +59,10 @@ const createAmbassadorSchema = z
     ambassador_type: z.enum(["student", "teacher"], {
       error: "Select a type",
     }),
+    avatar_url: z.string().optional().default(""),
+    course: z.string().trim().optional().default(""),
+    district: z.string().trim().optional().default(""),
+    state: z.string().trim().optional().default(""),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirm_password: z.string().min(1, "Please confirm the password"),
   })
@@ -78,6 +86,7 @@ export default function AmbassadorsPage() {
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const collegeId = useAuthStore((s) => s.user?.collegeId);
   const { data: ambassadors = [], isLoading, refetch } = useAmbassadors();
@@ -90,15 +99,40 @@ export default function AmbassadorsPage() {
       email: "",
       phone_number: "",
       ambassador_type: undefined,
+      avatar_url: "",
+      course: "",
+      district: "",
+      state: "",
       password: "",
       confirm_password: "",
     },
   });
 
+  async function handleAvatarUpload(file: File | null) {
+    if (!file) return;
+    try {
+      setUploadingAvatar(true);
+      const url = await uploadCollegeAdminFile(file, "ambassadors/avatar");
+      form.setValue("avatar_url", url, { shouldDirty: true });
+      toast.success("Photo uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
   function onSubmit(values: CreateAmbassadorForm) {
     if (!collegeId) return;
     create(
-      { ...values, college_id: collegeId },
+      {
+        ...values,
+        college_id: collegeId,
+        avatar_url: values.avatar_url || undefined,
+        course: values.course || undefined,
+        district: values.district || undefined,
+        state: values.state || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Campus ambassador created successfully");
@@ -139,7 +173,7 @@ export default function AmbassadorsPage() {
                 Add Ambassador
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Campus Ambassador</DialogTitle>
               </DialogHeader>
@@ -212,6 +246,82 @@ export default function AmbassadorsPage() {
                       {form.formState.errors.ambassador_type.message}
                     </p>
                   )}
+                </div>
+
+                {/* Profile Photo */}
+                <div className="space-y-1.5">
+                  <Label>
+                    Profile Photo{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    {form.watch("avatar_url") ? (
+                      <img
+                        src={form.watch("avatar_url")}
+                        alt="Avatar preview"
+                        className="h-12 w-12 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                        Photo
+                      </div>
+                    )}
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        disabled={uploadingAvatar}
+                        onChange={(e) =>
+                          handleAvatarUpload(e.target.files?.[0] ?? null)
+                        }
+                      />
+                      <span className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                        {uploadingAvatar && (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        )}
+                        {uploadingAvatar ? "Uploading..." : "Upload Photo"}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Course, District, State */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="course">
+                    Course{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="course"
+                    placeholder="e.g. B.Tech Computer Science"
+                    {...form.register("course")}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="district">
+                      District{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="district"
+                      placeholder="District"
+                      {...form.register("district")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="state">
+                      State{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="state"
+                      placeholder="State"
+                      {...form.register("state")}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -302,6 +412,7 @@ export default function AmbassadorsPage() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead className="w-[80px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -326,12 +437,15 @@ export default function AmbassadorsPage() {
                     <TableCell>
                       <Skeleton className="h-4 w-[100px]" />
                     </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-14" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : ambassadors.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground"
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -402,6 +516,19 @@ export default function AmbassadorsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(a.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs"
+                        asChild
+                      >
+                        <Link href={`/ambassadors/${a.id}`}>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

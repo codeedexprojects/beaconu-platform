@@ -1,0 +1,47 @@
+meta {
+  name: Create Question
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections/verbal-communication/questions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "question_type_id": "{{questionTypeId}}",
+    "difficulty": "medium",
+    "title": "Describe the campus image",
+    "content": {
+      "text": "Describe what you see in the image in 30 seconds.",
+      "imageUrl": "{{uploadUrl}}"
+    },
+    "marks": 5,
+    "negative_marks": 0,
+    "course_ids": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentQuestionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a question under Verbal Communication. content.audioUrl is
+  required if the question type has_audio; content.imageUrl is required if
+  has_image. Empty/omitted course_ids means the question applies to every
+  course; pass specific course IDs to scope it.
+}

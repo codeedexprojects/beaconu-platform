@@ -8,6 +8,7 @@ import {
 } from "@/shared/middleware/authorize";
 import { CollegeRegistrationController } from "../controllers/college-registration.controller";
 import { CourseTabsController } from "../controllers/course-tabs.controller";
+import { CourseQuotasController } from "../controllers/course-quotas.controller";
 
 const router: Router = Router();
 
@@ -20,6 +21,13 @@ router.get(
   ...staffAuth,
   authorizeAny("academics.view", "academics.manage"),
   CollegeRegistrationController.listCourses,
+);
+
+router.get(
+  "/minimal",
+  ...staffAuth,
+  authorizeAny("academics.view", "academics.manage"),
+  CollegeRegistrationController.listCoursesMinimal,
 );
 
 router.post(
@@ -41,6 +49,35 @@ router.delete(
   ...staffWriteAuth,
   authorize("academics.manage"),
   CollegeRegistrationController.deleteCourse,
+);
+
+// ── Course Quotas ─────────────────────────────────────────────────────────────
+router.get(
+  "/:id/quotas",
+  ...staffAuth,
+  authorizeAny("academics.view", "academics.manage"),
+  CourseQuotasController.listCourseQuotas,
+);
+
+router.post(
+  "/:id/quotas",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  CourseQuotasController.attachQuota,
+);
+
+router.patch(
+  "/:id/quotas/:courseQuotaId",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  CourseQuotasController.updateCourseQuota,
+);
+
+router.delete(
+  "/:id/quotas/:courseQuotaId",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  CourseQuotasController.detachQuota,
 );
 
 // ── Course Tabs ───────────────────────────────────────────────────────────────

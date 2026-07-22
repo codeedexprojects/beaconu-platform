@@ -1,0 +1,25 @@
+meta {
+  name: Update College Public Listing
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/colleges/:id/listing
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+body:json {
+  {
+    "isListed": true
+  }
+}

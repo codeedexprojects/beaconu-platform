@@ -1,0 +1,31 @@
+meta {
+  name: Generate Paper (Manual)
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/papers
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "generation_type": "manual",
+    "manual_selections": [
+      { "question_id": "{{assessmentQuestionId}}", "section_id": "{{assessmentSectionIdVerbal}}" }
+    ]
+  }
+}
+
+docs {
+  Evaluator-assembled paper. manual_selections must contain exactly
+  TemplateSection.question_count entries per section_id in the template, or
+  the request fails with a ValidationError naming the mismatched section.
+}

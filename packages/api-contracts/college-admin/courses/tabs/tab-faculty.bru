@@ -13,3 +13,11 @@ get {
 auth:bearer {
   token: {{staffToken}}
 }
+
+docs {
+  Returns raw stored faculty data for a course (admin view).
+  Stored as { list: [...] } — the public endpoint strips the wrapper and
+  returns the array directly.
+
+  To update, use: tab-faculty-update.bru
+}

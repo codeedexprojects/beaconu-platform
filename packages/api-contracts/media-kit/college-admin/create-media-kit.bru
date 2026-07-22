@@ -1,0 +1,42 @@
+meta {
+  name: Create Media Kit Item (College Admin)
+  type: http
+  seq: 1
+}
+
+docs {
+  Run after the upload chain (Presign Upload -> PUT the file to the
+  returned uploadUrl -> Verify Upload) so {{permanentUrl}} is populated.
+  Running this standalone will post file_url as a literal, un-uploaded URL.
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/media-kit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "title": "Campus Poster 2026",
+    "asset_type": "poster",
+    "scope": "campus_wide",
+    "file_url": "{{permanentUrl}}",
+    "file_name": "sample.jpg",
+    "file_size_bytes": 245678
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("mediaKitId", data.data.id);
+    }
+  }
+}

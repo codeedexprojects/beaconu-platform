@@ -3,18 +3,18 @@
 // ============================================================
 
 model DocumentTemplate {
-  id          String   @id @default(dbgenerated("('DTM-'::text || (nextval('document_template_seq'::regclass))::text)"))
-  collegeId   String   @map("college_id")
-  name        String   @db.VarChar(100)
-  slug        String   @db.VarChar(50)
-  description String?  @db.Text
-  isStandard  Boolean  @default(true) @map("is_standard")
-  isActive    Boolean  @default(true) @map("is_active")
-  hasFee      Boolean  @default(false) @map("has_fee")
-  feeAmount   Decimal  @default(0) @map("fee_amount") @db.Decimal(10, 2)
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("('DTM-'::text || (nextval('document_template_seq'::regclass))::text)"))
+  collegeId    String   @map("college_id")
+  name         String   @db.VarChar(100)
+  slug         String   @db.VarChar(50)
+  category     String   @db.VarChar(50)
+  instructions String?  @db.Text
+  description  String?  @db.Text
+  isStandard   Boolean  @default(true) @map("is_standard")
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -46,6 +46,9 @@ model DocumentRequest {
   issuedAt            DateTime? @map("issued_at") @db.Timestamptz
   pickupDate          DateTime? @map("pickup_date") @db.Date
   pickupConfirmed     Boolean   @default(false) @map("pickup_confirmed")
+  pickupInstructions  String?   @map("pickup_instructions") @db.Text
+  officeContactPhone  String?   @map("office_contact_phone") @db.VarChar(20)
+  statusHistory       Json      @default("[]") @map("status_history")
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -89,4 +92,42 @@ model IssuedDocument {
   @@index([studentId], name: "idx_issued_student")
   @@index([collegeId], name: "idx_issued_college")
   @@map("issued_documents")
+}
+
+// College asks a student to submit a document (e.g. ID proof, marksheet) by a
+// deadline; the student uploads, and the college verifies/rejects it. This is
+// the reverse direction of DocumentRequest (student requests a certificate
+// FROM the college) — deliberately independent of Application/AdmissionCycle
+// so it works before the admissions/assessment flow is wired up.
+model DocumentSubmissionRequest {
+  id              String    @id @default(dbgenerated("('DSR-'::text || (nextval('document_submission_request_seq'::regclass))::text)"))
+  collegeId       String    @map("college_id")
+  studentId       String    @map("student_id")
+  requestedBy     String    @map("requested_by")
+  documentCategory String   @map("document_category") @db.VarChar(50)
+  documentName    String    @map("document_name") @db.VarChar(255)
+  instructions    String?   @db.Text
+  deadline        DateTime  @db.Date
+  status          String    @default("pending") @db.VarChar(20)
+  fileUrl         String?   @map("file_url") @db.Text
+  fileName        String?   @map("file_name") @db.VarChar(255)
+  fileSizeBytes   Int?      @map("file_size_bytes")
+  submittedAt     DateTime? @map("submitted_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  reviewedBy      String?   @map("reviewed_by")
+  reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz
+  statusHistory   Json      @default("[]") @map("status_history")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college          College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  student          Student      @relation(fields: [studentId], references: [id])
+  requestedByStaff StaffMember  @relation("DocSubReqRequestedBy", fields: [requestedBy], references: [id])
+  reviewedByStaff  StaffMember? @relation("DocSubReqReviewedBy", fields: [reviewedBy], references: [id])
+
+  @@index([collegeId], name: "idx_docsubreq_college")
+  @@index([studentId], name: "idx_docsubreq_student")
+  @@index([collegeId, status], name: "idx_docsubreq_status")
+  @@map("document_submission_requests")
 }

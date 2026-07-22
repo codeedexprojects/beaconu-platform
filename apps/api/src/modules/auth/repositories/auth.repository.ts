@@ -133,7 +133,10 @@ export class AuthRepository {
   static async findBlinkUserByEmail(email: string) {
     return prisma.blinkUser.findUnique({
       where: { email },
-      include: { blinkRole: true },
+      include: {
+        blinkRole: true,
+        associateParent: { select: { agencyRegNumber: true } },
+      },
     });
   }
 

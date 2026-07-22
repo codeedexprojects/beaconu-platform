@@ -1,0 +1,19 @@
+meta {
+  name: Archive Assessment Template
+  type: http
+  seq: 16
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/archive
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Soft-deletes a template (status -> archived). Row is preserved.
+}

@@ -1,0 +1,124 @@
+meta {
+  name: Tab - Faculty (Update)
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/faculty
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "list": [
+        {
+          "id": "faculty_001",
+          "name": "Dr. Rajesh Kumar",
+          "photo": "https://cdn.facultyphotos.example.com/photos/rajesh-kumar.jpg",
+          "designation": "Professor & Head of Cardiology",
+          "department": "DEPARTMENT OF CARDIOLOGY",
+          "education": [
+            {
+              "degree": "DM in Cardiology",
+              "institution": "AIIMS, New Delhi",
+              "duration": "2005 - 2008"
+            },
+            {
+              "degree": "MD in Internal Medicine",
+              "institution": "JIPMER, Puducherry",
+              "duration": "2001 - 2004"
+            },
+            {
+              "degree": "MBBS",
+              "institution": "Government Medical College, Kozhikode",
+              "duration": "1994 - 2000"
+            }
+          ],
+          "professional_experience": [
+            {
+              "role": "Professor & Head of Cardiology",
+              "organization": "Beacon Institute of Technology",
+              "duration": "2020 - Present",
+              "is_current": true,
+              "current_badge": "CURRENT POSITION",
+              "icon": ""
+            },
+            {
+              "role": "Senior Consultant Cardiologist",
+              "organization": "City Heart Institute",
+              "duration": "2015 - 2020",
+              "is_current": false,
+              "current_badge": "",
+              "icon": ""
+            },
+            {
+              "role": "Associate Professor",
+              "organization": "AIIMS, New Delhi",
+              "duration": "2008 - 2015",
+              "is_current": false,
+              "current_badge": "",
+              "icon": ""
+            }
+          ]
+        },
+        {
+          "id": "faculty_002",
+          "name": "Dr. Priya Nair",
+          "photo": "https://cdn.facultyphotos.example.com/photos/priya-nair.jpg",
+          "designation": "Associate Professor",
+          "department": "DEPARTMENT OF COMPUTER SCIENCE",
+          "education": [
+            {
+              "degree": "PhD in Machine Learning",
+              "institution": "IIT Bombay",
+              "duration": "2012 - 2017"
+            },
+            {
+              "degree": "M.Tech in Computer Science",
+              "institution": "NIT Calicut",
+              "duration": "2008 - 2010"
+            }
+          ],
+          "professional_experience": [
+            {
+              "role": "Associate Professor",
+              "organization": "Beacon Institute of Technology",
+              "duration": "2019 - Present",
+              "is_current": true,
+              "current_badge": "CURRENT POSITION",
+              "icon": ""
+            },
+            {
+              "role": "Research Scientist",
+              "organization": "TCS Research Labs",
+              "duration": "2017 - 2019",
+              "is_current": false,
+              "current_badge": "",
+              "icon": ""
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+docs {
+  Updates the faculty tab for a course.
+  Stored as { list: [...] } in metadata.tabData.faculty.
+
+  Public endpoint (GET /public/.../tabs/faculty) strips the { list } wrapper
+  and returns the array directly:
+    { "success": true, "data": [...] }
+
+  Required env vars:
+    courseId   — set by list-courses.bru or create-course.bru
+    staffToken — set by login.bru
+}

@@ -1,0 +1,55 @@
+meta {
+  name: Create Library
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/libraries
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "type": "central",
+    "name": "Central Library",
+    "stats": [
+      { "value": "21,786", "label": "Sq Feet Area" },
+      { "value": "300", "label": "Total Seats" }
+    ],
+    "availableResources": {
+      "items": [
+        { "name": "E-Books", "count": "195,809" },
+        { "name": "Journals (Print)", "count": "39" }
+      ]
+    },
+    "libraryHours": {
+      "days": [
+        {
+          "day": "Monday",
+          "working_hours_start": "09:00",
+          "working_hours_end": "16:30",
+          "transaction_hours_start": "09:00",
+          "transaction_hours_end": "11:00"
+        }
+      ]
+    },
+    "facilities": {
+      "items": [{ "name": "Quiet Study Areas", "image": "" }]
+    }
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("libraryId", data.data.id);
+    }
+  }
+}

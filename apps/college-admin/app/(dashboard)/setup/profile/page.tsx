@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
@@ -127,6 +127,10 @@ export default function SetupProfilePage() {
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
+  // Guards the form-hydration effect below so a background refetch of
+  // `profile` (e.g. on window refocus) can't wipe in-progress edits —
+  // including an already-uploaded logo/cover URL — by re-running `reset()`.
+  const hasHydratedFormRef = useRef(false);
 
   const {
     register,
@@ -145,7 +149,8 @@ export default function SetupProfilePage() {
   });
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasHydratedFormRef.current) {
+      hasHydratedFormRef.current = true;
       const commuteSection = (profile.profileSections?.commute as any) || {};
       const existingOverview =
         (profile.profileSections?.college_overview as Record<string, any>) ||
@@ -294,14 +299,84 @@ export default function SetupProfilePage() {
     watch("profileSections.college_overview.social") || [];
   const overviewReels =
     watch("profileSections.college_overview.campus_reels") || [];
-  const overviewAmbassadors =
-    watch("profileSections.college_overview.campus_ambassadors") || [];
   const overviewNearbyAccess =
     watch("profileSections.college_overview.nearby_access") || [];
 
+  // Map picker
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
+  const overviewLat = watch(
+    "profileSections.college_overview.location.latitude",
+  );
+  const overviewLng = watch(
+    "profileSections.college_overview.location.longitude",
+  );
+
+  useEffect(() => {
+    if ((window as any).google?.maps) {
+      setMapScriptLoaded(true);
+      return;
+    }
+    if (document.querySelector("script[data-beaconu-gm]")) return;
+    const script = document.createElement("script");
+    script.setAttribute("data-beaconu-gm", "1");
+    script.src =
+      "https://maps.googleapis.com/maps/api/js?key=AIzaSyBk9DCaKvJp9IejQ9-MCs";
+    script.async = true;
+    script.onload = () => setMapScriptLoaded(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // Reset map instance when leaving the tab so it re-inits on return
+  useEffect(() => {
+    if (activeTab !== "college_overview") {
+      mapInstanceRef.current = null;
+      markerRef.current = null;
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Re-runs when script loads OR when tab switches to college_overview
+    // (the div only exists in the DOM when that tab is active)
+    if (!mapScriptLoaded || !mapContainerRef.current || mapInstanceRef.current)
+      return;
+    const lat = overviewLat ? Number(overviewLat) : 20.5937;
+    const lng = overviewLng ? Number(overviewLng) : 78.9629;
+    const map = new (window as any).google.maps.Map(mapContainerRef.current, {
+      center: { lat, lng },
+      zoom: overviewLat ? 14 : 5,
+    });
+    mapInstanceRef.current = map;
+    if (overviewLat && overviewLng) {
+      markerRef.current = new (window as any).google.maps.Marker({
+        position: { lat, lng },
+        map,
+      });
+    }
+    map.addListener("click", (e: any) => {
+      const newLat = e.latLng.lat();
+      const newLng = e.latLng.lng();
+      setValue("profileSections.college_overview.location.latitude", newLat);
+      setValue("profileSections.college_overview.location.longitude", newLng);
+      setValue(
+        "profileSections.college_overview.location.map_link",
+        `https://maps.google.com/?q=${newLat},${newLng}`,
+      );
+      if (markerRef.current) {
+        markerRef.current.setPosition(e.latLng);
+      } else {
+        markerRef.current = new (window as any).google.maps.Marker({
+          position: e.latLng,
+          map,
+        });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapScriptLoaded, activeTab]);
+
   // Commute arrays
-  const commutePickupPoints =
-    watch("profileSections.commute.pickup_points") || [];
   const commuteRoutes = watch("profileSections.commute.routes") || [];
   const commuteRules =
     watch("profileSections.commute.rules_and_code_of_conduct.rules") || [];
@@ -624,13 +699,8 @@ export default function SetupProfilePage() {
                         htmlFor="logoUrl"
                         className="font-semibold text-foreground"
                       >
-                        Logo Image URL
+                        Logo Image
                       </Label>
-                      <Input
-                        id="logoUrl"
-                        placeholder="https://example.com/logo.png"
-                        {...register("logoUrl")}
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -650,13 +720,8 @@ export default function SetupProfilePage() {
                         htmlFor="coverImageUrl"
                         className="font-semibold text-foreground"
                       >
-                        Cover Image URL
+                        Cover Image
                       </Label>
-                      <Input
-                        id="coverImageUrl"
-                        placeholder="https://example.com/cover.png"
-                        {...register("coverImageUrl")}
-                      />
                       <Input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -802,13 +867,6 @@ export default function SetupProfilePage() {
                               className="flex-1"
                               {...register(
                                 `profileSections.college_overview.accolades.${idx}.title`,
-                              )}
-                            />
-                            <Input
-                              placeholder="Image Url"
-                              className="flex-1"
-                              {...register(
-                                `profileSections.college_overview.accolades.${idx}.image`,
                               )}
                             />
                             <Input
@@ -1047,44 +1105,70 @@ export default function SetupProfilePage() {
                       {overviewFacilities.map((item: any, idx: number) => (
                         <div
                           key={idx}
-                          className="flex gap-2 items-center border p-2 rounded-lg bg-muted/10"
+                          className="border p-4 rounded-xl bg-muted/10 space-y-3 relative group"
                         >
-                          <Input
-                            placeholder="Facility Name"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.inside_campus_facilities.${idx}.label`,
-                            )}
-                          />
-                          <Input
-                            placeholder="Subtitle"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.inside_campus_facilities.${idx}.subtitle`,
-                            )}
-                          />
-                          <Input
-                            placeholder="Icon Url / Key"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.inside_campus_facilities.${idx}.icon`,
-                            )}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setValue(
-                                "profileSections.college_overview.inside_campus_facilities",
-                                overviewFacilities.filter(
-                                  (_: any, i: number) => i !== idx,
-                                ),
-                              );
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Facility #{idx + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive h-8 px-2 hover:bg-destructive/10"
+                              onClick={() => {
+                                setValue(
+                                  "profileSections.college_overview.inside_campus_facilities",
+                                  overviewFacilities.filter(
+                                    (_: any, i: number) => i !== idx,
+                                  ),
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Facility Name</Label>
+                              <Input
+                                placeholder="Library, Cafeteria, etc."
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.inside_campus_facilities.${idx}.label`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Subtitle</Label>
+                              <Input
+                                placeholder="Open 24/7, AC, Wifi"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.inside_campus_facilities.${idx}.subtitle`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Icon</Label>
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                className="mt-1"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.inside_campus_facilities.${idx}.icon`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.inside_campus_facilities.${idx}.icon`,
+                                    `college-overview/facilities-${idx}`,
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1162,11 +1246,107 @@ export default function SetupProfilePage() {
                     <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
                       Geographic & Map Coordinates
                     </h4>
+
+                    {/* Map Picker */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Pick Location on Map
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Click anywhere on the map to set the coordinates.
+                        Latitude, Longitude and Google Maps link will be
+                        auto-filled.
+                      </p>
+                      <div
+                        ref={mapContainerRef}
+                        className="w-full rounded-lg border border-border overflow-hidden"
+                        style={{ height: 320 }}
+                      />
+                      {!mapScriptLoaded && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Loading
+                          map…
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Lat / Lng (read from map click, editable as fallback) */}
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-1">
-                        <Label>Google Maps Embed or Link</Label>
+                        <Label>Latitude</Label>
                         <Input
-                          placeholder="Google Maps link"
+                          placeholder="e.g. 17.4599791"
+                          {...register(
+                            "profileSections.college_overview.location.latitude",
+                          )}
+                          onChange={(e) => {
+                            register(
+                              "profileSections.college_overview.location.latitude",
+                            ).onChange(e);
+                            const lat = parseFloat(e.target.value);
+                            const lng = Number(overviewLng);
+                            if (
+                              !isNaN(lat) &&
+                              !isNaN(lng) &&
+                              mapInstanceRef.current
+                            ) {
+                              const pos = { lat, lng };
+                              mapInstanceRef.current.setCenter(pos);
+                              mapInstanceRef.current.setZoom(14);
+                              if (markerRef.current)
+                                markerRef.current.setPosition(pos);
+                              else
+                                markerRef.current = new (
+                                  window as any
+                                ).google.maps.Marker({
+                                  position: pos,
+                                  map: mapInstanceRef.current,
+                                });
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Longitude</Label>
+                        <Input
+                          placeholder="e.g. 78.3320099"
+                          {...register(
+                            "profileSections.college_overview.location.longitude",
+                          )}
+                          onChange={(e) => {
+                            register(
+                              "profileSections.college_overview.location.longitude",
+                            ).onChange(e);
+                            const lat = Number(overviewLat);
+                            const lng = parseFloat(e.target.value);
+                            if (
+                              !isNaN(lat) &&
+                              !isNaN(lng) &&
+                              mapInstanceRef.current
+                            ) {
+                              const pos = { lat, lng };
+                              mapInstanceRef.current.setCenter(pos);
+                              mapInstanceRef.current.setZoom(14);
+                              if (markerRef.current)
+                                markerRef.current.setPosition(pos);
+                              else
+                                markerRef.current = new (
+                                  window as any
+                                ).google.maps.Marker({
+                                  position: pos,
+                                  map: mapInstanceRef.current,
+                                });
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label>Google Maps Link</Label>
+                        <Input
+                          placeholder="Auto-filled on map click, or paste manually"
                           {...register(
                             "profileSections.college_overview.location.map_link",
                           )}
@@ -1175,7 +1355,7 @@ export default function SetupProfilePage() {
                       <div className="space-y-1">
                         <Label>Address String</Label>
                         <Input
-                          placeholder="Map Address"
+                          placeholder="Full address"
                           {...register(
                             "profileSections.college_overview.location.address",
                           )}
@@ -1301,142 +1481,6 @@ export default function SetupProfilePage() {
                     )}
                   </div>
 
-                  {/* Campus Ambassadors */}
-                  <div className="space-y-4 pt-4 border-t border-border/60">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Campus Ambassadors
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setValue(
-                            "profileSections.college_overview.campus_ambassadors",
-                            [
-                              ...overviewAmbassadors,
-                              {
-                                name: "",
-                                course: "",
-                                district: "",
-                                state: "",
-                                image: "",
-                                message_link: "",
-                              },
-                            ],
-                          );
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Ambassador
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {overviewAmbassadors.map((item: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="border p-4 rounded-xl bg-muted/20 grid gap-3 md:grid-cols-2"
-                        >
-                          <div className="space-y-1">
-                            <Label className="text-xs">Full Name</Label>
-                            <Input
-                              placeholder="Arshal Mathew"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.name`,
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Course Name</Label>
-                            <Input
-                              placeholder="B.Sc Nursing"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.course`,
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">District</Label>
-                            <Input
-                              placeholder="Palakkad"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.district`,
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">State</Label>
-                            <Input
-                              placeholder="Kerala"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.state`,
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Image Link</Label>
-                            <Input
-                              placeholder="https://example.com/ambassador.jpg"
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.image`,
-                              )}
-                            />
-                            <Input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              disabled={
-                                uploadingField ===
-                                `profileSections.college_overview.campus_ambassadors.${idx}.image`
-                              }
-                              onChange={(e) =>
-                                handleImageUpload(
-                                  e.target.files?.[0] ?? null,
-                                  `profileSections.college_overview.campus_ambassadors.${idx}.image`,
-                                  `college-overview/ambassadors-${idx}`,
-                                )
-                              }
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">
-                              Message/Chat CTA link
-                            </Label>
-                            <Input
-                              placeholder="https://wa.me/..."
-                              className="h-9"
-                              {...register(
-                                `profileSections.college_overview.campus_ambassadors.${idx}.message_link`,
-                              )}
-                            />
-                          </div>
-                          <div className="md:col-span-2 flex justify-end">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="text-destructive h-9"
-                              onClick={() => {
-                                setValue(
-                                  "profileSections.college_overview.campus_ambassadors",
-                                  overviewAmbassadors.filter(
-                                    (_: any, i: number) => i !== idx,
-                                  ),
-                                );
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Remove
-                              Ambassador
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Campus Reels Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
@@ -1515,11 +1559,20 @@ export default function SetupProfilePage() {
                         <div className="space-y-1">
                           <Label className="text-xs">Thumbnail</Label>
                           <Input
-                            placeholder="Thumbnail image URL"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.campus_reels.${idx}.thumbnail`,
-                            )}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="mt-1"
+                            disabled={
+                              uploadingField ===
+                              `profileSections.college_overview.campus_reels.${idx}.thumbnail`
+                            }
+                            onChange={(e) =>
+                              handleImageUpload(
+                                e.target.files?.[0] ?? null,
+                                `profileSections.college_overview.campus_reels.${idx}.thumbnail`,
+                                `college-overview/reels-thumbnail-${idx}`,
+                              )
+                            }
                           />
                         </div>
                         <div className="space-y-1">
@@ -1776,15 +1829,7 @@ export default function SetupProfilePage() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs">
-                                  Image Link URL
-                                </Label>
-                                <Input
-                                  placeholder="https://example.com/image.jpg"
-                                  {...register(
-                                    `profileSections.happenings.happenings.${idx}.image`,
-                                  )}
-                                />
+                                <Label className="text-xs">Image</Label>
                                 <Input
                                   type="file"
                                   accept="image/jpeg,image/png,image/webp"
@@ -1962,13 +2007,6 @@ export default function SetupProfilePage() {
                                     )}
                                   />
                                   <Input
-                                    placeholder="Logo URL"
-                                    className="flex-1"
-                                    {...register(
-                                      `profileSections.institutions_across_world.institutions.${idx}.logo`,
-                                    )}
-                                  />
-                                  <Input
                                     type="file"
                                     accept="image/jpeg,image/png,image/webp"
                                     className="max-w-[220px]"
@@ -2026,84 +2064,6 @@ export default function SetupProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="commuteTitle" className="font-semibold">
-                        Section Title
-                      </Label>
-                      <Input
-                        id="commuteTitle"
-                        placeholder="Commute"
-                        {...register("profileSections.commute.title")}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-semibold">
-                        Selected Pickup Point
-                      </Label>
-                      <Input
-                        placeholder="HSR Layout"
-                        {...register(
-                          "profileSections.commute.selected_pickup_point",
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Pickup points */}
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
-                        Pickup Points
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setValue("profileSections.commute.pickup_points", [
-                            ...commutePickupPoints,
-                            "",
-                          ]);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Pickup Point
-                      </Button>
-                    </div>
-                    {commutePickupPoints.map((item: string, idx: number) => (
-                      <div key={idx} className="flex gap-2 items-center pl-2">
-                        <Input
-                          placeholder="Pickup point name"
-                          className="h-9 flex-1"
-                          value={item || ""}
-                          onChange={(e) => {
-                            const next = [...commutePickupPoints];
-                            next[idx] = e.target.value;
-                            setValue(
-                              "profileSections.commute.pickup_points",
-                              next,
-                            );
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setValue(
-                              "profileSections.commute.pickup_points",
-                              commutePickupPoints.filter(
-                                (_: any, i: number) => i !== idx,
-                              ),
-                            );
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-
                   {/* Routes */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
                     <div className="flex items-center justify-between">
@@ -2558,33 +2518,6 @@ export default function SetupProfilePage() {
                         />
                       </div>
                     ))}
-                  </div>
-
-                  {/* Raw payload helper */}
-                  <div className="space-y-2 pt-4 border-t border-border/40">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Commute Payload (Preview)
-                    </Label>
-                    <Textarea
-                      rows={10}
-                      value={JSON.stringify(
-                        {
-                          tab: "commute",
-                          pickup_points: commutePickupPoints,
-                          selected_pickup_point: watch(
-                            "profileSections.commute.selected_pickup_point",
-                          ),
-                          routes: commuteRoutes,
-                          rules_and_code_of_conduct: watch(
-                            "profileSections.commute.rules_and_code_of_conduct",
-                          ),
-                        },
-                        null,
-                        2,
-                      )}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
                   </div>
                 </CardContent>
               </Card>

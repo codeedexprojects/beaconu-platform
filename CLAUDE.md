@@ -66,6 +66,15 @@ JWT: `{ userId, userType, collegeId?, roleId?, permissions[], sessionId }`
 `main` → production | `develop` → staging | `feature/*` → work
 Branch per feature. Small PRs. Merge frequently.
 
+## Database Migrations
+
+**Never hand-write a migration's SQL file from scratch, and never edit one that has already been applied.** Migration files under `packages/db/prisma/migrations/` must always originate from the Prisma CLI's schema diff, never authored by Claude directly.
+
+- Generate + apply: run `pnpm db:migrate:dev` from the repo root and let the **user** run it in their own terminal — it's interactive (prompts for a migration name, confirms destructive changes) and Claude's shell cannot answer those prompts.
+- Non-interactive generation only (no schema apply yet): `prisma migrate dev --create-only --name X` followed by `prisma migrate deploy` — both are real Prisma CLI invocations against the schema, not hand-written SQL.
+- **`CREATE SEQUENCE` for `dbgenerated()` ID defaults is the one real exception.** Prisma's diff engine never emits these automatically — not even if the sequence already exists on the target dev DB — so a migration that adds a `dbgenerated()` column with a new sequence will always fail shadow-DB validation (P3006, "relation ... does not exist") unless the `CREATE SEQUENCE IF NOT EXISTS` line is added directly into that migration's SQL file. This is safe to do **only while the migration is still unapplied** (check `finished_at IS NULL` in `_prisma_migrations` first) — add the matching entry to `packages/db/prisma/sequences.sql` too, for the record and for bootstrapping fresh environments, but the migration file itself still needs the line physically present.
+- Editing a migration file that has **already** been applied (`finished_at` set) breaks Prisma's checksum tracking and forces a full `prisma migrate reset` (destructive, wipes local dev data) — this has happened before from doing exactly this. Don't repeat it.
+
 ## Bruno API Contracts (`packages/api-contracts/`)
 
 Every API route change must be reflected in `packages/api-contracts/` in the same session.
@@ -602,6 +611,52 @@ if (error) return <InlineError message={getErrorMessage(error)} />;
 
 ---
 
+## Confirmation Dialogs
+
+Never use the browser's native `confirm()` or `alert()`. Use the app's `ConfirmDialog` component
+(`components/ui/confirm-dialog.tsx`) instead — it's portaled to `document.body`, matches the
+app's design system, and is themeable/testable, none of which `window.confirm` supports.
+
+```tsx
+const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+const { mutate: deleteItem, isPending } = useDeleteItem();
+
+function handleDelete(item: Item) {
+  setDeleteTarget(item);
+}
+
+function confirmDelete() {
+  if (!deleteTarget) return;
+  deleteItem(deleteTarget.id, {
+    onSuccess: () => {
+      toast.success(`"${deleteTarget.name}" removed`);
+      setDeleteTarget(null);
+    },
+  });
+}
+
+<ConfirmDialog
+  open={deleteTarget !== null}
+  title="Remove Item"
+  description={
+    deleteTarget ? `Remove "${deleteTarget.name}"? This cannot be undone.` : ""
+  }
+  confirmLabel="Remove"
+  variant="destructive"
+  loading={isPending}
+  onCancel={() => setDeleteTarget(null)}
+  onConfirm={confirmDelete}
+/>;
+```
+
+- One local `useState<T | null>` holds the pending target; `null` means the dialog is closed
+- `variant="destructive"` for deletes/irreversible actions, `variant="default"` otherwise
+- `loading` wires to the mutation's `isPending` so the buttons disable and show a spinner mid-request
+- `onSuccess` clears the target (closes the dialog) — don't close it before the mutation resolves
+- If `components/ui/confirm-dialog.tsx` doesn't exist yet in an app, copy it from `apps/super-admin/components/ui/confirm-dialog.tsx` rather than inventing a new pattern
+
+---
+
 ## RBAC
 
 ```tsx
@@ -694,6 +749,7 @@ Never commit as default.
 | `toast.success` inside a hook                        | `toast.success` in the component `onSuccess`             |
 | `toast.error` manually in a component                | `toast.error(getErrorMessage(error))` in `onError`       |
 | `window.location.href = '/login'`                    | `auth:session-expired` event + router in `providers.tsx` |
+| `window.confirm()` / `alert()`                       | `ConfirmDialog` component (see Confirmation Dialogs)     |
 | `isAuthenticated` as stored boolean                  | `token !== null` computed in selector                    |
 | `const { admin } = useAuthStore()`                   | `const admin = useAuthStore(s => s.admin)`               |
 | API response data in Zustand                         | TanStack Query cache                                     |

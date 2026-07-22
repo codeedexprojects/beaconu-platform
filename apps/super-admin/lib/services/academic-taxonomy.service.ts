@@ -16,6 +16,7 @@ export interface StreamLookup {
   id: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -26,6 +27,7 @@ export interface Discipline {
   streamId: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -58,6 +60,7 @@ export interface CreateDisciplineInput {
   stream_id: string;
   name: string;
   slug: string;
+  logo_url?: string;
   sort_order?: number;
   is_active?: boolean;
 }
@@ -66,6 +69,7 @@ export interface UpdateDisciplineInput {
   stream_id?: string;
   name?: string;
   slug?: string;
+  logo_url?: string | null;
   sort_order?: number;
   is_active?: boolean;
 }
@@ -73,11 +77,15 @@ export interface UpdateDisciplineInput {
 export interface CreateSimpleTaxonomyInput {
   name: string;
   slug: string;
+  logo_url?: string;
   sort_order?: number;
   is_active?: boolean;
 }
 
-export type UpdateSimpleTaxonomyInput = Partial<CreateSimpleTaxonomyInput>;
+export type UpdateSimpleTaxonomyInput = Omit<
+  Partial<CreateSimpleTaxonomyInput>,
+  "logo_url"
+> & { logo_url?: string | null };
 
 export interface TaxonomyListParams {
   page?: number;
@@ -115,6 +123,9 @@ export const academicTaxonomyService = {
 
   createStream: (data: CreateSimpleTaxonomyInput) =>
     api.post<StreamLookup>("/api/v1/admin/universities/streams", data),
+
+  updateStream: (id: string, data: UpdateSimpleTaxonomyInput) =>
+    api.patch<StreamLookup>(`/api/v1/admin/universities/streams/${id}`, data),
 
   enableStream: (id: string) =>
     api.patch<StreamLookup>(`/api/v1/admin/universities/streams/${id}`, {

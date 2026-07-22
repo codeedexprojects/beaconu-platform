@@ -1,0 +1,49 @@
+meta {
+  name: Create Application Form
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "application_type": "Regular",
+    "name": "UG Admissions 2026",
+    "admission_year": "2026",
+    "program_level": "undergraduate",
+    "starts_on": "2026-06-01",
+    "ends_on": "2026-08-31"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("admissionCycleId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates an application form (admission cycle) for the authenticated
+  college. `ends_on` is optional but must be on or after `starts_on` if set.
+
+  Body:
+  - application_type (required, free text)
+  - name (required)
+  - admission_year (required)
+  - program_level (required)
+  - starts_on (required, date)
+  - ends_on (optional, date)
+}

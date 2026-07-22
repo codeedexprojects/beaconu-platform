@@ -47,6 +47,10 @@ export class BlinkRepository {
         createdByStaffId: data.createdByStaffId,
         blinkRoleId: data.roleId,
         status: data.status,
+        avatarUrl: data.avatarUrl ?? null,
+        profileMetadata: data.profileMetadata as
+          | Record<string, string | number | boolean | null>
+          | undefined,
       },
       include: { blinkRole: true },
     });
@@ -56,6 +60,25 @@ export class BlinkRepository {
     return prisma.blinkUser.update({
       where: { id },
       data: { lastLoginAt: new Date() },
+    });
+  }
+
+  static async updateProfile(
+    id: string,
+    data: {
+      fullName?: string;
+      phoneNumber?: string;
+      ambassadorType?: string;
+      avatarUrl?: string | null;
+      status?: string;
+      passwordHash?: string;
+      profileMetadata?: Record<string, string | number | boolean | null>;
+    },
+  ) {
+    return prisma.blinkUser.update({
+      where: { id },
+      data,
+      include: { blinkRole: true },
     });
   }
 
@@ -225,6 +248,15 @@ export class BlinkRepository {
     });
   }
 
+  /** Creates the wallet on first save if the user has no earnings history yet. */
+  static async upsertBankDetails(blinkUserId: string, bankDetails: object) {
+    return prisma.blinkWallet.upsert({
+      where: { blinkUserId },
+      create: { blinkUserId, bankDetails },
+      update: { bankDetails },
+    });
+  }
+
   static async processWithdrawal(
     blinkUserId: string,
     amount: number,
@@ -269,6 +301,23 @@ export class BlinkRepository {
         campusCode: true,
         status: true,
         createdAt: true,
+        profileMetadata: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async findActiveAmbassadorsByCollegePublic(collegeId: string) {
+    return prisma.blinkUser.findMany({
+      where: {
+        collegeId,
+        blinkRole: { slug: "campus_ambassador" },
+        status: "active",
+      },
+      select: {
+        fullName: true,
+        avatarUrl: true,
+        profileMetadata: true,
       },
       orderBy: { createdAt: "desc" },
     });

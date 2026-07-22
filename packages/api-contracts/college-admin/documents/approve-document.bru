@@ -1,0 +1,25 @@
+meta {
+  name: Approve Document Request (College Admin)
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/documents/requests/{{documentRequestId}}/approve
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Moves a document request from "awaiting_approval" to "approved". Only
+  once approved can the document be issued.
+}

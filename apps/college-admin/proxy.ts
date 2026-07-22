@@ -10,6 +10,20 @@ const RESERVED_ROOT_ROUTES = new Set([
   "_next",
 ]);
 
+const ACTIVE_CONSOLE_ROUTES = new Set([
+  "roles",
+  "staff",
+  "hostels",
+  "commute",
+  "settings",
+  "ambassadors",
+  "campus-visits",
+  "documents",
+  "anti-ragging",
+  "application-forms",
+  "assessments",
+]);
+
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const hostSlug = extractCollegeSlugFromHost(request.headers.get("host"));
@@ -24,11 +38,14 @@ export function proxy(request: NextRequest) {
 
   const segments = path.split("/").filter(Boolean);
   const firstSegment = segments[0];
+  const isConsoleRoute =
+    firstSegment && ACTIVE_CONSOLE_ROUTES.has(firstSegment);
   const collegeSlug =
-    firstSegment && !RESERVED_ROOT_ROUTES.has(firstSegment)
+    firstSegment && !RESERVED_ROOT_ROUTES.has(firstSegment) && !isConsoleRoute
       ? firstSegment
       : null;
 
+  // If the URL slug doesn't match the host slug, redirect to canonical URL
   if (hostSlug && collegeSlug && hostSlug !== collegeSlug) {
     const nextUrl = request.nextUrl.clone();
     const tail = segments.slice(1);
@@ -36,47 +53,26 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(nextUrl);
   }
 
+  // If no college slug in the path (e.g. direct /hostels, /login, etc.), pass through
   if (!collegeSlug) {
     return NextResponse.next();
   }
 
   const nextUrl = request.nextUrl.clone();
 
+  // /{slug} → /  (dashboard root)
   if (segments.length === 1) {
     nextUrl.pathname = "/";
     return NextResponse.rewrite(nextUrl);
   }
 
-  if (segments[1] === "login") {
-    nextUrl.pathname = "/login";
-    return NextResponse.rewrite(nextUrl);
-  }
-
-  if (segments[1] === "setup-account") {
-    nextUrl.pathname = "/setup-account";
-    return NextResponse.rewrite(nextUrl);
-  }
-
-  if (segments[1] === "setup") {
-    nextUrl.pathname = `/${segments.slice(1).join("/")}`;
-    return NextResponse.rewrite(nextUrl);
-  }
-
-  const ACTIVE_CONSOLE_ROUTES = new Set([
-    "roles",
-    "staff",
-    "hostels",
-    "commute",
-    "settings",
-    "ambassadors",
-  ]);
-
-  if (ACTIVE_CONSOLE_ROUTES.has(segments[1])) {
-    nextUrl.pathname = `/${segments.slice(1).join("/")}`;
-    return NextResponse.rewrite(nextUrl);
-  }
-
-  return NextResponse.next();
+  // /{slug}/{anything...} → /{anything...}
+  // Strip the college slug prefix for ALL paths. This covers:
+  //   /{slug}/login, /{slug}/setup/*, /{slug}/hostels, /{slug}/hostels/{id},
+  //   and any other unknown paths like /{slug}/{hostelId} that landed here
+  //   due to link generation quirks.
+  nextUrl.pathname = `/${segments.slice(1).join("/")}`;
+  return NextResponse.rewrite(nextUrl);
 }
 
 export const config = {

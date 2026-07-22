@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthStore } from "@/store";
 
 import {
@@ -52,11 +53,16 @@ export default function CommutePage() {
   const { data: routes = [], isLoading: loadingRoutes } = useCollegeCommutes();
   const { mutate: createRoute, isPending: creating } =
     useCreateCollegeCommute();
-  const { mutate: deleteRoute } = useDeleteCollegeCommute();
+  const { mutate: deleteRoute, isPending: isDeleting } =
+    useDeleteCollegeCommute();
   const canManageCommute =
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("commute.manage") ?? false);
 
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
 
@@ -145,15 +151,19 @@ export default function CommutePage() {
 
   const handleDelete = (id: string, name: string) => {
     if (!canManageCommute) return;
-    if (
-      confirm(`Are you absolutely sure you want to remove route "${name}"?`)
-    ) {
-      deleteRoute(id, {
-        onSuccess: () => {
-          toast.success(`Commute Route "${name}" removed successfully`);
-        },
-      });
-    }
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteRoute(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(
+          `Commute Route "${deleteTarget.name}" removed successfully`,
+        );
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const onSubmit = (data: RouteFormData) => {
@@ -603,6 +613,21 @@ export default function CommutePage() {
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Commute Route"
+        description={
+          deleteTarget
+            ? `Are you absolutely sure you want to remove route "${deleteTarget.name}"?`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

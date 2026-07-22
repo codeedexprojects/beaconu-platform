@@ -1,0 +1,250 @@
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { ApplicationCourseRepository } from "../repositories/application-course.repository";
+import type { AddApplicationCourseInput } from "../validators/application-course.validator";
+
+type ApplicationCourseRow = NonNullable<
+  Awaited<ReturnType<typeof ApplicationCourseRepository.findByIdForApplication>>
+>;
+
+function toDto(row: ApplicationCourseRow) {
+  const { course, applicationFee, ...rest } = row;
+  return {
+    ...rest,
+    applicationFee: applicationFee.toString(),
+    courseName: course.name,
+    courseCode: course.code,
+  };
+}
+
+/** Bidirectional: positive appFeeAdjustmentValue surcharges the base fee
+ * (e.g. NRI Quota), negative discounts it — mirrors CourseQuota's semantics.
+ * Clamped at 0 so a discount can never push the fee negative. */
+export function applyFeeAdjustment(
+  baseFee: number,
+  type: string | null | undefined,
+  value: unknown,
+): number {
+  if (!type || value == null) return baseFee;
+  const numericValue = Number(value);
+  const adjusted =
+    type === "percentage"
+      ? baseFee + (baseFee * numericValue) / 100
+      : baseFee + numericValue;
+  return Math.max(0, adjusted);
+}
+
+/** requirePayment defaults to true for every normal call site (adding more
+ * courses, filling details, documents, declaration). The one exception is
+ * ApplicationService.start() creating the PRIMARY course immediately after
+ * the draft Application itself is created — payment can't exist yet at
+ * that point, so it passes requirePayment: false. */
+async function assertOwnDraftApplication(
+  applicationId: string,
+  studentId: string,
+  requirePayment = true,
+) {
+  const application =
+    await ApplicationCourseRepository.findApplicationForStudent(
+      applicationId,
+      studentId,
+    );
+  if (!application) throw new NotFoundError("Application not found");
+  if (application.formStatus !== "draft") {
+    throw new ConflictError(
+      "This application has already been submitted and can no longer be edited",
+    );
+  }
+  if (requirePayment && application.feePaymentStatus !== "paid") {
+    throw new ConflictError(
+      "Complete payment for your primary course before continuing",
+    );
+  }
+  return application;
+}
+
+export class ApplicationCourseService {
+  /** Read-only fee/quota browsing for a course within a cycle — doesn't
+   * require a draft application to already exist, since students should be
+   * able to compare fees before committing to start one. */
+  static async listQuotaOptions(admissionCycleId: string, courseId: string) {
+    const cycleCourse =
+      await ApplicationCourseRepository.findAdmissionCycleCourse(
+        admissionCycleId,
+        courseId,
+      );
+    if (!cycleCourse) {
+      throw new NotFoundError("Course");
+    }
+
+    const seats =
+      await ApplicationCourseRepository.findQuotaSeatsForCycleCourse(
+        cycleCourse.id,
+      );
+    const adjustments = await ApplicationCourseRepository.findQuotaAdjustments(
+      courseId,
+      seats.map((s) => s.collegeQuotaId),
+    );
+    const adjustmentByQuota = new Map(
+      adjustments.map((a) => [a.collegeQuotaId, a]),
+    );
+    const baseFee = cycleCourse.applicationFee.toNumber();
+
+    return {
+      baseApplicationFee: baseFee.toString(),
+      quotas: seats.map((s) => {
+        const adjustment = adjustmentByQuota.get(s.collegeQuotaId);
+        const finalFee = applyFeeAdjustment(
+          baseFee,
+          adjustment?.appFeeAdjustmentType,
+          adjustment?.appFeeAdjustmentValue,
+        );
+        const isPooled = s.seatPool !== null;
+        return {
+          courseQuotaSeatId: s.id,
+          collegeQuotaId: s.collegeQuotaId,
+          quotaName: s.collegeQuota.name,
+          quotaSlug: s.collegeQuota.slug,
+          bucketType: s.collegeQuota.bucketType,
+          applicationFee: finalFee.toString(),
+          tuitionFeeOverride:
+            adjustment?.tuitionFeeOverride?.toString() ?? null,
+          totalSeats: isPooled ? s.seatPool!.totalSeats : s.totalSeats,
+          openSeats: isPooled ? s.seatPool!.openSeats : s.openSeats,
+        };
+      }),
+    };
+  }
+
+  static async list(applicationId: string, studentId: string) {
+    // Read-only — allowed even before payment so the student can review
+    // their primary course selection while they're still on the payment
+    // step.
+    await assertOwnDraftApplication(applicationId, studentId, false);
+    const rows =
+      await ApplicationCourseRepository.findByApplicationId(applicationId);
+    return rows.map(toDto);
+  }
+
+  static async addCourse(
+    applicationId: string,
+    studentId: string,
+    body: AddApplicationCourseInput,
+    options: { isPrimary?: boolean } = {},
+  ) {
+    const isPrimary = options.isPrimary ?? false;
+    const application = await assertOwnDraftApplication(
+      applicationId,
+      studentId,
+      !isPrimary,
+    );
+
+    const cycleCourse =
+      await ApplicationCourseRepository.findAdmissionCycleCourse(
+        application.admissionCycleId,
+        body.course_id,
+      );
+    if (!cycleCourse) {
+      throw new NotFoundError("Course");
+    }
+
+    const existing = await ApplicationCourseRepository.findExistingSelection(
+      applicationId,
+      body.course_id,
+    );
+    if (existing && existing.status !== "withdrawn") {
+      throw new ConflictError(
+        "This course has already been added to your application",
+      );
+    }
+
+    const baseFee = cycleCourse.applicationFee.toNumber();
+    let finalFee = baseFee;
+    let courseQuotaSeatId: string | null = null;
+
+    if (body.course_quota_seat_id) {
+      const seat = await ApplicationCourseRepository.findCourseQuotaSeat(
+        body.course_quota_seat_id,
+        cycleCourse.id,
+      );
+      if (!seat) {
+        throw new NotFoundError("Quota");
+      }
+
+      // Availability check only — not a reservation. Seats are decremented
+      // atomically at final submit, with a re-check at that point, so an
+      // abandoned draft never holds a seat hostage.
+      const effectiveOpenSeats = seat.seatPool
+        ? seat.seatPool.openSeats
+        : seat.openSeats;
+      if (effectiveOpenSeats == null || effectiveOpenSeats <= 0) {
+        throw new ConflictError("No seats available for this quota");
+      }
+
+      const adjustment = await ApplicationCourseRepository.findQuotaAdjustments(
+        body.course_id,
+        [seat.collegeQuotaId],
+      );
+      finalFee = applyFeeAdjustment(
+        baseFee,
+        adjustment[0]?.appFeeAdjustmentType,
+        adjustment[0]?.appFeeAdjustmentValue,
+      );
+      courseQuotaSeatId = seat.id;
+    }
+
+    const created =
+      existing && existing.status === "withdrawn"
+        ? await ApplicationCourseRepository.reactivate(existing.id, {
+            applicationFee: finalFee,
+            courseQuotaSeatId,
+            preferenceOrder: body.preference_order ?? 1,
+          })
+        : await ApplicationCourseRepository.create({
+            applicationId,
+            courseId: body.course_id,
+            applicationFee: finalFee,
+            courseQuotaSeatId,
+            isPrimary,
+            preferenceOrder: body.preference_order ?? 1,
+          });
+
+    await ApplicationCourseService.recalculateTotalFee(applicationId);
+
+    const full = await ApplicationCourseRepository.findByIdForApplication(
+      applicationId,
+      created.id,
+    );
+    return toDto(full!);
+  }
+
+  static async withdrawCourse(
+    applicationId: string,
+    studentId: string,
+    id: string,
+  ) {
+    await assertOwnDraftApplication(applicationId, studentId);
+
+    const existing = await ApplicationCourseRepository.findByIdForApplication(
+      applicationId,
+      id,
+    );
+    if (!existing) throw new NotFoundError("Course selection not found");
+    if (existing.isPrimary) {
+      throw new ConflictError(
+        "The primary course you paid for can't be withdrawn",
+      );
+    }
+
+    await ApplicationCourseRepository.withdraw(id);
+    await ApplicationCourseService.recalculateTotalFee(applicationId);
+  }
+
+  static async recalculateTotalFee(applicationId: string) {
+    const total =
+      await ApplicationCourseRepository.sumActiveApplicationFees(applicationId);
+    await ApplicationCourseRepository.updateApplicationTotalFee(
+      applicationId,
+      total,
+    );
+  }
+}

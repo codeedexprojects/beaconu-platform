@@ -16,6 +16,14 @@ import {
   Settings,
   LayoutDashboard,
   Star,
+  Library,
+  CalendarDays,
+  Percent,
+  FileText,
+  ShieldAlert,
+  ClipboardList,
+  Mic,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -189,12 +197,18 @@ export default function DashboardLayout({
     if (path.includes("/setup/profile")) return "profile.view";
     if (path.includes("/setup/campuses")) return "campuses.view";
     if (path.includes("/setup/academics")) return "academics.view";
+    if (path.includes("/quotas")) return "academics.view";
     if (path.includes("/roles")) return "staff.view";
     if (path.includes("/staff")) return "staff.view";
     if (path.includes("/hostels")) return "hostel.view";
+    if (path.includes("/libraries")) return "library.view";
     if (path.includes("/commute")) return "commute.view";
     if (path.includes("/settings")) return "profile.view";
     if (path.includes("/ambassadors")) return "staff.view";
+    if (path.includes("/campus-visits")) return "staff.view";
+    if (path.includes("/media-kit")) return "staff.view";
+    if (path.includes("/documents")) return "staff.view";
+    if (path.includes("/anti-ragging")) return "staff.view";
     return null;
   };
 
@@ -293,6 +307,12 @@ export default function DashboardLayout({
                     permission: "academics.view",
                   },
                   {
+                    name: "Quota Catalogue",
+                    path: "/quotas",
+                    icon: Percent,
+                    permission: "academics.view",
+                  },
+                  {
                     name: "Role Builder (RBAC)",
                     path: "/roles",
                     icon: Shield,
@@ -311,6 +331,12 @@ export default function DashboardLayout({
                     permission: "hostel.view",
                   },
                   {
+                    name: "Libraries",
+                    path: "/libraries",
+                    icon: Library,
+                    permission: "library.view",
+                  },
+                  {
                     name: "Bus Fleet & Commute",
                     path: "/commute",
                     icon: Truck,
@@ -320,6 +346,42 @@ export default function DashboardLayout({
                     name: "Campus Ambassadors",
                     path: "/ambassadors",
                     icon: Star,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Campus Visits",
+                    path: "/campus-visits",
+                    icon: CalendarDays,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Media Kit",
+                    path: "/media-kit",
+                    icon: ImageIcon,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Documents",
+                    path: "/documents",
+                    icon: FileText,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Application Forms",
+                    path: "/application-forms",
+                    icon: ClipboardList,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Anti-Ragging",
+                    path: "/anti-ragging",
+                    icon: ShieldAlert,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Assessments",
+                    path: "/assessments",
+                    icon: Mic,
                     permission: "staff.view",
                   },
                   {
@@ -516,11 +578,19 @@ export default function DashboardLayout({
                       { name: "Overview Profile", path: "/setup/profile" },
                       { name: "Campuses Catalog", path: "/setup/campuses" },
                       { name: "Academics Catalog", path: "/setup/academics" },
+                      { name: "Quota Catalogue", path: "/quotas" },
                       { name: "Role Builder (RBAC)", path: "/roles" },
                       { name: "Staff Directory", path: "/staff" },
                       { name: "Hostels Occupancy", path: "/hostels" },
+                      { name: "Libraries", path: "/libraries" },
                       { name: "Bus Fleet & Commute", path: "/commute" },
                       { name: "Campus Ambassadors", path: "/ambassadors" },
+                      { name: "Campus Visits", path: "/campus-visits" },
+                      { name: "Media Kit", path: "/media-kit" },
+                      { name: "Documents", path: "/documents" },
+                      { name: "Application Forms", path: "/application-forms" },
+                      { name: "Anti-Ragging", path: "/anti-ragging" },
+                      { name: "Assessments", path: "/assessments" },
                       { name: "Settings", path: "/settings" },
                     ].find((s) => appPathname.includes(s.path))?.name ||
                     "Overview"}
@@ -547,9 +617,7 @@ export default function DashboardLayout({
           </header>
 
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto max-w-4xl">
-              {hasAccess ? children : renderAccessDenied()}
-            </div>
+            {hasAccess ? children : renderAccessDenied()}
           </div>
         </main>
       </div>

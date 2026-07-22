@@ -1,0 +1,20 @@
+meta {
+  name: List Ambassadors for College (Public)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}/ambassadors
+  body: none
+  auth: none
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("ambassadorId", data.data[0].id);
+    }
+  }
+}

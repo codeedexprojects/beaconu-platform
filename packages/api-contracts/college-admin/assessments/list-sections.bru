@@ -1,0 +1,21 @@
+meta {
+  name: List Assessment Sections
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/sections
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Lists all assessment sections that exist for this college (only sections
+  that have been enabled at least once will appear — none exist until
+  Toggle Verbal Communication is called for the first time).
+}

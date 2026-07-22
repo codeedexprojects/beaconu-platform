@@ -1,0 +1,96 @@
+meta {
+  name: Get Course Scholarship Details
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/scholarship-details?port_entry_id=port_jee_main&score_range_id=range_1-1000
+  body: none
+  auth: none
+}
+
+params:query {
+  port_entry_id: port_jee_main
+  score_range_id: range_1-1000
+}
+
+docs {
+  Dedicated endpoint for the Merit Scholarship calculator on a course's
+  Financial Aid tab — NOT the same as the generic GET
+  .../courses/:courseId/tabs/financial_aid endpoint. That generic route
+  returns the full raw/transformed tab (including financial_concessions).
+  This endpoint resolves just the scholarship calculator's criteria/discount
+  for a specific Port of Entry + Score Range selection.
+
+  Path params:
+  - collegeSlug: College subdomain slug
+  - courseId: Course ID
+
+  Query params (both optional):
+  - port_entry_id: a port entry `id` from the `port_entries` array below
+  - score_range_id: a score range `id` nested under that port entry's
+    `score_ranges` array
+
+  `port_entries` is ALWAYS the full, unfiltered list — every port entry,
+  each with its OWN nested `score_ranges` array (not flattened). It does not
+  change based on the query params. This lets the frontend render the full
+  port-entry → score-range hierarchy from a single no-filter call, with no
+  round-trip needed after picking a port entry.
+
+  `details` is ONLY resolved once a real selection is made:
+  - no filter (or invalid/incomplete filter) → details is null
+  - port_entry_id valid AND score_range_id valid (within that port entry's
+    score_ranges) → details resolves to that score range's discount/amounts,
+    with `criteria` being the selected port entry's terms_and_conditions list
+
+  Response (no filter):
+  {
+    "port_entries": [
+      {
+        "id": "port_college_entrance_exam",
+        "name": "College Entrance Exam",
+        "score_ranges": [
+          { "id": "range_90_100", "range_label": "90-100" },
+          { "id": "range_75_90", "range_label": "75-90" }
+        ]
+      },
+      {
+        "id": "port_jee",
+        "name": "JEE",
+        "score_ranges": [
+          { "id": "range_50_100", "range_label": "50-100" }
+        ]
+      }
+    ],
+    "details": null,
+    "filters_applied": { "port_entry_id": null, "score_range_id": null }
+  }
+
+  Response (with a valid filter):
+  {
+    "port_entries": [...],
+    "details": {
+      "criteria": ["minimum 45% score", "minimum 60% +2 score"],
+      "discount_type": "amount",
+      "discount_value": 10000,
+      "max_scholarship_amount": "₹10,000",
+      "net_payable_amount": "₹2,30,000"
+    },
+    "filters_applied": {
+      "port_entry_id": "port_college_entrance_exam",
+      "score_range_id": "range_90_100"
+    }
+  }
+
+  `filters_applied` echoes back exactly what was resolved (both null when
+  nothing was selected or selection didn't match anything real). All text
+  fields are trimmed of leading/trailing whitespace; criteria lines also
+  collapse any embedded newlines into spaces.
+
+  Response message: "Scholarship details fetched successfully".
+  Returns 404 "Course not found" if the course/college doesn't exist or
+  isn't active.
+
+  Table: courses (metadata JSONB, tabData.financial_aid.merit_scholarship)
+}

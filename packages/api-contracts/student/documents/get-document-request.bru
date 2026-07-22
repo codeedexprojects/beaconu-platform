@@ -1,0 +1,22 @@
+meta {
+  name: Get My Document Request Status
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/documents/requests/{{documentRequestId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Full status detail for one document request, including rejectionReason,
+  displayStatus (submitted, resubmitted, under_review, awaiting_approval,
+  rejected, ready_for_download, ready_to_collect, collected), and
+  resubmissionHistory.
+}

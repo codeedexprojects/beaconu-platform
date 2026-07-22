@@ -22,4 +22,18 @@ router.post(
   CollegeAdminBlinkController.createAmbassador,
 );
 
+router.get(
+  "/:id",
+  authenticate,
+  authorizeUserType("staff_member"),
+  CollegeAdminBlinkController.getAmbassador,
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorizeUserType("staff_member"),
+  CollegeAdminBlinkController.updateAmbassador,
+);
+
 export default router;

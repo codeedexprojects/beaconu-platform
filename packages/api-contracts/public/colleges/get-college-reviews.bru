@@ -1,0 +1,22 @@
+meta {
+  name: Get College Reviews
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/reviews?limit=10
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 10
+}
+
+docs {
+  Returns approved reviews for a college by its subdomain slug, newest
+  first: id, rating, reviewText, reviewType, categoryRatings, createdAt.
+  `limit` is optional (default 10, max 50). No auth required. Reviewer
+  identity is never exposed on this public endpoint.
+}

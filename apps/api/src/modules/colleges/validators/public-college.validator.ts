@@ -54,6 +54,19 @@ export const publicCollegeSchemas = {
       .trim()
       .optional()
       .transform((v) => v || undefined),
+    city: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
+  }),
+
+  reviewsQuery: z.object({
+    limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+  }),
+
+  coursesMinimalQuery: z.object({
+    college_id: optionalUuidFromQuery,
   }),
 };
 

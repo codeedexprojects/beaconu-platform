@@ -1,0 +1,15 @@
+meta {
+  name: Get Quota Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/quotas/{{quotaId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}

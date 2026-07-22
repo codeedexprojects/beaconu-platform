@@ -42,6 +42,9 @@ export function useApproveEmployee() {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.adminProfiles,
       });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.pendingBlink,
+      });
     },
   });
 }

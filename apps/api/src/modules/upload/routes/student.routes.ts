@@ -33,4 +33,39 @@ router.post(
   StudentUploadController.verifyRefundProof,
 );
 
+router.post(
+  "/document/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignDocument,
+);
+
+router.post(
+  "/document/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyDocument,
+);
+
+router.post(
+  "/anti-ragging-evidence/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignAntiRaggingEvidence,
+);
+
+router.post(
+  "/anti-ragging-evidence/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyAntiRaggingEvidence,
+);
+
+router.delete(
+  "/file",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.removeFile,
+);
+
 export default router;

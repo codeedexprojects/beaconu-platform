@@ -21,8 +21,6 @@ export function Toaster({ ...props }: ToasterProps) {
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-lg",
-          error: "group-[.toaster]:border-destructive/20",
-          success: "group-[.toaster]:border-emerald-200",
         },
       }}
       {...props}

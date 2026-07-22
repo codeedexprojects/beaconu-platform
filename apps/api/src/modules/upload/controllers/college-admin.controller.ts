@@ -4,13 +4,19 @@ import { randomUUID } from "crypto";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { ValidationError } from "@/shared/errors";
 import { UploadService } from "../upload.service";
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from "../upload.constants";
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE_BYTES,
+  MAX_VIDEO_SIZE_BYTES,
+  VIDEO_MIME_TYPES,
+  VIDEO_PRESIGN_EXPIRY_SECONDS,
+} from "../upload.constants";
 import type { AllowedMimeType } from "../upload.constants";
 
 const presignSchema = z.object({
   mimeType: z.enum(ALLOWED_MIME_TYPES as [string, ...string[]], {
     error:
-      "Allowed: image/jpeg, image/png, image/webp, application/pdf, video/mp4, video/webm, video/quicktime",
+      "Allowed: image/jpeg, image/png, image/webp, application/pdf, video/mp4, video/webm, video/quicktime, audio/mpeg, audio/mp4, audio/wav",
   }),
   fileSizeBytes: z.number().int().positive(),
   context: z.string().trim().min(1).max(100),
@@ -25,9 +31,12 @@ export class CollegeAdminUploadController {
     const collegeId = req.collegeId!;
     const { mimeType, fileSizeBytes, context } = presignSchema.parse(req.body);
 
-    if (fileSizeBytes > MAX_FILE_SIZE_BYTES) {
+    const isVideo = VIDEO_MIME_TYPES.includes(mimeType as AllowedMimeType);
+    const maxSizeBytes = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_FILE_SIZE_BYTES;
+
+    if (fileSizeBytes > maxSizeBytes) {
       throw new ValidationError(
-        `File must not exceed ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB`,
+        `File must not exceed ${maxSizeBytes / (1024 * 1024)} MB`,
       );
     }
 
@@ -35,6 +44,7 @@ export class CollegeAdminUploadController {
     const result = await UploadService.presign(
       key,
       mimeType as AllowedMimeType,
+      isVideo ? VIDEO_PRESIGN_EXPIRY_SECONDS : undefined,
     );
 
     res.status(200).json(ApiResponse.success("Upload URL generated", result));
@@ -51,5 +61,18 @@ export class CollegeAdminUploadController {
 
     const result = await UploadService.verify(key);
     res.status(200).json(ApiResponse.success("Upload verified", result));
+  }
+
+  static async remove(req: Request, res: Response): Promise<void> {
+    const collegeId = req.collegeId!;
+    const { key } = verifySchema.parse(req.body);
+    const expectedPrefix = `college/${collegeId}/`;
+
+    if (!key.startsWith(expectedPrefix)) {
+      throw new ValidationError("Invalid key: does not belong to this college");
+    }
+
+    const result = await UploadService.remove(key);
+    res.status(200).json(ApiResponse.success("File deleted", result));
   }
 }

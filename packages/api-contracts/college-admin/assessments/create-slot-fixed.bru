@@ -1,0 +1,29 @@
+meta {
+  name: Create Assessment Slot (Fixed)
+  type: http
+  seq: 24
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/slots
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "slot_type": "fixed",
+    "window_start": "2026-08-01T09:00:00.000Z",
+    "max_capacity": 100
+  }
+}
+
+docs {
+  No window_end — for slot_type "fixed" the end time is always derived
+  server-side as window_start + the template's total_duration_mins.
+}

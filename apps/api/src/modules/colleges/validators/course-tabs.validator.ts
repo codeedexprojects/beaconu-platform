@@ -79,8 +79,54 @@ export const publicCourseDetailParamSchema = z.object({
 });
 
 export const eligibilityCriteriaQuerySchema = z.object({
-  student_type: z.string().trim().optional(),
+  student_type: z.enum(["indian", "foreign"]).optional(),
   quota_category: z.string().trim().optional(),
+});
+
+export const scholarshipDetailsQuerySchema = z.object({
+  port_entry_id: z.string().trim().optional(),
+  score_range_id: z.string().trim().optional(),
+});
+
+export const reviewsQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+});
+
+export const otherCoursesOfferedQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+  search: z.string().trim().optional(),
+});
+
+export const clubsAssociationsQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
+  per_page: z
+    .string()
+    .optional()
+    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
+  search: z.string().trim().optional(),
+});
+
+export const clubDetailParamSchema = z.object({
+  slug: z.string().min(1, "College slug is required"),
+  courseId: z.string().min(1, "Course ID is required"),
+  clubId: z.string().min(1, "Club ID is required"),
 });
 
 // ── Update Body Schema ───────────────────────────────────────────────────────
@@ -101,3 +147,13 @@ export type UpdateCourseTabData = z.infer<typeof updateCourseTabSchema>;
 export type EligibilityCriteriaQuery = z.infer<
   typeof eligibilityCriteriaQuerySchema
 >;
+export type ScholarshipDetailsQuery = z.infer<
+  typeof scholarshipDetailsQuerySchema
+>;
+export type OtherCoursesOfferedQuery = z.infer<
+  typeof otherCoursesOfferedQuerySchema
+>;
+export type ClubsAssociationsQuery = z.infer<
+  typeof clubsAssociationsQuerySchema
+>;
+export type ClubDetailParam = z.infer<typeof clubDetailParamSchema>;

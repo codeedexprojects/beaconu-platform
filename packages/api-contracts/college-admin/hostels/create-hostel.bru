@@ -14,6 +14,11 @@ auth:bearer {
   token: {{staffToken}}
 }
 
+docs {
+  Creates a hostel with optional nested room types, mess plans, and addon services.
+  Response includes a `gallery` array built from the cover image and room-type photos.
+}
+
 body:json {
   {
     "name": "CV Raman Boys Residence Hall",
@@ -35,5 +40,17 @@ body:json {
         "securityDeposit": 15000
       }
     ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("hostelId", data.data.id);
+    }
+    if (data.data && data.data.roomTypes && data.data.roomTypes[0]) {
+      bru.setEnvVar("roomTypeId", data.data.roomTypes[0].id);
+    }
   }
 }

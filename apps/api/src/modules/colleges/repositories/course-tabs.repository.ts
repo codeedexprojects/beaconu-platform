@@ -167,6 +167,7 @@ export class CourseTabsRepository {
       select: {
         id: true,
         name: true,
+        collegeId: true,
         metadata: true,
       },
     });
@@ -241,5 +242,73 @@ export class CourseTabsRepository {
         [prismaFieldName]: true,
       },
     });
+  }
+
+  /**
+   * Other active courses offered by the same college (excluding the
+   * current course), with study level for tree grouping. Capped at 10
+   * for the inline course-detail tab preview.
+   */
+  static async findOtherCollegeCourses(
+    collegeId: string,
+    excludeCourseId: string,
+  ) {
+    return prisma.course.findMany({
+      where: {
+        collegeId,
+        status: "active",
+        id: { not: excludeCourseId },
+      },
+      select: {
+        id: true,
+        name: true,
+        duration: true,
+        metadata: true,
+        studyLevel: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: { name: "asc" },
+      take: 10,
+    });
+  }
+
+  /**
+   * Paginated + searchable list of other active courses offered by the
+   * same college (excluding the current course). Used by the dedicated
+   * "other courses offered" listing endpoint.
+   */
+  static async findOtherCollegeCoursesPaginated(
+    collegeId: string,
+    excludeCourseId: string,
+    search: string | undefined,
+    skip: number,
+    take: number,
+  ) {
+    const whereClause = {
+      collegeId,
+      status: "active",
+      id: { not: excludeCourseId },
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      prisma.course.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          duration: true,
+          metadata: true,
+          studyLevel: { select: { id: true, name: true, slug: true } },
+        },
+        orderBy: { name: "asc" },
+        skip,
+        take,
+      }),
+      prisma.course.count({ where: whereClause }),
+    ]);
+
+    return { data, total };
   }
 }

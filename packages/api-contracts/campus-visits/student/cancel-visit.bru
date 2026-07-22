@@ -1,0 +1,22 @@
+meta {
+  name: Cancel Campus Visit
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/campus-visits/{{campusVisitId}}/cancel
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "cancellation_reason": "Schedule conflict — unable to visit on the proposed date"
+  }
+}

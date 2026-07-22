@@ -4,6 +4,15 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { publicCollegeSchemas } from "../validators/public-college.validator";
 import { CollegeRegistrationService } from "../services/college-registration.service";
+import { BlinkService } from "@/modules/blink/services/blink.service";
+import { WishlistService } from "@/modules/wishlist/services/wishlist.service";
+import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
+
+// req.userId is only populated for students on public routes (via
+// authenticateOptional) — staff/admin JWTs never carry wishlist data.
+function requestingStudentId(req: Request): string | null {
+  return req.userType === "student" && req.userId ? req.userId : null;
+}
 // Exhaustive list of valid college-level tab IDs.
 // Only these IDs will appear in the public college tabs array.
 // Course-level tabs (fees, faculty, etc.) are implicitly excluded.
@@ -187,7 +196,7 @@ function buildTabList(profileSections: Record<string, unknown>) {
   return tabs;
 }
 
-function buildPublicProfileResponse(college: any) {
+function buildPublicProfileResponse(college: any, isWishlisted: boolean) {
   const profileSections = isRecord(college.profileSections)
     ? (college.profileSections as Record<string, unknown>)
     : {};
@@ -203,7 +212,7 @@ function buildPublicProfileResponse(college: any) {
   } = college;
 
   return {
-    collegeDetails,
+    collegeDetails: { ...collegeDetails, isWishlisted },
     tabs,
   };
 }
@@ -231,6 +240,18 @@ function findSectionByIdentifier(
   return null;
 }
 
+const SECTION_DYNAMIC_OVERLAYS: Record<
+  string,
+  (collegeId: string) => Promise<Record<string, unknown>>
+> = {
+  institutions_across_world: (collegeId) =>
+    CollegeRegistrationService.buildDynamicInstitutionsSection(collegeId),
+  college_overview: async (collegeId) => ({
+    campus_ambassadors:
+      await BlinkService.listPublicCampusAmbassadors(collegeId),
+  }),
+};
+
 export class PublicCollegeController {
   static async getColleges(req: Request, res: Response) {
     const {
@@ -244,13 +265,17 @@ export class PublicCollegeController {
       filter,
       state,
       district,
+      city,
     } = publicCollegeSchemas.listQuery.parse(req.query);
 
     const sortOption = sortBy ?? sort ?? filter;
     const isFeeSort =
       sortOption === "fees_high_to_low" || sortOption === "fees_low_to_high";
 
-    const filters: any = { status: "active" };
+    const filters: any = {
+      status: "active",
+      settings: { path: ["isListed"], equals: true },
+    };
 
     if (universityId) {
       filters.universityId = universityId as string;
@@ -262,6 +287,10 @@ export class PublicCollegeController {
 
     if (district) {
       filters.district = { equals: district, mode: "insensitive" };
+    }
+
+    if (city) {
+      filters.city = { equals: city, mode: "insensitive" };
     }
 
     if (streamId || disciplineId || studyLevelId || programTypeId) {
@@ -378,9 +407,27 @@ export class PublicCollegeController {
         .map(({ feeStructures: _feeStructures, ...college }) => college);
     }
 
+    const studentId = requestingStudentId(req);
+    const wishlistedIds = studentId
+      ? await WishlistService.getWishlistedCollegeIds(
+          studentId,
+          colleges.map((college) => college.id),
+        )
+      : new Set<string>();
+
+    const collegesWithWishlist = colleges.map((college) => ({
+      ...college,
+      isWishlisted: wishlistedIds.has(college.id),
+    }));
+
     return res
       .status(200)
-      .json(ApiResponse.success("Colleges fetched successfully", colleges));
+      .json(
+        ApiResponse.success(
+          "Colleges fetched successfully",
+          collegesWithWishlist,
+        ),
+      );
   }
 
   static async getCollegeById(req: Request, res: Response) {
@@ -395,12 +442,17 @@ export class PublicCollegeController {
       throw new NotFoundError("College not found");
     }
 
+    const studentId = requestingStudentId(req);
+    const isWishlisted = studentId
+      ? await WishlistService.isWishlisted(studentId, college.id)
+      : false;
+
     return res
       .status(200)
       .json(
         ApiResponse.success(
           "College fetched successfully",
-          buildPublicProfileResponse(college),
+          buildPublicProfileResponse(college, isWishlisted),
         ),
       );
   }
@@ -426,13 +478,13 @@ export class PublicCollegeController {
       sectionIdentifier,
     );
 
+    const overlayFn = SECTION_DYNAMIC_OVERLAYS[sectionIdentifier];
     // institutions_across_world is always-live (computed from institution
     // group membership) — like `commute` on the college-admin read path, it
     // exists even if the college never saved anything for this section.
-    const isInstitutionsAcrossWorld =
-      sectionIdentifier === "institutions_across_world";
+    const isAlwaysLiveOnly = sectionIdentifier === "institutions_across_world";
 
-    if (!matchedSection && !isInstitutionsAcrossWorld) {
+    if (!matchedSection && !isAlwaysLiveOnly) {
       throw new NotFoundError("Section not found");
     }
 
@@ -447,14 +499,11 @@ export class PublicCollegeController {
 
     let sectionData: unknown = matchedSection?.section;
 
-    if (isInstitutionsAcrossWorld) {
-      const dynamicSection =
-        await CollegeRegistrationService.buildDynamicInstitutionsSection(
-          collegeId,
-        );
+    if (overlayFn) {
+      const overlayData = await overlayFn(collegeId);
       sectionData = {
         ...(isRecord(sectionData) ? sectionData : {}),
-        ...dynamicSection,
+        ...overlayData,
       };
     }
 
@@ -482,12 +531,17 @@ export class PublicCollegeController {
       throw new NotFoundError("College not found");
     }
 
+    const studentId = requestingStudentId(req);
+    const isWishlisted = studentId
+      ? await WishlistService.isWishlisted(studentId, college.id)
+      : false;
+
     return res
       .status(200)
       .json(
         ApiResponse.success(
           "College fetched successfully",
-          buildPublicProfileResponse(college),
+          buildPublicProfileResponse(college, isWishlisted),
         ),
       );
   }
@@ -532,5 +586,68 @@ export class PublicCollegeController {
     return res
       .status(200)
       .json(ApiResponse.success("Courses fetched successfully", mappedCourses));
+  }
+
+  static async listCoursesMinimal(req: Request, res: Response) {
+    const { college_id } = publicCollegeSchemas.coursesMinimalQuery.parse(
+      req.query,
+    );
+
+    const courses = college_id
+      ? await CollegeRegistrationService.listCoursesMinimal(college_id)
+      : [];
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Courses fetched successfully", courses));
+  }
+
+  static async getCollegeScholarships(req: Request, res: Response) {
+    const slug = normalizeStringParam(req.params.slug);
+
+    const scholarships =
+      await PublicCollegeExtrasQuery.getScholarshipsBySlug(slug);
+
+    if (scholarships === null) {
+      throw new NotFoundError("College not found");
+    }
+
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Scholarships fetched successfully", scholarships),
+      );
+  }
+
+  static async getCollegeGallery(req: Request, res: Response) {
+    const slug = normalizeStringParam(req.params.slug);
+
+    const gallery = await PublicCollegeExtrasQuery.getGalleryBySlug(slug);
+
+    if (gallery === null) {
+      throw new NotFoundError("College not found");
+    }
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Gallery fetched successfully", gallery));
+  }
+
+  static async getCollegeReviews(req: Request, res: Response) {
+    const slug = normalizeStringParam(req.params.slug);
+    const { limit } = publicCollegeSchemas.reviewsQuery.parse(req.query);
+
+    const reviews = await PublicCollegeExtrasQuery.getReviewsBySlug(
+      slug,
+      limit,
+    );
+
+    if (reviews === null) {
+      throw new NotFoundError("College not found");
+    }
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Reviews fetched successfully", reviews));
   }
 }

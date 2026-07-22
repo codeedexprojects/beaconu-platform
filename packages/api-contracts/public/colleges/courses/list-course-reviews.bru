@@ -1,0 +1,54 @@
+meta {
+  name: List Course Reviews
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/reviews?page=1&per_page=3
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  per_page: 3
+}
+
+docs {
+  Returns a paginated list of reviews for a given course.
+
+  Path params:
+  - collegeSlug: slug of the college (e.g. al-jamia-arts-and-science-college-ajas)
+  - courseId: course identifier (e.g. CRS-2)
+
+  Query params:
+  - page: page number (default: 1)
+  - per_page: items per page, max 50 (default: 10)
+
+  Response shape:
+  {
+    "success": true,
+    "message": "Reviews fetched successfully",
+    "data": {
+      "reviews": [
+        {
+          "id": "review_001",
+          "reviewer_name": "Priya Nair",
+          "reviewer_avatar": "https://...",
+          "date": "2025-10-10",
+          "rating": 5,
+          "comment": "Great infrastructure..."
+        }
+      ],
+      "pagination": {
+        "current_page": 1,
+        "per_page": 3,
+        "total_items": 2909,
+        "total_pages": 970,
+        "has_next_page": true,
+        "has_previous_page": false
+      }
+    }
+  }
+}

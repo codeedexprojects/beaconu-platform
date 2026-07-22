@@ -1,0 +1,32 @@
+meta {
+  name: List Course Quota Seats
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/application-forms/{{admissionCycleId}}/courses/{{courseId}}/quotas
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("courseQuotaSeatId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists this course's quota+seat configuration within this application form.
+  Each row is either exclusive to this course (its own totalSeats/openSeats)
+  or pooled — shared with other courses via a seat pool (isPooled: true,
+  totalSeats/openSeats resolved from the pool). Soft-detached rows are
+  excluded.
+}

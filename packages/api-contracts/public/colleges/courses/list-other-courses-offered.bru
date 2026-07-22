@@ -1,0 +1,56 @@
+meta {
+  name: List Other Courses Offered
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/courses/{{courseId}}/other-courses-offered?page=1&per_page=10
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  per_page: 10
+}
+
+docs {
+  Paginated + searchable list of other courses offered by the same college
+  (excludes the current course), grouped by study level. This is the full
+  listing endpoint — the other_courses_offered tab on Get Course Tab returns
+  only the first 10 courses as an inline preview.
+
+  Path params:
+  - collegeSlug: slug of the college (e.g. al-jamia-arts-and-science-college-ajas)
+  - courseId: course identifier to exclude from the list (e.g. CRS-2)
+
+  Query params:
+  - page: page number (default: 1)
+  - per_page: items per page, max 50 (default: 10)
+  - search: filter by course name, case-insensitive (optional)
+
+  Response shape:
+  {
+    "success": true,
+    "message": "Other courses offered fetched",
+    "data": {
+      "list": [
+        {
+          "studyLevel": { "id": "SVL-1", "name": "Short term", "slug": "short-term" },
+          "courses": [
+            { "id": "CRS-1", "name": "Bachelor of Computer Application (BCA)", "duration": "3 Years", "fee": "INR 45,000" }
+          ]
+        }
+      ],
+      "pagination": {
+        "current_page": 1,
+        "per_page": 10,
+        "total_items": 2,
+        "total_pages": 1,
+        "has_next_page": false,
+        "has_previous_page": false
+      }
+    }
+  }
+}

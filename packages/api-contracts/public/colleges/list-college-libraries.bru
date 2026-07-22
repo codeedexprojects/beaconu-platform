@@ -1,0 +1,16 @@
+meta {
+  name: List College Libraries
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/by-slug/{{collegeSlug}}/libraries
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the active libraries for a college (id, type, departmentId, name,
+  stats, availableResources, libraryHours, facilities). No auth required.
+}
