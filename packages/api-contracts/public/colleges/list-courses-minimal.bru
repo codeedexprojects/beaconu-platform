@@ -1,0 +1,21 @@
+meta {
+  name: List Courses Minimal (Public)
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/courses/minimal
+  body: none
+  auth: none
+}
+
+query {
+  college_id: {{collegeId}}
+}
+
+docs {
+  Returns a minimal course list (id, name, code) for the given active college.
+  No auth required. college_id is optional — if omitted, returns an empty
+  array (there is no implicit college scope on a public route).
+}

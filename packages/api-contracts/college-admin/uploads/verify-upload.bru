@@ -1,0 +1,47 @@
+meta {
+  name: Verify Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/uploads/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{uploadKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.permanentUrl) {
+      bru.setEnvVar("permanentUrl", data.data.permanentUrl);
+    }
+  }
+}
+
+docs {
+  Confirms the presigned PUT actually landed in S3 (checks object
+  existence) and returns a permanent URL. Requires `profile.edit` or
+  `academics.manage` permission; sub_admin role is denied. Can only verify
+  keys under the caller's own `college/{collegeId}/` prefix.
+
+  Response: { verified, permanentUrl, viewUrl }
+
+  Run this after PUTting the file to `uploadUrl` from the presign response,
+  and before using `permanentUrl` as `file_url` in a feature's create
+  endpoint (e.g. POST /college-admin/media-kit).
+}

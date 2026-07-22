@@ -588,6 +588,20 @@ export class PublicCollegeController {
       .json(ApiResponse.success("Courses fetched successfully", mappedCourses));
   }
 
+  static async listCoursesMinimal(req: Request, res: Response) {
+    const { college_id } = publicCollegeSchemas.coursesMinimalQuery.parse(
+      req.query,
+    );
+
+    const courses = college_id
+      ? await CollegeRegistrationService.listCoursesMinimal(college_id)
+      : [];
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Courses fetched successfully", courses));
+  }
+
   static async getCollegeScholarships(req: Request, res: Response) {
     const slug = normalizeStringParam(req.params.slug);
 
