@@ -42,16 +42,29 @@ export class ApplicationPaymentService {
       );
     if (!application) throw new NotFoundError("Application");
     if (application.feePaymentStatus === "paid") {
-      throw new ConflictError(
-        "This application's primary course fee has already been paid",
-      );
+      throw new ConflictError("This application's fee has already been paid");
     }
 
-    // Created lazily on first initiate — keeps this module decoupled from
-    // admissions' Start Application flow (see repository doc comment).
+    // A pending transaction means courses are already locked — reuse it
+    // rather than creating a duplicate order for what must be the same
+    // amount (nothing can have changed while locked).
+    const pending =
+      await ApplicationPaymentRepository.findPendingTransaction(applicationId);
+    if (pending) return toDto(pending);
+
+    // Ledger amount tracks the application's current running total across
+    // every course, not just the primary's own fee — refreshed here in
+    // case an earlier attempt failed, courses changed, and the total is
+    // now different from what was ledgered before.
+    const totalAmount = application.totalApplicationFee.toNumber();
     let ledgerEntry =
-      await ApplicationPaymentRepository.findPrimaryLedgerEntry(applicationId);
-    if (!ledgerEntry) {
+      await ApplicationPaymentRepository.findLedgerEntry(applicationId);
+    if (ledgerEntry) {
+      ledgerEntry = await ApplicationPaymentRepository.updateLedgerAmount(
+        ledgerEntry.id,
+        totalAmount,
+      );
+    } else {
       const primaryCourse =
         await ApplicationPaymentRepository.findPrimaryApplicationCourse(
           applicationId,
@@ -61,7 +74,7 @@ export class ApplicationPaymentService {
         studentId,
         collegeId: application.collegeId,
         applicationCourseId: primaryCourse.id,
-        amount: primaryCourse.applicationFee.toNumber(),
+        amount: totalAmount,
       });
     }
 

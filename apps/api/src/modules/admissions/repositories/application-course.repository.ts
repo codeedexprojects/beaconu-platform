@@ -98,6 +98,26 @@ export class ApplicationCourseRepository {
     });
   }
 
+  /** Courses/quota are freely editable while building up the application,
+   * and lock the instant a payment order exists — even before it's
+   * confirmed, so the total can't shift out from under a pending order.
+   * "pending" or "completed" locks; "failed" doesn't, so a failed attempt
+   * lets the student go back and adjust courses before retrying. Reads the
+   * Transaction table directly (shared table, not the payments module's
+   * repository/service) — same one-directional pattern used by the
+   * payments module reading ApplicationCourse directly, avoiding a
+   * circular import between the two modules. */
+  static async isPaymentLocked(applicationId: string) {
+    const txn = await prisma.transaction.findFirst({
+      where: {
+        status: { in: ["pending", "completed"] },
+        ledgerEntry: { applicationCourse: { applicationId } },
+      },
+      select: { id: true },
+    });
+    return !!txn;
+  }
+
   static async findExistingSelection(applicationId: string, courseId: string) {
     return prisma.applicationCourse.findUnique({
       where: { uq_application_course: { applicationId, courseId } },
@@ -162,6 +182,17 @@ export class ApplicationCourseRepository {
       where: { id },
       data: { status: "withdrawn", statusUpdatedAt: new Date() },
       select: { id: true },
+    });
+  }
+
+  static async updateQuota(
+    id: string,
+    data: { applicationFee: number; courseQuotaSeatId: string | null },
+  ) {
+    return prisma.applicationCourse.update({
+      where: { id },
+      data,
+      select: APPLICATION_COURSE_SELECT,
     });
   }
 

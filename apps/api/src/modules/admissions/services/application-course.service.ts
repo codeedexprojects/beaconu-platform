@@ -33,15 +33,18 @@ export function applyFeeAdjustment(
   return Math.max(0, adjusted);
 }
 
-/** requirePayment defaults to true for every normal call site (adding more
- * courses, filling details, documents, declaration). The one exception is
- * ApplicationService.start() creating the PRIMARY course immediately after
- * the draft Application itself is created — payment can't exist yet at
- * that point, so it passes requirePayment: false. */
+/** Courses/quota are freely editable while the student is still building
+ * up their application (primary + any extra courses, each with a
+ * preference order) — the whole set gets paid for together in one order.
+ * requireNotLocked defaults to true for every course-mutating call
+ * (add, withdraw, change quota); it locks the instant a payment order
+ * exists (pending or completed — see isPaymentLocked's doc comment), even
+ * before that order is confirmed, so the total can't shift out from under
+ * a payment already in flight. Read-only calls (list) pass false. */
 async function assertOwnDraftApplication(
   applicationId: string,
   studentId: string,
-  requirePayment = true,
+  requireNotLocked = true,
 ) {
   const application =
     await ApplicationCourseRepository.findApplicationForStudent(
@@ -54,10 +57,14 @@ async function assertOwnDraftApplication(
       "This application has already been submitted and can no longer be edited",
     );
   }
-  if (requirePayment && application.feePaymentStatus !== "paid") {
-    throw new ConflictError(
-      "Complete payment for your primary course before continuing",
-    );
+  if (requireNotLocked) {
+    const locked =
+      await ApplicationCourseRepository.isPaymentLocked(applicationId);
+    if (locked) {
+      throw new ConflictError(
+        "Courses and quotas can no longer be changed once payment is in progress",
+      );
+    }
   }
   return application;
 }
@@ -132,10 +139,12 @@ export class ApplicationCourseService {
     options: { isPrimary?: boolean } = {},
   ) {
     const isPrimary = options.isPrimary ?? false;
+    // A brand-new application (Start Application creating the primary
+    // course) can never already be payment-locked — nothing to check yet
+    // — so this is just the normal gate, no special-casing needed.
     const application = await assertOwnDraftApplication(
       applicationId,
       studentId,
-      !isPrimary,
     );
 
     const cycleCourse =
@@ -231,12 +240,85 @@ export class ApplicationCourseService {
     if (!existing) throw new NotFoundError("Course selection not found");
     if (existing.isPrimary) {
       throw new ConflictError(
-        "The primary course you paid for can't be withdrawn",
+        "Your primary course selection can't be withdrawn",
       );
     }
 
     await ApplicationCourseRepository.withdraw(id);
     await ApplicationCourseService.recalculateTotalFee(applicationId);
+  }
+
+  /** Changes the quota (and recomputes the fee) on a course already added
+   * to the application — including the primary course, which can have its
+   * quota revised even though it can't be withdrawn. Locked the same as
+   * every other course mutation once a payment order exists. */
+  static async changeQuota(
+    applicationId: string,
+    studentId: string,
+    applicationCourseId: string,
+    courseQuotaSeatId: string | null,
+  ) {
+    const application = await assertOwnDraftApplication(
+      applicationId,
+      studentId,
+    );
+
+    const existing = await ApplicationCourseRepository.findByIdForApplication(
+      applicationId,
+      applicationCourseId,
+    );
+    if (!existing || existing.status === "withdrawn") {
+      throw new NotFoundError("Course selection not found");
+    }
+
+    const cycleCourse =
+      await ApplicationCourseRepository.findAdmissionCycleCourse(
+        application.admissionCycleId,
+        existing.courseId,
+      );
+    if (!cycleCourse) throw new NotFoundError("Course");
+    const baseFee = cycleCourse.applicationFee.toNumber();
+
+    let finalFee = baseFee;
+    let resolvedQuotaSeatId: string | null = null;
+
+    if (courseQuotaSeatId) {
+      const seat = await ApplicationCourseRepository.findCourseQuotaSeat(
+        courseQuotaSeatId,
+        cycleCourse.id,
+      );
+      if (!seat) throw new NotFoundError("Quota");
+
+      const effectiveOpenSeats = seat.seatPool
+        ? seat.seatPool.openSeats
+        : seat.openSeats;
+      if (effectiveOpenSeats == null || effectiveOpenSeats <= 0) {
+        throw new ConflictError("No seats available for this quota");
+      }
+
+      const adjustment = await ApplicationCourseRepository.findQuotaAdjustments(
+        existing.courseId,
+        [seat.collegeQuotaId],
+      );
+      finalFee = applyFeeAdjustment(
+        baseFee,
+        adjustment[0]?.appFeeAdjustmentType,
+        adjustment[0]?.appFeeAdjustmentValue,
+      );
+      resolvedQuotaSeatId = seat.id;
+    }
+
+    await ApplicationCourseRepository.updateQuota(applicationCourseId, {
+      applicationFee: finalFee,
+      courseQuotaSeatId: resolvedQuotaSeatId,
+    });
+    await ApplicationCourseService.recalculateTotalFee(applicationId);
+
+    const full = await ApplicationCourseRepository.findByIdForApplication(
+      applicationId,
+      applicationCourseId,
+    );
+    return toDto(full!);
   }
 
   static async recalculateTotalFee(applicationId: string) {

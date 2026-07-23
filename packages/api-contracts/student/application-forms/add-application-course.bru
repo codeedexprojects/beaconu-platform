@@ -35,14 +35,16 @@ script:post-response {
 docs {
   Adds a NON-primary course (optionally with a quota) to the student's own
   draft application — the primary course itself is set once, at Start
-  Application, and can't be re-added here. Requires the application to
-  still be in "draft" status AND its primary course's fee already paid
-  (feePaymentStatus === "paid" — see the payments endpoints; 409
-  otherwise). `course_quota_seat_id` is optional — omit for "no quota,"
-  which charges the course's base application fee. When given, the fee
-  snapshot on the resulting ApplicationCourse row includes the quota's
-  bidirectional fee adjustment, and seat availability is checked (not
-  reserved — seats are never decremented by anything in the student flow;
-  see Submit Application). Recomputes the parent Application's
-  totalApplicationFee.
+  Application, and can't be re-added here. All courses (primary + extras)
+  get selected BEFORE any payment — one order pays for the combined total.
+  Requires the application to still be in "draft" status AND not yet
+  payment-locked (409 otherwise) — locking happens the instant a payment
+  order is created (Initiate Application Payment), even before it's
+  confirmed, not just once fully paid. `course_quota_seat_id` is optional
+  — omit for "no quota," which charges the course's base application fee.
+  When given, the fee snapshot on the resulting ApplicationCourse row
+  includes the quota's bidirectional fee adjustment, and seat availability
+  is checked (not reserved — seats are never decremented by anything in
+  the student flow; see Submit Application). Recomputes the parent
+  Application's totalApplicationFee.
 }

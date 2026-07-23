@@ -2,12 +2,17 @@ import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { NotFoundError } from "@/shared/errors";
 import { AdmissionCycleQuery } from "../queries/admission-cycle.query";
+import { StudentCourseCatalogueQuery } from "../queries/student-course-catalogue.query";
+import { ApplicationPaymentSummaryQuery } from "../queries/application-payment-summary.query";
 import { ApplicationService } from "../services/application.service";
 import { ApplicationCourseService } from "../services/application-course.service";
 import { ApplicationDocumentService } from "../services/application-document.service";
 import { studentAdmissionCycleListQuerySchema } from "../validators/admission-cycle.validator";
 import { startApplicationSchema } from "../validators/application.validator";
-import { addApplicationCourseSchema } from "../validators/application-course.validator";
+import {
+  addApplicationCourseSchema,
+  changeApplicationCourseQuotaSchema,
+} from "../validators/application-course.validator";
 import {
   personalDetailsSchema,
   familyDetailsSchema,
@@ -30,6 +35,16 @@ export class StudentAdmissionCycleController {
     );
     if (!result) throw new NotFoundError("Application form not found");
     return res.json(ApiResponse.success("Application form fetched", result));
+  }
+
+  static async listCourseCatalogue(req: Request, res: Response) {
+    const search =
+      typeof req.query.search === "string" ? req.query.search : undefined;
+    const result = await StudentCourseCatalogueQuery.listForCycle(
+      req.params.id as string,
+      search,
+    );
+    return res.json(ApiResponse.success("Courses fetched", result));
   }
 }
 
@@ -99,6 +114,32 @@ export class StudentApplicationController {
       req.params.appCourseId as string,
     );
     return res.json(ApiResponse.success("Course withdrawn", null));
+  }
+
+  static async changeCourseQuota(req: Request, res: Response) {
+    const body = changeApplicationCourseQuotaSchema.parse(req.body);
+    const application = await ApplicationService.getMine(
+      req.userId as string,
+      req.params.id as string,
+    );
+    const result = await ApplicationCourseService.changeQuota(
+      application.id,
+      req.userId as string,
+      req.params.appCourseId as string,
+      body.course_quota_seat_id ?? null,
+    );
+    return res.json(ApiResponse.success("Quota updated", result));
+  }
+
+  static async getPaymentSummary(req: Request, res: Response) {
+    const application = await ApplicationService.getMine(
+      req.userId as string,
+      req.params.id as string,
+    );
+    const result = await ApplicationPaymentSummaryQuery.getForApplication(
+      application.id,
+    );
+    return res.json(ApiResponse.success("Payment summary fetched", result));
   }
 
   static async updatePersonalDetails(req: Request, res: Response) {
