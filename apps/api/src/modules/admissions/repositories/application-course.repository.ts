@@ -263,6 +263,24 @@ export class ApplicationCourseRepository {
     });
   }
 
+  static async findByIdWithStatus(id: string) {
+    return prisma.applicationCourse.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    });
+  }
+
+  static async markAssessmentCompleted(
+    tx: Prisma.TransactionClient,
+    id: string,
+  ) {
+    return tx.applicationCourse.update({
+      where: { id },
+      data: { status: "assessment_completed", statusUpdatedAt: new Date() },
+      select: { id: true },
+    });
+  }
+
   static async createStatusLog(
     tx: Prisma.TransactionClient,
     data: {

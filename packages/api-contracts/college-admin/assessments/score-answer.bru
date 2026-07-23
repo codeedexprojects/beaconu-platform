@@ -1,0 +1,31 @@
+meta {
+  name: Score Answer
+  type: http
+  seq: 29
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/answers/{{studentAnswerId}}/score
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "manual_score": 4,
+    "remarks": "Well-reasoned response, minor clarity issues"
+  }
+}
+
+docs {
+  Manually scores a non-autoscorable answer (e.g. scenario-writing,
+  likert-scale). Sets manual_score + final_score, evaluation_status ->
+  "evaluated". The attempt must currently be "under_evaluation" — publishing
+  (PATCH /attempts/:id/publish) requires every answer to be either
+  auto_scored or evaluated first.
+}

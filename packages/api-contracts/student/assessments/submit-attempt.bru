@@ -1,0 +1,23 @@
+meta {
+  name: Submit Attempt
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/submit
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Student-initiated early submit: "in_progress" -> "completed" ->
+  immediately "under_evaluation" (every attempt needs an evaluator
+  review/publish step, even if fully auto-scored). Same terminal
+  transition the auto-submit job uses for the graceful (disconnect/window
+  expiry) path.
+}

@@ -1,0 +1,24 @@
+meta {
+  name: List Evaluation Queue
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/evaluation-queue
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Attempts currently in "under_evaluation" or "evaluated" for this college,
+  with per-attempt counts of pending/auto_scored/evaluated answers so the
+  evaluator can see at a glance which attempts still need manual scoring
+  before they can be published.
+
+  Optional query: status=under_evaluation,evaluated (comma-separated).
+}

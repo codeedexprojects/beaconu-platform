@@ -1,0 +1,25 @@
+meta {
+  name: Publish Result
+  type: http
+  seq: 30
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/attempts/{{assessmentAttemptId}}/publish
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Publishes a fully-evaluated attempt: computes total/max/section scores
+  (weighted by TemplateSection.section_weightage when set on every section
+  of the template), status "under_evaluation" -> "evaluated" ->
+  "result_published", and advances the linked ApplicationCourse.status to
+  "assessment_completed". Fails with a 409 ConflictError if any answer is
+  still evaluation_status "pending" (score it first via Score Answer), or
+  if the attempt isn't currently "under_evaluation".
+}

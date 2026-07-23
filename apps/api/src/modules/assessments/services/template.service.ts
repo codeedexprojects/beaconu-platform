@@ -57,8 +57,6 @@ export class TemplateService {
     return TemplateRepository.create(collegeId, {
       name: data.name,
       templateType: data.template_type ?? "admission",
-      totalMarks: data.total_marks,
-      totalDurationMins: data.total_duration_mins,
       negativeMarkingMode: data.negative_marking_mode ?? "none",
       instructions: data.instructions,
       sections: data.sections,
@@ -87,8 +85,6 @@ export class TemplateService {
     return TemplateRepository.update(id, {
       name: data.name,
       templateType: data.template_type,
-      totalMarks: data.total_marks,
-      totalDurationMins: data.total_duration_mins,
       negativeMarkingMode: data.negative_marking_mode as
         | NegativeMarkingMode
         | undefined,

@@ -1,0 +1,30 @@
+meta {
+  name: Record Anti-Cheat Event
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/anti-cheat-events
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "type": "tab_hidden"
+  }
+}
+
+docs {
+  Client fires this on visibilitychange (type: "tab_hidden" /
+  "tab_visible"). The auto-submit job checks every minute: if the latest
+  logged event is "tab_hidden" for more than 10 seconds with no later
+  "tab_visible", the attempt is terminated (disqualified). Also bumps
+  last_activity_at, which separately backs the 2-minute disconnect rule.
+}

@@ -42,6 +42,7 @@ export const createQuestionSchema = z.object({
   answer_key: answerKeySchema.optional(),
   marks: z.coerce.number().positive(),
   negative_marks: z.coerce.number().min(0).optional(),
+  time_limit_secs: z.coerce.number().int().positive().default(60),
   course_ids: z.array(z.string().trim().min(1)).optional(),
 });
 
@@ -53,6 +54,7 @@ export const updateQuestionSchema = z.object({
   answer_key: answerKeySchema.optional(),
   marks: z.coerce.number().positive().optional(),
   negative_marks: z.coerce.number().min(0).optional(),
+  time_limit_secs: z.coerce.number().int().positive().optional(),
   course_ids: z.array(z.string().trim().min(1)).optional(),
 });
 
@@ -86,8 +88,6 @@ const templateSectionSchema = z.object({
 export const createTemplateSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(255),
   template_type: z.string().trim().max(20).optional(),
-  total_marks: z.coerce.number().positive(),
-  total_duration_mins: z.coerce.number().int().positive(),
   negative_marking_mode: z.enum(["none", "fixed", "proportional"]).optional(),
   instructions: z.array(templateInstructionSchema).optional(),
   sections: z.array(templateSectionSchema).min(1),
@@ -96,8 +96,6 @@ export const createTemplateSchema = z.object({
 export const updateTemplateSchema = z.object({
   name: z.string().trim().min(1).max(255).optional(),
   template_type: z.string().trim().max(20).optional(),
-  total_marks: z.coerce.number().positive().optional(),
-  total_duration_mins: z.coerce.number().int().positive().optional(),
   negative_marking_mode: z.enum(["none", "fixed", "proportional"]).optional(),
   instructions: z.array(templateInstructionSchema).optional(),
   sections: z.array(templateSectionSchema).min(1).optional(),
@@ -113,6 +111,7 @@ const manualQuestionSelectionSchema = z.object({
 
 export const generatePaperSchema = z.object({
   generation_type: z.enum(["auto", "manual"]),
+  paper_type: z.enum(["trial", "normal"]).default("normal"),
   name: z.string().trim().min(1).max(255).optional(),
   course_id: z.string().trim().min(1).optional(),
   manual_selections: z.array(manualQuestionSelectionSchema).optional(),
@@ -162,3 +161,70 @@ export const toggleSlotSchema = z.object({
 });
 
 export type ToggleSlotBody = z.infer<typeof toggleSlotSchema>;
+
+const answerResponseSchema = z.object({
+  selectedOptionIds: z.array(z.string()).optional(),
+  order: z.array(z.string()).optional(),
+  blankAnswers: z
+    .array(z.object({ blankId: z.string(), optionId: z.string() }))
+    .optional(),
+  text: z.string().optional(),
+});
+
+export const startAttemptSchema = z.object({
+  application_course_id: z.string().trim().min(1),
+  slot_id: z.string().trim().min(1),
+});
+
+export type StartAttemptBody = z.infer<typeof startAttemptSchema>;
+
+export const submitAnswerSchema = z
+  .object({
+    // Optional — a student can flag a question "for review" without
+    // having answered it yet.
+    response: answerResponseSchema.optional(),
+    is_flagged: z.boolean().optional(),
+    time_spent_secs: z.number().int().nonnegative().optional(),
+  })
+  .refine(
+    (data) =>
+      data.response !== undefined ||
+      data.is_flagged !== undefined ||
+      data.time_spent_secs !== undefined,
+    {
+      message:
+        "Provide at least one of response, is_flagged, or time_spent_secs",
+    },
+  );
+
+export type SubmitAnswerBody = z.infer<typeof submitAnswerSchema>;
+
+export const antiCheatEventSchema = z.object({
+  type: z.enum(["tab_hidden", "tab_visible"]),
+});
+
+export type AntiCheatEventBody = z.infer<typeof antiCheatEventSchema>;
+
+export const scoreOverrideSchema = z.object({
+  manual_score: z.number(),
+  remarks: z.string().trim().max(1000).optional(),
+});
+
+export type ScoreOverrideBody = z.infer<typeof scoreOverrideSchema>;
+
+export const submitTrialSchema = z.object({
+  answers: z.array(
+    z.object({
+      question_id: z.string().trim().min(1),
+      response: answerResponseSchema,
+    }),
+  ),
+});
+
+export type SubmitTrialBody = z.infer<typeof submitTrialSchema>;
+
+export const evaluationQueueQuerySchema = z.object({
+  status: z.string().optional(),
+});
+
+export type EvaluationQueueQuery = z.infer<typeof evaluationQueueQuerySchema>;

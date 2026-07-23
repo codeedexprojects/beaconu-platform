@@ -13,6 +13,7 @@ export class PaperRepository {
       paperCode: string;
       name?: string;
       generationType: string;
+      paperType: string;
       generatedBy?: string;
       questions: PaperQuestionCreateData[];
     },
@@ -24,6 +25,7 @@ export class PaperRepository {
           paperCode: data.paperCode,
           name: data.name ?? null,
           generationType: data.generationType,
+          paperType: data.paperType,
           status: "draft",
           generatedBy: data.generatedBy ?? null,
         },
@@ -53,7 +55,7 @@ export class PaperRepository {
         template: { select: { collegeId: true } },
         paperQuestions: {
           include: {
-            question: true,
+            question: { include: { questionType: true } },
             section: { select: { name: true } },
           },
           orderBy: { questionOrder: "asc" },
@@ -69,7 +71,7 @@ export class PaperRepository {
         template: { select: { collegeId: true } },
         paperQuestions: {
           include: {
-            question: true,
+            question: { include: { questionType: true } },
             section: { select: { name: true } },
           },
           orderBy: { questionOrder: "asc" },
@@ -81,8 +83,21 @@ export class PaperRepository {
 
   static async approve(id: string, templateId: string, approvedBy: string) {
     return prisma.$transaction(async (tx) => {
+      const target = await tx.assessmentPaper.findUniqueOrThrow({
+        where: { id },
+        select: { paperType: true },
+      });
+
+      // Only one active paper per type — approving a trial paper only
+      // demotes the other approved trial paper, leaving an approved normal
+      // paper (and vice versa) untouched.
       await tx.assessmentPaper.updateMany({
-        where: { templateId, status: "approved", id: { not: id } },
+        where: {
+          templateId,
+          status: "approved",
+          paperType: target.paperType,
+          id: { not: id },
+        },
         data: { status: "draft", approvedBy: null, approvedAt: null },
       });
 
@@ -90,6 +105,25 @@ export class PaperRepository {
         where: { id },
         data: { status: "approved", approvedBy, approvedAt: new Date() },
       });
+    });
+  }
+
+  static async findActiveByTemplateAndType(
+    templateId: string,
+    paperType: string,
+  ) {
+    return prisma.assessmentPaper.findFirst({
+      where: { templateId, paperType, status: "approved" },
+      include: {
+        template: { select: { collegeId: true } },
+        paperQuestions: {
+          include: {
+            question: { include: { questionType: true } },
+            section: { select: { name: true } },
+          },
+          orderBy: { questionOrder: "asc" },
+        },
+      },
     });
   }
 

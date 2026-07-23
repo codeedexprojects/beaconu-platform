@@ -8,8 +8,6 @@ import type {
 export interface TemplateCreateData {
   name: string;
   templateType: string;
-  totalMarks: number;
-  totalDurationMins: number;
   negativeMarkingMode: NegativeMarkingMode;
   instructions?: TemplateInstructionItem[];
   sections: TemplateSectionInput[];
@@ -29,8 +27,6 @@ export class TemplateRepository {
           name: data.name,
           templateType: data.templateType,
           totalQuestions,
-          totalMarks: data.totalMarks,
-          totalDurationMins: data.totalDurationMins,
           status: "draft",
           instructions: (data.instructions ??
             []) as unknown as Prisma.InputJsonValue,
@@ -59,7 +55,14 @@ export class TemplateRepository {
       include: {
         templateSections: {
           include: {
-            section: { select: { id: true, name: true, isCoreSection: true } },
+            section: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                isCoreSection: true,
+              },
+            },
           },
           orderBy: { sortOrder: "asc" },
         },
@@ -73,7 +76,14 @@ export class TemplateRepository {
       include: {
         templateSections: {
           include: {
-            section: { select: { id: true, name: true, isCoreSection: true } },
+            section: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                isCoreSection: true,
+              },
+            },
           },
           orderBy: { sortOrder: "asc" },
         },
@@ -87,8 +97,6 @@ export class TemplateRepository {
     data: Partial<{
       name: string;
       templateType: string;
-      totalMarks: number;
-      totalDurationMins: number;
       negativeMarkingMode: NegativeMarkingMode;
       instructions: TemplateInstructionItem[];
       sections: TemplateSectionInput[];
@@ -99,10 +107,6 @@ export class TemplateRepository {
       if (data.name !== undefined) updateData.name = data.name;
       if (data.templateType !== undefined)
         updateData.templateType = data.templateType;
-      if (data.totalMarks !== undefined)
-        updateData.totalMarks = data.totalMarks;
-      if (data.totalDurationMins !== undefined)
-        updateData.totalDurationMins = data.totalDurationMins;
       if (data.instructions !== undefined)
         updateData.instructions =
           data.instructions as unknown as Prisma.InputJsonValue;

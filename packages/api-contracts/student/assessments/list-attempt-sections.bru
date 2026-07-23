@@ -1,0 +1,23 @@
+meta {
+  name: List Attempt Sections
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/sections
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Assessment (section list) screen: one row per template section — name,
+  description, question_count, time_limit_mins (informational pacing
+  only, not a separately-enforced clock), answered_count, and a derived
+  status: not_started (0 answered) / in_progress (some) / completed
+  (answered_count === question_count).
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Submit Trial
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/assessments/templates/{{assessmentTemplateId}}/trial/submit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "answers": [
+      { "question_id": "QST-1", "response": { "selectedOptionIds": ["opt-1"] } }
+    ]
+  }
+}
+
+docs {
+  Scores the submitted answers against the active trial paper's answer
+  keys server-side and returns the result inline (totalScore, maxScore,
+  sectionScores, perQuestion). Nothing is persisted — retry as many times
+  as you like. Only autoScorable questions contribute to the score;
+  non-autoscorable questions (e.g. scenario-writing) come back with
+  scorable: false and autoScore: null.
+}

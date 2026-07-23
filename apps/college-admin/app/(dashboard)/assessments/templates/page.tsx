@@ -59,19 +59,12 @@ import type {
 
 const templateSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  total_marks: z.coerce.number().positive("Total marks must be greater than 0"),
-  total_duration_mins: z.coerce
-    .number()
-    .int()
-    .positive("Duration must be greater than 0"),
   negative_marking_mode: z.enum(["none", "fixed", "proportional"]),
 });
 type TemplateFormValues = z.infer<typeof templateSchema>;
 
 const EMPTY_VALUES: TemplateFormValues = {
   name: "",
-  total_marks: 100,
-  total_duration_mins: 90,
   negative_marking_mode: "none",
 };
 
@@ -132,8 +125,6 @@ export default function AssessmentTemplatesPage() {
     setEditing(item);
     form.reset({
       name: item.name,
-      total_marks: item.totalMarks,
-      total_duration_mins: item.totalDurationMins,
       negative_marking_mode: item.negativeMarkingMode,
     });
     setRows(
@@ -318,56 +309,26 @@ export default function AssessmentTemplatesPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="total_marks">Total Marks</Label>
-                  <Input
-                    id="total_marks"
-                    type="number"
-                    {...form.register("total_marks")}
-                  />
-                  {form.formState.errors.total_marks && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.total_marks.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="total_duration_mins">Duration (mins)</Label>
-                  <Input
-                    id="total_duration_mins"
-                    type="number"
-                    {...form.register("total_duration_mins")}
-                  />
-                  {form.formState.errors.total_duration_mins && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.total_duration_mins.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="negative_marking_mode">
-                    Negative Marking
-                  </Label>
-                  <Select
-                    value={form.watch("negative_marking_mode")}
-                    onValueChange={(v) =>
-                      form.setValue(
-                        "negative_marking_mode",
-                        v as NegativeMarkingMode,
-                      )
-                    }
-                  >
-                    <SelectTrigger id="negative_marking_mode">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="fixed">Fixed</SelectItem>
-                      <SelectItem value="proportional">Proportional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="negative_marking_mode">Negative Marking</Label>
+                <Select
+                  value={form.watch("negative_marking_mode")}
+                  onValueChange={(v) =>
+                    form.setValue(
+                      "negative_marking_mode",
+                      v as NegativeMarkingMode,
+                    )
+                  }
+                >
+                  <SelectTrigger id="negative_marking_mode">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="fixed">Fixed</SelectItem>
+                    <SelectItem value="proportional">Proportional</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
@@ -583,12 +544,6 @@ export default function AssessmentTemplatesPage() {
                   Questions
                 </TableHead>
                 <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
-                  Marks
-                </TableHead>
-                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
-                  Duration
-                </TableHead>
-                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
                   Status
                 </TableHead>
                 <TableHead className="w-[180px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
@@ -627,12 +582,6 @@ export default function AssessmentTemplatesPage() {
                     </TableCell>
                     <TableCell className="py-4 text-sm text-muted-foreground">
                       {t.totalQuestions}
-                    </TableCell>
-                    <TableCell className="py-4 text-sm text-muted-foreground">
-                      {t.totalMarks}
-                    </TableCell>
-                    <TableCell className="py-4 text-sm text-muted-foreground">
-                      {t.totalDurationMins} mins
                     </TableCell>
                     <TableCell className="py-4">
                       <Badge variant={STATUS_VARIANT[t.status]}>

@@ -1,6 +1,8 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { SlotRepository } from "../repositories/slot.repository";
 import { TemplateRepository } from "../repositories/template.repository";
+import { PaperRepository } from "../repositories/paper.repository";
+import { computePaperDurationSecs } from "../lib/duration";
 import type {
   CreateSlotBody,
   UpdateSlotBody,
@@ -15,9 +17,29 @@ export class SlotService {
 
   private static computeFixedWindowEnd(
     windowStart: Date,
-    totalDurationMins: number,
+    durationSecs: number,
   ): Date {
-    return new Date(windowStart.getTime() + totalDurationMins * 60_000);
+    return new Date(windowStart.getTime() + durationSecs * 1000);
+  }
+
+  /** A fixed slot's end time must match how long the assessment actually
+   * runs — the sum of the approved normal paper's questions' time_limit_secs
+   * — not an admin-declared duration (removed; see docs/context.md's rule
+   * that total assessment time is the sum of all question times). */
+  private static async resolveFixedWindowEnd(templateId: string, start: Date) {
+    const paper = await PaperRepository.findActiveByTemplateAndType(
+      templateId,
+      "normal",
+    );
+    if (!paper) {
+      throw new ConflictError(
+        "Approve a normal paper for this template before creating a fixed slot",
+      );
+    }
+    return this.computeFixedWindowEnd(
+      start,
+      computePaperDurationSecs(paper.paperQuestions),
+    );
   }
 
   static async create(
@@ -35,10 +57,7 @@ export class SlotService {
 
     const windowEnd =
       data.slot_type === "fixed"
-        ? this.computeFixedWindowEnd(
-            data.window_start,
-            template.totalDurationMins,
-          )
+        ? await this.resolveFixedWindowEnd(templateId, data.window_start)
         : data.window_end!;
 
     this.validateWindow(data.window_start, windowEnd);
@@ -72,8 +91,7 @@ export class SlotService {
       slotType === "fixed" &&
       (data.window_start !== undefined || data.slot_type === "fixed")
     ) {
-      const template = await TemplateRepository.findById(existing.templateId);
-      end = this.computeFixedWindowEnd(start, template!.totalDurationMins);
+      end = await this.resolveFixedWindowEnd(existing.templateId, start);
     }
 
     if (

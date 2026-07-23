@@ -1,0 +1,21 @@
+meta {
+  name: Get My Attempt
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Fetches the authenticated student's own attempt — 404 if it belongs to
+  someone else. Useful for resuming an in-progress attempt or checking
+  status/scores after result_published.
+}

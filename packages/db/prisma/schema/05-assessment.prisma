@@ -65,6 +65,7 @@ model Question {
   answerKey        Json?    @map("answer_key")
   marks            Decimal  @default(1.0) @db.Decimal(5, 2)
   negativeMarks    Decimal  @default(0) @map("negative_marks") @db.Decimal(5, 2)
+  timeLimitSecs    Int      @default(60) @map("time_limit_secs")
   version          Int      @default(1)
   parentQuestionId String?  @map("parent_question_id")
   status           String   @default("active") @db.VarChar(20)
@@ -111,8 +112,6 @@ model AssessmentTemplate {
   name              String   @db.VarChar(255)
   templateType      String   @default("admission") @map("template_type") @db.VarChar(20)
   totalQuestions    Int      @map("total_questions")
-  totalMarks        Decimal  @map("total_marks") @db.Decimal(7, 2)
-  totalDurationMins Int      @map("total_duration_mins")
   status            String   @default("draft") @db.VarChar(20)
   instructions      Json     @default("[]")
   settings          Json     @default("{}")
@@ -156,6 +155,7 @@ model AssessmentPaper {
   paperCode      String    @unique @map("paper_code") @db.VarChar(30)
   name           String?   @db.VarChar(255)
   generationType String    @map("generation_type") @db.VarChar(10)
+  paperType      String    @default("normal") @map("paper_type") @db.VarChar(10)
   status         String    @default("draft") @db.VarChar(20)
   generatedBy    String?   @map("generated_by")
   approvedBy     String?   @map("approved_by")
@@ -226,6 +226,7 @@ model AssessmentAttempt {
   status              String    @default("not_started") @db.VarChar(20)
   startedAt           DateTime? @map("started_at") @db.Timestamptz
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  lastActivityAt      DateTime? @map("last_activity_at") @db.Timestamptz
   timeSpentSecs       Int?      @map("time_spent_secs")
   totalScore          Decimal?  @map("total_score") @db.Decimal(7, 2)
   maxScore            Decimal?  @map("max_score") @db.Decimal(7, 2)

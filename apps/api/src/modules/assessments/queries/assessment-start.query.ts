@@ -1,8 +1,15 @@
 import { NotFoundError } from "@/shared/errors";
 import { SlotRepository } from "../repositories/slot.repository";
 import { TemplateRepository } from "../repositories/template.repository";
+import { PaperRepository } from "../repositories/paper.repository";
+import { AttemptRepository } from "../repositories/attempt.repository";
+import {
+  computePaperDurationSecs,
+  computePaperTotalMarks,
+} from "../lib/duration";
 import type {
   AssessmentStartInfo,
+  AttemptStatus,
   NegativeMarkingMode,
   SlotStatus,
   SlotType,
@@ -13,6 +20,8 @@ export class AssessmentStartQuery {
   static async getBySlotId(
     collegeId: string,
     slotId: string,
+    studentId?: string,
+    applicationCourseId?: string,
   ): Promise<AssessmentStartInfo> {
     const slot = await SlotRepository.findById(slotId);
     if (!slot || slot.collegeId !== collegeId) {
@@ -35,6 +44,28 @@ export class AssessmentStartQuery {
       now <= slot.windowEnd;
     const hasWindowPassed = now > slot.windowEnd;
 
+    const [normalPaper, trialPaper] = await Promise.all([
+      PaperRepository.findActiveByTemplateAndType(template.id, "normal"),
+      PaperRepository.findActiveByTemplateAndType(template.id, "trial"),
+    ]);
+    const totalDurationSecs = normalPaper
+      ? computePaperDurationSecs(normalPaper.paperQuestions)
+      : 0;
+    const totalMarks = normalPaper
+      ? computePaperTotalMarks(normalPaper.paperQuestions)
+      : 0;
+
+    let myAttempt: AssessmentStartInfo["myAttempt"] = null;
+    if (studentId && applicationCourseId) {
+      const attempt = await AttemptRepository.findByStudentAndApplicationCourse(
+        applicationCourseId,
+        studentId,
+      );
+      if (attempt) {
+        myAttempt = { id: attempt.id, status: attempt.status as AttemptStatus };
+      }
+    }
+
     return {
       slot: {
         id: slot.id,
@@ -47,8 +78,8 @@ export class AssessmentStartQuery {
         id: template.id,
         name: template.name,
         totalQuestions: template.totalQuestions,
-        totalMarks: Number(template.totalMarks),
-        totalDurationMins: template.totalDurationMins,
+        totalMarks,
+        totalDurationSecs,
         negativeMarkingMode: settings.negativeMarkingMode ?? "none",
         instructions:
           (template.instructions as unknown as
@@ -63,6 +94,8 @@ export class AssessmentStartQuery {
       },
       isWithinWindow,
       hasWindowPassed,
+      hasActiveTrialPaper: trialPaper !== null,
+      myAttempt,
     };
   }
 }

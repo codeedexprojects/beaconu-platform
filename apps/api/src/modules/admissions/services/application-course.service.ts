@@ -1,3 +1,4 @@
+import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import type { AddApplicationCourseInput } from "../validators/application-course.validator";
@@ -328,5 +329,32 @@ export class ApplicationCourseService {
       applicationId,
       total,
     );
+  }
+
+  /** Called from the assessments module (evaluation.service.ts) once an
+   * attempt's result is published — via this service, never its
+   * repository, per the "modules talk via services only" rule. */
+  static async markAssessmentCompleted(
+    applicationCourseId: string,
+    publishedByStaffId: string,
+  ) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
+    if (!course) throw new NotFoundError("Application course not found");
+    if (course.status === "assessment_completed") return;
+
+    await prisma.$transaction(async (tx) => {
+      await ApplicationCourseRepository.markAssessmentCompleted(
+        tx,
+        applicationCourseId,
+      );
+      await ApplicationCourseRepository.createStatusLog(tx, {
+        applicationCourseId,
+        fromStatus: course.status,
+        toStatus: "assessment_completed",
+        changedByType: "staff_member",
+        changedById: publishedByStaffId,
+      });
+    });
   }
 }

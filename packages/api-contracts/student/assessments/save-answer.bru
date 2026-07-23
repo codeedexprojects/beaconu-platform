@@ -1,0 +1,34 @@
+meta {
+  name: Save Answer
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/answers/{{assessmentQuestionId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "response": { "selectedOptionIds": ["opt-1"] },
+    "is_flagged": false,
+    "time_spent_secs": 32
+  }
+}
+
+docs {
+  Upserts one answer (autosave — call again to overwrite). response shape
+  depends on the question's format: { selectedOptionIds } for
+  single/multi-choice, { order } for ranking/sequence, { blankAnswers } for
+  fill-in-the-blank, { text } for free-text/likert. Autoscorable questions
+  are scored immediately (auto_score + evaluation_status: "auto_scored");
+  others stay "pending" for evaluator scoring. Requires the attempt to be
+  "in_progress".
+}

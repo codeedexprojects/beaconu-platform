@@ -67,6 +67,7 @@ export interface QuestionItem {
   answerKey: AnswerKey | null;
   marks: number;
   negativeMarks: number;
+  timeLimitSecs: number;
   version: number;
   status: QuestionStatus;
   courseIds: string[];
@@ -81,6 +82,7 @@ export interface CreateQuestionInput {
   answer_key?: AnswerKey;
   marks: number;
   negative_marks?: number;
+  time_limit_secs?: number;
   course_ids?: string[];
 }
 
@@ -92,6 +94,7 @@ export interface UpdateQuestionInput {
   answer_key?: AnswerKey;
   marks?: number;
   negative_marks?: number;
+  time_limit_secs?: number;
   course_ids?: string[];
 }
 
@@ -114,6 +117,8 @@ export type NegativeMarkingMode = "none" | "fixed" | "proportional";
 export interface TemplateInstructionItem {
   heading: string;
   description: string;
+  /** Client-defined icon key (e.g. "wifi", "webcam") — not a URL/asset. */
+  icon?: string;
 }
 
 export interface TemplateSectionItem {
@@ -132,8 +137,6 @@ export interface AssessmentTemplateItem {
   name: string;
   templateType: string;
   totalQuestions: number;
-  totalMarks: number;
-  totalDurationMins: number;
   status: TemplateStatus;
   negativeMarkingMode: NegativeMarkingMode;
   instructions: TemplateInstructionItem[];
@@ -153,8 +156,6 @@ export interface TemplateSectionInput {
 export interface CreateTemplateInput {
   name: string;
   template_type?: string;
-  total_marks: number;
-  total_duration_mins: number;
   negative_marking_mode?: NegativeMarkingMode;
   instructions?: TemplateInstructionItem[];
   sections: TemplateSectionInput[];
@@ -163,8 +164,6 @@ export interface CreateTemplateInput {
 export interface UpdateTemplateInput {
   name?: string;
   template_type?: string;
-  total_marks?: number;
-  total_duration_mins?: number;
   negative_marking_mode?: NegativeMarkingMode;
   instructions?: TemplateInstructionItem[];
   sections?: TemplateSectionInput[];
@@ -172,6 +171,7 @@ export interface UpdateTemplateInput {
 
 export type PaperGenerationType = "auto" | "manual";
 export type PaperStatus = "draft" | "approved" | "deleted";
+export type PaperType = "trial" | "normal";
 
 export interface PaperQuestionItem {
   id: string;
@@ -188,6 +188,7 @@ export interface AssessmentPaperItem {
   paperCode: string;
   name: string | null;
   generationType: PaperGenerationType;
+  paperType: PaperType;
   status: PaperStatus;
   generatedBy: string | null;
   approvedBy: string | null;
@@ -203,6 +204,7 @@ export interface ManualQuestionSelection {
 
 export interface GeneratePaperInput {
   generation_type: PaperGenerationType;
+  paper_type?: PaperType;
   name?: string;
   course_id?: string;
   manual_selections?: ManualQuestionSelection[];
@@ -262,12 +264,230 @@ export interface AssessmentStartInfo {
     id: string;
     name: string;
     totalQuestions: number;
+    // Both computed as sums over the approved normal paper's questions
+    // (0 if none approved yet) — not admin-declared fields, which no
+    // longer exist on AssessmentTemplate. See Plan L.
     totalMarks: number;
-    totalDurationMins: number;
+    totalDurationSecs: number;
     negativeMarkingMode: NegativeMarkingMode;
     instructions: TemplateInstructionItem[];
     sections: AssessmentStartSectionSummary[];
   };
   isWithinWindow: boolean;
   hasWindowPassed: boolean;
+  hasActiveTrialPaper: boolean;
+  /** Only populated when application_course_id is passed to the start-info
+   * request — null if the student hasn't started an attempt yet. */
+  myAttempt: { id: string; status: AttemptStatus } | null;
+}
+
+// ---------------------------------------------------------------------------
+// Attempt + Evaluation
+// ---------------------------------------------------------------------------
+
+export type AttemptStatus =
+  | "not_started"
+  | "in_progress"
+  | "completed"
+  | "auto_submitted"
+  | "terminated"
+  | "under_evaluation"
+  | "evaluated"
+  | "result_published";
+
+export type AnswerEvaluationStatus = "pending" | "auto_scored" | "evaluated";
+export type AntiCheatEventType = "tab_hidden" | "tab_visible";
+
+/** Mirrors AnswerKey's shapes — one field populated per responseFormat. */
+export interface AnswerResponse {
+  selectedOptionIds?: string[];
+  order?: string[];
+  blankAnswers?: BlankAnswer[];
+  text?: string;
+}
+
+export interface AssessmentAttemptItem {
+  id: string;
+  applicationCourseId: string;
+  studentId: string;
+  paperId: string;
+  slotId: string;
+  status: AttemptStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  timeSpentSecs: number | null;
+  totalScore: number | null;
+  maxScore: number | null;
+  sectionScores: Record<string, { score: number; max: number }>;
+  createdAt: string;
+}
+
+export interface StudentAnswerItem {
+  id: string;
+  attemptId: string;
+  questionId: string;
+  sectionId: string;
+  response: AnswerResponse | null;
+  isFlagged: boolean;
+  timeSpentSecs: number;
+  autoScore: number | null;
+  manualScore: number | null;
+  finalScore: number | null;
+  evaluationStatus: AnswerEvaluationStatus;
+  evaluationRemarks: string | null;
+  answeredAt: string | null;
+}
+
+export interface StartAttemptInput {
+  application_course_id: string;
+  slot_id: string;
+}
+
+export interface SubmitAnswerInput {
+  // Optional — a student can flag a question "for review" without having
+  // answered it yet. At least one of response/is_flagged/time_spent_secs
+  // must be present (enforced by the validator).
+  response?: AnswerResponse;
+  is_flagged?: boolean;
+  time_spent_secs?: number;
+}
+
+export interface AntiCheatEventInput {
+  type: AntiCheatEventType;
+}
+
+export interface EvaluationQueueItem {
+  id: string;
+  applicationCourseId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  status: AttemptStatus;
+  completedAt: string | null;
+  pendingCount: number;
+  autoScoredCount: number;
+  evaluatedCount: number;
+  totalScore: number | null;
+  maxScore: number | null;
+}
+
+export interface EvaluationAnswerDetail {
+  id: string;
+  questionId: string;
+  sectionId: string;
+  sectionName: string;
+  questionOrder: number;
+  content: QuestionContent;
+  answerKey: AnswerKey | null;
+  marks: number;
+  response: AnswerResponse | null;
+  isFlagged: boolean;
+  autoScore: number | null;
+  manualScore: number | null;
+  finalScore: number | null;
+  evaluationStatus: AnswerEvaluationStatus;
+  evaluationRemarks: string | null;
+}
+
+export interface EvaluationAttemptDetail {
+  id: string;
+  applicationCourseId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  status: AttemptStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalScore: number | null;
+  maxScore: number | null;
+  answers: EvaluationAnswerDetail[];
+}
+
+export interface ScoreOverrideInput {
+  manual_score: number;
+  remarks?: string;
+}
+
+export type AttemptSectionStatus = "not_started" | "in_progress" | "completed";
+
+export interface AttemptSectionSummary {
+  id: string;
+  sectionId: string;
+  name: string;
+  description: string | null;
+  questionCount: number;
+  timeLimitMins: number;
+  answeredCount: number;
+  status: AttemptSectionStatus;
+}
+
+export interface AttemptQuestionMyAnswer {
+  response: AnswerResponse | null;
+  isFlagged: boolean;
+  answeredAt: string | null;
+}
+
+export interface AttemptQuestionItem {
+  id: string;
+  questionId: string;
+  questionOrder: number;
+  questionTypeId: string;
+  content: QuestionContent;
+  marks: number;
+  timeLimitSecs: number;
+  myAnswer: AttemptQuestionMyAnswer | null;
+}
+
+export interface AttemptOverviewQuestion {
+  questionOrder: number;
+  questionId: string;
+  isAnswered: boolean;
+  isFlagged: boolean;
+}
+
+export interface AttemptOverview {
+  sectionId: string;
+  sectionName: string;
+  totalQuestions: number;
+  answeredCount: number;
+  flaggedCount: number;
+  questions: AttemptOverviewQuestion[];
+}
+
+// ---------------------------------------------------------------------------
+// Trial papers (ephemeral — never persisted, never create an Attempt)
+// ---------------------------------------------------------------------------
+
+export interface TrialPaperQuestionItem {
+  id: string;
+  sectionId: string;
+  sectionName: string;
+  questionTypeId: string;
+  content: QuestionContent;
+  marks: number;
+  scorable: boolean;
+}
+
+export interface TrialPaperItem {
+  paperId: string;
+  paperCode: string;
+  templateId: string;
+  questions: TrialPaperQuestionItem[];
+}
+
+export interface SubmitTrialInput {
+  answers: { question_id: string; response: AnswerResponse }[];
+}
+
+export interface TrialResultQuestionScore {
+  questionId: string;
+  scorable: boolean;
+  autoScore: number | null;
+}
+
+export interface TrialResult {
+  totalScore: number;
+  maxScore: number;
+  sectionScores: Record<string, { score: number; max: number }>;
+  perQuestion: TrialResultQuestionScore[];
 }

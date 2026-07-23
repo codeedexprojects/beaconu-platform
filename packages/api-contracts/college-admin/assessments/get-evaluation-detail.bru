@@ -1,0 +1,25 @@
+meta {
+  name: Get Evaluation Detail
+  type: http
+  seq: 31
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/evaluation/{{assessmentAttemptId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Full per-question detail for one attempt — student name/email, every
+  question's content, the correct answer_key (unlike the student-facing
+  endpoints, evaluators see it), the student's response, and current
+  score/evaluation_status. answer_key is only ever exposed on
+  college-admin routes, never student ones. Use this to find the
+  student_answer id needed for Score Answer, and to decide when every
+  question is auto_scored/evaluated so Publish Result will succeed.
+}

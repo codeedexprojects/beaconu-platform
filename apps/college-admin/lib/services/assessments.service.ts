@@ -16,6 +16,11 @@ import type {
   CreateSlotInput,
   UpdateSlotInput,
   PaginationMeta,
+  AssessmentAttemptItem,
+  EvaluationQueueItem,
+  EvaluationAttemptDetail,
+  EvaluationAnswerDetail,
+  ScoreOverrideInput,
 } from "@beaconu/types";
 
 const BASE = "/api/v1/college-admin/assessments";
@@ -243,4 +248,30 @@ export async function toggleAssessmentSlot(
   isActive: boolean,
 ): Promise<AssessmentSlotItem> {
   return api.patch(`${BASE}/slots/${id}/toggle`, { is_active: isActive });
+}
+
+export async function getEvaluationQueue(
+  status?: string[],
+): Promise<EvaluationQueueItem[]> {
+  const query = status?.length ? `?status=${status.join(",")}` : "";
+  return api.get(`${BASE}/evaluation-queue${query}`);
+}
+
+export async function getEvaluationDetail(
+  attemptId: string,
+): Promise<EvaluationAttemptDetail> {
+  return api.get(`${BASE}/evaluation/${attemptId}`);
+}
+
+export async function scoreAssessmentAnswer(
+  answerId: string,
+  data: ScoreOverrideInput,
+): Promise<EvaluationAnswerDetail> {
+  return api.patch(`${BASE}/answers/${answerId}/score`, data);
+}
+
+export async function publishAssessmentResult(
+  attemptId: string,
+): Promise<AssessmentAttemptItem> {
+  return api.patch(`${BASE}/attempts/${attemptId}/publish`, {});
 }

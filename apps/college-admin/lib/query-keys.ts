@@ -66,6 +66,12 @@ export const QUERY_KEYS = {
     filters
       ? ["college-assessment-questions", slug, filters]
       : ["college-assessment-questions", slug],
+  evaluationQueue: (status?: string[]) =>
+    status?.length
+      ? (["college-evaluation-queue", status] as const)
+      : (["college-evaluation-queue"] as const),
+  evaluationDetail: (attemptId: string) =>
+    ["college-evaluation-detail", attemptId] as const,
   antiRaggingComplaints: (filters?: object) =>
     filters
       ? ["college-anti-ragging-complaints", filters]
