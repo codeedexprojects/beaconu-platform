@@ -19,7 +19,6 @@ body:json {
   {
     "nationality": "Indian",
     "course_id": "{{courseId}}",
-    "course_quota_seat_id": "{{courseQuotaSeatId}}",
     "state_of_domicile": "Karnataka",
     "passport_country": null,
     "passport_number": null,
@@ -47,13 +46,16 @@ docs {
   applied on the primary course's fee. `course_id` is REQUIRED — this
   becomes the application's primary course, and its fee is what payment
   gates before the rest of the flow (details, documents, declaration,
-  submit) unlocks. `course_quota_seat_id` is optional (omit for "no
-  quota," base fee). `state_of_domicile` / `passport_country` /
-  `passport_number` are optional, relevant mainly for foreign-nationality
-  applicants. `campus_id` is optional and must belong to the cycle's
-  college if given.
+  submit) unlocks. No quota is set here — the primary course starts
+  quota-less, same as every other course; use Change Application Course
+  Quota afterward if a quota applies. `state_of_domicile` /
+  `passport_country` / `passport_number` are optional, relevant mainly for
+  foreign-nationality applicants. `campus_id` is optional and must belong
+  to the cycle's college if given.
 
-  Next step: POST /payments/applications/{{applicationId}}/initiate to pay
-  the primary course's fee — nothing else on the application unlocks until
-  that payment is confirmed.
+  Typical next steps: browse List Course Catalogue (courses + their quota
+  options in one call) to add more courses or pick a quota via Change
+  Application Course Quota, then POST
+  /payments/applications/{{applicationId}}/initiate to pay — nothing else
+  on the application unlocks until that payment is confirmed.
 }

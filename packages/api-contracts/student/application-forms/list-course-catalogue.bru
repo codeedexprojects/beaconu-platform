@@ -19,10 +19,11 @@ headers {
 }
 
 docs {
-  Lean course catalogue for an admission cycle — id, name, code, base
-  application fee, no quota data. Used for the "Add Course" browse/search
-  page (picking the primary course at Start, or an extra course
-  afterward), distinct from the Payment Summary endpoint which shows only
-  courses already added to the application. Optional `search` query param
-  filters by course name/code (case-insensitive substring match).
+  Course catalogue for an admission cycle — id, name, code, base
+  application fee, AND each course's quota options (name, bucket type,
+  computed fee, seats) embedded inline, in one call. Used for the "Add
+  Course" browse/search page (picking the primary course at Start, or an
+  extra course afterward) — distinct from Get Payment Summary, which shows
+  only courses already added to the application. Optional `search` query
+  param filters by course name/code (case-insensitive substring match).
 }

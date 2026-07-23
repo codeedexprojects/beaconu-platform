@@ -23,14 +23,17 @@ body:json {
 
 docs {
   Changes the quota (and recomputes the fee) on a course already added to
-  the application — including the primary course, which can have its
-  quota revised even though it can never be withdrawn. `null` clears the
-  quota back to the course's base fee. 409 if the application is submitted
-  or payment-locked (see Initiate Application Payment) — quota can only
-  move while still building up the selection, before paying. Recomputes
-  the parent Application's totalApplicationFee.
+  the application — including the primary course, which starts quota-less
+  (Start Application never sets one) and can only ever get a quota through
+  this endpoint, since it can never be withdrawn and re-added. `null`
+  clears the quota back to the course's base fee. 409 if the application
+  is submitted or payment-locked (see Initiate Application Payment) —
+  quota can only move while still building up the selection, before
+  paying. Recomputes the parent Application's totalApplicationFee.
 
-  Typical use: the Payment Summary page shows each course's alternative
-  quota options; picking a different one calls this, then the page
-  re-fetches Get Payment Summary to show the refreshed numbers.
+  Valid quota ids come from List Course Catalogue (browsing) or Get
+  Payment Summary (for a course already on the application). Typical use:
+  the summary page shows each course's alternative quota options; picking
+  a different one calls this, then the page re-fetches Get Payment
+  Summary to show the refreshed numbers.
 }

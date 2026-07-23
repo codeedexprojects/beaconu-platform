@@ -69,26 +69,6 @@ export class StudentApplicationController {
     return res.json(ApiResponse.success("Application fetched", result));
   }
 
-  static async listQuotaOptions(req: Request, res: Response) {
-    const result = await ApplicationCourseService.listQuotaOptions(
-      req.params.id as string,
-      req.params.courseId as string,
-    );
-    return res.json(ApiResponse.success("Quota options fetched", result));
-  }
-
-  static async listCourses(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
-    const result = await ApplicationCourseService.list(
-      application.id,
-      req.userId as string,
-    );
-    return res.json(ApiResponse.success("Selected courses fetched", result));
-  }
-
   static async addCourse(req: Request, res: Response) {
     const body = addApplicationCourseSchema.parse(req.body);
     const application = await ApplicationService.getMine(

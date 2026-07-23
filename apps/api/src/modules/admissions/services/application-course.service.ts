@@ -71,68 +71,6 @@ async function assertOwnDraftApplication(
 }
 
 export class ApplicationCourseService {
-  /** Read-only fee/quota browsing for a course within a cycle — doesn't
-   * require a draft application to already exist, since students should be
-   * able to compare fees before committing to start one. */
-  static async listQuotaOptions(admissionCycleId: string, courseId: string) {
-    const cycleCourse =
-      await ApplicationCourseRepository.findAdmissionCycleCourse(
-        admissionCycleId,
-        courseId,
-      );
-    if (!cycleCourse) {
-      throw new NotFoundError("Course");
-    }
-
-    const seats =
-      await ApplicationCourseRepository.findQuotaSeatsForCycleCourse(
-        cycleCourse.id,
-      );
-    const adjustments = await ApplicationCourseRepository.findQuotaAdjustments(
-      courseId,
-      seats.map((s) => s.collegeQuotaId),
-    );
-    const adjustmentByQuota = new Map(
-      adjustments.map((a) => [a.collegeQuotaId, a]),
-    );
-    const baseFee = cycleCourse.applicationFee.toNumber();
-
-    return {
-      baseApplicationFee: baseFee.toString(),
-      quotas: seats.map((s) => {
-        const adjustment = adjustmentByQuota.get(s.collegeQuotaId);
-        const finalFee = applyFeeAdjustment(
-          baseFee,
-          adjustment?.appFeeAdjustmentType,
-          adjustment?.appFeeAdjustmentValue,
-        );
-        const isPooled = s.seatPool !== null;
-        return {
-          courseQuotaSeatId: s.id,
-          collegeQuotaId: s.collegeQuotaId,
-          quotaName: s.collegeQuota.name,
-          quotaSlug: s.collegeQuota.slug,
-          bucketType: s.collegeQuota.bucketType,
-          applicationFee: finalFee.toString(),
-          tuitionFeeOverride:
-            adjustment?.tuitionFeeOverride?.toString() ?? null,
-          totalSeats: isPooled ? s.seatPool!.totalSeats : s.totalSeats,
-          openSeats: isPooled ? s.seatPool!.openSeats : s.openSeats,
-        };
-      }),
-    };
-  }
-
-  static async list(applicationId: string, studentId: string) {
-    // Read-only — allowed even before payment so the student can review
-    // their primary course selection while they're still on the payment
-    // step.
-    await assertOwnDraftApplication(applicationId, studentId, false);
-    const rows =
-      await ApplicationCourseRepository.findByApplicationId(applicationId);
-    return rows.map(toDto);
-  }
-
   static async addCourse(
     applicationId: string,
     studentId: string,

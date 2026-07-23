@@ -56,22 +56,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  static async findQuotaSeatsForCycleCourse(admissionCycleCourseId: string) {
-    return prisma.courseQuotaSeats.findMany({
-      where: { admissionCycleCourseId, isActive: true },
-      select: {
-        id: true,
-        collegeQuotaId: true,
-        totalSeats: true,
-        openSeats: true,
-        seatPool: { select: { totalSeats: true, openSeats: true } },
-        collegeQuota: {
-          select: { id: true, name: true, slug: true, bucketType: true },
-        },
-      },
-    });
-  }
-
   static async findQuotaAdjustments(
     courseId: string,
     collegeQuotaIds: string[],
@@ -157,14 +141,6 @@ export class ApplicationCourseRepository {
       where: { id },
       data: { ...data, status: "draft", statusUpdatedAt: new Date() },
       select: APPLICATION_COURSE_SELECT,
-    });
-  }
-
-  static async findByApplicationId(applicationId: string) {
-    return prisma.applicationCourse.findMany({
-      where: { applicationId, status: { not: "withdrawn" } },
-      select: APPLICATION_COURSE_SELECT,
-      orderBy: { preferenceOrder: "asc" },
     });
   }
 

@@ -24,9 +24,9 @@ export interface StudentApplicationDto {
 export interface StartApplicationInput {
   nationality: string;
   // The primary course — required, since payment (and everything after
-  // it) is gated on this specific selection.
+  // it) is gated on this selection. Its quota is set afterward via
+  // Change Application Course Quota, never at Start.
   course_id: string;
-  course_quota_seat_id?: string | null;
   campus_id?: string | null;
   state_of_domicile?: string | null;
   passport_country?: string | null;
@@ -43,11 +43,6 @@ export interface ApplicationCourseQuotaOption {
   tuitionFeeOverride: string | null;
   totalSeats: number | null;
   openSeats: number | null;
-}
-
-export interface ApplicationCourseQuotaOptionsDto {
-  baseApplicationFee: string;
-  quotas: ApplicationCourseQuotaOption[];
 }
 
 export interface ApplicationCourseDto {
@@ -80,6 +75,7 @@ export interface CourseCatalogueItem {
   courseName: string;
   courseCode: string;
   applicationFee: string;
+  quotaOptions: ApplicationCourseQuotaOption[];
 }
 
 export interface ApplicationPaymentSummaryCourse {

@@ -41,10 +41,12 @@ docs {
   payment-locked (409 otherwise) — locking happens the instant a payment
   order is created (Initiate Application Payment), even before it's
   confirmed, not just once fully paid. `course_quota_seat_id` is optional
-  — omit for "no quota," which charges the course's base application fee.
-  When given, the fee snapshot on the resulting ApplicationCourse row
-  includes the quota's bidirectional fee adjustment, and seat availability
-  is checked (not reserved — seats are never decremented by anything in
-  the student flow; see Submit Application). Recomputes the parent
-  Application's totalApplicationFee.
+  — omit for "no quota" (base fee), or set it directly here; either way it
+  can be revised later via Change Application Course Quota. Valid quota
+  ids for a course come from List Course Catalogue, which embeds each
+  course's quota options inline. When a quota is set, the fee snapshot on
+  the resulting ApplicationCourse row includes the quota's bidirectional
+  fee adjustment, and seat availability is checked (not reserved — seats
+  are never decremented by anything in the student flow; see Submit
+  Application). Recomputes the parent Application's totalApplicationFee.
 }

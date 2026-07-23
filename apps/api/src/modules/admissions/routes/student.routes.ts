@@ -27,15 +27,6 @@ router.get("/:id/courses", StudentAdmissionCycleController.listCourseCatalogue);
 router.post("/:id/application", StudentApplicationController.start);
 router.get("/:id/application", StudentApplicationController.getMine);
 
-router.get(
-  "/:id/courses/:courseId/quota-options",
-  StudentApplicationController.listQuotaOptions,
-);
-
-router.get(
-  "/:id/application/courses",
-  StudentApplicationController.listCourses,
-);
 router.post("/:id/application/courses", StudentApplicationController.addCourse);
 router.delete(
   "/:id/application/courses/:appCourseId",

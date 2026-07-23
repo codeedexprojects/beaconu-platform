@@ -99,24 +99,25 @@ export class ApplicationService {
 
     // The primary course — its fee is what gates payment, and payment is
     // what gates the rest of the flow. Created via the same course-selection
-    // logic as any other course (fee calc, seat-availability check),
-    // marked isPrimary so it can never be withdrawn and so the payments
-    // module knows which selection to charge.
+    // logic as any other course, marked isPrimary so it can never be
+    // withdrawn and so the payments module knows which selection to
+    // charge. Quota-less at creation — set afterward via Change
+    // Application Course Quota, same as every other course.
     try {
       await ApplicationCourseService.addCourse(
         created.id,
         studentId,
         {
           course_id: body.course_id,
-          course_quota_seat_id: body.course_quota_seat_id ?? null,
+          course_quota_seat_id: null,
           preference_order: 1,
         },
         { isPrimary: true },
       );
     } catch (error) {
       // Compensating rollback — see hardDeleteFailedDraft's doc comment.
-      // Without this, a bad course/quota id or a lost seat-availability
-      // race would leave a permanently broken, course-less draft behind.
+      // Without this, a bad course id or a lost seat-availability race
+      // would leave a permanently broken, course-less draft behind.
       await ApplicationRepository.hardDeleteFailedDraft(created.id);
       throw error;
     }

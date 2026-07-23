@@ -1,24 +1,11 @@
 import { prisma } from "@beaconu/db";
-
-function mapRow(row: {
-  id: string;
-  applicationFee: { toString(): string };
-  course: { id: string; name: string; code: string };
-}) {
-  return {
-    courseId: row.course.id,
-    courseName: row.course.name,
-    courseCode: row.course.code,
-    applicationFee: row.applicationFee.toString(),
-  };
-}
+import { quotaOptionsForCourse } from "./quota-options.helper";
 
 export class StudentCourseCatalogueQuery {
-  /** Lean course listing for an admission cycle — no quota data, that's
-   * fetched per-course once the student picks one (see the existing
-   * quota-options endpoint). Used for the "Add Course" browse/search page,
-   * distinct from the payment-summary page which shows only courses
-   * already added to the application. */
+  /** Course listing for an admission cycle, each with its quota options
+   * embedded — one call for the "Add Course" browse/search page instead of
+   * a follow-up per-course round trip. Distinct from the payment-summary
+   * page, which shows only courses already added to the application. */
   static async listForCycle(admissionCycleId: string, search?: string) {
     const rows = await prisma.admissionCycleCourse.findMany({
       where: {
@@ -40,6 +27,23 @@ export class StudentCourseCatalogueQuery {
       },
       orderBy: { course: { name: "asc" } },
     });
-    return rows.map(mapRow);
+
+    return Promise.all(
+      rows.map(async (row) => {
+        const baseFee = row.applicationFee.toNumber();
+        const quotaOptions = await quotaOptionsForCourse(
+          row.id,
+          row.course.id,
+          baseFee,
+        );
+        return {
+          courseId: row.course.id,
+          courseName: row.course.name,
+          courseCode: row.course.code,
+          applicationFee: baseFee.toString(),
+          quotaOptions,
+        };
+      }),
+    );
   }
 }
