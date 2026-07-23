@@ -236,6 +236,7 @@ export class QuestionBankService {
         answer_key: mergedAnswerKey,
         marks: data.marks ?? Number(existing.marks),
         negative_marks: data.negative_marks ?? Number(existing.negativeMarks),
+        time_limit_secs: data.time_limit_secs ?? existing.timeLimitSecs,
         course_ids: resolvedCourseIds,
       },
       existing.id,

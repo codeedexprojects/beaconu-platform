@@ -18,13 +18,11 @@ headers {
 body:json {
   {
     "name": "Standard Admission Assessment",
-    "total_marks": 100,
-    "total_duration_mins": 90,
     "negative_marking_mode": "none",
     "instructions": [
       {
         "heading": "Time Limit",
-        "description": "You have 90 minutes to complete this assessment."
+        "description": "Total time is the sum of every question's own time limit."
       },
       {
         "heading": "Tab Switching",
@@ -64,4 +62,12 @@ docs {
   omitted entirely that's fine too, but partial (some sections with, some
   without) is rejected. Get real section_id values from GET
   /assessments/sections (enable a section first if needed).
+
+  No total_duration_mins or total_marks fields — templates no longer
+  declare either. Both are always computed from the approved normal
+  paper's questions (time_limit_secs summed for duration, marks summed
+  for total marks — set per-question in Create Question), shown to
+  students on the Assessment Room screen (Get Assessment Start Info) and,
+  for duration, also used for auto-submit expiry and fixed-slot window-end
+  (see Create Assessment Slot (Fixed)).
 }

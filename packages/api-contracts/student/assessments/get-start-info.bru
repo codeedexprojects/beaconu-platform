@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/assessments/slots/{{assessmentSlotId}}/start
+  url: {{baseUrl}}/api/v1/student/assessments/slots/{{assessmentSlotId}}/start?application_course_id={{applicationCourseId}}
   body: none
   auth: none
+}
+
+params:query {
+  application_course_id: {{applicationCourseId}}
 }
 
 headers {
@@ -15,11 +19,19 @@ headers {
 }
 
 docs {
-  Assessment starting page: returns the slot's timing window, the
-  template's duration/marks/section breakdown, and its instructions
-  (heading + description list) — everything the student sees before
-  clicking "Start". `isWithinWindow` tells the frontend whether the slot
-  can be started right now; `hasWindowPassed` distinguishes "too early"
-  from "missed it". Does not create or touch an AssessmentAttempt — that
-  comes later once Application/ApplicationCourse exists.
+  Assessment Room screen: returns the slot's timing window, the template's
+  section breakdown, its instructions (heading + description + an
+  optional client-defined icon key), `total_marks`, and
+  `total_duration_secs` — both computed as sums over the currently-approved
+  normal paper's questions (marks summed for `total_marks`,
+  time_limit_secs summed for `total_duration_secs`; both 0 if no normal
+  paper is approved yet) — neither is an admin-declared template field
+  anymore. `has_active_trial_paper` tells the client whether to
+  show/enable "Take Trial of Assessment". `is_within_window` tells the
+  frontend whether the slot can be started right now; `has_window_passed`
+  distinguishes "too early" from "missed it".
+
+  `application_course_id` is optional — pass it to get `my_attempt`
+  (`{id, status}` or `null`) so the Room screen can render "Resume
+  Assessment" instead of "Start Assessment" for a returning student.
 }

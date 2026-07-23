@@ -26,6 +26,7 @@ body:json {
     },
     "marks": 5,
     "negative_marks": 0,
+    "time_limit_secs": 45,
     "course_ids": []
   }
 }
@@ -43,5 +44,9 @@ docs {
   Creates a question under Verbal Communication. content.audioUrl is
   required if the question type has_audio; content.imageUrl is required if
   has_image. Empty/omitted course_ids means the question applies to every
-  course; pass specific course IDs to scope it.
+  course; pass specific course IDs to scope it. time_limit_secs is the
+  per-question countdown shown on the student's take-test screen —
+  optional, defaults to 60; an attempt's total duration is the sum of its
+  paper's questions' time_limit_secs (see Get Attempt Sections /
+  Get Assessment Start Info).
 }

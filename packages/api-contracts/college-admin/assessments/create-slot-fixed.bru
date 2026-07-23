@@ -25,5 +25,9 @@ body:json {
 
 docs {
   No window_end — for slot_type "fixed" the end time is always derived
-  server-side as window_start + the template's total_duration_mins.
+  server-side as window_start + the sum of the template's currently
+  approved normal paper's questions' time_limit_secs. Fails with a 409
+  ConflictError ("Approve a normal paper for this template before creating
+  a fixed slot") if no normal paper is approved yet — generate + approve
+  one first (see Generate Paper (Auto) / Approve Paper).
 }

@@ -17,7 +17,7 @@ headers {
 
 body:json {
   {
-    "total_duration_mins": 100
+    "name": "Standard Admission Assessment (v2)"
   }
 }
 
@@ -25,4 +25,6 @@ docs {
   All fields optional. If `sections` is provided, it wholesale-replaces the
   existing TemplateSection rows (delete + recreate) — there's no per-section
   patch, always send the full section list when changing any section.
+  No total_duration_mins or total_marks — see Create Assessment Template's
+  docs.
 }

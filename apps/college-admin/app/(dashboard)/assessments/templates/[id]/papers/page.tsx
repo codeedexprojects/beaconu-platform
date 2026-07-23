@@ -48,6 +48,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import type {
   AssessmentPaperItem,
   ManualQuestionSelection,
+  PaperType,
   QuestionItem,
 } from "@beaconu/types";
 
@@ -141,6 +142,7 @@ export default function AssessmentPapersPage() {
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<GenerationMode>("auto");
+  const [paperType, setPaperType] = useState<PaperType>("normal");
   const [name, setName] = useState("");
   const [courseId, setCourseId] = useState("");
   const [manualSelections, setManualSelections] = useState<
@@ -170,6 +172,7 @@ export default function AssessmentPapersPage() {
 
   function resetDialog() {
     setMode("auto");
+    setPaperType("normal");
     setName("");
     setCourseId("");
     setManualSelections({});
@@ -236,6 +239,7 @@ export default function AssessmentPapersPage() {
       generate(
         {
           generation_type: "manual",
+          paper_type: paperType,
           name: name.trim() || undefined,
           manual_selections,
           course_id: hasCalculatorSection ? courseId : undefined,
@@ -254,6 +258,7 @@ export default function AssessmentPapersPage() {
     generate(
       {
         generation_type: "auto",
+        paper_type: paperType,
         name: name.trim() || undefined,
         course_id: hasCalculatorSection ? courseId : undefined,
       },
@@ -340,6 +345,31 @@ export default function AssessmentPapersPage() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Paper Type</Label>
+                <Select
+                  value={paperType}
+                  onValueChange={(v) => setPaperType(v as PaperType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">
+                      Normal — used for real attempts
+                    </SelectItem>
+                    <SelectItem value="trial">
+                      Trial — practice run, not tracked as an attempt
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  A template can have one approved normal paper and one approved
+                  trial paper at the same time — approving a new one only
+                  replaces the previously-approved paper of the same type.
+                </p>
               </div>
 
               {mode === "auto" ? (
@@ -482,6 +512,9 @@ export default function AssessmentPapersPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {paper.paperType === "trial" && (
+                      <Badge variant="secondary">Trial</Badge>
+                    )}
                     <Badge
                       variant={
                         paper.status === "approved" ? "default" : "outline"

@@ -73,4 +73,21 @@ router.post(
 router.patch("/slots/:id", CollegeAdminAssessmentController.updateSlot);
 router.patch("/slots/:id/toggle", CollegeAdminAssessmentController.toggleSlot);
 
+router.get(
+  "/evaluation-queue",
+  CollegeAdminAssessmentController.listEvaluationQueue,
+);
+router.get(
+  "/evaluation/:attemptId",
+  CollegeAdminAssessmentController.getEvaluationDetail,
+);
+router.patch(
+  "/answers/:id/score",
+  CollegeAdminAssessmentController.scoreAnswer,
+);
+router.patch(
+  "/attempts/:id/publish",
+  CollegeAdminAssessmentController.publishResult,
+);
+
 export default router;

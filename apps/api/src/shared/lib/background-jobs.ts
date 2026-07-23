@@ -15,6 +15,10 @@ import {
   startVisitReminderJob,
   stopVisitReminderJob,
 } from "@/modules/campus-visits/jobs/visit-reminder.job";
+import {
+  startAssessmentAutoSubmitJob,
+  stopAssessmentAutoSubmitJob,
+} from "@/modules/assessments/jobs/assessment-auto-submit.job";
 
 const JOBS = [
   {
@@ -36,6 +40,11 @@ const JOBS = [
     name: "Campus visit reminder",
     start: startVisitReminderJob,
     stop: stopVisitReminderJob,
+  },
+  {
+    name: "Assessment auto-submit",
+    start: startAssessmentAutoSubmitJob,
+    stop: stopAssessmentAutoSubmitJob,
   },
 ];
 

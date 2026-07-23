@@ -1,0 +1,23 @@
+meta {
+  name: List Section Questions
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/sections/{{assessmentSectionIdVerbal}}/questions
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Ordered question list for the take-test screen — content only, no
+  answer_key ever included. Each question carries its own
+  time_limit_secs (the per-question countdown). my_answer reflects any
+  prior save for that question (null if never touched) — response, is_
+  flagged, answered_at.
+}

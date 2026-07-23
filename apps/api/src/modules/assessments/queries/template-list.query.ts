@@ -21,8 +21,6 @@ function mapTemplate(row: TemplateWithSections): AssessmentTemplateItem {
     name: row.name,
     templateType: row.templateType,
     totalQuestions: row.totalQuestions,
-    totalMarks: Number(row.totalMarks),
-    totalDurationMins: row.totalDurationMins,
     status: row.status as TemplateStatus,
     negativeMarkingMode: settings.negativeMarkingMode ?? "none",
     instructions:

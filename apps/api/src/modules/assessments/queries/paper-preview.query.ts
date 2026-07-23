@@ -5,6 +5,7 @@ import type {
   AssessmentPaperItem,
   PaperGenerationType,
   PaperStatus,
+  PaperType,
   QuestionContent,
   QuestionItem,
 } from "@beaconu/types";
@@ -20,6 +21,7 @@ function mapPaper(row: PaperWithQuestions): AssessmentPaperItem {
     paperCode: row.paperCode,
     name: row.name,
     generationType: row.generationType as PaperGenerationType,
+    paperType: row.paperType as PaperType,
     status: row.status as PaperStatus,
     generatedBy: row.generatedBy,
     approvedBy: row.approvedBy,
@@ -37,6 +39,7 @@ function mapPaper(row: PaperWithQuestions): AssessmentPaperItem {
         answerKey: (q.answerKey as AnswerKey | null) ?? null,
         marks: Number(q.marks),
         negativeMarks: Number(q.negativeMarks),
+        timeLimitSecs: q.timeLimitSecs,
         version: q.version,
         status: q.status as QuestionItem["status"],
         courseIds: [],

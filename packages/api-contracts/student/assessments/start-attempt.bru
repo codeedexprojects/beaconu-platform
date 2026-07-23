@@ -1,0 +1,42 @@
+meta {
+  name: Start Attempt
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/assessments/attempts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "application_course_id": "{{applicationCourseId}}",
+    "slot_id": "{{assessmentSlotId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentAttemptId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates an AssessmentAttempt (status "not_started"). Requires: the
+  ApplicationCourse belongs to the authenticated student, its status is
+  "submitted" or "assessment_pending", the linked AdmissionCycleCourse has
+  assessment_required = true, the slot is active, and there's a currently
+  approved paper_type: "normal" paper on the slot's template. Fails with a
+  409 ConflictError if any of those aren't met, or if an attempt already
+  exists for this application course.
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Get Trial Paper
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/templates/{{assessmentTemplateId}}/trial
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns the template's currently active (approved) trial paper's
+  questions — content only, no answer keys. 404 if no trial paper is
+  currently approved for this template. Purely a practice run: submitting
+  via Submit Trial never creates an AssessmentAttempt and never affects
+  ApplicationCourse status.
+}

@@ -30,6 +30,7 @@ export class QuestionRepository {
             : undefined,
           marks: data.marks,
           negativeMarks: data.negative_marks ?? 0,
+          timeLimitSecs: data.time_limit_secs ?? 60,
           version,
           parentQuestionId: parentQuestionId ?? null,
         },

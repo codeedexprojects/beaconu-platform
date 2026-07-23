@@ -67,6 +67,7 @@ export class PaperGenerationService {
       paperCode,
       name: data.name,
       generationType: data.generation_type,
+      paperType: data.paper_type ?? "normal",
       generatedBy: userId,
       questions,
     });

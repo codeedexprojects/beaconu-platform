@@ -20,6 +20,7 @@ function mapQuestion(row: {
   answerKey: unknown;
   marks: unknown;
   negativeMarks: unknown;
+  timeLimitSecs: number;
   version: number;
   status: string;
   createdAt: Date;
@@ -35,6 +36,7 @@ function mapQuestion(row: {
     answerKey: (row.answerKey as AnswerKey | null) ?? null,
     marks: Number(row.marks),
     negativeMarks: Number(row.negativeMarks),
+    timeLimitSecs: row.timeLimitSecs,
     version: row.version,
     status: row.status as QuestionItem["status"],
     courseIds: row.courseMappings.map((m) => m.courseId),

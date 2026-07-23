@@ -1,0 +1,42 @@
+meta {
+  name: Generate Paper (Trial)
+  type: http
+  seq: 27
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/templates/{{assessmentTemplateId}}/papers
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{staffToken}}
+}
+
+body:json {
+  {
+    "generation_type": "auto",
+    "paper_type": "trial",
+    "name": "Trial Set A"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("assessmentTrialPaperId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Same generation flow as the normal paper, but tagged paper_type: "trial".
+  A template can have one active (approved) trial paper AND one active
+  normal paper at the same time — approving a trial paper only demotes the
+  previously-approved trial paper, never the approved normal paper.
+  Approve it via the same PATCH /papers/:id/approve endpoint before students
+  can fetch it through GET /student/assessments/templates/:id/trial.
+}

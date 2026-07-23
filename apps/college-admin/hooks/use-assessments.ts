@@ -26,6 +26,10 @@ import {
   createAssessmentSlot,
   updateAssessmentSlot,
   toggleAssessmentSlot,
+  getEvaluationQueue,
+  getEvaluationDetail,
+  scoreAssessmentAnswer,
+  publishAssessmentResult,
 } from "@/lib/services/assessments.service";
 import type {
   CreateQuestionInput,
@@ -36,6 +40,7 @@ import type {
   GeneratePaperInput,
   CreateSlotInput,
   UpdateSlotInput,
+  ScoreOverrideInput,
 } from "@beaconu/types";
 
 export function useAssessmentSections() {
@@ -322,6 +327,58 @@ export function useToggleAssessmentSlot(templateId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.assessmentSlots(templateId),
       });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useEvaluationQueue(status?: string[]) {
+  return useQuery({
+    queryKey: QUERY_KEYS.evaluationQueue(status),
+    queryFn: () => getEvaluationQueue(status),
+  });
+}
+
+export function useEvaluationDetail(attemptId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.evaluationDetail(attemptId),
+    queryFn: () => getEvaluationDetail(attemptId),
+  });
+}
+
+export function useScoreAssessmentAnswer(attemptId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      answerId,
+      data,
+    }: {
+      answerId: string;
+      data: ScoreOverrideInput;
+    }) => scoreAssessmentAnswer(answerId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.evaluationDetail(attemptId),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.evaluationQueue() });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function usePublishAssessmentResult() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (attemptId: string) => publishAssessmentResult(attemptId),
+    onSuccess: (_data, attemptId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.evaluationDetail(attemptId),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.evaluationQueue() });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

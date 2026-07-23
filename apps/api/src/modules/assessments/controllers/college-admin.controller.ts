@@ -5,9 +5,11 @@ import { QuestionBankService } from "../services/question-bank.service";
 import { TemplateService } from "../services/template.service";
 import { PaperGenerationService } from "../services/paper-generation.service";
 import { SlotService } from "../services/slot.service";
+import { EvaluationService } from "../services/evaluation.service";
 import { QuestionListQuery } from "../queries/question-list.query";
 import { TemplateListQuery } from "../queries/template-list.query";
 import { PaperPreviewQuery } from "../queries/paper-preview.query";
+import { EvaluationDetailQuery } from "../queries/evaluation-detail.query";
 import {
   toggleSectionSchema,
   createQuestionSchema,
@@ -20,6 +22,8 @@ import {
   createSlotSchema,
   updateSlotSchema,
   toggleSlotSchema,
+  scoreOverrideSchema,
+  evaluationQueueQuerySchema,
 } from "../validators/assessment.validator";
 
 export class CollegeAdminAssessmentController {
@@ -233,5 +237,41 @@ export class CollegeAdminAssessmentController {
       data.is_active,
     );
     return res.json(ApiResponse.success("Assessment slot updated", result));
+  }
+
+  static async listEvaluationQueue(req: Request, res: Response) {
+    const query = evaluationQueueQuerySchema.parse(req.query);
+    const result = await EvaluationService.listQueue(req.collegeId!, {
+      status: query.status ? query.status.split(",") : undefined,
+    });
+    return res.json(ApiResponse.success("Evaluation queue fetched", result));
+  }
+
+  static async getEvaluationDetail(req: Request, res: Response) {
+    const result = await EvaluationDetailQuery.getById(
+      req.collegeId!,
+      req.params.attemptId as string,
+    );
+    return res.json(ApiResponse.success("Attempt detail fetched", result));
+  }
+
+  static async scoreAnswer(req: Request, res: Response) {
+    const data = scoreOverrideSchema.parse(req.body);
+    const result = await EvaluationService.scoreAnswer(
+      req.collegeId!,
+      req.userId!,
+      req.params.id as string,
+      data,
+    );
+    return res.json(ApiResponse.success("Answer scored", result));
+  }
+
+  static async publishResult(req: Request, res: Response) {
+    const result = await EvaluationService.publish(
+      req.collegeId!,
+      req.userId!,
+      req.params.id as string,
+    );
+    return res.json(ApiResponse.success("Result published", result));
   }
 }

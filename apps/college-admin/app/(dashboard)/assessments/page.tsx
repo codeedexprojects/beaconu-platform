@@ -108,9 +108,14 @@ export default function AssessmentsPage() {
             Configure the assessment sections used to evaluate applicants.
           </p>
         </div>
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/assessments/templates">Assessment Templates</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/assessments/evaluation">Evaluation</Link>
+          </Button>
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/assessments/templates">Assessment Templates</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
