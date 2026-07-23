@@ -9,3 +9,11 @@ export const addApplicationCourseSchema = z.object({
 export type AddApplicationCourseInput = z.infer<
   typeof addApplicationCourseSchema
 >;
+
+export const changeApplicationCourseQuotaSchema = z.object({
+  course_quota_seat_id: z.string().trim().min(1).optional().nullable(),
+});
+
+export type ChangeApplicationCourseQuotaInput = z.infer<
+  typeof changeApplicationCourseQuotaSchema
+>;

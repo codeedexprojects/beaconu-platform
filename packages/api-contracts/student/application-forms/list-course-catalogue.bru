@@ -1,0 +1,28 @@
+meta {
+  name: List Course Catalogue (Student)
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/courses?search=
+  body: none
+  auth: none
+}
+
+params:query {
+  search:
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lean course catalogue for an admission cycle — id, name, code, base
+  application fee, no quota data. Used for the "Add Course" browse/search
+  page (picking the primary course at Start, or an extra course
+  afterward), distinct from the Payment Summary endpoint which shows only
+  courses already added to the application. Optional `search` query param
+  filters by course name/code (case-insensitive substring match).
+}

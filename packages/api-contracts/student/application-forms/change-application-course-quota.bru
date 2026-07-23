@@ -1,0 +1,36 @@
+meta {
+  name: Change Application Course Quota (Student)
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/courses/{{applicationCourseId}}/quota
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "course_quota_seat_id": null
+  }
+}
+
+docs {
+  Changes the quota (and recomputes the fee) on a course already added to
+  the application — including the primary course, which can have its
+  quota revised even though it can never be withdrawn. `null` clears the
+  quota back to the course's base fee. 409 if the application is submitted
+  or payment-locked (see Initiate Application Payment) — quota can only
+  move while still building up the selection, before paying. Recomputes
+  the parent Application's totalApplicationFee.
+
+  Typical use: the Payment Summary page shows each course's alternative
+  quota options; picking a different one calls this, then the page
+  re-fetches Get Payment Summary to show the refreshed numbers.
+}

@@ -19,6 +19,8 @@ docs {
   application (soft — sets status to "withdrawn", never a hard delete, so
   the fee history survives). Recomputes the parent Application's
   totalApplicationFee. 409 if the application has already been submitted,
-  or if the target is the primary course — the one paid for at Start
-  Application can never be withdrawn.
+  if payment has been initiated/completed (courses lock the instant an
+  order exists, not just once paid), or if the target is the primary
+  course — the one set at Start Application can never be withdrawn
+  (though its quota can still be changed — see Change Course Quota).
 }

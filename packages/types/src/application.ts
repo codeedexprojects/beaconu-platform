@@ -71,6 +71,40 @@ export interface AddApplicationCourseInput {
   preference_order?: number;
 }
 
+export interface ChangeApplicationCourseQuotaInput {
+  course_quota_seat_id?: string | null;
+}
+
+export interface CourseCatalogueItem {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  applicationFee: string;
+}
+
+export interface ApplicationPaymentSummaryCourse {
+  applicationCourseId: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  preferenceOrder: number;
+  selectedQuota: {
+    courseQuotaSeatId: string;
+    quotaName: string | null;
+    applicationFee: string;
+  } | null;
+  applicationFee: string;
+  quotaOptions: ApplicationCourseQuotaOption[];
+}
+
+export interface ApplicationPaymentSummaryDto {
+  courses: ApplicationPaymentSummaryCourse[];
+  totalApplicationFee: string;
+  feePaymentStatus: string;
+  isLocked: boolean;
+}
+
 export interface PersonalDetailsInput {
   full_name: string;
   date_of_birth: string;

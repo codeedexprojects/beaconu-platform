@@ -24,13 +24,24 @@ script:post-response {
 }
 
 docs {
-  Creates a payment order for the application's primary course fee. 404 if
-  the application doesn't exist or has no primary course; 409 if the
-  primary course's fee has already been paid.
+  Creates a payment order for the application's CURRENT total across every
+  course selected so far (primary + any extras) — not just the primary
+  course's own fee. 404 if the application doesn't exist or has no
+  primary course; 409 if the fee has already been paid.
+
+  Calling this is what locks courses/quota (see Add Course / Withdraw
+  Course / Change Course Quota) — from this point on nothing about the
+  course selection can change until either payment is confirmed, or this
+  attempt fails and the lock releases. Idempotent while a "pending"
+  transaction already exists: calling again just returns that same
+  transaction rather than creating a duplicate order (safe, since courses
+  can't have changed while locked).
 
   The fee ledger entry (StudentFeeLedger, feeCategory "application_fee")
-  is created lazily on first call here, using the primary
-  ApplicationCourse's stored fee snapshot — not at Start Application.
+  is created lazily on first call here — not at Start Application — using
+  the application's running total, and refreshed to the current total on
+  each call if a previous attempt had failed and the total has since
+  changed.
 
   Behind a PaymentProvider interface (apps/api/src/modules/payments/lib/) —
   today this returns a fabricated order id from a mock provider with no

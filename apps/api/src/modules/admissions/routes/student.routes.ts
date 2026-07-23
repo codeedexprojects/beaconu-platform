@@ -22,6 +22,7 @@ router.get(
 );
 
 router.get("/:id", StudentAdmissionCycleController.getById);
+router.get("/:id/courses", StudentAdmissionCycleController.listCourseCatalogue);
 
 router.post("/:id/application", StudentApplicationController.start);
 router.get("/:id/application", StudentApplicationController.getMine);
@@ -39,6 +40,15 @@ router.post("/:id/application/courses", StudentApplicationController.addCourse);
 router.delete(
   "/:id/application/courses/:appCourseId",
   StudentApplicationController.withdrawCourse,
+);
+router.patch(
+  "/:id/application/courses/:appCourseId/quota",
+  StudentApplicationController.changeCourseQuota,
+);
+
+router.get(
+  "/:id/application/summary",
+  StudentApplicationController.getPaymentSummary,
 );
 
 router.patch(

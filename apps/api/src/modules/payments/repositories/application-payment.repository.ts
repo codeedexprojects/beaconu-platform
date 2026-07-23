@@ -25,14 +25,36 @@ export class ApplicationPaymentRepository {
   ) {
     return prisma.application.findFirst({
       where: { id: applicationId, studentId },
-      select: { id: true, collegeId: true, feePaymentStatus: true },
+      select: {
+        id: true,
+        collegeId: true,
+        feePaymentStatus: true,
+        totalApplicationFee: true,
+      },
     });
   }
 
-  /** The application-fee ledger entry for the application's primary
-   * course. Looked up via the relation since StudentFeeLedger links to
-   * applicationCourseId, not applicationId directly. */
-  static async findPrimaryLedgerEntry(applicationId: string) {
+  /** A "pending" transaction means courses are already locked (see
+   * admissions' isPaymentLocked) — reusing it instead of creating a new
+   * one on a repeat initiate() call is always safe, since the total can't
+   * have drifted while locked. */
+  static async findPendingTransaction(applicationId: string) {
+    return prisma.transaction.findFirst({
+      where: {
+        status: "pending",
+        ledgerEntry: { applicationCourse: { applicationId } },
+      },
+      select: TRANSACTION_SELECT,
+    });
+  }
+
+  /** The application-fee ledger entry — one per application, linked via
+   * the primary ApplicationCourse (StudentFeeLedger.applicationCourseId is
+   * a single FK, so it anchors there), but its amount tracks the whole
+   * application's total, not just the primary course's own fee. Looked up
+   * via the relation since the FK is applicationCourseId, not
+   * applicationId directly. */
+  static async findLedgerEntry(applicationId: string) {
     return prisma.studentFeeLedger.findFirst({
       where: {
         feeCategory: "application_fee",
@@ -60,9 +82,12 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** Created lazily on first initiate() call, using the primary course's
-   * own stored fee snapshot — not pre-created at Start Application, so
-   * the two modules stay decoupled in both directions. */
+  /** Created lazily on first initiate() call, using the application's
+   * current running total (not the primary course's own fee alone — the
+   * student may have added more courses since) — not pre-created at Start
+   * Application, so the two modules stay decoupled in both directions.
+   * See updateLedgerAmount for refreshing an existing entry when a prior
+   * attempt failed and the total has since changed. */
   static async createLedgerEntry(data: {
     studentId: string;
     collegeId: string;
@@ -80,6 +105,20 @@ export class ApplicationPaymentRepository {
         netAmount: data.amount,
         balanceAmount: data.amount,
       },
+      select: {
+        id: true,
+        netAmount: true,
+        paidAmount: true,
+        balanceAmount: true,
+        status: true,
+      },
+    });
+  }
+
+  static async updateLedgerAmount(ledgerEntryId: string, amount: number) {
+    return prisma.studentFeeLedger.update({
+      where: { id: ledgerEntryId },
+      data: { totalAmount: amount, netAmount: amount, balanceAmount: amount },
       select: {
         id: true,
         netAmount: true,

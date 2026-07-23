@@ -1,0 +1,29 @@
+meta {
+  name: Get Payment Summary (Student)
+  type: http
+  seq: 22
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/summary
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Everything the payment summary page needs in one call — replaces what
+  would otherwise be a course list + a quota-options call per course.
+  Returns every course already added to the application (primary + any
+  extras, in preference order), each with its currently-selected quota and
+  the full list of alternative quota options (for an inline picker), plus
+  the grand total (totalApplicationFee), feePaymentStatus, and isLocked
+  (true once a payment order exists — see Initiate Application Payment).
+
+  Purely a read — selecting a different quota on this page is a separate
+  call (Change Application Course Quota), then re-fetch this endpoint to
+  see the refreshed numbers. Nothing here writes anything.
+}
