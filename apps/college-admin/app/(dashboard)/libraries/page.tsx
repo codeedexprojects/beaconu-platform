@@ -311,7 +311,7 @@ export default function LibrariesPage() {
             <Card key={library.id}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-base font-bold text-indigo-950">
+                  <CardTitle className="text-base font-bold">
                     {library.name}
                   </CardTitle>
                   <Badge

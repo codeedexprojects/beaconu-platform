@@ -103,7 +103,7 @@ export function BasicDetailsTab({
     <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
       <CardHeader>
         <CardTitle className="text-xl font-bold flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-indigo-500" /> Basic Details
+          <BookOpen className="h-5 w-5 text-primary" /> Basic Details
         </CardTitle>
         <CardDescription>
           Primary properties of this academic program.
@@ -332,7 +332,7 @@ export function BasicDetailsTab({
             <Button
               type="submit"
               disabled={isCreating || isUpdating}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+              className="font-semibold"
             >
               {(isCreating || isUpdating) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

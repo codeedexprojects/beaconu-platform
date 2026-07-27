@@ -35,7 +35,7 @@ export function AdmissionPolicyTab({
           <Label className="text-xs">Enabled</Label>
           <input
             type="checkbox"
-            className="h-4 w-4 accent-indigo-600"
+            className="h-4 w-4 accent-primary"
             checked={getActiveTabPayload().enabled ?? true}
             onChange={(e) =>
               updateActiveTabPayload({

@@ -434,7 +434,7 @@ export default function SetupAcademicsPage() {
               setActiveTab("basic");
             }}
             size="lg"
-            className="shadow-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+            className="shadow-md font-semibold"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add New Course
@@ -501,7 +501,7 @@ export default function SetupAcademicsPage() {
                     <Button
                       onClick={saveActiveTab}
                       disabled={isUpdatingTab}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                      className="font-semibold"
                     >
                       {isUpdatingTab ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -735,7 +735,7 @@ export default function SetupAcademicsPage() {
           </Button>
           <Button
             size="lg"
-            className="shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+            className="shadow-lg font-semibold"
             onClick={() =>
               router.push(getPortalPath(collegeSlug, "/setup/review"))
             }

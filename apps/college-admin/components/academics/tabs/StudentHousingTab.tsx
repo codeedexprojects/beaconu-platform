@@ -41,9 +41,7 @@ export function StudentHousingTab({
 
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-indigo-950">
-            Linked Hostels
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Linked Hostels</CardTitle>
           <CardDescription>
             Select which of the college&apos;s hostels apply to students of this
             course.
@@ -95,9 +93,7 @@ export function StudentHousingTab({
 
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-indigo-950">
-            Currently Linked
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Currently Linked</CardTitle>
           <CardDescription>
             Hostels currently shown on this course&apos;s Student Housing tab.
           </CardDescription>

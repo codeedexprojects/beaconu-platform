@@ -40,6 +40,12 @@ interface RowState {
   isOff: boolean;
 }
 
+function parseMaxCapacity(value: string): number | null {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+
 function toRowState(entry: CampusVisitAvailabilityEntry): RowState {
   return {
     time: entry.time ?? "",
@@ -84,12 +90,17 @@ export default function CampusVisitAvailabilityPage() {
       toast.error("Set a time before opening this day for visits");
       return;
     }
+    const maxCapacityValue = parseMaxCapacity(row.maxCapacity);
+    if (maxCapacityValue === null) {
+      toast.error("Max capacity must be a whole number of 1 or more");
+      return;
+    }
     setSavingWeekday(weekday);
     upsert(
       {
         weekday,
         time: row.isOff ? undefined : row.time,
-        max_capacity: Number(row.maxCapacity) || 1,
+        max_capacity: maxCapacityValue,
         is_off: row.isOff,
       },
       {

@@ -36,10 +36,12 @@ import {
 import { useRbac } from "@/hooks/use-rbac";
 import { AdminFormModal } from "@/components/admins/AdminFormModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function PlatformAdminsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
 
   const { data: admins, isLoading } = usePlatformAdminsList();
   const { updateStatus, remove } = usePlatformAdminMutations();
@@ -63,22 +65,15 @@ export default function PlatformAdminsPage() {
       return;
     }
 
-    toast("Delete this administrator?", {
-      description: `Admin: ${admin.fullName}. This action will deactivate their account.`,
-      action: {
-        label: "Delete",
-        onClick: () =>
-          remove.mutate(admin.id, {
-            onSuccess: () => {
-              toast.success("Admin deleted");
-            },
-          }),
-      },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {
-          return;
-        },
+    setDeleteTarget(admin);
+  };
+
+  const confirmDeleteAdmin = () => {
+    if (!deleteTarget) return;
+    remove.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Admin deleted");
+        setDeleteTarget(null);
       },
     });
   };
@@ -225,6 +220,21 @@ export default function PlatformAdminsPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         editAdmin={selectedAdmin}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Administrator"
+        description={
+          deleteTarget
+            ? `Admin: ${deleteTarget.fullName}. This action will deactivate their account.`
+            : ""
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={remove.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteAdmin}
       />
     </div>
   );

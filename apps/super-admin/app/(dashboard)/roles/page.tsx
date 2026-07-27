@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   usePlatformRoles,
   usePlatformPermissions,
@@ -160,6 +161,12 @@ export default function RolesPage() {
   const [isSlugEdited, setIsSlugEdited] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    isSystemRole: boolean;
+  } | null>(null);
 
   const roleCountLabel = useMemo(() => {
     if (isLoading) return "Loading...";
@@ -228,23 +235,15 @@ export default function RolesPage() {
     slug: string;
     isSystemRole: boolean;
   }) {
-    toast("Delete this role?", {
-      description: `Role: ${role.name}. This action cannot be undone.`,
-      action: {
-        label: "Delete",
-        onClick: () => {
-          deleteRoleMutation.mutate(role.id, {
-            onSuccess: () => {
-              toast.success("Role deleted successfully");
-            },
-          });
-        },
-      },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {
-          return;
-        },
+    setDeleteTarget(role);
+  }
+
+  function confirmDeleteRole() {
+    if (!deleteTarget) return;
+    deleteRoleMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Role deleted successfully");
+        setDeleteTarget(null);
       },
     });
   }
@@ -483,6 +482,21 @@ export default function RolesPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Role"
+        description={
+          deleteTarget
+            ? `Role: ${deleteTarget.name}. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleteRoleMutation.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteRole}
+      />
     </div>
   );
 }

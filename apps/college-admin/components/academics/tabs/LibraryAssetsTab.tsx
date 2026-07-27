@@ -26,9 +26,7 @@ export function LibraryAssetsTab({
     <div className="space-y-6">
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-indigo-950">
-            Linked Libraries
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Linked Libraries</CardTitle>
           <CardDescription>
             Select which of the college&apos;s libraries apply to students of
             this course. Manage library details under Setup &rarr; Libraries.
@@ -82,9 +80,7 @@ export function LibraryAssetsTab({
 
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-indigo-950">
-            Currently Linked
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Currently Linked</CardTitle>
           <CardDescription>
             Libraries currently shown on this course&apos;s Library tab.
           </CardDescription>

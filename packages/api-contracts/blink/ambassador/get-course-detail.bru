@@ -1,0 +1,38 @@
+meta {
+  name: Get Course Detail
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/colleges/{{blinkAmbassadorCollegeId}}/courses/{{blinkAmbassadorCourseId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Returns full course detail for a specific course under a college.
+  Requires: blink_ambassador access token.
+
+  Returns 404 if the course does not exist, is not active, or does not
+  belong to the specified college.
+
+  Response includes:
+    - Core info: name, code, duration, eligibility, studyMode, intakeCapacity
+    - Classification: discipline, stream, studyLevel, programType, campus
+    - Content: highlights, curriculum, careerOpportunities, eligibilityCriteria, faqs
+    - quotas[]: active admission quotas with seat count and optional tuition override
+    - feeStructures[]: active fee rows (category, amount, instalment config,
+      oneTimeFees, additionalFees, whatsIncluded, whatsExcluded, feePdfUrl)
+
+  Note: unlike the associate/employee course-detail endpoint, this response
+  does NOT include commissions[] (service charge / payout config) — ambassador
+  compensation is referral-based, not tied to per-course service charge configs.
+
+  Tables: courses, fee_structures, course_quotas
+}

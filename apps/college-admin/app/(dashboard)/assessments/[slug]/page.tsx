@@ -71,18 +71,27 @@ const CHOICE_FORMATS = ["single_choice", "multi_choice"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
 const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
 
-const questionSchema = z.object({
-  question_type_id: z.string().trim().min(1, "Question type is required"),
-  difficulty: z.enum(["easy", "medium", "hard"]),
-  title: z.string().trim().optional(),
-  prompt_type: z.enum(["text", "audio"]),
-  text: z.string().trim().optional(),
-  audio_url: z.string().trim().optional(),
-  image_url: z.string().trim().optional(),
-  marks: z.coerce.number().positive("Marks must be greater than 0"),
-  negative_marks: z.coerce.number().min(0).optional(),
-  course_ids: z.array(z.string()).optional(),
-});
+const questionSchema = z
+  .object({
+    question_type_id: z.string().trim().min(1, "Question type is required"),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    title: z.string().trim().optional(),
+    prompt_type: z.enum(["text", "audio"]),
+    text: z.string().trim().optional(),
+    audio_url: z.string().trim().optional(),
+    image_url: z.string().trim().optional(),
+    marks: z.coerce.number().positive("Marks must be greater than 0"),
+    negative_marks: z.coerce.number().min(0).optional(),
+    course_ids: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) =>
+      data.negative_marks === undefined || data.negative_marks <= data.marks,
+    {
+      message: "Negative marks cannot exceed marks",
+      path: ["negative_marks"],
+    },
+  );
 type QuestionFormValues = z.infer<typeof questionSchema>;
 
 const EMPTY_VALUES: QuestionFormValues = {

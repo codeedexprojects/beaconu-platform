@@ -27,9 +27,7 @@ export function EligibilityCriteriaTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
-              Indian Students
-            </CardTitle>
+            <CardTitle className="text-lg font-bold">Indian Students</CardTitle>
             <CardDescription>
               Add a quota category (e.g. General, Management, NRI) — each quota
               has its own eligibility criteria.
@@ -193,7 +191,7 @@ export function EligibilityCriteriaTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               Foreign Students
             </CardTitle>
             <CardDescription>

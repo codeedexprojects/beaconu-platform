@@ -72,7 +72,7 @@ export function ExamPatternsTab({
                 onClick={() => setExamPolicyPatternIdx(idx)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                   examPolicyPatternIdx === idx
-                    ? "bg-indigo-600 text-white border-indigo-600"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : "border-border text-muted-foreground hover:bg-muted"
                 }`}
               >

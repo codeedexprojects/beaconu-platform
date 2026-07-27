@@ -107,7 +107,7 @@ export function CourseInfoTab({
                 onClick={() => onSubTabChange(tab.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 border ${
                   isSubActive
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >

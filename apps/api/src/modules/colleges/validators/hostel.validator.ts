@@ -28,8 +28,8 @@ export const updateHostelSchema = z.object({
   safetyTier: z.string().trim().optional().nullable(),
   wardenInfo: z
     .object({
-      name: z.string().trim().optional(),
-      phone: z.string().trim().optional(),
+      name: z.string().trim().min(1),
+      phone: z.string().trim().min(1),
       whatsapp: z.string().trim().optional(),
       email: z.string().trim().email().optional(),
       photo: z.string().trim().url().optional(),
