@@ -50,9 +50,16 @@ export const admissionCycleListQuerySchema = z.object({
   admission_year: z.string().trim().optional(),
 });
 
+// college_id is optional — omitting it (e.g. the client hitting this
+// endpoint with no cycle/college context yet) lists open cycles across
+// every college instead of scoping to one. course_id is also optional —
+// narrows to cycles that actually have that course attached (active
+// AdmissionCycleCourse), for a "find where I can apply for this course"
+// search.
 export const studentAdmissionCycleListQuerySchema =
   admissionCycleListQuerySchema.extend({
-    college_id: z.string().trim().min(1, "College is required"),
+    college_id: z.string().trim().min(1).optional(),
+    course_id: z.string().trim().min(1).optional(),
   });
 
 export type CreateAdmissionCycleInput = z.infer<

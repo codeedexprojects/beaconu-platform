@@ -17,4 +17,26 @@ export const applicationCycleParamSchema = z.object({
   id: z.string().min(1, "Application form ID is required"),
 });
 
+// Each detail step is its own page on the client — the form-details GET
+// returns only the one section asked for, not all four at once.
+export const getFormDetailsQuerySchema = z.object({
+  section: z.enum([
+    "personal_details",
+    "family_details",
+    "address_details",
+    "qualification_details",
+  ]),
+});
+
+// Optional college filter for the no-cycle-id status API — narrows to one
+// college (which may run several concurrent cycles) without requiring a
+// specific admissionCycleId.
+export const getStatusAllCyclesQuerySchema = z.object({
+  college_id: z.string().trim().min(1).optional(),
+});
+
 export type StartApplicationInput = z.infer<typeof startApplicationSchema>;
+export type GetFormDetailsQuery = z.infer<typeof getFormDetailsQuerySchema>;
+export type GetStatusAllCyclesQuery = z.infer<
+  typeof getStatusAllCyclesQuerySchema
+>;

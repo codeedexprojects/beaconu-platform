@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/address-details
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/address-details
   body: json
   auth: none
 }
@@ -32,5 +32,7 @@ body:json {
 docs {
   Full-replace write of the address-details step (409 if already
   submitted). `current` is required (and validated) only when
-  `same_as_permanent` is false. Advances currentStep to at least 5.
+  `same_as_permanent` is false. Advances currentStep to at least 5. Lands
+  on the Student profile, not this Application row — see Update Personal
+  Details' docs for why.
 }

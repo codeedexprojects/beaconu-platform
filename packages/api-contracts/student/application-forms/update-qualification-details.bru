@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/qualification-details
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/qualification-details
   body: json
   auth: none
 }
@@ -33,5 +33,6 @@ body:json {
 docs {
   Full-replace write of the qualification-details step (409 if already
   submitted). At least one qualification entry is required. Advances
-  currentStep to at least 6.
+  currentStep to at least 6. Lands on the Student profile, not this
+  Application row — see Update Personal Details' docs for why.
 }

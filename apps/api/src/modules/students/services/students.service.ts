@@ -58,4 +58,57 @@ export class StudentsService {
 
     return StudentsQuery.getProfile(id);
   }
+
+  /** Wholesale-replace writes for the four admission-application detail
+   * steps — the caller (admissions' ApplicationService) is responsible for
+   * any Zod-input-specific shaping (e.g. Date -> ISO string) before
+   * passing the plain JSON-safe object in here; this module doesn't know
+   * about the admissions form's validator shapes, only that it's JSON. */
+  static async updatePersonalDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await StudentsRepository.updateDetailStep(
+      studentId,
+      "personalDetails",
+      data,
+    );
+  }
+
+  static async updateFamilyDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await StudentsRepository.updateDetailStep(studentId, "familyDetails", data);
+  }
+
+  static async updateAddressDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await StudentsRepository.updateDetailStep(
+      studentId,
+      "addressDetails",
+      data,
+    );
+  }
+
+  static async updateQualificationDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await StudentsRepository.updateDetailStep(
+      studentId,
+      "qualificationDetails",
+      data,
+    );
+  }
+
+  /** Read-only snapshot source for Application.submit() — the one place
+   * these four sections get frozen onto a specific Application row. */
+  static async getDetailsForSnapshot(studentId: string) {
+    const row = await StudentsRepository.findDetailsForSnapshot(studentId);
+    if (!row) throw new NotFoundError("Student not found");
+    return row;
+  }
 }

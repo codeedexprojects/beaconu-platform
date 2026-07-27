@@ -36,11 +36,13 @@ script:post-response {
 }
 
 docs {
-  Creates a draft Application for the authenticated student against this
-  admission cycle (404 if the cycle doesn't exist, 409 if it's not
-  currently "open"). Idempotent: calling this again for the same
-  student+cycle returns the existing draft instead of erroring, since
-  (studentId, admissionCycleId) is unique.
+  Creates a NEW draft Application for the authenticated student against
+  this admission cycle (404 if the cycle doesn't exist, 409 if it's not
+  currently "open"). NOT idempotent anymore: a student can have several
+  separate Applications under the same cycle now (one per course) — this
+  always creates a new Application row, 409 only if the requested
+  course_id is already actively (non-withdrawn) selected in ANY of the
+  student's existing applications for this cycle.
 
   `nationality` is required and drives NRI-style application-fee surcharges
   applied on the primary course's fee. `course_id` is REQUIRED — this

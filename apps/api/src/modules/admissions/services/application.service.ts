@@ -1,8 +1,9 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { ApplicationCourseService } from "./application-course.service";
+import { StudentsService } from "@/modules/students/services/students.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -49,6 +50,56 @@ function buildApplicationNumber(
   return `${collegeCode.slice(0, 12)}-${yearDigits}-${numericSuffix}`;
 }
 
+/** Cheap, currentStep-only resolution of the single next thing the student
+ * needs to do on this application — see getStatus's doc comment for why
+ * this can't distinguish "documents still pending" from "documents already
+ * done, sitting on declaration". */
+function resolvePendingAction(
+  formStatus: string,
+  feePaymentStatus: string,
+  currentStep: number,
+) {
+  if (formStatus === "submitted") return "none" as const;
+  if (feePaymentStatus !== "paid") return "payment" as const;
+  if (currentStep < STEP_NUMBERS.personal) return "personal_details" as const;
+  if (currentStep < STEP_NUMBERS.family) return "family_details" as const;
+  if (currentStep < STEP_NUMBERS.address) return "address_details" as const;
+  if (currentStep < STEP_NUMBERS.qualification)
+    return "qualification_details" as const;
+  if (currentStep < STEP_NUMBERS.declaration) return "declaration" as const;
+  return "submit" as const;
+}
+
+type StatusRow = Awaited<
+  ReturnType<typeof ApplicationRepository.findStatusRows>
+>[number];
+
+function toStatusSummary(row: StatusRow) {
+  return {
+    applicationId: row.id,
+    applicationNumber: row.applicationNumber,
+    collegeId: row.college.id,
+    collegeName: row.college.name,
+    admissionCycleId: row.admissionCycle.id,
+    admissionCycleName: row.admissionCycle.name,
+    courses: row.applicationCourses.map((ac) => ({
+      courseId: ac.course.id,
+      courseName: ac.course.name,
+      courseCode: ac.course.code,
+      isPrimary: ac.isPrimary,
+      status: ac.status,
+    })),
+    formStatus: row.formStatus,
+    feePaymentStatus: row.feePaymentStatus,
+    pendingAction: resolvePendingAction(
+      row.formStatus,
+      row.feePaymentStatus,
+      row.currentStep,
+    ),
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 export class ApplicationService {
   static async start(
     studentId: string,
@@ -62,11 +113,20 @@ export class ApplicationService {
       throw new ConflictError("This application form is not currently open");
     }
 
-    const existing = await ApplicationRepository.findByStudentAndCycle(
-      studentId,
-      admissionCycleId,
-    );
-    if (existing) return toDto(existing);
+    // Cross-application guard (Plan N): a student can have several
+    // Applications for this cycle now, one per course — but never two
+    // active ones for the SAME course.
+    const activeSelection =
+      await ApplicationRepository.findActiveCourseSelectionInCycle(
+        studentId,
+        admissionCycleId,
+        body.course_id,
+      );
+    if (activeSelection) {
+      throw new ConflictError(
+        "You already have an active application for this course in this admission cycle",
+      );
+    }
 
     if (body.campus_id) {
       const campus = await ApplicationRepository.findCampusInCollege(
@@ -129,13 +189,35 @@ export class ApplicationService {
     return toDto(row!);
   }
 
-  static async getMine(studentId: string, admissionCycleId: string) {
-    const row = await ApplicationRepository.findByStudentAndCycle(
+  /** Live read off the Student profile, to resume/pre-fill the wizard —
+   * not the frozen per-application snapshot (that's submit()-only). Works
+   * regardless of formStatus — even a submitted application's owner can
+   * still see their current profile data (e.g. before starting a second
+   * application). Returns only the one section asked for, since each
+   * detail step is its own page on the client. */
+  static async getFormDetails(
+    applicationId: string,
+    studentId: string,
+    section:
+      | "personal_details"
+      | "family_details"
+      | "address_details"
+      | "qualification_details",
+  ) {
+    const application = await ApplicationRepository.findByIdForStudent(
+      applicationId,
       studentId,
-      admissionCycleId,
     );
-    if (!row) throw new NotFoundError("Application not found");
-    return toDto(row);
+    if (!application) throw new NotFoundError("Application not found");
+
+    const details = await StudentsService.getDetailsForSnapshot(studentId);
+    const bySection = {
+      personal_details: details.personalDetails,
+      family_details: details.familyDetails,
+      address_details: details.addressDetails,
+      qualification_details: details.qualificationDetails,
+    };
+    return bySection[section];
   }
 
   private static async assertOwnDraft(
@@ -159,6 +241,10 @@ export class ApplicationService {
     }
   }
 
+  /** These four write to the Student profile (reusable across every
+   * application), not to this Application row — Application.assertOwnDraft
+   * still gates on this specific application being editable, but the
+   * payload itself lands on Student, keyed by studentId. See Plan M. */
   static async updatePersonalDetails(
     applicationId: string,
     studentId: string,
@@ -174,10 +260,13 @@ export class ApplicationService {
       ...rest
     } = body;
 
-    const row = await ApplicationRepository.updateDetailStep(
+    await StudentsService.updatePersonalDetails(studentId, {
+      ...rest,
+      date_of_birth: date_of_birth.toISOString(),
+    });
+
+    const row = await ApplicationRepository.advanceStep(
       applicationId,
-      "personalDetails",
-      { ...rest, date_of_birth: date_of_birth.toISOString() },
       STEP_NUMBERS.personal,
       {
         ...(profile_photo_url !== undefined && {
@@ -200,10 +289,9 @@ export class ApplicationService {
     body: FamilyDetailsInput,
   ) {
     await ApplicationService.assertOwnDraft(applicationId, studentId);
-    const row = await ApplicationRepository.updateDetailStep(
+    await StudentsService.updateFamilyDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
       applicationId,
-      "familyDetails",
-      body,
       STEP_NUMBERS.family,
     );
     return toDto(row);
@@ -215,10 +303,9 @@ export class ApplicationService {
     body: AddressDetailsInput,
   ) {
     await ApplicationService.assertOwnDraft(applicationId, studentId);
-    const row = await ApplicationRepository.updateDetailStep(
+    await StudentsService.updateAddressDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
       applicationId,
-      "addressDetails",
-      body,
       STEP_NUMBERS.address,
     );
     return toDto(row);
@@ -230,10 +317,9 @@ export class ApplicationService {
     body: QualificationDetailsInput,
   ) {
     await ApplicationService.assertOwnDraft(applicationId, studentId);
-    const row = await ApplicationRepository.updateDetailStep(
+    await StudentsService.updateQualificationDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
       applicationId,
-      "qualificationDetails",
-      body,
       STEP_NUMBERS.qualification,
     );
     return toDto(row);
@@ -291,6 +377,13 @@ export class ApplicationService {
       throw new ConflictError("Add at least one course before submitting");
     }
 
+    // Freeze whatever's currently on the Student profile onto this
+    // Application row — the one-time snapshot (Plan M). Read outside the
+    // transaction since it's just a source read, not part of the atomic
+    // write set.
+    const detailsSnapshot =
+      await StudentsService.getDetailsForSnapshot(studentId);
+
     await prisma.$transaction(async (tx) => {
       for (const course of courses) {
         await ApplicationCourseRepository.markSubmitted(tx, course.id);
@@ -303,7 +396,14 @@ export class ApplicationService {
         });
       }
 
-      await ApplicationRepository.markSubmitted(tx, applicationId);
+      await ApplicationRepository.markSubmitted(tx, applicationId, {
+        personalDetails:
+          detailsSnapshot.personalDetails as Prisma.InputJsonValue,
+        familyDetails: detailsSnapshot.familyDetails as Prisma.InputJsonValue,
+        addressDetails: detailsSnapshot.addressDetails as Prisma.InputJsonValue,
+        qualificationDetails:
+          detailsSnapshot.qualificationDetails as Prisma.InputJsonValue,
+      });
     });
 
     const row = await ApplicationRepository.findByIdForStudent(
@@ -313,8 +413,47 @@ export class ApplicationService {
     return toDto(row!);
   }
 
-  static async listMine(studentId: string) {
-    const rows = await ApplicationRepository.findAllForStudent(studentId);
+  /** Cycle-level admission status — null if the student hasn't started any
+   * application here yet, otherwise one entry per Application (a student
+   * can have several under one cycle now, Plan N — one per course). Each
+   * entry's pendingAction is derived cheaply off currentStep (never re-
+   * derived from checking which fields are actually filled), so a step
+   * revisited out of order after currentStep has already advanced past it
+   * won't be reflected here — same limitation the PATCH endpoints already
+   * have with "never regress currentStep". Documents aren't part of this
+   * resume sequence: currentStep doesn't track them (see
+   * ApplicationRepository.advanceStep's doc comment) and Submit doesn't
+   * require them either, so they're left for the client to check
+   * separately via List Required/Uploaded Documents. */
+  static async getStatus(studentId: string, admissionCycleId: string) {
+    const cycle =
+      await ApplicationRepository.findCycleForApply(admissionCycleId);
+    if (!cycle) throw new NotFoundError("Application form not found");
+
+    const rows = await ApplicationRepository.findStatusRows(studentId, {
+      admissionCycleId,
+    });
+    if (rows.length === 0) return null;
+    return rows.map(toStatusSummary);
+  }
+
+  /** Same as getStatus but with no specific cycle id — optionally narrowed
+   * to one college (covers a college running several concurrent cycles),
+   * or fully unscoped to span every college the student has ever applied
+   * to (a general "my applications" status screen). */
+  static async getStatusAllCycles(studentId: string, collegeId?: string) {
+    const rows = await ApplicationRepository.findStatusRows(studentId, {
+      collegeId,
+    });
+    if (rows.length === 0) return null;
+    return rows.map(toStatusSummary);
+  }
+
+  static async listMine(studentId: string, admissionCycleId?: string) {
+    const rows = await ApplicationRepository.findAllForStudent(
+      studentId,
+      admissionCycleId,
+    );
     return rows.map((row) => {
       const { admissionCycle, college, ...rest } = row;
       return {

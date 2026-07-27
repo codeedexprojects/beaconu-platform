@@ -125,7 +125,9 @@ model Application {
   applicationCourses ApplicationCourse[]
   documents          ApplicationDocument[]
 
-  @@unique([studentId, admissionCycleId], name: "uq_student_cycle")
+  // A student can have several Applications for the same cycle now (one
+  // per course, enforced at the service layer against the whole cycle, not
+  // per-application) — see application.service.ts's start()/addCourse().
   @@index([studentId], name: "idx_applications_student")
   @@index([collegeId], name: "idx_applications_college")
   @@index([admissionCycleId], name: "idx_applications_cycle")

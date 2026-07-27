@@ -1,0 +1,44 @@
+meta {
+  name: Get Admission Status (All Cycles, Student)
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/status?college_id={{collegeId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  ~college_id: {{collegeId}}
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Same as Get Admission Status, but with no admissionCycleId in the path —
+  use this whenever you don't have a specific cycle id in hand yet.
+
+  `college_id` (optional query param):
+  - omitted -> spans every admission cycle across every college the
+    student has ever applied to (general "my applications" status screen)
+  - provided -> narrows to that one college, across all of ITS cycles
+    (covers a college running several concurrent admission cycles) —
+    this is the one to use for an "Apply" button/page scoped to a
+    specific college where you know the college_id but not which cycle
+    the student may have already started under
+
+  Use the cycle-scoped version
+  (/application-forms/{{admissionCycleId}}/application/status) instead
+  when you already know the specific cycle.
+
+  `data` is `null` if the student hasn't started any application in scope
+  yet. Otherwise an array, same shape as the cycle-scoped endpoint — each
+  entry carries its own collegeId/collegeName and
+  admissionCycleId/admissionCycleName (every college runs fully independent
+  admission cycles), so entries from different colleges/cycles can be told
+  apart and grouped by the client.
+}

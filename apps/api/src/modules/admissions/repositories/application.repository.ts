@@ -55,13 +55,23 @@ export class ApplicationRepository {
     });
   }
 
-  static async findByStudentAndCycle(
+  /** The cross-application duplicate-course guard: is `courseId` already
+   * actively (non-withdrawn) selected in ANY of this student's
+   * Applications for this cycle? Used by both start() (the primary course)
+   * and addCourse() (any additional course) — a course can only ever be
+   * "live" in one of the student's applications per cycle at a time. */
+  static async findActiveCourseSelectionInCycle(
     studentId: string,
     admissionCycleId: string,
+    courseId: string,
   ) {
-    return prisma.application.findUnique({
-      where: { uq_student_cycle: { studentId, admissionCycleId } },
-      select: APPLICATION_SELECT,
+    return prisma.applicationCourse.findFirst({
+      where: {
+        courseId,
+        status: { not: "withdrawn" },
+        application: { studentId, admissionCycleId },
+      },
+      select: { id: true, applicationId: true, status: true },
     });
   }
 
@@ -113,20 +123,40 @@ export class ApplicationRepository {
     });
   }
 
-  /** Full-replace write for one of the JSON detail blobs (personal, family,
-   * address, qualification), plus the handful of top-level columns that
-   * conceptually belong to "personal details" (profile photo, WhatsApp).
-   * Advances currentStep to the furthest step reached so far — never
-   * regresses it if the student revisits an earlier step. */
+  /** Full-replace write for a JSON blob that genuinely lives on Application
+   * itself (only "declaration" left — personal/family/address/qualification
+   * moved to the Student profile, see StudentsService). Advances currentStep
+   * to the furthest step reached so far — never regresses it if the student
+   * revisits an earlier step. */
   static async updateDetailStep(
     id: string,
-    jsonField:
-      | "personalDetails"
-      | "familyDetails"
-      | "addressDetails"
-      | "qualificationDetails"
-      | "declaration",
+    jsonField: "declaration",
     jsonValue: object,
+    stepNumber: number,
+  ) {
+    const current = await prisma.application.findUnique({
+      where: { id },
+      select: { currentStep: true },
+    });
+    const nextStep = Math.max(current?.currentStep ?? 1, stepNumber);
+
+    return prisma.application.update({
+      where: { id },
+      data: {
+        [jsonField]: jsonValue,
+        currentStep: nextStep,
+      },
+      select: APPLICATION_SELECT,
+    });
+  }
+
+  /** Progress-tracking-only advance for the four steps whose actual data
+   * now lives on Student (see StudentsService.update*Details) — this just
+   * bumps currentStep (never regressing) and, for personal details only,
+   * patches the handful of top-level Application columns that conceptually
+   * belong to it (profile photo, WhatsApp) which weren't part of the move. */
+  static async advanceStep(
+    id: string,
     stepNumber: number,
     topLevelFields?: Record<string, unknown>,
   ) {
@@ -139,7 +169,6 @@ export class ApplicationRepository {
     return prisma.application.update({
       where: { id },
       data: {
-        [jsonField]: jsonValue,
         currentStep: nextStep,
         ...topLevelFields,
       },
@@ -159,13 +188,27 @@ export class ApplicationRepository {
     });
   }
 
-  static async markSubmitted(tx: Prisma.TransactionClient, id: string) {
+  /** `detailsSnapshot` freezes the student's current personal/family/
+   * address/qualification details onto this specific Application row —
+   * a one-time copy taken here at submit, never updated again even if the
+   * student's Student-level profile changes afterward. */
+  static async markSubmitted(
+    tx: Prisma.TransactionClient,
+    id: string,
+    detailsSnapshot: {
+      personalDetails: Prisma.InputJsonValue;
+      familyDetails: Prisma.InputJsonValue;
+      addressDetails: Prisma.InputJsonValue;
+      qualificationDetails: Prisma.InputJsonValue;
+    },
+  ) {
     return tx.application.update({
       where: { id },
       data: {
         formStatus: "submitted",
         submittedAt: new Date(),
         currentStep: 9,
+        ...detailsSnapshot,
       },
       select: { id: true },
     });
@@ -191,10 +234,56 @@ export class ApplicationRepository {
     await prisma.application.delete({ where: { id } });
   }
 
-  static async findAllForStudent(studentId: string) {
+  static async findAllForStudent(studentId: string, admissionCycleId?: string) {
     return prisma.application.findMany({
-      where: { studentId },
+      where: { studentId, ...(admissionCycleId && { admissionCycleId }) },
       select: APPLICATION_LIST_SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /** For the admission-status API — one row per Application the student
+   * has (optionally narrowed to one cycle and/or one college), each with
+   * what's needed to compute its pending action (fee status, form status,
+   * currentStep), the owning college's + cycle's own id/name (every
+   * college runs its own independent admission cycles — this is what lets
+   * results spanning colleges be told apart), and every non-withdrawn
+   * course on it (not just the primary — an application can carry
+   * several). Omitting both filters spans every cycle/college the student
+   * has ever applied to. `collegeId` alone (no `admissionCycleId`) covers
+   * a college that runs several concurrent cycles — narrower than "all
+   * colleges", broader than "one specific cycle". */
+  static async findStatusRows(
+    studentId: string,
+    filters?: { admissionCycleId?: string; collegeId?: string },
+  ) {
+    return prisma.application.findMany({
+      where: {
+        studentId,
+        ...(filters?.admissionCycleId && {
+          admissionCycleId: filters.admissionCycleId,
+        }),
+        ...(filters?.collegeId && { collegeId: filters.collegeId }),
+      },
+      select: {
+        id: true,
+        applicationNumber: true,
+        formStatus: true,
+        feePaymentStatus: true,
+        currentStep: true,
+        createdAt: true,
+        college: { select: { id: true, name: true } },
+        admissionCycle: { select: { id: true, name: true } },
+        applicationCourses: {
+          where: { status: { not: "withdrawn" } },
+          select: {
+            isPrimary: true,
+            status: true,
+            course: { select: { id: true, name: true, code: true } },
+          },
+          orderBy: { preferenceOrder: "asc" },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
   }

@@ -65,7 +65,7 @@ export class AdmissionCycleQuery {
   static async listForStudent(filters: StudentAdmissionCycleListQuery) {
     const rows = await prisma.admissionCycle.findMany({
       where: {
-        collegeId: filters.college_id,
+        ...(filters.college_id && { collegeId: filters.college_id }),
         status: "open",
         ...(filters.application_type && {
           applicationType: filters.application_type,
@@ -73,6 +73,14 @@ export class AdmissionCycleQuery {
         ...(filters.program_level && { programLevel: filters.program_level }),
         ...(filters.admission_year && {
           admissionYear: filters.admission_year,
+        }),
+        // Only cycles that actually have this course attached and open for
+        // applications — not just any cycle at a college that offers it
+        // elsewhere/in a different cycle.
+        ...(filters.course_id && {
+          admissionCycleCourses: {
+            some: { courseId: filters.course_id, isActive: true },
+          },
         }),
       },
       orderBy: [{ startsOn: "desc" }],

@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/personal-details
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/personal-details
   body: json
   auth: none
 }
@@ -34,8 +34,14 @@ body:json {
 
 docs {
   Full-replace write of the personal-details step (409 if the application
-  has already been submitted). `profile_photo_url` / `whatsapp_country_code`
-  / `whatsapp_number` are stored as top-level Application columns, not
-  inside the JSON blob, but accepted together here since they're
-  conceptually part of "personal info." Advances currentStep to at least 3.
+  has already been submitted). The URL still takes an application id (used
+  only for the ownership/draft/paid gate), but the actual data now lands
+  on the Student profile, not this Application row — reusable across every
+  application the same student submits. `profile_photo_url` /
+  `whatsapp_country_code` / `whatsapp_number` are the one exception: still
+  stored as top-level Application columns, accepted together here since
+  they're conceptually part of "personal info." Advances currentStep to at
+  least 3. Application only gets its own frozen copy of personal_details
+  once, at Submit Application (the point-in-time snapshot) — see
+  Get Application Form Details to read the live (pre-submit) values.
 }

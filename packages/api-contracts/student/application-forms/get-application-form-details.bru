@@ -1,0 +1,38 @@
+meta {
+  name: Get Application Form Details
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/details?section=personal_details
+  body: none
+  auth: none
+}
+
+params:query {
+  section: personal_details
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Live read of ONE form-step section straight off the Student profile —
+  for resuming/pre-filling that step's page. `section` is required, one of:
+  personal_details | family_details | address_details | qualification_details.
+  Each page on the client calls this with its own `section` value rather
+  than fetching all four at once.
+
+  Response `data` is just that section's object directly (e.g. for
+  `section=personal_details`, `data` is `{ full_name, date_of_birth, ... }`),
+  or `{}` if that step hasn't been filled in yet. Missing/invalid `section`
+  -> ValidationError.
+
+  This is NOT the frozen per-application snapshot — that's only written
+  once, at Submit Application, and isn't exposed by this endpoint. Works
+  regardless of the application's form_status (even after submit, so the
+  student can still see their current profile before starting a second
+  application elsewhere).
+}
