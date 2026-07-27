@@ -94,4 +94,34 @@ export class AdmissionCycleQuery {
     });
     return row ? mapAdmissionCycle(row) : null;
   }
+
+  /** Which of these course ids currently have an actively-attached course
+   * on a cycle that's genuinely open right now — same "open" + date-window
+   * rule Start Application enforces (status "open", today on/after
+   * startsOn, today on/before the whole endsOn day). Used by the public
+   * course listing to show a "you can apply now" flag without exposing
+   * which specific cycle it is. */
+  static async findCourseIdsWithActiveOpenCycle(
+    courseIds: string[],
+  ): Promise<string[]> {
+    if (courseIds.length === 0) return [];
+    const now = new Date();
+    const todayMidnight = new Date();
+    todayMidnight.setUTCHours(0, 0, 0, 0);
+
+    const rows = await prisma.admissionCycleCourse.findMany({
+      where: {
+        courseId: { in: courseIds },
+        isActive: true,
+        admissionCycle: {
+          status: "open",
+          startsOn: { lte: now },
+          OR: [{ endsOn: null }, { endsOn: { gte: todayMidnight } }],
+        },
+      },
+      select: { courseId: true },
+      distinct: ["courseId"],
+    });
+    return rows.map((r) => r.courseId);
+  }
 }

@@ -1,5 +1,6 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { AdmissionCycleRepository } from "../repositories/admission-cycle.repository";
+import { AdmissionCycleQuery } from "../queries/admission-cycle.query";
 import type {
   CreateAdmissionCycleInput,
   UpdateAdmissionCycleInput,
@@ -57,5 +58,16 @@ export class AdmissionCycleService {
   static async remove(id: string, collegeId: string) {
     await this.loadForCollege(id, collegeId);
     return AdmissionCycleRepository.archive(id);
+  }
+
+  /** For other modules (e.g. colleges' public course listing) to check
+   * "can a student apply to this course right now" without reaching into
+   * this module's Query/Repository directly — cross-module access goes
+   * through Services only. Returns just the subset of `courseIds` that
+   * currently have an active, genuinely-open admission cycle attached. */
+  static async getCourseIdsWithActiveForm(
+    courseIds: string[],
+  ): Promise<string[]> {
+    return AdmissionCycleQuery.findCourseIdsWithActiveOpenCycle(courseIds);
   }
 }

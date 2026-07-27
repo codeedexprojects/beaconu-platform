@@ -43,6 +43,8 @@ export class ApplicationRepository {
         collegeId: true,
         status: true,
         admissionYear: true,
+        startsOn: true,
+        endsOn: true,
         college: { select: { code: true } },
       },
     });

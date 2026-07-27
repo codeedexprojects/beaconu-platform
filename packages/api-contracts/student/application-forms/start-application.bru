@@ -38,11 +38,18 @@ script:post-response {
 docs {
   Creates a NEW draft Application for the authenticated student against
   this admission cycle (404 if the cycle doesn't exist, 409 if it's not
-  currently "open"). NOT idempotent anymore: a student can have several
-  separate Applications under the same cycle now (one per course) — this
-  always creates a new Application row, 409 only if the requested
-  course_id is already actively (non-withdrawn) selected in ANY of the
-  student's existing applications for this cycle.
+  currently "open", 409 if today is before the cycle's startsOn date, 409
+  if today is after its endsOn deadline — inclusive of the whole endsOn
+  day). NOT idempotent anymore: a student can have several separate
+  Applications under the same cycle now (one per course) — this always
+  creates a new Application row, 409 only if the requested course_id is
+  already actively (non-withdrawn) selected in ANY of the student's
+  existing applications for this cycle.
+
+  The deadline is checked ONLY here, at Start — once an Application has
+  been started, the student can keep filling it in, paying, and
+  submitting even if the cycle's endsOn date passes afterward. It never
+  blocks an already-started draft, only a brand-new one.
 
   `nationality` is required and drives NRI-style application-fee surcharges
   applied on the primary course's fee. `course_id` is REQUIRED — this

@@ -42,9 +42,17 @@ docs {
         "stream": { "id": "...", "name": "Engineering", "slug": "engineering" }
       },
       "studyLevel": { "id": "...", "name": "Undergraduate", "slug": "undergraduate" },
-      "programType": { "id": "...", "name": "B.Tech", "slug": "btech" }
+      "programType": { "id": "...", "name": "B.Tech", "slug": "btech" },
+      "hasActiveAdmissionForm": true
     }
   ]
+
+  hasActiveAdmissionForm — true if this course is actively attached
+  (AdmissionCycleCourse.isActive) to an admission cycle that's genuinely
+  open right now: cycle.status === "open" AND today is on/after the
+  cycle's startsOn AND on/before the whole endsOn day (same window Start
+  Application itself enforces). Doesn't identify which specific cycle —
+  use List Application Forms with ?course_id= to find it.
 
   Sets courseId env var from the first result for downstream requests.
 }
