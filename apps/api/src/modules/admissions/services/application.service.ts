@@ -113,6 +113,26 @@ export class ApplicationService {
       throw new ConflictError("This application form is not currently open");
     }
 
+    // startsOn/endsOn are @db.Date (date-only, no time component) — compare
+    // against the whole day, not an exact instant: a cycle isn't open for
+    // applications until its start date, and stays open through the whole
+    // of its end date (inclusive), not just up to midnight at its start.
+    const now = new Date();
+    if (now < cycle.startsOn) {
+      throw new ConflictError(
+        "This application form is not open yet — check back on its start date",
+      );
+    }
+    if (cycle.endsOn) {
+      const endOfDeadlineDay = new Date(cycle.endsOn);
+      endOfDeadlineDay.setUTCHours(23, 59, 59, 999);
+      if (now > endOfDeadlineDay) {
+        throw new ConflictError(
+          "The deadline for this application form has passed",
+        );
+      }
+    }
+
     // Cross-application guard (Plan N): a student can have several
     // Applications for this cycle now, one per course — but never two
     // active ones for the SAME course.

@@ -6,6 +6,7 @@ import { publicCollegeSchemas } from "../validators/public-college.validator";
 import { CollegeRegistrationService } from "../services/college-registration.service";
 import { BlinkService } from "@/modules/blink/services/blink.service";
 import { WishlistService } from "@/modules/wishlist/services/wishlist.service";
+import { AdmissionCycleService } from "@/modules/admissions/services/admission-cycle.service";
 import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
 
 // req.userId is only populated for students on public routes (via
@@ -565,6 +566,12 @@ export class PublicCollegeController {
       },
     });
 
+    const courseIdsWithActiveForm =
+      await AdmissionCycleService.getCourseIdsWithActiveForm(
+        courses.map((c) => c.id),
+      );
+    const activeFormCourseIds = new Set(courseIdsWithActiveForm);
+
     const mappedCourses = courses.map((course: any) => {
       const rawMeta =
         course.metadata && typeof course.metadata === "object"
@@ -580,7 +587,11 @@ export class PublicCollegeController {
         name: toTabDisplayName(id),
       }));
       const { tabData: _td, tabs: _ts, ...restMeta } = rawMeta;
-      return { ...course, metadata: { ...restMeta, tabs } };
+      return {
+        ...course,
+        metadata: { ...restMeta, tabs },
+        hasActiveAdmissionForm: activeFormCourseIds.has(course.id),
+      };
     });
 
     return res
