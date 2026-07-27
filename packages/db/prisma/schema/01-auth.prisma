@@ -16,6 +16,15 @@ model Student {
   source           String    @default("beaconu_app") @db.VarChar(30)
   status           String    @default("active") @db.VarChar(20)
   profileMetadata  Json      @default("{}") @map("profile_metadata")
+  // Live source of truth for the admission-application form's four detail
+  // steps, reusable across every application the student submits.
+  // AdmissionCycle applications keep their own copies of these as a
+  // frozen, point-in-time snapshot taken once at submit — see
+  // Application.personalDetails etc. in 04-admissions.prisma.
+  personalDetails      Json      @default("{}") @map("personal_details")
+  familyDetails        Json      @default("{}") @map("family_details")
+  addressDetails       Json      @default("{}") @map("address_details")
+  qualificationDetails Json      @default("{}") @map("qualification_details")
   lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz

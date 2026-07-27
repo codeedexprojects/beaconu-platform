@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/family-details
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/family-details
   body: json
   auth: none
 }
@@ -30,5 +30,7 @@ body:json {
 
 docs {
   Full-replace write of the family-details step (409 if already submitted).
-  Advances currentStep to at least 4.
+  Advances currentStep to at least 4. Lands on the Student profile, not
+  this Application row — see Update Personal Details' docs for why, and
+  Get Application Form Details to read it back before submit.
 }

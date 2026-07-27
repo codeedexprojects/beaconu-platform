@@ -1,6 +1,7 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
+import { ApplicationRepository } from "../repositories/application.repository";
 import type { AddApplicationCourseInput } from "../validators/application-course.validator";
 
 type ApplicationCourseRow = NonNullable<
@@ -102,6 +103,25 @@ export class ApplicationCourseService {
     if (existing && existing.status !== "withdrawn") {
       throw new ConflictError(
         "This course has already been added to your application",
+      );
+    }
+
+    // Cross-application guard (Plan N): the student may have a *different*
+    // Application for this same cycle that already has this course active
+    // — a course can only ever be live in one of a student's applications
+    // per cycle at a time.
+    const crossAppSelection =
+      await ApplicationRepository.findActiveCourseSelectionInCycle(
+        studentId,
+        application.admissionCycleId,
+        body.course_id,
+      );
+    if (
+      crossAppSelection &&
+      crossAppSelection.applicationId !== applicationId
+    ) {
+      throw new ConflictError(
+        "You already have an active application for this course in this admission cycle",
       );
     }
 

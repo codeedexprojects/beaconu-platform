@@ -55,13 +55,12 @@ async function ensureAdmissionCycleCourse() {
 }
 
 async function ensureApplicationCourse(studentId: string) {
+  // A student can now have multiple Applications per cycle (Plan N) —
+  // this seed script only ever wants its own EVALSEED-* one, identified by
+  // the stable applicationNumber, not by (studentId, admissionCycleId)
+  // alone anymore.
   let application = await prisma.application.findUnique({
-    where: {
-      uq_student_cycle: {
-        studentId,
-        admissionCycleId: ADMISSION_CYCLE_ID,
-      },
-    },
+    where: { applicationNumber: `EVALSEED-${studentId}` },
   });
   if (!application) {
     // Stable per-student, not positional — re-running with a different

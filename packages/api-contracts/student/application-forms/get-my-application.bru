@@ -1,5 +1,5 @@
 meta {
-  name: Get My Application (Student)
+  name: List My Applications For Cycle (Student)
   type: http
   seq: 4
 }
@@ -15,6 +15,14 @@ headers {
 }
 
 docs {
-  Fetches the authenticated student's own application (draft or submitted)
-  for this admission cycle. 404 if they haven't started one yet.
+  Lists every Application the authenticated student has for this admission
+  cycle (draft or submitted). A student can now have several — one per
+  course, each a fully separate Application — as long as no two active
+  (non-withdrawn) course selections across all of them target the same
+  course. Empty array if they haven't started any yet.
+
+  Each nested action (personal-details, documents, declaration, submit,
+  etc.) is addressed via its own applicationId under
+  /application-forms/my-applications/{{applicationId}}/... — use this list
+  to find the applicationId for whichever application you want to act on.
 }

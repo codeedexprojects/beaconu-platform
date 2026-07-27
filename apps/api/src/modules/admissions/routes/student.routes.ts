@@ -21,61 +21,84 @@ router.get(
   StudentApplicationController.getMyApplicationById,
 );
 
-router.get("/:id", StudentAdmissionCycleController.getById);
-router.get("/:id/courses", StudentAdmissionCycleController.listCourseCatalogue);
+// No cycle id given — status across every cycle the student has ever
+// applied to. Registered before "/:id" for the same wildcard-ordering
+// reason as my-applications above.
+router.get("/status", StudentApplicationController.getStatusAllCycles);
 
-router.post("/:id/application", StudentApplicationController.start);
-router.get("/:id/application", StudentApplicationController.getMine);
-
-router.post("/:id/application/courses", StudentApplicationController.addCourse);
+// A student can have several Applications per cycle now (one per course,
+// Plan N) — every action beyond "list for this cycle" / "start a new one"
+// targets a specific applicationId directly, not the cycle. Registered
+// before "/:id" for the same wildcard-ordering reason as my-applications
+// above.
+router.get(
+  "/my-applications/:applicationId/details",
+  StudentApplicationController.getFormDetails,
+);
+router.get(
+  "/my-applications/:applicationId/summary",
+  StudentApplicationController.getPaymentSummary,
+);
+router.post(
+  "/my-applications/:applicationId/courses",
+  StudentApplicationController.addCourse,
+);
 router.delete(
-  "/:id/application/courses/:appCourseId",
+  "/my-applications/:applicationId/courses/:appCourseId",
   StudentApplicationController.withdrawCourse,
 );
 router.patch(
-  "/:id/application/courses/:appCourseId/quota",
+  "/my-applications/:applicationId/courses/:appCourseId/quota",
   StudentApplicationController.changeCourseQuota,
 );
-
-router.get(
-  "/:id/application/summary",
-  StudentApplicationController.getPaymentSummary,
-);
-
 router.patch(
-  "/:id/application/personal-details",
+  "/my-applications/:applicationId/personal-details",
   StudentApplicationController.updatePersonalDetails,
 );
 router.patch(
-  "/:id/application/family-details",
+  "/my-applications/:applicationId/family-details",
   StudentApplicationController.updateFamilyDetails,
 );
 router.patch(
-  "/:id/application/address-details",
+  "/my-applications/:applicationId/address-details",
   StudentApplicationController.updateAddressDetails,
 );
 router.patch(
-  "/:id/application/qualification-details",
+  "/my-applications/:applicationId/qualification-details",
   StudentApplicationController.updateQualificationDetails,
 );
-
 router.get(
-  "/:id/application/documents/required",
+  "/my-applications/:applicationId/documents/required",
   StudentApplicationController.listRequiredDocuments,
 );
 router.get(
-  "/:id/application/documents",
+  "/my-applications/:applicationId/documents",
   StudentApplicationController.listUploadedDocuments,
 );
 router.post(
-  "/:id/application/documents",
+  "/my-applications/:applicationId/documents",
   StudentApplicationController.registerDocument,
 );
-
 router.patch(
-  "/:id/application/declaration",
+  "/my-applications/:applicationId/declaration",
   StudentApplicationController.updateDeclaration,
 );
-router.post("/:id/application/submit", StudentApplicationController.submit);
+router.post(
+  "/my-applications/:applicationId/submit",
+  StudentApplicationController.submit,
+);
+
+router.get("/:id", StudentAdmissionCycleController.getById);
+router.get("/:id/courses", StudentAdmissionCycleController.listCourseCatalogue);
+
+// Start a new Application under this cycle (course-gated, not
+// idempotent-per-cycle anymore — see ApplicationService.start()).
+router.post("/:id/application", StudentApplicationController.start);
+// List every Application the student has for this cycle (can be more
+// than one, Plan N).
+router.get("/:id/application", StudentApplicationController.listForCycle);
+// null if no application started yet; else one status + pending action
+// per application the student has for this cycle.
+router.get("/:id/application/status", StudentApplicationController.getStatus);
 
 export default router;

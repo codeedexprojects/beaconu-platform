@@ -21,6 +21,49 @@ export interface StudentApplicationDto {
   updatedAt: string;
 }
 
+/** The single next thing the student needs to do on a given Application.
+ * "payment" — primary course's fee isn't paid yet. One of the four detail
+ * steps or "declaration" — resume there. "submit" — every step is done,
+ * call Submit Application. "none" — already submitted. Documents aren't
+ * part of this sequence — check List Required/Uploaded Documents
+ * separately. */
+export type PendingApplicationAction =
+  | "payment"
+  | "personal_details"
+  | "family_details"
+  | "address_details"
+  | "qualification_details"
+  | "declaration"
+  | "submit"
+  | "none";
+
+export interface ApplicationStatusCourse {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  status: string;
+}
+
+/** One entry per Application the student has for an admission cycle (can
+ * be several, one per course) — the cycle-level admission status API
+ * returns `null` instead of this array when the student hasn't started
+ * any application yet. `courses` lists every non-withdrawn course on that
+ * application (primary + any extras), not just one. */
+export interface ApplicationStatusSummary {
+  applicationId: string;
+  applicationNumber: string;
+  collegeId: string;
+  collegeName: string;
+  admissionCycleId: string;
+  admissionCycleName: string;
+  courses: ApplicationStatusCourse[];
+  formStatus: string;
+  feePaymentStatus: string;
+  pendingAction: PendingApplicationAction;
+  createdAt: string;
+}
+
 export interface StartApplicationInput {
   nationality: string;
   // The primary course — required, since payment (and everything after
@@ -159,6 +202,25 @@ export interface QualificationEntry {
 
 export interface QualificationDetailsInput {
   qualifications: QualificationEntry[];
+}
+
+/** Live read of one form-step section off the Student profile — used to
+ * resume/pre-fill the wizard. Selected via `?section=` since each step is
+ * its own page on the client; whatever was last saved via the matching
+ * PATCH, or `{}` if that step hasn't been filled yet. Not the frozen
+ * per-application snapshot (that's only set at submit and isn't exposed by
+ * this endpoint). */
+export type ApplicationFormDetailsSection =
+  | "personal_details"
+  | "family_details"
+  | "address_details"
+  | "qualification_details";
+
+export interface ApplicationFormDetailsBySection {
+  personal_details: Partial<PersonalDetailsInput>;
+  family_details: Partial<FamilyDetailsInput>;
+  address_details: Partial<AddressDetailsInput>;
+  qualification_details: Partial<QualificationDetailsInput>;
 }
 
 export interface RequiredDocumentDto {

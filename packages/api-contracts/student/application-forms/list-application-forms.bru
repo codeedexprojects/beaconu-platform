@@ -12,6 +12,7 @@ get {
 
 params:query {
   college_id: {{collegeId}}
+  ~course_id: {{courseId}}
   ~application_type: Regular
   ~program_level: undergraduate
   ~admission_year: 2026
@@ -22,10 +23,23 @@ headers {
 }
 
 docs {
-  Lists currently open application forms for a college. Read-only — students
-  cannot create/update/delete application forms.
-  
-  Query:
-  - college_id (required)
-  - application_type, program_level, admission_year (all optional filters)
+  Lists currently open application forms. Read-only — students cannot
+  create/update/delete application forms.
+
+  Query (all optional):
+  - college_id — scopes to one college; omit it to list open forms across
+    every college instead.
+  - course_id — only cycles that actually have this course attached and
+    active (not just any cycle at a college that happens to offer it
+    elsewhere) — for "which open forms can I apply to this specific course
+    under" searches.
+  - application_type, program_level, admission_year — further filters,
+    combinable freely with college_id/course_id.
+
+  This is also what a client hits when it doesn't have a specific
+  admissionCycleId yet — e.g. Get Application Form
+  ({{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}) with
+  an empty id resolves to this same GET /application-forms URL (Express
+  can't match an empty path segment to the :id route), so it lands here
+  automatically and now returns every open form instead of erroring.
 }

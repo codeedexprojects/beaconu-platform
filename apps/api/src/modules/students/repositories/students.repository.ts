@@ -48,4 +48,36 @@ export class StudentsRepository {
       select: STUDENT_SELECT,
     });
   }
+
+  /** Wholesale-replace write for one of the four admission-application
+   * detail blobs, reusable across every application the student submits —
+   * see Application.personalDetails etc. for the frozen per-application
+   * snapshot taken once at submit. */
+  static async updateDetailStep(
+    id: string,
+    field:
+      | "personalDetails"
+      | "familyDetails"
+      | "addressDetails"
+      | "qualificationDetails",
+    value: Prisma.InputJsonValue,
+  ) {
+    return prisma.student.update({
+      where: { id },
+      data: { [field]: value },
+      select: { id: true },
+    });
+  }
+
+  static async findDetailsForSnapshot(id: string) {
+    return prisma.student.findUnique({
+      where: { id },
+      select: {
+        personalDetails: true,
+        familyDetails: true,
+        addressDetails: true,
+        qualificationDetails: true,
+      },
+    });
+  }
 }

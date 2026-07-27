@@ -8,7 +8,11 @@ import { ApplicationService } from "../services/application.service";
 import { ApplicationCourseService } from "../services/application-course.service";
 import { ApplicationDocumentService } from "../services/application-document.service";
 import { studentAdmissionCycleListQuerySchema } from "../validators/admission-cycle.validator";
-import { startApplicationSchema } from "../validators/application.validator";
+import {
+  startApplicationSchema,
+  getFormDetailsQuerySchema,
+  getStatusAllCyclesQuerySchema,
+} from "../validators/application.validator";
 import {
   addApplicationCourseSchema,
   changeApplicationCourseQuotaSchema,
@@ -61,22 +65,53 @@ export class StudentApplicationController {
       .json(ApiResponse.success("Application started", result));
   }
 
-  static async getMine(req: Request, res: Response) {
-    const result = await ApplicationService.getMine(
+  /** A student can have several Applications for one cycle now (Plan N) —
+   * lists all of them for this cycle, not "the" one. */
+  static async listForCycle(req: Request, res: Response) {
+    const result = await ApplicationService.listMine(
       req.userId as string,
       req.params.id as string,
     );
-    return res.json(ApiResponse.success("Application fetched", result));
+    return res.json(ApiResponse.success("Applications fetched", result));
+  }
+
+  /** null when the student hasn't started any application for this cycle;
+   * otherwise one entry per Application (there can be several now, Plan N)
+   * with its pending action. */
+  static async getStatus(req: Request, res: Response) {
+    const result = await ApplicationService.getStatus(
+      req.userId as string,
+      req.params.id as string,
+    );
+    return res.json(ApiResponse.success("Application status fetched", result));
+  }
+
+  /** Same as getStatus but with no cycle id given — optionally narrowed to
+   * one college via ?college_id=, else spans every college the student has
+   * ever applied to. */
+  static async getStatusAllCycles(req: Request, res: Response) {
+    const query = getStatusAllCyclesQuerySchema.parse(req.query);
+    const result = await ApplicationService.getStatusAllCycles(
+      req.userId as string,
+      query.college_id,
+    );
+    return res.json(ApiResponse.success("Application status fetched", result));
+  }
+
+  static async getFormDetails(req: Request, res: Response) {
+    const query = getFormDetailsQuerySchema.parse(req.query);
+    const result = await ApplicationService.getFormDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      query.section,
+    );
+    return res.json(ApiResponse.success("Form details fetched", result));
   }
 
   static async addCourse(req: Request, res: Response) {
     const body = addApplicationCourseSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationCourseService.addCourse(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -84,12 +119,8 @@ export class StudentApplicationController {
   }
 
   static async withdrawCourse(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     await ApplicationCourseService.withdrawCourse(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       req.params.appCourseId as string,
     );
@@ -98,12 +129,8 @@ export class StudentApplicationController {
 
   static async changeCourseQuota(req: Request, res: Response) {
     const body = changeApplicationCourseQuotaSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationCourseService.changeQuota(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       req.params.appCourseId as string,
       body.course_quota_seat_id ?? null,
@@ -112,24 +139,23 @@ export class StudentApplicationController {
   }
 
   static async getPaymentSummary(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
+    // ApplicationPaymentSummaryQuery has no ownership check of its own
+    // (Query layer, no studentId param) — verified here first, same as
+    // every other action in this controller.
+    await ApplicationService.getById(
+      req.params.applicationId as string,
       req.userId as string,
-      req.params.id as string,
     );
     const result = await ApplicationPaymentSummaryQuery.getForApplication(
-      application.id,
+      req.params.applicationId as string,
     );
     return res.json(ApiResponse.success("Payment summary fetched", result));
   }
 
   static async updatePersonalDetails(req: Request, res: Response) {
     const body = personalDetailsSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.updatePersonalDetails(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -138,12 +164,8 @@ export class StudentApplicationController {
 
   static async updateFamilyDetails(req: Request, res: Response) {
     const body = familyDetailsSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.updateFamilyDetails(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -152,12 +174,8 @@ export class StudentApplicationController {
 
   static async updateAddressDetails(req: Request, res: Response) {
     const body = addressDetailsSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.updateAddressDetails(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -166,12 +184,8 @@ export class StudentApplicationController {
 
   static async updateQualificationDetails(req: Request, res: Response) {
     const body = qualificationDetailsSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.updateQualificationDetails(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -179,24 +193,16 @@ export class StudentApplicationController {
   }
 
   static async listRequiredDocuments(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationDocumentService.listRequired(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
     );
     return res.json(ApiResponse.success("Required documents fetched", result));
   }
 
   static async listUploadedDocuments(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationDocumentService.listUploaded(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
     );
     return res.json(ApiResponse.success("Uploaded documents fetched", result));
@@ -204,12 +210,8 @@ export class StudentApplicationController {
 
   static async registerDocument(req: Request, res: Response) {
     const body = registerApplicationDocumentSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationDocumentService.register(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -218,12 +220,8 @@ export class StudentApplicationController {
 
   static async updateDeclaration(req: Request, res: Response) {
     const body = declarationSchema.parse(req.body);
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.updateDeclaration(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
       body,
     );
@@ -231,12 +229,8 @@ export class StudentApplicationController {
   }
 
   static async submit(req: Request, res: Response) {
-    const application = await ApplicationService.getMine(
-      req.userId as string,
-      req.params.id as string,
-    );
     const result = await ApplicationService.submit(
-      application.id,
+      req.params.applicationId as string,
       req.userId as string,
     );
     return res.json(ApiResponse.success("Application submitted", result));

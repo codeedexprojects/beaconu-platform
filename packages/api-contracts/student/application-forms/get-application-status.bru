@@ -1,0 +1,54 @@
+meta {
+  name: Get Admission Status (Student)
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/status
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Cycle-level admission status, with a pending action for each application.
+
+  `data` is `null` if the student hasn't started any application for this
+  admission cycle yet. Otherwise it's an array — one entry per Application
+  the student has here (there can be several now, one per course, see
+  Start Application) — each shaped:
+
+  {
+    applicationId, applicationNumber,
+    collegeId, collegeName,
+    admissionCycleId, admissionCycleName,
+    courses: [
+      { courseId, courseName, courseCode, isPrimary, status }, ...
+    ],                                        // every non-withdrawn course on this
+                                               // application, not just the primary
+    formStatus, feePaymentStatus,
+    pendingAction: "payment" | "personal_details" | "family_details"
+                 | "address_details" | "qualification_details"
+                 | "declaration" | "submit" | "none",
+    createdAt
+  }
+
+  pendingAction — the single next thing to do for this application, not a
+  list of everything remaining:
+  - primary course's fee not yet paid -> "payment"
+  - paid, still draft -> the first incomplete step's name (e.g.
+    "qualification_details"), derived cheaply from the application's
+    currentStep (never re-checks whether an earlier step was actually
+    filled in)
+  - paid, currentStep past declaration -> "submit" (ready to call Submit
+    Application)
+  - formStatus "submitted" -> "none"
+
+  Documents are NOT part of this sequence (Submit doesn't require them and
+  currentStep doesn't track them) — check List Required/Uploaded Documents
+  separately for that.
+}
