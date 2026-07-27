@@ -30,7 +30,7 @@ export function AccreditationsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               Accreditations & Approvals
             </CardTitle>
             <CardDescription>

@@ -65,6 +65,12 @@ function useQuotaEligibleCourses(
   };
 }
 
+function parseTotalSeats(value: string): number | null {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0) return null;
+  return n;
+}
+
 function CourseChipPicker({
   courses,
   selected,
@@ -311,10 +317,15 @@ export function ManageSeatPoolsDialog({
       toast.error("Select at least one course to share this pool");
       return;
     }
+    const totalSeatsValue = parseTotalSeats(totalSeats);
+    if (totalSeatsValue === null) {
+      toast.error("Total seats must be a whole number of 0 or more");
+      return;
+    }
     createPool(
       {
         college_quota_id: selectedQuotaId,
-        total_seats: Number(totalSeats) || 0,
+        total_seats: totalSeatsValue,
         course_ids: Array.from(selectedCourseIds),
       },
       {
@@ -368,11 +379,16 @@ export function ManageSeatPoolsDialog({
       toast.error("A seat pool needs at least one course");
       return;
     }
+    const totalSeatsValue = parseTotalSeats(draft.totalSeats);
+    if (totalSeatsValue === null) {
+      toast.error("Total seats must be a whole number of 0 or more");
+      return;
+    }
     updatePool(
       {
         id: pool.id,
         data: {
-          total_seats: Number(draft.totalSeats) || 0,
+          total_seats: totalSeatsValue,
           course_ids: Array.from(draft.courseIds),
         },
       },

@@ -592,7 +592,7 @@ export default function DocumentSubmissionRequestsPage() {
                     href={viewingRequest.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                    className="flex items-center gap-1.5 text-primary hover:underline"
                   >
                     <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     {viewingRequest.fileName ?? "View file"}

@@ -163,13 +163,25 @@ function RequirementCard({
   }
 
   function handleSave() {
+    if (!label.trim() || !category.trim()) {
+      toast.error("Fill in label and category");
+      return;
+    }
+    if (label.trim().length > 100) {
+      toast.error("Label must be 100 characters or fewer");
+      return;
+    }
+    if (category.trim().length > 30) {
+      toast.error("Category must be 30 characters or fewer");
+      return;
+    }
     if (mimeTypes.size === 0) {
       toast.error("Select at least one accepted file type");
       return;
     }
     onSave({
-      document_label: label,
-      document_category: category,
+      document_label: label.trim(),
+      document_category: category.trim(),
       is_required: required,
       accepted_mime_types: Array.from(mimeTypes) as DocumentMimeType[],
       course_ids: Array.from(courseIds),
@@ -371,6 +383,14 @@ export function ManageDocumentsDialog({
   function handleCreate() {
     if (!newLabel.trim() || !newCategory.trim()) {
       toast.error("Fill in label and category");
+      return;
+    }
+    if (newLabel.trim().length > 100) {
+      toast.error("Label must be 100 characters or fewer");
+      return;
+    }
+    if (newCategory.trim().length > 30) {
+      toast.error("Category must be 30 characters or fewer");
       return;
     }
     if (newMimeTypes.size === 0) {

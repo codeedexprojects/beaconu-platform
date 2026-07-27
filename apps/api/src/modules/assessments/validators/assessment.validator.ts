@@ -34,29 +34,49 @@ const answerKeySchema = z.object({
   blankAnswers: z.array(blankAnswerSchema).optional(),
 });
 
-export const createQuestionSchema = z.object({
-  question_type_id: z.string().trim().min(1, "Question type is required"),
-  difficulty: z.enum(["easy", "medium", "hard"]),
-  title: z.string().trim().max(255).optional(),
-  content: questionContentSchema,
-  answer_key: answerKeySchema.optional(),
-  marks: z.coerce.number().positive(),
-  negative_marks: z.coerce.number().min(0).optional(),
-  time_limit_secs: z.coerce.number().int().positive().default(60),
-  course_ids: z.array(z.string().trim().min(1)).optional(),
-});
+export const createQuestionSchema = z
+  .object({
+    question_type_id: z.string().trim().min(1, "Question type is required"),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    title: z.string().trim().max(255).optional(),
+    content: questionContentSchema,
+    answer_key: answerKeySchema.optional(),
+    marks: z.coerce.number().positive(),
+    negative_marks: z.coerce.number().min(0).optional(),
+    time_limit_secs: z.coerce.number().int().positive().default(60),
+    course_ids: z.array(z.string().trim().min(1)).optional(),
+  })
+  .refine(
+    (data) =>
+      data.negative_marks === undefined || data.negative_marks <= data.marks,
+    {
+      message: "negative_marks cannot exceed marks",
+      path: ["negative_marks"],
+    },
+  );
 
-export const updateQuestionSchema = z.object({
-  question_type_id: z.string().trim().min(1).optional(),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-  title: z.string().trim().max(255).optional(),
-  content: questionContentSchema.partial().optional(),
-  answer_key: answerKeySchema.optional(),
-  marks: z.coerce.number().positive().optional(),
-  negative_marks: z.coerce.number().min(0).optional(),
-  time_limit_secs: z.coerce.number().int().positive().optional(),
-  course_ids: z.array(z.string().trim().min(1)).optional(),
-});
+export const updateQuestionSchema = z
+  .object({
+    question_type_id: z.string().trim().min(1).optional(),
+    difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+    title: z.string().trim().max(255).optional(),
+    content: questionContentSchema.partial().optional(),
+    answer_key: answerKeySchema.optional(),
+    marks: z.coerce.number().positive().optional(),
+    negative_marks: z.coerce.number().min(0).optional(),
+    time_limit_secs: z.coerce.number().int().positive().optional(),
+    course_ids: z.array(z.string().trim().min(1)).optional(),
+  })
+  .refine(
+    (data) =>
+      data.marks === undefined ||
+      data.negative_marks === undefined ||
+      data.negative_marks <= data.marks,
+    {
+      message: "negative_marks cannot exceed marks",
+      path: ["negative_marks"],
+    },
+  );
 
 export const questionListQuerySchema = z.object({
   question_type_id: z.string().trim().optional(),

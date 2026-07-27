@@ -63,7 +63,7 @@ export function PlacementsTab({
           <Label className="text-xs">Enabled</Label>
           <input
             type="checkbox"
-            className="h-4 w-4 accent-indigo-600"
+            className="h-4 w-4 accent-primary"
             checked={getActiveTabPayload().enabled ?? true}
             onChange={(e) =>
               updateActiveTabPayload({
@@ -78,9 +78,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
-              Summary Stats
-            </CardTitle>
+            <CardTitle className="text-lg font-bold">Summary Stats</CardTitle>
             <CardDescription>
               Key placement numbers shown at the top (e.g. Average Package,
               Highest Package).
@@ -172,9 +170,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
-              Notable Offers
-            </CardTitle>
+            <CardTitle className="text-lg font-bold">Notable Offers</CardTitle>
             <CardDescription>
               Highlight top company offers with package details.
             </CardDescription>
@@ -371,7 +367,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               Placement Trends
             </CardTitle>
             <CardDescription>
@@ -518,7 +514,7 @@ export function PlacementsTab({
                     </Label>
                     <input
                       type="checkbox"
-                      className="h-4 w-4 accent-indigo-600"
+                      className="h-4 w-4 accent-primary"
                       checked={item.highlighted ?? false}
                       onChange={(e) =>
                         updateTabListItem("placement_trends.data_points", idx, {
@@ -548,7 +544,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               All Company Statistics
             </CardTitle>
             <CardDescription>
@@ -753,7 +749,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               Industry &amp; Salary Report
             </CardTitle>
             <CardDescription>
@@ -928,7 +924,7 @@ export function PlacementsTab({
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-bold text-indigo-950">
+            <CardTitle className="text-lg font-bold">
               Student Success Stories
             </CardTitle>
             <CardDescription>
@@ -1153,9 +1149,7 @@ export function PlacementsTab({
       {/* Download Report */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-indigo-950">
-            Download Report
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Download Report</CardTitle>
           <CardDescription>
             PDF report link shown to students for full placement details.
           </CardDescription>

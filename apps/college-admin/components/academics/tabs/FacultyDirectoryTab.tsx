@@ -60,7 +60,7 @@ export function FacultyDirectoryTab({
               onClick={() => setFacultyExpandedIdx(idx)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 facultyExpandedIdx === idx
-                  ? "bg-indigo-600 text-white border-indigo-600"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "border-border text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -268,7 +268,7 @@ export function FacultyDirectoryTab({
                   key={ei}
                   className={`border p-3 rounded-lg space-y-3 ${
                     exp.is_current
-                      ? "border-indigo-300 bg-indigo-50/30"
+                      ? "border-primary/30 bg-primary/5"
                       : "bg-muted/5"
                   }`}
                 >

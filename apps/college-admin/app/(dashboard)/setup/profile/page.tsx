@@ -488,7 +488,7 @@ export default function SetupProfilePage() {
           onClick={handleSubmit(onSubmit)}
           disabled={isPending}
           size="lg"
-          className="shadow-md bg-indigo-600 hover:bg-indigo-700 text-white transition-all font-semibold"
+          className="shadow-md transition-all font-semibold"
         >
           {isPending ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -512,13 +512,13 @@ export default function SetupProfilePage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex flex-col items-start gap-1 p-4 rounded-xl text-left transition-all border ${
                   isActive
-                    ? "bg-indigo-600/5 border-indigo-600/30 text-indigo-900 shadow-sm font-semibold ring-1 ring-indigo-500/20"
+                    ? "bg-primary/5 border-primary/30 text-primary shadow-sm font-semibold ring-1 ring-primary/20"
                     : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
-                    className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-muted-foreground"}`}
+                    className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
                   />
                   <span className="text-sm font-bold">{tab.label}</span>
                 </div>
@@ -538,8 +538,7 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Building className="h-5 w-5 text-indigo-500" /> Basic
-                    Details
+                    <Building className="h-5 w-5 text-primary" /> Basic Details
                   </CardTitle>
                   <CardDescription>
                     Primary administrative metadata of your educational
@@ -611,7 +610,7 @@ export default function SetupProfilePage() {
                             id="addressFromLead"
                             checked={field.value}
                             onChange={(e) => field.onChange(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
                         )}
                       />
@@ -759,7 +758,7 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Compass className="h-5 w-5 text-indigo-500" /> College
+                    <Compass className="h-5 w-5 text-primary" /> College
                     Overview
                   </CardTitle>
                   <CardDescription>
@@ -824,7 +823,7 @@ export default function SetupProfilePage() {
                   {/* Accolades Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Accolades & Ratings
                       </h4>
                       <Button
@@ -910,7 +909,7 @@ export default function SetupProfilePage() {
                   {/* University Details Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         University Fact Sheet
                       </h4>
                       <Button
@@ -970,7 +969,7 @@ export default function SetupProfilePage() {
                   {/* Amenities Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Campus Amenities
                       </h4>
                       <Button
@@ -1081,7 +1080,7 @@ export default function SetupProfilePage() {
                   {/* Inside Campus Facilities */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Campus Facilities & Outlets
                       </h4>
                       <Button
@@ -1177,7 +1176,7 @@ export default function SetupProfilePage() {
                   {/* Social Links */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Social Links
                       </h4>
                       <Button
@@ -1243,7 +1242,7 @@ export default function SetupProfilePage() {
 
                   {/* Location Settings */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                       Geographic & Map Coordinates
                     </h4>
 
@@ -1367,7 +1366,7 @@ export default function SetupProfilePage() {
                   {/* Nearby Access Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Nearby Establishments
                       </h4>
                       <Button
@@ -1484,7 +1483,7 @@ export default function SetupProfilePage() {
                   {/* Campus Reels Section */}
                   <div className="space-y-4 pt-4 border-t border-border/60">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Campus Reels & Videos
                       </h4>
                       <Button
@@ -1616,8 +1615,8 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-indigo-500" /> Student
-                    Code of Conduct
+                    <FileText className="h-5 w-5 text-primary" /> Student Code
+                    of Conduct
                   </CardTitle>
                   <CardDescription>
                     Specify the code of discipline rules, instructions, and
@@ -1668,7 +1667,7 @@ export default function SetupProfilePage() {
                             key={idx}
                             className="flex gap-3 items-start border p-3 rounded-lg bg-muted/10"
                           >
-                            <div className="font-bold text-sm text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-md mt-1">
+                            <div className="font-bold text-sm text-primary bg-primary/10 px-2.5 py-1.5 rounded-md mt-1">
                               #{idx + 1}
                             </div>
                             <Textarea
@@ -1712,8 +1711,7 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Play className="h-5 w-5 text-indigo-500" /> Happenings &
-                    News
+                    <Play className="h-5 w-5 text-primary" /> Happenings & News
                   </CardTitle>
                   <CardDescription>
                     Publish events, certifications, achievements, and
@@ -1770,7 +1768,7 @@ export default function SetupProfilePage() {
                             className="border p-4 rounded-xl bg-muted/20 space-y-3"
                           >
                             <div className="flex justify-between items-center">
-                              <h5 className="font-bold text-sm text-indigo-800">
+                              <h5 className="font-bold text-sm text-muted-foreground">
                                 Happening #{idx + 1}
                               </h5>
                               <Button
@@ -1872,7 +1870,7 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Globe className="h-5 w-5 text-indigo-500" /> Institutions
+                    <Globe className="h-5 w-5 text-primary" /> Institutions
                     Across the World
                   </CardTitle>
                   <CardDescription>
@@ -2055,7 +2053,7 @@ export default function SetupProfilePage() {
               <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-indigo-500" /> Commute &
+                    <MapPin className="h-5 w-5 text-primary" /> Commute &
                     Accessibility
                   </CardTitle>
                   <CardDescription>
@@ -2067,7 +2065,7 @@ export default function SetupProfilePage() {
                   {/* Routes */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                         Routes
                       </h4>
                       <Button
@@ -2096,7 +2094,7 @@ export default function SetupProfilePage() {
                             className="border rounded-xl p-4 space-y-4 bg-muted/15"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <h5 className="font-semibold text-indigo-900">
+                              <h5 className="font-semibold text-muted-foreground">
                                 Route #{routeIdx + 1}
                               </h5>
                               <Button
@@ -2245,7 +2243,7 @@ export default function SetupProfilePage() {
 
                             <div className="space-y-3 pt-2 border-t border-border/40">
                               <div className="flex items-center justify-between">
-                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                <h6 className="text-xs font-bold uppercase text-muted-foreground">
                                   Morning Pickup Points
                                 </h6>
                                 <Button
@@ -2332,7 +2330,7 @@ export default function SetupProfilePage() {
 
                             <div className="space-y-3 pt-2 border-t border-border/40">
                               <div className="flex items-center justify-between">
-                                <h6 className="text-xs font-bold uppercase text-indigo-900">
+                                <h6 className="text-xs font-bold uppercase text-muted-foreground">
                                   Evening Dropoff Points
                                 </h6>
                                 <Button
@@ -2424,7 +2422,7 @@ export default function SetupProfilePage() {
 
                   {/* Rules and code of conduct */}
                   <div className="space-y-4 pt-4 border-t border-border/40">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-indigo-900">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                       Rules & Code Of Conduct
                     </h4>
                     <div className="grid gap-3 md:grid-cols-2">
@@ -2563,7 +2561,7 @@ export default function SetupProfilePage() {
                   <Button
                     type="button"
                     size="lg"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md"
+                    className="font-semibold shadow-md"
                     onClick={() =>
                       router.push(getPortalPath(collegeSlug, "/setup/campuses"))
                     }

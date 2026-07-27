@@ -839,6 +839,116 @@ export class BlinkQuery {
     };
   }
 
+  static async getCourseDetailForAmbassador(
+    collegeId: string,
+    courseId: string,
+  ) {
+    const course = await prisma.course.findFirst({
+      where: { id: courseId, collegeId, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        duration: true,
+        eligibility: true,
+        intakeCapacity: true,
+        studyMode: true,
+        highlights: true,
+        curriculum: true,
+        careerOpportunities: true,
+        eligibilityCriteria: true,
+        faqs: true,
+        discipline: {
+          select: {
+            id: true,
+            name: true,
+            stream: { select: { id: true, name: true } },
+          },
+        },
+        studyLevel: { select: { id: true, name: true } },
+        programType: { select: { id: true, name: true } },
+        campus: {
+          select: { id: true, name: true, city: true, state: true },
+        },
+        quotas: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            tuitionFeeOverride: true,
+            collegeQuota: {
+              select: { name: true, bucketType: true },
+            },
+          },
+        },
+        feeStructures: {
+          where: { isActive: true },
+          orderBy: [{ academicYear: "desc" }, { feeCategory: "asc" }],
+          select: {
+            id: true,
+            academicYear: true,
+            feeCategory: true,
+            amount: true,
+            yearOrSemester: true,
+            instalmentAllowed: true,
+            instalmentConfig: true,
+            gender: true,
+            oneTimeFees: true,
+            additionalFees: true,
+            whatsIncluded: true,
+            whatsExcluded: true,
+            feePdfUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!course) return null;
+
+    return {
+      id: course.id,
+      name: course.name,
+      code: course.code,
+      duration: course.duration ?? null,
+      eligibility: course.eligibility ?? null,
+      intakeCapacity: course.intakeCapacity ?? null,
+      studyMode: course.studyMode,
+      discipline: course.discipline,
+      studyLevel: course.studyLevel,
+      programType: course.programType,
+      campus: course.campus ?? null,
+      highlights: course.highlights,
+      curriculum: course.curriculum,
+      careerOpportunities: course.careerOpportunities,
+      eligibilityCriteria: course.eligibilityCriteria,
+      faqs: course.faqs,
+      quotas: course.quotas.map((q) => ({
+        id: q.id,
+        quotaName: q.collegeQuota.name,
+        // Seats now live in the shared seat_matrix pool per admission cycle,
+        // not on the course-quota config; kept null to preserve DTO shape.
+        seats: null as number | null,
+        tuitionFeeOverride: q.tuitionFeeOverride
+          ? Number(q.tuitionFeeOverride)
+          : null,
+      })),
+      feeStructures: course.feeStructures.map((f) => ({
+        id: f.id,
+        academicYear: f.academicYear,
+        feeCategory: f.feeCategory,
+        amount: Number(f.amount),
+        yearOrSemester: f.yearOrSemester ?? null,
+        instalmentAllowed: f.instalmentAllowed,
+        instalmentConfig: f.instalmentConfig,
+        gender: f.gender ?? null,
+        oneTimeFees: f.oneTimeFees,
+        additionalFees: f.additionalFees,
+        whatsIncluded: f.whatsIncluded,
+        whatsExcluded: f.whatsExcluded,
+        feePdfUrl: f.feePdfUrl ?? null,
+      })),
+    };
+  }
+
   static async listServiceCharges(
     filters: ServiceChargeQuery,
   ): Promise<ServiceChargeItem[]> {

@@ -1,0 +1,37 @@
+meta {
+  name: List College Courses
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/colleges/{{blinkAmbassadorCollegeId}}/courses
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.courses && data.data.courses[0]) {
+      bru.setEnvVar("blinkAmbassadorCourseId", data.data.courses[0].id);
+    }
+  }
+}
+
+docs {
+  Returns all active courses for a college.
+  Requires: blink_ambassador access token.
+
+  Returns 404 if the college does not exist.
+
+  Response includes: college (id, name) + courses array with
+  discipline, stream, studyLevel, programType details.
+
+  Tables: colleges, courses, disciplines, streams, study_levels, program_types
+}

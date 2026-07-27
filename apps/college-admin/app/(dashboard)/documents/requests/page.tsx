@@ -507,7 +507,7 @@ export default function DocumentRequestsFromStudentsPage() {
                         href={doc.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                        className="flex items-center gap-1.5 text-primary hover:underline"
                       >
                         <Paperclip className="h-3.5 w-3.5 shrink-0" />
                         {doc.name ?? `Attachment ${i + 1}`}
@@ -530,7 +530,7 @@ export default function DocumentRequestsFromStudentsPage() {
                       href={viewingRequest.issuedDocumentUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                      className="flex items-center gap-1.5 text-primary hover:underline"
                     >
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                       View issued file

@@ -1,0 +1,45 @@
+meta {
+  name: List Colleges
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/colleges?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("blinkAmbassadorCollegeId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns a paginated list of active colleges for the authenticated campus ambassador.
+  Requires: blink_ambassador access token.
+
+  Query params:
+  - search (optional): filter by college name, city, or state (case-insensitive)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response includes: id, name, slug, code, logoUrl, city, state, university, totalCourses
+
+  Tables: colleges, universities
+}

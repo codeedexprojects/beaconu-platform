@@ -48,6 +48,8 @@ import {
   useJoinInstitutionGroup,
 } from "@/hooks/use-colleges";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
+import { joinGroupSchema } from "@beaconu/validation";
+import type { JoinGroupInput } from "@beaconu/validation";
 
 const settingsFormSchema = z.object({
   name: z.string().trim().min(2, "College name is required"),
@@ -625,14 +627,15 @@ export default function SettingsPage() {
 function InstitutionGroupCard() {
   const { data: groupData, isLoading } = useMyInstitutionGroup();
   const joinMutation = useJoinInstitutionGroup();
-  const [code, setCode] = useState("");
+  const joinForm = useForm<JoinGroupInput>({
+    resolver: zodResolver(joinGroupSchema),
+    defaultValues: { group_code: "" },
+  });
 
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code.trim()) return;
-    joinMutation.mutate(code.trim(), {
+  const handleJoin = (values: JoinGroupInput) => {
+    joinMutation.mutate(values.group_code.trim(), {
       onSuccess: () => {
-        setCode("");
+        joinForm.reset({ group_code: "" });
       },
     });
   };
@@ -828,20 +831,22 @@ function InstitutionGroupCard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleJoin} className="space-y-4">
+        <form
+          onSubmit={joinForm.handleSubmit(handleJoin)}
+          className="space-y-4"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="join-group-code">Group Code</Label>
             <div className="flex gap-2">
               <Input
                 id="join-group-code"
                 placeholder="e.g. IGC-ABCD-1234"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
+                {...joinForm.register("group_code")}
                 className="font-mono tracking-widest text-center"
               />
               <Button
                 type="submit"
-                disabled={joinMutation.isPending || !code.trim()}
+                disabled={joinMutation.isPending}
                 className="shrink-0"
               >
                 {joinMutation.isPending ? (
@@ -851,6 +856,11 @@ function InstitutionGroupCard() {
                 )}
               </Button>
             </div>
+            {joinForm.formState.errors.group_code && (
+              <p className="text-xs text-destructive">
+                {joinForm.formState.errors.group_code.message}
+              </p>
+            )}
             <p className="text-[10px] text-muted-foreground">
               Ask your parent institution group administrator for the active
               group join code.

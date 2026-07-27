@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import { z } from "zod";
 import { toast } from "sonner";
 import {
   ShieldAlert,
@@ -75,6 +78,15 @@ function formatDateTime(value: string) {
   return new Date(value).toLocaleString("en-IN");
 }
 
+const resolveSchema = z.object({
+  resolution: z
+    .string()
+    .trim()
+    .min(1, "Resolution details are required")
+    .max(5000, "Resolution must be under 5000 characters"),
+});
+type ResolveFormValues = z.infer<typeof resolveSchema>;
+
 export default function AntiRaggingPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [incidentTypeFilter, setIncidentTypeFilter] = useState("");
@@ -82,7 +94,15 @@ export default function AntiRaggingPage() {
   const [page, setPage] = useState(1);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
-  const [resolution, setResolution] = useState("");
+
+  const resolveForm = useForm<ResolveFormValues>({
+    resolver: zodResolver(resolveSchema),
+    defaultValues: { resolution: "" },
+  });
+
+  useEffect(() => {
+    if (!resolvingId) resolveForm.reset({ resolution: "" });
+  }, [resolvingId, resolveForm]);
 
   const { data, isLoading } = useAntiRaggingComplaints({
     status: statusFilter || undefined,
@@ -110,15 +130,14 @@ export default function AntiRaggingPage() {
     });
   }
 
-  function handleResolve() {
-    if (!resolvingId || !resolution.trim()) return;
+  function handleResolve(values: ResolveFormValues) {
+    if (!resolvingId) return;
     resolve(
-      { complaintId: resolvingId, data: { resolution } },
+      { complaintId: resolvingId, data: { resolution: values.resolution } },
       {
         onSuccess: () => {
           toast.success("Report resolved");
           setResolvingId(null);
-          setResolution("");
         },
       },
     );
@@ -369,7 +388,7 @@ export default function AntiRaggingPage() {
                     {viewingComplaint.student?.phoneNumber && (
                       <a
                         href={`tel:${viewingComplaint.student.phoneNumber}`}
-                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                        className="flex items-center gap-1.5 text-primary hover:underline"
                       >
                         <Phone className="h-3.5 w-3.5 shrink-0" />
                         {viewingComplaint.student.phoneNumber}
@@ -378,7 +397,7 @@ export default function AntiRaggingPage() {
                     {viewingComplaint.student?.email && (
                       <a
                         href={`mailto:${viewingComplaint.student.email}`}
-                        className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                        className="flex items-center gap-1.5 text-primary hover:underline"
                       >
                         <Mail className="h-3.5 w-3.5 shrink-0" />
                         {viewingComplaint.student.email}
@@ -437,7 +456,7 @@ export default function AntiRaggingPage() {
                           href={file.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-blue-600 hover:underline"
+                          className="flex items-center gap-1.5 text-primary hover:underline"
                         >
                           <Paperclip className="h-3.5 w-3.5 shrink-0" />
                           {file.name ?? `Evidence ${i + 1}`}
@@ -493,36 +512,38 @@ export default function AntiRaggingPage() {
       {/* Resolve Modal */}
       {resolvingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <form
+            onSubmit={resolveForm.handleSubmit(handleResolve)}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
             <h2 className="mb-4 text-lg font-semibold">Resolve Report</h2>
             <div className="space-y-1">
               <Label>Resolution details</Label>
               <textarea
                 rows={4}
                 placeholder="Describe the action taken and outcome..."
-                value={resolution}
-                onChange={(e) => setResolution(e.target.value)}
+                {...resolveForm.register("resolution")}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              {resolveForm.formState.errors.resolution && (
+                <p className="text-sm text-destructive">
+                  {resolveForm.formState.errors.resolution.message}
+                </p>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => {
-                  setResolvingId(null);
-                  setResolution("");
-                }}
+                onClick={() => setResolvingId(null)}
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleResolve}
-                disabled={isResolving || !resolution.trim()}
-              >
+              <Button type="submit" disabled={isResolving}>
                 {isResolving ? "Resolving..." : "Confirm Resolution"}
               </Button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>

@@ -19,8 +19,8 @@ export function CourseListView({
     return (
       <Card className="border-dashed bg-muted/5 py-12">
         <CardContent className="flex flex-col items-center justify-center text-center">
-          <div className="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center mb-6">
-            <BookOpen className="h-8 w-8 text-indigo-600" />
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <BookOpen className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold tracking-tight mb-2">
             No programs configured
@@ -29,11 +29,7 @@ export function CourseListView({
             Start building your academic catalog by configuring your first
             course offering.
           </p>
-          <Button
-            onClick={onAddFirst}
-            size="lg"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-          >
+          <Button onClick={onAddFirst} size="lg" className="font-semibold">
             <Plus className="h-5 w-5 mr-2" /> Add First Course
           </Button>
         </CardContent>
@@ -46,12 +42,12 @@ export function CourseListView({
       {courses.map((course) => (
         <Card
           key={course.id}
-          className="group overflow-hidden border border-border/80 bg-card/60 backdrop-blur-md transition-all hover:shadow-lg hover:border-indigo-400/40"
+          className="group overflow-hidden border border-border/80 bg-card/60 backdrop-blur-md transition-all hover:shadow-lg hover:border-primary/40"
         >
           <div className="p-6 space-y-4">
             <div className="flex items-start justify-between">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-indigo-600" />
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
                 {course.code}
@@ -75,7 +71,7 @@ export function CourseListView({
                 {course.discipline?.name}
               </p>
               {course.campus && (
-                <p className="text-indigo-600 font-semibold mt-2">
+                <p className="text-primary font-semibold mt-2">
                   Campus: {course.campus.name}
                 </p>
               )}

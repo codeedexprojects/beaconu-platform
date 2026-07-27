@@ -223,7 +223,7 @@ export default function CommutePage() {
               <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Truck className="h-5 w-5 text-blue-500" />
+                    <Truck className="h-5 w-5 text-primary" />
                     <CardTitle className="text-lg font-bold">
                       {route.name}
                     </CardTitle>
@@ -348,7 +348,7 @@ export default function CommutePage() {
                                     {bus.totalSeats} seats capacity
                                   </p>
                                 </div>
-                                <span className="font-mono text-blue-600 font-bold">
+                                <span className="font-mono text-primary font-bold">
                                   ${bus.monthlyFee}/mo
                                 </span>
                               </div>
@@ -525,7 +525,7 @@ export default function CommutePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-blue-600 font-bold">
+                          <span className="font-mono text-primary font-bold">
                             ${bus.monthlyFee}/mo
                           </span>
                           <button

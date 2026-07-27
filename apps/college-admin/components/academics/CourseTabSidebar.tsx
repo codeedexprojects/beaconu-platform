@@ -31,7 +31,7 @@ export function CourseTabSidebar({
             }}
             className={`w-full flex flex-col items-start gap-1 p-4 rounded-xl text-left transition-all border ${
               isActive
-                ? "bg-indigo-600/5 border-indigo-600/30 text-indigo-900 shadow-sm font-semibold ring-1 ring-indigo-500/20"
+                ? "bg-primary/5 border-primary/30 text-primary shadow-sm font-semibold ring-1 ring-primary/20"
                 : isDisabled
                   ? "opacity-50 cursor-not-allowed border-transparent text-muted-foreground"
                   : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -39,7 +39,7 @@ export function CourseTabSidebar({
           >
             <div className="flex items-center gap-3">
               <Icon
-                className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-muted-foreground"}`}
+                className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
               />
               <span className="text-sm font-bold">{tab.label}</span>
             </div>

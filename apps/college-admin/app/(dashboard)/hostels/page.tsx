@@ -518,7 +518,7 @@ export default function HostelsPage() {
               <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Home className="h-5 w-5 text-blue-500" />
+                    <Home className="h-5 w-5 text-primary" />
                     <CardTitle className="text-lg font-bold">
                       {hostel.name}
                     </CardTitle>
@@ -571,7 +571,7 @@ export default function HostelsPage() {
                       Total Beds
                     </p>
                     <p className="text-lg font-bold text-foreground flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-blue-500" />{" "}
+                      <Bed className="h-4 w-4 text-primary" />{" "}
                       {hostel.totalBeds || 0} Beds
                     </p>
                   </div>
@@ -626,7 +626,7 @@ export default function HostelsPage() {
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs font-bold text-blue-600 flex items-center justify-end font-mono">
+                              <p className="text-xs font-bold text-primary flex items-center justify-end font-mono">
                                 <DollarSign className="h-3 w-3" />{" "}
                                 {room.annualPlanPrice}/yr
                               </p>
