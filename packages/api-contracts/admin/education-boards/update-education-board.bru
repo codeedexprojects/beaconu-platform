@@ -1,0 +1,46 @@
+meta {
+  name: Update Education Board
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/education-boards/{{educationBoardId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "subjects": [
+      { "name": "English", "max_mark": 100, "pass_mark": 35 },
+      { "name": "Mathematics", "max_mark": 100, "pass_mark": 35 },
+      { "name": "Science", "max_mark": 100, "pass_mark": 35 },
+      { "name": "Social Science", "max_mark": 100, "pass_mark": 35 },
+      { "name": "Second Language", "max_mark": 100, "pass_mark": 35 }
+    ]
+  }
+}
+
+docs {
+  Partial update — all fields optional (name, grade, is_active, subjects),
+  at least one required. Requires platform_admin auth +
+  education-boards.manage.
+
+  When `subjects` is provided, the ENTIRE subject list is wholesale-
+  replaced (old subject rows deleted, new ones created) — not merged or
+  patched individually. Omit `subjects` entirely to leave the existing
+  list untouched.
+
+  If `name` and/or `grade` change, uniqueness is re-checked (409 if the new
+  combination already exists on another board) and the slug is
+  regenerated.
+}

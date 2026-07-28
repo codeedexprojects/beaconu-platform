@@ -77,6 +77,11 @@ async function main() {
     },
     { code: "exams.view", description: "View entrance exams" },
     { code: "exams.manage", description: "Create and manage entrance exams" },
+    { code: "education-boards.view", description: "View education boards" },
+    {
+      code: "education-boards.manage",
+      description: "Create and manage education boards",
+    },
     { code: "events.view", description: "View events" },
     { code: "events.manage", description: "Create and manage events" },
     { code: "notifications.view", description: "View push notifications" },

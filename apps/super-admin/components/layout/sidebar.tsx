@@ -27,6 +27,7 @@ import {
   PlayCircle,
   Wallet,
   ReceiptIndianRupee,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -155,6 +156,12 @@ const navSections: NavSection[] = [
         label: "Entrance Exams",
         icon: PenLine,
         permission: "exams.view",
+      },
+      {
+        href: "/education-boards",
+        label: "Education Boards",
+        icon: Award,
+        permission: "education-boards.view",
       },
       {
         href: "/financial-aid",

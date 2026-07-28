@@ -15,6 +15,7 @@ import collegeDashboardRoutes from "@/modules/colleges/routes/college-dashboard.
 import { adminInstitutionGroupRouter } from "@/modules/colleges/routes/institution-group.routes";
 import newsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts.routes";
 import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.routes";
+import educationBoardsRoutes from "@/modules/platform-admin/routes/education-boards.routes";
 import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans.routes";
 import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-guide-videos.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
@@ -34,6 +35,7 @@ router.use("/universities", adminUniversityRoutes);
 router.use("/platform-admins", platformAdminMgmtRoutes);
 router.use("/news", newsAlertsRoutes);
 router.use("/entrance-exams", entranceExamsRoutes);
+router.use("/education-boards", educationBoardsRoutes);
 router.use("/financial-aid/loans", financialAidLoansRoutes);
 router.use("/starter-guide/videos", starterGuideVideosRoutes);
 

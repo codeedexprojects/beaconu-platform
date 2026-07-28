@@ -1,0 +1,25 @@
+meta {
+  name: Get Education Board (Student)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/education-boards/{{educationBoardId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Fetches one education board's full subjects/mark details (name, maxMark,
+  passMark, sortOrder per subject) — for showing the subject-wise mark
+  entry fields once a student has picked a board via List Education Board
+  Names. Requires student authentication.
+
+  404 if the board doesn't exist OR is currently inactive — a student can
+  never view/select a deactivated board's details.
+}
