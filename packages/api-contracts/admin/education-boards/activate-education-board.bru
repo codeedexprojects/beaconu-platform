@@ -1,0 +1,21 @@
+meta {
+  name: Activate Education Board
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/education-boards/{{educationBoardId}}/activate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Reactivates a previously deactivated board (isActive: true).
+  Requires platform_admin auth + education-boards.manage.
+  403 if already active.
+}

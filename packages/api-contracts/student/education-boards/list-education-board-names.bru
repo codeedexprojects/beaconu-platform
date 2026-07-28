@@ -1,0 +1,42 @@
+meta {
+  name: List Education Board Names (Student)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/education-boards
+  body: none
+  auth: none
+}
+
+params:query {
+  ~grade: 10th
+  ~search: CBSE
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0 && data.data[0].id) {
+      bru.setEnvVar("educationBoardId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Board picker for the Qualification Details step — names only (id, name,
+  grade, slug), no subjects. Only ACTIVE boards are returned. Requires
+  student authentication.
+
+  Query (all optional):
+  - grade: "10th" | "12th" — omit to get both grades
+  - search: case-insensitive match on board name
+
+  Use Get Education Board (by id) to fetch a specific board's subjects and
+  mark details once the student picks one.
+}

@@ -1,0 +1,55 @@
+meta {
+  name: Create Education Board
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/education-boards
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "CBSE",
+    "grade": "10th",
+    "subjects": [
+      { "name": "English", "max_mark": 100, "pass_mark": 33 },
+      { "name": "Mathematics", "max_mark": 100, "pass_mark": 33 },
+      { "name": "Science", "max_mark": 100, "pass_mark": 33 },
+      { "name": "Social Science", "max_mark": 100, "pass_mark": 33 }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("educationBoardId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new education board for a specific grade, with its subjects
+  (each subject needs its own max_mark/pass_mark). Requires platform_admin
+  auth + education-boards.manage.
+
+  - grade: "10th" | "12th" — required. The same board name can exist once
+    per grade (e.g. "CBSE" 10th and "CBSE" 12th are two separate records,
+    each with their own subject list) — 409 if (name, grade) already exists.
+  - subjects: at least 1 required. pass_mark cannot exceed max_mark for any
+    subject (validation error otherwise).
+  - slug is auto-generated from name + grade (e.g. "cbse-10th"), not
+    user-supplied.
+}

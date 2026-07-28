@@ -1,0 +1,39 @@
+meta {
+  name: List Education Boards
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/education-boards
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~grade: 10th
+  ~is_active: true
+  ~search: CBSE
+  ~page: 1
+  ~limit: 50
+}
+
+docs {
+  Lists education boards, paginated. Requires platform_admin auth +
+  education-boards.view.
+
+  Query (all optional):
+  - grade: "10th" | "12th"
+  - is_active: true | false
+  - search: case-insensitive match on board name
+  - page: default 1
+  - limit: default 50, max 100
+
+  Response includes `meta` (page, limit, total, totalPages, hasNextPage,
+  hasPreviousPage) alongside `data`. Each item includes its subjects (name,
+  maxMark, passMark, sortOrder), ordered by sortOrder.
+}

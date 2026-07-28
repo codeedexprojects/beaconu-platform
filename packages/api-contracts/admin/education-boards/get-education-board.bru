@@ -1,0 +1,20 @@
+meta {
+  name: Get Education Board
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/education-boards/{{educationBoardId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Fetches a single education board by id, including its subjects.
+  Requires platform_admin auth + education-boards.view. 404 if not found.
+}

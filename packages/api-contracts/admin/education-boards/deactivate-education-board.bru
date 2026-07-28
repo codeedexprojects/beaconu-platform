@@ -1,0 +1,21 @@
+meta {
+  name: Deactivate Education Board
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/education-boards/{{educationBoardId}}/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Soft-deactivates a board (isActive: false) — never hard-deleted.
+  Requires platform_admin auth + education-boards.manage.
+  403 if already inactive.
+}

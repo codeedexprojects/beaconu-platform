@@ -384,6 +384,41 @@ model ProgramType {
   @@map("program_types")
 }
 
+model EducationBoard {
+  id        String   @id @default(dbgenerated("('EDB-'::text || (nextval('education_board_seq'::regclass))::text)"))
+  name      String   @db.VarChar(150)
+  grade     String   @db.VarChar(10) // "10th" | "12th"
+  slug      String   @unique @db.VarChar(180)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  subjects EducationBoardSubject[]
+
+  @@unique([name, grade], name: "uq_board_name_grade")
+  @@index([grade], name: "idx_boards_grade")
+  @@map("education_boards")
+}
+
+model EducationBoardSubject {
+  id               String   @id @default(dbgenerated("('EBS-'::text || (nextval('education_board_subject_seq'::regclass))::text)"))
+  educationBoardId String   @map("education_board_id")
+  name             String   @db.VarChar(100)
+  maxMark          Decimal  @map("max_mark") @db.Decimal(6, 2)
+  passMark         Decimal  @map("pass_mark") @db.Decimal(6, 2)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  educationBoard EducationBoard @relation(fields: [educationBoardId], references: [id], onDelete: Cascade)
+
+  @@unique([educationBoardId, name], name: "uq_board_subject_name")
+  @@index([educationBoardId], name: "idx_board_subjects_board")
+  @@map("education_board_subjects")
+}
+
 model Course {
   id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
   collegeId              String   @map("college_id")
