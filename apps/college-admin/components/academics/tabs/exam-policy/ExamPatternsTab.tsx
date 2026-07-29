@@ -5,6 +5,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { IconPickerField } from "@/components/icon-picker";
 
 export function ExamPatternsTab({
   payload,
@@ -25,7 +26,6 @@ export function ExamPatternsTab({
   const [examPolicyPatternIdx, setExamPolicyPatternIdx] = useState<number>(0);
   const getActiveTabPayload = () => payload;
   const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const handleCourseFieldUpload = onFieldUpload;
 
   return (
     <div className="space-y-6">
@@ -625,65 +625,26 @@ export function ExamPatternsTab({
                             });
                           }}
                         />
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Icon URL (optional)"
-                            value={comp.icon || ""}
-                            onChange={(e) => {
-                              const sections = [
-                                ...(pat.internal_assessment || []),
-                              ];
-                              const comps = [
-                                ...(sections[si].components || []),
-                              ];
-                              comps[ci] = {
-                                ...comps[ci],
-                                icon: e.target.value,
-                              };
-                              sections[si] = {
-                                ...sections[si],
-                                components: comps,
-                              };
-                              updatePattern({
-                                internal_assessment: sections,
-                              });
-                            }}
-                          />
-                          <Input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                            disabled={
-                              uploadingField ===
-                              `exam_policy_component_icon_${pi}_${si}_${ci}`
-                            }
-                            onChange={(e) =>
-                              handleCourseFieldUpload(
-                                e.target.files?.[0] ?? null,
-                                `exam_policy_component_icon_${pi}_${si}_${ci}`,
-                                `exam_policy/component_icon_${pi}_${si}_${ci}`,
-                                (url) => {
-                                  const sections = [
-                                    ...(pat.internal_assessment || []),
-                                  ];
-                                  const comps = [
-                                    ...(sections[si].components || []),
-                                  ];
-                                  comps[ci] = {
-                                    ...comps[ci],
-                                    icon: url,
-                                  };
-                                  sections[si] = {
-                                    ...sections[si],
-                                    components: comps,
-                                  };
-                                  updatePattern({
-                                    internal_assessment: sections,
-                                  });
-                                },
-                              )
-                            }
-                          />
-                        </div>
+                        <IconPickerField
+                          value={comp.icon || ""}
+                          onChange={(iconUrl) => {
+                            const sections = [
+                              ...(pat.internal_assessment || []),
+                            ];
+                            const comps = [...(sections[si].components || [])];
+                            comps[ci] = {
+                              ...comps[ci],
+                              icon: iconUrl,
+                            };
+                            sections[si] = {
+                              ...sections[si],
+                              components: comps,
+                            };
+                            updatePattern({
+                              internal_assessment: sections,
+                            });
+                          }}
+                        />
                         {/* Sub-components */}
                         <div className="pl-3 space-y-1">
                           <div className="flex justify-between items-center">

@@ -1,0 +1,20 @@
+meta {
+  name: Activate Icon
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/icons/{{iconId}}/activate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Reactivates a previously deactivated icon. Requires platform_admin auth +
+  icons.manage. 403 if already active.
+}

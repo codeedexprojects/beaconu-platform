@@ -1,0 +1,29 @@
+meta {
+  name: List Icons
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/icons?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~search: hostel
+  ~is_active: true
+}
+
+docs {
+  Paginated list of icons, newest-name-first. Requires platform_admin auth +
+  icons.view.
+
+  Optional filters: search (name, case-insensitive), is_active.
+}

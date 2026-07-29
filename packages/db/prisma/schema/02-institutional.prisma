@@ -419,6 +419,18 @@ model EducationBoardSubject {
   @@map("education_board_subjects")
 }
 
+model Icon {
+  id        String   @id @default(dbgenerated("('ICN-'::text || (nextval('icon_seq'::regclass))::text)"))
+  name      String   @unique @db.VarChar(150)
+  iconUrl   String   @map("icon_url") @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([isActive], name: "idx_icons_active")
+  @@map("icons")
+}
+
 model Course {
   id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
   collegeId              String   @map("college_id")

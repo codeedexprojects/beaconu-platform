@@ -23,3 +23,4 @@ export * from "./assessment";
 export * from "./application";
 export * from "./media-kit";
 export * from "./education-board";
+export * from "./icon";

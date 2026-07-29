@@ -12,6 +12,7 @@ import collegeAdminAntiRaggingRoutes from "@/modules/anti-ragging/routes/college
 import collegeAdminAdmissionCycleRoutes from "@/modules/admissions/routes/college-admin.routes";
 import collegeAdminAssessmentRoutes from "@/modules/assessments/routes/college-admin.routes";
 import collegeAdminMediaKitRoutes from "@/modules/media-kit/routes/college-admin.routes";
+import collegeAdminIconsRoutes from "@/modules/platform-admin/routes/icons-college-admin.routes";
 
 const router: Router = Router();
 
@@ -27,5 +28,6 @@ router.use("/anti-ragging-complaints", collegeAdminAntiRaggingRoutes);
 router.use("/application-forms", collegeAdminAdmissionCycleRoutes);
 router.use("/assessments", collegeAdminAssessmentRoutes);
 router.use("/media-kit", collegeAdminMediaKitRoutes);
+router.use("/icons", collegeAdminIconsRoutes);
 
 export default router;

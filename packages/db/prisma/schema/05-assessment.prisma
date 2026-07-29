@@ -124,6 +124,7 @@ model AssessmentTemplate {
   templateSections TemplateSection[]
   assessmentPapers AssessmentPaper[]
   assessmentSlots  AssessmentSlot[]
+  admissionCycles  AdmissionCycle[]
 
   @@index([collegeId], name: "idx_templates_college")
   @@index([status], name: "idx_templates_status")
@@ -218,33 +219,36 @@ model AssessmentSlot {
 }
 
 model AssessmentAttempt {
-  id                  String    @id @default(dbgenerated("('AAT-'::text || (nextval('assessment_attempt_seq'::regclass))::text)"))
-  applicationCourseId String    @map("application_course_id")
-  studentId           String    @map("student_id")
-  paperId             String    @map("paper_id")
-  slotId              String    @map("slot_id")
-  status              String    @default("not_started") @db.VarChar(20)
-  startedAt           DateTime? @map("started_at") @db.Timestamptz
-  completedAt         DateTime? @map("completed_at") @db.Timestamptz
-  lastActivityAt      DateTime? @map("last_activity_at") @db.Timestamptz
-  timeSpentSecs       Int?      @map("time_spent_secs")
-  totalScore          Decimal?  @map("total_score") @db.Decimal(7, 2)
-  maxScore            Decimal?  @map("max_score") @db.Decimal(7, 2)
-  sectionScores       Json      @default("{}") @map("section_scores")
-  antiCheatLog        Json      @default("[]") @map("anti_cheat_log")
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id             String    @id @default(dbgenerated("('AAT-'::text || (nextval('assessment_attempt_seq'::regclass))::text)"))
+  // One attempt per Application (covers every course listed on it), not
+  // per ApplicationCourse — a student submits one application, takes one
+  // assessment for it, regardless of how many courses are on it.
+  applicationId  String    @map("application_id")
+  studentId      String    @map("student_id")
+  paperId        String    @map("paper_id")
+  slotId         String    @map("slot_id")
+  status         String    @default("not_started") @db.VarChar(20)
+  startedAt      DateTime? @map("started_at") @db.Timestamptz
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz
+  lastActivityAt DateTime? @map("last_activity_at") @db.Timestamptz
+  timeSpentSecs  Int?      @map("time_spent_secs")
+  totalScore     Decimal?  @map("total_score") @db.Decimal(7, 2)
+  maxScore       Decimal?  @map("max_score") @db.Decimal(7, 2)
+  sectionScores  Json      @default("{}") @map("section_scores")
+  antiCheatLog   Json      @default("[]") @map("anti_cheat_log")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  applicationCourse ApplicationCourse      @relation(fields: [applicationCourseId], references: [id])
-  student           Student                @relation(fields: [studentId], references: [id])
-  paper             AssessmentPaper        @relation(fields: [paperId], references: [id])
-  slot              AssessmentSlot         @relation(fields: [slotId], references: [id])
-  studentAnswers    StudentAnswer[]
-  reschedules       AssessmentReschedule[]
+  application    Application            @relation(fields: [applicationId], references: [id])
+  student        Student                @relation(fields: [studentId], references: [id])
+  paper          AssessmentPaper        @relation(fields: [paperId], references: [id])
+  slot           AssessmentSlot         @relation(fields: [slotId], references: [id])
+  studentAnswers StudentAnswer[]
+  reschedules    AssessmentReschedule[]
 
-  @@unique([applicationCourseId, studentId], name: "uq_student_attempt")
-  @@index([applicationCourseId], name: "idx_attempts_app_course")
+  @@unique([applicationId, studentId], name: "uq_student_attempt")
+  @@index([applicationId], name: "idx_attempts_application")
   @@index([studentId], name: "idx_attempts_student")
   @@index([paperId], name: "idx_attempts_paper")
   @@index([slotId], name: "idx_attempts_slot")

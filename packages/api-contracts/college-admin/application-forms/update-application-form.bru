@@ -18,11 +18,18 @@ headers {
 body:json {
   {
     "name": "UG Admissions 2026 - Extended",
-    "ends_on": "2026-09-15"
+    "ends_on": "2026-09-15",
+    "assessment_required": true,
+    "assessment_template_id": "{{assessmentTemplateId}}"
   }
 }
 
 docs {
   Partially updates an application form. All fields optional; only send
   what changed. Re-validates starts_on/ends_on ordering if either is sent.
+
+  assessment_required: whether the whole application form requires an
+  assessment — the single source of truth AttemptService.start() gates on.
+  assessment_template_id: must belong to your own college (404 otherwise).
+  Pass null to clear it back to "no assessment configured".
 }

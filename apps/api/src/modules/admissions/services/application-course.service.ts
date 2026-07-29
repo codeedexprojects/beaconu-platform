@@ -106,14 +106,15 @@ export class ApplicationCourseService {
       );
     }
 
-    // Cross-application guard (Plan N): the student may have a *different*
-    // Application for this same cycle that already has this course active
-    // — a course can only ever be live in one of a student's applications
-    // per cycle at a time.
+    // Cross-application guard (Plan N, broadened in Plan R to the whole
+    // college): the student may have a *different* Application at this
+    // college that already has this course active — a course can only
+    // ever be live in one of a student's applications at a college at a
+    // time, regardless of cycle.
     const crossAppSelection =
-      await ApplicationRepository.findActiveCourseSelectionInCycle(
+      await ApplicationRepository.findActiveCourseSelectionInCollege(
         studentId,
-        application.admissionCycleId,
+        application.collegeId,
         body.course_id,
       );
     if (
@@ -121,7 +122,7 @@ export class ApplicationCourseService {
       crossAppSelection.applicationId !== applicationId
     ) {
       throw new ConflictError(
-        "You already have an active application for this course in this admission cycle",
+        "You already have an active application for this course at this college",
       );
     }
 
@@ -314,5 +315,21 @@ export class ApplicationCourseService {
         changedById: publishedByStaffId,
       });
     });
+  }
+
+  /** Fan-out entry point for the assessments module — one AssessmentAttempt
+   * now covers the whole Application (every course listed on it), so
+   * publishing a result marks every one of its active (non-withdrawn)
+   * courses, not just one. Reuses the existing per-course
+   * markAssessmentCompleted (and its own idempotency check) for each. */
+  static async markAssessmentCompletedForApplication(
+    applicationId: string,
+    publishedByStaffId: string,
+  ) {
+    const courses =
+      await ApplicationCourseRepository.findActiveForSubmit(applicationId);
+    for (const course of courses) {
+      await this.markAssessmentCompleted(course.id, publishedByStaffId);
+    }
   }
 }

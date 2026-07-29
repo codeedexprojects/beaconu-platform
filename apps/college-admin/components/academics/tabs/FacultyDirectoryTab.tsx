@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { IconPickerField } from "@/components/icon-picker";
 
 export function FacultyDirectoryTab({
   payload,
@@ -372,15 +373,13 @@ export function FacultyDirectoryTab({
                         }}
                       />
                     )}
-                    <Input
-                      placeholder="Icon URL (optional)"
-                      className="h-7 text-xs flex-1"
+                    <IconPickerField
                       value={exp.icon || ""}
-                      onChange={(e) => {
+                      onChange={(iconUrl) => {
                         const next = [...(f.professional_experience || [])];
                         next[ei] = {
                           ...next[ei],
-                          icon: e.target.value,
+                          icon: iconUrl,
                         };
                         updateFaculty({
                           professional_experience: next,

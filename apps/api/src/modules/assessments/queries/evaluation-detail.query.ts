@@ -59,7 +59,7 @@ export class EvaluationDetailQuery {
 
     return {
       id: attempt.id,
-      applicationCourseId: attempt.applicationCourseId,
+      applicationId: attempt.applicationId,
       studentId: attempt.studentId,
       studentName: attempt.student.fullName,
       studentEmail: attempt.student.email,

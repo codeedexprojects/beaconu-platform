@@ -1,52 +1,40 @@
 import { prisma, Prisma } from "@beaconu/db";
 
 export class AttemptRepository {
-  /** Reads ApplicationCourse/Application directly (shared tables, not the
-   * admissions module's repository) — same cross-module read pattern
-   * already used in payments/repositories/application-payment.repository.ts,
-   * to avoid a circular module dependency. */
-  static async findApplicationCourseForAttempt(applicationCourseId: string) {
-    return prisma.applicationCourse.findUnique({
-      where: { id: applicationCourseId },
+  /** Reads Application directly (shared table, not the admissions module's
+   * repository) — same cross-module read pattern already used in
+   * payments/repositories/application-payment.repository.ts, to avoid a
+   * circular module dependency. One attempt covers the whole Application
+   * (every course listed on it), so this resolves off applicationId, not
+   * applicationCourseId. */
+  static async findApplicationForAttempt(applicationId: string) {
+    return prisma.application.findUnique({
+      where: { id: applicationId },
       select: {
         id: true,
-        status: true,
-        courseId: true,
-        application: {
-          select: {
-            id: true,
-            studentId: true,
-            collegeId: true,
-            admissionCycleId: true,
-          },
+        studentId: true,
+        collegeId: true,
+        formStatus: true,
+        admissionCycle: {
+          select: { assessmentTemplateId: true, assessmentRequired: true },
         },
       },
     });
   }
 
-  static async findAssessmentRequired(
-    admissionCycleId: string,
-    courseId: string,
-  ) {
-    return prisma.admissionCycleCourse.findUnique({
-      where: { uq_cycle_course: { admissionCycleId, courseId } },
-      select: { assessmentRequired: true, isActive: true },
-    });
-  }
-
-  static async findByStudentAndApplicationCourse(
-    applicationCourseId: string,
+  static async findByStudentAndApplication(
+    applicationId: string,
     studentId: string,
   ) {
     return prisma.assessmentAttempt.findUnique({
       where: {
-        uq_student_attempt: { applicationCourseId, studentId },
+        uq_student_attempt: { applicationId, studentId },
       },
     });
   }
 
   static async create(data: {
-    applicationCourseId: string;
+    applicationId: string;
     studentId: string;
     paperId: string;
     slotId: string;

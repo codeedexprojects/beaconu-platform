@@ -1,0 +1,45 @@
+meta {
+  name: Create Icon
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/icons
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Hostel",
+    "icon_url": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/platform/icons/hostel.svg"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("iconId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new icon. Requires platform_admin auth + icons.manage.
+
+  - name: must be unique (409 otherwise).
+  - icon_url: the uploaded image's permanent URL — obtain it first via
+    POST /admin/uploads/presign + PUT to S3 + POST /admin/uploads/verify
+    (same generic upload flow used elsewhere in this app), then pass the
+    resulting permanentUrl here.
+}

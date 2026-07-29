@@ -1,0 +1,19 @@
+meta {
+  name: Get Icon
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/icons/{{iconId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Fetches a single icon by id. Requires platform_admin auth + icons.view.
+}

@@ -1,0 +1,26 @@
+meta {
+  name: List Active Icons (Picker)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/icons?search=hostel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~search: hostel
+}
+
+docs {
+  Active icons only, optionally name-filtered, no pagination — the shared
+  platform icon library for college-admin's icon picker (used wherever a
+  facility/amenity would otherwise require uploading a custom icon image).
+  Requires staff_member auth, no special permission code.
+}

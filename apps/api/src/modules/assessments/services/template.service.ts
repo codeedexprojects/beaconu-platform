@@ -71,6 +71,13 @@ export class TemplateService {
     return template;
   }
 
+  /** Public entry point for other modules (e.g. admissions, attaching a
+   * template to an AdmissionCycle) to verify a template id belongs to
+   * their college — cross-module access goes through Services only. */
+  static async getForCollege(collegeId: string, id: string) {
+    return this.loadForCollege(id, collegeId);
+  }
+
   static async update(
     collegeId: string,
     id: string,

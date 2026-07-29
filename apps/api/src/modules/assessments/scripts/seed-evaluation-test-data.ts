@@ -5,10 +5,11 @@
  * and two autoscorable choice questions) so the evaluator dashboard
  * (/assessments/evaluation) has something to review.
  *
- * Builds the full chain the real Start-Attempt flow requires (AdmissionCycleCourse
- * with assessment_required, Application + ApplicationCourse, an active Slot) via
- * direct Prisma writes rather than the API, since this is test-data setup, not a
- * flow being verified. Idempotent — re-running skips anything already created.
+ * Builds the full chain the real Start-Attempt flow requires (AdmissionCycle
+ * with assessment_required + assessment_template_id, Application +
+ * ApplicationCourse, an active Slot) via direct Prisma writes rather than the
+ * API, since this is test-data setup, not a flow being verified. Idempotent —
+ * re-running skips anything already created.
  *
  * Run from the monorepo root:
  *   npx tsx apps/api/src/modules/assessments/scripts/seed-evaluation-test-data.ts
@@ -54,6 +55,17 @@ async function ensureAdmissionCycleCourse() {
   return created.id;
 }
 
+/** Plan R: the attempt-start gate now reads AdmissionCycle.assessmentRequired
+ * + assessmentTemplateId (the whole application form's config), not the
+ * per-course AdmissionCycleCourse.assessmentRequired above (kept for other
+ * purposes, but no longer read by AttemptService.start()). */
+async function ensureAdmissionCycleAssessmentConfig() {
+  await prisma.admissionCycle.update({
+    where: { id: ADMISSION_CYCLE_ID },
+    data: { assessmentRequired: true, assessmentTemplateId: TEMPLATE_ID },
+  });
+}
+
 async function ensureApplicationCourse(studentId: string) {
   // A student can now have multiple Applications per cycle (Plan N) —
   // this seed script only ever wants its own EVALSEED-* one, identified by
@@ -79,7 +91,7 @@ async function ensureApplicationCourse(studentId: string) {
     });
   }
 
-  let applicationCourse = await prisma.applicationCourse.findUnique({
+  const applicationCourse = await prisma.applicationCourse.findUnique({
     where: {
       uq_application_course: {
         applicationId: application.id,
@@ -88,7 +100,7 @@ async function ensureApplicationCourse(studentId: string) {
     },
   });
   if (!applicationCourse) {
-    applicationCourse = await prisma.applicationCourse.create({
+    await prisma.applicationCourse.create({
       data: {
         applicationId: application.id,
         courseId: COURSE_ID,
@@ -100,7 +112,10 @@ async function ensureApplicationCourse(studentId: string) {
       },
     });
   }
-  return applicationCourse.id;
+  // Plan R: AssessmentAttempt links to the Application (covers every
+  // course on it), not to one ApplicationCourse — this is what the caller
+  // actually needs now.
+  return application.id;
 }
 
 async function ensureSlot() {
@@ -146,19 +161,19 @@ async function loadStudents() {
 }
 
 async function createAttempt(
-  applicationCourseId: string,
+  applicationId: string,
   studentId: string,
   slotId: string,
 ) {
   const existing = await prisma.assessmentAttempt.findUnique({
-    where: { uq_student_attempt: { applicationCourseId, studentId } },
+    where: { uq_student_attempt: { applicationId, studentId } },
   });
   if (existing) return existing;
 
   const now = new Date();
   return prisma.assessmentAttempt.create({
     data: {
-      applicationCourseId,
+      applicationId,
       studentId,
       paperId: PAPER_ID,
       slotId,
@@ -193,14 +208,15 @@ async function main() {
   }
 
   await ensureAdmissionCycleCourse();
+  await ensureAdmissionCycleAssessmentConfig();
   const slotId = await ensureSlot();
   const [studentA, studentB] = await loadStudents();
 
-  const applicationCourseA = await ensureApplicationCourse(studentA.id);
-  const applicationCourseB = await ensureApplicationCourse(studentB.id);
+  const applicationA = await ensureApplicationCourse(studentA.id);
+  const applicationB = await ensureApplicationCourse(studentB.id);
 
-  const attemptA = await createAttempt(applicationCourseA, studentA.id, slotId);
-  const attemptB = await createAttempt(applicationCourseB, studentB.id, slotId);
+  const attemptA = await createAttempt(applicationA, studentA.id, slotId);
+  const attemptB = await createAttempt(applicationB, studentB.id, slotId);
 
   const startedAt = new Date(Date.now() - 30 * 60 * 1000);
   const completedAt = new Date();

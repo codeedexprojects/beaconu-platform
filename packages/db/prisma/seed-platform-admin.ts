@@ -82,6 +82,8 @@ async function main() {
       code: "education-boards.manage",
       description: "Create and manage education boards",
     },
+    { code: "icons.view", description: "View icons" },
+    { code: "icons.manage", description: "Create and manage icons" },
     { code: "events.view", description: "View events" },
     { code: "events.manage", description: "Create and manage events" },
     { code: "notifications.view", description: "View push notifications" },

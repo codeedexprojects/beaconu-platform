@@ -117,7 +117,7 @@ export type NegativeMarkingMode = "none" | "fixed" | "proportional";
 export interface TemplateInstructionItem {
   heading: string;
   description: string;
-  /** Client-defined icon key (e.g. "wifi", "webcam") — not a URL/asset. */
+  /** Icon URL selected from the shared platform icon library (see IconItem). */
   icon?: string;
 }
 
@@ -253,13 +253,16 @@ export interface AssessmentStartSectionSummary {
 }
 
 export interface AssessmentStartInfo {
+  /** null if the template (resolved from the student's admission cycle)
+   * currently has no active slot scheduled — the Room screen should render
+   * a "not currently scheduled" state, not an error, in that case. */
   slot: {
     id: string;
     slotType: SlotType;
     windowStart: string;
     windowEnd: string;
     status: SlotStatus;
-  };
+  } | null;
   template: {
     id: string;
     name: string;
@@ -276,8 +279,8 @@ export interface AssessmentStartInfo {
   isWithinWindow: boolean;
   hasWindowPassed: boolean;
   hasActiveTrialPaper: boolean;
-  /** Only populated when application_course_id is passed to the start-info
-   * request — null if the student hasn't started an attempt yet. */
+  /** Always resolved now — application_id is a required input to the
+   * start-info request. null if the student hasn't started an attempt yet. */
   myAttempt: { id: string; status: AttemptStatus } | null;
 }
 
@@ -308,7 +311,9 @@ export interface AnswerResponse {
 
 export interface AssessmentAttemptItem {
   id: string;
-  applicationCourseId: string;
+  // One attempt per Application (covers every course listed on it), not
+  // per ApplicationCourse.
+  applicationId: string;
   studentId: string;
   paperId: string;
   slotId: string;
@@ -338,9 +343,13 @@ export interface StudentAnswerItem {
   answeredAt: string | null;
 }
 
+// slot_id was removed — the slot is auto-resolved server-side from the
+// student's application (admission cycle -> assessment template -> current
+// active slot for that template), not chosen by the client. application_id
+// (not application_course_id) since one attempt now covers the whole
+// Application, not a single course on it.
 export interface StartAttemptInput {
-  application_course_id: string;
-  slot_id: string;
+  application_id: string;
 }
 
 export interface SubmitAnswerInput {
@@ -358,7 +367,7 @@ export interface AntiCheatEventInput {
 
 export interface EvaluationQueueItem {
   id: string;
-  applicationCourseId: string;
+  applicationId: string;
   studentId: string;
   studentName: string;
   studentEmail: string | null;
@@ -391,7 +400,7 @@ export interface EvaluationAnswerDetail {
 
 export interface EvaluationAttemptDetail {
   id: string;
-  applicationCourseId: string;
+  applicationId: string;
   studentId: string;
   studentName: string;
   studentEmail: string | null;

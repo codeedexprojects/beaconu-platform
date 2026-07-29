@@ -22,6 +22,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -48,6 +55,7 @@ import {
   useUpdateAdmissionCycle,
   useDeleteAdmissionCycle,
 } from "@/hooks/use-admission-cycles";
+import { useAssessmentTemplates } from "@/hooks/use-assessments";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { ManageCoursesDialog } from "@/components/application-forms/manage-courses-dialog";
 import { ManageSeatPoolsDialog } from "@/components/application-forms/manage-seat-pools-dialog";
@@ -62,6 +70,9 @@ const applicationFormSchema = z
     program_level: z.string().trim().min(1, "Program level is required"),
     starts_on: z.string().trim().min(1, "Start date is required"),
     ends_on: z.string().trim().optional(),
+    assessment_required: z.boolean(),
+    // "" means "no assessment configured" — coerced to null on submit.
+    assessment_template_id: z.string(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
     message: "End date must be on or after the start date",
@@ -76,6 +87,8 @@ const EMPTY_VALUES: ApplicationFormValues = {
   program_level: "",
   starts_on: "",
   ends_on: "",
+  assessment_required: false,
+  assessment_template_id: "",
 };
 
 const STATUS_VARIANT: Record<
@@ -110,6 +123,7 @@ export default function ApplicationFormsPage() {
   const { mutate: create, isPending: isCreating } = useCreateAdmissionCycle();
   const { mutate: update, isPending: isUpdating } = useUpdateAdmissionCycle();
   const { mutate: remove, isPending: isDeleting } = useDeleteAdmissionCycle();
+  const { data: templates } = useAssessmentTemplates();
 
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
@@ -131,6 +145,8 @@ export default function ApplicationFormsPage() {
       program_level: item.programLevel,
       starts_on: item.startsOn.slice(0, 10),
       ends_on: item.endsOn ? item.endsOn.slice(0, 10) : "",
+      assessment_required: item.assessmentRequired,
+      assessment_template_id: item.assessmentTemplateId ?? "",
     });
     setOpen(true);
   }
@@ -139,6 +155,7 @@ export default function ApplicationFormsPage() {
     const payload = {
       ...values,
       ends_on: values.ends_on || undefined,
+      assessment_template_id: values.assessment_template_id || null,
     };
     if (editing) {
       update(
@@ -285,6 +302,53 @@ export default function ApplicationFormsPage() {
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="assessment_required"
+                  type="checkbox"
+                  checked={form.watch("assessment_required")}
+                  onChange={(e) =>
+                    form.setValue("assessment_required", e.target.checked)
+                  }
+                />
+                <Label
+                  htmlFor="assessment_required"
+                  className="text-sm font-normal"
+                >
+                  Assessment required for this application form
+                </Label>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="assessment_template_id">
+                  Assessment Template{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <Select
+                  value={form.watch("assessment_template_id")}
+                  onValueChange={(v) =>
+                    form.setValue(
+                      "assessment_template_id",
+                      v === "none" ? "" : v,
+                    )
+                  }
+                >
+                  <SelectTrigger id="assessment_template_id">
+                    <SelectValue placeholder="No assessment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No assessment</SelectItem>
+                    {templates?.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Every course under this application form that requires an
+                  assessment shares this one template.
+                </p>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button

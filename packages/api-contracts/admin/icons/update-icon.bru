@@ -1,0 +1,33 @@
+meta {
+  name: Update Icon
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/icons/{{iconId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Hostel & Accommodation"
+  }
+}
+
+docs {
+  Updates an icon's name and/or icon_url and/or is_active. All fields
+  optional, at least one required. Requires platform_admin auth +
+  icons.manage.
+
+  409 if the new name is already used by a different icon.
+}

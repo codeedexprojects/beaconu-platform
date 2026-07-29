@@ -28,7 +28,7 @@ export class EvaluationService {
       }
       return {
         id: a.id,
-        applicationCourseId: a.applicationCourseId,
+        applicationId: a.applicationId,
         studentId: a.studentId,
         studentName: a.student.fullName,
         studentEmail: a.student.email,
@@ -144,8 +144,10 @@ export class EvaluationService {
     });
     await AttemptRepository.update(attemptId, { status: "result_published" });
 
-    await ApplicationCourseService.markAssessmentCompleted(
-      attempt.applicationCourseId,
+    // Fan-out: one attempt covers every course on the Application, so every
+    // active ApplicationCourse under it gets marked, not just one.
+    await ApplicationCourseService.markAssessmentCompletedForApplication(
+      attempt.applicationId,
       staffId,
     );
 

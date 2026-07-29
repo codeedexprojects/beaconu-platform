@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PercentTotalBadge } from "@/components/academics/shared/PercentTotalBadge";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { IconPickerField } from "@/components/icon-picker";
 
 export function DemographicsTab({
   payload,
@@ -291,10 +292,9 @@ export function DemographicsTab({
                   value={item.subtitle || ""}
                   onChange={(e) => updateWe({ subtitle: e.target.value })}
                 />
-                <ImageUpload
+                <IconPickerField
                   value={item.icon || ""}
-                  onChange={(url) => updateWe({ icon: url })}
-                  context={`demographics/work-experience-icon-${idx}`}
+                  onChange={(iconUrl) => updateWe({ icon: iconUrl })}
                 />
               </div>
             );

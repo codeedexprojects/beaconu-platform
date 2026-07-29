@@ -33,6 +33,18 @@ export class SlotRepository {
     return prisma.assessmentSlot.findUnique({ where: { id } });
   }
 
+  /** Slot is "just a timing wrapper around a template" — the student never
+   * picks one directly, so this resolves whichever slot is currently
+   * active for the template. `create()` above already auto-deactivates any
+   * other active slot for the same template, so there's normally at most
+   * one match; orderBy is just a tiebreaker if that convention ever drifts. */
+  static async findCurrentActiveForTemplate(templateId: string) {
+    return prisma.assessmentSlot.findFirst({
+      where: { templateId, status: "active" },
+      orderBy: { windowStart: "desc" },
+    });
+  }
+
   static async listByTemplate(collegeId: string, templateId: string) {
     return prisma.assessmentSlot.findMany({
       where: { collegeId, templateId },

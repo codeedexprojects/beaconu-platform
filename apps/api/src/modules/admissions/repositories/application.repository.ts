@@ -59,19 +59,20 @@ export class ApplicationRepository {
 
   /** The cross-application duplicate-course guard: is `courseId` already
    * actively (non-withdrawn) selected in ANY of this student's
-   * Applications for this cycle? Used by both start() (the primary course)
-   * and addCourse() (any additional course) — a course can only ever be
-   * "live" in one of the student's applications per cycle at a time. */
-  static async findActiveCourseSelectionInCycle(
+   * Applications at this COLLEGE — across every admission cycle, not just
+   * the current one? Used by both start() (the primary course) and
+   * addCourse() (any additional course) — a course can only ever be "live"
+   * in one of the student's applications at a college at a time. */
+  static async findActiveCourseSelectionInCollege(
     studentId: string,
-    admissionCycleId: string,
+    collegeId: string,
     courseId: string,
   ) {
     return prisma.applicationCourse.findFirst({
       where: {
         courseId,
         status: { not: "withdrawn" },
-        application: { studentId, admissionCycleId },
+        application: { studentId, collegeId },
       },
       select: { id: true, applicationId: true, status: true },
     });

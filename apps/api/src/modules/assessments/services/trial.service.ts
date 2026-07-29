@@ -13,25 +13,19 @@ import type {
 } from "@beaconu/types";
 
 export class TrialService {
-  private static async loadActiveTrialPaper(
-    collegeId: string,
-    templateId: string,
-  ) {
+  private static async loadActiveTrialPaper(templateId: string) {
     const paper = await PaperRepository.findActiveByTemplateAndType(
       templateId,
       "trial",
     );
-    if (!paper || paper.template.collegeId !== collegeId) {
+    if (!paper) {
       throw new NotFoundError("No active trial paper for this assessment");
     }
     return paper;
   }
 
-  static async getTrialPaper(
-    collegeId: string,
-    templateId: string,
-  ): Promise<TrialPaperItem> {
-    const paper = await this.loadActiveTrialPaper(collegeId, templateId);
+  static async getTrialPaper(templateId: string): Promise<TrialPaperItem> {
+    const paper = await this.loadActiveTrialPaper(templateId);
 
     return {
       paperId: paper.id,
@@ -50,11 +44,10 @@ export class TrialService {
   }
 
   static async submit(
-    collegeId: string,
     templateId: string,
     data: SubmitTrialInput,
   ): Promise<TrialResult> {
-    const paper = await this.loadActiveTrialPaper(collegeId, templateId);
+    const paper = await this.loadActiveTrialPaper(templateId);
     const template = await TemplateRepository.findById(templateId);
     if (!template) throw new NotFoundError("Assessment template not found");
 
