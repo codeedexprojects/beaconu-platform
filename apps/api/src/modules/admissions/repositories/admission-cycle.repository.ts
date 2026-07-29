@@ -24,6 +24,8 @@ export class AdmissionCycleRepository {
         programLevel: data.program_level,
         startsOn: data.starts_on,
         endsOn: data.ends_on ?? null,
+        assessmentRequired: data.assessment_required ?? false,
+        assessmentTemplateId: data.assessment_template_id ?? null,
       },
     });
   }
@@ -51,6 +53,12 @@ export class AdmissionCycleRepository {
         }),
         ...(data.starts_on !== undefined && { startsOn: data.starts_on }),
         ...(data.ends_on !== undefined && { endsOn: data.ends_on }),
+        ...(data.assessment_required !== undefined && {
+          assessmentRequired: data.assessment_required,
+        }),
+        ...(data.assessment_template_id !== undefined && {
+          assessmentTemplateId: data.assessment_template_id,
+        }),
       },
     });
   }

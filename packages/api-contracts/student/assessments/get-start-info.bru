@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/assessments/slots/{{assessmentSlotId}}/start?application_course_id={{applicationCourseId}}
+  url: {{baseUrl}}/api/v1/student/assessments/start?application_id={{applicationId}}
   body: none
   auth: none
 }
 
 params:query {
-  application_course_id: {{applicationCourseId}}
+  application_id: {{applicationId}}
 }
 
 headers {
@@ -19,19 +19,34 @@ headers {
 }
 
 docs {
-  Assessment Room screen: returns the slot's timing window, the template's
-  section breakdown, its instructions (heading + description + an
-  optional client-defined icon key), `total_marks`, and
-  `total_duration_secs` — both computed as sums over the currently-approved
-  normal paper's questions (marks summed for `total_marks`,
-  time_limit_secs summed for `total_duration_secs`; both 0 if no normal
-  paper is approved yet) — neither is an admin-declared template field
-  anymore. `has_active_trial_paper` tells the client whether to
-  show/enable "Take Trial of Assessment". `is_within_window` tells the
-  frontend whether the slot can be started right now; `has_window_passed`
-  distinguishes "too early" from "missed it".
+  Assessment Room screen. No slot id in the URL — a slot is just a timing
+  wrapper around a template, the student never picks one directly.
+  `application_id` (required) is resolved server-side:
+  Application.admissionCycle.assessmentTemplateId -> the template's
+  currently active slot. One attempt covers the whole Application (every
+  course listed on it), not a single course — application_id, not
+  application_course_id.
 
-  `application_course_id` is optional — pass it to get `my_attempt`
-  (`{id, status}` or `null`) so the Room screen can render "Resume
-  Assessment" instead of "Start Assessment" for a returning student.
+  409 ConflictError "This application is not currently at the assessment
+  stage" if Application.formStatus isn't "submitted".
+  409 ConflictError "Assessment not required for this application" if the
+  admission cycle's assessment_required is false.
+  409 ConflictError "No assessment configured for this admission cycle" if
+  the admission cycle has no assessment_template_id set (college-admin
+  configures both of these on the Application Form / Admission Cycle
+  itself, not per course).
+
+  `slot` in the response is `null` if the resolved template currently has
+  no active slot scheduled — render a "not currently scheduled" state on
+  the Room screen, not an error, in that case.
+
+  Returns the template's section breakdown, instructions (heading +
+  description + an optional client-defined icon key), `total_marks`, and
+  `total_duration_secs` — both computed as sums over the currently-approved
+  normal paper's questions (both 0 if no normal paper is approved yet).
+  `has_active_trial_paper` tells the client whether to show/enable "Take
+  Trial of Assessment". `is_within_window`/`has_window_passed` are both
+  `false` when `slot` is null. `my_attempt` (`{id, status}` or `null`) is
+  always resolved now, so the Room screen can render "Resume Assessment"
+  instead of "Start Assessment" for a returning student.
 }

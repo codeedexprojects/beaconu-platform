@@ -16,47 +16,48 @@ import type {
 } from "@beaconu/types";
 import type { Prisma } from "@beaconu/db";
 
-const OPEN_STATUSES = ["submitted", "assessment_pending"];
 const TAB_HIDDEN_GRACE_MS = 10 * 1000;
 const DISCONNECT_GRACE_MS = 2 * 60 * 1000;
 
 export class AttemptService {
-  static async start(
-    studentId: string,
-    collegeId: string,
-    data: StartAttemptInput,
-  ) {
-    const applicationCourse =
-      await AttemptRepository.findApplicationCourseForAttempt(
-        data.application_course_id,
-      );
-    if (
-      !applicationCourse ||
-      applicationCourse.application.studentId !== studentId ||
-      applicationCourse.application.collegeId !== collegeId
-    ) {
-      throw new NotFoundError("Application course not found");
+  /** One attempt per Application (covers every course listed on it), not
+   * per ApplicationCourse — a student submits one application, takes one
+   * assessment for it. */
+  static async start(studentId: string, data: StartAttemptInput) {
+    const application = await AttemptRepository.findApplicationForAttempt(
+      data.application_id,
+    );
+    if (!application || application.studentId !== studentId) {
+      throw new NotFoundError("Application not found");
     }
-    if (!OPEN_STATUSES.includes(applicationCourse.status)) {
+    // Application.formStatus is a simple draft/submitted flow — Submit
+    // Application already flips every ApplicationCourse under it to
+    // "submitted" atomically, so this is the correct whole-application
+    // equivalent of the old per-course status check.
+    if (application.formStatus !== "submitted") {
       throw new ConflictError(
         "This application is not currently at the assessment stage",
       );
     }
 
-    const cycleCourse = await AttemptRepository.findAssessmentRequired(
-      applicationCourse.application.admissionCycleId,
-      applicationCourse.courseId,
-    );
-    if (!cycleCourse || !cycleCourse.assessmentRequired) {
-      throw new ConflictError("Assessment not required for this course");
+    if (!application.admissionCycle.assessmentRequired) {
+      throw new ConflictError("Assessment not required for this application");
     }
 
-    const slot = await SlotRepository.findById(data.slot_id);
-    if (!slot || slot.collegeId !== collegeId) {
-      throw new NotFoundError("Assessment slot not found");
+    // Resolved from the application's own admission cycle — never
+    // client-supplied. See SlotRepository.findCurrentActiveForTemplate's
+    // doc comment: a slot is just a timing wrapper around a template, the
+    // student never picks one directly.
+    const templateId = application.admissionCycle.assessmentTemplateId;
+    if (!templateId) {
+      throw new ConflictError(
+        "No assessment configured for this admission cycle",
+      );
     }
-    if (slot.status !== "active") {
-      throw new ConflictError("This slot is no longer active");
+
+    const slot = await SlotRepository.findCurrentActiveForTemplate(templateId);
+    if (!slot) {
+      throw new ConflictError("No assessment slot currently scheduled");
     }
 
     const paper = await PaperRepository.findActiveByTemplateAndType(
@@ -69,18 +70,18 @@ export class AttemptService {
       );
     }
 
-    const existing = await AttemptRepository.findByStudentAndApplicationCourse(
-      data.application_course_id,
+    const existing = await AttemptRepository.findByStudentAndApplication(
+      data.application_id,
       studentId,
     );
     if (existing) {
       throw new ConflictError(
-        "You already have an attempt for this application course",
+        "You already have an attempt for this application",
       );
     }
 
     return AttemptRepository.create({
-      applicationCourseId: data.application_course_id,
+      applicationId: data.application_id,
       studentId,
       paperId: paper.id,
       slotId: slot.id,

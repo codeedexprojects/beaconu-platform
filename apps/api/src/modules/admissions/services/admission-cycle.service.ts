@@ -1,6 +1,7 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { AdmissionCycleRepository } from "../repositories/admission-cycle.repository";
 import { AdmissionCycleQuery } from "../queries/admission-cycle.query";
+import { TemplateService } from "@/modules/assessments/services/template.service";
 import type {
   CreateAdmissionCycleInput,
   UpdateAdmissionCycleInput,
@@ -17,6 +18,12 @@ function isUniqueConstraintError(error: unknown): boolean {
 
 export class AdmissionCycleService {
   static async create(collegeId: string, data: CreateAdmissionCycleInput) {
+    if (data.assessment_template_id) {
+      await TemplateService.getForCollege(
+        collegeId,
+        data.assessment_template_id,
+      );
+    }
     try {
       return await AdmissionCycleRepository.create(collegeId, data);
     } catch (error) {
@@ -43,6 +50,12 @@ export class AdmissionCycleService {
     data: UpdateAdmissionCycleInput,
   ) {
     await this.loadForCollege(id, collegeId);
+    if (data.assessment_template_id) {
+      await TemplateService.getForCollege(
+        collegeId,
+        data.assessment_template_id,
+      );
+    }
     try {
       return await AdmissionCycleRepository.update(id, data);
     } catch (error) {

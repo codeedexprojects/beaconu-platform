@@ -33,6 +33,9 @@ export const QUERY_KEYS = {
   educationBoards: (params?: object) =>
     params ? ["education-boards", params] : (["education-boards"] as const),
   educationBoard: (id: string) => ["education-boards", id] as const,
+  icons: (params?: object) =>
+    params ? ["icons", params] : (["icons"] as const),
+  icon: (id: string) => ["icons", id] as const,
   institutionGroup: (collegeId: string) =>
     ["institution-group", collegeId] as const,
   educationLoans: (params?: object) =>

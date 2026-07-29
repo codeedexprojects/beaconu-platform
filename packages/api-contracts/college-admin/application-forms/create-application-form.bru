@@ -22,7 +22,9 @@ body:json {
     "admission_year": "2026",
     "program_level": "undergraduate",
     "starts_on": "2026-06-01",
-    "ends_on": "2026-08-31"
+    "ends_on": "2026-08-31",
+    "assessment_required": true,
+    "assessment_template_id": "{{assessmentTemplateId}}"
   }
 }
 
@@ -46,4 +48,12 @@ docs {
   - program_level (required)
   - starts_on (required, date)
   - ends_on (optional, date)
+  - assessment_required (optional, default false) — whether the whole
+    application form requires an assessment. This, not the per-course
+    AdmissionCycleCourse.assessment_required, is what gates whether a
+    student can start an assessment attempt.
+  - assessment_template_id (optional) — one assessment template for the
+    whole application form; every course under this cycle shares it (an
+    attempt covers the whole application, not one course at a time). Must
+    belong to your own college (404 otherwise).
 }

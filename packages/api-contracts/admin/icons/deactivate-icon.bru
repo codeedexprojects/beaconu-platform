@@ -1,0 +1,20 @@
+meta {
+  name: Deactivate Icon
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/icons/{{iconId}}/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Deactivates an icon (soft — never deleted). Requires platform_admin auth +
+  icons.manage. 403 if already inactive.
+}

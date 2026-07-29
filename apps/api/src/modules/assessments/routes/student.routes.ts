@@ -7,7 +7,9 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("student"));
 
-router.get("/slots/:slotId/start", StudentAssessmentController.getStartInfo);
+// No slot id — resolved server-side from the student's own application
+// (admission cycle -> assessment template -> current active slot).
+router.get("/start", StudentAssessmentController.getStartInfo);
 
 router.get(
   "/templates/:templateId/trial",

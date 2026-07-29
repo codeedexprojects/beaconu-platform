@@ -49,4 +49,8 @@ docs {
   fee adjustment, and seat availability is checked (not reserved — seats
   are never decremented by anything in the student flow; see Submit
   Application). Recomputes the parent Application's totalApplicationFee.
+
+  409 if `course_id` is already actively (non-withdrawn) selected on a
+  *different* one of the student's applications at this college — across
+  every admission cycle, not just this one.
 }

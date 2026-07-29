@@ -17,8 +17,7 @@ headers {
 
 body:json {
   {
-    "application_course_id": "{{applicationCourseId}}",
-    "slot_id": "{{assessmentSlotId}}"
+    "application_id": "{{applicationId}}"
   }
 }
 
@@ -32,11 +31,23 @@ script:post-response {
 }
 
 docs {
-  Creates an AssessmentAttempt (status "not_started"). Requires: the
-  ApplicationCourse belongs to the authenticated student, its status is
-  "submitted" or "assessment_pending", the linked AdmissionCycleCourse has
-  assessment_required = true, the slot is active, and there's a currently
-  approved paper_type: "normal" paper on the slot's template. Fails with a
-  409 ConflictError if any of those aren't met, or if an attempt already
-  exists for this application course.
+  Creates an AssessmentAttempt (status "not_started") for the WHOLE
+  Application (covers every course listed on it) — one attempt per
+  application, not one per course. No slot_id — the slot is auto-resolved
+  server-side the same way as Get Assessment Start Info:
+  Application.admissionCycle.assessmentTemplateId -> the template's
+  currently active slot.
+
+  Requires: the Application belongs to the authenticated student,
+  Application.formStatus is "submitted", the admission cycle's
+  assessment_required is true, the admission cycle has an
+  assessment_template_id set, that template has a currently active slot,
+  and there's a currently approved paper_type: "normal" paper on that
+  template. Fails with a 409 ConflictError if any of those aren't met
+  ("This application is not currently at the assessment stage" /
+  "Assessment not required for this application" / "No assessment
+  configured for this admission cycle" / "No assessment slot currently
+  scheduled" / "No approved paper available for this assessment yet"), or
+  "You already have an attempt for this application" if one already
+  exists.
 }

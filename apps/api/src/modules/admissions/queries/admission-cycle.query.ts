@@ -15,6 +15,8 @@ function mapAdmissionCycle(row: {
   startsOn: Date;
   endsOn: Date | null;
   status: string;
+  assessmentRequired: boolean;
+  assessmentTemplateId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -29,6 +31,8 @@ function mapAdmissionCycle(row: {
     startsOn: row.startsOn.toISOString(),
     endsOn: row.endsOn ? row.endsOn.toISOString() : null,
     status: row.status,
+    assessmentRequired: row.assessmentRequired,
+    assessmentTemplateId: row.assessmentTemplateId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

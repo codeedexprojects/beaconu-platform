@@ -133,18 +133,19 @@ export class ApplicationService {
       }
     }
 
-    // Cross-application guard (Plan N): a student can have several
-    // Applications for this cycle now, one per course — but never two
-    // active ones for the SAME course.
+    // Cross-application guard (Plan N, broadened in Plan R to the whole
+    // college): a student can have several Applications at this college
+    // now, one per course — but never two active ones for the SAME course,
+    // regardless of which cycle each is under.
     const activeSelection =
-      await ApplicationRepository.findActiveCourseSelectionInCycle(
+      await ApplicationRepository.findActiveCourseSelectionInCollege(
         studentId,
-        admissionCycleId,
+        cycle.collegeId,
         body.course_id,
       );
     if (activeSelection) {
       throw new ConflictError(
-        "You already have an active application for this course in this admission cycle",
+        "You already have an active application for this course at this college",
       );
     }
 

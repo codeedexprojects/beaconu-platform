@@ -11,6 +11,13 @@ export interface AdmissionCycleItem {
   startsOn: string;
   endsOn: string | null;
   status: AdmissionCycleStatus;
+  // Whether the whole application form requires an assessment — the single
+  // source of truth for gating an assessment attempt. AdmissionCycleCourse's
+  // own (per-course) assessmentRequired is unrelated to this.
+  assessmentRequired: boolean;
+  // The one assessment template shared by every course under this cycle —
+  // null if no assessment is configured for this cycle yet.
+  assessmentTemplateId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +29,8 @@ export interface CreateAdmissionCycleInput {
   program_level: string;
   starts_on: string;
   ends_on?: string;
+  assessment_required?: boolean;
+  assessment_template_id?: string | null;
 }
 
 export interface UpdateAdmissionCycleInput {
@@ -31,6 +40,8 @@ export interface UpdateAdmissionCycleInput {
   program_level?: string;
   starts_on?: string;
   ends_on?: string;
+  assessment_required?: boolean;
+  assessment_template_id?: string | null;
 }
 
 export type TokenPaymentStage = "before_assessment" | "after_shortlisting";

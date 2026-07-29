@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { IconPickerField } from "@/components/icon-picker";
 
 export function GuidelinesTab({
   payload,
@@ -24,7 +25,6 @@ export function GuidelinesTab({
 }) {
   const getActiveTabPayload = () => payload;
   const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const handleCourseFieldUpload = onFieldUpload;
 
   return (
     <div className="space-y-6">
@@ -260,41 +260,26 @@ export function GuidelinesTab({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Icon (optional)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                      disabled={
-                        uploadingField ===
-                        `exam_policy_academic_policy_icon_${pi}`
-                      }
-                      onChange={(e) =>
-                        handleCourseFieldUpload(
-                          e.target.files?.[0] ?? null,
-                          `exam_policy_academic_policy_icon_${pi}`,
-                          `exam_policy/academic_policy_icon_${pi}`,
-                          (url) => {
-                            const policies = [
-                              ...(getActiveTabPayload()
-                                .important_guidelines_banner
-                                ?.academic_policies || []),
-                            ];
-                            policies[pi] = {
-                              ...policies[pi],
-                              icon: url,
-                            };
-                            updateActiveTabPayload({
-                              important_guidelines_banner: {
-                                ...(getActiveTabPayload()
-                                  .important_guidelines_banner || {}),
-                                academic_policies: policies,
-                              },
-                            });
-                          },
-                        )
-                      }
-                    />
-                  </div>
+                  <IconPickerField
+                    value={policy.icon || ""}
+                    onChange={(iconUrl) => {
+                      const policies = [
+                        ...(getActiveTabPayload().important_guidelines_banner
+                          ?.academic_policies || []),
+                      ];
+                      policies[pi] = {
+                        ...policies[pi],
+                        icon: iconUrl,
+                      };
+                      updateActiveTabPayload({
+                        important_guidelines_banner: {
+                          ...(getActiveTabPayload()
+                            .important_guidelines_banner || {}),
+                          academic_policies: policies,
+                        },
+                      });
+                    }}
+                  />
                 </div>
               </div>
               <Button

@@ -51,6 +51,7 @@ import {
   useArchiveAssessmentTemplate,
 } from "@/hooks/use-assessments";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { IconPickerField } from "@/components/icon-picker";
 import type {
   AssessmentTemplateItem,
   NegativeMarkingMode,
@@ -76,6 +77,7 @@ interface InstructionRow {
   key: string;
   heading: string;
   description: string;
+  icon?: string;
 }
 
 const STATUS_VARIANT: Record<
@@ -141,6 +143,7 @@ export default function AssessmentTemplatesPage() {
         key: `${index}-${Math.random().toString(36).slice(2, 8)}`,
         heading: ins.heading,
         description: ins.description,
+        icon: ins.icon,
       })),
     );
     setOpen(true);
@@ -153,6 +156,7 @@ export default function AssessmentTemplatesPage() {
         key: Math.random().toString(36).slice(2, 10),
         heading: "",
         description: "",
+        icon: undefined,
       },
     ]);
   }
@@ -214,9 +218,10 @@ export default function AssessmentTemplatesPage() {
 
     const payload = {
       ...values,
-      instructions: instructionRows.map(({ heading, description }) => ({
+      instructions: instructionRows.map(({ heading, description, icon }) => ({
         heading,
         description,
+        ...(icon ? { icon } : {}),
       })),
       sections: rows.map(({ key: _key, ...rest }) => rest),
     };
@@ -362,6 +367,12 @@ export default function AssessmentTemplatesPage() {
                             updateInstructionRow(row.key, {
                               description: e.target.value,
                             })
+                          }
+                        />
+                        <IconPickerField
+                          value={row.icon}
+                          onChange={(iconUrl) =>
+                            updateInstructionRow(row.key, { icon: iconUrl })
                           }
                         />
                       </div>

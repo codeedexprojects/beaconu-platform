@@ -6,6 +6,7 @@ import { AttemptService } from "../services/attempt.service";
 import { TrialService } from "../services/trial.service";
 import {
   antiCheatEventSchema,
+  getStartInfoQuerySchema,
   startAttemptSchema,
   submitAnswerSchema,
   submitTrialSchema,
@@ -13,11 +14,10 @@ import {
 
 export class StudentAssessmentController {
   static async getStartInfo(req: Request, res: Response) {
-    const result = await AssessmentStartQuery.getBySlotId(
-      req.collegeId!,
-      req.params.slotId as string,
-      req.userId,
-      req.query.application_course_id as string | undefined,
+    const { application_id } = getStartInfoQuerySchema.parse(req.query);
+    const result = await AssessmentStartQuery.getForApplication(
+      req.userId!,
+      application_id,
     );
     return res.json(
       ApiResponse.success("Assessment start info fetched", result),
@@ -52,7 +52,6 @@ export class StudentAssessmentController {
 
   static async getTrialPaper(req: Request, res: Response) {
     const result = await TrialService.getTrialPaper(
-      req.collegeId!,
       req.params.templateId as string,
     );
     return res.json(ApiResponse.success("Trial paper fetched", result));
@@ -61,7 +60,6 @@ export class StudentAssessmentController {
   static async submitTrial(req: Request, res: Response) {
     const data = submitTrialSchema.parse(req.body);
     const result = await TrialService.submit(
-      req.collegeId!,
       req.params.templateId as string,
       data,
     );
@@ -70,11 +68,7 @@ export class StudentAssessmentController {
 
   static async startAttempt(req: Request, res: Response) {
     const data = startAttemptSchema.parse(req.body);
-    const result = await AttemptService.start(
-      req.userId!,
-      req.collegeId!,
-      data,
-    );
+    const result = await AttemptService.start(req.userId!, data);
     return res.status(201).json(ApiResponse.success("Attempt created", result));
   }
 

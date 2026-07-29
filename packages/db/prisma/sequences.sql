@@ -85,6 +85,7 @@ CREATE SEQUENCE IF NOT EXISTS "hostel_mess_plan_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_review_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_room_type_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_wishlist_seq";
+CREATE SEQUENCE IF NOT EXISTS "icon_seq";
 CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
 CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_booking_seq";

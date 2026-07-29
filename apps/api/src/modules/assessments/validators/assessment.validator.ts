@@ -95,6 +95,7 @@ export type QuestionListQueryParams = z.infer<typeof questionListQuerySchema>;
 const templateInstructionSchema = z.object({
   heading: z.string().trim().min(1, "Heading is required").max(255),
   description: z.string().trim().min(1, "Description is required").max(2000),
+  icon: z.string().trim().min(1).optional(),
 });
 
 const templateSectionSchema = z.object({
@@ -191,12 +192,22 @@ const answerResponseSchema = z.object({
   text: z.string().optional(),
 });
 
+// slot_id was removed — the slot is auto-resolved server-side from the
+// student's application (admission cycle -> assessment template -> current
+// active slot for that template). application_id (not
+// application_course_id) — one attempt now covers the whole Application,
+// not a single course on it.
 export const startAttemptSchema = z.object({
-  application_course_id: z.string().trim().min(1),
-  slot_id: z.string().trim().min(1),
+  application_id: z.string().trim().min(1),
 });
 
 export type StartAttemptBody = z.infer<typeof startAttemptSchema>;
+
+export const getStartInfoQuerySchema = z.object({
+  application_id: z.string().trim().min(1),
+});
+
+export type GetStartInfoQuery = z.infer<typeof getStartInfoQuerySchema>;
 
 export const submitAnswerSchema = z
   .object({

@@ -3,22 +3,33 @@
 // ============================================================
 
 model AdmissionCycle {
-  id              String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
-  collegeId       String    @map("college_id")
-  applicationType String    @map("application_type") @db.VarChar(50)
-  name            String    @db.VarChar(255)
-  slug            String    @db.VarChar(100)
-  programLevel    String    @map("program_level") @db.VarChar(30)
-  admissionYear   String    @map("admission_year") @db.VarChar(10)
-  startsOn        DateTime  @map("starts_on") @db.Date
-  endsOn          DateTime? @map("ends_on") @db.Date
-  status          String    @default("open") @db.VarChar(20)
-  settings        Json      @default("{}")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                    String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
+  collegeId             String    @map("college_id")
+  applicationType       String    @map("application_type") @db.VarChar(50)
+  name                  String    @db.VarChar(255)
+  slug                  String    @db.VarChar(100)
+  programLevel          String    @map("program_level") @db.VarChar(30)
+  admissionYear         String    @map("admission_year") @db.VarChar(10)
+  startsOn              DateTime  @map("starts_on") @db.Date
+  endsOn                DateTime? @map("ends_on") @db.Date
+  status                String    @default("open") @db.VarChar(20)
+  settings              Json      @default("{}")
+  // Whether the whole application form requires an assessment — the single
+  // source of truth AttemptService.start() gates on. AdmissionCycleCourse's
+  // own (per-course) assessmentRequired is unrelated to this and stays
+  // unused for this purpose.
+  assessmentRequired    Boolean   @default(false) @map("assessment_required")
+  // One assessment template for the whole application form — every course
+  // under this cycle shares it (an assessment attempt covers the whole
+  // Application, not one course at a time). null = no assessment
+  // configured for this cycle yet.
+  assessmentTemplateId  String?   @map("assessment_template_id")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college               College                @relation(fields: [collegeId], references: [id])
+  assessmentTemplate    AssessmentTemplate?    @relation(fields: [assessmentTemplateId], references: [id])
   admissionCycleCourses AdmissionCycleCourse[]
   applications          Application[]
   enrollments           Enrollment[]
@@ -124,10 +135,14 @@ model Application {
   referralCode       ReferralCode?         @relation(fields: [referralCodeId], references: [id])
   applicationCourses ApplicationCourse[]
   documents          ApplicationDocument[]
+  // One assessment attempt per Application (covers every course listed on
+  // it), not per ApplicationCourse.
+  assessmentAttempts AssessmentAttempt[]
 
   // A student can have several Applications for the same cycle now (one
-  // per course, enforced at the service layer against the whole cycle, not
-  // per-application) — see application.service.ts's start()/addCourse().
+  // per course, enforced at the service layer against the whole COLLEGE,
+  // not just the current cycle) — see application.service.ts's
+  // start()/addCourse().
   @@index([studentId], name: "idx_applications_student")
   @@index([collegeId], name: "idx_applications_college")
   @@index([admissionCycleId], name: "idx_applications_cycle")
@@ -159,7 +174,6 @@ model ApplicationCourse {
   course                  Course                   @relation(fields: [courseId], references: [id])
   courseQuotaSeat         CourseQuotaSeats?        @relation(fields: [courseQuotaSeatId], references: [id])
   statusLogs              ApplicationStatusLog[]
-  assessmentAttempts      AssessmentAttempt[]
   interviewBooking        InterviewBooking?
   offerLetter             OfferLetter?
   seatCancellations       SeatCancellation[]

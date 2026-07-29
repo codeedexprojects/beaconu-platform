@@ -20,6 +20,13 @@ export const createAdmissionCycleSchema = z
       .max(30),
     starts_on: z.coerce.date(),
     ends_on: z.coerce.date().optional(),
+    // Whether the whole application form requires an assessment — the
+    // single source of truth AttemptService.start() gates on.
+    assessment_required: z.boolean().optional(),
+    // One assessment template for the whole application form — every
+    // course under this cycle shares it. Optional/nullable — a cycle can
+    // have no assessment configured.
+    assessment_template_id: z.string().trim().min(1).optional().nullable(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
     message: "End date must be on or after the start date",
@@ -34,6 +41,8 @@ export const updateAdmissionCycleSchema = z
     program_level: z.string().trim().min(1).max(30).optional(),
     starts_on: z.coerce.date().optional(),
     ends_on: z.coerce.date().optional(),
+    assessment_required: z.boolean().optional(),
+    assessment_template_id: z.string().trim().min(1).optional().nullable(),
   })
   .refine(
     (data) =>

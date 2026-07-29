@@ -23,6 +23,7 @@ export class ApplicationCourseRepository {
       where: { id: applicationId, studentId },
       select: {
         id: true,
+        collegeId: true,
         admissionCycleId: true,
         formStatus: true,
         feePaymentStatus: true,

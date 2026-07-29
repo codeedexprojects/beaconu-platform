@@ -1,8 +1,8 @@
-import { NotFoundError } from "@/shared/errors";
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { AttemptRepository } from "../repositories/attempt.repository";
 import { SlotRepository } from "../repositories/slot.repository";
 import { TemplateRepository } from "../repositories/template.repository";
 import { PaperRepository } from "../repositories/paper.repository";
-import { AttemptRepository } from "../repositories/attempt.repository";
 import {
   computePaperDurationSecs,
   computePaperTotalMarks,
@@ -17,19 +17,32 @@ import type {
 } from "@beaconu/types";
 
 export class AssessmentStartQuery {
-  static async getBySlotId(
-    collegeId: string,
-    slotId: string,
-    studentId?: string,
-    applicationCourseId?: string,
+  /** Resolves everything from the student's own application — no slot id
+   * (or even template id) is ever supplied by the client. One attempt
+   * covers the whole Application (every course listed on it), not a
+   * single course, so this resolves off applicationId. Chain:
+   * Application.admissionCycle.assessmentTemplateId -> the template's
+   * currently active slot (see SlotRepository doc comment — a slot is
+   * just a timing wrapper, the student never picks one). */
+  static async getForApplication(
+    studentId: string,
+    applicationId: string,
   ): Promise<AssessmentStartInfo> {
-    const slot = await SlotRepository.findById(slotId);
-    if (!slot || slot.collegeId !== collegeId) {
-      throw new NotFoundError("Assessment slot not found");
+    const application =
+      await AttemptRepository.findApplicationForAttempt(applicationId);
+    if (!application || application.studentId !== studentId) {
+      throw new NotFoundError("Application not found");
     }
 
-    const template = await TemplateRepository.findById(slot.templateId);
-    if (!template || template.collegeId !== collegeId) {
+    const templateId = application.admissionCycle.assessmentTemplateId;
+    if (!templateId) {
+      throw new ConflictError(
+        "No assessment configured for this admission cycle",
+      );
+    }
+
+    const template = await TemplateRepository.findById(templateId);
+    if (!template) {
       throw new NotFoundError("Assessment template not found");
     }
 
@@ -37,12 +50,14 @@ export class AssessmentStartQuery {
       negativeMarkingMode?: NegativeMarkingMode;
     };
 
+    const slot = await SlotRepository.findCurrentActiveForTemplate(templateId);
     const now = new Date();
-    const isWithinWindow =
-      slot.status === "active" &&
-      now >= slot.windowStart &&
-      now <= slot.windowEnd;
-    const hasWindowPassed = now > slot.windowEnd;
+    const isWithinWindow = slot
+      ? slot.status === "active" &&
+        now >= slot.windowStart &&
+        now <= slot.windowEnd
+      : false;
+    const hasWindowPassed = slot ? now > slot.windowEnd : false;
 
     const [normalPaper, trialPaper] = await Promise.all([
       PaperRepository.findActiveByTemplateAndType(template.id, "normal"),
@@ -55,25 +70,24 @@ export class AssessmentStartQuery {
       ? computePaperTotalMarks(normalPaper.paperQuestions)
       : 0;
 
-    let myAttempt: AssessmentStartInfo["myAttempt"] = null;
-    if (studentId && applicationCourseId) {
-      const attempt = await AttemptRepository.findByStudentAndApplicationCourse(
-        applicationCourseId,
-        studentId,
-      );
-      if (attempt) {
-        myAttempt = { id: attempt.id, status: attempt.status as AttemptStatus };
-      }
-    }
+    const attempt = await AttemptRepository.findByStudentAndApplication(
+      applicationId,
+      studentId,
+    );
+    const myAttempt: AssessmentStartInfo["myAttempt"] = attempt
+      ? { id: attempt.id, status: attempt.status as AttemptStatus }
+      : null;
 
     return {
-      slot: {
-        id: slot.id,
-        slotType: slot.slotType as SlotType,
-        windowStart: slot.windowStart.toISOString(),
-        windowEnd: slot.windowEnd.toISOString(),
-        status: slot.status as SlotStatus,
-      },
+      slot: slot
+        ? {
+            id: slot.id,
+            slotType: slot.slotType as SlotType,
+            windowStart: slot.windowStart.toISOString(),
+            windowEnd: slot.windowEnd.toISOString(),
+            status: slot.status as SlotStatus,
+          }
+        : null,
       template: {
         id: template.id,
         name: template.name,

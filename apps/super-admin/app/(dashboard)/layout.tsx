@@ -26,6 +26,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   "/news-alerts": "content.view",
   "/entrance-exams": "exams.view",
   "/education-boards": "education-boards.view",
+  "/icons": "icons.view",
   "/events": "events.view",
 };
 

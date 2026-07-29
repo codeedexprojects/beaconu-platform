@@ -48,6 +48,7 @@ import {
   resolveCollegeAmenityIcon,
 } from "@beaconu/utils";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
+import { IconPickerField } from "@/components/icon-picker";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 
 // Tab metadata
@@ -1055,18 +1056,13 @@ export default function SetupProfilePage() {
                               </Button>
                             </div>
                             {!isFixedAmenity && (
-                              <Input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                                disabled={
-                                  uploadingField ===
-                                  `profileSections.college_overview.amenities.${idx}.icon`
-                                }
-                                onChange={(e) =>
-                                  handleImageUpload(
-                                    e.target.files?.[0] ?? null,
+                              <IconPickerField
+                                value={item?.icon}
+                                onChange={(iconUrl) =>
+                                  setValue(
                                     `profileSections.college_overview.amenities.${idx}.icon`,
-                                    `college-overview/amenities-${idx}`,
+                                    iconUrl,
+                                    { shouldDirty: true },
                                   )
                                 }
                               />
@@ -1150,19 +1146,13 @@ export default function SetupProfilePage() {
                             </div>
                             <div className="space-y-1">
                               <Label className="text-xs">Icon</Label>
-                              <Input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                                className="mt-1"
-                                disabled={
-                                  uploadingField ===
-                                  `profileSections.college_overview.inside_campus_facilities.${idx}.icon`
-                                }
-                                onChange={(e) =>
-                                  handleImageUpload(
-                                    e.target.files?.[0] ?? null,
+                              <IconPickerField
+                                value={item?.icon}
+                                onChange={(iconUrl) =>
+                                  setValue(
                                     `profileSections.college_overview.inside_campus_facilities.${idx}.icon`,
-                                    `college-overview/facilities-${idx}`,
+                                    iconUrl,
+                                    { shouldDirty: true },
                                   )
                                 }
                               />
