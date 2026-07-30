@@ -100,6 +100,30 @@ export class AttemptService {
     return this.loadOwn(studentId, attemptId);
   }
 
+  /** Cross-module status read for `admissions`' cycle-status API — never
+   * throws, returns `null` when the student hasn't started an attempt for
+   * this application yet (not an error there, just "not_started"). */
+  static async findStatusForApplication(
+    studentId: string,
+    applicationId: string,
+  ) {
+    const attempt = await AttemptRepository.findByStudentAndApplication(
+      applicationId,
+      studentId,
+    );
+    if (!attempt) return null;
+    return {
+      status: attempt.status as AttemptStatus,
+      attemptId: attempt.id,
+      startedAt: attempt.startedAt ? attempt.startedAt.toISOString() : null,
+      completedAt: attempt.completedAt
+        ? attempt.completedAt.toISOString()
+        : null,
+      totalScore: attempt.totalScore ? Number(attempt.totalScore) : null,
+      maxScore: attempt.maxScore ? Number(attempt.maxScore) : null,
+    };
+  }
+
   static async beginNow(studentId: string, attemptId: string) {
     const attempt = await this.loadOwn(studentId, attemptId);
     if (attempt.status !== "not_started") {

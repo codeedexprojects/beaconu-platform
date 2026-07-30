@@ -35,8 +35,22 @@ export const getStatusAllCyclesQuerySchema = z.object({
   college_id: z.string().trim().min(1).optional(),
 });
 
+// College-admin applications list (read-only monitoring view) — every
+// filter optional, spans every admission cycle at the college unless
+// admission_cycle_id narrows it.
+export const listApplicationsQuerySchema = z.object({
+  admission_cycle_id: z.string().trim().min(1).optional(),
+  form_status: z.string().trim().min(1).optional(),
+  fee_payment_status: z.string().trim().min(1).optional(),
+  course_id: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
 export type StartApplicationInput = z.infer<typeof startApplicationSchema>;
 export type GetFormDetailsQuery = z.infer<typeof getFormDetailsQuerySchema>;
 export type GetStatusAllCyclesQuery = z.infer<
   typeof getStatusAllCyclesQuerySchema
 >;
+export type ListApplicationsQuery = z.infer<typeof listApplicationsQuerySchema>;

@@ -276,10 +276,13 @@ export class ApplicationRepository {
         currentStep: true,
         createdAt: true,
         college: { select: { id: true, name: true } },
-        admissionCycle: { select: { id: true, name: true } },
+        admissionCycle: {
+          select: { id: true, name: true, assessmentRequired: true },
+        },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },
           select: {
+            id: true,
             isPrimary: true,
             status: true,
             course: { select: { id: true, name: true, code: true } },
@@ -288,6 +291,29 @@ export class ApplicationRepository {
         },
       },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /** Cross-module read into `interviews`' own table — that module has no
+   * service layer yet (schema-only), so this duplicates a minimal direct
+   * read here rather than inventing a fake service call, matching the
+   * precedent in payments/repositories/application-payment.repository.ts. */
+  static async findInterviewBookingsByCourseIds(
+    applicationCourseIds: string[],
+  ) {
+    if (applicationCourseIds.length === 0) return [];
+    return prisma.interviewBooking.findMany({
+      where: { applicationCourseId: { in: applicationCourseIds } },
+      include: { slot: { select: { scheduledDate: true } } },
+    });
+  }
+
+  /** Same reasoning as findInterviewBookingsByCourseIds, for OfferLetter —
+   * no service layer exists for that model yet either. */
+  static async findOfferLettersByCourseIds(applicationCourseIds: string[]) {
+    if (applicationCourseIds.length === 0) return [];
+    return prisma.offerLetter.findMany({
+      where: { applicationCourseId: { in: applicationCourseIds } },
     });
   }
 }

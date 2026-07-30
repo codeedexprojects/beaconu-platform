@@ -22,6 +22,7 @@ import {
   FileText,
   ShieldAlert,
   ClipboardList,
+  ListChecks,
   Mic,
   Image as ImageIcon,
 } from "lucide-react";
@@ -370,6 +371,12 @@ export default function DashboardLayout({
                     name: "Application Forms",
                     path: "/application-forms",
                     icon: ClipboardList,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Applications",
+                    path: "/applications",
+                    icon: ListChecks,
                     permission: "staff.view",
                   },
                   {

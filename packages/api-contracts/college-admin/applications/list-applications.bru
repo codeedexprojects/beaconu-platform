@@ -1,0 +1,41 @@
+meta {
+  name: List Applications
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/applications?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~search: mzamil
+  ~form_status: submitted
+  ~fee_payment_status: paid
+  ~admission_cycle_id: {{admissionCycleId}}
+  ~course_id: {{courseId}}
+}
+
+docs {
+  Paginated, filterable list of every student Application submitted at this
+  college — read-only monitoring view (no create/update/delete). Requires
+  staff_member auth, no special permission code.
+
+  Spans every admission cycle at the college unless `admission_cycle_id`
+  narrows it. `search` matches the application number OR the student's
+  name/email. `course_id` matches if any non-withdrawn course on the
+  application is that course. Each row includes the student's name/email/
+  phone and every non-withdrawn ApplicationCourse (primary + extras).
+
+  Response shape (matches this app's other paginated list endpoints, e.g.
+  Campus Visits): `data: { applications: [...], meta: { total, page, limit,
+  hasNext } }` — meta is nested inside `data`, not a sibling of it.
+}

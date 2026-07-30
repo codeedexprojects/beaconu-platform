@@ -37,31 +37,105 @@ export type PendingApplicationAction =
   | "submit"
   | "none";
 
+/** Mirrors AssessmentStatus's own AttemptStatus union (assessment module),
+ * plus "not_required" for cycles that don't gate on an assessment at all. */
+export type AssessmentStatusValue =
+  | "not_required"
+  | "not_started"
+  | "in_progress"
+  | "completed"
+  | "auto_submitted"
+  | "terminated"
+  | "under_evaluation"
+  | "evaluated"
+  | "result_published";
+
+/** One attempt covers the whole Application (every course on it), not a
+ * single course — see AssessmentAttempt / Plan R. */
+export interface ApplicationAssessmentStatus {
+  status: AssessmentStatusValue;
+  attemptId: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalScore: number | null;
+  maxScore: number | null;
+}
+
+export type InterviewStatusValue =
+  | "not_scheduled"
+  | "booked"
+  | "completed"
+  | "cancelled"
+  | "rescheduled";
+
+/** Application-level, not per-course — a student interviews once for the
+ * whole application, resolved off its primary course's booking (the
+ * course that drives the rest of the pipeline). `not_scheduled` (every
+ * field null) until the interviews module actually books one —
+ * schema-only today, no API writes InterviewBooking yet. */
+export interface ApplicationInterviewStatus {
+  status: InterviewStatusValue;
+  scheduledAt: string | null;
+  completedAt: string | null;
+  outcome: string | null;
+  score: string | null;
+  remarks: string | null;
+}
+
+/** Application-level, resolved off the primary course's OfferLetter (token
+ * amount is a whole-application concept, not per-course). `not_issued`
+ * (every field null) until one is actually created — no API writes/reads
+ * that model yet either. */
+export interface ApplicationAmountDetails {
+  status: "not_issued" | "issued" | "expired" | "withdrawn";
+  offerNumber: string | null;
+  tokenAmount: string | null;
+  tokenPaymentStatus: string | null;
+  validUntil: string | null;
+  documentUrl: string | null;
+}
+
 export interface ApplicationStatusCourse {
   courseId: string;
   courseName: string;
   courseCode: string;
   isPrimary: boolean;
+  /** Raw ApplicationCourse.status pipeline value (see root CLAUDE.md's
+   * Application status flow). */
   status: string;
+  /** True once `status` has reached "shortlisted" or any later pipeline
+   * stage (offer_issued, token_paid, enrolled). */
+  isShortlisted: boolean;
 }
 
-/** One entry per Application the student has for an admission cycle (can
- * be several, one per course) — the cycle-level admission status API
- * returns `null` instead of this array when the student hasn't started
- * any application yet. `courses` lists every non-withdrawn course on that
- * application (primary + any extras), not just one. */
-export interface ApplicationStatusSummary {
+/** The application-record part of the status response — form/payment
+ * progress and every non-withdrawn course on it (primary + any extras),
+ * not just one. */
+export interface ApplicationStatusApplication {
   applicationId: string;
   applicationNumber: string;
   collegeId: string;
   collegeName: string;
   admissionCycleId: string;
   admissionCycleName: string;
-  courses: ApplicationStatusCourse[];
   formStatus: string;
   feePaymentStatus: string;
   pendingAction: PendingApplicationAction;
+  courses: ApplicationStatusCourse[];
   createdAt: string;
+}
+
+/** One entry per Application the student has for an admission cycle (can
+ * be several, one per course) — the cycle-level admission status API
+ * returns `null` instead of this array when the student hasn't started
+ * any application yet. `assessment`/`interview`/`amountDetails` are all
+ * whole-application concepts (never per-course), sitting alongside
+ * `application` rather than nested inside it. */
+export interface ApplicationStatusSummary {
+  application: ApplicationStatusApplication;
+  assessment: ApplicationAssessmentStatus;
+  interview: ApplicationInterviewStatus;
+  amountDetails: ApplicationAmountDetails;
 }
 
 export interface StartApplicationInput {
@@ -284,6 +358,108 @@ export interface ApplicationPaymentDto {
   providerPaymentId: string | null;
   paidAt: string | null;
   createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// College-admin applications list (read-only monitoring view)
+// ---------------------------------------------------------------------------
+
+export interface ApplicationListCourseItem {
+  id: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  status: string;
+}
+
+export interface ApplicationListItem {
+  id: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  admissionCycleId: string;
+  admissionCycleName: string;
+  formStatus: string;
+  feePaymentStatus: string;
+  totalApplicationFee: string;
+  courses: ApplicationListCourseItem[];
+  submittedAt: string | null;
+  createdAt: string;
+}
+
+export interface ApplicationListQuery {
+  admission_cycle_id?: string;
+  form_status?: string;
+  fee_payment_status?: string;
+  course_id?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ApplicationDetailCourseItem {
+  id: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  status: string;
+  applicationFee: string;
+  quotaName: string | null;
+  rejectionReason: string | null;
+  statusUpdatedAt: string | null;
+}
+
+export interface ApplicationDetailDocumentItem {
+  id: string;
+  documentType: string;
+  documentCategory: string;
+  fileUrl: string;
+  fileName: string | null;
+  verificationStatus: string;
+  rejectionReason: string | null;
+  createdAt: string;
+}
+
+/** Full read-only detail view for college-admin. `personalDetails` /
+ * `familyDetails` / `addressDetails` / `qualificationDetails` are merged:
+ * the Application's own frozen snapshot (set once, at submit) if non-empty,
+ * else the Student's live profile data (still being filled in, for a draft
+ * application) — see ApplicationDetailQuery.getForCollegeAdmin. */
+export interface ApplicationDetailDto {
+  id: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  admissionCycleId: string;
+  admissionCycleName: string;
+  campusName: string | null;
+  currentStep: number;
+  formStatus: string;
+  feePaymentStatus: string;
+  totalApplicationFee: string;
+  nationality: string | null;
+  stateOfDomicile: string | null;
+  passportCountry: string | null;
+  passportNumber: string | null;
+  profilePhotoUrl: string | null;
+  whatsappCountryCode: string | null;
+  whatsappNumber: string | null;
+  personalDetails: Partial<PersonalDetailsInput>;
+  familyDetails: Partial<FamilyDetailsInput>;
+  addressDetails: Partial<AddressDetailsInput>;
+  qualificationDetails: Partial<QualificationDetailsInput>;
+  declaration: Partial<DeclarationInput>;
+  courses: ApplicationDetailCourseItem[];
+  documents: ApplicationDetailDocumentItem[];
+  submittedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ConfirmPaymentInput {

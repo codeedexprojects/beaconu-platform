@@ -21,6 +21,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "documents",
   "anti-ragging",
   "application-forms",
+  "applications",
   "assessments",
 ]);
 

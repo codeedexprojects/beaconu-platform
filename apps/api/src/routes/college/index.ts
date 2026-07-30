@@ -10,6 +10,7 @@ import collegeAdminCampusVisitRoutes from "@/modules/campus-visits/routes/colleg
 import collegeAdminDocumentsRoutes from "@/modules/documents/routes/college-admin.routes";
 import collegeAdminAntiRaggingRoutes from "@/modules/anti-ragging/routes/college-admin.routes";
 import collegeAdminAdmissionCycleRoutes from "@/modules/admissions/routes/college-admin.routes";
+import collegeAdminApplicationsRoutes from "@/modules/admissions/routes/applications-college-admin.routes";
 import collegeAdminAssessmentRoutes from "@/modules/assessments/routes/college-admin.routes";
 import collegeAdminMediaKitRoutes from "@/modules/media-kit/routes/college-admin.routes";
 import collegeAdminIconsRoutes from "@/modules/platform-admin/routes/icons-college-admin.routes";
@@ -26,6 +27,7 @@ router.use("/campus-visits", collegeAdminCampusVisitRoutes);
 router.use("/documents", collegeAdminDocumentsRoutes);
 router.use("/anti-ragging-complaints", collegeAdminAntiRaggingRoutes);
 router.use("/application-forms", collegeAdminAdmissionCycleRoutes);
+router.use("/applications", collegeAdminApplicationsRoutes);
 router.use("/assessments", collegeAdminAssessmentRoutes);
 router.use("/media-kit", collegeAdminMediaKitRoutes);
 router.use("/icons", collegeAdminIconsRoutes);
