@@ -1,0 +1,56 @@
+meta {
+  name: Book Interview Slot
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/interviews/bookings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "application_course_id": "{{applicationCourseId}}",
+    "slot_id": "{{interviewSlotId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("interviewBookingId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Books an interview slot for one of the student's own ApplicationCourses.
+  One booking per ApplicationCourse, ever.
+
+  409 ConflictError "This course is not currently at the interview stage"
+  unless the course's status is "assessment_completed" or already
+  "interview_pending". 409 "You already have an interview booking for this
+  course". 409 "This interview slot is fully booked" (capacity race lost).
+
+  On success, the linked ApplicationCourse's status moves to
+  "interview_pending" (first booking only — idempotent no-op if already
+  there, e.g. after a cancel + re-book).
+
+  For a "gmeet" slot: this is the point where the Google Meet link is
+  actually created (not at slot creation time) — the response's
+  `slot.meetingUrl`/`slot.meetingId` reflect the freshly-created link. If
+  another student already booked this same slot earlier, the link already
+  exists and is simply reused. Best-effort — stays `null` if Google Meet
+  isn't configured or the call fails; booking still succeeds either way.
+}

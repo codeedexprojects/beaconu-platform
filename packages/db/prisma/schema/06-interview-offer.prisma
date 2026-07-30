@@ -15,6 +15,10 @@ model InterviewSlot {
   zoomMeetingUrl String?  @map("zoom_meeting_url") @db.Text
   zoomMeetingId  String?  @map("zoom_meeting_id") @db.VarChar(50)
   zoomPasscode   String?  @map("zoom_passcode") @db.VarChar(20)
+  // Google Calendar event id backing the auto-generated Meet link (mode
+  // "gmeet" only) — needed to update/cancel the event later. Same
+  // convention as CounsellingSession.googleEventId.
+  googleEventId  String?  @map("google_event_id") @db.VarChar(255)
   phoneNumber    String?  @map("phone_number") @db.VarChar(20)
   venue          String?  @db.VarChar(255)
   interviewerId  String?  @map("interviewer_id")

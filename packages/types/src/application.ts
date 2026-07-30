@@ -138,6 +138,33 @@ export interface ApplicationStatusSummary {
   amountDetails: ApplicationAmountDetails;
 }
 
+export interface ApplicationStatusSummaryCourseBasic {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  status: string;
+}
+
+/** The original, flat status shape — kept as-is for the all-cycles
+ * endpoint (`GET /application-forms/status`). Only the cycle-scoped
+ * endpoint (`GET /:id/application/status`, see `ApplicationStatusSummary`
+ * above) moved to the richer application/assessment/interview/
+ * amountDetails shape. */
+export interface ApplicationStatusSummaryBasic {
+  applicationId: string;
+  applicationNumber: string;
+  collegeId: string;
+  collegeName: string;
+  admissionCycleId: string;
+  admissionCycleName: string;
+  courses: ApplicationStatusSummaryCourseBasic[];
+  formStatus: string;
+  feePaymentStatus: string;
+  pendingAction: PendingApplicationAction;
+  createdAt: string;
+}
+
 export interface StartApplicationInput {
   nationality: string;
   // The primary course — required, since payment (and everything after

@@ -23,6 +23,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "application-forms",
   "applications",
   "assessments",
+  "interviews",
 ]);
 
 export function proxy(request: NextRequest) {

@@ -40,7 +40,9 @@ docs {
   no active slot scheduled — render a "not currently scheduled" state on
   the Room screen, not an error, in that case.
 
-  Returns the template's section breakdown, instructions (heading +
+  Returns the template's section breakdown (each with the section's own
+  `description`, alongside `name`/`question_count`/`time_limit_mins`),
+  instructions (heading +
   description + an optional client-defined icon key), `total_marks`, and
   `total_duration_secs` — both computed as sums over the currently-approved
   normal paper's questions (both 0 if no normal paper is approved yet).

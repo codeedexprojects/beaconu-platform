@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   ClipboardList,
   ListChecks,
+  Video,
   Mic,
   Image as ImageIcon,
 } from "lucide-react";
@@ -389,6 +390,12 @@ export default function DashboardLayout({
                     name: "Assessments",
                     path: "/assessments",
                     icon: Mic,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Interviews",
+                    path: "/interviews",
+                    icon: Video,
                     permission: "staff.view",
                   },
                   {

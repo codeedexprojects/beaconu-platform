@@ -1,0 +1,60 @@
+meta {
+  name: Create Interview Slot
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/slots
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "mode": "gmeet",
+    "scheduled_date": "2026-08-15",
+    "start_time": "10:00",
+    "end_time": "10:30",
+    "max_capacity": 1
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("interviewSlotId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a fixed-time interview slot. `mode`: "gmeet" | "telephonic" |
+  "on_campus". Requires staff_member auth, no special permission code.
+
+  For "gmeet": no meeting link input, and no link is created yet at this
+  point either — `meetingUrl`/`meetingId` are `null` in this response.
+  The Google Meet event (same Calendar/Meet integration used for
+  counsellor session booking) is only created the first time a student
+  actually books this slot (see Book Interview Slot, student-side) — a
+  slot that never gets booked never gets a calendar event. Best-effort:
+  if Google Meet isn't configured or the call fails at booking time, the
+  link just stays `null`, same fallback behavior as counselling. For
+  "telephonic": no phone number
+  input either — the interviewer calls the student's own number, which
+  shows up on each booking (`InterviewBookingItem.studentPhone`), not a
+  college-entered one. For "on_campus": pass `venue`. `duration_mins`
+  defaults to 30, `max_capacity` defaults to 1 (how many students can book
+  this same slot).
+
+  `start_time`/`end_time` are "HH:MM" 24-hour strings.
+}

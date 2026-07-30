@@ -1,0 +1,36 @@
+meta {
+  name: List Interview Bookings
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/bookings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~status: booked
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("interviewBookingId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists every interview booking at this college, newest first — the
+  evaluator queue. `status`: "booked" | "completed" | "cancelled".
+
+  Each row includes `studentPhone` — the student's own phone number, used
+  directly for "telephonic" slots (no separate college-entered number).
+}

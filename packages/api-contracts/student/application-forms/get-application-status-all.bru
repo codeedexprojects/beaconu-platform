@@ -33,11 +33,26 @@ docs {
 
   Use the cycle-scoped version
   (/application-forms/{{admissionCycleId}}/application/status) instead
-  when you already know the specific cycle.
+  when you already know the specific cycle — note that one now returns a
+  richer shape (application/assessment/interview/amountDetails); this
+  all-cycles endpoint deliberately keeps the original flat shape:
 
   `data` is `null` if the student hasn't started any application in scope
-  yet. Otherwise an array, same shape as the cycle-scoped endpoint — each
-  entry carries its own collegeId/collegeName and
+  yet. Otherwise an array, each entry shaped:
+
+  {
+    applicationId, applicationNumber,
+    collegeId, collegeName,
+    admissionCycleId, admissionCycleName,
+    courses: [{ courseId, courseName, courseCode, isPrimary, status }, ...],
+    formStatus, feePaymentStatus,
+    pendingAction: "payment" | "personal_details" | "family_details"
+                 | "address_details" | "qualification_details"
+                 | "declaration" | "submit" | "none",
+    createdAt
+  }
+
+  Each entry carries its own collegeId/collegeName and
   admissionCycleId/admissionCycleName (every college runs fully independent
   admission cycles), so entries from different colleges/cycles can be told
   apart and grouped by the client.

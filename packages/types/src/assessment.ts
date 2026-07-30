@@ -248,6 +248,7 @@ export interface ToggleSlotInput {
 export interface AssessmentStartSectionSummary {
   id: string;
   name: string;
+  description: string | null;
   questionCount: number;
   timeLimitMins: number;
 }

@@ -1,0 +1,27 @@
+meta {
+  name: List Available Interview Slots
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/interviews/slots?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+  ~mode: gmeet
+}
+
+docs {
+  Every currently-bookable slot at a college — active, upcoming, with open
+  capacity. `college_id` is required (students aren't scoped to one
+  college via their session — they can apply to several). `mode` optional
+  filter: "gmeet" | "telephonic" | "on_campus".
+}

@@ -247,6 +247,20 @@ export class ApplicationCourseRepository {
     });
   }
 
+  /** Cross-module ownership read — used by other modules (e.g.
+   * `interviews`) that need to verify a student owns an ApplicationCourse
+   * and check its current pipeline status before acting on it. */
+  static async findByIdWithOwnership(id: string) {
+    return prisma.applicationCourse.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        application: { select: { studentId: true, collegeId: true } },
+      },
+    });
+  }
+
   static async markAssessmentCompleted(
     tx: Prisma.TransactionClient,
     id: string,
@@ -254,6 +268,21 @@ export class ApplicationCourseRepository {
     return tx.applicationCourse.update({
       where: { id },
       data: { status: "assessment_completed", statusUpdatedAt: new Date() },
+      select: { id: true },
+    });
+  }
+
+  /** Generic status transition, reused by every new interview-pipeline
+   * status update (markInterviewPending/Completed/markShortlisted) instead
+   * of one near-identical repo method per status. */
+  static async updateStatus(
+    tx: Prisma.TransactionClient,
+    id: string,
+    status: string,
+  ) {
+    return tx.applicationCourse.update({
+      where: { id },
+      data: { status, statusUpdatedAt: new Date() },
       select: { id: true },
     });
   }
