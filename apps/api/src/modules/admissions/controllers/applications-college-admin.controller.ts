@@ -1,0 +1,29 @@
+import { Request, Response } from "express";
+import { ApiResponse } from "@/shared/responses/api-response";
+import { listApplicationsQuerySchema } from "../validators/application.validator";
+import { ApplicationListQuery } from "../queries/application-list.query";
+import { ApplicationDetailQuery } from "../queries/application-detail.query";
+
+export class ApplicationsCollegeAdminController {
+  static async list(req: Request, res: Response): Promise<void> {
+    const filters = listApplicationsQuerySchema.parse(req.query);
+    const result = await ApplicationListQuery.listForCollegeAdmin(
+      req.collegeId!,
+      filters,
+    );
+    res.status(200).json(
+      ApiResponse.success("Applications fetched", {
+        applications: result.applications,
+        meta: result.meta,
+      }),
+    );
+  }
+
+  static async getById(req: Request, res: Response): Promise<void> {
+    const result = await ApplicationDetailQuery.getForCollegeAdmin(
+      req.params.id as string,
+      req.collegeId!,
+    );
+    res.status(200).json(ApiResponse.success("Application fetched", result));
+  }
+}

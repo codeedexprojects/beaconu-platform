@@ -1,0 +1,88 @@
+meta {
+  name: Get Admission Cycle Status (Student)
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/{{admissionCycleId}}/application/status
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Full cycle-level admission status — application progress, assessment,
+  interview, and token/offer amount details — one entry per Application
+  the student has here (there can be several now, one per course, see
+  Start Application).
+
+  `data` is `null` if the student hasn't started any application for this
+  admission cycle yet. Otherwise an array, each entry shaped:
+
+  {
+    application: {
+      applicationId, applicationNumber,
+      collegeId, collegeName,
+      admissionCycleId, admissionCycleName,
+      formStatus, feePaymentStatus,
+      pendingAction: "payment" | "personal_details" | "family_details"
+                   | "address_details" | "qualification_details"
+                   | "declaration" | "submit" | "none",
+      // Every non-withdrawn course on this application, not just the
+      // primary. isShortlisted is the only per-course field here (a
+      // student can be shortlisted for one course on an application but
+      // not another) — everything else below is whole-application.
+      courses: [
+        { courseId, courseName, courseCode, isPrimary, status, isShortlisted }, ...
+      ],
+      createdAt
+    },
+
+    // One assessment attempt covers the WHOLE application (every course
+    // on it), not one per course — see Plan R.
+    assessment: {
+      status: "not_required" | "not_started" | "in_progress" | "completed"
+            | "auto_submitted" | "terminated" | "under_evaluation"
+            | "evaluated" | "result_published",
+      attemptId, startedAt, completedAt, totalScore, maxScore
+    },
+
+    // Whole-application, not per-course — a student interviews once for
+    // the application, resolved off its primary course's booking.
+    interview: {
+      status: "not_scheduled" | "booked" | "completed" | "cancelled" | "rescheduled",
+      scheduledAt, completedAt, outcome, score, remarks
+    },
+
+    // Whole-application, resolved off the primary course's offer letter.
+    amountDetails: {
+      status: "not_issued" | "issued" | "expired" | "withdrawn",
+      offerNumber, tokenAmount, tokenPaymentStatus, validUntil, documentUrl
+    }
+  }
+
+  pendingAction — the single next thing to do for this application, not a
+  list of everything remaining:
+  - primary course's fee not yet paid -> "payment"
+  - paid, still draft -> the first incomplete step's name (e.g.
+    "qualification_details"), derived cheaply from the application's
+    currentStep (never re-checks whether an earlier step was actually
+    filled in)
+  - paid, currentStep past declaration -> "submit" (ready to call Submit
+    Application)
+  - formStatus "submitted" -> "none"
+
+  Documents are NOT part of this sequence (Submit doesn't require them and
+  currentStep doesn't track them) — check List Required/Uploaded Documents
+  separately for that.
+
+  interview and amountDetails will show "not_scheduled"/"not_issued" (all
+  detail fields null) for every application today — the interviews and
+  offer-letter backend modules aren't built yet (schema-only). This
+  response shape is final; those sections will start returning real data
+  automatically once those modules exist, with no further contract change.
+}

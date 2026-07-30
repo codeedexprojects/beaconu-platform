@@ -4,6 +4,7 @@ import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { ApplicationCourseService } from "./application-course.service";
 import { StudentsService } from "@/modules/students/services/students.service";
+import { AttemptService } from "@/modules/assessments/services/attempt.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -74,29 +75,145 @@ type StatusRow = Awaited<
   ReturnType<typeof ApplicationRepository.findStatusRows>
 >[number];
 
-function toStatusSummary(row: StatusRow) {
-  return {
-    applicationId: row.id,
-    applicationNumber: row.applicationNumber,
-    collegeId: row.college.id,
-    collegeName: row.college.name,
-    admissionCycleId: row.admissionCycle.id,
-    admissionCycleName: row.admissionCycle.name,
-    courses: row.applicationCourses.map((ac) => ({
-      courseId: ac.course.id,
-      courseName: ac.course.name,
-      courseCode: ac.course.code,
-      isPrimary: ac.isPrimary,
-      status: ac.status,
-    })),
-    formStatus: row.formStatus,
-    feePaymentStatus: row.feePaymentStatus,
-    pendingAction: resolvePendingAction(
-      row.formStatus,
-      row.feePaymentStatus,
-      row.currentStep,
+// Every pipeline stage at/after "shortlisted" — see root CLAUDE.md's
+// Application status flow ordering.
+const SHORTLISTED_OR_LATER = new Set([
+  "shortlisted",
+  "offer_issued",
+  "token_paid",
+  "enrolled",
+]);
+
+async function resolveAssessmentStatus(studentId: string, row: StatusRow) {
+  if (!row.admissionCycle.assessmentRequired) {
+    return {
+      status: "not_required" as const,
+      attemptId: null,
+      startedAt: null,
+      completedAt: null,
+      totalScore: null,
+      maxScore: null,
+    };
+  }
+  const attempt = await AttemptService.findStatusForApplication(
+    studentId,
+    row.id,
+  );
+  if (!attempt) {
+    return {
+      status: "not_started" as const,
+      attemptId: null,
+      startedAt: null,
+      completedAt: null,
+      totalScore: null,
+      maxScore: null,
+    };
+  }
+  return attempt;
+}
+
+const NOT_SCHEDULED_INTERVIEW = {
+  status: "not_scheduled" as const,
+  scheduledAt: null,
+  completedAt: null,
+  outcome: null,
+  score: null,
+  remarks: null,
+};
+
+const NOT_ISSUED_AMOUNT_DETAILS = {
+  status: "not_issued" as const,
+  offerNumber: null,
+  tokenAmount: null,
+  tokenPaymentStatus: null,
+  validUntil: null,
+  documentUrl: null,
+};
+
+async function buildStatusSummary(studentId: string, row: StatusRow) {
+  const applicationCourseIds = row.applicationCourses.map((ac) => ac.id);
+  const primaryCourse =
+    row.applicationCourses.find((ac) => ac.isPrimary) ??
+    row.applicationCourses[0];
+
+  const [assessment, interviewBookings, offerLetters] = await Promise.all([
+    resolveAssessmentStatus(studentId, row),
+    ApplicationRepository.findInterviewBookingsByCourseIds(
+      applicationCourseIds,
     ),
-    createdAt: row.createdAt.toISOString(),
+    ApplicationRepository.findOfferLettersByCourseIds(applicationCourseIds),
+  ]);
+
+  // Interview + token/offer are whole-application concepts (a student
+  // interviews once, gets one token amount, not one per course) — even
+  // though the underlying tables are keyed per ApplicationCourse, resolve
+  // both off the primary course only, the one driving the rest of the
+  // pipeline.
+  const booking = primaryCourse
+    ? interviewBookings.find((b) => b.applicationCourseId === primaryCourse.id)
+    : undefined;
+  const offer = primaryCourse
+    ? offerLetters.find((o) => o.applicationCourseId === primaryCourse.id)
+    : undefined;
+
+  const interview = booking
+    ? {
+        status: booking.status as
+          | "booked"
+          | "completed"
+          | "cancelled"
+          | "rescheduled",
+        scheduledAt: booking.slot.scheduledDate.toISOString(),
+        completedAt: booking.completedAt
+          ? booking.completedAt.toISOString()
+          : null,
+        outcome: booking.interviewOutcome,
+        score: booking.interviewScore
+          ? booking.interviewScore.toString()
+          : null,
+        remarks: booking.interviewRemarks,
+      }
+    : NOT_SCHEDULED_INTERVIEW;
+
+  const amountDetails = offer
+    ? {
+        status: offer.status as "issued" | "expired" | "withdrawn",
+        offerNumber: offer.offerNumber,
+        tokenAmount: offer.tokenAmount.toString(),
+        tokenPaymentStatus: offer.tokenPaymentStatus,
+        validUntil: offer.validUntil.toISOString(),
+        documentUrl: offer.documentUrl,
+      }
+    : NOT_ISSUED_AMOUNT_DETAILS;
+
+  return {
+    application: {
+      applicationId: row.id,
+      applicationNumber: row.applicationNumber,
+      collegeId: row.college.id,
+      collegeName: row.college.name,
+      admissionCycleId: row.admissionCycle.id,
+      admissionCycleName: row.admissionCycle.name,
+      formStatus: row.formStatus,
+      feePaymentStatus: row.feePaymentStatus,
+      pendingAction: resolvePendingAction(
+        row.formStatus,
+        row.feePaymentStatus,
+        row.currentStep,
+      ),
+      courses: row.applicationCourses.map((ac) => ({
+        courseId: ac.course.id,
+        courseName: ac.course.name,
+        courseCode: ac.course.code,
+        isPrimary: ac.isPrimary,
+        status: ac.status,
+        isShortlisted: SHORTLISTED_OR_LATER.has(ac.status),
+      })),
+      createdAt: row.createdAt.toISOString(),
+    },
+    assessment,
+    interview,
+    amountDetails,
   };
 }
 
@@ -455,7 +572,7 @@ export class ApplicationService {
       admissionCycleId,
     });
     if (rows.length === 0) return null;
-    return rows.map(toStatusSummary);
+    return Promise.all(rows.map((row) => buildStatusSummary(studentId, row)));
   }
 
   /** Same as getStatus but with no specific cycle id — optionally narrowed
@@ -467,7 +584,7 @@ export class ApplicationService {
       collegeId,
     });
     if (rows.length === 0) return null;
-    return rows.map(toStatusSummary);
+    return Promise.all(rows.map((row) => buildStatusSummary(studentId, row)));
   }
 
   static async listMine(studentId: string, admissionCycleId?: string) {

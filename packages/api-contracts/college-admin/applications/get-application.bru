@@ -1,0 +1,31 @@
+meta {
+  name: Get Application
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/applications/{{applicationId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Full read-only detail for one Application — personal/family/address/
+  qualification details, declaration, every non-withdrawn course (with fee
+  + chosen quota name), and every uploaded document. Requires staff_member
+  auth, no special permission code. 404 if the application doesn't exist or
+  belongs to a different college.
+
+  Response is a single object (not `{applications, meta}` like List
+  Applications) — `data` is the `ApplicationDetailDto` directly.
+
+  `personalDetails`/`familyDetails`/`addressDetails`/`qualificationDetails`
+  are merged: the Application's own frozen snapshot (set once, at submit)
+  if non-empty, else the Student's live profile data (for a still-draft
+  application).
+}

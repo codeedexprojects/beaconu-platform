@@ -22,6 +22,9 @@ export const QUERY_KEYS = {
   lookupsDepartments: ["lookups", "departments"] as const,
   icons: (search?: string) =>
     search ? (["icons", search] as const) : (["icons"] as const),
+  applications: (filters?: object) =>
+    filters ? ["college-applications", filters] : ["college-applications"],
+  application: (id: string) => ["college-applications", id] as const,
   commutes: ["college-commutes"] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,
