@@ -102,6 +102,7 @@ export class AssessmentStartQuery {
         sections: template.templateSections.map((ts) => ({
           id: ts.sectionId,
           name: ts.section.name,
+          description: ts.section.description,
           questionCount: ts.questionCount,
           timeLimitMins: ts.timeLimitMins,
         })),

@@ -130,6 +130,37 @@ const NOT_ISSUED_AMOUNT_DETAILS = {
   documentUrl: null,
 };
 
+/** Original flat shape, kept as-is for the all-cycles endpoint
+ * (`getStatusAllCycles` / `GET /application-forms/status`) — only the
+ * single-cycle endpoint (`getStatus` / `GET /:id/application/status`) was
+ * asked to move to the richer application/assessment/interview/
+ * amountDetails shape (`buildStatusSummary`, below). */
+function toBasicStatusSummary(row: StatusRow) {
+  return {
+    applicationId: row.id,
+    applicationNumber: row.applicationNumber,
+    collegeId: row.college.id,
+    collegeName: row.college.name,
+    admissionCycleId: row.admissionCycle.id,
+    admissionCycleName: row.admissionCycle.name,
+    courses: row.applicationCourses.map((ac) => ({
+      courseId: ac.course.id,
+      courseName: ac.course.name,
+      courseCode: ac.course.code,
+      isPrimary: ac.isPrimary,
+      status: ac.status,
+    })),
+    formStatus: row.formStatus,
+    feePaymentStatus: row.feePaymentStatus,
+    pendingAction: resolvePendingAction(
+      row.formStatus,
+      row.feePaymentStatus,
+      row.currentStep,
+    ),
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 async function buildStatusSummary(studentId: string, row: StatusRow) {
   const applicationCourseIds = row.applicationCourses.map((ac) => ac.id);
   const primaryCourse =
@@ -584,7 +615,7 @@ export class ApplicationService {
       collegeId,
     });
     if (rows.length === 0) return null;
-    return Promise.all(rows.map((row) => buildStatusSummary(studentId, row)));
+    return rows.map(toBasicStatusSummary);
   }
 
   static async listMine(studentId: string, admissionCycleId?: string) {

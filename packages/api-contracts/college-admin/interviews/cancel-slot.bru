@@ -1,0 +1,20 @@
+meta {
+  name: Cancel Interview Slot
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/slots/{{interviewSlotId}}/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Soft-cancels a slot (status: "cancelled") — never hard-deleted. Already-
+  booked students are NOT automatically notified/moved by this call.
+}

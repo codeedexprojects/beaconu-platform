@@ -1,0 +1,25 @@
+meta {
+  name: Shortlist Application Course
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/courses/{{applicationCourseId}}/shortlist
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Marks an ApplicationCourse "shortlisted" — only allowed once its
+  interview has been completed (status "interview_completed").
+
+  409 ConflictError "This course's interview hasn't been completed yet" if
+  the course isn't at that stage. No OfferLetter / token payment is
+  triggered by this action — that's a separate, later feature (explicitly
+  out of scope for this pass).
+}

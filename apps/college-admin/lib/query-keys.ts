@@ -25,6 +25,12 @@ export const QUERY_KEYS = {
   applications: (filters?: object) =>
     filters ? ["college-applications", filters] : ["college-applications"],
   application: (id: string) => ["college-applications", id] as const,
+  interviewSlots: (filters?: object) =>
+    filters ? ["interview-slots", filters] : ["interview-slots"],
+  interviewBookings: (status?: string) =>
+    status ? ["interview-bookings", status] : ["interview-bookings"],
+  interviewReschedules: (status?: string) =>
+    status ? ["interview-reschedules", status] : ["interview-reschedules"],
   commutes: ["college-commutes"] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,

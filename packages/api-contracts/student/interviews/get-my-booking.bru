@@ -1,0 +1,21 @@
+meta {
+  name: Get My Interview Booking
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/interviews/bookings/course/{{applicationCourseId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Fetches the student's own interview booking for one ApplicationCourse
+  (404 if none exists yet — not an error state to build UI around, just
+  means "not booked yet").
+}

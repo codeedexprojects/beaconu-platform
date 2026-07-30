@@ -1,0 +1,43 @@
+meta {
+  name: Review Reschedule Request
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/reschedules/{{interviewRescheduleId}}/review
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "action": "approve",
+    "to_slot_id": "{{interviewSlotId}}",
+    "review_remarks": "Approved, new slot confirmed."
+  }
+}
+
+docs {
+  Approves or rejects a pending reschedule request.
+
+  - `action: "approve"` — moves the booking to `to_slot_id` (or the slot
+    the student originally requested, if they gave one and this is
+    omitted) — atomically checks the new slot has capacity, decrements
+    the old slot's booked count, increments the new one's.
+  - `action: "reject"` — booking stays exactly as-is; only the reschedule
+    request row is marked "rejected".
+
+  409 ConflictError "This reschedule request has already been reviewed" if
+  not currently "pending". 400 ValidationError "to_slot_id is required to
+  approve this reschedule" if approving with no slot id available from
+  either source.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Update Interview Slot
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/slots/{{interviewSlotId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "max_capacity": 2
+  }
+}
+
+docs {
+  Updates any subset of an interview slot's fields.
+}

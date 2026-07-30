@@ -1,0 +1,25 @@
+meta {
+  name: List Interview Slots
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/slots
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~mode: gmeet
+  ~status: active
+}
+
+docs {
+  Lists every interview slot at this college (both active and cancelled —
+  admins retain visibility), newest scheduled first.
+}

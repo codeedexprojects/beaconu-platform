@@ -332,4 +332,103 @@ export class ApplicationCourseService {
       await this.markAssessmentCompleted(course.id, publishedByStaffId);
     }
   }
+
+  /** Cross-module ownership + status read — used by the `interviews`
+   * module (never touches this module's repository directly, per the
+   * "modules talk via services only" rule) to verify a student owns an
+   * ApplicationCourse before booking/rescheduling against it. */
+  static async getForStudentWithStatus(
+    applicationCourseId: string,
+    studentId: string,
+  ) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithOwnership(
+        applicationCourseId,
+      );
+    if (!course || course.application.studentId !== studentId) {
+      throw new NotFoundError("Application course not found");
+    }
+    return {
+      id: course.id,
+      status: course.status,
+      collegeId: course.application.collegeId,
+    };
+  }
+
+  private static async transitionStatus(
+    applicationCourseId: string,
+    toStatus: string,
+    changedByType: "staff_member" | "student",
+    changedById: string,
+  ) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
+    if (!course) throw new NotFoundError("Application course not found");
+    if (course.status === toStatus) return;
+
+    await prisma.$transaction(async (tx) => {
+      await ApplicationCourseRepository.updateStatus(
+        tx,
+        applicationCourseId,
+        toStatus,
+      );
+      await ApplicationCourseRepository.createStatusLog(tx, {
+        applicationCourseId,
+        fromStatus: course.status,
+        toStatus,
+        changedByType,
+        changedById,
+      });
+    });
+  }
+
+  /** Called by interviews/services/interview-booking.service.ts the first
+   * time a student successfully books a slot for this course — idempotent
+   * no-op if already at/past this stage (e.g. re-booking after a
+   * cancellation). */
+  static async markInterviewPending(
+    applicationCourseId: string,
+    studentId: string,
+  ) {
+    await this.transitionStatus(
+      applicationCourseId,
+      "interview_pending",
+      "student",
+      studentId,
+    );
+  }
+
+  /** Called once an evaluator records the interview's outcome. */
+  static async markInterviewCompleted(
+    applicationCourseId: string,
+    staffId: string,
+  ) {
+    await this.transitionStatus(
+      applicationCourseId,
+      "interview_completed",
+      "staff_member",
+      staffId,
+    );
+  }
+
+  /** Shortlisting is its own explicit staff action, only meaningful once
+   * the interview is done — no OfferLetter/token payment triggered here
+   * (deferred to a later feature). */
+  static async markShortlisted(applicationCourseId: string, staffId: string) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
+    if (!course) throw new NotFoundError("Application course not found");
+    if (course.status === "shortlisted") return;
+    if (course.status !== "interview_completed") {
+      throw new ConflictError(
+        "This course's interview hasn't been completed yet",
+      );
+    }
+    await this.transitionStatus(
+      applicationCourseId,
+      "shortlisted",
+      "staff_member",
+      staffId,
+    );
+  }
 }

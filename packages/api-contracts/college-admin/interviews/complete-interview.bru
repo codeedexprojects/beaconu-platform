@@ -1,0 +1,37 @@
+meta {
+  name: Complete Interview
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/bookings/{{interviewBookingId}}/complete
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "interview_score": 8.5,
+    "interview_outcome": "recommended",
+    "interview_remarks": "Strong communication skills, clear on career goals."
+  }
+}
+
+docs {
+  Records the interview's outcome and marks the booking "completed". Also
+  transitions the linked ApplicationCourse.status to "interview_completed"
+  — a separate, later "Shortlist" action is needed to move it further (see
+  Shortlist Application Course).
+
+  409 ConflictError "This booking is not currently active" if the booking
+  isn't currently "booked" (e.g. already completed or cancelled).
+}
