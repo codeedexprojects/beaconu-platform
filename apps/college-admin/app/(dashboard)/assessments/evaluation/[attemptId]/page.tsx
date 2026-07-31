@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, RotateCcw } from "lucide-react";
 
@@ -209,6 +209,7 @@ function ScoreForm({
 export default function EvaluationDetailPage() {
   const params = useParams<{ attemptId: string }>();
   const attemptId = params.attemptId;
+  const router = useRouter();
 
   const { data: attempt, isLoading } = useEvaluationDetail(attemptId);
   const { mutate: publish, isPending: isPublishing } =
@@ -227,8 +228,11 @@ export default function EvaluationDetailPage() {
   function handleRestart() {
     restart(attemptId, {
       onSuccess: () => {
-        toast.success("Assessment restarted");
+        toast.success("Assessment restarted — the student can start fresh");
         setRestartOpen(false);
+        // This attempt no longer exists — its own detail page has
+        // nothing left to show, so go back to the queue.
+        router.push("/assessments/evaluation");
       },
       onError: (error) => toast.error(getErrorMessage(error)),
     });
@@ -323,7 +327,7 @@ export default function EvaluationDetailPage() {
         open={restartOpen}
         onOpenChange={setRestartOpen}
         title="Restart Assessment"
-        description="This will permanently erase all of this student's answers and restart the assessment from scratch — a fresh attempt, as if it had never been started. This cannot be undone."
+        description="This will permanently delete this attempt and all of the student's answers. The student will be able to start a brand new attempt for this application from scratch. This cannot be undone."
         confirmLabel="Restart"
         variant="destructive"
         isPending={isRestarting}

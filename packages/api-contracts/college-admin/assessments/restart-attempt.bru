@@ -15,21 +15,26 @@ headers {
 }
 
 docs {
-  Resets an assessment attempt back to a blank, freshly-started state —
-  works from ANY status (completed, auto_submitted, terminated,
-  under_evaluation, evaluated, result_published), not just a stuck
-  in_progress one.
+  Hard-DELETES the attempt entirely (not a reset in place) — works from
+  ANY status (completed, auto_submitted, terminated, under_evaluation,
+  evaluated, result_published), not just a stuck in_progress one.
 
-  What gets reset: every StudentAnswer row for this attempt is hard-deleted
-  (a deliberate exception to this codebase's "soft deletes only" rule —
-  answers are the literal content of a response being explicitly discarded
-  by an authorized admin action, not a business record with its own
-  lifecycle). The attempt itself goes back to status "in_progress" with a
-  fresh started_at/last_activity_at (now), completed_at/total_score/
-  max_score cleared to null, section_scores reset to {}, and
-  anti_cheat_log cleared to [].
+  Response: `{ application_id }` — there's no attempt left to return.
+  After this call, the student's application has NO attempt at all, so
+  their next `POST /student/assessments/attempts { application_id }` is a
+  genuinely fresh start (it's no longer blocked by the "you already have
+  an attempt for this application" uniqueness check, since that row is
+  gone).
 
-  Scope note: only the attempt is reset. The linked ApplicationCourse's
+  This is a deliberate exception to this codebase's "soft deletes only"
+  rule — an attempt + its answers being explicitly discarded by an
+  authorized admin action, not a business record with its own lifecycle.
+  StudentAnswer rows cascade-delete automatically. AssessmentReschedule
+  rows for this attempt (if any) are also deleted first, defensively —
+  that table has no cascade and no module code writes to it yet, but this
+  avoids a future FK violation once that feature exists.
+
+  Scope note: only the attempt is deleted. The linked ApplicationCourse's
   pipeline status (e.g. "assessment_completed" if it was already
   evaluated/published) is deliberately left untouched — restarting does
   NOT revert it back to an earlier stage.
