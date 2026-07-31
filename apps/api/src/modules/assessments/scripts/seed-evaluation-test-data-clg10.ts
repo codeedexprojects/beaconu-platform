@@ -269,9 +269,9 @@ async function createAttempt(
 async function main() {
   const sectionIds = await ensureSections();
 
-  const verbalTypeId = await ensureQuestionType("describe-image");
-  const aptitudeTypeId = await ensureQuestionType("data-interpretation");
-  const listeningTypeId = await ensureQuestionType("true-false");
+  const verbalTypeId = await ensureQuestionType("describeImage");
+  const aptitudeTypeId = await ensureQuestionType("dataInterpretation");
+  const listeningTypeId = await ensureQuestionType("audioMcqSingle");
 
   const describeImage = await ensureQuestion(
     "CLG10-SEED-DESCRIBE-IMAGE",
@@ -289,13 +289,11 @@ async function main() {
     sectionIds["aptitude-logical-reasoning"],
     aptitudeTypeId,
     {
-      text: "Based on the chart, which quarter had the highest growth?",
-      options: [
-        { id: "q1opt", text: "Q1" },
-        { id: "q2opt", text: "Q2" },
-      ],
+      text: "Based on the chart, analyze which quarter had the highest growth and explain why.",
+      imageUrl:
+        "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/college/CLG-10/assessments/aptitude-logical-reasoning/seed-chart-placeholder.png",
     },
-    { correctOptionIds: ["q1opt"] },
+    null,
   );
   const trueFalse = await ensureQuestion(
     "CLG10-SEED-TRUE-FALSE",

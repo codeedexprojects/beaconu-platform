@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { InterviewRescheduleRepository } from "../repositories/interview-reschedule.repository";
 import { InterviewBookingRepository } from "../repositories/interview-booking.repository";
 import { InterviewSlotRepository } from "../repositories/interview-slot.repository";
+import { combineDateAndTime } from "../lib/datetime";
 import type {
   InterviewRescheduleItem,
   ReviewInterviewRescheduleInput,
@@ -30,20 +31,6 @@ function mapReschedule(row: RescheduleRow): InterviewRescheduleItem {
   };
 }
 
-/** `scheduledDate` (@db.Date) and `startTime` (@db.Time) are separate
- * columns — Prisma returns startTime as an epoch-date Date with only the
- * time-of-day meaningful. Combine into the slot's real start instant. */
-function slotStartInstant(scheduledDate: Date, startTime: Date): Date {
-  const combined = new Date(scheduledDate);
-  combined.setUTCHours(
-    startTime.getUTCHours(),
-    startTime.getUTCMinutes(),
-    startTime.getUTCSeconds(),
-    0,
-  );
-  return combined;
-}
-
 export class InterviewRescheduleService {
   static async request(
     studentId: string,
@@ -67,7 +54,7 @@ export class InterviewRescheduleService {
       );
     }
 
-    const slotStart = slotStartInstant(
+    const slotStart = combineDateAndTime(
       booking.slot.scheduledDate,
       booking.slot.startTime,
     );

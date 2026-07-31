@@ -10,7 +10,11 @@ import {
   InterviewSlotRepository,
   type InterviewSlotCreateData,
 } from "../repositories/interview-slot.repository";
-import { formatDateOnly, formatTimeOnly } from "../lib/datetime";
+import {
+  formatDateOnly,
+  formatTimeOnly,
+  combineDateAndTime,
+} from "../lib/datetime";
 import type { InterviewSlotItem } from "@beaconu/types";
 
 type SlotRow = NonNullable<
@@ -53,6 +57,15 @@ export class InterviewSlotService {
   private static validateTimes(start: Date, end: Date) {
     if (end.getTime() <= start.getTime()) {
       throw new ValidationError("end_time must be after start_time");
+    }
+  }
+
+  private static validateNotInPast(scheduledDate: Date, startTime: Date) {
+    const slotStart = combineDateAndTime(scheduledDate, startTime);
+    if (slotStart.getTime() <= Date.now()) {
+      throw new ValidationError(
+        "Interview slots cannot be scheduled in the past",
+      );
     }
   }
 
@@ -114,6 +127,7 @@ export class InterviewSlotService {
 
   static async create(collegeId: string, data: InterviewSlotCreateData) {
     this.validateTimes(data.startTime, data.endTime);
+    this.validateNotInPast(data.scheduledDate, data.startTime);
     const row = await InterviewSlotRepository.create(collegeId, data);
     return mapSlot(row);
   }
@@ -155,6 +169,10 @@ export class InterviewSlotService {
     const end = data.endTime ?? existing.endTime;
     if (data.startTime !== undefined || data.endTime !== undefined) {
       this.validateTimes(start, end);
+    }
+    if (data.scheduledDate !== undefined || data.startTime !== undefined) {
+      const scheduledDate = data.scheduledDate ?? existing.scheduledDate;
+      this.validateNotInPast(scheduledDate, start);
     }
     const updated = await InterviewSlotRepository.update(id, data);
     if (

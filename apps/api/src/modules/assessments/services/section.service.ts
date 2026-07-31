@@ -2,7 +2,7 @@ import { prisma } from "@beaconu/db";
 import { NotFoundError } from "@/shared/errors";
 import { SectionRepository } from "../repositories/section.repository";
 import { QuestionTypeRepository } from "../repositories/question-type.repository";
-import { SECTION_SEEDS } from "../constants/section-seeds";
+import { SECTION_SEEDS, QUESTION_TYPE_SEEDS } from "../constants/section-seeds";
 
 export class SectionService {
   static async listSections(collegeId: string) {
@@ -32,7 +32,7 @@ export class SectionService {
     if (isActive) {
       // Backfills any question types added to this section's seed after the
       // college first enabled it — not just on first creation.
-      await this.syncQuestionTypes(collegeId, seedEntry.questionTypes);
+      await this.syncQuestionTypes(collegeId, seedEntry.questionTypeSlugs);
     }
 
     return SectionRepository.setActive(section.id, isActive);
@@ -40,14 +40,16 @@ export class SectionService {
 
   private static async syncQuestionTypes(
     collegeId: string,
-    questionTypes: (typeof SECTION_SEEDS)[string]["questionTypes"],
+    questionTypeSlugs: string[],
   ) {
-    for (const typeSeed of questionTypes) {
+    for (const typeSlug of questionTypeSlugs) {
+      const seed = QUESTION_TYPE_SEEDS[typeSlug];
+      if (!seed) continue; // Guards against a stale slug left in a section's list.
       const existing = await prisma.questionType.findFirst({
-        where: { collegeId, slug: typeSeed.slug },
+        where: { collegeId, slug: seed.slug },
       });
       if (!existing) {
-        await QuestionTypeRepository.create(collegeId, typeSeed);
+        await QuestionTypeRepository.create(collegeId, seed);
       }
     }
   }
@@ -67,7 +69,9 @@ export class SectionService {
         tx,
       );
 
-      for (const typeSeed of seedEntry.questionTypes) {
+      for (const typeSlug of seedEntry.questionTypeSlugs) {
+        const typeSeed = QUESTION_TYPE_SEEDS[typeSlug];
+        if (!typeSeed) continue;
         const existing = await tx.questionType.findFirst({
           where: { collegeId, slug: typeSeed.slug },
         });

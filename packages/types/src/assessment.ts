@@ -17,8 +17,19 @@ export interface QuestionTypeItem {
   collegeId: string;
   name: string;
   slug: string;
+  // Rendering category for the frontend (NOT the assessment topic/section):
+  // "selection" | "textInput" | "audioListening" | "visualHighlight" |
+  // "audioSpeaking" | "visualImage". Kept as `string` (not a union) so new
+  // categories don't require a type-package release — same reasoning as
+  // ResponseFormat below.
   category: string;
   responseFormat: string;
+  // Which answer widget the frontend renders: "multiOptionSelection" |
+  // "singleOptionSelection" | "slotFillSelection" | "freeText" |
+  // "wordHighlightSelection" | "audioRecording". Coarser than
+  // responseFormat (e.g. fill_blank_drag_drop and fill_blank_dropdown both
+  // map to "slotFillSelection").
+  answerFormat: string;
   hasAudio: boolean;
   hasImage: boolean;
   hasPassage: boolean;

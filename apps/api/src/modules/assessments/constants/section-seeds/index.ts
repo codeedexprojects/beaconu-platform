@@ -9,6 +9,8 @@ import { SCIENTIFIC_CALCULATOR } from "./scientific-calculator.seed";
 import { FINANCIAL_CALCULATOR } from "./financial-calculator.seed";
 import { BASIC_CALCULATOR } from "./basic-calculator.seed";
 
+export { QUESTION_TYPE_SEEDS } from "./question-type-seeds";
+
 export const SECTION_SEEDS: Record<string, SectionSeedEntry> = {
   [VERBAL_COMMUNICATION.section.slug]: VERBAL_COMMUNICATION,
   [APTITUDE_LOGICAL_REASONING.section.slug]: APTITUDE_LOGICAL_REASONING,
