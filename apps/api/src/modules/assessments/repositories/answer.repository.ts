@@ -48,22 +48,6 @@ export class AnswerRepository {
     });
   }
 
-  /** Hard delete — a college-admin "restart this assessment" action,
-   * unlike every other entity in this codebase, genuinely means erase the
-   * previous responses so the attempt is blank again. StudentAnswer rows
-   * are the literal content of a response being explicitly discarded by
-   * an authorized admin action, not a business record with its own
-   * lifecycle (no status/isActive column exists on this model), so this
-   * is a deliberate exception to the "soft deletes only" rule — confirmed
-   * with the user rather than assumed. */
-  static async deleteByAttempt(
-    attemptId: string,
-    tx?: Prisma.TransactionClient,
-  ) {
-    const client = tx ?? prisma;
-    return client.studentAnswer.deleteMany({ where: { attemptId } });
-  }
-
   static async listByAttempt(attemptId: string) {
     return prisma.studentAnswer.findMany({
       where: { attemptId },

@@ -392,7 +392,9 @@ export function useRestartAssessmentAttempt() {
   return useMutation({
     mutationFn: (attemptId: string) => restartAssessmentAttempt(attemptId),
     onSuccess: (_data, attemptId) => {
-      queryClient.invalidateQueries({
+      // The attempt no longer exists — remove its cached detail rather
+      // than invalidate (invalidating would refetch and 404).
+      queryClient.removeQueries({
         queryKey: QUERY_KEYS.evaluationDetail(attemptId),
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.evaluationQueue() });

@@ -63,6 +63,24 @@ export class AttemptRepository {
     });
   }
 
+  /** Hard delete — a college-admin "restart" action that removes the
+   * attempt entirely so the student can start a genuinely new one (not
+   * just reset the existing row in place). StudentAnswer rows cascade
+   * automatically (onDelete: Cascade); call deleteReschedulesByAttempt
+   * first — AssessmentReschedule has no cascade for attemptId. */
+  static async delete(id: string, tx?: Prisma.TransactionClient) {
+    const client = tx ?? prisma;
+    return client.assessmentAttempt.delete({ where: { id } });
+  }
+
+  static async deleteReschedulesByAttempt(
+    attemptId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? prisma;
+    return client.assessmentReschedule.deleteMany({ where: { attemptId } });
+  }
+
   static async findPaperQuestion(paperId: string, questionId: string) {
     return prisma.paperQuestion.findFirst({
       where: { paperId, questionId },

@@ -99,37 +99,31 @@ export class AttemptService {
     });
   }
 
-  /** College-admin action: resets an attempt back to a blank, freshly-
-   * started state — works from ANY status (completed/auto_submitted/
-   * terminated/under_evaluation/evaluated/result_published), not just a
-   * stuck in_progress one. Per the confirmed scope: only the attempt
-   * itself is reset — the linked ApplicationCourse's pipeline status is
-   * deliberately left untouched (no revert to an earlier stage). */
+  /** College-admin action: hard-deletes the attempt entirely (not a reset
+   * in place) so the student's application goes back to having NO
+   * attempt at all — the next POST /attempts they make is a genuinely
+   * fresh start, not blocked by the "you already have an attempt for
+   * this application" uniqueness check. Works from ANY status. Per the
+   * confirmed scope: only the attempt is removed — the linked
+   * ApplicationCourse's pipeline status is deliberately left untouched
+   * (no revert to an earlier stage). StudentAnswer rows cascade-delete
+   * automatically (onDelete: Cascade in schema); AssessmentReschedule has
+   * no cascade and (per a full-codebase grep) no module code writes to it
+   * yet, but its rows for this attempt are cleared defensively so this
+   * doesn't start failing with a FK violation the day that feature is
+   * actually built. */
   static async restart(collegeId: string, attemptId: string) {
     const attempt = await AttemptRepository.findById(attemptId);
     if (!attempt || attempt.paper.template.collegeId !== collegeId) {
       throw new NotFoundError("Assessment attempt not found");
     }
 
-    const now = new Date();
-    return prisma.$transaction(async (tx) => {
-      await AnswerRepository.deleteByAttempt(attemptId, tx);
-      return AttemptRepository.update(
-        attemptId,
-        {
-          status: "in_progress",
-          startedAt: now,
-          lastActivityAt: now,
-          completedAt: null,
-          antiCheatLog: [],
-          totalScore: null,
-          maxScore: null,
-          sectionScores: {},
-          timeSpentSecs: null,
-        },
-        tx,
-      );
+    await prisma.$transaction(async (tx) => {
+      await AttemptRepository.deleteReschedulesByAttempt(attemptId, tx);
+      await AttemptRepository.delete(attemptId, tx);
     });
+
+    return { applicationId: attempt.applicationId };
   }
 
   private static async loadOwn(studentId: string, attemptId: string) {

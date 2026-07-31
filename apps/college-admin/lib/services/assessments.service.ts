@@ -276,8 +276,10 @@ export async function publishAssessmentResult(
   return api.patch(`${BASE}/attempts/${attemptId}/publish`, {});
 }
 
+// Deletes the attempt entirely (not a reset in place) — the response has
+// no attempt to return, just the applicationId it was for.
 export async function restartAssessmentAttempt(
   attemptId: string,
-): Promise<AssessmentAttemptItem> {
+): Promise<{ applicationId: string }> {
   return api.patch(`${BASE}/attempts/${attemptId}/restart`, {});
 }
