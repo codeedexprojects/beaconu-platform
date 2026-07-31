@@ -20,9 +20,11 @@ router.post(
   StudentAssessmentController.submitTrial,
 );
 
+// Creates the attempt AND starts the clock in one call — no separate
+// "begin" step (there's no screen between attempt-creation and the timer
+// running in the real take-test flow).
 router.post("/attempts", StudentAssessmentController.startAttempt);
 router.get("/attempts/:id", StudentAssessmentController.getMyAttempt);
-router.patch("/attempts/:id/begin", StudentAssessmentController.beginAttempt);
 router.get(
   "/attempts/:id/sections",
   StudentAssessmentController.getAttemptSections,

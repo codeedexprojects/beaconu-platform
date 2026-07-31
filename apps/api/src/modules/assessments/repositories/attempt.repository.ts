@@ -38,6 +38,9 @@ export class AttemptRepository {
     studentId: string;
     paperId: string;
     slotId: string;
+    status: string;
+    startedAt: Date;
+    lastActivityAt: Date;
   }) {
     return prisma.assessmentAttempt.create({ data });
   }

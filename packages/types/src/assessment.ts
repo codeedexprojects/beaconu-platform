@@ -272,7 +272,11 @@ export interface AssessmentStartInfo {
     // (0 if none approved yet) — not admin-declared fields, which no
     // longer exist on AssessmentTemplate. See Plan L.
     totalMarks: number;
-    totalDurationSecs: number;
+    // Math.ceil of the underlying seconds total (question time_limit_secs
+    // summed + the buffer) — the API only ever exposes minutes here; the
+    // auto-submit job separately computes the exact-seconds deadline via
+    // computePaperDurationSecs, not from this rounded value.
+    totalDurationMins: number;
     negativeMarkingMode: NegativeMarkingMode;
     instructions: TemplateInstructionItem[];
     sections: AssessmentStartSectionSummary[];

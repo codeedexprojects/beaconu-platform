@@ -31,13 +31,18 @@ script:post-response {
 }
 
 docs {
-  Creates an AssessmentAttempt (status "not_started") for the WHOLE
-  Application (covers every course listed on it) — one attempt per
-  application, not one per course. No slot_id — the slot is auto-resolved
-  server-side the same way as Get Assessment Start Info:
-  Application.admissionCycle.assessmentTemplateId -> the template's
-  currently active slot.
-  
+  Creates an AssessmentAttempt AND starts the clock in one call — status
+  is "in_progress" immediately (started_at/last_activity_at set to now),
+  for the WHOLE Application (covers every course listed on it) — one
+  attempt per application, not one per course. There is no separate
+  "begin" endpoint — the two were merged since there's no screen between
+  attempt-creation and the timer running in the actual take-test flow
+  (the Room screen's instructions/countdown all happen before this call).
+
+  No slot_id — the slot is auto-resolved server-side the same way as Get
+  Assessment Start Info: Application.admissionCycle.assessmentTemplateId
+  -> the template's currently active slot.
+
   Requires: the Application belongs to the authenticated student,
   Application.formStatus is "submitted", the admission cycle's
   assessment_required is true, the admission cycle has an

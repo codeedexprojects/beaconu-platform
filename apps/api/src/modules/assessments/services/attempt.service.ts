@@ -80,11 +80,21 @@ export class AttemptService {
       );
     }
 
+    // Create already starts the clock — there's no separate screen between
+    // "attempt created" and "timer running" in the actual take-test flow
+    // (the Room screen's instructions/countdown are all pre-attempt), so a
+    // standalone begin() step only added a failure window (create
+    // succeeds, begin never gets called) for no UX benefit. One call does
+    // both.
+    const now = new Date();
     return AttemptRepository.create({
       applicationId: data.application_id,
       studentId,
       paperId: paper.id,
       slotId: slot.id,
+      status: "in_progress",
+      startedAt: now,
+      lastActivityAt: now,
     });
   }
 
@@ -122,19 +132,6 @@ export class AttemptService {
       totalScore: attempt.totalScore ? Number(attempt.totalScore) : null,
       maxScore: attempt.maxScore ? Number(attempt.maxScore) : null,
     };
-  }
-
-  static async beginNow(studentId: string, attemptId: string) {
-    const attempt = await this.loadOwn(studentId, attemptId);
-    if (attempt.status !== "not_started") {
-      throw new ConflictError("This attempt has already been started");
-    }
-    const now = new Date();
-    return AttemptRepository.update(attemptId, {
-      status: "in_progress",
-      startedAt: now,
-      lastActivityAt: now,
-    });
   }
 
   static async saveAnswer(
