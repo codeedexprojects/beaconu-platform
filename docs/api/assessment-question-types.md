@@ -1,86 +1,69 @@
 # Assessment Question Types
 
-Reference list of every seeded `AssessmentSection` + `QuestionType` in the `assessments` module (`apps/api/src/modules/assessments/constants/section-seeds/`). Enabling a section for a college auto-seeds its question types (idempotent — see `SectionService.toggleSection`).
+Canonical, frontend-aligned reference for every seeded `QuestionType` in the `assessments` module (`apps/api/src/modules/assessments/constants/section-seeds/question-type-seeds.ts`). Enabling a section for a college auto-seeds whichever of these types that section references (idempotent — see `SectionService.toggleSection`).
 
-## Verbal Communication (core section)
+## Design
 
-| Name                   | `responseFormat`        | Auto-scorable |
-| ---------------------- | ----------------------- | ------------- |
-| Audio Comprehension    | `audio_response`        | No            |
-| Repeat Sentence        | `audio_response`        | No            |
-| Read Aloud             | `audio_response`        | No            |
-| Respond to a Situation | `audio_response`        | No            |
-| Describe Image         | `audio_response`        | No            |
-| Voice Response         | `audio_response`        | No            |
-| Voice MCQ              | `voice_mcq`             | No            |
-| Voice Dropdown         | `voice_dropdown`        | No            |
-| Voice Filling Blank    | `voice_fill_blank`      | No            |
-| Voice Incorrect Words  | `voice_incorrect_words` | No            |
+- `slug` matches the frontend's exact question-type enum values one-for-one (`mcqSingle`, `mcqMultiple`, etc.) — the client can switch on `question_type.slug` directly, no translation table needed.
+- `QuestionType.slug` is unique **per college**, not per section — a single canonical type (e.g. `mcqSingle`) is shared across every section that offers it. Sections reference types by slug (`SectionSeedEntry.questionTypeSlugs`); they don't own separate copies.
+- `category` is the frontend's **rendering category** (`selection` | `textInput` | `audioListening` | `visualHighlight` | `audioSpeaking` | `visualImage`) — **not** the assessment topic/section. Which topic a question belongs to is tracked by which `AssessmentSection` it's under, independent of this field.
+- `answerFormat` is which answer widget the frontend renders (`multiOptionSelection` | `singleOptionSelection` | `slotFillSelection` | `freeText` | `wordHighlightSelection` | `audioRecording`) — coarser than `responseFormat` (e.g. `fill_blank_drag_drop` and `fill_blank_dropdown` both map to `slotFillSelection`).
+- `responseFormat` is the internal, more granular format that drives content/answer-key validation in `question-bank.service.ts`.
 
-## Aptitude & Logical Reasoning (core section)
+## The 22 canonical types
 
-| Name                             | `responseFormat`       | Auto-scorable |
-| -------------------------------- | ---------------------- | ------------- |
-| MCQ                              | `single_choice`        | Yes           |
-| Data Interpretation              | `single_choice`        | Yes           |
-| Sequence Questions               | `sequence`             | Yes           |
-| Fill in the Blanks – Drag & Drop | `fill_blank_drag_drop` | Yes           |
-| Fill in the Blanks – Drop Down   | `fill_blank_dropdown`  | Yes           |
+| `slug`                  | Name                                   | `category`      | `answerFormat`         | `responseFormat`                  | Auto-scorable |
+| ----------------------- | -------------------------------------- | --------------- | ---------------------- | --------------------------------- | ------------- |
+| `mcqSingle`             | MCQ (Single Answer)                    | selection       | singleOptionSelection  | `single_choice`                   | Yes           |
+| `mcqMultiple`           | MCQ (Multiple Answers)                 | selection       | multiOptionSelection   | `multi_choice`                    | Yes           |
+| `dragAndDropFill`       | Fill in the Blanks — Drag & Drop       | selection       | slotFillSelection      | `fill_blank_drag_drop`            | Yes           |
+| `dropdownFill`          | Fill in the Blanks — Drop Down         | selection       | slotFillSelection      | `fill_blank_dropdown`             | Yes           |
+| `essay`                 | Writing Essay                          | textInput       | freeText               | `text_response`                   | No            |
+| `textSummary`           | Summary                                | textInput       | freeText               | `text_response`                   | No            |
+| `email`                 | Email                                  | textInput       | freeText               | `text_response`                   | No            |
+| `letter`                | Letter Writing                         | textInput       | freeText               | `text_response`                   | No            |
+| `notice`                | Notice Writing                         | textInput       | freeText               | `text_response`                   | No            |
+| `dialogueCompletion`    | Dialogue Completion                    | textInput       | freeText               | `text_response`                   | No            |
+| `summarizeSpokenText`   | Summarize Spoken Text                  | audioListening  | freeText               | `text_response` (hasAudio)        | No            |
+| `audioMcqMultiple`      | Audio MCQ (Multiple Answers)           | audioListening  | multiOptionSelection   | `multi_choice` (hasAudio)         | Yes           |
+| `audioDropdownFill`     | Audio Fill in the Blanks — Drop Down   | audioListening  | slotFillSelection      | `fill_blank_dropdown` (hasAudio)  | Yes           |
+| `audioDragAndDropFill`  | Audio Fill in the Blanks — Drag & Drop | audioListening  | slotFillSelection      | `fill_blank_drag_drop` (hasAudio) | Yes           |
+| `audioBestOption`       | Audio Best-Matching Option             | audioListening  | singleOptionSelection  | `single_choice` (hasAudio)        | Yes           |
+| `audioMcqSingle`        | Audio MCQ (Single Answer)              | audioListening  | singleOptionSelection  | `single_choice` (hasAudio)        | Yes           |
+| `highlightWords`        | Highlight Incorrect Words              | visualHighlight | wordHighlightSelection | `word_highlight`                  | Yes           |
+| `audioSpeakingResponse` | Audio Speaking Response                | audioSpeaking   | audioRecording         | `audio_response` (hasAudio)       | No            |
+| `repeatSentence`        | Repeat Sentence                        | audioSpeaking   | audioRecording         | `audio_response` (hasAudio)       | No            |
+| `readAloud`             | Read Aloud                             | audioSpeaking   | audioRecording         | `audio_response` (hasPassage)     | No            |
+| `dataInterpretation`    | Data Interpretation                    | visualImage     | freeText               | `text_response` (hasImage)        | No            |
+| `describeImage`         | Describe Image                         | visualImage     | audioRecording         | `audio_response` (hasImage)       | No            |
 
-## Listening & Reading (core section)
+`audioDropdownFill`/`audioDragAndDropFill`/`audioMcqMultiple`/`audioBestOption`/`audioMcqSingle` are **selection-answered** — the audio is the _prompt_, the student still answers by picking/filling, not by recording. Only `audioSpeakingResponse`/`repeatSentence`/`readAloud`/`describeImage` are actually **voice-recorded** answers (`audioRecording`).
 
-| Name                             | `responseFormat`       | Auto-scorable |
-| -------------------------------- | ---------------------- | ------------- |
-| Audio Comprehension              | `audio_response`       | No            |
-| MCQ                              | `single_choice`        | Yes           |
-| True/False                       | `single_choice`        | Yes           |
-| Passage-Based Questions          | `single_choice`        | Yes           |
-| Fill in the Blanks – Drag & Drop | `fill_blank_drag_drop` | Yes           |
-| Fill in the Blanks – Drop Down   | `fill_blank_dropdown`  | Yes           |
+`highlightWords` is validated identically to `mcqMultiple` (`content.options` = the tappable words, `answer_key.correctOptionIds` = which of those word-ids are actually wrong) — same mechanic, different UI widget.
 
-## Leadership Qualities (core section)
+## Section → type mapping
 
-| Name                          | `responseFormat` | Auto-scorable |
-| ----------------------------- | ---------------- | ------------- |
-| Scenario-Based Writing (Text) | `text_response`  | No            |
-| Ranking Questions             | `ranking`        | Yes           |
+| Section                      | Core?                | Types offered                                                                                                               |
+| ---------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Verbal Communication         | Yes                  | `audioSpeakingResponse`, `repeatSentence`, `readAloud`, `describeImage`                                                     |
+| Aptitude & Logical Reasoning | Yes                  | `mcqSingle`, `mcqMultiple`, `dragAndDropFill`, `dropdownFill`, `dataInterpretation`                                         |
+| Listening & Reading          | Yes                  | `audioMcqSingle`, `audioMcqMultiple`, `audioBestOption`, `audioDragAndDropFill`, `audioDropdownFill`, `summarizeSpokenText` |
+| Leadership Qualities         | Yes                  | `mcqSingle`, `essay`, `dialogueCompletion`, `highlightWords`                                                                |
+| Emotional Intelligence       | Yes                  | `mcqSingle`, `mcqMultiple`, `essay`, `highlightWords`                                                                       |
+| Written Communication        | Yes                  | `essay`, `textSummary`, `email`, `letter`, `notice`, `dialogueCompletion`                                                   |
+| Scientific Calculator        | No (course-specific) | `mcqSingle`                                                                                                                 |
+| Financial Calculator         | No (course-specific) | `mcqSingle`                                                                                                                 |
+| Basic Calculator             | No (course-specific) | `mcqSingle`                                                                                                                 |
 
-## Emotional Intelligence (core section)
+## Removed / consolidated (superseded by the above)
 
-| Name                  | `responseFormat` | Auto-scorable |
-| --------------------- | ---------------- | ------------- |
-| Scenario-Based MCQ    | `single_choice`  | Yes           |
-| Likert Scale          | `likert_scale`   | No            |
-| Situational Judgement | `single_choice`  | Yes           |
+These existed in an earlier iteration but aren't part of the frontend's supported set, so they're no longer seeded for new colleges:
 
-## Written Communication (core section)
+- `sequence`/`ranking` responseFormat question types (Sequence Questions, Ranking Questions) — no frontend equivalent.
+- Written Communication's text-based "Describe Image" — only the audio version (`describeImage`) is in the frontend's list.
+- Emotional Intelligence's "Likert Scale" — no frontend equivalent.
+- The original `voice_mcq`/`voice_dropdown`/`voice_fill_blank`/`voice_incorrect_words` types — these assumed voice-_recorded_ answers, but the frontend's audio-listening types are actually selection-answered (see `audioMcqSingle` etc. above); corrected to reuse the plain `single_choice`/`multi_choice`/`fill_blank_*` formats with `hasAudio: true` instead.
+- Duplicate/near-duplicate audio types ("Audio Comprehension", "Respond to a Situation", "Voice Response", "True/False", "Passage-Based Questions", per-section "MCQ"/"Scenario-Based MCQ"/"Situational Judgement") — consolidated into the shared canonical types above (e.g. `audioMcqSingle`, `summarizeSpokenText`, `mcqSingle`).
+- Per-calculator-section "Scientific/Financial/Basic Calculation Problem" types — consolidated into the shared `mcqSingle` (course-scoping is a property of the `Question`, not the `QuestionType`).
 
-| Name           | `responseFormat` | Auto-scorable |
-| -------------- | ---------------- | ------------- |
-| Writing Essay  | `text_response`  | No            |
-| Summary        | `text_response`  | No            |
-| Email          | `text_response`  | No            |
-| Describe Image | `text_response`  | No            |
-| Letter Writing | `text_response`  | No            |
-| Notice Writing | `text_response`  | No            |
-| Dialog Writing | `text_response`  | No            |
-
-## Calculator sections (non-core — course-specific)
-
-| Section               | Question Type                  | `responseFormat` | Auto-scorable |
-| --------------------- | ------------------------------ | ---------------- | ------------- |
-| Scientific Calculator | Scientific Calculation Problem | `single_choice`  | Yes           |
-| Financial Calculator  | Financial Calculation Problem  | `single_choice`  | Yes           |
-| Basic Calculator      | Basic Calculation Problem      | `single_choice`  | Yes           |
-
-## All `responseFormat` values
-
-`single_choice`, `multi_choice`\*, `sequence`, `ranking`, `fill_blank_drag_drop`, `fill_blank_dropdown`, `audio_response`, `text_response`, `likert_scale`, `voice_mcq`, `voice_dropdown`, `voice_fill_blank`, `voice_incorrect_words`
-
-\* `multi_choice` isn't assigned to any seeded question type yet, but is supported by the type union (`packages/types/src/assessment.ts`) and the validation logic (`CHOICE_FORMATS` in `question-bank.service.ts`) — usable if a new question type needs it.
-
-## Notes
-
-- Core sections apply globally to every course — questions in them cannot be mapped to specific courses.
-- Non-core (calculator) sections are course-specific — every question in them must be mapped to at least one course.
-- `responseFormat` drives which answer-input widget the client should render; it's returned per-question on the student attempt endpoints (`AttemptQuestionItem.responseFormat`) alongside `content`.
+Note: this removal only affects the **seed source** — colleges that already created `Question` rows against these older types keep them in the DB untouched (no destructive migration was run); they just won't be offered as choices for new questions going forward, and the "list question types" endpoint no longer surfaces them.

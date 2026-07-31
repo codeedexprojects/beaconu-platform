@@ -17,3 +17,18 @@ export function formatDateOnly(value: Date): string {
 export function formatTimeOnly(value: Date): string {
   return value.toISOString().slice(11, 16);
 }
+
+/** scheduledDate (@db.Date) and startTime/endTime (@db.Time) are separate
+ * columns — Prisma returns the time ones as an epoch-date Date with only
+ * the time-of-day meaningful. Combine into a slot's real instant (e.g.
+ * its actual start moment) for comparisons against `now`. */
+export function combineDateAndTime(date: Date, time: Date): Date {
+  const combined = new Date(date);
+  combined.setUTCHours(
+    time.getUTCHours(),
+    time.getUTCMinutes(),
+    time.getUTCSeconds(),
+    0,
+  );
+  return combined;
+}

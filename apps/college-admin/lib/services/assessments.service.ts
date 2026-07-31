@@ -36,28 +36,37 @@ export const CORE_SECTIONS: CoreSectionMeta[] = [
     slug: "verbal-communication",
     name: "Verbal Communication",
     description:
-      "Audio Comprehension, Repeat Sentence, Read Aloud, Respond to a Situation, Describe Image.",
+      "Audio Speaking Response, Repeat Sentence, Read Aloud, Describe Image.",
   },
   {
     slug: "aptitude-logical-reasoning",
     name: "Aptitude & Logical Reasoning",
-    description: "MCQ, Data Interpretation, Sequence Questions.",
+    description:
+      "MCQ (single/multiple), Fill in the Blanks (drag & drop / drop down), Data Interpretation.",
   },
   {
     slug: "listening-reading",
     name: "Listening & Reading",
     description:
-      "Audio Comprehension, MCQ, True/False, Passage-Based Questions.",
+      "Audio MCQ (single/multiple/best-option), Audio Fill in the Blanks, Summarize Spoken Text.",
   },
   {
     slug: "leadership-qualities",
     name: "Leadership Qualities",
-    description: "Scenario-Based Writing (Text), Ranking Questions.",
+    description:
+      "MCQ, Writing Essay, Dialogue Completion, Highlight Incorrect Words.",
   },
   {
     slug: "emotional-intelligence",
     name: "Emotional Intelligence",
-    description: "Scenario-Based MCQ, Likert Scale, Situational Judgement.",
+    description:
+      "MCQ (single/multiple), Writing Essay, Highlight Incorrect Words.",
+  },
+  {
+    slug: "written-communication",
+    name: "Written Communication",
+    description:
+      "Writing Essay, Summary, Email, Letter, Notice, Dialogue Completion.",
   },
 ];
 

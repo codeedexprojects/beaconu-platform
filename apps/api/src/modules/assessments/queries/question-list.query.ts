@@ -49,8 +49,10 @@ export class QuestionListQuery {
     const seedEntry = SECTION_SEEDS[sectionSlug];
     if (!seedEntry) throw new NotFoundError("Assessment section not found");
 
-    const slugs = seedEntry.questionTypes.map((t) => t.slug);
-    return QuestionTypeRepository.listByCollegeAndSlugs(collegeId, slugs);
+    return QuestionTypeRepository.listByCollegeAndSlugs(
+      collegeId,
+      seedEntry.questionTypeSlugs,
+    );
   }
 
   static async listQuestions(

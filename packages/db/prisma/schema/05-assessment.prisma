@@ -32,8 +32,17 @@ model QuestionType {
   collegeId      String   @map("college_id")
   name           String   @db.VarChar(100)
   slug           String   @db.VarChar(50)
+  // Rendering category for the frontend's UI (selection/textInput/
+  // audioListening/visualHighlight/audioSpeaking/visualImage) — NOT the
+  // assessment topic/section, which is tracked via which AssessmentSection
+  // a Question belongs to, not via this field.
   category       String   @db.VarChar(30)
   responseFormat String   @map("response_format") @db.VarChar(30)
+  // Coarser-grained answer widget the frontend renders (multiOptionSelection/
+  // singleOptionSelection/slotFillSelection/freeText/wordHighlightSelection/
+  // audioRecording) — a grouping of responseFormat values; e.g. both
+  // fill_blank_drag_drop and fill_blank_dropdown share "slotFillSelection".
+  answerFormat   String   @map("answer_format") @db.VarChar(30)
   hasAudio       Boolean  @default(false) @map("has_audio")
   hasImage       Boolean  @default(false) @map("has_image")
   hasPassage     Boolean  @default(false) @map("has_passage")

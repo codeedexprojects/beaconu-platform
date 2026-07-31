@@ -67,7 +67,10 @@ import type {
   QuestionBlank,
 } from "@beaconu/types";
 
-const CHOICE_FORMATS = ["single_choice", "multi_choice"];
+// Mirrors question-bank.service.ts's validation groups — word_highlight
+// (Highlight Incorrect Words) is structurally identical to multi_choice
+// (options + correct option ids), just a different answer widget.
+const CHOICE_FORMATS = ["single_choice", "multi_choice", "word_highlight"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
 const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
 

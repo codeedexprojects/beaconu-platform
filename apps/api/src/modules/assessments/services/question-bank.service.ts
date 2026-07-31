@@ -9,18 +9,17 @@ import type {
   UpdateQuestionInput,
 } from "@beaconu/types";
 
-const CHOICE_FORMATS = ["single_choice", "multi_choice", "voice_mcq"];
+// word_highlight (highlightWords) is structurally identical to
+// multi_choice — options + a set of correct option ids (the "wrong"
+// words) — just a different UI widget (tap-to-toggle words in a passage
+// vs a discrete options list), so it shares the same choice validation.
+const CHOICE_FORMATS = ["single_choice", "multi_choice", "word_highlight"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
-// voice_dropdown/voice_fill_blank are the audio-answered counterparts of
-// fill_blank_dropdown/fill_blank_drag_drop — same options+blanks shape,
-// never auto-scorable (see written/verbal-communication.seed.ts), so this
-// only affects the structural checks below, not the answer-key ones.
-const FILL_BLANK_FORMATS = [
-  "fill_blank_drag_drop",
-  "fill_blank_dropdown",
-  "voice_dropdown",
-  "voice_fill_blank",
-];
+// audioDropdownFill/audioDragAndDropFill reuse the exact same
+// responseFormat as their non-audio counterparts (fill_blank_dropdown/
+// fill_blank_drag_drop) — the audio flag (hasAudio) is what distinguishes
+// them, not a separate format value.
+const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
 
 export class QuestionBankService {
   private static async loadSection(collegeId: string, sectionSlug: string) {

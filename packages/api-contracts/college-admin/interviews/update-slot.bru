@@ -26,4 +26,8 @@ body:json {
 
 docs {
   Updates any subset of an interview slot's fields.
+
+  If scheduled_date or start_time is being changed, 400 ValidationError
+  "Interview slots cannot be scheduled in the past" if the resulting
+  scheduled_date + start_time combined is at or before the current time.
 }

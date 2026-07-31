@@ -57,4 +57,7 @@ docs {
   this same slot).
 
   `start_time`/`end_time` are "HH:MM" 24-hour strings.
+
+  400 ValidationError "Interview slots cannot be scheduled in the past" if
+  scheduled_date + start_time combined is at or before the current time.
 }

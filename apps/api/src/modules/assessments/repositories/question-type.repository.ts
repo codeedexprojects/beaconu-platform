@@ -19,6 +19,7 @@ export class QuestionTypeRepository {
         slug: seed.slug,
         category: seed.category,
         responseFormat: seed.responseFormat,
+        answerFormat: seed.answerFormat,
         hasAudio: seed.hasAudio,
         hasImage: seed.hasImage,
         hasPassage: seed.hasPassage,
