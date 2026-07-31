@@ -4,7 +4,7 @@ import { SlotRepository } from "../repositories/slot.repository";
 import { TemplateRepository } from "../repositories/template.repository";
 import { PaperRepository } from "../repositories/paper.repository";
 import {
-  computePaperDurationSecs,
+  computeTemplateDurationSecs,
   computePaperTotalMarks,
 } from "../lib/duration";
 import type {
@@ -63,9 +63,12 @@ export class AssessmentStartQuery {
       PaperRepository.findActiveByTemplateAndType(template.id, "normal"),
       PaperRepository.findActiveByTemplateAndType(template.id, "trial"),
     ]);
-    const totalDurationSecs = normalPaper
-      ? computePaperDurationSecs(normalPaper.paperQuestions)
-      : 0;
+    // Duration comes from the template's own sections (time_limit_mins),
+    // available as soon as the template has sections — unlike totalMarks,
+    // it doesn't need an approved paper to exist yet.
+    const totalDurationSecs = computeTemplateDurationSecs(
+      template.templateSections,
+    );
     const totalMarks = normalPaper
       ? computePaperTotalMarks(normalPaper.paperQuestions)
       : 0;

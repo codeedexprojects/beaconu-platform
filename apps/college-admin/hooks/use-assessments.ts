@@ -30,6 +30,7 @@ import {
   getEvaluationDetail,
   scoreAssessmentAnswer,
   publishAssessmentResult,
+  restartAssessmentAttempt,
 } from "@/lib/services/assessments.service";
 import type {
   CreateQuestionInput,
@@ -374,6 +375,22 @@ export function usePublishAssessmentResult() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (attemptId: string) => publishAssessmentResult(attemptId),
+    onSuccess: (_data, attemptId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.evaluationDetail(attemptId),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.evaluationQueue() });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useRestartAssessmentAttempt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (attemptId: string) => restartAssessmentAttempt(attemptId),
     onSuccess: (_data, attemptId) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.evaluationDetail(attemptId),

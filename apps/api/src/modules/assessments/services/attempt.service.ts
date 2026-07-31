@@ -5,7 +5,7 @@ import { SlotRepository } from "../repositories/slot.repository";
 import { PaperRepository } from "../repositories/paper.repository";
 import { TemplateRepository } from "../repositories/template.repository";
 import { scoreAutoAnswer } from "../lib/scoring";
-import { computePaperDurationSecs } from "../lib/duration";
+import { computeTemplateDurationSecs } from "../lib/duration";
 import type {
   AnswerKey,
   AntiCheatEventType,
@@ -14,6 +14,7 @@ import type {
   StartAttemptInput,
   SubmitAnswerInput,
 } from "@beaconu/types";
+import { prisma } from "@beaconu/db";
 import type { Prisma } from "@beaconu/db";
 
 const TAB_HIDDEN_GRACE_MS = 10 * 1000;
@@ -95,6 +96,39 @@ export class AttemptService {
       status: "in_progress",
       startedAt: now,
       lastActivityAt: now,
+    });
+  }
+
+  /** College-admin action: resets an attempt back to a blank, freshly-
+   * started state — works from ANY status (completed/auto_submitted/
+   * terminated/under_evaluation/evaluated/result_published), not just a
+   * stuck in_progress one. Per the confirmed scope: only the attempt
+   * itself is reset — the linked ApplicationCourse's pipeline status is
+   * deliberately left untouched (no revert to an earlier stage). */
+  static async restart(collegeId: string, attemptId: string) {
+    const attempt = await AttemptRepository.findById(attemptId);
+    if (!attempt || attempt.paper.template.collegeId !== collegeId) {
+      throw new NotFoundError("Assessment attempt not found");
+    }
+
+    const now = new Date();
+    return prisma.$transaction(async (tx) => {
+      await AnswerRepository.deleteByAttempt(attemptId, tx);
+      return AttemptRepository.update(
+        attemptId,
+        {
+          status: "in_progress",
+          startedAt: now,
+          lastActivityAt: now,
+          completedAt: null,
+          antiCheatLog: [],
+          totalScore: null,
+          maxScore: null,
+          sectionScores: {},
+          timeSpentSecs: null,
+        },
+        tx,
+      );
     });
   }
 
@@ -286,7 +320,8 @@ export class AttemptService {
         lastActivity && now - lastActivity.getTime() > DISCONNECT_GRACE_MS;
 
       const durationMs =
-        computePaperDurationSecs(attempt.paper.paperQuestions) * 1000;
+        computeTemplateDurationSecs(attempt.paper.template.templateSections) *
+        1000;
       const isDurationExpired =
         attempt.startedAt && now - attempt.startedAt.getTime() > durationMs;
       const isWindowExpired = now > attempt.slot.windowEnd.getTime();

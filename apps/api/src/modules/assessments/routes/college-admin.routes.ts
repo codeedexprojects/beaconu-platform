@@ -89,5 +89,9 @@ router.patch(
   "/attempts/:id/publish",
   CollegeAdminAssessmentController.publishResult,
 );
+router.patch(
+  "/attempts/:id/restart",
+  CollegeAdminAssessmentController.restartAttempt,
+);
 
 export default router;

@@ -1,0 +1,38 @@
+meta {
+  name: Restart Attempt
+  type: http
+  seq: 31
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/assessments/attempts/{{assessmentAttemptId}}/restart
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{staffToken}}
+}
+
+docs {
+  Resets an assessment attempt back to a blank, freshly-started state —
+  works from ANY status (completed, auto_submitted, terminated,
+  under_evaluation, evaluated, result_published), not just a stuck
+  in_progress one.
+
+  What gets reset: every StudentAnswer row for this attempt is hard-deleted
+  (a deliberate exception to this codebase's "soft deletes only" rule —
+  answers are the literal content of a response being explicitly discarded
+  by an authorized admin action, not a business record with its own
+  lifecycle). The attempt itself goes back to status "in_progress" with a
+  fresh started_at/last_activity_at (now), completed_at/total_score/
+  max_score cleared to null, section_scores reset to {}, and
+  anti_cheat_log cleared to [].
+
+  Scope note: only the attempt is reset. The linked ApplicationCourse's
+  pipeline status (e.g. "assessment_completed" if it was already
+  evaluated/published) is deliberately left untouched — restarting does
+  NOT revert it back to an earlier stage.
+
+  404 if the attempt doesn't exist or belongs to a different college.
+}
