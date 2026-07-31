@@ -7,6 +7,7 @@ import { TrialService } from "../services/trial.service";
 import {
   antiCheatEventSchema,
   getStartInfoQuerySchema,
+  sectionQuestionQuerySchema,
   startAttemptSchema,
   submitAnswerSchema,
   submitTrialSchema,
@@ -33,12 +34,14 @@ export class StudentAssessmentController {
   }
 
   static async getSectionQuestions(req: Request, res: Response) {
+    const { question_order } = sectionQuestionQuerySchema.parse(req.query);
     const result = await AttemptDetailQuery.getSectionQuestions(
       req.userId!,
       req.params.id as string,
       req.params.sectionId as string,
+      question_order,
     );
-    return res.json(ApiResponse.success("Questions fetched", result));
+    return res.json(ApiResponse.success("Question fetched", result));
   }
 
   static async getOverview(req: Request, res: Response) {

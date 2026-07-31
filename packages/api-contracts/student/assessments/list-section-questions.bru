@@ -1,13 +1,17 @@
 meta {
-  name: List Section Questions
+  name: Get Section Question
   type: http
   seq: 11
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/sections/{{assessmentSectionIdVerbal}}/questions
+  url: {{baseUrl}}/api/v1/student/assessments/attempts/{{assessmentAttemptId}}/sections/{{assessmentSectionIdVerbal}}/questions?question_order=1
   body: none
   auth: none
+}
+
+params:query {
+  question_order: 1
 }
 
 headers {
@@ -15,9 +19,21 @@ headers {
 }
 
 docs {
-  Ordered question list for the take-test screen — content only, no
-  answer_key ever included. Each question carries its own
-  time_limit_secs (the per-question countdown). my_answer reflects any
-  prior save for that question (null if never touched) — response, is_
-  flagged, answered_at.
+  Returns ONE question at a time, not the whole section's list — matches
+  a "one question per screen, Next/Previous button" take-test UI.
+  `question_order` (1-based, query param, defaults to 1) selects which
+  question in the section to return.
+
+  Response: `{ question, questionOrder, totalQuestions, hasNext,
+  hasPrevious }`. `question.content` — content only, no `answer_key`
+  ever included. `question.responseFormat` (e.g. "single_choice",
+  "voice_mcq", "fill_blank_dropdown") tells the client which answer
+  widget to render. `question.myAnswer` reflects any prior save for
+  that question (null if never touched) — response, is_flagged,
+  answered_at.
+
+  To move to the next question: re-call with `question_order + 1` (use
+  the response's own `hasNext` to know whether to show a "Next" button).
+  404 "Question not found" if `question_order` is out of range for this
+  section.
 }

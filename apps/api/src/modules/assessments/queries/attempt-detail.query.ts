@@ -5,6 +5,7 @@ import type {
   AnswerResponse,
   AttemptOverview,
   AttemptQuestionItem,
+  AttemptSectionQuestionPage,
   AttemptSectionStatus,
   AttemptSectionSummary,
   QuestionContent,
@@ -59,41 +60,71 @@ export class AttemptDetailQuery {
     });
   }
 
+  private static toAttemptQuestionItem(
+    pq: Awaited<
+      ReturnType<typeof AttemptRepository.findQuestionsForSection>
+    >[number],
+    answerByQuestion: Map<
+      string,
+      Awaited<ReturnType<typeof AnswerRepository.listByAttempt>>[number]
+    >,
+  ): AttemptQuestionItem {
+    const answer = answerByQuestion.get(pq.questionId);
+    return {
+      id: pq.id,
+      questionId: pq.questionId,
+      questionOrder: pq.questionOrder,
+      questionTypeId: pq.question.questionTypeId,
+      questionTypeName: pq.question.questionType.name,
+      responseFormat: pq.question.questionType.responseFormat,
+      content: pq.question.content as unknown as QuestionContent,
+      marks: Number(pq.question.marks),
+      timeLimitSecs: pq.question.timeLimitSecs,
+      myAnswer: answer
+        ? {
+            response:
+              (answer.response as unknown as AnswerResponse | null) ?? null,
+            isFlagged: answer.isFlagged,
+            answeredAt: answer.answeredAt
+              ? answer.answeredAt.toISOString()
+              : null,
+          }
+        : null,
+    };
+  }
+
+  /** One question per response, for a "one question per screen, Next
+   * button" take-test UI — not the whole section dumped in one call.
+   * `questionOrder` is 1-based; defaults to 1 (the first question) when
+   * omitted. */
   static async getSectionQuestions(
     studentId: string,
     attemptId: string,
     sectionId: string,
-  ): Promise<AttemptQuestionItem[]> {
+    questionOrder: number,
+  ): Promise<AttemptSectionQuestionPage> {
     const attempt = await this.loadOwn(studentId, attemptId);
     const [paperQuestions, answers] = await Promise.all([
       AttemptRepository.findQuestionsForSection(attempt.paperId, sectionId),
       AnswerRepository.listByAttempt(attemptId),
     ]);
 
+    const target = paperQuestions.find(
+      (pq) => pq.questionOrder === questionOrder,
+    );
+    if (!target) {
+      throw new NotFoundError("Question not found");
+    }
+
     const answerByQuestion = new Map(answers.map((a) => [a.questionId, a]));
 
-    return paperQuestions.map((pq) => {
-      const answer = answerByQuestion.get(pq.questionId);
-      return {
-        id: pq.id,
-        questionId: pq.questionId,
-        questionOrder: pq.questionOrder,
-        questionTypeId: pq.question.questionTypeId,
-        content: pq.question.content as unknown as QuestionContent,
-        marks: Number(pq.question.marks),
-        timeLimitSecs: pq.question.timeLimitSecs,
-        myAnswer: answer
-          ? {
-              response:
-                (answer.response as unknown as AnswerResponse | null) ?? null,
-              isFlagged: answer.isFlagged,
-              answeredAt: answer.answeredAt
-                ? answer.answeredAt.toISOString()
-                : null,
-            }
-          : null,
-      };
-    });
+    return {
+      question: this.toAttemptQuestionItem(target, answerByQuestion),
+      questionOrder,
+      totalQuestions: paperQuestions.length,
+      hasNext: paperQuestions.some((pq) => pq.questionOrder > questionOrder),
+      hasPrevious: questionOrder > 1,
+    };
   }
 
   static async getOverview(

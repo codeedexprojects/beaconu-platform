@@ -209,6 +209,12 @@ export const getStartInfoQuerySchema = z.object({
 
 export type GetStartInfoQuery = z.infer<typeof getStartInfoQuerySchema>;
 
+export const sectionQuestionQuerySchema = z.object({
+  question_order: z.coerce.number().int().positive().default(1),
+});
+
+export type SectionQuestionQuery = z.infer<typeof sectionQuestionQuerySchema>;
+
 export const submitAnswerSchema = z
   .object({
     // Optional — a student can flag a question "for review" without
