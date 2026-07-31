@@ -93,7 +93,7 @@ export class AssessmentStartQuery {
         name: template.name,
         totalQuestions: template.totalQuestions,
         totalMarks,
-        totalDurationSecs,
+        totalDurationMins: Math.ceil(totalDurationSecs / 60),
         negativeMarkingMode: settings.negativeMarkingMode ?? "none",
         instructions:
           (template.instructions as unknown as

@@ -72,15 +72,7 @@ export class StudentAssessmentController {
   static async startAttempt(req: Request, res: Response) {
     const data = startAttemptSchema.parse(req.body);
     const result = await AttemptService.start(req.userId!, data);
-    return res.status(201).json(ApiResponse.success("Attempt created", result));
-  }
-
-  static async beginAttempt(req: Request, res: Response) {
-    const result = await AttemptService.beginNow(
-      req.userId!,
-      req.params.id as string,
-    );
-    return res.json(ApiResponse.success("Attempt started", result));
+    return res.status(201).json(ApiResponse.success("Attempt started", result));
   }
 
   static async saveAnswer(req: Request, res: Response) {

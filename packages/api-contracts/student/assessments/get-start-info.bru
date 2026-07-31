@@ -44,8 +44,16 @@ docs {
   `description`, alongside `name`/`question_count`/`time_limit_mins`),
   instructions (heading +
   description + an optional client-defined icon key), `total_marks`, and
-  `total_duration_secs` — both computed as sums over the currently-approved
-  normal paper's questions (both 0 if no normal paper is approved yet).
+  `total_duration_mins`. `total_marks` is the sum of the
+  currently-approved normal paper's questions' marks (0 if none approved
+  yet). `total_duration_mins` is `Math.ceil` of that same paper's
+  questions' summed `time_limit_secs` PLUS a fixed 5-minute buffer (see
+  `computePaperDurationSecs`, `apps/api/.../assessments/lib/duration.ts`),
+  converted to whole minutes — 0 only when no normal paper is approved yet.
+  The API only ever exposes minutes here; the auto-submit job separately
+  computes the exact-seconds deadline internally (not derived from this
+  rounded value), so it may cut the attempt off up to ~59s before/after
+  what a naive minutes->seconds conversion of this field would suggest.
   `has_active_trial_paper` tells the client whether to show/enable "Take
   Trial of Assessment". `is_within_window`/`has_window_passed` are both
   `false` when `slot` is null. `my_attempt` (`{id, status}` or `null`) is
