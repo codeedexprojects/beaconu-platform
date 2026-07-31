@@ -437,15 +437,50 @@ export interface AttemptQuestionMyAnswer {
   answeredAt: string | null;
 }
 
+/** Drives which answer-input widget the client renders for a question —
+ * paired with `content`/`myAnswer.response`, whose populated fields vary by
+ * format (see QuestionContent/AnswerResponse). Kept as `string` rather than
+ * a strict union so new question types (added via section-seed files) don't
+ * require a type-package release to show up in this response. */
+export type ResponseFormat =
+  | "text_response"
+  | "single_choice"
+  | "multi_choice"
+  | "sequence"
+  | "ranking"
+  | "fill_blank_drag_drop"
+  | "fill_blank_dropdown"
+  | "audio_response"
+  | "likert_scale"
+  | "voice_mcq"
+  | "voice_dropdown"
+  | "voice_fill_blank"
+  | "voice_incorrect_words"
+  | (string & {});
+
 export interface AttemptQuestionItem {
   id: string;
   questionId: string;
   questionOrder: number;
   questionTypeId: string;
+  questionTypeName: string;
+  responseFormat: ResponseFormat;
   content: QuestionContent;
   marks: number;
   timeLimitSecs: number;
   myAnswer: AttemptQuestionMyAnswer | null;
+}
+
+/** One question at a time, for a "one question per screen, Next/Previous
+ * navigation" take-test UI — not the whole section's questions in one
+ * response. `question_order` is 1-based and matches AttemptQuestionItem's
+ * own `questionOrder` field. */
+export interface AttemptSectionQuestionPage {
+  question: AttemptQuestionItem;
+  questionOrder: number;
+  totalQuestions: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface AttemptOverviewQuestion {

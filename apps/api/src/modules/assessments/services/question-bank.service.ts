@@ -9,9 +9,18 @@ import type {
   UpdateQuestionInput,
 } from "@beaconu/types";
 
-const CHOICE_FORMATS = ["single_choice", "multi_choice"];
+const CHOICE_FORMATS = ["single_choice", "multi_choice", "voice_mcq"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
-const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
+// voice_dropdown/voice_fill_blank are the audio-answered counterparts of
+// fill_blank_dropdown/fill_blank_drag_drop — same options+blanks shape,
+// never auto-scorable (see written/verbal-communication.seed.ts), so this
+// only affects the structural checks below, not the answer-key ones.
+const FILL_BLANK_FORMATS = [
+  "fill_blank_drag_drop",
+  "fill_blank_dropdown",
+  "voice_dropdown",
+  "voice_fill_blank",
+];
 
 export class QuestionBankService {
   private static async loadSection(collegeId: string, sectionSlug: string) {
