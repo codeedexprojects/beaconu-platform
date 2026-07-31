@@ -38,9 +38,10 @@ docs {
   required for slot_type "window" and must be after window_start
   (ValidationError otherwise). For slot_type "fixed", omit window_end
   entirely — it's derived server-side from window_start + the sum of the
-  currently-approved normal paper's questions' time_limit_secs (a fixed
-  slot only has one start time; the end is whatever the paper's total
-  question time works out to, always kept in sync — requires an approved
-  normal paper to exist, see Create Assessment Slot (Fixed) for the
-  ConflictError otherwise). max_capacity is optional — omit for unlimited.
+  template's OWN sections' time_limit_mins (plus a fixed 5-minute buffer),
+  not the paper's questions (a fixed slot only has one start time; the end
+  is whatever the template's declared section times add up to, always
+  kept in sync — no approved paper is required to exist for this). See
+  Create Assessment Slot (Fixed) for the exact fixed-type example.
+  max_capacity is optional — omit for unlimited.
 }

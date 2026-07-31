@@ -6,6 +6,7 @@ import { TemplateService } from "../services/template.service";
 import { PaperGenerationService } from "../services/paper-generation.service";
 import { SlotService } from "../services/slot.service";
 import { EvaluationService } from "../services/evaluation.service";
+import { AttemptService } from "../services/attempt.service";
 import { QuestionListQuery } from "../queries/question-list.query";
 import { TemplateListQuery } from "../queries/template-list.query";
 import { PaperPreviewQuery } from "../queries/paper-preview.query";
@@ -273,5 +274,13 @@ export class CollegeAdminAssessmentController {
       req.params.id as string,
     );
     return res.json(ApiResponse.success("Result published", result));
+  }
+
+  static async restartAttempt(req: Request, res: Response) {
+    const result = await AttemptService.restart(
+      req.collegeId!,
+      req.params.id as string,
+    );
+    return res.json(ApiResponse.success("Attempt restarted", result));
   }
 }

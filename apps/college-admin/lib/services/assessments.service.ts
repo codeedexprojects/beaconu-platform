@@ -275,3 +275,9 @@ export async function publishAssessmentResult(
 ): Promise<AssessmentAttemptItem> {
   return api.patch(`${BASE}/attempts/${attemptId}/publish`, {});
 }
+
+export async function restartAssessmentAttempt(
+  attemptId: string,
+): Promise<AssessmentAttemptItem> {
+  return api.patch(`${BASE}/attempts/${attemptId}/restart`, {});
+}

@@ -63,11 +63,13 @@ docs {
   without) is rejected. Get real section_id values from GET
   /assessments/sections (enable a section first if needed).
 
-  No total_duration_mins or total_marks fields — templates no longer
-  declare either. Both are always computed from the approved normal
-  paper's questions (time_limit_secs summed for duration, marks summed
-  for total marks — set per-question in Create Question), shown to
-  students on the Assessment Room screen (Get Assessment Start Info) and,
-  for duration, also used for auto-submit expiry and fixed-slot window-end
-  (see Create Assessment Slot (Fixed)).
+  No total_duration_mins or total_marks field on the template itself —
+  both are always computed, but from different sources: total DURATION is
+  the sum of each section's own time_limit_mins (set per-section right
+  here on this request) plus a fixed 5-minute buffer — set these
+  correctly, since this is what students see on the Room screen and what
+  the auto-submit job/fixed-slot window-end actually enforce as the
+  deadline. total MARKS is separately computed from the approved normal
+  paper's questions' marks (set per-question in Create Question) — marks
+  genuinely need a paper to exist since they're not declared per-section.
 }

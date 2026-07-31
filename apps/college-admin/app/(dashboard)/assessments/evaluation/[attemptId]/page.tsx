@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { getErrorMessage } from "@/lib/api";
 import {
   useEvaluationDetail,
   useScoreAssessmentAnswer,
   usePublishAssessmentResult,
+  useRestartAssessmentAttempt,
 } from "@/hooks/use-assessments";
 import type { EvaluationAnswerDetail } from "@beaconu/types";
 
@@ -211,10 +213,23 @@ export default function EvaluationDetailPage() {
   const { data: attempt, isLoading } = useEvaluationDetail(attemptId);
   const { mutate: publish, isPending: isPublishing } =
     usePublishAssessmentResult();
+  const { mutate: restart, isPending: isRestarting } =
+    useRestartAssessmentAttempt();
+  const [restartOpen, setRestartOpen] = useState(false);
 
   function handlePublish() {
     publish(attemptId, {
       onSuccess: () => toast.success("Result published"),
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
+
+  function handleRestart() {
+    restart(attemptId, {
+      onSuccess: () => {
+        toast.success("Assessment restarted");
+        setRestartOpen(false);
+      },
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
@@ -274,25 +289,46 @@ export default function EvaluationDetailPage() {
             )}
           </div>
         </div>
-        {attempt.status === "under_evaluation" && (
+        <div className="flex items-center gap-2">
           <Button
-            onClick={handlePublish}
-            disabled={!canPublish || isPublishing}
-            title={
-              !canPublish
-                ? `${pendingCount} answer(s) still need scoring`
-                : undefined
-            }
+            variant="outline"
+            onClick={() => setRestartOpen(true)}
+            disabled={isRestarting}
           >
-            <CheckCircle2 className="mr-1.5 h-4 w-4" />
-            {isPublishing
-              ? "Publishing..."
-              : canPublish
-                ? "Publish Result"
-                : `${pendingCount} pending`}
+            <RotateCcw className="mr-1.5 h-4 w-4" />
+            Restart Assessment
           </Button>
-        )}
+          {attempt.status === "under_evaluation" && (
+            <Button
+              onClick={handlePublish}
+              disabled={!canPublish || isPublishing}
+              title={
+                !canPublish
+                  ? `${pendingCount} answer(s) still need scoring`
+                  : undefined
+              }
+            >
+              <CheckCircle2 className="mr-1.5 h-4 w-4" />
+              {isPublishing
+                ? "Publishing..."
+                : canPublish
+                  ? "Publish Result"
+                  : `${pendingCount} pending`}
+            </Button>
+          )}
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={restartOpen}
+        onOpenChange={setRestartOpen}
+        title="Restart Assessment"
+        description="This will permanently erase all of this student's answers and restart the assessment from scratch — a fresh attempt, as if it had never been started. This cannot be undone."
+        confirmLabel="Restart"
+        variant="destructive"
+        isPending={isRestarting}
+        onConfirm={handleRestart}
+      />
 
       <div className="space-y-6">
         {Array.from(sections.entries()).map(([sectionId, section]) => (

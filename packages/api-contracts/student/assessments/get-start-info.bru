@@ -46,17 +46,20 @@ docs {
   description + an optional client-defined icon key), `total_marks`, and
   `total_duration_mins`. `total_marks` is the sum of the
   currently-approved normal paper's questions' marks (0 if none approved
-  yet). `total_duration_mins` is `Math.ceil` of that same paper's
-  questions' summed `time_limit_secs` PLUS a fixed 5-minute buffer (see
-  `computePaperDurationSecs`, `apps/api/.../assessments/lib/duration.ts`),
-  converted to whole minutes — 0 only when no normal paper is approved yet.
-  The API only ever exposes minutes here; the auto-submit job separately
-  computes the exact-seconds deadline internally (not derived from this
-  rounded value), so it may cut the attempt off up to ~59s before/after
-  what a naive minutes->seconds conversion of this field would suggest.
-  `has_active_trial_paper` tells the client whether to show/enable "Take
-  Trial of Assessment". `is_within_window`/`has_window_passed` are both
-  `false` when `slot` is null. `my_attempt` (`{id, status}` or `null`) is
-  always resolved now, so the Room screen can render "Resume Assessment"
-  instead of "Start Assessment" for a returning student.
+  yet — this one genuinely needs a paper). `total_duration_mins` is
+  `Math.ceil` of the TEMPLATE's OWN sections' summed `time_limit_mins`
+  PLUS a fixed 5-minute buffer (see `computeTemplateDurationSecs`,
+  `apps/api/.../assessments/lib/duration.ts`) — available as soon as the
+  template has sections with `time_limit_mins` set, independent of
+  whether any paper has been generated/approved yet. It deliberately does
+  NOT sum individual questions' `time_limit_secs` — those stay
+  per-question on-screen countdowns only. This is the exact same value
+  the auto-submit job enforces as the attempt's hard deadline (converted
+  back to seconds internally), so what's shown here always matches when
+  the attempt actually gets cut off. `has_active_trial_paper` tells the
+  client whether to show/enable "Take Trial of Assessment".
+  `is_within_window`/`has_window_passed` are both `false` when `slot` is
+  null. `my_attempt` (`{id, status}` or `null`) is always resolved now, so
+  the Room screen can render "Resume Assessment" instead of "Start
+  Assessment" for a returning student.
 }

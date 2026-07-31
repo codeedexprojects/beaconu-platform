@@ -70,8 +70,13 @@ export class AttemptRepository {
     });
   }
 
-  static async update(id: string, data: Prisma.AssessmentAttemptUpdateInput) {
-    return prisma.assessmentAttempt.update({ where: { id }, data });
+  static async update(
+    id: string,
+    data: Prisma.AssessmentAttemptUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? prisma;
+    return client.assessmentAttempt.update({ where: { id }, data });
   }
 
   static async appendAntiCheatEvent(
@@ -103,8 +108,10 @@ export class AttemptRepository {
       include: {
         paper: {
           include: {
-            paperQuestions: {
-              select: { question: { select: { timeLimitSecs: true } } },
+            template: {
+              select: {
+                templateSections: { select: { timeLimitMins: true } },
+              },
             },
           },
         },

@@ -1,8 +1,7 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { SlotRepository } from "../repositories/slot.repository";
 import { TemplateRepository } from "../repositories/template.repository";
-import { PaperRepository } from "../repositories/paper.repository";
-import { computePaperDurationSecs } from "../lib/duration";
+import { computeTemplateDurationSecs } from "../lib/duration";
 import type {
   CreateSlotBody,
   UpdateSlotBody,
@@ -23,22 +22,18 @@ export class SlotService {
   }
 
   /** A fixed slot's end time must match how long the assessment actually
-   * runs — the sum of the approved normal paper's questions' time_limit_secs
-   * — not an admin-declared duration (removed; see docs/context.md's rule
-   * that total assessment time is the sum of all question times). */
-  private static async resolveFixedWindowEnd(templateId: string, start: Date) {
-    const paper = await PaperRepository.findActiveByTemplateAndType(
-      templateId,
-      "normal",
-    );
-    if (!paper) {
-      throw new ConflictError(
-        "Approve a normal paper for this template before creating a fixed slot",
-      );
-    }
+   * runs — the sum of the template's sections' time_limit_mins (plus the
+   * buffer) — not an admin-declared single duration field (removed) and
+   * not the paper's questions either (see computeTemplateDurationSecs's
+   * doc comment for why). No paper needs to exist yet — sections are
+   * available as soon as the template has them. */
+  private static resolveFixedWindowEnd(
+    templateSections: { timeLimitMins: number }[],
+    start: Date,
+  ) {
     return this.computeFixedWindowEnd(
       start,
-      computePaperDurationSecs(paper.paperQuestions),
+      computeTemplateDurationSecs(templateSections),
     );
   }
 
@@ -57,7 +52,10 @@ export class SlotService {
 
     const windowEnd =
       data.slot_type === "fixed"
-        ? await this.resolveFixedWindowEnd(templateId, data.window_start)
+        ? this.resolveFixedWindowEnd(
+            template.templateSections,
+            data.window_start,
+          )
         : data.window_end!;
 
     this.validateWindow(data.window_start, windowEnd);
@@ -91,7 +89,11 @@ export class SlotService {
       slotType === "fixed" &&
       (data.window_start !== undefined || data.slot_type === "fixed")
     ) {
-      end = await this.resolveFixedWindowEnd(existing.templateId, start);
+      const template = await TemplateRepository.findById(existing.templateId);
+      if (!template) {
+        throw new NotFoundError("Assessment template not found");
+      }
+      end = this.resolveFixedWindowEnd(template.templateSections, start);
     }
 
     if (
