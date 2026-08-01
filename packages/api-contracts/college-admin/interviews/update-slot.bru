@@ -20,14 +20,23 @@ headers {
 
 body:json {
   {
-    "max_capacity": 2
+    "venue": "Admin Block, Room 4"
   }
 }
 
 docs {
-  Updates any subset of an interview slot's fields.
+  Updates any subset of an interview slot's fields (mode, scheduled_date,
+  start_time, end_time, duration_mins, campus_id, venue, interviewer_id).
+  No max_capacity — every slot is a fixed 1-on-1 booking, not configurable.
 
   If scheduled_date or start_time is being changed, 400 ValidationError
   "Interview slots cannot be scheduled in the past" if the resulting
   scheduled_date + start_time combined is at or before the current time.
+
+  409 ConflictError if changing `mode` to one that's currently disabled
+  for this college — see Get Interview Settings / Update Interview
+  Settings.
+
+  404 "Campus not found" if `campus_id` is changed to one that doesn't
+  belong to this college.
 }

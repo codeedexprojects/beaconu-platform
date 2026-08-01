@@ -12,12 +12,15 @@ import {
   getInterviewReschedules,
   reviewInterviewReschedule,
   shortlistCourse,
+  getInterviewSettings,
+  updateInterviewSettings,
 } from "@/lib/services/interviews.service";
 import type {
   CreateInterviewSlotInput,
   UpdateInterviewSlotInput,
   CompleteInterviewInput,
   ReviewInterviewRescheduleInput,
+  UpdateInterviewSettingsInput,
 } from "@beaconu/types";
 
 export function useInterviewSlots(filters?: {
@@ -123,6 +126,27 @@ export function useReviewInterviewReschedule() {
       });
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.interviewBookings(),
+      });
+    },
+  });
+}
+
+export function useInterviewSettings() {
+  return useQuery({
+    queryKey: QUERY_KEYS.interviewSettings,
+    queryFn: () => getInterviewSettings(),
+  });
+}
+
+export function useUpdateInterviewSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateInterviewSettingsInput) =>
+      updateInterviewSettings(data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.interviewSettings,
       });
     },
   });

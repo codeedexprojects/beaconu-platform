@@ -17,11 +17,21 @@ auth:bearer {
 params:query {
   college_id: {{collegeId}}
   ~mode: gmeet
+  ~scheduled_date: 2026-08-15
 }
 
 docs {
   Every currently-bookable slot at a college — active, upcoming, with open
   capacity. `college_id` is required (students aren't scoped to one
-  college via their session — they can apply to several). `mode` optional
-  filter: "gmeet" | "telephonic" | "on_campus".
+  college via their session — they can apply to several).
+
+  Filters (both optional):
+  - `mode` ("type"): "gmeet" | "on_campus"
+  - `scheduled_date` ("date wise"): exact day, "YYYY-MM-DD" — when given,
+    replaces the default "any upcoming date" range with an exact-day match.
+
+  Each slot's `campus` field (present when `mode` is "on_campus" and a
+  campus was selected at creation) carries the structured address/city/
+  state/pinCode/latitude/longitude — latitude/longitude are null if that
+  campus was never geo-tagged.
 }

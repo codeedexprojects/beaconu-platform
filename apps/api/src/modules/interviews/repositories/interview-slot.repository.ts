@@ -18,7 +18,19 @@ const SLOT_SELECT = {
   zoomMeetingId: true,
   zoomPasscode: true,
   googleEventId: true,
-  phoneNumber: true,
+  campusId: true,
+  campus: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      city: true,
+      state: true,
+      pinCode: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
   venue: true,
   interviewerId: true,
   interviewer: { select: { fullName: true, email: true } },
@@ -28,21 +40,28 @@ const SLOT_SELECT = {
 
 // No meetingUrl/meetingId/meetingPasscode here — for "gmeet" slots those
 // are always written separately via updateMeetingInfo(), once the Google
-// Meet event has actually been created. No phoneNumber either —
-// "telephonic" interviews use the student's own number (see
-// InterviewBookingItem.studentPhone), never a college-entered one.
+// Meet event has actually been created. No maxCapacity either — every slot
+// is a fixed 1-on-1 booking now, left at the schema's own default (1),
+// never set explicitly from here.
 export interface InterviewSlotCreateData {
   mode: string;
   scheduledDate: Date;
   startTime: Date;
   endTime: Date;
   durationMins?: number;
-  maxCapacity?: number;
+  campusId?: string;
   venue?: string;
   interviewerId?: string;
 }
 
 export class InterviewSlotRepository {
+  static async findCampusInCollege(campusId: string, collegeId: string) {
+    return prisma.campus.findFirst({
+      where: { id: campusId, collegeId },
+      select: { id: true },
+    });
+  }
+
   static async create(collegeId: string, data: InterviewSlotCreateData) {
     return prisma.interviewSlot.create({
       data: {
@@ -54,9 +73,7 @@ export class InterviewSlotRepository {
         ...(data.durationMins !== undefined && {
           durationMins: data.durationMins,
         }),
-        ...(data.maxCapacity !== undefined && {
-          maxCapacity: data.maxCapacity,
-        }),
+        campusId: data.campusId,
         venue: data.venue,
         interviewerId: data.interviewerId,
       },
@@ -86,13 +103,21 @@ export class InterviewSlotRepository {
     });
   }
 
-  /** Available-for-booking slots — active, upcoming, with open capacity. */
-  static async listAvailableForCollege(collegeId: string, mode?: string) {
+  /** Available-for-booking slots — active, upcoming, with open capacity.
+   * `scheduledDate`, when given, replaces the default "any upcoming date"
+   * lower bound with an exact-day filter ("date wise" browsing). */
+  static async listAvailableForCollege(
+    collegeId: string,
+    mode?: string,
+    scheduledDate?: Date,
+  ) {
     return prisma.interviewSlot.findMany({
       where: {
         collegeId,
         status: "active",
-        scheduledDate: { gte: new Date(new Date().toDateString()) },
+        ...(scheduledDate
+          ? { scheduledDate }
+          : { scheduledDate: { gte: new Date(new Date().toDateString()) } }),
         ...(mode && { mode }),
       },
       select: SLOT_SELECT,
@@ -113,9 +138,7 @@ export class InterviewSlotRepository {
         ...(data.durationMins !== undefined && {
           durationMins: data.durationMins,
         }),
-        ...(data.maxCapacity !== undefined && {
-          maxCapacity: data.maxCapacity,
-        }),
+        ...(data.campusId !== undefined && { campusId: data.campusId }),
         ...(data.venue !== undefined && { venue: data.venue }),
         ...(data.interviewerId !== undefined && {
           interviewerId: data.interviewerId,

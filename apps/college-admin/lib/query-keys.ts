@@ -27,6 +27,7 @@ export const QUERY_KEYS = {
   application: (id: string) => ["college-applications", id] as const,
   interviewSlots: (filters?: object) =>
     filters ? ["interview-slots", filters] : ["interview-slots"],
+  interviewSettings: ["interview-settings"] as const,
   interviewBookings: (status?: string) =>
     status ? ["interview-bookings", status] : ["interview-bookings"],
   interviewReschedules: (status?: string) =>

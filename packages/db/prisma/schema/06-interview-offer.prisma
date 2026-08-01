@@ -19,7 +19,7 @@ model InterviewSlot {
   // "gmeet" only) — needed to update/cancel the event later. Same
   // convention as CounsellingSession.googleEventId.
   googleEventId  String?  @map("google_event_id") @db.VarChar(255)
-  phoneNumber    String?  @map("phone_number") @db.VarChar(20)
+  campusId       String?  @map("campus_id")
   venue          String?  @db.VarChar(255)
   interviewerId  String?  @map("interviewer_id")
   status         String   @default("active") @db.VarChar(20)
@@ -28,6 +28,7 @@ model InterviewSlot {
 
   // Relations
   college        College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  campus         Campus?               @relation(fields: [campusId], references: [id])
   interviewer    StaffMember?          @relation("InterviewerStaff", fields: [interviewerId], references: [id])
   bookings       InterviewBooking[]
   rescheduleFrom InterviewReschedule[] @relation("IRescheduleFrom")
@@ -37,7 +38,29 @@ model InterviewSlot {
   @@index([collegeId, scheduledDate], name: "idx_islots_date")
   @@index([collegeId, status], name: "idx_islots_status")
   @@index([interviewerId], name: "idx_islots_interviewer")
+  @@index([campusId], name: "idx_islots_campus")
   @@map("interview_slots")
+}
+
+// One row per college.
+model InterviewSettings {
+  id                   String   @id @default(dbgenerated("('ITC-'::text || (nextval('interview_settings_seq'::regclass))::text)"))
+  collegeId            String   @unique @map("college_id")
+  allowGmeet           Boolean  @default(true) @map("allow_gmeet")
+  allowOnCampus        Boolean  @default(true) @map("allow_on_campus")
+  gmeetHeading         String?  @map("gmeet_heading") @db.VarChar(255)
+  gmeetDescription     String?  @map("gmeet_description") @db.Text
+  gmeetInstructions    Json     @default("[]") @map("gmeet_instructions")
+  onCampusHeading      String?  @map("on_campus_heading") @db.VarChar(255)
+  onCampusDescription  String?  @map("on_campus_description") @db.Text
+  onCampusInstructions Json     @default("[]") @map("on_campus_instructions")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@map("interview_settings")
 }
 
 model InterviewBooking {

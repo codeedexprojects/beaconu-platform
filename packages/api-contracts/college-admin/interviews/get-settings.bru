@@ -1,0 +1,36 @@
+meta {
+  name: Get Interview Settings
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  One shared settings block per college — which interview modes are
+  currently open for new slot creation, plus SEPARATE
+  heading/description/instructions blocks for online (Google Meet) vs
+  offline (On Campus) interviews (not per-slot, and not shared between the
+  two modes).
+
+  Response shape:
+  {
+    collegeId, allowGmeet, allowOnCampus,
+    gmeet: { heading, description, instructions: string[] },
+    onCampus: { heading, description, instructions: string[] },
+    updatedAt
+  }
+
+  A college that has never touched this returns the defaults: both modes
+  enabled, both blocks' heading/description null and instructions [].
+  There's no explicit "create settings" step — the first Update Interview
+  Settings call creates the row implicitly (find-or-create).
+}

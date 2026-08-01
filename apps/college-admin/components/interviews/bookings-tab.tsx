@@ -201,15 +201,14 @@ export function InterviewBookingsTab() {
                   >
                     <TableCell className="py-4 pl-6 text-sm">
                       <p className="font-medium">{booking.studentName}</p>
-                      {booking.slot.mode === "telephonic" &&
-                        booking.studentPhone && (
-                          <a
-                            href={`tel:${booking.studentPhone}`}
-                            className="text-xs text-primary hover:underline"
-                          >
-                            {booking.studentPhone}
-                          </a>
-                        )}
+                      {booking.studentPhone && (
+                        <a
+                          href={`tel:${booking.studentPhone}`}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {booking.studentPhone}
+                        </a>
+                      )}
                     </TableCell>
                     <TableCell className="py-4 text-sm text-muted-foreground">
                       {booking.slot.mode.replace("_", " ")} ·{" "}

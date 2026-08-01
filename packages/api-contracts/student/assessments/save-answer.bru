@@ -25,10 +25,27 @@ body:json {
 
 docs {
   Upserts one answer (autosave — call again to overwrite). response shape
-  depends on the question's format: { selectedOptionIds } for
-  single/multi-choice, { order } for ranking/sequence, { blankAnswers } for
-  fill-in-the-blank, { text } for free-text/likert. Autoscorable questions
+  depends on the question's response_format:
+  - single_choice / multi_choice  -> { selectedOptionIds: string[] }
+  - ranking / sequence            -> { order: string[] }
+  - fill_blank_drag_drop /
+    fill_blank_dropdown           -> { blankAnswers: { blankId, optionId }[] }
+  - text_response                 -> { text: string }
+  - audio_response                -> { audioUrl: string }  (Read Aloud,
+    Repeat Sentence, Describe Image, Audio Speaking Response — upload the
+    student's recording FIRST via the generic upload flow: POST
+    /student/uploads/audio/presign -> PUT to uploadUrl -> POST
+    /student/uploads/audio/verify -> use the returned permanentUrl here)
+
+  Only the field(s) matching the question's own response_format are read;
+  send exactly one populated field per call. Autoscorable question types
   are scored immediately (auto_score + evaluation_status: "auto_scored");
-  others stay "pending" for evaluator scoring. Requires the attempt to be
-  "in_progress".
+  audio_response and other non-autoscorable types always stay "pending"
+  for evaluator scoring — there is no machine scoring path for audio at
+  all, it's evaluator-reviewed 100% of the time.
+
+  Requires the attempt to be "in_progress". response is itself optional —
+  a student can flag a question or record time_spent_secs without having
+  answered yet (at least one of response/is_flagged/time_spent_secs is
+  required).
 }

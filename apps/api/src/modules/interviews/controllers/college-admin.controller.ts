@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { InterviewSlotService } from "../services/interview-slot.service";
 import { InterviewBookingService } from "../services/interview-booking.service";
 import { InterviewRescheduleService } from "../services/interview-reschedule.service";
+import { InterviewSettingsService } from "../services/interview-settings.service";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { parseDateOnly, parseTimeOnly } from "../lib/datetime";
 import {
@@ -13,6 +14,7 @@ import {
   listInterviewBookingsQuerySchema,
   reviewInterviewRescheduleSchema,
   listInterviewReschedulesQuerySchema,
+  updateInterviewSettingsSchema,
 } from "../validators/interview.validator";
 
 export class InterviewCollegeAdminController {
@@ -24,7 +26,7 @@ export class InterviewCollegeAdminController {
       startTime: parseTimeOnly(body.start_time),
       endTime: parseTimeOnly(body.end_time),
       durationMins: body.duration_mins,
-      maxCapacity: body.max_capacity,
+      campusId: body.campus_id,
       venue: body.venue,
       interviewerId: body.interviewer_id,
     });
@@ -58,9 +60,7 @@ export class InterviewCollegeAdminController {
         ...(body.duration_mins !== undefined && {
           durationMins: body.duration_mins,
         }),
-        ...(body.max_capacity !== undefined && {
-          maxCapacity: body.max_capacity,
-        }),
+        ...(body.campus_id !== undefined && { campusId: body.campus_id }),
         ...(body.venue !== undefined && { venue: body.venue }),
         ...(body.interviewer_id !== undefined && {
           interviewerId: body.interviewer_id,
@@ -118,6 +118,24 @@ export class InterviewCollegeAdminController {
       body,
     );
     return res.json(ApiResponse.success("Reschedule request reviewed", result));
+  }
+
+  static async getSettings(req: Request, res: Response) {
+    const result = await InterviewSettingsService.get(req.collegeId!);
+    return res.json(ApiResponse.success("Interview settings fetched", result));
+  }
+
+  static async updateSettings(req: Request, res: Response) {
+    const body = updateInterviewSettingsSchema.parse(req.body);
+    const result = await InterviewSettingsService.update(req.collegeId!, {
+      ...(body.allow_gmeet !== undefined && { allowGmeet: body.allow_gmeet }),
+      ...(body.allow_on_campus !== undefined && {
+        allowOnCampus: body.allow_on_campus,
+      }),
+      ...(body.gmeet !== undefined && { gmeet: body.gmeet }),
+      ...(body.on_campus !== undefined && { onCampus: body.on_campus }),
+    });
+    return res.json(ApiResponse.success("Interview settings updated", result));
   }
 
   static async shortlist(req: Request, res: Response) {

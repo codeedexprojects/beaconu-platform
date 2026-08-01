@@ -190,6 +190,13 @@ const answerResponseSchema = z.object({
     .array(z.object({ blankId: z.string(), optionId: z.string() }))
     .optional(),
   text: z.string().optional(),
+  // "audio_response" format (audioSpeakingResponse/repeatSentence/
+  // readAloud/describeImage — all autoScorable: false, always
+  // evaluator-scored). Uploaded first via the existing generic student
+  // upload flow (presign -> PUT -> verify), same pattern as a question's
+  // own content.audioUrl; this field carries the STUDENT's recorded
+  // answer, not the prompt.
+  audioUrl: z.string().trim().min(1).optional(),
 });
 
 // slot_id was removed — the slot is auto-resolved server-side from the

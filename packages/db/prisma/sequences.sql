@@ -90,6 +90,7 @@ CREATE SEQUENCE IF NOT EXISTS "institution_group_seq";
 CREATE SEQUENCE IF NOT EXISTS "institution_group_member_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_booking_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "interview_settings_seq";
 CREATE SEQUENCE IF NOT EXISTS "interview_slot_seq";
 CREATE SEQUENCE IF NOT EXISTS "issued_document_seq";
 CREATE SEQUENCE IF NOT EXISTS "library_seq";

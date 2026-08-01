@@ -4,11 +4,13 @@ import { useState } from "react";
 import { InterviewSlotsTab } from "@/components/interviews/slots-tab";
 import { InterviewBookingsTab } from "@/components/interviews/bookings-tab";
 import { InterviewReschedulesTab } from "@/components/interviews/reschedules-tab";
+import { InterviewSettingsTab } from "@/components/interviews/settings-tab";
 
 const SUB_TABS = [
   { id: "slots", label: "Slots" },
   { id: "bookings", label: "Bookings" },
   { id: "reschedules", label: "Reschedule Requests" },
+  { id: "settings", label: "Settings" },
 ] as const;
 
 type SubTab = (typeof SUB_TABS)[number]["id"];
@@ -46,6 +48,7 @@ export default function InterviewsPage() {
       {subTab === "slots" && <InterviewSlotsTab />}
       {subTab === "bookings" && <InterviewBookingsTab />}
       {subTab === "reschedules" && <InterviewReschedulesTab />}
+      {subTab === "settings" && <InterviewSettingsTab />}
     </div>
   );
 }

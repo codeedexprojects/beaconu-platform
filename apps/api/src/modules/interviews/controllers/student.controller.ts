@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
 import { InterviewBookingService } from "../services/interview-booking.service";
 import { InterviewRescheduleService } from "../services/interview-reschedule.service";
+import { parseDateOnly } from "../lib/datetime";
 import {
   bookInterviewSlotSchema,
   listAvailableSlotsQuerySchema,
@@ -14,6 +15,7 @@ export class InterviewStudentController {
     const result = await InterviewBookingService.listAvailableSlots(
       query.college_id,
       query.mode,
+      query.scheduled_date ? parseDateOnly(query.scheduled_date) : undefined,
     );
     return res.json(
       ApiResponse.success("Available interview slots fetched", result),

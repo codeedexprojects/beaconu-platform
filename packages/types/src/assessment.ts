@@ -317,12 +317,18 @@ export type AttemptStatus =
 export type AnswerEvaluationStatus = "pending" | "auto_scored" | "evaluated";
 export type AntiCheatEventType = "tab_hidden" | "tab_visible";
 
-/** Mirrors AnswerKey's shapes — one field populated per responseFormat. */
+/** Mirrors AnswerKey's shapes — one field populated per responseFormat:
+ * single_choice/multi_choice -> selectedOptionIds, ranking/sequence ->
+ * order, fill_blank_drag_drop/fill_blank_dropdown -> blankAnswers,
+ * text_response -> text, audio_response -> audioUrl (the student's
+ * recorded answer, uploaded via the generic upload flow beforehand —
+ * never scored automatically, always evaluator-reviewed). */
 export interface AnswerResponse {
   selectedOptionIds?: string[];
   order?: string[];
   blankAnswers?: BlankAnswer[];
   text?: string;
+  audioUrl?: string;
 }
 
 export interface AssessmentAttemptItem {

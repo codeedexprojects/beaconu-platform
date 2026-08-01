@@ -57,11 +57,11 @@ model CounsellingSession {
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student      Student                       @relation(fields: [studentId], references: [id])
-  counsellor   Counsellor                    @relation(fields: [counsellorId], references: [id])
-  availability CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
-  reschedules  SessionReschedule[]
-  walletTxns   CounsellorWalletTransaction[]
+  student        Student                       @relation(fields: [studentId], references: [id])
+  counsellor     Counsellor                    @relation(fields: [counsellorId], references: [id])
+  availability   CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
+  reschedules    SessionReschedule[]
+  walletTxns     CounsellorWalletTransaction[]
   refundRequests CounsellingRefundRequest[]
 
   @@index([studentId], name: "idx_sessions_student")
@@ -140,19 +140,19 @@ model CounsellorWalletTransaction {
 }
 
 model CounsellingRefundRequest {
-  id            String    @id @default(dbgenerated("('CRQ-'::text || (nextval('counselling_refund_request_seq'::regclass))::text)")) @db.Text
-  sessionId     String    @map("session_id")
-  studentId     String    @map("student_id")
-  counsellorId  String    @map("counsellor_id")
-  amount        Decimal   @db.Decimal(10, 2)
-  upiId         String    @map("upi_id") @db.VarChar(100)
-  reason        String    @db.Text
-  proofUrl      String?   @map("proof_url") @db.Text
-  status        String    @default("pending") @db.VarChar(20)
-  reviewedBy    String?   @map("reviewed_by")
-  reviewRemarks String?   @map("review_remarks") @db.Text
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id            String   @id @default(dbgenerated("('CRQ-'::text || (nextval('counselling_refund_request_seq'::regclass))::text)")) @db.Text
+  sessionId     String   @map("session_id")
+  studentId     String   @map("student_id")
+  counsellorId  String   @map("counsellor_id")
+  amount        Decimal  @db.Decimal(10, 2)
+  upiId         String   @map("upi_id") @db.VarChar(100)
+  reason        String   @db.Text
+  proofUrl      String?  @map("proof_url") @db.Text
+  status        String   @default("pending") @db.VarChar(20)
+  reviewedBy    String?  @map("reviewed_by")
+  reviewRemarks String?  @map("review_remarks") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   session    CounsellingSession @relation(fields: [sessionId], references: [id])

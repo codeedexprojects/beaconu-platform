@@ -3,29 +3,29 @@
 // ============================================================
 
 model AdmissionCycle {
-  id                    String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
-  collegeId             String    @map("college_id")
-  applicationType       String    @map("application_type") @db.VarChar(50)
-  name                  String    @db.VarChar(255)
-  slug                  String    @db.VarChar(100)
-  programLevel          String    @map("program_level") @db.VarChar(30)
-  admissionYear         String    @map("admission_year") @db.VarChar(10)
-  startsOn              DateTime  @map("starts_on") @db.Date
-  endsOn                DateTime? @map("ends_on") @db.Date
-  status                String    @default("open") @db.VarChar(20)
-  settings              Json      @default("{}")
+  id                   String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
+  collegeId            String    @map("college_id")
+  applicationType      String    @map("application_type") @db.VarChar(50)
+  name                 String    @db.VarChar(255)
+  slug                 String    @db.VarChar(100)
+  programLevel         String    @map("program_level") @db.VarChar(30)
+  admissionYear        String    @map("admission_year") @db.VarChar(10)
+  startsOn             DateTime  @map("starts_on") @db.Date
+  endsOn               DateTime? @map("ends_on") @db.Date
+  status               String    @default("open") @db.VarChar(20)
+  settings             Json      @default("{}")
   // Whether the whole application form requires an assessment — the single
   // source of truth AttemptService.start() gates on. AdmissionCycleCourse's
   // own (per-course) assessmentRequired is unrelated to this and stays
   // unused for this purpose.
-  assessmentRequired    Boolean   @default(false) @map("assessment_required")
+  assessmentRequired   Boolean   @default(false) @map("assessment_required")
   // One assessment template for the whole application form — every course
   // under this cycle shares it (an assessment attempt covers the whole
   // Application, not one course at a time). null = no assessment
   // configured for this cycle yet.
-  assessmentTemplateId  String?   @map("assessment_template_id")
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  assessmentTemplateId String?   @map("assessment_template_id")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college               College                @relation(fields: [collegeId], references: [id])
@@ -152,22 +152,22 @@ model Application {
 }
 
 model ApplicationCourse {
-  id              String    @id @default(dbgenerated("('APC-'::text || (nextval('application_course_seq'::regclass))::text)"))
-  applicationId   String    @map("application_id")
-  courseId        String    @map("course_id")
-  applicationFee     Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
-  status             String    @default("draft") @db.VarChar(30)
-  rejectionReason    String?   @map("rejection_reason") @db.Text
-  courseQuotaSeatId  String?   @map("course_quota_seat_id")
+  id                String    @id @default(dbgenerated("('APC-'::text || (nextval('application_course_seq'::regclass))::text)"))
+  applicationId     String    @map("application_id")
+  courseId          String    @map("course_id")
+  applicationFee    Decimal   @default(0) @map("application_fee") @db.Decimal(10, 2)
+  status            String    @default("draft") @db.VarChar(30)
+  rejectionReason   String?   @map("rejection_reason") @db.Text
+  courseQuotaSeatId String?   @map("course_quota_seat_id")
   // The course selected at Start Application — its fee gates the rest of
   // the flow. Exactly one per application; additional courses added later
   // are isPrimary: false and don't block anything on their own payment.
-  isPrimary          Boolean   @default(false) @map("is_primary")
-  preferenceOrder    Int       @default(1) @map("preference_order") @db.SmallInt
-  statusHistory      Json      @default("[]") @map("status_history")
-  statusUpdatedAt    DateTime? @map("status_updated_at") @db.Timestamptz
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  isPrimary         Boolean   @default(false) @map("is_primary")
+  preferenceOrder   Int       @default(1) @map("preference_order") @db.SmallInt
+  statusHistory     Json      @default("[]") @map("status_history")
+  statusUpdatedAt   DateTime? @map("status_updated_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   application             Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -433,8 +433,8 @@ model SeatPool {
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  collegeQuota   CollegeQuota            @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
-  admissionCycle AdmissionCycle          @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
+  collegeQuota   CollegeQuota       @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
+  admissionCycle AdmissionCycle     @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
   courseQuotas   CourseQuotaSeats[]
 
   @@index([collegeQuotaId], name: "idx_seat_pool_college_quota")

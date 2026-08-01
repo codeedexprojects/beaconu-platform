@@ -14,6 +14,7 @@ export class EvaluationService {
   ): Promise<EvaluationQueueItem[]> {
     const attempts = await AttemptRepository.findByCollege(collegeId, {
       status: filters.status ?? [
+        "in_progress",
         "under_evaluation",
         "evaluated",
         "result_published",
