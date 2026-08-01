@@ -7,6 +7,8 @@ import type {
   CompleteInterviewInput,
   InterviewRescheduleItem,
   ReviewInterviewRescheduleInput,
+  InterviewSettingsItem,
+  UpdateInterviewSettingsInput,
 } from "@beaconu/types";
 
 const BASE = "/api/v1/college-admin/interviews";
@@ -69,4 +71,14 @@ export function reviewInterviewReschedule(
 
 export function shortlistCourse(applicationCourseId: string): Promise<null> {
   return api.patch(`${BASE}/courses/${applicationCourseId}/shortlist`, {});
+}
+
+export function getInterviewSettings(): Promise<InterviewSettingsItem> {
+  return api.get(`${BASE}/settings`);
+}
+
+export function updateInterviewSettings(
+  data: UpdateInterviewSettingsInput,
+): Promise<InterviewSettingsItem> {
+  return api.patch(`${BASE}/settings`, data);
 }

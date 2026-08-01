@@ -3,19 +3,19 @@
 // ============================================================
 
 model Student {
-  id               String    @id @default(dbgenerated("('STU-'::text || (nextval('student_seq'::regclass))::text)"))
-  fullName         String    @map("full_name") @db.VarChar(255)
-  email            String?   @unique @db.VarChar(255)
-  phoneCountryCode String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
-  phoneNumber      String?   @map("phone_number") @db.VarChar(15)
-  avatarUrl        String?   @map("avatar_url") @db.Text
-  passwordHash     String?   @map("password_hash") @db.Text
-  googleId         String?   @unique @map("google_id") @db.VarChar(255)
-  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
-  isPhoneVerified  Boolean   @default(false) @map("is_phone_verified")
-  source           String    @default("beaconu_app") @db.VarChar(30)
-  status           String    @default("active") @db.VarChar(20)
-  profileMetadata  Json      @default("{}") @map("profile_metadata")
+  id                   String    @id @default(dbgenerated("('STU-'::text || (nextval('student_seq'::regclass))::text)"))
+  fullName             String    @map("full_name") @db.VarChar(255)
+  email                String?   @unique @db.VarChar(255)
+  phoneCountryCode     String?   @default("+91") @map("phone_country_code") @db.VarChar(5)
+  phoneNumber          String?   @map("phone_number") @db.VarChar(15)
+  avatarUrl            String?   @map("avatar_url") @db.Text
+  passwordHash         String?   @map("password_hash") @db.Text
+  googleId             String?   @unique @map("google_id") @db.VarChar(255)
+  isEmailVerified      Boolean   @default(false) @map("is_email_verified")
+  isPhoneVerified      Boolean   @default(false) @map("is_phone_verified")
+  source               String    @default("beaconu_app") @db.VarChar(30)
+  status               String    @default("active") @db.VarChar(20)
+  profileMetadata      Json      @default("{}") @map("profile_metadata")
   // Live source of truth for the admission-application form's four detail
   // steps, reusable across every application the student submits.
   // AdmissionCycle applications keep their own copies of these as a
@@ -25,48 +25,48 @@ model Student {
   familyDetails        Json      @default("{}") @map("family_details")
   addressDetails       Json      @default("{}") @map("address_details")
   qualificationDetails Json      @default("{}") @map("qualification_details")
-  lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  lastLoginAt          DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  studentLead             StudentLead?
-  applications            Application[]
-  enrollments             Enrollment[]
-  seatCancellations       SeatCancellation[]
-  courseSwitchRequests    CourseSwitchRequest[]
-  assessmentAttempts      AssessmentAttempt[]
-  assessmentReschedules   AssessmentReschedule[]
-  interviewBookings       InterviewBooking[]
-  interviewReschedules    InterviewReschedule[]
-  offerLetters            OfferLetter[]
-  transactions            Transaction[]
-  scholarshipApplications ScholarshipApplication[]
-  collegeReviews          CollegeReview[]
-  eventRegistrations      EventRegistration[]
-  counsellingSessions     CounsellingSession[]
-  hostelEnrollments       HostelEnrollment[]
-  hostelWishlists         HostelWishlist[]
-  collegeWishlists        CollegeWishlist[]
-  hostelReviews           HostelReview[]
-  commuteEnrollments      CommuteEnrollment[]
-  commuteRideHistory      CommuteRideHistory[]
-  blinkUsersLinked        BlinkUser[]                @relation("LinkedStudent")
-  referrals               Referral[]
-  squadSearches           SquadSearch[]
-  beaconuCard             BeaconuCard?
-  studentBankAccounts     StudentBankAccount[]
-  studentWalletTxns       StudentWalletTransaction[]
-  antiRaggingComplaints   AntiRaggingComplaint[]
-  supportTickets          SupportTicket[]
-  documentRequests        DocumentRequest[]
-  issuedDocs              IssuedDocument[]
+  studentLead                StudentLead?
+  applications               Application[]
+  enrollments                Enrollment[]
+  seatCancellations          SeatCancellation[]
+  courseSwitchRequests       CourseSwitchRequest[]
+  assessmentAttempts         AssessmentAttempt[]
+  assessmentReschedules      AssessmentReschedule[]
+  interviewBookings          InterviewBooking[]
+  interviewReschedules       InterviewReschedule[]
+  offerLetters               OfferLetter[]
+  transactions               Transaction[]
+  scholarshipApplications    ScholarshipApplication[]
+  collegeReviews             CollegeReview[]
+  eventRegistrations         EventRegistration[]
+  counsellingSessions        CounsellingSession[]
+  hostelEnrollments          HostelEnrollment[]
+  hostelWishlists            HostelWishlist[]
+  collegeWishlists           CollegeWishlist[]
+  hostelReviews              HostelReview[]
+  commuteEnrollments         CommuteEnrollment[]
+  commuteRideHistory         CommuteRideHistory[]
+  blinkUsersLinked           BlinkUser[]                 @relation("LinkedStudent")
+  referrals                  Referral[]
+  squadSearches              SquadSearch[]
+  beaconuCard                BeaconuCard?
+  studentBankAccounts        StudentBankAccount[]
+  studentWalletTxns          StudentWalletTransaction[]
+  antiRaggingComplaints      AntiRaggingComplaint[]
+  supportTickets             SupportTicket[]
+  documentRequests           DocumentRequest[]
+  issuedDocs                 IssuedDocument[]
   documentSubmissionRequests DocumentSubmissionRequest[]
-  campusVisits            CampusVisit[]
-  studentFeeLedgers       StudentFeeLedger[]
-  paymentReceipts         PaymentReceipt[]
-  refunds                 Refund[]
-  counsellingRefundRequests CounsellingRefundRequest[]
+  campusVisits               CampusVisit[]
+  studentFeeLedgers          StudentFeeLedger[]
+  paymentReceipts            PaymentReceipt[]
+  refunds                    Refund[]
+  counsellingRefundRequests  CounsellingRefundRequest[]
 
   @@unique([phoneCountryCode, phoneNumber], name: "uq_students_phone")
   @@index([email], name: "idx_students_email")
@@ -90,16 +90,16 @@ model PlatformAdmin {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  studentLeadsAssigned      StudentLead[]              @relation("AssignedAdmin")
-  newsAlerts                NewsAlert[]
-  entranceExams             EntranceExam[]
-  blogs                     Blog[]                     @relation("BlogReviewer")
-  platformRole              PlatformRole?              @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
-  collegeOnboardingRequests CollegeOnboardingRequest[]
+  studentLeadsAssigned           StudentLead[]                   @relation("AssignedAdmin")
+  newsAlerts                     NewsAlert[]
+  entranceExams                  EntranceExam[]
+  blogs                          Blog[]                          @relation("BlogReviewer")
+  platformRole                   PlatformRole?                   @relation(fields: [platformRoleId], references: [id], onDelete: SetNull)
+  collegeOnboardingRequests      CollegeOnboardingRequest[]
   counsellorRegistrationRequests CounsellorRegistrationRequest[]
-  platformConfigUpdates    PlatformConfig[]
+  platformConfigUpdates          PlatformConfig[]
   counsellorWithdrawalReviews    CounsellorWalletTransaction[]
-  counsellingRefundReviews    CounsellingRefundRequest[]
+  counsellingRefundReviews       CounsellingRefundRequest[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")
@@ -206,28 +206,28 @@ model StaffMember {
   inviter     StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
   invitees    StaffMember[] @relation("StaffInviter")
 
-  interviewSlots              InterviewSlot[]          @relation("InterviewerStaff")
-  interviewBookingsEval       InterviewBooking[]       @relation("EvaluatedByStaff")
-  interviewRescheduleReviews  InterviewReschedule[]    @relation("IRescheduleReviewer")
-  offerLettersIssued          OfferLetter[]            @relation("IssuedByStaff")
-  assessmentRescheduleReviews AssessmentReschedule[]   @relation("ARescheduleReviewer")
-  studentAnswersEval          StudentAnswer[]
-  scholarshipAppReviews       ScholarshipApplication[]
-  seatCancellationProcs       SeatCancellation[]
-  courseSwitchProcs           CourseSwitchRequest[]    @relation("ProcessedBySwitchStaff")
-  documentVerifications       ApplicationDocument[]    @relation("VerifiedByStaff")
-  docRequestsAssigned         DocumentRequest[]        @relation("AssignedStaff")
-  docRequestsProcessed        DocumentRequest[]        @relation("ProcessedByStaff")
-  issuedDocuments             IssuedDocument[]
+  interviewSlots                InterviewSlot[]             @relation("InterviewerStaff")
+  interviewBookingsEval         InterviewBooking[]          @relation("EvaluatedByStaff")
+  interviewRescheduleReviews    InterviewReschedule[]       @relation("IRescheduleReviewer")
+  offerLettersIssued            OfferLetter[]               @relation("IssuedByStaff")
+  assessmentRescheduleReviews   AssessmentReschedule[]      @relation("ARescheduleReviewer")
+  studentAnswersEval            StudentAnswer[]
+  scholarshipAppReviews         ScholarshipApplication[]
+  seatCancellationProcs         SeatCancellation[]
+  courseSwitchProcs             CourseSwitchRequest[]       @relation("ProcessedBySwitchStaff")
+  documentVerifications         ApplicationDocument[]       @relation("VerifiedByStaff")
+  docRequestsAssigned           DocumentRequest[]           @relation("AssignedStaff")
+  docRequestsProcessed          DocumentRequest[]           @relation("ProcessedByStaff")
+  issuedDocuments               IssuedDocument[]
   docSubmissionRequestsMade     DocumentSubmissionRequest[] @relation("DocSubReqRequestedBy")
   docSubmissionRequestsReviewed DocumentSubmissionRequest[] @relation("DocSubReqReviewedBy")
-  transactionsVerified        Transaction[]
-  refundsProcessed            Refund[]
-  antiRaggingAssigned         AntiRaggingComplaint[]
-  supportTicketsAssigned      SupportTicket[]
-  announcements               Announcement[]
-  blinkUsersCreated           BlinkUser[]              @relation("CreatedByStaff")
-  institutionGroups           InstitutionGroup[]
+  transactionsVerified          Transaction[]
+  refundsProcessed              Refund[]
+  antiRaggingAssigned           AntiRaggingComplaint[]
+  supportTicketsAssigned        SupportTicket[]
+  announcements                 Announcement[]
+  blinkUsersCreated             BlinkUser[]                 @relation("CreatedByStaff")
+  institutionGroups             InstitutionGroup[]
 
   @@unique([email, collegeId], name: "uq_staff_email_college")
   @@index([collegeId], name: "idx_staff_college")
@@ -316,9 +316,9 @@ model Counsellor {
   counsellorType  String    @map("counsellor_type") @db.VarChar(20)
   counsellorCode  String?   @unique @map("counsellor_code") @db.Text
   status          String    @default("active") @db.VarChar(20)
-  rating          Decimal   @default(0.0) @db.Decimal(2, 1) @map("rating")
+  rating          Decimal   @default(0.0) @map("rating") @db.Decimal(2, 1)
   knownLanguages  String?   @map("known_languages") @db.VarChar(255)
-  sessionFee      Decimal   @default(0.0) @db.Decimal(10, 2) @map("session_fee")
+  sessionFee      Decimal   @default(0.0) @map("session_fee") @db.Decimal(10, 2)
   profileMetadata Json      @default("{}") @map("profile_metadata")
   upiId           String?   @map("upi_id") @db.VarChar(100)
   bankDetails     Json      @default("{}") @map("bank_details")

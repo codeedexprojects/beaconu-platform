@@ -4,6 +4,7 @@ import { InterviewBookingRepository } from "../repositories/interview-booking.re
 import { InterviewSlotRepository } from "../repositories/interview-slot.repository";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { InterviewSlotService, mapSlot } from "./interview-slot.service";
+import { InterviewSettingsService } from "./interview-settings.service";
 import type {
   CompleteInterviewInput,
   InterviewBookingItem,
@@ -23,7 +24,13 @@ type BookingRow = NonNullable<
   Awaited<ReturnType<typeof InterviewBookingRepository.findById>>
 >;
 
-function mapBooking(row: BookingRow): InterviewBookingItem {
+// "Get my booking" is meant to be fully self-contained (no separate
+// settings call needed post-booking) — bakes in whichever mode-specific
+// instructions block matches the booked slot's mode.
+async function mapBooking(row: BookingRow): Promise<InterviewBookingItem> {
+  const settings = await InterviewSettingsService.get(row.slot.collegeId);
+  const instructions =
+    row.slot.mode === "gmeet" ? settings.gmeet : settings.onCampus;
   return {
     id: row.id,
     applicationCourseId: row.applicationCourseId,
@@ -31,6 +38,7 @@ function mapBooking(row: BookingRow): InterviewBookingItem {
     studentName: row.student.fullName,
     studentPhone: row.student.phoneNumber,
     slot: mapSlot(row.slot),
+    instructions,
     status: row.status as InterviewBookingItem["status"],
     interviewScore: row.interviewScore ? row.interviewScore.toString() : null,
     interviewRemarks: row.interviewRemarks,
@@ -44,10 +52,15 @@ function mapBooking(row: BookingRow): InterviewBookingItem {
 }
 
 export class InterviewBookingService {
-  static async listAvailableSlots(collegeId: string, mode?: string) {
+  static async listAvailableSlots(
+    collegeId: string,
+    mode?: string,
+    scheduledDate?: Date,
+  ) {
     const rows = await InterviewSlotRepository.listAvailableForCollege(
       collegeId,
       mode,
+      scheduledDate,
     );
     return rows.map(mapSlot);
   }
@@ -148,7 +161,7 @@ export class InterviewBookingService {
     const rows = await InterviewBookingRepository.listForCollege(collegeId, {
       status,
     });
-    return rows.map(mapBooking);
+    return Promise.all(rows.map(mapBooking));
   }
 
   private static async loadForCollege(id: string, collegeId: string) {

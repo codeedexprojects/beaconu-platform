@@ -7,6 +7,9 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("staff_member"));
 
+router.get("/settings", InterviewCollegeAdminController.getSettings);
+router.patch("/settings", InterviewCollegeAdminController.updateSettings);
+
 router.post("/slots", InterviewCollegeAdminController.createSlot);
 router.get("/slots", InterviewCollegeAdminController.listSlots);
 router.patch("/slots/:id", InterviewCollegeAdminController.updateSlot);

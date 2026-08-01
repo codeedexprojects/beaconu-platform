@@ -138,61 +138,62 @@ model College {
   demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
   // Relations
-  university                University                 @relation(fields: [universityId], references: [id])
-  departments               Department[]
-  campuses                  Campus[]
-  courses                   Course[]
-  gallery                   CollegeGallery[]
-  reviews                   CollegeReview[]
-  collegeRoles              CollegeRole[]
-  staffMembers              StaffMember[]
-  blinkUsers                BlinkUser[]
-  admissionCycles           AdmissionCycle[]
-  applications              Application[]
-  enrollments               Enrollment[]
-  assessmentSections        AssessmentSection[]
-  assessmentTemplates       AssessmentTemplate[]
-  assessmentSlots           AssessmentSlot[]
-  questionTypes             QuestionType[]
-  questions                 Question[]
-  interviewSlots            InterviewSlot[]
-  offerLetters              OfferLetter[]
-  feeStructures             FeeStructure[]
-  studentFeeLedger          StudentFeeLedger[]
-  transactions              Transaction[]
-  paymentReceipts           PaymentReceipt[]
-  refunds                   Refund[]
-  scholarshipConfigs        ScholarshipConfig[]
-  collegePaymentAccounts    CollegePaymentAccount[]
-  documentTemplates         DocumentTemplate[]
-  documentRequests          DocumentRequest[]
-  issuedDocuments           IssuedDocument[]
+  university                 University                  @relation(fields: [universityId], references: [id])
+  departments                Department[]
+  campuses                   Campus[]
+  courses                    Course[]
+  gallery                    CollegeGallery[]
+  reviews                    CollegeReview[]
+  collegeRoles               CollegeRole[]
+  staffMembers               StaffMember[]
+  blinkUsers                 BlinkUser[]
+  admissionCycles            AdmissionCycle[]
+  applications               Application[]
+  enrollments                Enrollment[]
+  assessmentSections         AssessmentSection[]
+  assessmentTemplates        AssessmentTemplate[]
+  assessmentSlots            AssessmentSlot[]
+  questionTypes              QuestionType[]
+  questions                  Question[]
+  interviewSlots             InterviewSlot[]
+  interviewSettings          InterviewSettings?
+  offerLetters               OfferLetter[]
+  feeStructures              FeeStructure[]
+  studentFeeLedger           StudentFeeLedger[]
+  transactions               Transaction[]
+  paymentReceipts            PaymentReceipt[]
+  refunds                    Refund[]
+  scholarshipConfigs         ScholarshipConfig[]
+  collegePaymentAccounts     CollegePaymentAccount[]
+  documentTemplates          DocumentTemplate[]
+  documentRequests           DocumentRequest[]
+  issuedDocuments            IssuedDocument[]
   documentSubmissionRequests DocumentSubmissionRequest[]
-  hostels                   Hostel[]
-  libraries                 Library[]
-  commuteRoutes             CommuteRoute[]
-  newsAlerts                NewsAlert[]
-  articles                  Article[]
-  referralCodes             ReferralCode[]
-  serviceChargeConfigs      ServiceChargeConfig[]
-  mediaKits                 MediaKit[]
-  campusVisits              CampusVisit[]
-  campusVisitAvailabilities CampusVisitAvailability[]
-  announcements             Announcement[]
-  supportTickets            SupportTicket[]
-  antiRaggingComplaints     AntiRaggingComplaint[]
-  courseSwitchRequests      CourseSwitchRequest[]
-  admissionFormConfigs      AdmissionFormConfig[]
-  documentUploadConfigs     DocumentUploadConfig[]
-  hostelEnrollments         HostelEnrollment[]
-  commuteEnrollments        CommuteEnrollment[]
-  broadcastNotifications    BroadcastNotification[]
-  institutionGroups         InstitutionGroup[]
-  institutionGroupMember    InstitutionGroupMember?
-  collegeOnboardingRequests CollegeOnboardingRequest[]
-  collegeQuotas             CollegeQuota[]
+  hostels                    Hostel[]
+  libraries                  Library[]
+  commuteRoutes              CommuteRoute[]
+  newsAlerts                 NewsAlert[]
+  articles                   Article[]
+  referralCodes              ReferralCode[]
+  serviceChargeConfigs       ServiceChargeConfig[]
+  mediaKits                  MediaKit[]
+  campusVisits               CampusVisit[]
+  campusVisitAvailabilities  CampusVisitAvailability[]
+  announcements              Announcement[]
+  supportTickets             SupportTicket[]
+  antiRaggingComplaints      AntiRaggingComplaint[]
+  courseSwitchRequests       CourseSwitchRequest[]
+  admissionFormConfigs       AdmissionFormConfig[]
+  documentUploadConfigs      DocumentUploadConfig[]
+  hostelEnrollments          HostelEnrollment[]
+  commuteEnrollments         CommuteEnrollment[]
+  broadcastNotifications     BroadcastNotification[]
+  institutionGroups          InstitutionGroup[]
+  institutionGroupMember     InstitutionGroupMember?
+  collegeOnboardingRequests  CollegeOnboardingRequest[]
+  collegeQuotas              CollegeQuota[]
 
-  collegeWishlists          CollegeWishlist[]
+  collegeWishlists CollegeWishlist[]
 
   @@index([universityId], name: "idx_colleges_university")
   @@index([slug], name: "idx_colleges_slug")
@@ -261,11 +262,12 @@ model Campus {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  departments  Department[]
-  courses      Course[]
-  applications Application[]
-  enrollments  Enrollment[]
+  college        College         @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  departments    Department[]
+  courses        Course[]
+  applications   Application[]
+  enrollments    Enrollment[]
+  interviewSlots InterviewSlot[]
 
   @@index([collegeId], name: "idx_campuses_college")
   @@index([collegeId, status], name: "idx_campuses_status")
@@ -297,18 +299,18 @@ model Department {
 }
 
 model Library {
-  id           String   @id @default(dbgenerated("('LIB-'::text || (nextval('library_seq'::regclass))::text)"))
-  collegeId    String   @map("college_id")
-  departmentId String?  @map("department_id")
-  type         String   @db.VarChar(20) // "central" | "department"
-  name         String   @db.VarChar(255)
-  stats        Json     @default("[]") // [{value, label}]
-  availableResources Json @default("{\"items\":[]}") @map("available_resources")
-  libraryHours Json     @default("{\"days\":[]}") @map("library_hours")
-  facilities   Json     @default("{\"items\":[]}")
-  status       String   @default("active") @db.VarChar(20)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("('LIB-'::text || (nextval('library_seq'::regclass))::text)"))
+  collegeId          String   @map("college_id")
+  departmentId       String?  @map("department_id")
+  type               String   @db.VarChar(20) // "central" | "department"
+  name               String   @db.VarChar(255)
+  stats              Json     @default("[]") // [{value, label}]
+  availableResources Json     @default("{\"items\":[]}") @map("available_resources")
+  libraryHours       Json     @default("{\"days\":[]}") @map("library_hours")
+  facilities         Json     @default("{\"items\":[]}")
+  status             String   @default("active") @db.VarChar(20)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -345,8 +347,8 @@ model Discipline {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  stream  Stream   @relation(fields: [streamId], references: [id])
-  courses Course[]
+  stream    Stream    @relation(fields: [streamId], references: [id])
+  courses   Course[]
   libraries Library[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
@@ -456,46 +458,46 @@ model Course {
   // Course Detail Page (display-only, write-once)
   departmentId String? @map("department_id")
 
-  highlights                     Json      @default("[]")
-  curriculum                     Json      @default("[]") // [{semester, subjects[], specializations[]}]
-  courseStructure                Json      @default("{}") @map("course_structure") // credit breakdown
-  valueAddedCourses              Json      @default("[]") @map("value_added_courses") // [{name, credits, deliveryMode}]
-  careerOpportunities            Json      @default("[]") @map("career_opportunities") // [{role, salaryRange}]
-  higherEducationCertifications  Json      @default("{}") @map("higher_education_certifications") // {global[], postGraduation[]}
-  flexibleExitOptions            Json      @default("[]") @map("flexible_exit_options") // [{afterYears, awardName}]
-  classTimings                   Json      @default("{}") @map("class_timings") // {monday: {start,end,status}, ...}
-  industryTools                  Json      @default("[]") @map("industry_tools")
-  labFacilities                  Json      @default("[]") @map("lab_facilities")
-  roomFacilities                 Json      @default("[]") @map("room_facilities")
-  featuredAlumni                 Json      @default("[]") @map("featured_alumni")
-  faqs                           Json      @default("[]")
-  examPolicy                     Json      @default("{}") @map("exam_policy")
-  entranceExamEligibility        Json      @default("[]") @map("entrance_exam_eligibility")
-  eligibilityCriteria            Json      @default("{}") @map("eligibility_criteria")
-  accreditations                 Json      @default("[]")
-  keyDates                        Json      @default("[]") @map("key_dates")
-  demographics                    Json      @default("{}") // course-level demographics
-  demographicsRefreshedAt          DateTime? @map("demographics_refreshed_at") @db.Timestamptz
+  highlights                    Json      @default("[]")
+  curriculum                    Json      @default("[]") // [{semester, subjects[], specializations[]}]
+  courseStructure               Json      @default("{}") @map("course_structure") // credit breakdown
+  valueAddedCourses             Json      @default("[]") @map("value_added_courses") // [{name, credits, deliveryMode}]
+  careerOpportunities           Json      @default("[]") @map("career_opportunities") // [{role, salaryRange}]
+  higherEducationCertifications Json      @default("{}") @map("higher_education_certifications") // {global[], postGraduation[]}
+  flexibleExitOptions           Json      @default("[]") @map("flexible_exit_options") // [{afterYears, awardName}]
+  classTimings                  Json      @default("{}") @map("class_timings") // {monday: {start,end,status}, ...}
+  industryTools                 Json      @default("[]") @map("industry_tools")
+  labFacilities                 Json      @default("[]") @map("lab_facilities")
+  roomFacilities                Json      @default("[]") @map("room_facilities")
+  featuredAlumni                Json      @default("[]") @map("featured_alumni")
+  faqs                          Json      @default("[]")
+  examPolicy                    Json      @default("{}") @map("exam_policy")
+  entranceExamEligibility       Json      @default("[]") @map("entrance_exam_eligibility")
+  eligibilityCriteria           Json      @default("{}") @map("eligibility_criteria")
+  accreditations                Json      @default("[]")
+  keyDates                      Json      @default("[]") @map("key_dates")
+  demographics                  Json      @default("{}") // course-level demographics
+  demographicsRefreshedAt       DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
   // Relations
-  college                College                 @relation(fields: [collegeId], references: [id])
-  campus                 Campus?                 @relation(fields: [campusId], references: [id])
-  department             Department?             @relation(fields: [departmentId], references: [id])
-  discipline             Discipline              @relation(fields: [disciplineId], references: [id])
-  studyLevel             StudyLevel              @relation(fields: [studyLevelId], references: [id])
-  programType            ProgramType             @relation(fields: [programTypeId], references: [id])
-  quotas                 CourseQuota[]
-  admissionCycleCourses  AdmissionCycleCourse[]
-  applicationCourses     ApplicationCourse[]
-  questionCourseMappings QuestionCourseMapping[]
-  feeStructures          FeeStructure[]
-  serviceChargeConfigs   ServiceChargeConfig[]
-  referralCodes          ReferralCode[]
-  mediaKits              MediaKit[]
-  enrollments            Enrollment[]
-  courseSwitchRequestsTo CourseSwitchRequest[]   @relation("SwitchToCourse")
-  newsAlerts             NewsAlert[]
-  collegeReviews         CollegeReview[]
+  college                     College                      @relation(fields: [collegeId], references: [id])
+  campus                      Campus?                      @relation(fields: [campusId], references: [id])
+  department                  Department?                  @relation(fields: [departmentId], references: [id])
+  discipline                  Discipline                   @relation(fields: [disciplineId], references: [id])
+  studyLevel                  StudyLevel                   @relation(fields: [studyLevelId], references: [id])
+  programType                 ProgramType                  @relation(fields: [programTypeId], references: [id])
+  quotas                      CourseQuota[]
+  admissionCycleCourses       AdmissionCycleCourse[]
+  applicationCourses          ApplicationCourse[]
+  questionCourseMappings      QuestionCourseMapping[]
+  feeStructures               FeeStructure[]
+  serviceChargeConfigs        ServiceChargeConfig[]
+  referralCodes               ReferralCode[]
+  mediaKits                   MediaKit[]
+  enrollments                 Enrollment[]
+  courseSwitchRequestsTo      CourseSwitchRequest[]        @relation("SwitchToCourse")
+  newsAlerts                  NewsAlert[]
+  collegeReviews              CollegeReview[]
   documentUploadConfigCourses DocumentUploadConfigCourse[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
@@ -510,18 +512,18 @@ model Course {
 }
 
 model CourseQuota {
-  id                   String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
-  courseId             String   @map("course_id")
-  collegeQuotaId       String   @map("college_quota_id")
+  id                    String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
+  courseId              String   @map("course_id")
+  collegeQuotaId        String   @map("college_quota_id")
   // Bidirectional: positive value surcharges the application fee (e.g. NRI
   // Quota), negative discounts it. "flat" | "percentage" describes how the
   // value is applied, not its direction.
   appFeeAdjustmentType  String?  @map("app_fee_adjustment_type") @db.VarChar(10)
   appFeeAdjustmentValue Decimal? @map("app_fee_adjustment_value") @db.Decimal(10, 2)
-  tuitionFeeOverride   Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
-  isActive             Boolean  @default(true) @map("is_active")
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  tuitionFeeOverride    Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -546,7 +548,7 @@ model CollegeQuota {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  college                    College                      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  college                    College                     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   courseQuotas               CourseQuota[]
   seatPools                  SeatPool[]
   courseQuotaSeats           CourseQuotaSeats[]
@@ -585,15 +587,15 @@ model CollegeReview {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  courseId        String?  @map("course_id") // null = campus_life, filled = faculty_course
-  reviewType      String   @default("campus_life") @map("review_type") @db.VarChar(20)
-  categoryRatings Json     @default("{}") @map("category_ratings") // {facultyAndCourse: 4, campusLife: 4}
-  isAnonymous     Boolean  @default(true) @map("is_anonymous")
+  courseId        String? @map("course_id") // null = campus_life, filled = faculty_course
+  reviewType      String  @default("campus_life") @map("review_type") @db.VarChar(20)
+  categoryRatings Json    @default("{}") @map("category_ratings") // {facultyAndCourse: 4, campusLife: 4}
+  isAnonymous     Boolean @default(true) @map("is_anonymous")
 
   // Relations
   college College @relation(fields: [collegeId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
-  course  Course?  @relation(fields: [courseId], references: [id])
+  course  Course? @relation(fields: [courseId], references: [id])
 
   @@index([collegeId, status], name: "idx_reviews_college")
   @@index([studentId], name: "idx_reviews_student")

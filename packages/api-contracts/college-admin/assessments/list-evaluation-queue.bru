@@ -15,10 +15,14 @@ headers {
 }
 
 docs {
-  Attempts currently in "under_evaluation" or "evaluated" for this college,
-  with per-attempt counts of pending/auto_scored/evaluated answers so the
-  evaluator can see at a glance which attempts still need manual scoring
-  before they can be published.
+  Attempts currently "in_progress", "under_evaluation", "evaluated", or
+  "result_published" for this college — includes attempts a student has
+  started but not yet submitted, not just ones ready for evaluation. Each
+  entry carries per-attempt counts of pending/auto_scored/evaluated
+  answers so the evaluator can see at a glance which attempts still need
+  manual scoring before they can be published (an in_progress attempt's
+  counts just reflect whatever's been auto/answered so far).
 
-  Optional query: status=under_evaluation,evaluated (comma-separated).
+  Optional query: status=in_progress,under_evaluation (comma-separated) —
+  overrides the default set above entirely.
 }

@@ -39,19 +39,18 @@ import {
   useCreateInterviewSlot,
   useUpdateInterviewSlot,
   useCancelInterviewSlot,
+  useInterviewSettings,
 } from "@/hooks/use-interviews";
+import { useCollegeCampuses } from "@/hooks/use-colleges";
 import type { InterviewMode, InterviewSlotItem } from "@beaconu/types";
 
 const slotSchema = z
   .object({
-    mode: z.enum(["gmeet", "telephonic", "on_campus"]),
+    mode: z.enum(["gmeet", "on_campus"]),
     scheduled_date: z.string().trim().min(1, "Date is required"),
     start_time: z.string().trim().min(1, "Start time is required"),
     end_time: z.string().trim().min(1, "End time is required"),
-    max_capacity: z.preprocess(
-      (v) => (v === "" || v === null ? undefined : v),
-      z.coerce.number().int().positive().optional(),
-    ),
+    campus_id: z.string().trim().optional(),
     venue: z.string().trim().optional(),
   })
   .refine((data) => data.end_time > data.start_time, {
@@ -65,7 +64,7 @@ const EMPTY_VALUES: SlotFormValues = {
   scheduled_date: "",
   start_time: "",
   end_time: "",
-  max_capacity: undefined,
+  campus_id: undefined,
   venue: "",
 };
 
@@ -79,7 +78,6 @@ const STATUS_VARIANT: Record<
 
 const MODE_LABELS: Record<InterviewMode, string> = {
   gmeet: "Google Meet",
-  telephonic: "Telephonic",
   on_campus: "On Campus",
 };
 
@@ -97,6 +95,8 @@ export function InterviewSlotsTab() {
   const [editing, setEditing] = useState<InterviewSlotItem | null>(null);
 
   const { data: slots, isLoading } = useInterviewSlots();
+  const { data: settings } = useInterviewSettings();
+  const { data: campuses } = useCollegeCampuses();
   const { mutate: create, isPending: isCreating } = useCreateInterviewSlot();
   const { mutate: update, isPending: isUpdating } = useUpdateInterviewSlot();
   const {
@@ -124,7 +124,7 @@ export function InterviewSlotsTab() {
       scheduled_date: slot.scheduledDate,
       start_time: slot.startTime,
       end_time: slot.endTime,
-      max_capacity: slot.maxCapacity,
+      campus_id: slot.campus?.id,
       venue: slot.venue ?? "",
     });
     setOpen(true);
@@ -136,7 +136,7 @@ export function InterviewSlotsTab() {
       scheduled_date: values.scheduled_date,
       start_time: values.start_time,
       end_time: values.end_time,
-      max_capacity: values.max_capacity,
+      campus_id: values.mode === "on_campus" ? values.campus_id : undefined,
       venue: values.mode === "on_campus" ? values.venue : undefined,
     };
 
@@ -170,7 +170,7 @@ export function InterviewSlotsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Fixed-time interview slots — Google Meet, telephonic, or on-campus.
+          Fixed-time interview slots — Google Meet or on-campus.
         </p>
         <Dialog
           open={open}
@@ -202,9 +202,12 @@ export function InterviewSlotsTab() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gmeet">Google Meet</SelectItem>
-                    <SelectItem value="telephonic">Telephonic</SelectItem>
-                    <SelectItem value="on_campus">On Campus</SelectItem>
+                    {(settings?.allowGmeet ?? true) && (
+                      <SelectItem value="gmeet">Google Meet</SelectItem>
+                    )}
+                    {(settings?.allowOnCampus ?? true) && (
+                      <SelectItem value="on_campus">On Campus</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -247,41 +250,48 @@ export function InterviewSlotsTab() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="max_capacity">
-                  Max Capacity{" "}
-                  <span className="text-muted-foreground">(optional)</span>
-                </Label>
-                <Input
-                  id="max_capacity"
-                  type="number"
-                  placeholder="Defaults to 1"
-                  {...form.register("max_capacity")}
-                />
-              </div>
-
               {mode === "gmeet" && (
                 <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                   A Google Meet link is generated automatically once this slot
                   is created — no need to add one manually.
                 </p>
               )}
-              {mode === "telephonic" && (
-                <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                  No phone number needed here — the interviewer calls the
-                  student directly, using the number on their booking (see the
-                  Bookings tab).
-                </p>
-              )}
               {mode === "on_campus" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="venue">Venue</Label>
-                  <Input
-                    id="venue"
-                    placeholder="Admin Block, Room 3"
-                    {...form.register("venue")}
-                  />
-                </div>
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="campus_id">Campus</Label>
+                    <Select
+                      value={form.watch("campus_id") ?? ""}
+                      onValueChange={(v) => form.setValue("campus_id", v)}
+                    >
+                      <SelectTrigger id="campus_id">
+                        <SelectValue placeholder="Select a campus" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {campuses?.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Gives students the campus&apos;s address (and map
+                      location, if geo-tagged) alongside this slot.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="venue">
+                      Room / Venue Detail{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="venue"
+                      placeholder="Admin Block, Room 3"
+                      {...form.register("venue")}
+                    />
+                  </div>
+                </>
               )}
 
               <div className="flex justify-end gap-2 pt-2">
@@ -320,9 +330,6 @@ export function InterviewSlotsTab() {
                   Time
                 </TableHead>
                 <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
-                  Capacity
-                </TableHead>
-                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
                   Status
                 </TableHead>
                 <TableHead className="w-[140px] py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide">
@@ -334,7 +341,7 @@ export function InterviewSlotsTab() {
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i} className="border-b last:border-0">
-                    {Array.from({ length: 6 }).map((__, j) => (
+                    {Array.from({ length: 5 }).map((__, j) => (
                       <TableCell key={j} className="py-4">
                         <Skeleton className="h-4 w-20" />
                       </TableCell>
@@ -344,7 +351,7 @@ export function InterviewSlotsTab() {
               ) : !slots || slots.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     className="py-20 text-center text-muted-foreground"
                   >
                     No interview slots scheduled yet.
@@ -374,6 +381,12 @@ export function InterviewSlotsTab() {
                             Link pending...
                           </span>
                         )}
+                        {slot.mode === "on_campus" && slot.campus && (
+                          <span className="text-xs text-muted-foreground">
+                            {slot.campus.name}
+                            {slot.venue ? ` — ${slot.venue}` : ""}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-4 text-sm text-muted-foreground">
@@ -381,9 +394,6 @@ export function InterviewSlotsTab() {
                     </TableCell>
                     <TableCell className="py-4 text-sm text-muted-foreground">
                       {slot.startTime} – {slot.endTime}
-                    </TableCell>
-                    <TableCell className="py-4 text-sm text-muted-foreground">
-                      {slot.bookedCount} / {slot.maxCapacity}
                     </TableCell>
                     <TableCell className="py-4">
                       <Badge variant={STATUS_VARIANT[slot.status]}>

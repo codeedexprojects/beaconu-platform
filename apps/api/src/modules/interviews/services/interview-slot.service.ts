@@ -10,6 +10,7 @@ import {
   InterviewSlotRepository,
   type InterviewSlotCreateData,
 } from "../repositories/interview-slot.repository";
+import { InterviewSettingsService } from "./interview-settings.service";
 import {
   formatDateOnly,
   formatTimeOnly,
@@ -35,7 +36,20 @@ export function mapSlot(row: SlotRow): InterviewSlotItem {
     meetingUrl: row.zoomMeetingUrl,
     meetingId: row.zoomMeetingId,
     meetingPasscode: row.zoomPasscode,
-    phoneNumber: row.phoneNumber,
+    campus: row.campus
+      ? {
+          id: row.campus.id,
+          name: row.campus.name,
+          address: row.campus.address,
+          city: row.campus.city,
+          state: row.campus.state,
+          pinCode: row.campus.pinCode,
+          latitude: row.campus.latitude ? row.campus.latitude.toNumber() : null,
+          longitude: row.campus.longitude
+            ? row.campus.longitude.toNumber()
+            : null,
+        }
+      : null,
     venue: row.venue,
     interviewerId: row.interviewerId,
     interviewerName: row.interviewer?.fullName ?? null,
@@ -125,7 +139,18 @@ export class InterviewSlotService {
     );
   }
 
+  private static async validateCampus(collegeId: string, campusId?: string) {
+    if (!campusId) return;
+    const campus = await InterviewSlotRepository.findCampusInCollege(
+      campusId,
+      collegeId,
+    );
+    if (!campus) throw new NotFoundError("Campus not found");
+  }
+
   static async create(collegeId: string, data: InterviewSlotCreateData) {
+    await InterviewSettingsService.assertModeAllowed(collegeId, data.mode);
+    await this.validateCampus(collegeId, data.campusId);
     this.validateTimes(data.startTime, data.endTime);
     this.validateNotInPast(data.scheduledDate, data.startTime);
     const row = await InterviewSlotRepository.create(collegeId, data);
@@ -143,10 +168,15 @@ export class InterviewSlotService {
     return rows.map(mapSlot);
   }
 
-  static async listAvailable(collegeId: string, mode?: string) {
+  static async listAvailable(
+    collegeId: string,
+    mode?: string,
+    scheduledDate?: Date,
+  ) {
     const rows = await InterviewSlotRepository.listAvailableForCollege(
       collegeId,
       mode,
+      scheduledDate,
     );
     return rows.map(mapSlot);
   }
@@ -165,6 +195,12 @@ export class InterviewSlotService {
     data: Partial<InterviewSlotCreateData>,
   ) {
     const existing = await this.loadForCollege(id, collegeId);
+    if (data.mode !== undefined && data.mode !== existing.mode) {
+      await InterviewSettingsService.assertModeAllowed(collegeId, data.mode);
+    }
+    if (data.campusId !== undefined) {
+      await this.validateCampus(collegeId, data.campusId);
+    }
     const start = data.startTime ?? existing.startTime;
     const end = data.endTime ?? existing.endTime;
     if (data.startTime !== undefined || data.endTime !== undefined) {

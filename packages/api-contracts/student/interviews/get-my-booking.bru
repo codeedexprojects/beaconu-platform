@@ -17,5 +17,15 @@ auth:bearer {
 docs {
   Fetches the student's own interview booking for one ApplicationCourse
   (404 if none exists yet — not an error state to build UI around, just
-  means "not booked yet").
+  means "not booked yet"). This is the "get my slot" call to make right
+  after Book Interview Slot — the response is fully self-contained:
+
+  - `slot`: full slot details, including `campus` (address/city/state/
+    pinCode/latitude/longitude — "on_campus" mode only, latitude/longitude
+    null if that campus was never geo-tagged) and `venue` (room/floor
+    detail, if the admin added one).
+  - `instructions`: the college's heading/description/instructions for
+    whichever mode this booking's slot is — the "gmeet" block if
+    `slot.mode === "gmeet"`, the "on_campus" block otherwise. No separate
+    settings call needed.
 }

@@ -23,8 +23,7 @@ body:json {
     "mode": "gmeet",
     "scheduled_date": "2026-08-15",
     "start_time": "10:00",
-    "end_time": "10:30",
-    "max_capacity": 1
+    "end_time": "10:30"
   }
 }
 
@@ -38,8 +37,12 @@ script:post-response {
 }
 
 docs {
-  Creates a fixed-time interview slot. `mode`: "gmeet" | "telephonic" |
-  "on_campus". Requires staff_member auth, no special permission code.
+  Creates a fixed-time interview slot. `mode`: "gmeet" | "on_campus"
+  ("telephonic" was removed entirely). Requires staff_member auth, no
+  special permission code.
+
+  409 ConflictError if the requested `mode` is currently disabled for this
+  college — see Get Interview Settings / Update Interview Settings.
 
   For "gmeet": no meeting link input, and no link is created yet at this
   point either — `meetingUrl`/`meetingId` are `null` in this response.
@@ -48,13 +51,17 @@ docs {
   actually books this slot (see Book Interview Slot, student-side) — a
   slot that never gets booked never gets a calendar event. Best-effort:
   if Google Meet isn't configured or the call fails at booking time, the
-  link just stays `null`, same fallback behavior as counselling. For
-  "telephonic": no phone number
-  input either — the interviewer calls the student's own number, which
-  shows up on each booking (`InterviewBookingItem.studentPhone`), not a
-  college-entered one. For "on_campus": pass `venue`. `duration_mins`
-  defaults to 30, `max_capacity` defaults to 1 (how many students can book
-  this same slot).
+  link just stays `null`, same fallback behavior as counselling.
+
+  For "on_campus": pass `campus_id` (must be one of this college's own
+  Campus rows — 404 "Campus not found" otherwise) so the student-facing
+  response carries the campus's structured address/city/state/pinCode/
+  latitude/longitude. `venue` is an optional room/floor-level detail
+  alongside it (e.g. "Room 3, Admin Block") — the Campus record itself
+  doesn't capture that level of detail.
+
+  `duration_mins` defaults to 30. No `max_capacity` input — every slot is
+  a fixed 1-on-1 booking now, not admin-configurable.
 
   `start_time`/`end_time` are "HH:MM" 24-hour strings.
 
