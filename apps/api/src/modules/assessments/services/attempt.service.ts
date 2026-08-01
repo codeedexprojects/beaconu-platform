@@ -18,7 +18,6 @@ import { prisma } from "@beaconu/db";
 import type { Prisma } from "@beaconu/db";
 
 const TAB_HIDDEN_GRACE_MS = 10 * 1000;
-const DISCONNECT_GRACE_MS = 2 * 60 * 1000;
 
 export class AttemptService {
   /** One attempt per Application (covers every course listed on it), not
@@ -282,9 +281,11 @@ export class AttemptService {
     });
   }
 
-  /** Called by the assessment-auto-submit job (every minute). Applies the
-   * three rules from docs/context.md §8/§18: tab-hidden >10s -> terminated,
-   * disconnect >2min -> auto_submitted, duration/window expiry -> auto_submitted. */
+  /** Called by the assessment-auto-submit job (every minute). Applies two
+   * rules from docs/context.md §8/§18: tab-hidden >10s -> terminated,
+   * duration/window expiry -> auto_submitted. No disconnect/idle-timeout
+   * rule — a student can go quiet (reading, thinking, between sections)
+   * for as long as they like without being auto-submitted for it. */
   static async runAutoSubmitSweep(): Promise<{
     terminated: number;
     autoSubmitted: number;
@@ -309,10 +310,6 @@ export class AttemptService {
         continue;
       }
 
-      const lastActivity = attempt.lastActivityAt ?? attempt.startedAt;
-      const isDisconnected =
-        lastActivity && now - lastActivity.getTime() > DISCONNECT_GRACE_MS;
-
       const durationMs =
         computeTemplateDurationSecs(attempt.paper.template.templateSections) *
         1000;
@@ -320,7 +317,7 @@ export class AttemptService {
         attempt.startedAt && now - attempt.startedAt.getTime() > durationMs;
       const isWindowExpired = now > attempt.slot.windowEnd.getTime();
 
-      if (isDisconnected || isDurationExpired || isWindowExpired) {
+      if (isDurationExpired || isWindowExpired) {
         await this.finalize(attempt.id, attempt.startedAt, "auto_submitted");
         autoSubmitted++;
       }
