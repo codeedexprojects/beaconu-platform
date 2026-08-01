@@ -81,6 +81,7 @@ const questionSchema = z
     title: z.string().trim().optional(),
     prompt_type: z.enum(["text", "audio"]),
     text: z.string().trim().optional(),
+    question: z.string().trim().optional(),
     audio_url: z.string().trim().optional(),
     image_url: z.string().trim().optional(),
     marks: z.coerce.number().positive("Marks must be greater than 0"),
@@ -103,6 +104,7 @@ const EMPTY_VALUES: QuestionFormValues = {
   title: "",
   prompt_type: "text",
   text: "",
+  question: "",
   audio_url: "",
   image_url: "",
   marks: 5,
@@ -188,6 +190,7 @@ export default function AssessmentSectionQuestionsPage() {
       prompt_type:
         item.content.promptType ?? (type?.hasAudio ? "audio" : "text"),
       text: item.content.text ?? "",
+      question: item.content.question ?? "",
       audio_url: item.content.audioUrl ?? "",
       image_url: item.content.imageUrl ?? "",
       marks: item.marks,
@@ -315,6 +318,7 @@ export default function AssessmentSectionQuestionsPage() {
       title: values.title || undefined,
       content: {
         text: values.text || undefined,
+        question: values.question || undefined,
         audioUrl: values.audio_url || undefined,
         imageUrl: values.image_url || undefined,
         options: options.length > 0 ? options : undefined,
@@ -506,6 +510,20 @@ export default function AssessmentSectionQuestionsPage() {
                   rows={3}
                   placeholder="Prompt or passage shown to the student"
                   {...form.register("text")}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="question">
+                  Question{" "}
+                  <span className="text-muted-foreground">(optional)</span>
+                </Label>
+                <textarea
+                  id="question"
+                  rows={2}
+                  placeholder="For prompt/passage-based questions — the actual question being asked about the prompt above"
+                  {...form.register("question")}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>

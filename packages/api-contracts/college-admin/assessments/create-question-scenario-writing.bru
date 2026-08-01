@@ -21,7 +21,8 @@ body:json {
     "difficulty": "medium",
     "title": "Handling a missed deadline",
     "content": {
-      "text": "Your team missed a critical deadline due to a dependency outside your control. Describe how you would communicate this to stakeholders and what you'd do next."
+      "text": "Your team missed a critical deadline due to a dependency outside your control.",
+      "question": "How would you communicate this to stakeholders, and what would you do next?"
     },
     "marks": 5,
     "negative_marks": 0,
@@ -33,4 +34,10 @@ docs {
   Example of a text_response, non-autoScorable question type. No answer_key
   is required or accepted for this type — it's evaluator-scored manually
   during the (not-yet-built) evaluation phase.
+
+  `content.question` (optional, all question types): for prompt/passage-
+  based questions, `content.text` holds the passage/scenario and
+  `content.question` holds the specific question being asked about it —
+  keeps the two visually/semantically separate instead of concatenating
+  them into one `text` block.
 }

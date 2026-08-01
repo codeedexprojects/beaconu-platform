@@ -50,6 +50,10 @@ export interface QuestionBlank {
 
 export interface QuestionContent {
   text?: string;
+  // For prompt/passage-based question types — `text` holds the passage/
+  // prompt, this holds the actual question being asked about it. Optional
+  // everywhere else.
+  question?: string;
   audioUrl?: string;
   imageUrl?: string;
   options?: QuestionOption[];

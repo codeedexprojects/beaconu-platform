@@ -16,6 +16,11 @@ const questionBlankSchema = z.object({
 
 const questionContentSchema = z.object({
   text: z.string().trim().max(2000).optional(),
+  // For prompt/passage-based question types (dataInterpretation, essay,
+  // summarizeSpokenText, etc.) — `text` holds the passage/prompt, this
+  // holds the actual question being asked about it. Optional everywhere
+  // else.
+  question: z.string().trim().max(1000).optional(),
   audioUrl: z.string().trim().url().optional(),
   imageUrl: z.string().trim().url().optional(),
   options: z.array(questionOptionSchema).optional(),

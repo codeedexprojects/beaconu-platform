@@ -68,12 +68,18 @@ export class AttemptDetailQuery {
       string,
       Awaited<ReturnType<typeof AnswerRepository.listByAttempt>>[number]
     >,
+    // 1-based position within THIS section — not pq.questionOrder, which is
+    // a 0-based counter that increments across the whole paper (every
+    // section shares one sequence), so it's neither 1-based nor
+    // section-relative. Using position here is what actually makes
+    // "question N of this section" / hasNext / hasPrevious correct.
+    displayOrder: number,
   ): AttemptQuestionItem {
     const answer = answerByQuestion.get(pq.questionId);
     return {
       id: pq.id,
       questionId: pq.questionId,
-      questionOrder: pq.questionOrder,
+      questionOrder: displayOrder,
       questionTypeId: pq.question.questionTypeId,
       questionTypeName: pq.question.questionType.name,
       responseFormat: pq.question.questionType.responseFormat,
@@ -109,9 +115,10 @@ export class AttemptDetailQuery {
       AnswerRepository.listByAttempt(attemptId),
     ]);
 
-    const target = paperQuestions.find(
-      (pq) => pq.questionOrder === questionOrder,
-    );
+    // Position within THIS section's already-filtered, already-ordered
+    // array — see toAttemptQuestionItem's doc comment for why this can't
+    // be a lookup against the raw pq.questionOrder DB field.
+    const target = paperQuestions[questionOrder - 1];
     if (!target) {
       throw new NotFoundError("Question not found");
     }
@@ -119,10 +126,14 @@ export class AttemptDetailQuery {
     const answerByQuestion = new Map(answers.map((a) => [a.questionId, a]));
 
     return {
-      question: this.toAttemptQuestionItem(target, answerByQuestion),
+      question: this.toAttemptQuestionItem(
+        target,
+        answerByQuestion,
+        questionOrder,
+      ),
       questionOrder,
       totalQuestions: paperQuestions.length,
-      hasNext: paperQuestions.some((pq) => pq.questionOrder > questionOrder),
+      hasNext: questionOrder < paperQuestions.length,
       hasPrevious: questionOrder > 1,
     };
   }
@@ -146,14 +157,17 @@ export class AttemptDetailQuery {
 
     let answeredCount = 0;
     let flaggedCount = 0;
-    const questions = paperQuestions.map((pq) => {
+    const questions = paperQuestions.map((pq, index) => {
       const answer = answerByQuestion.get(pq.questionId);
       const isAnswered = answer ? answer.response !== null : false;
       const isFlagged = answer?.isFlagged ?? false;
       if (isAnswered) answeredCount++;
       if (isFlagged) flaggedCount++;
       return {
-        questionOrder: pq.questionOrder,
+        // 1-based position within this section — see
+        // toAttemptQuestionItem's doc comment for why this isn't
+        // pq.questionOrder.
+        questionOrder: index + 1,
         questionId: pq.questionId,
         isAnswered,
         isFlagged,
