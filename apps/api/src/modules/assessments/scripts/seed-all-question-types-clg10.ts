@@ -85,7 +85,16 @@ async function ensureQuestion(
   const existing = await prisma.question.findFirst({
     where: { sectionId, title: marker },
   });
-  if (existing) return existing;
+  // Re-syncs content/answerKey on every run instead of just returning the
+  // stale row — this is dev seed data (title-marked "CLG10-ALLTYPES-*"),
+  // not production, so it's safe to keep it in lockstep with this script
+  // rather than only ever seeding once.
+  if (existing) {
+    return prisma.question.update({
+      where: { id: existing.id },
+      data: { content, answerKey: answerKey ?? undefined },
+    });
+  }
 
   return prisma.$transaction(async (tx) => {
     const question = await tx.question.create({
@@ -395,7 +404,10 @@ async function main() {
     "ESSAY",
     "essay",
     "written-communication",
-    { text: "Write a 250-word essay on the importance of time management." },
+    {
+      text: "Time management is a skill relevant to students, professionals, and everyone in between.",
+      question: "Write a 250-word essay on the importance of time management.",
+    },
     null,
   );
   await seed(
@@ -403,7 +415,8 @@ async function main() {
     "textSummary",
     "written-communication",
     {
-      text: "Read the following passage and summarize it in 100 words: Renewable energy sources like solar and wind power are becoming increasingly cost-competitive with fossil fuels...",
+      text: "Renewable energy sources like solar and wind power are becoming increasingly cost-competitive with fossil fuels...",
+      question: "Summarize the passage above in 100 words.",
     },
     null,
   );
@@ -412,7 +425,9 @@ async function main() {
     "email",
     "written-communication",
     {
-      text: "Write a formal email to your professor requesting an extension for your assignment submission.",
+      text: "You need more time to complete your current assignment.",
+      question:
+        "Write a formal email to your professor requesting an extension for your assignment submission.",
     },
     null,
   );
@@ -421,7 +436,8 @@ async function main() {
     "letter",
     "written-communication",
     {
-      text: "Write a letter to the editor of a newspaper about increasing traffic congestion in your city.",
+      text: "Traffic congestion in your city has been getting worse over the past year.",
+      question: "Write a letter to the editor of a newspaper about this issue.",
     },
     null,
   );
@@ -430,7 +446,8 @@ async function main() {
     "notice",
     "written-communication",
     {
-      text: "Draft a notice for your college notice board announcing the annual sports day.",
+      text: "Your college's Annual Sports Day is coming up.",
+      question: "Draft a notice for your college notice board announcing it.",
     },
     null,
   );
@@ -439,7 +456,8 @@ async function main() {
     "dialogueCompletion",
     "written-communication",
     {
-      text: "Complete the dialogue: A: Excuse me, could you tell me how to get to the library? B: ___",
+      text: "A: Excuse me, could you tell me how to get to the library? B: ___",
+      question: "Complete B's side of the dialogue.",
     },
     null,
   );
@@ -450,8 +468,9 @@ async function main() {
     "summarizeSpokenText",
     "listening-reading",
     {
-      text: "Listen to the audio and summarize the key points in your own words.",
       audioUrl: PLACEHOLDER_AUDIO,
+      question:
+        "Listen to the audio and summarize the key points in your own words.",
     },
     null,
   );
@@ -563,8 +582,8 @@ async function main() {
     "audioSpeakingResponse",
     "verbal-communication",
     {
-      text: "Listen to the question and respond appropriately.",
       audioUrl: PLACEHOLDER_AUDIO,
+      question: "Listen to the question and respond appropriately.",
     },
     null,
   );
@@ -580,7 +599,8 @@ async function main() {
     "readAloud",
     "verbal-communication",
     {
-      text: "Read the following passage aloud: The quick brown fox jumps over the lazy dog.",
+      text: "The quick brown fox jumps over the lazy dog.",
+      question: "Read the passage above aloud.",
     },
     null,
   );
@@ -591,8 +611,9 @@ async function main() {
     "dataInterpretation",
     "aptitude-logical-reasoning",
     {
-      text: "Based on the chart, analyze which quarter had the highest growth and explain why.",
       imageUrl: PLACEHOLDER_IMAGE,
+      question:
+        "Based on the chart, analyze which quarter had the highest growth and explain why.",
     },
     null,
   );
@@ -601,8 +622,9 @@ async function main() {
     "describeImage",
     "verbal-communication",
     {
-      text: "Describe what is happening in the image, focusing on the setting and mood.",
       imageUrl: PLACEHOLDER_IMAGE,
+      question:
+        "Describe what is happening in the image, focusing on the setting and mood.",
     },
     null,
   );
