@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -116,8 +116,19 @@ function newOptionId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function newBlankId() {
-  return Math.random().toString(36).slice(2, 10);
+// Fill-in-the-blank passages mark each blank's position inline with this
+// token (e.g. "The cat sat on the [[blank]] and looked at the [[blank]].")
+// instead of a separate, position-less "Add Blank" button — the blank list
+// is derived from the passage text itself, so it can never drift out of
+// sync with where the blanks actually are.
+const BLANK_MARKER_REGEX = /\[\[blank\]\]/gi;
+
+function detectBlanks(text: string): QuestionBlank[] {
+  const count = (text.match(BLANK_MARKER_REGEX) ?? []).length;
+  return Array.from({ length: count }, (_, i) => ({
+    id: `blank-${i + 1}`,
+    label: `Blank ${i + 1}`,
+  }));
 }
 
 const PAGE_SIZE = 20;
@@ -137,7 +148,6 @@ export default function AssessmentSectionQuestionsPage() {
   >(null);
   const [options, setOptions] = useState<QuestionOption[]>([]);
   const [correctOptionIds, setCorrectOptionIds] = useState<string[]>([]);
-  const [blanks, setBlanks] = useState<QuestionBlank[]>([]);
   const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<QuestionItem | null>(null);
   const [page, setPage] = useState(1);
@@ -170,12 +180,38 @@ export default function AssessmentSectionQuestionsPage() {
   const isFillBlank =
     !!selectedType && FILL_BLANK_FORMATS.includes(selectedType.responseFormat);
 
+  // Derived from the passage text's [[blank]] markers — never manually
+  // added/removed/reordered, so it can't drift out of sync with the text.
+  const watchedText = form.watch("text") ?? "";
+  const blanks = useMemo(
+    () => (isFillBlank ? detectBlanks(watchedText) : []),
+    [isFillBlank, watchedText],
+  );
+  const textFieldReg = form.register("text");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /** Inserts "[[blank]]" at the current cursor position (or the end, if
+   * the textarea isn't focused) instead of making the admin type the
+   * marker by hand — click to drop in a blank right where the cursor is. */
+  function insertBlankMarker() {
+    const el = textareaRef.current;
+    const current = form.getValues("text") ?? "";
+    const start = el?.selectionStart ?? current.length;
+    const end = el?.selectionEnd ?? current.length;
+    const next = `${current.slice(0, start)}[[blank]]${current.slice(end)}`;
+    form.setValue("text", next, { shouldDirty: true, shouldValidate: true });
+    const cursor = start + "[[blank]]".length;
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(cursor, cursor);
+    });
+  }
+
   function openCreate() {
     setEditing(null);
     form.reset(EMPTY_VALUES);
     setOptions([]);
     setCorrectOptionIds([]);
-    setBlanks([]);
     setBlankAnswers({});
     setOpen(true);
   }
@@ -199,13 +235,18 @@ export default function AssessmentSectionQuestionsPage() {
     });
     setOptions(item.content.options ?? []);
     setCorrectOptionIds(item.answerKey?.correctOptionIds ?? []);
-    setBlanks(item.content.blanks ?? []);
+    // Remap positionally (index in the saved blanks[] -> "blank-{n}") so
+    // this works both for older questions authored with random blank ids
+    // and for ones already using the [[blank]]-derived positional scheme.
+    const legacyBlanks = item.content.blanks ?? [];
+    const answerByLegacyId = Object.fromEntries(
+      (item.answerKey?.blankAnswers ?? []).map((a) => [a.blankId, a.optionId]),
+    );
     setBlankAnswers(
       Object.fromEntries(
-        (item.answerKey?.blankAnswers ?? []).map((a) => [
-          a.blankId,
-          a.optionId,
-        ]),
+        legacyBlanks
+          .map((b, i) => [`blank-${i + 1}`, answerByLegacyId[b.id]])
+          .filter(([, optionId]) => optionId !== undefined),
       ),
     );
     setOpen(true);
@@ -217,26 +258,6 @@ export default function AssessmentSectionQuestionsPage() {
     if (type) {
       form.setValue("prompt_type", type.hasAudio ? "audio" : "text");
     }
-  }
-
-  function addBlank() {
-    setBlanks((prev) => [
-      ...prev,
-      { id: newBlankId(), label: `Blank ${prev.length + 1}` },
-    ]);
-  }
-
-  function updateBlankLabel(id: string, label: string) {
-    setBlanks((prev) => prev.map((b) => (b.id === id ? { ...b, label } : b)));
-  }
-
-  function removeBlank(id: string) {
-    setBlanks((prev) => prev.filter((b) => b.id !== id));
-    setBlankAnswers((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
   }
 
   function setBlankAnswer(blankId: string, optionId: string) {
@@ -303,7 +324,9 @@ export default function AssessmentSectionQuestionsPage() {
 
     if (isFillBlank) {
       if (blanks.length === 0) {
-        toast.error("Add at least one blank");
+        toast.error(
+          "Add [[blank]] in the passage text for each blank you want",
+        );
         return;
       }
       if (blanks.some((b) => !blankAnswers[b.id])) {
@@ -499,19 +522,52 @@ export default function AssessmentSectionQuestionsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="text">
-                  {isChoice || isOrdered ? "Prompt" : "Question Text"}
-                  {form.watch("prompt_type") === "audio" && (
-                    <span className="text-muted-foreground"> (optional)</span>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="text">
+                    {isFillBlank
+                      ? "Passage"
+                      : isChoice || isOrdered
+                        ? "Prompt"
+                        : "Question Text"}
+                    {form.watch("prompt_type") === "audio" && (
+                      <span className="text-muted-foreground"> (optional)</span>
+                    )}
+                  </Label>
+                  {isFillBlank && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 text-xs"
+                      onClick={insertBlankMarker}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Insert Blank
+                    </Button>
                   )}
-                </Label>
+                </div>
                 <textarea
                   id="text"
                   rows={3}
-                  placeholder="Prompt or passage shown to the student"
-                  {...form.register("text")}
+                  placeholder={
+                    isFillBlank
+                      ? "Type [[blank]] wherever a blank should go, e.g. The cat sat on the [[blank]] and looked at the [[blank]]."
+                      : "Prompt or passage shown to the student"
+                  }
+                  {...textFieldReg}
+                  ref={(el) => {
+                    textFieldReg.ref(el);
+                    textareaRef.current = el;
+                  }}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                {isFillBlank && (
+                  <p className="text-xs text-muted-foreground">
+                    {blanks.length > 0
+                      ? `${blanks.length} blank${blanks.length === 1 ? "" : "s"} detected`
+                      : "No [[blank]] markers found yet — type [[blank]] wherever a blank should go."}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -701,61 +757,47 @@ export default function AssessmentSectionQuestionsPage() {
                   <div className="space-y-1.5">
                     <Label>Blanks</Label>
                     <p className="text-xs text-muted-foreground">
-                      One row per blank in the passage — pick the correct
-                      word-bank option for each.
+                      Detected from the [[blank]] markers in the passage above,
+                      in order — pick the correct word-bank option for each.
                     </p>
-                    <div className="space-y-2 rounded-md border p-2">
-                      {blanks.map((blank, idx) => (
-                        <div key={blank.id} className="flex items-center gap-2">
-                          <Input
-                            value={blank.label ?? `Blank ${idx + 1}`}
-                            onChange={(e) =>
-                              updateBlankLabel(blank.id, e.target.value)
-                            }
-                            className="h-8 w-32 text-sm"
-                          />
-                          <Select
-                            value={blankAnswers[blank.id] ?? ""}
-                            onValueChange={(v) => setBlankAnswer(blank.id, v)}
+                    {blanks.length === 0 ? (
+                      <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                        Add [[blank]] to the passage text to create blanks here.
+                      </p>
+                    ) : (
+                      <div className="space-y-2 rounded-md border p-2">
+                        {blanks.map((blank, idx) => (
+                          <div
+                            key={blank.id}
+                            className="flex items-center gap-2"
                           >
-                            <SelectTrigger className="h-8 flex-1 text-xs">
-                              <SelectValue placeholder="Correct option" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {options.map((opt) => (
-                                <SelectItem key={opt.id} value={opt.id}>
-                                  {opt.text || "(untitled option)"}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-destructive"
-                            onClick={() => removeBlank(blank.id)}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={addBlank}
-                        disabled={options.length === 0}
-                      >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        Add Blank
-                      </Button>
-                      {options.length === 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Add at least one word bank option first.
-                        </p>
-                      )}
-                    </div>
+                            <span className="w-20 shrink-0 text-sm text-muted-foreground">
+                              Blank {idx + 1}
+                            </span>
+                            <Select
+                              value={blankAnswers[blank.id] ?? ""}
+                              onValueChange={(v) => setBlankAnswer(blank.id, v)}
+                            >
+                              <SelectTrigger className="h-8 flex-1 text-xs">
+                                <SelectValue placeholder="Correct option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {options.map((opt) => (
+                                  <SelectItem key={opt.id} value={opt.id}>
+                                    {opt.text || "(untitled option)"}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ))}
+                        {options.length === 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Add at least one word bank option first.
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </>
               )}

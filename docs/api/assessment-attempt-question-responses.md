@@ -238,6 +238,16 @@ _(This example shows the shape once `myAnswer` is populated — for an `audio_re
 
 ### dragAndDropFill
 
+`content.text` marks each blank's position inline with a literal `[[blank]]`
+token — the client must find these tokens and render the actual fill-blank
+widget (drag target / dropdown, per `responseFormat`) at each one, in order.
+The Nth `[[blank]]` occurrence corresponds to `content.blanks[N-1]`
+(`blanks[0].id` = 1st marker, `blanks[1].id` = 2nd marker, etc.) — that
+`id` is what goes in `response.blankAnswers[].blankId` when submitting (see
+[assessment-answer-submissions.md](./assessment-answer-submissions.md)).
+Never render the raw `[[blank]]` text to the student — always replace it
+with the widget.
+
 ```json
 {
   "question": {
@@ -248,13 +258,13 @@ _(This example shows the shape once `myAnswer` is populated — for an `audio_re
     "questionTypeName": "Fill in the Blanks — Drag & Drop",
     "responseFormat": "fill_blank_drag_drop",
     "content": {
-      "text": "The cat sat on the ___ and looked at the ___.",
+      "text": "The cat sat on the [[blank]] and looked at the [[blank]].",
       "options": [
         { "id": "w1", "text": "mat" },
         { "id": "w2", "text": "moon" },
         { "id": "w3", "text": "tree" }
       ],
-      "blanks": [{ "id": "b1" }, { "id": "b2" }]
+      "blanks": [{ "id": "blank-1" }, { "id": "blank-2" }]
     },
     "marks": 5,
     "timeLimitSecs": 60,
@@ -279,13 +289,13 @@ _(This example shows the shape once `myAnswer` is populated — for an `audio_re
     "questionTypeName": "Fill in the Blanks — Drop Down",
     "responseFormat": "fill_blank_dropdown",
     "content": {
-      "text": "Water boils at ___ degrees Celsius at sea level and freezes at ___.",
+      "text": "Water boils at [[blank]] degrees Celsius at sea level and freezes at [[blank]].",
       "options": [
         { "id": "d1", "text": "100" },
         { "id": "d2", "text": "0" },
         { "id": "d3", "text": "50" }
       ],
-      "blanks": [{ "id": "b1" }, { "id": "b2" }]
+      "blanks": [{ "id": "blank-1" }, { "id": "blank-2" }]
     },
     "marks": 5,
     "timeLimitSecs": 60,
@@ -551,13 +561,13 @@ _(This example shows the shape once `myAnswer` is populated — for an `audio_re
     "questionTypeName": "Audio Fill in the Blanks — Drop Down",
     "responseFormat": "fill_blank_dropdown",
     "content": {
-      "text": "Listen to the audio and fill in the blanks: The train departs at ___ and arrives at ___.",
+      "text": "Listen to the audio and fill in the blanks: The train departs at [[blank]] and arrives at [[blank]].",
       "audioUrl": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/college/CLG-10/assessments/seed-placeholder.mp3",
       "options": [
         { "id": "t1", "text": "9:00 AM" },
         { "id": "t2", "text": "11:30 AM" }
       ],
-      "blanks": [{ "id": "b1" }, { "id": "b2" }]
+      "blanks": [{ "id": "blank-1" }, { "id": "blank-2" }]
     },
     "marks": 5,
     "timeLimitSecs": 60,
@@ -582,13 +592,13 @@ _(This example shows the shape once `myAnswer` is populated — for an `audio_re
     "questionTypeName": "Audio Fill in the Blanks — Drag & Drop",
     "responseFormat": "fill_blank_drag_drop",
     "content": {
-      "text": "Listen to the audio, then fill in: The speaker recommends ___ before ___.",
+      "text": "Listen to the audio, then fill in: The speaker recommends [[blank]] before [[blank]].",
       "audioUrl": "https://beaconu-bucket.s3.ap-south-1.amazonaws.com/college/CLG-10/assessments/seed-placeholder.mp3",
       "options": [
         { "id": "w1", "text": "reviewing notes" },
         { "id": "w2", "text": "the exam" }
       ],
-      "blanks": [{ "id": "b1" }, { "id": "b2" }]
+      "blanks": [{ "id": "blank-1" }, { "id": "blank-2" }]
     },
     "marks": 5,
     "timeLimitSecs": 60,
