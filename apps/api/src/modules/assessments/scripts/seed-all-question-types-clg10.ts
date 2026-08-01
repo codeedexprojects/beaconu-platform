@@ -362,18 +362,18 @@ async function main() {
     "dragAndDropFill",
     "aptitude-logical-reasoning",
     {
-      text: "The cat sat on the ___ and looked at the ___.",
+      text: "The cat sat on the [[blank]] and looked at the [[blank]].",
       options: [
         { id: "w1", text: "mat" },
         { id: "w2", text: "moon" },
         { id: "w3", text: "tree" },
       ],
-      blanks: [{ id: "b1" }, { id: "b2" }],
+      blanks: [{ id: "blank-1" }, { id: "blank-2" }],
     },
     {
       blankAnswers: [
-        { blankId: "b1", optionId: "w1" },
-        { blankId: "b2", optionId: "w2" },
+        { blankId: "blank-1", optionId: "w1" },
+        { blankId: "blank-2", optionId: "w2" },
       ],
     },
   );
@@ -383,18 +383,18 @@ async function main() {
     "dropdownFill",
     "aptitude-logical-reasoning",
     {
-      text: "Water boils at ___ degrees Celsius at sea level and freezes at ___.",
+      text: "Water boils at [[blank]] degrees Celsius at sea level and freezes at [[blank]].",
       options: [
         { id: "d1", text: "100" },
         { id: "d2", text: "0" },
         { id: "d3", text: "50" },
       ],
-      blanks: [{ id: "b1" }, { id: "b2" }],
+      blanks: [{ id: "blank-1" }, { id: "blank-2" }],
     },
     {
       blankAnswers: [
-        { blankId: "b1", optionId: "d1" },
-        { blankId: "b2", optionId: "d2" },
+        { blankId: "blank-1", optionId: "d1" },
+        { blankId: "blank-2", optionId: "d2" },
       ],
     },
   );
@@ -494,18 +494,18 @@ async function main() {
     "audioDropdownFill",
     "listening-reading",
     {
-      text: "Listen to the audio and fill in the blanks: The train departs at ___ and arrives at ___.",
+      text: "Listen to the audio and fill in the blanks: The train departs at [[blank]] and arrives at [[blank]].",
       audioUrl: PLACEHOLDER_AUDIO,
       options: [
         { id: "t1", text: "9:00 AM" },
         { id: "t2", text: "11:30 AM" },
       ],
-      blanks: [{ id: "b1" }, { id: "b2" }],
+      blanks: [{ id: "blank-1" }, { id: "blank-2" }],
     },
     {
       blankAnswers: [
-        { blankId: "b1", optionId: "t1" },
-        { blankId: "b2", optionId: "t2" },
+        { blankId: "blank-1", optionId: "t1" },
+        { blankId: "blank-2", optionId: "t2" },
       ],
     },
   );
@@ -514,18 +514,18 @@ async function main() {
     "audioDragAndDropFill",
     "listening-reading",
     {
-      text: "Listen to the audio, then fill in: The speaker recommends ___ before ___.",
+      text: "Listen to the audio, then fill in: The speaker recommends [[blank]] before [[blank]].",
       audioUrl: PLACEHOLDER_AUDIO,
       options: [
         { id: "w1", text: "reviewing notes" },
         { id: "w2", text: "the exam" },
       ],
-      blanks: [{ id: "b1" }, { id: "b2" }],
+      blanks: [{ id: "blank-1" }, { id: "blank-2" }],
     },
     {
       blankAnswers: [
-        { blankId: "b1", optionId: "w1" },
-        { blankId: "b2", optionId: "w2" },
+        { blankId: "blank-1", optionId: "w1" },
+        { blankId: "blank-2", optionId: "w2" },
       ],
     },
   );
