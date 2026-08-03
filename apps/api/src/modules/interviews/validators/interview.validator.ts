@@ -79,7 +79,7 @@ export const listAvailableSlotsQuerySchema = z.object({
 });
 
 export const bookInterviewSlotSchema = z.object({
-  application_course_id: z.string().trim().min(1),
+  application_id: z.string().trim().min(1),
   slot_id: z.string().trim().min(1),
 });
 

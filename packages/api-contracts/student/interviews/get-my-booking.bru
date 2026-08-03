@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/interviews/bookings/course/{{applicationCourseId}}
+  url: {{baseUrl}}/api/v1/student/interviews/bookings/application/{{applicationId}}
   body: none
   auth: bearer
 }
@@ -15,7 +15,7 @@ auth:bearer {
 }
 
 docs {
-  Fetches the student's own interview booking for one ApplicationCourse
+  Fetches the student's own interview booking for one whole Application
   (404 if none exists yet — not an error state to build UI around, just
   means "not booked yet"). This is the "get my slot" call to make right
   after Book Interview Slot — the response is fully self-contained:

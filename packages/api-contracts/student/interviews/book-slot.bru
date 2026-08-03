@@ -20,7 +20,7 @@ headers {
 
 body:json {
   {
-    "application_course_id": "{{applicationCourseId}}",
+    "application_id": "{{applicationId}}",
     "slot_id": "{{interviewSlotId}}"
   }
 }
@@ -35,17 +35,20 @@ script:post-response {
 }
 
 docs {
-  Books an interview slot for one of the student's own ApplicationCourses.
-  One booking per ApplicationCourse, ever.
+  Books an interview slot for the whole Application (not one specific
+  course on it — an Application can carry several via "Add Course", and
+  the student sits one shared interview covering all of them). One
+  booking per Application, ever.
 
-  409 ConflictError "This course is not currently at the interview stage"
-  unless the course's status is "assessment_completed" or already
-  "interview_pending". 409 "You already have an interview booking for this
-  course". 409 "This interview slot is fully booked" (capacity race lost).
+  409 ConflictError "This application is not currently at the interview
+  stage" unless at least one non-withdrawn course's status is
+  "assessment_completed" or already "interview_pending". 409 "You already
+  have an interview booking for this application". 409 "This interview
+  slot is fully booked" (capacity race lost).
 
-  On success, the linked ApplicationCourse's status moves to
-  "interview_pending" (first booking only — idempotent no-op if already
-  there, e.g. after a cancel + re-book).
+  On success, every course that was at "assessment_completed" moves to
+  "interview_pending" (idempotent no-op for ones already there, e.g. after
+  a cancel + re-book). Courses not yet eligible are left untouched.
 
   For a "gmeet" slot: this is the point where the Google Meet link is
   actually created (not at slot creation time) — the response's

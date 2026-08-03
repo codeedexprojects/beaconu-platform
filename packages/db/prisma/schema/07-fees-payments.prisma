@@ -190,9 +190,10 @@ model ScholarshipConfig {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  calculatorConfig Json    @default("{}") @map("calculator_config") // {portOfEntryOptions[], rankRangeBrackets[]}
-  displayLabel     String? @map("display_label") @db.VarChar(100) // "Defence personnel"
-  discountDisplay  String? @map("discount_display") @db.VarChar(20) // "20% OFF"
+  calculatorConfig  Json    @default("{}") @map("calculator_config") // {portOfEntryOptions[], rankRangeBrackets[]}
+  displayLabel      String? @map("display_label") @db.VarChar(100) // "Defence personnel"
+  discountDisplay   String? @map("discount_display") @db.VarChar(20) // "20% OFF"
+  requiredDocuments Json    @default("[]") @map("required_documents") // string[] of doc names, e.g. ["Income Certificate", "Caste Certificate"]
 
   // Relations
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
@@ -205,30 +206,40 @@ model ScholarshipConfig {
 }
 
 model ScholarshipApplication {
-  id                  String    @id @default(dbgenerated("('SCA-'::text || (nextval('scholarship_application_seq'::regclass))::text)"))
-  scholarshipConfigId String    @map("scholarship_config_id")
-  studentId           String    @map("student_id")
-  applicationCourseId String    @map("application_course_id")
-  supportingDocuments Json      @default("[]") @map("supporting_documents")
-  remarks             String?   @db.Text
-  discountAmount      Decimal?  @map("discount_amount") @db.Decimal(12, 2)
-  status              String    @default("pending") @db.VarChar(20)
-  reviewedBy          String?   @map("reviewed_by")
-  reviewedAt          DateTime? @map("reviewed_at") @db.Timestamptz
-  reviewRemarks       String?   @map("review_remarks") @db.Text
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                      String    @id @default(dbgenerated("('SCA-'::text || (nextval('scholarship_application_seq'::regclass))::text)"))
+  scholarshipConfigId     String    @map("scholarship_config_id")
+  studentId               String    @map("student_id")
+  // Whole-Application, not one specific course — a student can have
+  // several courses on one Application (added via Add Course), at
+  // different pipeline stages; the scholarship isn't tied to just one of
+  // them.
+  applicationId           String    @map("application_id")
+  // Student-entered, at application time — the range they select/type
+  // (e.g. "2,00,000 - 5,00,000"), not a config-defined bracket.
+  annualFamilyIncomeRange String    @map("annual_family_income_range") @db.VarChar(50)
+  supportingDocuments     Json      @default("[]") @map("supporting_documents")
+  // The student's reason for applying — despite the generic column name,
+  // this is a required student-facing field for this application, not an
+  // internal admin note (that's reviewRemarks, below).
+  remarks                 String?   @db.Text
+  discountAmount          Decimal?  @map("discount_amount") @db.Decimal(12, 2)
+  status                  String    @default("pending") @db.VarChar(20)
+  reviewedBy              String?   @map("reviewed_by")
+  reviewedAt              DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewRemarks           String?   @map("review_remarks") @db.Text
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   scholarshipConfig ScholarshipConfig @relation(fields: [scholarshipConfigId], references: [id])
   student           Student           @relation(fields: [studentId], references: [id])
-  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
+  application       Application       @relation(fields: [applicationId], references: [id])
   reviewer          StaffMember?      @relation(fields: [reviewedBy], references: [id])
 
-  @@unique([scholarshipConfigId, studentId, applicationCourseId], name: "uq_scholarship_student_course")
+  @@unique([scholarshipConfigId, studentId, applicationId], name: "uq_scholarship_student_application")
   @@index([scholarshipConfigId], name: "idx_schapp_config")
   @@index([studentId], name: "idx_schapp_student")
-  @@index([applicationCourseId], name: "idx_schapp_app_course")
+  @@index([applicationId], name: "idx_schapp_application")
   @@index([status], name: "idx_schapp_status")
   @@map("scholarship_applications")
 }

@@ -25,3 +25,4 @@ export * from "./media-kit";
 export * from "./education-board";
 export * from "./icon";
 export * from "./interview";
+export * from "./scholarships";

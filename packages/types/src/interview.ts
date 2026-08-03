@@ -107,7 +107,19 @@ export type InterviewOutcome = "recommended" | "not_recommended";
 
 export interface InterviewBookingItem {
   id: string;
-  applicationCourseId: string;
+  // One shared booking per whole Application (not per course) — an
+  // Application can carry several courses via "Add Course". Each course
+  // still has its own independent pipeline status (e.g. one could be
+  // interview_completed while another hasn't reached that stage yet), so
+  // shortlisting stays a distinct, per-course staff action taken after
+  // this shared interview.
+  applicationId: string;
+  applicationNumber: string;
+  courses: {
+    applicationCourseId: string;
+    courseName: string;
+    status: string;
+  }[];
   studentId: string;
   studentName: string;
   /** The student's own phone number, for the interviewer's reference. */
@@ -129,7 +141,7 @@ export interface InterviewBookingItem {
 }
 
 export interface BookInterviewSlotInput {
-  application_course_id: string;
+  application_id: string;
   slot_id: string;
 }
 

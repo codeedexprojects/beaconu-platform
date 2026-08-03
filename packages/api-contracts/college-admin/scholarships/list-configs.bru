@@ -1,0 +1,21 @@
+meta {
+  name: List Scholarships
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/scholarships/configs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Every scholarship category this college has ever created, active and
+  inactive alike — admin sees everything, unlike the student-facing browse
+  endpoint which defaults to active-only.
+}

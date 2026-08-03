@@ -64,29 +64,33 @@ model InterviewSettings {
 }
 
 model InterviewBooking {
-  id                  String    @id @default(dbgenerated("('IBK-'::text || (nextval('interview_booking_seq'::regclass))::text)"))
-  applicationCourseId String    @unique @map("application_course_id")
-  studentId           String    @map("student_id")
-  slotId              String    @map("slot_id")
-  status              String    @default("booked") @db.VarChar(20)
-  interviewScore      Decimal?  @map("interview_score") @db.Decimal(5, 2)
-  interviewRemarks    String?   @map("interview_remarks") @db.Text
-  interviewOutcome    String?   @map("interview_outcome") @db.VarChar(20)
-  evaluatedBy         String?   @map("evaluated_by")
-  evaluatedAt         DateTime? @map("evaluated_at") @db.Timestamptz
-  bookedAt            DateTime  @default(now()) @map("booked_at") @db.Timestamptz
-  completedAt         DateTime? @map("completed_at") @db.Timestamptz
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id               String    @id @default(dbgenerated("('IBK-'::text || (nextval('interview_booking_seq'::regclass))::text)"))
+  // One booking per whole Application (not per course) — an Application
+  // can carry several courses via "Add Course", but a student sits one
+  // shared interview covering all of them, mirroring the scholarship
+  // module's same Application-level linkage.
+  applicationId    String    @unique @map("application_id")
+  studentId        String    @map("student_id")
+  slotId           String    @map("slot_id")
+  status           String    @default("booked") @db.VarChar(20)
+  interviewScore   Decimal?  @map("interview_score") @db.Decimal(5, 2)
+  interviewRemarks String?   @map("interview_remarks") @db.Text
+  interviewOutcome String?   @map("interview_outcome") @db.VarChar(20)
+  evaluatedBy      String?   @map("evaluated_by")
+  evaluatedAt      DateTime? @map("evaluated_at") @db.Timestamptz
+  bookedAt         DateTime  @default(now()) @map("booked_at") @db.Timestamptz
+  completedAt      DateTime? @map("completed_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  applicationCourse ApplicationCourse     @relation(fields: [applicationCourseId], references: [id])
-  student           Student               @relation(fields: [studentId], references: [id])
-  slot              InterviewSlot         @relation(fields: [slotId], references: [id])
-  evaluator         StaffMember?          @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
-  reschedules       InterviewReschedule[]
+  application Application           @relation(fields: [applicationId], references: [id])
+  student     Student               @relation(fields: [studentId], references: [id])
+  slot        InterviewSlot         @relation(fields: [slotId], references: [id])
+  evaluator   StaffMember?          @relation("EvaluatedByStaff", fields: [evaluatedBy], references: [id])
+  reschedules InterviewReschedule[]
 
-  @@index([applicationCourseId], name: "idx_ibookings_app_course")
+  @@index([applicationId], name: "idx_ibookings_application")
   @@index([studentId], name: "idx_ibookings_student")
   @@index([slotId], name: "idx_ibookings_slot")
   @@index([status], name: "idx_ibookings_status")

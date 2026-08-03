@@ -32,6 +32,11 @@ export const QUERY_KEYS = {
     status ? ["interview-bookings", status] : ["interview-bookings"],
   interviewReschedules: (status?: string) =>
     status ? ["interview-reschedules", status] : ["interview-reschedules"],
+  scholarshipConfigs: ["scholarship-configs"] as const,
+  scholarshipApplications: (status?: string) =>
+    status
+      ? ["scholarship-applications", status]
+      : ["scholarship-applications"],
   commutes: ["college-commutes"] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,

@@ -36,7 +36,16 @@ const SLOT_SELECT = {
 
 const BOOKING_SELECT = {
   id: true,
-  applicationCourseId: true,
+  applicationId: true,
+  application: {
+    select: {
+      applicationNumber: true,
+      applicationCourses: {
+        where: { status: { not: "withdrawn" } },
+        select: { id: true, status: true, course: { select: { name: true } } },
+      },
+    },
+  },
   studentId: true,
   student: { select: { fullName: true, phoneNumber: true } },
   slotId: true,
@@ -54,7 +63,7 @@ const BOOKING_SELECT = {
 export class InterviewBookingRepository {
   static async create(
     tx: Prisma.TransactionClient,
-    data: { applicationCourseId: string; studentId: string; slotId: string },
+    data: { applicationId: string; studentId: string; slotId: string },
   ) {
     return tx.interviewBooking.create({
       data,
@@ -69,9 +78,9 @@ export class InterviewBookingRepository {
     });
   }
 
-  static async findByApplicationCourseId(applicationCourseId: string) {
+  static async findByApplicationId(applicationId: string) {
     return prisma.interviewBooking.findUnique({
-      where: { applicationCourseId },
+      where: { applicationId },
       select: BOOKING_SELECT,
     });
   }

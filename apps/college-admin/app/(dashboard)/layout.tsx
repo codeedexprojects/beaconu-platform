@@ -26,6 +26,7 @@ import {
   Video,
   Mic,
   Image as ImageIcon,
+  Award,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -396,6 +397,12 @@ export default function DashboardLayout({
                     name: "Interviews",
                     path: "/interviews",
                     icon: Video,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Scholarships",
+                    path: "/scholarships",
+                    icon: Award,
                     permission: "staff.view",
                   },
                   {

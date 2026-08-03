@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { InterviewBookingRepository } from "../repositories/interview-booking.repository";
 import { InterviewSlotRepository } from "../repositories/interview-slot.repository";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
+import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { InterviewSlotService, mapSlot } from "./interview-slot.service";
 import { InterviewSettingsService } from "./interview-settings.service";
 import type {
@@ -10,8 +11,8 @@ import type {
   InterviewBookingItem,
 } from "@beaconu/types";
 
-// A course is eligible to book an interview once its assessment stage is
-// done, or if it's already at interview_pending (re-booking after a
+// A course is eligible for the shared interview once its assessment stage
+// is done, or if it's already at interview_pending (re-booking after a
 // cancelled booking) — forward-compatible with whatever review stage
 // precedes this, same reasoning as AttemptService.start()'s course-status
 // gate in the assessments module.
@@ -33,7 +34,13 @@ async function mapBooking(row: BookingRow): Promise<InterviewBookingItem> {
     row.slot.mode === "gmeet" ? settings.gmeet : settings.onCampus;
   return {
     id: row.id,
-    applicationCourseId: row.applicationCourseId,
+    applicationId: row.applicationId,
+    applicationNumber: row.application.applicationNumber,
+    courses: row.application.applicationCourses.map((ac) => ({
+      applicationCourseId: ac.id,
+      courseName: ac.course.name,
+      status: ac.status,
+    })),
     studentId: row.studentId,
     studentName: row.student.fullName,
     studentPhone: row.student.phoneNumber,
@@ -67,31 +74,32 @@ export class InterviewBookingService {
 
   static async bookSlot(
     studentId: string,
-    data: { application_course_id: string; slot_id: string },
+    data: { application_id: string; slot_id: string },
   ) {
-    const course = await ApplicationCourseService.getForStudentWithStatus(
-      data.application_course_id,
-      studentId,
-    );
-    if (!BOOKABLE_STATUSES.has(course.status)) {
+    const application =
+      await ApplicationService.getForStudentWithCourseStatuses(
+        data.application_id,
+        studentId,
+      );
+    if (!application.courses.some((c) => BOOKABLE_STATUSES.has(c.status))) {
       throw new ConflictError(
-        "This course is not currently at the interview stage",
+        "This application is not currently at the interview stage",
       );
     }
 
-    const existing = await InterviewBookingRepository.findByApplicationCourseId(
-      data.application_course_id,
+    const existing = await InterviewBookingRepository.findByApplicationId(
+      data.application_id,
     );
     if (existing) {
       throw new ConflictError(
-        "You already have an interview booking for this course",
+        "You already have an interview booking for this application",
       );
     }
 
     const slot = await InterviewSlotRepository.findById(data.slot_id);
     if (
       !slot ||
-      slot.collegeId !== course.collegeId ||
+      slot.collegeId !== application.collegeId ||
       slot.status !== "active"
     ) {
       throw new NotFoundError("Interview slot not found");
@@ -106,15 +114,25 @@ export class InterviewBookingService {
         throw new ConflictError("This interview slot is fully booked");
       }
       return InterviewBookingRepository.create(tx, {
-        applicationCourseId: data.application_course_id,
+        applicationId: data.application_id,
         studentId,
         slotId: data.slot_id,
       });
     });
 
-    await ApplicationCourseService.markInterviewPending(
-      data.application_course_id,
-      studentId,
+    // Advance every course that was actually eligible (assessment_completed
+    // → interview_pending) — courses not yet at that stage are left alone,
+    // and markInterviewPending is a no-op for ones already there (e.g. a
+    // re-booking after cancellation).
+    await Promise.all(
+      application.courses
+        .filter((c) => BOOKABLE_STATUSES.has(c.status))
+        .map((c) =>
+          ApplicationCourseService.markInterviewPending(
+            c.applicationCourseId,
+            studentId,
+          ),
+        ),
     );
 
     // First booking against this slot is what actually creates the
@@ -127,11 +145,9 @@ export class InterviewBookingService {
     return mapBooking(finalBooking!);
   }
 
-  static async getMine(studentId: string, applicationCourseId: string) {
+  static async getMine(studentId: string, applicationId: string) {
     const booking =
-      await InterviewBookingRepository.findByApplicationCourseId(
-        applicationCourseId,
-      );
+      await InterviewBookingRepository.findByApplicationId(applicationId);
     if (!booking || booking.studentId !== studentId) {
       throw new NotFoundError("Interview booking not found");
     }
@@ -191,9 +207,23 @@ export class InterviewBookingService {
       evaluatedBy: staffId,
     });
 
-    await ApplicationCourseService.markInterviewCompleted(
-      booking.applicationCourseId,
-      staffId,
+    // Advance every course still awaiting this outcome — courses not at
+    // interview_pending (e.g. never eligible in the first place) are left
+    // untouched.
+    const application =
+      await ApplicationService.getForCollegeWithCourseStatuses(
+        booking.applicationId,
+        collegeId,
+      );
+    await Promise.all(
+      application.courses
+        .filter((c) => c.status === "interview_pending")
+        .map((c) =>
+          ApplicationCourseService.markInterviewCompleted(
+            c.applicationCourseId,
+            staffId,
+          ),
+        ),
     );
 
     return mapBooking(updated);

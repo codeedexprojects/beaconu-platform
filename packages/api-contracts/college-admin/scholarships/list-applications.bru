@@ -1,0 +1,41 @@
+meta {
+  name: List Scholarship Applications
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/scholarships/applications
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~status: pending
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("scholarshipApplicationId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Every scholarship request submitted by students at this college — the
+  admin review dashboard. Optional `status` filter: "pending" | "approved"
+  | "rejected" (omit for all).
+
+  Each entry includes the student's own reason for applying (`reason`),
+  their stated `annualFamilyIncomeRange`, `supportingDocuments` (uploaded
+  against the scholarship's `required_documents` checklist), and
+  `courseNames` — every non-withdrawn course on the Application this
+  request is for (an Application can carry several) — everything needed
+  to review without a second call.
+}

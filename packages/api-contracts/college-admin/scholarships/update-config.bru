@@ -1,0 +1,37 @@
+meta {
+  name: Update Scholarship
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/scholarships/configs/{{scholarshipConfigId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "is_active": false
+  }
+}
+
+docs {
+  Updates any subset of a scholarship's fields (name, scholarship_type,
+  discount_type, discount_value, required_documents, is_active). Setting
+  `is_active: false` is the soft-disable — hides it from the student
+  browse endpoint, doesn't touch any application already submitted
+  against it.
+
+  `required_documents`, if included, must still have at least one entry —
+  it can be omitted to leave the checklist unchanged, but can't be sent as
+  `[]` to clear it out (400 ValidationError).
+}

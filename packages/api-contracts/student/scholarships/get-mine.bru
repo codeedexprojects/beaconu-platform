@@ -1,0 +1,22 @@
+meta {
+  name: Get My Scholarship Application
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/scholarships/applications/{{scholarshipApplicationId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Fetches one of the student's own scholarship applications by id — 404 if
+  it doesn't exist or belongs to someone else. `status` is "pending" until
+  the college reviews it; once reviewed, check `discountAmount`,
+  `reviewedAt`, and `reviewRemarks`.
+}
