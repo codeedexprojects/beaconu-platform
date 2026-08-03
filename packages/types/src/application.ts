@@ -71,8 +71,8 @@ export type InterviewStatusValue =
 /** Application-level, not per-course — a student interviews once for the
  * whole application, resolved off its primary course's booking (the
  * course that drives the rest of the pipeline). `not_scheduled` (every
- * field null) until the interviews module actually books one —
- * schema-only today, no API writes InterviewBooking yet. */
+ * field null) simply means the student hasn't booked an Interview Slot
+ * yet — the interviews module itself is fully built. */
 export interface ApplicationInterviewStatus {
   status: InterviewStatusValue;
   scheduledAt: string | null;
@@ -93,6 +93,33 @@ export interface ApplicationAmountDetails {
   tokenPaymentStatus: string | null;
   validUntil: string | null;
   documentUrl: string | null;
+}
+
+/** One document requirement's status — mirrors Get Required Documents'
+ * per-item shape, minus acceptedMimeTypes/rejectionReason (call that
+ * endpoint directly for the upload form itself; this is just the
+ * onboarding-overview summary). */
+export interface ApplicationDocumentStatusItem {
+  documentType: string;
+  documentLabel: string;
+  isRequired: boolean;
+  uploaded: boolean;
+  verificationStatus: string | null;
+}
+
+/** Application-level — the same applicable-document checklist Get
+ * Required Documents computes, summarized into counts + a compact list so
+ * the full onboarding overview doesn't need a second call. Not part of
+ * `pendingAction`'s sequence (Submit Application doesn't require
+ * documents, and currentStep doesn't track them) — this is the section
+ * that actually surfaces "N of M uploaded" instead. */
+export interface ApplicationDocumentsStatus {
+  totalRequired: number;
+  uploadedCount: number;
+  missingCount: number;
+  pendingVerificationCount: number;
+  rejectedCount: number;
+  items: ApplicationDocumentStatusItem[];
 }
 
 export interface ApplicationStatusCourse {
@@ -133,6 +160,7 @@ export interface ApplicationStatusApplication {
  * `application` rather than nested inside it. */
 export interface ApplicationStatusSummary {
   application: ApplicationStatusApplication;
+  documents: ApplicationDocumentsStatus;
   assessment: ApplicationAssessmentStatus;
   interview: ApplicationInterviewStatus;
   amountDetails: ApplicationAmountDetails;

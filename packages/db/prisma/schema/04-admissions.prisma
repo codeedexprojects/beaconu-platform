@@ -128,16 +128,23 @@ model Application {
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  student            Student               @relation(fields: [studentId], references: [id])
-  college            College               @relation(fields: [collegeId], references: [id])
-  campus             Campus?               @relation(fields: [campusId], references: [id])
-  admissionCycle     AdmissionCycle        @relation(fields: [admissionCycleId], references: [id])
-  referralCode       ReferralCode?         @relation(fields: [referralCodeId], references: [id])
-  applicationCourses ApplicationCourse[]
-  documents          ApplicationDocument[]
+  student                 Student                  @relation(fields: [studentId], references: [id])
+  college                 College                  @relation(fields: [collegeId], references: [id])
+  campus                  Campus?                  @relation(fields: [campusId], references: [id])
+  admissionCycle          AdmissionCycle           @relation(fields: [admissionCycleId], references: [id])
+  referralCode            ReferralCode?            @relation(fields: [referralCodeId], references: [id])
+  applicationCourses      ApplicationCourse[]
+  documents               ApplicationDocument[]
   // One assessment attempt per Application (covers every course listed on
   // it), not per ApplicationCourse.
-  assessmentAttempts AssessmentAttempt[]
+  assessmentAttempts      AssessmentAttempt[]
+  // Scholarship applies to the whole Application (a student may have
+  // several courses on one Application, at different pipeline stages),
+  // not one specific course — see ScholarshipApplicationService.
+  scholarshipApplications ScholarshipApplication[]
+  // One shared interview booking per Application (covers every course
+  // listed on it) — see InterviewBookingService.
+  interviewBooking        InterviewBooking?
 
   // A student can have several Applications for the same cycle now (one
   // per course, enforced at the service layer against the whole COLLEGE,
@@ -170,17 +177,15 @@ model ApplicationCourse {
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  application             Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  course                  Course                   @relation(fields: [courseId], references: [id])
-  courseQuotaSeat         CourseQuotaSeats?        @relation(fields: [courseQuotaSeatId], references: [id])
-  statusLogs              ApplicationStatusLog[]
-  interviewBooking        InterviewBooking?
-  offerLetter             OfferLetter?
-  seatCancellations       SeatCancellation[]
-  enrollment              Enrollment?
-  referral                Referral?
-  scholarshipApplications ScholarshipApplication[]
-  studentFeeLedger        StudentFeeLedger[]
+  application       Application            @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  course            Course                 @relation(fields: [courseId], references: [id])
+  courseQuotaSeat   CourseQuotaSeats?      @relation(fields: [courseQuotaSeatId], references: [id])
+  statusLogs        ApplicationStatusLog[]
+  offerLetter       OfferLetter?
+  seatCancellations SeatCancellation[]
+  enrollment        Enrollment?
+  referral          Referral?
+  studentFeeLedger  StudentFeeLedger[]
 
   @@unique([applicationId, courseId], name: "uq_application_course")
   @@index([applicationId], name: "idx_app_courses_application")

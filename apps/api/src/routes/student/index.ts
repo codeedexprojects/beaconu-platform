@@ -21,6 +21,7 @@ import studentAdmissionCycleRoutes from "@/modules/admissions/routes/student.rou
 import studentAssessmentRoutes from "@/modules/assessments/routes/student.routes";
 import studentPaymentRoutes from "@/modules/payments/routes/student.routes";
 import studentInterviewRoutes from "@/modules/interviews/routes/student.routes";
+import studentScholarshipRoutes from "@/modules/scholarships/routes/student.routes";
 
 const router: Router = Router();
 
@@ -47,6 +48,7 @@ router.use("/application-forms", studentAdmissionCycleRoutes);
 router.use("/assessments", studentAssessmentRoutes);
 router.use("/payments", studentPaymentRoutes);
 router.use("/interviews", studentInterviewRoutes);
+router.use("/scholarships", studentScholarshipRoutes);
 router.use("/", studentProfileRoutes);
 
 export default router;

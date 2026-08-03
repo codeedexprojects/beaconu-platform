@@ -5,6 +5,7 @@ import { ApplicationCourseRepository } from "../repositories/application-course.
 import { ApplicationCourseService } from "./application-course.service";
 import { StudentsService } from "@/modules/students/services/students.service";
 import { AttemptService } from "@/modules/assessments/services/attempt.service";
+import { ApplicationDocumentService } from "./application-document.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -112,6 +113,43 @@ async function resolveAssessmentStatus(studentId: string, row: StatusRow) {
   return attempt;
 }
 
+/** Summarizes the same applicable-document checklist Get Required Documents
+ * already computes (same module, reused directly) into counts + a compact
+ * per-document list — so the onboarding overview covers documents too,
+ * not just application/assessment/interview/offer. */
+async function resolveDocumentsStatus(
+  applicationId: string,
+  studentId: string,
+) {
+  const required = await ApplicationDocumentService.listRequired(
+    applicationId,
+    studentId,
+  );
+  const requiredOnly = required.filter((d) => d.isRequired);
+  const uploadedCount = requiredOnly.filter((d) => d.uploaded !== null).length;
+  const rejectedCount = requiredOnly.filter(
+    (d) => d.uploaded?.verificationStatus === "rejected",
+  ).length;
+  const pendingVerificationCount = requiredOnly.filter(
+    (d) => d.uploaded?.verificationStatus === "pending",
+  ).length;
+
+  return {
+    totalRequired: requiredOnly.length,
+    uploadedCount,
+    missingCount: requiredOnly.length - uploadedCount,
+    pendingVerificationCount,
+    rejectedCount,
+    items: required.map((d) => ({
+      documentType: d.documentType,
+      documentLabel: d.documentLabel,
+      isRequired: d.isRequired,
+      uploaded: d.uploaded !== null,
+      verificationStatus: d.uploaded?.verificationStatus ?? null,
+    })),
+  };
+}
+
 const NOT_SCHEDULED_INTERVIEW = {
   status: "not_scheduled" as const,
   scheduledAt: null,
@@ -167,22 +205,18 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
     row.applicationCourses.find((ac) => ac.isPrimary) ??
     row.applicationCourses[0];
 
-  const [assessment, interviewBookings, offerLetters] = await Promise.all([
+  const [assessment, booking, offerLetters, documents] = await Promise.all([
     resolveAssessmentStatus(studentId, row),
-    ApplicationRepository.findInterviewBookingsByCourseIds(
-      applicationCourseIds,
-    ),
+    ApplicationRepository.findInterviewBookingForApplication(row.id),
     ApplicationRepository.findOfferLettersByCourseIds(applicationCourseIds),
+    resolveDocumentsStatus(row.id, studentId),
   ]);
 
-  // Interview + token/offer are whole-application concepts (a student
-  // interviews once, gets one token amount, not one per course) — even
-  // though the underlying tables are keyed per ApplicationCourse, resolve
-  // both off the primary course only, the one driving the rest of the
-  // pipeline.
-  const booking = primaryCourse
-    ? interviewBookings.find((b) => b.applicationCourseId === primaryCourse.id)
-    : undefined;
+  // Token/offer is still keyed per ApplicationCourse (unaffected by this
+  // rework) — resolve off the primary course, same as before. Interview is
+  // now a genuine whole-Application concept at the schema level (one
+  // shared InterviewBooking per Application), so no per-course lookup is
+  // needed anymore.
   const offer = primaryCourse
     ? offerLetters.find((o) => o.applicationCourseId === primaryCourse.id)
     : undefined;
@@ -245,6 +279,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
     assessment,
     interview,
     amountDetails,
+    documents,
   };
 }
 
@@ -656,5 +691,55 @@ export class ApplicationService {
     );
     if (!row) throw new NotFoundError("Application");
     return toDto(row);
+  }
+
+  /** Cross-module read for other modules (e.g. scholarships) that need to
+   * verify ownership + inspect every non-withdrawn course's status on an
+   * Application, without duplicating a raw Prisma query for a table this
+   * module already owns. */
+  static async getForStudentWithCourseStatuses(
+    applicationId: string,
+    studentId: string,
+  ) {
+    const row = await ApplicationRepository.findByIdWithCoursesForStudent(
+      applicationId,
+      studentId,
+    );
+    if (!row) throw new NotFoundError("Application not found");
+    return {
+      id: row.id,
+      collegeId: row.collegeId,
+      applicationNumber: row.applicationNumber,
+      courses: row.applicationCourses.map((ac) => ({
+        applicationCourseId: ac.id,
+        status: ac.status,
+        courseName: ac.course.name,
+      })),
+    };
+  }
+
+  /** College-scoped counterpart to getForStudentWithCourseStatuses, for
+   * staff-driven flows (e.g. InterviewBookingService.completeInterview)
+   * that have no student identity to check ownership against — scoped by
+   * collegeId instead. */
+  static async getForCollegeWithCourseStatuses(
+    applicationId: string,
+    collegeId: string,
+  ) {
+    const row = await ApplicationRepository.findByIdWithCoursesForCollege(
+      applicationId,
+      collegeId,
+    );
+    if (!row) throw new NotFoundError("Application not found");
+    return {
+      id: row.id,
+      collegeId: row.collegeId,
+      applicationNumber: row.applicationNumber,
+      courses: row.applicationCourses.map((ac) => ({
+        applicationCourseId: ac.id,
+        status: ac.status,
+        courseName: ac.course.name,
+      })),
+    };
   }
 }

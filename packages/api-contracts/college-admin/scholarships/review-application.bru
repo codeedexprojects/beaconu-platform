@@ -1,0 +1,38 @@
+meta {
+  name: Review Scholarship Application
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/scholarships/applications/{{scholarshipApplicationId}}/review
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "action": "approve",
+    "discount_amount": 15000,
+    "review_remarks": "Verified income certificate, approved at full requested amount."
+  }
+}
+
+docs {
+  Approve or reject a scholarship request. 409 ConflictError if it's
+  already been reviewed (one-shot — no re-review/undo).
+
+  `discount_amount` (approve only, optional) — the actual amount awarded;
+  if omitted, no discount_amount is recorded (the college can still
+  reference the scholarship's own discount_type/discount_value as the
+  default). `review_remarks` is the admin's internal note, separate from
+  the student's own `reason` for applying.
+}

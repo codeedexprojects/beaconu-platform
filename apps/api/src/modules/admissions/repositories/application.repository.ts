@@ -85,6 +85,52 @@ export class ApplicationRepository {
     });
   }
 
+  /** For other modules that need "does this student own this application,
+   * and which colleges/courses is it tied to" without duplicating a raw
+   * Prisma read of their own — e.g. ScholarshipApplicationService's
+   * eligibility check (any non-withdrawn course on the application). */
+  static async findByIdWithCoursesForStudent(id: string, studentId: string) {
+    return prisma.application.findFirst({
+      where: { id, studentId },
+      select: {
+        id: true,
+        collegeId: true,
+        applicationNumber: true,
+        applicationCourses: {
+          where: { status: { not: "withdrawn" } },
+          select: {
+            id: true,
+            status: true,
+            course: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }
+
+  /** Same shape as findByIdWithCoursesForStudent, but scoped by collegeId
+   * instead of studentId — for staff-driven flows (e.g. college-admin
+   * completing an interview) that have no student identity to check
+   * ownership against. */
+  static async findByIdWithCoursesForCollege(id: string, collegeId: string) {
+    return prisma.application.findFirst({
+      where: { id, collegeId },
+      select: {
+        id: true,
+        collegeId: true,
+        applicationNumber: true,
+        applicationCourses: {
+          where: { status: { not: "withdrawn" } },
+          select: {
+            id: true,
+            status: true,
+            course: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }
+
   /** applicationNumber is @unique @db.VarChar(30) with no DB default, so we
    * seed it with a throwaway placeholder (guaranteed unique, fits the column)
    * and overwrite it right after with the human-readable number derived from
@@ -294,16 +340,13 @@ export class ApplicationRepository {
     });
   }
 
-  /** Cross-module read into `interviews`' own table — that module has no
-   * service layer yet (schema-only), so this duplicates a minimal direct
-   * read here rather than inventing a fake service call, matching the
-   * precedent in payments/repositories/application-payment.repository.ts. */
-  static async findInterviewBookingsByCourseIds(
-    applicationCourseIds: string[],
-  ) {
-    if (applicationCourseIds.length === 0) return [];
-    return prisma.interviewBooking.findMany({
-      where: { applicationCourseId: { in: applicationCourseIds } },
+  /** Cross-module read into `interviews`' own table (no service method
+   * fits this exact shape) — InterviewBooking is now keyed directly by
+   * applicationId (one shared booking per whole Application), so this is
+   * a single findFirst, not a per-course join. */
+  static async findInterviewBookingForApplication(applicationId: string) {
+    return prisma.interviewBooking.findFirst({
+      where: { applicationId },
       include: { slot: { select: { scheduledDate: true } } },
     });
   }

@@ -1,0 +1,54 @@
+meta {
+  name: Create Scholarship
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/scholarships/configs
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Merit Scholarship",
+    "scholarship_type": "merit",
+    "discount_type": "percentage",
+    "discount_value": 20,
+    "required_documents": ["Income Certificate", "Marksheet"]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("scholarshipConfigId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a scholarship "category" a college offers. `required_documents`
+  is just a checklist of document NAMES the student must attach when
+  applying (e.g. "Income Certificate") — not files themselves; students
+  upload against this checklist via the generic upload flow when applying.
+  **Required — at least one document name** (400 ValidationError
+  otherwise); a scholarship can't be created with an empty checklist.
+
+  `discount_type`: "flat" | "percentage". `discount_value` must be > 0,
+  and <= 100 if `discount_type` is "percentage".
+
+  Created active by default — use Update Scholarship's `is_active` to
+  disable one without deleting it (soft toggle, matches the rest of the
+  codebase's no-hard-delete convention).
+}

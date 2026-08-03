@@ -1,0 +1,31 @@
+meta {
+  name: List Available Scholarships
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/scholarships/configs?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+  ~active_only: true
+}
+
+docs {
+  Browse the scholarships a college currently offers — `college_id` is
+  required (students aren't scoped to one college via their session).
+  Defaults to active-only (`active_only` defaults to true); each entry's
+  `requiredDocuments` tells you which document names to attach when
+  applying.
+
+  Applying is entirely optional — nothing about the admission flow
+  requires it, and a student may simply never call the apply endpoint.
+}

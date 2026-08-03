@@ -15,10 +15,10 @@ headers {
 }
 
 docs {
-  Full cycle-level admission status — application progress, assessment,
-  interview, and token/offer amount details — one entry per Application
-  the student has here (there can be several now, one per course, see
-  Start Application).
+  Full onboarding-process status — application progress, documents,
+  assessment, interview, and token/offer amount details, all in one call —
+  one entry per Application the student has here (there can be several
+  now, one per course, see Start Application).
 
   `data` is `null` if the student hasn't started any application for this
   admission cycle yet. Otherwise an array, each entry shaped:
@@ -40,6 +40,19 @@ docs {
         { courseId, courseName, courseCode, isPrimary, status, isShortlisted }, ...
       ],
       createdAt
+    },
+
+    // The same checklist Get Required Documents already computes, reused
+    // and summarized here so a full onboarding overview doesn't need a
+    // second call. `items` mirrors Get Required Documents' shape
+    // (minus acceptedMimeTypes/rejectionReason — call that endpoint
+    // directly if you need the upload form itself).
+    documents: {
+      totalRequired, uploadedCount, missingCount,
+      pendingVerificationCount, rejectedCount,
+      items: [
+        { documentType, documentLabel, isRequired, uploaded, verificationStatus }, ...
+      ]
     },
 
     // One assessment attempt covers the WHOLE application (every course
@@ -76,13 +89,18 @@ docs {
     Application)
   - formStatus "submitted" -> "none"
 
-  Documents are NOT part of this sequence (Submit doesn't require them and
-  currentStep doesn't track them) — check List Required/Uploaded Documents
-  separately for that.
+  Documents are NOT part of the pendingAction sequence above (Submit
+  doesn't require them and currentStep doesn't track them) — that's
+  exactly why the separate `documents` section exists on this response,
+  so the client can still surface "N of M documents uploaded" without a
+  second call.
 
-  interview and amountDetails will show "not_scheduled"/"not_issued" (all
-  detail fields null) for every application today — the interviews and
-  offer-letter backend modules aren't built yet (schema-only). This
-  response shape is final; those sections will start returning real data
-  automatically once those modules exist, with no further contract change.
+  `amountDetails` will show "not_issued" (all detail fields null) for
+  every application today — the offer-letter backend isn't built yet
+  (schema-only, `OfferLetter` model exists but no write flow triggers it).
+  `interview` IS live — Interview Slots/Bookings are a fully built module;
+  it'll show "not_scheduled" simply when the student hasn't booked one
+  yet. This response shape is final; `amountDetails` will start returning
+  real data automatically once the offer-letter flow is built, no further
+  contract change needed.
 }

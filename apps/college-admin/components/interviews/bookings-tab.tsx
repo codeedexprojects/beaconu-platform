@@ -34,7 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   useInterviewBookings,
   useCompleteInterview,
@@ -86,6 +85,9 @@ export function InterviewBookingsTab() {
   const [shortlisting, setShortlisting] = useState<InterviewBookingItem | null>(
     null,
   );
+  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const { data: bookings, isLoading } = useInterviewBookings(
     statusFilter || undefined,
@@ -116,14 +118,49 @@ export function InterviewBookingsTab() {
     );
   }
 
-  function confirmShortlist() {
-    if (!shortlisting) return;
-    shortlist(shortlisting.applicationCourseId, {
-      onSuccess: () => {
-        toast.success("Application course shortlisted");
-        setShortlisting(null);
-      },
+  function openShortlist(booking: InterviewBookingItem) {
+    const eligible = booking.courses.filter(
+      (c) => c.status === "interview_completed",
+    );
+    // Nothing to ask when there's only one eligible course — same
+    // single-click behavior as before this application could carry
+    // several courses.
+    setSelectedCourseIds(new Set(eligible.map((c) => c.applicationCourseId)));
+    setShortlisting(booking);
+  }
+
+  function toggleCourse(applicationCourseId: string) {
+    setSelectedCourseIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(applicationCourseId)) next.delete(applicationCourseId);
+      else next.add(applicationCourseId);
+      return next;
     });
+  }
+
+  function confirmShortlist() {
+    if (!shortlisting || selectedCourseIds.size === 0) return;
+    const ids = Array.from(selectedCourseIds);
+    Promise.all(
+      ids.map(
+        (id) =>
+          new Promise<void>((resolve, reject) =>
+            shortlist(id, {
+              onSuccess: () => resolve(),
+              onError: reject,
+            }),
+          ),
+      ),
+    )
+      .then(() => {
+        toast.success(
+          ids.length > 1 ? "Courses shortlisted" : "Course shortlisted",
+        );
+        setShortlisting(null);
+      })
+      .catch(() => {
+        setShortlisting(null);
+      });
   }
 
   return (
@@ -242,17 +279,20 @@ export function InterviewBookingsTab() {
                             Complete
                           </Button>
                         )}
-                        {booking.status === "completed" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 text-xs"
-                            onClick={() => setShortlisting(booking)}
-                          >
-                            <Star className="h-3.5 w-3.5" />
-                            Shortlist
-                          </Button>
-                        )}
+                        {booking.status === "completed" &&
+                          booking.courses.some(
+                            (c) => c.status === "interview_completed",
+                          ) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs"
+                              onClick={() => openShortlist(booking)}
+                            >
+                              <Star className="h-3.5 w-3.5" />
+                              Shortlist
+                            </Button>
+                          )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -331,20 +371,58 @@ export function InterviewBookingsTab() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <Dialog
         open={!!shortlisting}
         onOpenChange={(v) => !v && setShortlisting(null)}
-        title="Shortlist this application?"
-        description={
-          shortlisting
-            ? `"${shortlisting.studentName}" will be marked shortlisted for this course. This doesn't issue an offer letter yet.`
-            : undefined
-        }
-        confirmLabel="Shortlist"
-        variant="default"
-        isPending={isShortlisting}
-        onConfirm={confirmShortlist}
-      />
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Shortlist</DialogTitle>
+          </DialogHeader>
+          {shortlisting && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {`"${shortlisting.studentName}" — choose which course(s) on this application to shortlist. This doesn't issue an offer letter yet.`}
+              </p>
+              <div className="space-y-2 rounded-md border p-3">
+                {shortlisting.courses
+                  .filter((c) => c.status === "interview_completed")
+                  .map((c) => (
+                    <label
+                      key={c.applicationCourseId}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-input"
+                        checked={selectedCourseIds.has(c.applicationCourseId)}
+                        onChange={() => toggleCourse(c.applicationCourseId)}
+                      />
+                      {c.courseName}
+                    </label>
+                  ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShortlisting(null)}
+              disabled={isShortlisting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmShortlist}
+              disabled={isShortlisting || selectedCourseIds.size === 0}
+            >
+              {isShortlisting ? "Saving..." : "Shortlist"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,7 +10,7 @@ router.use(authenticate, authorizeUserType("student"));
 router.get("/slots", InterviewStudentController.listAvailableSlots);
 router.post("/bookings", InterviewStudentController.bookSlot);
 router.get(
-  "/bookings/course/:applicationCourseId",
+  "/bookings/application/:applicationId",
   InterviewStudentController.getMyBooking,
 );
 router.patch(

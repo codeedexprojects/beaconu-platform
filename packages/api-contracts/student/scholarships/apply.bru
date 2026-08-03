@@ -1,0 +1,65 @@
+meta {
+  name: Apply For Scholarship
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/scholarships/applications
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "scholarship_config_id": "{{scholarshipConfigId}}",
+    "application_id": "{{applicationId}}",
+    "reason": "I have consistently ranked in the top 5% of my class and would benefit greatly from financial support to continue my education.",
+    "annual_family_income_range": "2,00,000 - 5,00,000",
+    "supporting_documents": [
+      { "documentName": "Income Certificate", "fileUrl": "{{permanentUrl}}" }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("scholarshipApplicationId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Apply for a scholarship against a whole Application — not one specific
+  course on it (an Application can carry several courses via Add Course,
+  each possibly at a different pipeline stage). Entirely optional, never
+  required to proceed with an admission application.
+
+  409 ConflictError if:
+  - NONE of the application's courses have reached "shortlisted" (or
+    later — offer_issued, token_paid, enrolled) yet. You can apply once
+    AT LEAST ONE course on the application has been shortlisted.
+  - you've already applied for this exact scholarship for this
+    application (one application per scholarship+Application, but you
+    CAN apply to multiple different scholarships, or the same scholarship
+    under a different Application).
+
+  Upload each supporting document first via the existing generic student
+  upload flow (presign -> PUT -> verify), then reference the resulting
+  `permanentUrl` here alongside which required document name it satisfies
+  (see List Available Scholarships' `requiredDocuments`).
+
+  `reason` is the student's own reason for applying — shown to the
+  reviewer, distinct from the college's own internal review_remarks set
+  later at review time.
+}
