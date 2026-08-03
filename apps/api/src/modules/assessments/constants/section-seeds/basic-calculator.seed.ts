@@ -8,5 +8,5 @@ export const BASIC_CALCULATOR: SectionSeedEntry = {
       "Arithmetic, percentages, unit conversions, and general problem-solving. Course-specific — for Arts / Humanities / General Programs courses.",
     isCoreSection: false,
   },
-  questionTypeSlugs: ["mcqSingle"],
+  questionTypeSlugs: ["mcqSingle", "matchTheFollowing"],
 };

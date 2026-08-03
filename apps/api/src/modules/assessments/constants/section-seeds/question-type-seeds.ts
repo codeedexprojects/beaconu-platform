@@ -51,6 +51,24 @@ export const QUESTION_TYPE_SEEDS: Record<string, QuestionTypeSeed> = {
     hasPassage: true,
     autoScorable: true,
   },
+  // Course-specific — offered only on calculator sections (isCoreSection:
+  // false), so every question of this type must have course_ids mapped,
+  // per the existing calculator-section rule. Reuses the exact same
+  // content/answerKey/response mechanic as the fill-blank types (left
+  // items -> content.blanks, right-column pool -> content.options,
+  // pairing -> answerKey/response.blankAnswers) — see FILL_BLANK_FORMATS
+  // in lib/scoring.ts and question-bank.service.ts.
+  matchTheFollowing: {
+    slug: "matchTheFollowing",
+    name: "Match the Following",
+    category: "selection",
+    responseFormat: "matching",
+    answerFormat: "matchPairSelection",
+    hasAudio: false,
+    hasImage: false,
+    hasPassage: false,
+    autoScorable: true,
+  },
   essay: {
     slug: "essay",
     name: "Writing Essay",

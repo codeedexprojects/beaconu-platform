@@ -46,6 +46,9 @@ export type PromptType = "text" | "audio";
 export interface QuestionBlank {
   id: string;
   label?: string;
+  // "matching" only — a left-column item can be an image instead of (or
+  // alongside) text, e.g. "match this picture to its label."
+  imageUrl?: string;
 }
 
 export interface QuestionContent {
