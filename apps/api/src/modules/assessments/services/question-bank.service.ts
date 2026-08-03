@@ -19,7 +19,13 @@ const ORDERED_FORMATS = ["ranking", "sequence"];
 // responseFormat as their non-audio counterparts (fill_blank_dropdown/
 // fill_blank_drag_drop) — the audio flag (hasAudio) is what distinguishes
 // them, not a separate format value.
-const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
+// "matching" (Match the Following) reuses this exact validation — see
+// lib/scoring.ts's FILL_BLANK_FORMATS for why.
+const FILL_BLANK_FORMATS = [
+  "fill_blank_drag_drop",
+  "fill_blank_dropdown",
+  "matching",
+];
 
 export class QuestionBankService {
   private static async loadSection(collegeId: string, sectionSlug: string) {

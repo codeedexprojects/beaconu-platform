@@ -6,7 +6,15 @@ import type {
 
 const CHOICE_FORMATS = ["single_choice", "multi_choice"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
-const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
+// "matching" (Match the Following) reuses this exact mechanic — content
+// options/blanks + answerKey/response blankAnswers — a pairing between two
+// sets is structurally identical whether it's "fill this blank" or "match
+// this left item," all-or-nothing scored the same way.
+const FILL_BLANK_FORMATS = [
+  "fill_blank_drag_drop",
+  "fill_blank_dropdown",
+  "matching",
+];
 
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;

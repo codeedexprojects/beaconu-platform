@@ -8,5 +8,5 @@ export const SCIENTIFIC_CALCULATOR: SectionSeedEntry = {
       "Problems requiring trigonometric, logarithmic, and exponential computations. Course-specific — for Engineering / Sciences / Technology courses.",
     isCoreSection: false,
   },
-  questionTypeSlugs: ["mcqSingle"],
+  questionTypeSlugs: ["mcqSingle", "matchTheFollowing"],
 };

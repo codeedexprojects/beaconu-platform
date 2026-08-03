@@ -12,6 +12,9 @@ const questionOptionSchema = z.object({
 const questionBlankSchema = z.object({
   id: z.string().trim().min(1),
   label: z.string().trim().max(100).optional(),
+  // "matching" only — a left-column item can be an image instead of (or
+  // alongside) text, e.g. "match this picture to its label."
+  imageUrl: z.string().trim().url().optional(),
 });
 
 const questionContentSchema = z.object({

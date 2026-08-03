@@ -4,7 +4,7 @@
  * college CLG-10, wires them into an approved paper + active slot, points
  * admission cycle ACV-3 at that template, and creates a ready-to-answer
  * ("in_progress") attempt for STU-1 — so the full take-test flow can be
- * exercised end to end against all 22 types with no further manual setup.
+ * exercised end to end against all 23 types with no further manual setup.
  *
  * Enables every assessment section for CLG-10 first (idempotent — always
  * calls toggle(true) even if a section is already active, since
@@ -647,12 +647,44 @@ async function main() {
     [COURSE_ID],
   );
 
+  // -- course-scoped Match the Following example — reuses the exact
+  // fill-blank mechanic (content.blanks = left column, content.options =
+  // right column, answerKey.blankAnswers pairs them), see
+  // FILL_BLANK_FORMATS in lib/scoring.ts and question-bank.service.ts.
+  await seed(
+    "SCIENTIFIC-CALC-MATCHING",
+    "matchTheFollowing",
+    "scientific-calculator",
+    {
+      text: "Match each SI unit to the quantity it measures.",
+      options: [
+        { id: "q1", text: "Length" },
+        { id: "q2", text: "Mass" },
+        { id: "q3", text: "Time" },
+        { id: "q4", text: "Temperature" },
+      ],
+      blanks: [
+        { id: "u1", label: "Meter" },
+        { id: "u2", label: "Kilogram" },
+        { id: "u3", label: "Second" },
+      ],
+    },
+    {
+      blankAnswers: [
+        { blankId: "u1", optionId: "q1" },
+        { blankId: "u2", optionId: "q2" },
+        { blankId: "u3", optionId: "q3" },
+      ],
+    },
+    [COURSE_ID],
+  );
+
   const templateId = await ensureTemplate(sectionIds, questionsBySection);
   const paperId = await ensurePaper(templateId, questionsBySection);
   const slotId = await ensureSlot(templateId);
 
   console.log(
-    `Seeded ${created.length} questions (all 22 canonical types + 1 course-scoped example) for CLG-10:`,
+    `Seeded ${created.length} questions (all 23 canonical types + 1 course-scoped mcqSingle example) for CLG-10:`,
   );
   for (const line of created) console.log(`  ${line}`);
   console.log(`\nTemplate: ${templateId}`);

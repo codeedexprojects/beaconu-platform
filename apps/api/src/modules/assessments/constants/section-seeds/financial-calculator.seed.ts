@@ -8,5 +8,5 @@ export const FINANCIAL_CALCULATOR: SectionSeedEntry = {
       "Interest calculations, amortisation, NPV, IRR, and financial ratio problems. Course-specific — for Commerce / Finance / MBA / Economics courses.",
     isCoreSection: false,
   },
-  questionTypeSlugs: ["mcqSingle"],
+  questionTypeSlugs: ["mcqSingle", "matchTheFollowing"],
 };

@@ -149,6 +149,10 @@ export default function AssessmentSectionQuestionsPage() {
   const [options, setOptions] = useState<QuestionOption[]>([]);
   const [correctOptionIds, setCorrectOptionIds] = useState<string[]>([]);
   const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>({});
+  const [matchLeftItems, setMatchLeftItems] = useState<QuestionBlank[]>([]);
+  const [uploadingMatchItemId, setUploadingMatchItemId] = useState<
+    string | null
+  >(null);
   const [deleting, setDeleting] = useState<QuestionItem | null>(null);
   const [page, setPage] = useState(1);
 
@@ -179,14 +183,19 @@ export default function AssessmentSectionQuestionsPage() {
     !!selectedType && ORDERED_FORMATS.includes(selectedType.responseFormat);
   const isFillBlank =
     !!selectedType && FILL_BLANK_FORMATS.includes(selectedType.responseFormat);
+  const isMatching = selectedType?.responseFormat === "matching";
 
-  // Derived from the passage text's [[blank]] markers — never manually
-  // added/removed/reordered, so it can't drift out of sync with the text.
+  // fill_blank_* derives its blanks from the passage text's [[blank]]
+  // markers — there's no passage for "matching" (it's a two-column pairing,
+  // not a sentence), so its left-column items are authored directly via
+  // matchLeftItems, same add/edit/remove shape as blanks used to be before
+  // the marker-based UI existed.
   const watchedText = form.watch("text") ?? "";
-  const blanks = useMemo(
-    () => (isFillBlank ? detectBlanks(watchedText) : []),
-    [isFillBlank, watchedText],
-  );
+  const blanks = useMemo(() => {
+    if (isFillBlank) return detectBlanks(watchedText);
+    if (isMatching) return matchLeftItems;
+    return [];
+  }, [isFillBlank, watchedText, isMatching, matchLeftItems]);
   const textFieldReg = form.register("text");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -207,12 +216,53 @@ export default function AssessmentSectionQuestionsPage() {
     });
   }
 
+  function addMatchItem() {
+    setMatchLeftItems((prev) => [...prev, { id: newOptionId(), label: "" }]);
+  }
+
+  function updateMatchItemLabel(id: string, label: string) {
+    setMatchLeftItems((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, label } : b)),
+    );
+  }
+
+  function updateMatchItemImage(id: string, imageUrl: string | undefined) {
+    setMatchLeftItems((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, imageUrl } : b)),
+    );
+  }
+
+  async function handleMatchItemImageChange(id: string, file: File | null) {
+    if (!file) return;
+    setUploadingMatchItemId(id);
+    try {
+      const url = await uploadAssessmentMedia(slug, file);
+      updateMatchItemImage(id, url);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload image",
+      );
+    } finally {
+      setUploadingMatchItemId(null);
+    }
+  }
+
+  function removeMatchItem(id: string) {
+    setMatchLeftItems((prev) => prev.filter((b) => b.id !== id));
+    setBlankAnswers((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
   function openCreate() {
     setEditing(null);
     form.reset(EMPTY_VALUES);
     setOptions([]);
     setCorrectOptionIds([]);
     setBlankAnswers({});
+    setMatchLeftItems([]);
     setOpen(true);
   }
 
@@ -235,20 +285,30 @@ export default function AssessmentSectionQuestionsPage() {
     });
     setOptions(item.content.options ?? []);
     setCorrectOptionIds(item.answerKey?.correctOptionIds ?? []);
-    // Remap positionally (index in the saved blanks[] -> "blank-{n}") so
-    // this works both for older questions authored with random blank ids
-    // and for ones already using the [[blank]]-derived positional scheme.
-    const legacyBlanks = item.content.blanks ?? [];
-    const answerByLegacyId = Object.fromEntries(
+
+    const savedBlanks = item.content.blanks ?? [];
+    const answerBySavedId = Object.fromEntries(
       (item.answerKey?.blankAnswers ?? []).map((a) => [a.blankId, a.optionId]),
     );
-    setBlankAnswers(
-      Object.fromEntries(
-        legacyBlanks
-          .map((b, i) => [`blank-${i + 1}`, answerByLegacyId[b.id]])
-          .filter(([, optionId]) => optionId !== undefined),
-      ),
-    );
+
+    if (type?.responseFormat === "matching") {
+      // Matching items keep whatever id they were saved with — nothing to
+      // derive positionally, unlike fill_blank's text-marker-driven ids.
+      setMatchLeftItems(savedBlanks);
+      setBlankAnswers(answerBySavedId);
+    } else {
+      // Remap positionally (index in the saved blanks[] -> "blank-{n}") so
+      // this works both for older questions authored with random blank ids
+      // and for ones already using the [[blank]]-derived positional scheme.
+      setMatchLeftItems([]);
+      setBlankAnswers(
+        Object.fromEntries(
+          savedBlanks
+            .map((b, i) => [`blank-${i + 1}`, answerBySavedId[b.id]])
+            .filter(([, optionId]) => optionId !== undefined),
+        ),
+      );
+    }
     setOpen(true);
   }
 
@@ -322,11 +382,17 @@ export default function AssessmentSectionQuestionsPage() {
       return;
     }
 
-    if (isFillBlank) {
+    if (isFillBlank || isMatching) {
       if (blanks.length === 0) {
         toast.error(
-          "Add [[blank]] in the passage text for each blank you want",
+          isMatching
+            ? "Add at least one left-column item to match"
+            : "Add [[blank]] in the passage text for each blank you want",
         );
+        return;
+      }
+      if (isMatching && blanks.some((b) => !b.label?.trim() && !b.imageUrl)) {
+        toast.error("Give every left-column item text and/or an image");
         return;
       }
       if (blanks.some((b) => !blankAnswers[b.id])) {
@@ -346,20 +412,21 @@ export default function AssessmentSectionQuestionsPage() {
         imageUrl: values.image_url || undefined,
         options: options.length > 0 ? options : undefined,
         promptType: values.prompt_type,
-        blanks: isFillBlank ? blanks : undefined,
+        blanks: isFillBlank || isMatching ? blanks : undefined,
       },
-      answer_key: isFillBlank
-        ? {
-            blankAnswers: blanks.map((b) => ({
-              blankId: b.id,
-              optionId: blankAnswers[b.id],
-            })),
-          }
-        : isChoice
-          ? { correctOptionIds }
-          : isOrdered
-            ? { correctOrder: options.map((o) => o.id) }
-            : undefined,
+      answer_key:
+        isFillBlank || isMatching
+          ? {
+              blankAnswers: blanks.map((b) => ({
+                blankId: b.id,
+                optionId: blankAnswers[b.id],
+              })),
+            }
+          : isChoice
+            ? { correctOptionIds }
+            : isOrdered
+              ? { correctOrder: options.map((o) => o.id) }
+              : undefined,
       marks: values.marks,
       negative_marks: values.negative_marks,
       course_ids: values.course_ids,
@@ -526,10 +593,12 @@ export default function AssessmentSectionQuestionsPage() {
                   <Label htmlFor="text">
                     {isFillBlank
                       ? "Passage"
-                      : isChoice || isOrdered
-                        ? "Prompt"
-                        : "Question Text"}
-                    {form.watch("prompt_type") === "audio" && (
+                      : isMatching
+                        ? "Instructions"
+                        : isChoice || isOrdered
+                          ? "Prompt"
+                          : "Question Text"}
+                    {(form.watch("prompt_type") === "audio" || isMatching) && (
                       <span className="text-muted-foreground"> (optional)</span>
                     )}
                   </Label>
@@ -552,7 +621,9 @@ export default function AssessmentSectionQuestionsPage() {
                   placeholder={
                     isFillBlank
                       ? "Type [[blank]] wherever a blank should go, e.g. The cat sat on the [[blank]] and looked at the [[blank]]."
-                      : "Prompt or passage shown to the student"
+                      : isMatching
+                        ? "e.g. Match each capital city to its correct country."
+                        : "Prompt or passage shown to the student"
                   }
                   {...textFieldReg}
                   ref={(el) => {
@@ -713,12 +784,16 @@ export default function AssessmentSectionQuestionsPage() {
                 </div>
               )}
 
-              {isFillBlank && (
+              {(isFillBlank || isMatching) && (
                 <>
                   <div className="space-y-1.5">
-                    <Label>Word Bank</Label>
+                    <Label>
+                      {isMatching ? "Right Column (Word Bank)" : "Word Bank"}
+                    </Label>
                     <p className="text-xs text-muted-foreground">
-                      The choices students can pick from for each blank.
+                      {isMatching
+                        ? "The right-column choices students match each left item to."
+                        : "The choices students can pick from for each blank."}
                     </p>
                     <div className="space-y-2 rounded-md border p-2">
                       {options.map((opt, idx) => (
@@ -754,32 +829,85 @@ export default function AssessmentSectionQuestionsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label>Blanks</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Detected from the [[blank]] markers in the passage above,
-                      in order — pick the correct word-bank option for each.
-                    </p>
-                    {blanks.length === 0 ? (
-                      <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                        Add [[blank]] to the passage text to create blanks here.
+                  {isMatching ? (
+                    <div className="space-y-1.5">
+                      <Label>Left Column</Label>
+                      <p className="text-xs text-muted-foreground">
+                        The items students match to a right-column option each.
                       </p>
-                    ) : (
-                      <div className="space-y-2 rounded-md border p-2">
-                        {blanks.map((blank, idx) => (
+                      <div className="space-y-3 rounded-md border p-2">
+                        {matchLeftItems.map((item, idx) => (
                           <div
-                            key={blank.id}
-                            className="flex items-center gap-2"
+                            key={item.id}
+                            className="space-y-2 rounded-md border p-2"
                           >
-                            <span className="w-20 shrink-0 text-sm text-muted-foreground">
-                              Blank {idx + 1}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={item.label ?? ""}
+                                placeholder={`Left item ${idx + 1} text (optional if using an image)`}
+                                onChange={(e) =>
+                                  updateMatchItemLabel(item.id, e.target.value)
+                                }
+                                className="h-8 flex-1 text-sm"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 shrink-0 text-destructive"
+                                onClick={() => removeMatchItem(item.id)}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {item.imageUrl ? (
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={item.imageUrl}
+                                    alt=""
+                                    className="h-10 w-10 rounded border object-cover"
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs"
+                                    onClick={() =>
+                                      updateMatchItemImage(item.id, undefined)
+                                    }
+                                  >
+                                    Remove Image
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    className="h-8 flex-1 text-xs"
+                                    disabled={uploadingMatchItemId === item.id}
+                                    onChange={(e) =>
+                                      handleMatchItemImageChange(
+                                        item.id,
+                                        e.target.files?.[0] ?? null,
+                                      )
+                                    }
+                                  />
+                                  {uploadingMatchItemId === item.id && (
+                                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                                  )}
+                                </>
+                              )}
+                            </div>
+
                             <Select
-                              value={blankAnswers[blank.id] ?? ""}
-                              onValueChange={(v) => setBlankAnswer(blank.id, v)}
+                              value={blankAnswers[item.id] ?? ""}
+                              onValueChange={(v) => setBlankAnswer(item.id, v)}
                             >
-                              <SelectTrigger className="h-8 flex-1 text-xs">
-                                <SelectValue placeholder="Correct option" />
+                              <SelectTrigger className="h-8 w-full text-xs">
+                                <SelectValue placeholder="Correct match" />
                               </SelectTrigger>
                               <SelectContent>
                                 {options.map((opt) => (
@@ -791,14 +919,74 @@ export default function AssessmentSectionQuestionsPage() {
                             </Select>
                           </div>
                         ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={addMatchItem}
+                          disabled={options.length === 0}
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
+                          Add Left Item
+                        </Button>
                         {options.length === 0 && (
                           <p className="text-xs text-muted-foreground">
                             Add at least one word bank option first.
                           </p>
                         )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <Label>Blanks</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Detected from the [[blank]] markers in the passage
+                        above, in order — pick the correct word-bank option for
+                        each.
+                      </p>
+                      {blanks.length === 0 ? (
+                        <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                          Add [[blank]] to the passage text to create blanks
+                          here.
+                        </p>
+                      ) : (
+                        <div className="space-y-2 rounded-md border p-2">
+                          {blanks.map((blank, idx) => (
+                            <div
+                              key={blank.id}
+                              className="flex items-center gap-2"
+                            >
+                              <span className="w-20 shrink-0 text-sm text-muted-foreground">
+                                Blank {idx + 1}
+                              </span>
+                              <Select
+                                value={blankAnswers[blank.id] ?? ""}
+                                onValueChange={(v) =>
+                                  setBlankAnswer(blank.id, v)
+                                }
+                              >
+                                <SelectTrigger className="h-8 flex-1 text-xs">
+                                  <SelectValue placeholder="Correct option" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {options.map((opt) => (
+                                    <SelectItem key={opt.id} value={opt.id}>
+                                      {opt.text || "(untitled option)"}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                          {options.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Add at least one word bank option first.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 
