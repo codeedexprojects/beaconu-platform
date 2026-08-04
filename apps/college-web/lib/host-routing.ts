@@ -1,12 +1,5 @@
 const RESERVED_HOST_LABELS = new Set(["www"]);
 
-/**
- * Extracts college slug from host across localhost and production domains.
- *
- * Supported:
- * - slug.localhost:3001
- * - slug.beaconu.in
- */
 export function extractCollegeSlugFromHost(
   host?: string | null,
 ): string | null {

@@ -117,7 +117,6 @@ function LoginPageContent() {
   const setupForm = useForm<SetupFormData>({
     resolver: zodResolver(setupSchema as any),
   });
-  //
   const {
     data: validationData,
     error: setupError,

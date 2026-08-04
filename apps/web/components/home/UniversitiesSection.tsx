@@ -10,7 +10,6 @@ const universities = [
 export function UniversitiesSection() {
   return (
     <section className="px-4 md:px-6 lg:px-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[17px] sm:text-xl font-bold text-[#111827]">
           Universities
@@ -20,7 +19,6 @@ export function UniversitiesSection() {
         </button>
       </div>
 
-      {/* Mobile: horizontal scroll | sm+: 3-col | lg+: 6-col */}
       <div
         className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-6"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -30,7 +28,6 @@ export function UniversitiesSection() {
             key={uni.id}
             className="flex-shrink-0 w-[132px] sm:w-auto bg-white rounded-2xl flex flex-col items-center justify-center gap-2 p-4 shadow-sm border border-gray-100 min-h-[108px]"
           >
-            {/* Logo placeholder */}
             <div
               className="w-[60px] h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: `${uni.color}18` }}

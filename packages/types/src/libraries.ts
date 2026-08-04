@@ -1,7 +1,3 @@
-// ── Public library endpoints (college-web) ───────────────────────────────────
-// List and detail share the exact same shape — pure pass-through of the
-// college_libraries JSONB columns, no transform layer.
-
 export interface PublicLibraryStat {
   label?: string;
   value?: string;
@@ -36,8 +32,6 @@ export interface PublicLibrary {
   facilities?: { items?: PublicLibraryFacilityItem[] };
 }
 
-// GET /courses/:courseId/tabs/library — hydrates the college's full library
-// records for the ids the admin linked to this course (same shape as above).
 export interface PublicLibraryTab {
   tab?: string;
   libraries?: PublicLibrary[];

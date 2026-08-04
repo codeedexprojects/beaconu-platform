@@ -19,9 +19,6 @@ interface IconPickerProps {
   onSelect: (iconUrl: string) => void;
 }
 
-/** Picks an icon from the platform-managed icon library instead of
- * uploading a one-off image — reused wherever a form previously asked for
- * a generic "icon" upload (facilities, amenities, etc.). */
 export function IconPicker({
   open,
   onOpenChange,

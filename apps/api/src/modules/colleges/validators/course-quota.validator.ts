@@ -2,9 +2,6 @@ import { z } from "zod";
 
 export const FEE_ADJUSTMENT_TYPES = ["flat", "percentage"] as const;
 
-// Bidirectional: positive appFeeAdjustmentValue surcharges the application
-// fee (e.g. NRI Quota), negative discounts it. "flat" | "percentage"
-// describes how the value is applied, not its direction.
 const feeAdjustmentRefinement = (
   data: {
     appFeeAdjustmentType?: string | null;
@@ -57,7 +54,6 @@ export const updateCourseQuotaSchema = z
     isActive: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
-    // Only enforce the paired-fields rule when the caller is touching either field.
     if (
       data.appFeeAdjustmentType === undefined &&
       data.appFeeAdjustmentValue === undefined

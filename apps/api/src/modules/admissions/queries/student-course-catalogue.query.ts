@@ -2,10 +2,6 @@ import { prisma } from "@beaconu/db";
 import { quotaOptionsForCourse } from "./quota-options.helper";
 
 export class StudentCourseCatalogueQuery {
-  /** Course listing for an admission cycle, each with its quota options
-   * embedded — one call for the "Add Course" browse/search page instead of
-   * a follow-up per-course round trip. Distinct from the payment-summary
-   * page, which shows only courses already added to the application. */
   static async listForCycle(admissionCycleId: string, search?: string) {
     const rows = await prisma.admissionCycleCourse.findMany({
       where: {

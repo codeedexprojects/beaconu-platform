@@ -30,7 +30,6 @@ import type {
   FieldError,
 } from "react-hook-form";
 
-// @hookform/resolvers v3 is incompatible with Zod v4 — use safeParse directly.
 function makeZodResolver<T extends Record<string, unknown>>(
   schema: ZodSchema,
 ): Resolver<T> {

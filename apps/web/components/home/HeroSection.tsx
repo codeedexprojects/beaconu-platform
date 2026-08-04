@@ -38,11 +38,8 @@ export function HeroSection() {
         backgroundSize: "20px 20px",
       }}
     >
-      {/* Inner content — constrained on large screens */}
       <div className="max-w-4xl mx-auto">
-        {/* Top row: user + card badge + logout */}
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 lg:pt-20 pb-5 sm:pb-7">
-          {/* Avatar + name */}
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0 border-2 border-white/20">
               <span className="text-white font-bold text-sm">{initials}</span>
@@ -52,7 +49,6 @@ export function HeroSection() {
             </span>
           </div>
 
-          {/* BeaconU Infinity card badge */}
           <div className="flex items-center gap-1.5 bg-[#1C1C1E] rounded-full px-3 py-1.5 border border-white/10 flex-shrink-0 mx-2 sm:mx-4">
             <div className="w-[18px] h-[18px] rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-[10px] font-black leading-none">
@@ -67,7 +63,6 @@ export function HeroSection() {
             </span>
           </div>
 
-          {/* Logout button */}
           <button
             onClick={handleLogout}
             className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1C1C1E] border border-white/10 hover:border-red-500/40 hover:bg-red-950/40 flex items-center justify-center flex-shrink-0 transition-colors"
@@ -78,7 +73,6 @@ export function HeroSection() {
           </button>
         </div>
 
-        {/* Hero text */}
         <div className="px-6 sm:px-8 text-center mb-7 sm:mb-9 lg:mb-11">
           <h1 className="text-white font-bold text-[28px] sm:text-[40px] lg:text-[54px] leading-[1.15] tracking-tight mb-3 sm:mb-4">
             Your World Class
@@ -91,7 +85,6 @@ export function HeroSection() {
           </p>
         </div>
 
-        {/* Search bar — max-width on desktop */}
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto relative flex items-center bg-white rounded-full shadow-lg">
             <Search className="absolute left-4 h-[18px] w-[18px] sm:h-5 sm:w-5 text-gray-400 pointer-events-none" />

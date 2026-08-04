@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 11 — COUNSELLING & SESSIONS
-// ============================================================
-
 model CounsellorAvailability {
   id                  String   @id @default(dbgenerated("('CNA-'::text || (nextval('counsellor_availability_seq'::regclass))::text)")) @db.Text
   counsellorId        String   @map("counsellor_id")
@@ -17,7 +13,6 @@ model CounsellorAvailability {
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   counsellor        Counsellor           @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
   sessions          CounsellingSession[]
   rescheduleTargets SessionReschedule[]  @relation("RescheduleToSlot")
@@ -56,7 +51,6 @@ model CounsellingSession {
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student        Student                       @relation(fields: [studentId], references: [id])
   counsellor     Counsellor                    @relation(fields: [counsellorId], references: [id])
   availability   CounsellorAvailability        @relation(fields: [availabilityId], references: [id])
@@ -85,7 +79,6 @@ model SessionReschedule {
   reason           String?  @db.Text
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   session        CounsellingSession     @relation(fields: [sessionId], references: [id])
   toAvailability CounsellorAvailability @relation("RescheduleToSlot", fields: [toAvailabilityId], references: [id])
 
@@ -102,7 +95,6 @@ model CounsellorWallet {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   counsellor   Counsellor                    @relation(fields: [counsellorId], references: [id])
   transactions CounsellorWalletTransaction[]
 
@@ -126,7 +118,6 @@ model CounsellorWalletTransaction {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   wallet     CounsellorWallet    @relation(fields: [walletId], references: [id])
   counsellor Counsellor          @relation(fields: [counsellorId], references: [id])
   session    CounsellingSession? @relation(fields: [sessionId], references: [id])
@@ -154,7 +145,6 @@ model CounsellingRefundRequest {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   session    CounsellingSession @relation(fields: [sessionId], references: [id])
   student    Student            @relation(fields: [studentId], references: [id])
   counsellor Counsellor         @relation(fields: [counsellorId], references: [id])
@@ -189,7 +179,6 @@ model CounsellorRegistrationRequest {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   reviewer PlatformAdmin? @relation(fields: [reviewedBy], references: [id])
 
   @@index([status], name: "idx_counsellor_request_status")

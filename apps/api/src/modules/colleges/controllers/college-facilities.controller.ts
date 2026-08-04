@@ -19,8 +19,6 @@ import {
 } from "../validators/library.validator";
 
 export class CollegeFacilitiesController {
-  // ── Hostels Occupancy Inventory ────────────────────────────────────────────
-
   static async listHostels(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const hostels = await prisma.hostel.findMany({
@@ -347,8 +345,6 @@ export class CollegeFacilitiesController {
       .json(ApiResponse.success("Addon service removed", null));
   }
 
-  // ── Commute transit routes ──────────────────────────────────────────────────
-
   static async listRoutes(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const routes = await prisma.commuteRoute.findMany({
@@ -480,8 +476,6 @@ export class CollegeFacilitiesController {
       .status(200)
       .json(ApiResponse.success("Commuter transit route removed", null));
   }
-
-  // ── Libraries ────────────────────────────────────────────────────────────────
 
   static async listLibraries(req: Request, res: Response) {
     const collegeId = req.collegeId!;

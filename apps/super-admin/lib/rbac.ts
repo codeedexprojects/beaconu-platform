@@ -1,6 +1,5 @@
 export type AdminRole = "super_admin" | "sub_admin";
 
-// All available permissions in the super-admin panel
 export type Permission =
   | "colleges.view"
   | "colleges.manage"

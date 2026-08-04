@@ -367,7 +367,6 @@ export default function AntiRaggingPage() {
         </div>
       )}
 
-      {/* Details Dialog */}
       <Dialog open={!!viewingId} onOpenChange={(v) => !v && setViewingId(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <div>

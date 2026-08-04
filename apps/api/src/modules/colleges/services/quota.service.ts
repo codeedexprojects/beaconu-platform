@@ -11,8 +11,6 @@ type QuotaRow = NonNullable<
   Awaited<ReturnType<typeof QuotaRepository.findById>>
 >;
 
-// Quota slugs use snake_case (e.g. "government_quota") — they are matched
-// against DocumentUploadConfig.appliesToQuotas and the seeded catalogue.
 function toQuotaSlug(name: string): string {
   return toSlug(name).replace(/-/g, "_");
 }

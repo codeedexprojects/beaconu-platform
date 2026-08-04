@@ -68,7 +68,6 @@ const interests = [
 export function ExploreInterests() {
   return (
     <section className="px-4 md:px-6 lg:px-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[17px] sm:text-xl font-bold text-[#111827]">
           Explore your interest
@@ -78,9 +77,7 @@ export function ExploreInterests() {
         </button>
       </div>
 
-      {/* Blue-border grid container */}
       <div className="border-2 border-blue-200 rounded-3xl p-3">
-        {/* 2-col mobile | 3-col sm | 4-col lg */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {interests.map((item) => (
             <button
@@ -96,7 +93,6 @@ export function ExploreInterests() {
               >
                 {item.courses} courses
               </p>
-              {/* Illustration placeholder */}
               <div className="flex justify-end mt-2">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center"

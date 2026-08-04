@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button";
 export default function NotFoundPage(): React.JSX.Element {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070B14] flex items-center justify-center p-4">
-      {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-primary/15 blur-[120px]" />
       </div>
 
       <div className="relative text-center space-y-6 animate-fade-in">
-        {/* 404 number */}
         <div className="relative inline-block">
           <span className="text-[9rem] font-black leading-none tracking-tighter text-white/5 select-none">
             404

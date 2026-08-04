@@ -37,9 +37,6 @@ export class IconsRepository {
     return { rows, total };
   }
 
-  /** Active icons only, optionally name-filtered — for the college-admin
-   * icon picker. Unpaginated: the icon library is small reference data,
-   * same reasoning as EducationBoardsRepository.listActiveNames. */
   static async listActive(search?: string) {
     return prisma.icon.findMany({
       where: {

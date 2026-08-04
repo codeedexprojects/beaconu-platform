@@ -1,22 +1,18 @@
 export function OnlyAtBeaconU() {
   return (
     <section className="px-4 md:px-6 lg:px-8">
-      {/* Header */}
       <p className="text-[15px] sm:text-[17px] font-semibold text-[#111827] text-center mb-3">
         Only @ <span className="text-blue-600 font-bold">BeaconU</span>
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {/* Psychometric assessment */}
         <button
           className="rounded-3xl overflow-hidden relative p-4 sm:p-6 text-left flex flex-col min-h-[148px] sm:min-h-[180px] lg:min-h-[220px]"
           style={{ backgroundColor: "#1E3A8A" }}
         >
-          {/* Background decoration */}
           <div className="absolute -top-4 -right-4 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white/10" />
           <div className="absolute top-8 right-2 w-12 h-12 rounded-full bg-white/5" />
 
-          {/* Icon */}
           <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-16 h-16 flex items-center justify-center opacity-60">
             <svg
               width="44"
@@ -45,16 +41,13 @@ export function OnlyAtBeaconU() {
           </div>
         </button>
 
-        {/* Group Finder */}
         <button
           className="rounded-3xl overflow-hidden relative p-4 sm:p-6 text-left flex flex-col min-h-[148px] sm:min-h-[180px] lg:min-h-[220px]"
           style={{ backgroundColor: "#7C3AED" }}
         >
-          {/* Background decoration */}
           <div className="absolute -top-4 -right-4 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white/10" />
           <div className="absolute top-8 right-2 w-12 h-12 rounded-full bg-white/5" />
 
-          {/* Icon */}
           <div className="absolute top-3 right-2 sm:top-4 sm:right-3 w-16 h-16 flex items-center justify-center opacity-70">
             <svg
               width="44"

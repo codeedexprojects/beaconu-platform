@@ -9,8 +9,6 @@ interface RoleGuardProps {
   fallback?: React.ReactNode;
 }
 
-// Renders children only when the current admin has the required permission.
-// Use fallback to show a disabled state instead of hiding entirely.
 export function RoleGuard({
   permission,
   children,

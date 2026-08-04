@@ -47,9 +47,6 @@ export class CourseQuotaRepository {
     });
   }
 
-  /** Includes soft-deleted (isActive: false) rows — used to detect a prior
-   * detach so re-attaching reactivates the existing row instead of violating
-   * the (courseId, collegeQuotaId) unique constraint. */
   static async findByCourseAndCollegeQuota(
     courseId: string,
     collegeQuotaId: string,

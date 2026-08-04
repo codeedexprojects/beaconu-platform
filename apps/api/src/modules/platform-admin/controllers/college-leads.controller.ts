@@ -4,7 +4,6 @@ import { collegeOnboardingSchemas } from "@/modules/landing-page/validators/coll
 import { CollegeOnboardingService } from "@/modules/landing-page/services/college-onboarding.service";
 
 export class CollegeLeadsController {
-  // POST /api/v1/admin/college-leads
   static async create(req: Request, res: Response) {
     const data = collegeOnboardingSchemas.submit.parse(req.body);
     const result = await CollegeOnboardingService.createByAdmin(data);
@@ -13,7 +12,6 @@ export class CollegeLeadsController {
       .json(ApiResponse.success("College lead created successfully", result));
   }
 
-  // GET /api/v1/admin/college-leads
   static async list(req: Request, res: Response) {
     const filters = collegeOnboardingSchemas.list.parse(req.query);
     const result = await CollegeOnboardingService.list(filters);
@@ -27,7 +25,6 @@ export class CollegeLeadsController {
       );
   }
 
-  // GET /api/v1/admin/college-leads/:id
   static async getById(req: Request, res: Response) {
     const id = String(req.params.id);
     const result = await CollegeOnboardingService.getById(id);
@@ -41,7 +38,6 @@ export class CollegeLeadsController {
       );
   }
 
-  // PATCH /api/v1/admin/college-leads/:id
   static async update(req: Request, res: Response) {
     const id = String(req.params.id);
     const data = collegeOnboardingSchemas.submit.parse(req.body);
@@ -51,7 +47,6 @@ export class CollegeLeadsController {
       .json(ApiResponse.success("College lead updated successfully", result));
   }
 
-  // PATCH /api/v1/admin/college-leads/:id/status
   static async updateStatus(req: Request, res: Response) {
     const id = String(req.params.id);
     const data = collegeOnboardingSchemas.updateStatus.parse(req.body);
@@ -67,7 +62,6 @@ export class CollegeLeadsController {
       .json(ApiResponse.success("Status updated successfully", result));
   }
 
-  // GET /api/v1/admin/college-leads/stats
   static async getStats(_req: Request, res: Response) {
     const result = await CollegeOnboardingService.getStats();
     return res

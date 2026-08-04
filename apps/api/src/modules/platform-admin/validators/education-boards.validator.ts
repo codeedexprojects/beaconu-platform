@@ -2,7 +2,6 @@ import { z } from "zod";
 
 const GRADES = ["10th", "12th"] as const;
 
-// Query strings send booleans as "true"/"false" strings — transform them for this route only.
 const optionalBooleanFromQuery = z
   .union([z.boolean(), z.enum(["true", "false"])])
   .transform((value) =>
@@ -49,8 +48,6 @@ const idParamSchema = z.object({
   id: z.string(),
 });
 
-// Student-facing board picker — grade + name search, no pagination
-// (active board list is small reference data).
 const listEducationBoardNamesQuerySchema = z.object({
   grade: z.enum(GRADES).optional(),
   search: z.string().trim().optional(),

@@ -17,7 +17,7 @@ import type {
 const RESCHEDULABLE_STATUSES = ["pending", "confirmed"];
 const CANCELLABLE_STATUSES = ["pending", "confirmed", "arrived"];
 const MIN_ADVANCE_HOURS = 2;
-const REBROADCAST_AFTER_MS = 5 * 60 * 1000; // re-notify ambassadors if still unclaimed after 5 min
+const REBROADCAST_AFTER_MS = 5 * 60 * 1000;
 
 function weekdayOf(dateStr: string) {
   return new Date(dateStr + "T00:00:00Z").getUTCDay();
@@ -535,11 +535,6 @@ export class CampusVisitsService {
     return count;
   }
 
-  /**
-   * Visits stuck in "arrived" with no ambassador after REBROADCAST_AFTER_MS get re-notified.
-   * The redis key's own TTL (= the rebroadcast interval) is the throttle — once it expires,
-   * the visit is eligible again on the next job tick, so this naturally repeats until claimed.
-   */
   static async rebroadcastStaleArrivals(): Promise<number> {
     const redis = getRedisClient();
     const cutoff = new Date(Date.now() - REBROADCAST_AFTER_MS);

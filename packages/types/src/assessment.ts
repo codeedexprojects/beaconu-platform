@@ -17,18 +17,8 @@ export interface QuestionTypeItem {
   collegeId: string;
   name: string;
   slug: string;
-  // Rendering category for the frontend (NOT the assessment topic/section):
-  // "selection" | "textInput" | "audioListening" | "visualHighlight" |
-  // "audioSpeaking" | "visualImage". Kept as `string` (not a union) so new
-  // categories don't require a type-package release — same reasoning as
-  // ResponseFormat below.
   category: string;
   responseFormat: string;
-  // Which answer widget the frontend renders: "multiOptionSelection" |
-  // "singleOptionSelection" | "slotFillSelection" | "freeText" |
-  // "wordHighlightSelection" | "audioRecording". Coarser than
-  // responseFormat (e.g. fill_blank_drag_drop and fill_blank_dropdown both
-  // map to "slotFillSelection").
   answerFormat: string;
   hasAudio: boolean;
   hasImage: boolean;
@@ -46,16 +36,11 @@ export type PromptType = "text" | "audio";
 export interface QuestionBlank {
   id: string;
   label?: string;
-  // "matching" only — a left-column item can be an image instead of (or
-  // alongside) text, e.g. "match this picture to its label."
   imageUrl?: string;
 }
 
 export interface QuestionContent {
   text?: string;
-  // For prompt/passage-based question types — `text` holds the passage/
-  // prompt, this holds the actual question being asked about it. Optional
-  // everywhere else.
   question?: string;
   audioUrl?: string;
   imageUrl?: string;
@@ -135,7 +120,6 @@ export type NegativeMarkingMode = "none" | "fixed" | "proportional";
 export interface TemplateInstructionItem {
   heading: string;
   description: string;
-  /** Icon URL selected from the shared platform icon library (see IconItem). */
   icon?: string;
 }
 
@@ -246,8 +230,6 @@ export interface AssessmentSlotItem {
 export interface CreateSlotInput {
   slot_type: SlotType;
   window_start: string;
-  // Only required for "window" — a "fixed" slot's end time is derived
-  // server-side from window_start + the template's duration.
   window_end?: string;
   max_capacity?: number;
 }
@@ -272,9 +254,6 @@ export interface AssessmentStartSectionSummary {
 }
 
 export interface AssessmentStartInfo {
-  /** null if the template (resolved from the student's admission cycle)
-   * currently has no active slot scheduled — the Room screen should render
-   * a "not currently scheduled" state, not an error, in that case. */
   slot: {
     id: string;
     slotType: SlotType;
@@ -286,14 +265,7 @@ export interface AssessmentStartInfo {
     id: string;
     name: string;
     totalQuestions: number;
-    // Both computed as sums over the approved normal paper's questions
-    // (0 if none approved yet) — not admin-declared fields, which no
-    // longer exist on AssessmentTemplate. See Plan L.
     totalMarks: number;
-    // Math.ceil of the underlying seconds total (question time_limit_secs
-    // summed + the buffer) — the API only ever exposes minutes here; the
-    // auto-submit job separately computes the exact-seconds deadline via
-    // computePaperDurationSecs, not from this rounded value.
     totalDurationMins: number;
     negativeMarkingMode: NegativeMarkingMode;
     instructions: TemplateInstructionItem[];
@@ -302,14 +274,8 @@ export interface AssessmentStartInfo {
   isWithinWindow: boolean;
   hasWindowPassed: boolean;
   hasActiveTrialPaper: boolean;
-  /** Always resolved now — application_id is a required input to the
-   * start-info request. null if the student hasn't started an attempt yet. */
   myAttempt: { id: string; status: AttemptStatus } | null;
 }
-
-// ---------------------------------------------------------------------------
-// Attempt + Evaluation
-// ---------------------------------------------------------------------------
 
 export type AttemptStatus =
   | "not_started"
@@ -324,12 +290,6 @@ export type AttemptStatus =
 export type AnswerEvaluationStatus = "pending" | "auto_scored" | "evaluated";
 export type AntiCheatEventType = "tab_hidden" | "tab_visible";
 
-/** Mirrors AnswerKey's shapes — one field populated per responseFormat:
- * single_choice/multi_choice -> selectedOptionIds, ranking/sequence ->
- * order, fill_blank_drag_drop/fill_blank_dropdown -> blankAnswers,
- * text_response -> text, audio_response -> audioUrl (the student's
- * recorded answer, uploaded via the generic upload flow beforehand —
- * never scored automatically, always evaluator-reviewed). */
 export interface AnswerResponse {
   selectedOptionIds?: string[];
   order?: string[];
@@ -340,8 +300,6 @@ export interface AnswerResponse {
 
 export interface AssessmentAttemptItem {
   id: string;
-  // One attempt per Application (covers every course listed on it), not
-  // per ApplicationCourse.
   applicationId: string;
   studentId: string;
   paperId: string;
@@ -372,19 +330,11 @@ export interface StudentAnswerItem {
   answeredAt: string | null;
 }
 
-// slot_id was removed — the slot is auto-resolved server-side from the
-// student's application (admission cycle -> assessment template -> current
-// active slot for that template), not chosen by the client. application_id
-// (not application_course_id) since one attempt now covers the whole
-// Application, not a single course on it.
 export interface StartAttemptInput {
   application_id: string;
 }
 
 export interface SubmitAnswerInput {
-  // Optional — a student can flag a question "for review" without having
-  // answered it yet. At least one of response/is_flagged/time_spent_secs
-  // must be present (enforced by the validator).
   response?: AnswerResponse;
   is_flagged?: boolean;
   time_spent_secs?: number;
@@ -465,11 +415,6 @@ export interface AttemptQuestionMyAnswer {
   answeredAt: string | null;
 }
 
-/** Drives which answer-input widget the client renders for a question —
- * paired with `content`/`myAnswer.response`, whose populated fields vary by
- * format (see QuestionContent/AnswerResponse). Kept as `string` rather than
- * a strict union so new question types (added via section-seed files) don't
- * require a type-package release to show up in this response. */
 export type ResponseFormat =
   | "text_response"
   | "single_choice"
@@ -499,10 +444,6 @@ export interface AttemptQuestionItem {
   myAnswer: AttemptQuestionMyAnswer | null;
 }
 
-/** One question at a time, for a "one question per screen, Next/Previous
- * navigation" take-test UI — not the whole section's questions in one
- * response. `question_order` is 1-based and matches AttemptQuestionItem's
- * own `questionOrder` field. */
 export interface AttemptSectionQuestionPage {
   question: AttemptQuestionItem;
   questionOrder: number;
@@ -526,10 +467,6 @@ export interface AttemptOverview {
   flaggedCount: number;
   questions: AttemptOverviewQuestion[];
 }
-
-// ---------------------------------------------------------------------------
-// Trial papers (ephemeral — never persisted, never create an Attempt)
-// ---------------------------------------------------------------------------
 
 export interface TrialPaperQuestionItem {
   id: string;

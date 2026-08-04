@@ -54,7 +54,6 @@ export function RefundRequestDetailDialog({
           </Button>
         </div>
 
-        {/* Student */}
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Student
@@ -76,7 +75,6 @@ export function RefundRequestDetailDialog({
 
         <Separator />
 
-        {/* Counsellor + wallet */}
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Counsellor (refund debited from their wallet)

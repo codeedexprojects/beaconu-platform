@@ -95,7 +95,6 @@ export default function CampusVisitsPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Campus Visits</h1>
@@ -119,7 +118,6 @@ export default function CampusVisitsPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
@@ -171,7 +169,6 @@ export default function CampusVisitsPage() {
         </Card>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select
           value={statusFilter}

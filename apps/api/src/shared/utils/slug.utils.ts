@@ -1,24 +1,15 @@
 import { prisma } from "@beaconu/db";
 
-/**
- * Convert a human-readable name to a URL-safe slug.
- * e.g. "IIT Delhi" → "iit-delhi"
- *      "Amity University (Noida)" → "amity-university-noida"
- */
 export function toSlug(name: string): string {
   return name
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "") // remove special chars except spaces and hyphens
-    .replace(/\s+/g, "-") // spaces → hyphens
-    .replace(/-+/g, "-") // collapse multiple hyphens
-    .replace(/^-|-$/g, ""); // trim leading/trailing hyphens
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
-/**
- * Generate a college code from name.
- * e.g. "IIT Delhi" → "IITD", "Amity University Noida" → "AUN"
- */
 export function toCollegeCode(name: string): string {
   const words = name
     .trim()
@@ -37,10 +28,6 @@ export function toCollegeCode(name: string): string {
     .slice(0, 8);
 }
 
-/**
- * Ensure a slug is unique in the colleges table.
- * If taken, appends -2, -3, etc. until a free slug is found.
- */
 export async function ensureUniqueCollegeSlug(base: string): Promise<string> {
   const existing = await prisma.college.findUnique({ where: { slug: base } });
   if (!existing) return base;

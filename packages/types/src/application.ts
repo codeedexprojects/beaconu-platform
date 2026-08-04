@@ -21,12 +21,6 @@ export interface StudentApplicationDto {
   updatedAt: string;
 }
 
-/** The single next thing the student needs to do on a given Application.
- * "payment" — primary course's fee isn't paid yet. One of the four detail
- * steps or "declaration" — resume there. "submit" — every step is done,
- * call Submit Application. "none" — already submitted. Documents aren't
- * part of this sequence — check List Required/Uploaded Documents
- * separately. */
 export type PendingApplicationAction =
   | "payment"
   | "personal_details"
@@ -37,8 +31,6 @@ export type PendingApplicationAction =
   | "submit"
   | "none";
 
-/** Mirrors AssessmentStatus's own AttemptStatus union (assessment module),
- * plus "not_required" for cycles that don't gate on an assessment at all. */
 export type AssessmentStatusValue =
   | "not_required"
   | "not_started"
@@ -50,8 +42,6 @@ export type AssessmentStatusValue =
   | "evaluated"
   | "result_published";
 
-/** One attempt covers the whole Application (every course on it), not a
- * single course — see AssessmentAttempt / Plan R. */
 export interface ApplicationAssessmentStatus {
   status: AssessmentStatusValue;
   attemptId: string | null;
@@ -68,11 +58,6 @@ export type InterviewStatusValue =
   | "cancelled"
   | "rescheduled";
 
-/** Application-level, not per-course — a student interviews once for the
- * whole application, resolved off its primary course's booking (the
- * course that drives the rest of the pipeline). `not_scheduled` (every
- * field null) simply means the student hasn't booked an Interview Slot
- * yet — the interviews module itself is fully built. */
 export interface ApplicationInterviewStatus {
   status: InterviewStatusValue;
   scheduledAt: string | null;
@@ -82,10 +67,6 @@ export interface ApplicationInterviewStatus {
   remarks: string | null;
 }
 
-/** Application-level, resolved off the primary course's OfferLetter (token
- * amount is a whole-application concept, not per-course). `not_issued`
- * (every field null) until one is actually created — no API writes/reads
- * that model yet either. */
 export interface ApplicationAmountDetails {
   status: "not_issued" | "issued" | "expired" | "withdrawn";
   offerNumber: string | null;
@@ -95,10 +76,6 @@ export interface ApplicationAmountDetails {
   documentUrl: string | null;
 }
 
-/** One document requirement's status — mirrors Get Required Documents'
- * per-item shape, minus acceptedMimeTypes/rejectionReason (call that
- * endpoint directly for the upload form itself; this is just the
- * onboarding-overview summary). */
 export interface ApplicationDocumentStatusItem {
   documentType: string;
   documentLabel: string;
@@ -107,12 +84,6 @@ export interface ApplicationDocumentStatusItem {
   verificationStatus: string | null;
 }
 
-/** Application-level — the same applicable-document checklist Get
- * Required Documents computes, summarized into counts + a compact list so
- * the full onboarding overview doesn't need a second call. Not part of
- * `pendingAction`'s sequence (Submit Application doesn't require
- * documents, and currentStep doesn't track them) — this is the section
- * that actually surfaces "N of M uploaded" instead. */
 export interface ApplicationDocumentsStatus {
   totalRequired: number;
   uploadedCount: number;
@@ -127,17 +98,10 @@ export interface ApplicationStatusCourse {
   courseName: string;
   courseCode: string;
   isPrimary: boolean;
-  /** Raw ApplicationCourse.status pipeline value (see root CLAUDE.md's
-   * Application status flow). */
   status: string;
-  /** True once `status` has reached "shortlisted" or any later pipeline
-   * stage (offer_issued, token_paid, enrolled). */
   isShortlisted: boolean;
 }
 
-/** The application-record part of the status response — form/payment
- * progress and every non-withdrawn course on it (primary + any extras),
- * not just one. */
 export interface ApplicationStatusApplication {
   applicationId: string;
   applicationNumber: string;
@@ -152,12 +116,6 @@ export interface ApplicationStatusApplication {
   createdAt: string;
 }
 
-/** One entry per Application the student has for an admission cycle (can
- * be several, one per course) — the cycle-level admission status API
- * returns `null` instead of this array when the student hasn't started
- * any application yet. `assessment`/`interview`/`amountDetails` are all
- * whole-application concepts (never per-course), sitting alongside
- * `application` rather than nested inside it. */
 export interface ApplicationStatusSummary {
   application: ApplicationStatusApplication;
   documents: ApplicationDocumentsStatus;
@@ -174,11 +132,6 @@ export interface ApplicationStatusSummaryCourseBasic {
   status: string;
 }
 
-/** The original, flat status shape — kept as-is for the all-cycles
- * endpoint (`GET /application-forms/status`). Only the cycle-scoped
- * endpoint (`GET /:id/application/status`, see `ApplicationStatusSummary`
- * above) moved to the richer application/assessment/interview/
- * amountDetails shape. */
 export interface ApplicationStatusSummaryBasic {
   applicationId: string;
   applicationNumber: string;
@@ -195,9 +148,6 @@ export interface ApplicationStatusSummaryBasic {
 
 export interface StartApplicationInput {
   nationality: string;
-  // The primary course — required, since payment (and everything after
-  // it) is gated on this selection. Its quota is set afterward via
-  // Change Application Course Quota, never at Start.
   course_id: string;
   campus_id?: string | null;
   state_of_domicile?: string | null;
@@ -333,12 +283,6 @@ export interface QualificationDetailsInput {
   qualifications: QualificationEntry[];
 }
 
-/** Live read of one form-step section off the Student profile — used to
- * resume/pre-fill the wizard. Selected via `?section=` since each step is
- * its own page on the client; whatever was last saved via the matching
- * PATCH, or `{}` if that step hasn't been filled yet. Not the frozen
- * per-application snapshot (that's only set at submit and isn't exposed by
- * this endpoint). */
 export type ApplicationFormDetailsSection =
   | "personal_details"
   | "family_details"
@@ -415,10 +359,6 @@ export interface ApplicationPaymentDto {
   createdAt: string;
 }
 
-// ---------------------------------------------------------------------------
-// College-admin applications list (read-only monitoring view)
-// ---------------------------------------------------------------------------
-
 export interface ApplicationListCourseItem {
   id: string;
   courseId: string;
@@ -479,11 +419,6 @@ export interface ApplicationDetailDocumentItem {
   createdAt: string;
 }
 
-/** Full read-only detail view for college-admin. `personalDetails` /
- * `familyDetails` / `addressDetails` / `qualificationDetails` are merged:
- * the Application's own frozen snapshot (set once, at submit) if non-empty,
- * else the Student's live profile data (still being filled in, for a draft
- * application) — see ApplicationDetailQuery.getForCollegeAdmin. */
 export interface ApplicationDetailDto {
   id: string;
   applicationNumber: string;

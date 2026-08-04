@@ -47,7 +47,6 @@ export function proxy(request: NextRequest) {
       ? firstSegment
       : null;
 
-  // If the URL slug doesn't match the host slug, redirect to canonical URL
   if (hostSlug && collegeSlug && hostSlug !== collegeSlug) {
     const nextUrl = request.nextUrl.clone();
     const tail = segments.slice(1);
@@ -55,24 +54,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(nextUrl);
   }
 
-  // If no college slug in the path (e.g. direct /hostels, /login, etc.), pass through
   if (!collegeSlug) {
     return NextResponse.next();
   }
 
   const nextUrl = request.nextUrl.clone();
 
-  // /{slug} → /  (dashboard root)
   if (segments.length === 1) {
     nextUrl.pathname = "/";
     return NextResponse.rewrite(nextUrl);
   }
 
-  // /{slug}/{anything...} → /{anything...}
-  // Strip the college slug prefix for ALL paths. This covers:
-  //   /{slug}/login, /{slug}/setup/*, /{slug}/hostels, /{slug}/hostels/{id},
-  //   and any other unknown paths like /{slug}/{hostelId} that landed here
-  //   due to link generation quirks.
   nextUrl.pathname = `/${segments.slice(1).join("/")}`;
   return NextResponse.rewrite(nextUrl);
 }

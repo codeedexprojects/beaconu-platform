@@ -156,7 +156,6 @@ export default function AcademicMastersPage() {
   const { data: programTypesPage, isLoading: isLoadingProgramTypes } =
     useProgramTypes({ page: programTypePage, limit: PAGE_SIZE });
 
-  // Flat active streams for the discipline dropdown
   const { data: allActiveStreams = [] } = useAllActiveStreams();
 
   const streams = streamsPage?.data ?? [];
@@ -234,7 +233,6 @@ export default function AcademicMastersPage() {
     sort_order: 0,
   });
 
-  // Already sorted by backend; kept for dropdown use
   const sortedActiveStreams = useMemo(
     () => allActiveStreams.filter((s) => s.isActive),
     [allActiveStreams],
@@ -443,7 +441,6 @@ export default function AcademicMastersPage() {
       <div className="p-6">
         <TabNav active={activeTab} onChange={switchTab} />
 
-        {/* ── Streams ──────────────────────────────────────────────── */}
         {activeTab === "streams" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -597,7 +594,6 @@ export default function AcademicMastersPage() {
           </Card>
         )}
 
-        {/* ── Disciplines ──────────────────────────────────────────── */}
         {activeTab === "disciplines" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -783,7 +779,6 @@ export default function AcademicMastersPage() {
           </Card>
         )}
 
-        {/* ── Study Levels ─────────────────────────────────────────── */}
         {activeTab === "study-levels" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -916,7 +911,6 @@ export default function AcademicMastersPage() {
           </Card>
         )}
 
-        {/* ── Program Types ────────────────────────────────────────── */}
         {activeTab === "program-types" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

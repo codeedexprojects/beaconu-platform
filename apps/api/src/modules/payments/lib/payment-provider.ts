@@ -18,11 +18,6 @@ export interface VerifyPaymentParams {
   signature?: string;
 }
 
-/** Every concrete gateway (mock today; Razorpay, RazorpayX, or Razorpay
- * Route later) implements this same shape. Nothing in the payments module's
- * service layer depends on gateway-specific types, so swapping the
- * implementation returned by getPaymentProvider() is the only change needed
- * to go live with a real gateway. */
 export interface PaymentProvider {
   readonly name: string;
   createOrder(params: CreateOrderParams): Promise<CreateOrderResult>;

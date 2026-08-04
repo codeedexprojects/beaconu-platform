@@ -77,7 +77,6 @@ export function CollegeLeadStatusModal({
               </p>
             </div>
 
-            {/* Status toggle */}
             <div className="space-y-2">
               <Label>Status</Label>
               <div className="flex gap-2">
@@ -105,7 +104,6 @@ export function CollegeLeadStatusModal({
               )}
             </div>
 
-            {/* Affiliated University — only shown when approving a new lead */}
             {isNewApproval && (
               <div className="space-y-2">
                 <Label htmlFor="university-select">
@@ -138,7 +136,6 @@ export function CollegeLeadStatusModal({
               </div>
             )}
 
-            {/* Review Remarks */}
             <div className="space-y-2">
               <Label htmlFor="review-remarks">Review Remarks</Label>
               <textarea
@@ -155,7 +152,6 @@ export function CollegeLeadStatusModal({
               )}
             </div>
 
-            {/* Enable institution group */}
             {isNewApproval && (
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/20">
                 <div className="space-y-0.5">

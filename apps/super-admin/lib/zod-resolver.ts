@@ -1,9 +1,6 @@
 import type { FieldValues, Resolver } from "react-hook-form";
 import type { ZodTypeAny } from "zod";
 
-// Zod v4 uses `.issues` not `.errors` — @hookform/resolvers@3.x only checks `.errors`
-// so it re-throws ZodError instead of converting it to field errors. This resolver
-// uses safeParse to avoid that entirely.
 export function zodResolver<T extends FieldValues>(
   schema: ZodTypeAny,
 ): Resolver<T> {

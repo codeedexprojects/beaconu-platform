@@ -39,8 +39,6 @@ export interface UpdateBlogInput {
 
 const BLOG_AUTHOR_BASE = "/api/v1/blog/author/blogs";
 
-// ── Author (uses api client with Bearer token) ──
-
 export const blogAuthorService = {
   list: (params?: { status?: string; page?: number; limit?: number }) => {
     const query = new URLSearchParams();

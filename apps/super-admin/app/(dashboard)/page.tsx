@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/utils";
 
-// Mock Data
 const stats = [
   {
     label: "Total Colleges",
@@ -151,11 +150,9 @@ export default function DashboardPage(): React.JSX.Element {
 
   return (
     <div className="flex flex-col min-h-full pb-10">
-      {/* Top Main Header */}
       <Header title="Dashboard" description="Platform-wide overview" />
 
       <div className="flex-1 space-y-8 p-6 max-w-7xl mx-auto w-full">
-        {/* Welcome Hero Banner */}
         <div className="relative overflow-hidden rounded-2xl border border-rose-500/10 bg-gradient-to-br from-white/80 via-white/40 to-rose-50/20 p-6 md:p-8 shadow-sm backdrop-blur-md">
           <div className="absolute right-0 top-0 -mr-16 -mt-16 h-48 w-48 rounded-full bg-rose-500/5 blur-3xl" />
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -188,7 +185,6 @@ export default function DashboardPage(): React.JSX.Element {
           </div>
         </div>
 
-        {/* Dynamic Circular Stats Row */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const isUp = stat.change >= 0;

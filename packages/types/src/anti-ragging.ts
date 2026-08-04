@@ -62,8 +62,6 @@ export interface AntiRaggingComplaintListResponse {
   meta: PaginationMeta;
 }
 
-// Trimmed shape for the student's own report list — full detail lives
-// behind the get-by-id endpoint.
 export interface AntiRaggingComplaintSummary {
   id: string;
   complaintNumber: string;

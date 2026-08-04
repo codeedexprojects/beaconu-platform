@@ -15,7 +15,6 @@ export async function getAdminProfiles(): Promise<AdminProfilesResponse> {
   return {
     students: response.students ?? [],
     blinkUsers: response.blinkUsers ?? [],
-    // Keep UI stable if backend does not return platformAdmins yet.
     platformAdmins: response.platformAdmins ?? [],
   };
 }

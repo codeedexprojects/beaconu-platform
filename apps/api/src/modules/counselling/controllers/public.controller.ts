@@ -4,7 +4,6 @@ import { counsellorRequestSchemas } from "../validators/counsellor-request.valid
 import { CounsellorRequestService } from "../services/counsellor-request.service";
 
 export class CounsellingPublicController {
-  // POST /api/v1/public/counsellor-requests — public, no auth
   static async submitRequest(req: Request, res: Response) {
     const data = counsellorRequestSchemas.submit.parse(req.body);
     const result = await CounsellorRequestService.submit(data);

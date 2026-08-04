@@ -21,7 +21,6 @@ function StatCardSkeleton() {
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-0">
-      {/* Header */}
       <div className="flex gap-4 px-4 py-3 border-b">
         <Skeleton className="h-3 w-32" />
         <Skeleton className="h-3 w-20 ml-auto" />
@@ -29,7 +28,6 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
         <Skeleton className="h-3 w-16" />
         <Skeleton className="h-3 w-14" />
       </div>
-      {/* Rows */}
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
@@ -52,7 +50,6 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 export default function DashboardLoading(): React.JSX.Element {
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header skeleton */}
       <div className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
         <div className="space-y-1.5">
           <Skeleton className="h-4 w-28" />
@@ -66,16 +63,13 @@ export default function DashboardLoading(): React.JSX.Element {
       </div>
 
       <div className="flex-1 space-y-6 p-6">
-        {/* Stat cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <StatCardSkeleton key={i} />
           ))}
         </div>
 
-        {/* Main grid */}
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Table card */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
               <div className="space-y-1.5">
@@ -87,7 +81,6 @@ export default function DashboardLoading(): React.JSX.Element {
             <TableSkeleton rows={5} />
           </Card>
 
-          {/* Right column */}
           <div className="flex flex-col gap-6">
             <Card>
               <CardHeader className="pb-3">

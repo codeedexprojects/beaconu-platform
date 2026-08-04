@@ -69,8 +69,6 @@ const COLLEGE_PERMISSIONS = [
 ];
 
 export class CollegeRolesController {
-  // ── Permissions ────────────────────────────────────────────────────────────
-
   static async listPermissions(req: Request, res: Response) {
     return res
       .status(200)
@@ -81,8 +79,6 @@ export class CollegeRolesController {
         ),
       );
   }
-
-  // ── Roles CRUD ─────────────────────────────────────────────────────────────
 
   static async listRoles(req: Request, res: Response) {
     const collegeId = req.collegeId!;
@@ -123,7 +119,6 @@ export class CollegeRolesController {
     const body = schema.parse(req.body);
     const slug = generateSlug(body.name);
 
-    // Check if same name/slug exists
     const existing = await prisma.collegeRole.findFirst({
       where: { collegeId, slug },
     });
@@ -133,7 +128,6 @@ export class CollegeRolesController {
       );
     }
 
-    // Check valid permission codes
     const validCodes = COLLEGE_PERMISSIONS.map((p) => p.code);
     const invalidCodes = body.permissionCodes.filter(
       (code) => !validCodes.includes(code),

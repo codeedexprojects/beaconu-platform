@@ -176,8 +176,6 @@ export type FirebaseStudentLoginInput = z.infer<
   typeof firebaseStudentLoginSchema
 >;
 
-// ── Blink forgot-password ──────────────────────────────────────────────────
-
 export const blinkForgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });

@@ -237,7 +237,6 @@ export default function NewsAlertDetailPage() {
           Back to News & Alerts
         </Link>
 
-        {/* Status + timestamps */}
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={cn(

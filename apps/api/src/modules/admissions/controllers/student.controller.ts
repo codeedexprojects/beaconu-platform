@@ -65,8 +65,6 @@ export class StudentApplicationController {
       .json(ApiResponse.success("Application started", result));
   }
 
-  /** A student can have several Applications for one cycle now (Plan N) —
-   * lists all of them for this cycle, not "the" one. */
   static async listForCycle(req: Request, res: Response) {
     const result = await ApplicationService.listMine(
       req.userId as string,
@@ -75,9 +73,6 @@ export class StudentApplicationController {
     return res.json(ApiResponse.success("Applications fetched", result));
   }
 
-  /** null when the student hasn't started any application for this cycle;
-   * otherwise one entry per Application (there can be several now, Plan N)
-   * with its pending action. */
   static async getStatus(req: Request, res: Response) {
     const result = await ApplicationService.getStatus(
       req.userId as string,
@@ -86,9 +81,6 @@ export class StudentApplicationController {
     return res.json(ApiResponse.success("Application status fetched", result));
   }
 
-  /** Same as getStatus but with no cycle id given — optionally narrowed to
-   * one college via ?college_id=, else spans every college the student has
-   * ever applied to. */
   static async getStatusAllCycles(req: Request, res: Response) {
     const query = getStatusAllCyclesQuerySchema.parse(req.query);
     const result = await ApplicationService.getStatusAllCycles(
@@ -139,9 +131,6 @@ export class StudentApplicationController {
   }
 
   static async getPaymentSummary(req: Request, res: Response) {
-    // ApplicationPaymentSummaryQuery has no ownership check of its own
-    // (Query layer, no studentId param) — verified here first, same as
-    // every other action in this controller.
     await ApplicationService.getById(
       req.params.applicationId as string,
       req.userId as string,

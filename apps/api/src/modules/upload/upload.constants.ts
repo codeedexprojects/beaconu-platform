@@ -34,8 +34,8 @@ export const AUDIO_MIME_TYPES: AllowedMimeType[] = [
   "audio/wav",
 ];
 
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB  (images/PDFs)
-export const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB (videos)
-export const PRESIGN_EXPIRY_SECONDS = 300; // 5 min
-export const VIDEO_PRESIGN_EXPIRY_SECONDS = 900; // 15 min (videos need more time)
-export const VIEW_URL_EXPIRY_SECONDS = 3600; // 1 hr
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
+export const PRESIGN_EXPIRY_SECONDS = 300;
+export const VIDEO_PRESIGN_EXPIRY_SECONDS = 900;
+export const VIEW_URL_EXPIRY_SECONDS = 3600;

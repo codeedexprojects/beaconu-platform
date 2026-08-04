@@ -83,12 +83,10 @@ function EventRow({ event }: { event: EventListItem }) {
 
   return (
     <div className="flex items-start gap-4 px-6 py-4 hover:bg-muted/30 transition-colors border-b last:border-0">
-      {/* Left: Mode icon */}
       <div className="mt-0.5 p-2 rounded-full bg-muted shrink-0">
         <ModeIcon className="h-4 w-4" />
       </div>
 
-      {/* Middle: Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <span

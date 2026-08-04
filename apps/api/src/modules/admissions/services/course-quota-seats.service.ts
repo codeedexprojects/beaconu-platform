@@ -79,9 +79,6 @@ export class CourseQuotaSeatsService {
       );
     }
 
-    // A prior detach soft-deletes the (cycleCourse, quota) row rather than
-    // removing it, so re-attaching must reactivate that row instead of
-    // violating the unique constraint.
     const existing = await CourseQuotaSeatsRepository.findByCourseAndQuota(
       cycleCourse.id,
       body.college_quota_id,

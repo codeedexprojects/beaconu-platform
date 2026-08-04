@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-// ── Direction A: college requests a document FROM a student ──────────────
-// College admin creates the request (type + deadline), student submits a
-// file, college admin verifies/rejects it.
-
 export const documentCategoryValues = [
   "academic",
   "identification",
@@ -57,10 +53,6 @@ export type ReviewSubmissionInput = z.infer<typeof reviewSubmissionSchema>;
 export type SubmissionRequestListQuery = z.infer<
   typeof submissionRequestListQuerySchema
 >;
-
-// ── Direction B: student requests an official document FROM the college ──
-// Student creates the request (e.g. bonafide certificate), college admin
-// issues (uploads) it or rejects it.
 
 export const supportingDocumentSchema = z.object({
   url: z.string().trim().url("A valid file URL is required"),
@@ -137,10 +129,6 @@ export type ResubmitDocumentRequestInput = z.infer<
 export type DocumentRequestListQuery = z.infer<
   typeof documentRequestListQuerySchema
 >;
-
-// ── Document templates: catalog of documents students can request ────────
-// College admin defines what's requestable (e.g. "Bonafide Certificate",
-// "Transcript"); the student app lists these to build the request form.
 
 export const createDocumentTemplateSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),

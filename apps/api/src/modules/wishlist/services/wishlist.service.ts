@@ -4,8 +4,6 @@ import { WishlistRepository } from "../repositories/wishlist.repository";
 import { WishlistQuery } from "../queries/wishlist.query";
 
 export class WishlistService {
-  // Cross-module read used by other modules (e.g. colleges) to personalize
-  // public responses with wishlist status for the requesting student.
   static async getWishlistedCollegeIds(
     studentId: string,
     collegeIds: string[],

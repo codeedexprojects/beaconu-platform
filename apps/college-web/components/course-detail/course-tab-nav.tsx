@@ -21,9 +21,6 @@ const TAB_LABELS: Record<string, string> = {
   demo_graphics: "Demographics",
 };
 
-// tabId (snake_case, from the API) -> URL path segment (kebab-case route
-// folder name). Kept explicit rather than deriving one from the other so a
-// route rename can't silently produce a dead nav link.
 const TAB_PATHS: Record<string, string> = {
   admission_policy: "admission-policy",
   placements: "placements",
@@ -40,8 +37,6 @@ const TAB_PATHS: Record<string, string> = {
   demo_graphics: "demo-graphics",
 };
 
-// Tabs get added here as each one is built — unhandled tabs render as
-// plain (non-clickable) text instead of a link, so we never ship a dead link.
 const IMPLEMENTED_TABS = new Set([
   "course_info",
   "admission_policy",

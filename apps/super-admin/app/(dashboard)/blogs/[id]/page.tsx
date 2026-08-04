@@ -130,7 +130,6 @@ export default function BlogDetailPage() {
       <Header title="Blog Detail" description={blog.title} />
 
       <div className="flex-1 p-6 space-y-5 max-w-4xl">
-        {/* Back */}
         <Link
           href="/blogs"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -139,7 +138,6 @@ export default function BlogDetailPage() {
           Back to Blogs
         </Link>
 
-        {/* Review actions — only for pending */}
         {blog.status === "pending" && (
           <Card className="border-none shadow-sm border-l-4 border-l-amber-400">
             <CardHeader className="pb-3">
@@ -215,7 +213,6 @@ export default function BlogDetailPage() {
           </Card>
         )}
 
-        {/* Status banner for reviewed posts */}
         {blog.status !== "pending" && (
           <div
             className={cn(

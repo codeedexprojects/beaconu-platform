@@ -15,7 +15,7 @@ interface VideoEntry {
 }
 
 interface VideoListEditorProps {
-  value: string; // JSON string: [{title, url}]
+  value: string;
   onChange: (json: string) => void;
   disabled?: boolean;
 }

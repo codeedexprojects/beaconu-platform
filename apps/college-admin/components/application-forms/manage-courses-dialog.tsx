@@ -86,9 +86,6 @@ function CourseQuotaSeatsPanel({
   const configuredQuotaIds = new Set(
     activeRows.map((row) => row.collegeQuotaId),
   );
-  // Only quotas already linked to this course in Academics Catalog →
-  // Quotas & Fees can get cycle-scoped seats — Academics Catalog is the
-  // source of truth for which quotas a course accepts at all.
   const courseAcceptedQuotaIds = new Set(
     (courseQuotaConfigs ?? [])
       .filter((cq) => cq.isActive)

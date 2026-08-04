@@ -92,10 +92,6 @@ export class QuotaRepository {
     });
   }
 
-  /** Everything currently referencing this quota — which courses have it in
-   * their catalogue fee config, and which seat pools (with cycle + course
-   * context) allocate seats for it — so an admin can see what to detach
-   * before deactivating. */
   static async findUsageById(id: string, collegeId: string) {
     return prisma.collegeQuota.findFirst({
       where: { id, collegeId },

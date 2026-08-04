@@ -26,8 +26,6 @@ export interface StatusHistoryEntry {
   changedBy: string | null;
 }
 
-// ── Direction A: college requests a document FROM a student ──────────────
-
 export type DocumentCategory =
   | "academic"
   | "identification"
@@ -80,13 +78,6 @@ export interface ReviewSubmissionInput {
   status: "verified" | "rejected";
   rejection_reason?: string;
 }
-
-// ── Direction B: student requests an official document FROM the college ──
-// Raw status flow is submitted→processing→awaiting_approval→approved|rejected→issued→collected
-// (see DocumentRequestStatus in ./enums); only submitted/rejected/issued are
-// currently settable by the API. `displayStatus` folds in resubmission count
-// and delivery mode so the student sees a friendlier label (resubmitted,
-// under_review, ready_for_download, ready_to_collect) without a new raw status.
 
 export type DocumentDeliveryMode = "digital" | "pickup" | "courier";
 
@@ -179,8 +170,6 @@ export interface ResubmitDocumentRequestInput {
   description?: string;
   delivery_mode?: DocumentDeliveryMode;
 }
-
-// ── Document templates: catalog of documents students can request ────────
 
 export interface DocumentTemplateItem {
   id: string;

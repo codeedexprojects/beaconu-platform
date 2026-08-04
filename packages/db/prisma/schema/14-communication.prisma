@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 14 — COMMUNICATION & NOTIFICATIONS
-// ============================================================
-
 model Notification {
   id             String    @id @default(dbgenerated("('NTF-'::text || (nextval('notification_seq'::regclass))::text)"))
   recipientType  String    @map("recipient_type") @db.VarChar(20)
@@ -17,9 +13,6 @@ model Notification {
   readAt         DateTime? @map("read_at") @db.Timestamptz
   deliveryStatus String    @default("pending") @map("delivery_status") @db.VarChar(20)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-
-  // Polymorphic: recipientId resolved at application layer based on recipientType.
-  // No Prisma FK — recipientId can reference students, staff_members, blink_users, counsellors, or platform_admins.
 
   @@index([recipientType, recipientId, isRead], name: "idx_notif_recipient")
   @@index([category], name: "idx_notif_category")
@@ -45,9 +38,7 @@ model BroadcastNotification {
   sentAt          DateTime? @map("sent_at") @db.Timestamptz
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   college College? @relation(fields: [collegeId], references: [id])
-  // sentById is polymorphic (platform_admin or staff_member). Resolve at app layer.
 
   @@index([collegeId], name: "idx_broadcast_college")
   @@index([status], name: "idx_broadcast_status")
@@ -68,7 +59,6 @@ model Announcement {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   creator StaffMember @relation(fields: [createdBy], references: [id])
 
@@ -93,7 +83,6 @@ model SupportTicket {
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student  Student         @relation(fields: [studentId], references: [id])
   college  College         @relation(fields: [collegeId], references: [id])
   assignee StaffMember?    @relation(fields: [assignedTo], references: [id])
@@ -118,9 +107,7 @@ model TicketMessage {
   isSystem    Boolean  @default(false) @map("is_system")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  // senderId is polymorphic (student, staff_member, or system). Resolve at app layer via senderType.
 
   @@index([ticketId, createdAt], name: "idx_tmsg_ticket")
   @@index([senderType, senderId], name: "idx_tmsg_sender")
@@ -140,9 +127,6 @@ model ChatConversation {
   status             String    @default("active") @db.VarChar(20)
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-
-  // participant1Id and participant2Id are polymorphic (student, blink_user, or staff_member).
-  // Resolved at application layer via participant1Type / participant2Type discriminators.
 
   messages ChatMessage[]
 
@@ -164,9 +148,7 @@ model ChatMessage {
   readAt         DateTime? @map("read_at") @db.Timestamptz
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  // senderId is polymorphic (student, blink_user, or staff_member). Resolve at app layer via senderType.
 
   @@index([conversationId, createdAt], name: "idx_cmsg_conversation")
   @@index([senderType, senderId], name: "idx_cmsg_sender")

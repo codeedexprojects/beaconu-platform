@@ -24,7 +24,6 @@ const setupAccountSchema = z.object({
 });
 
 export class StaffAuthController {
-  // ── Login ─────────────────────────────────────────────────────────────────
   static async login(req: Request, res: Response) {
     const { email, password, collegeSlug } = req.body as {
       email: string;

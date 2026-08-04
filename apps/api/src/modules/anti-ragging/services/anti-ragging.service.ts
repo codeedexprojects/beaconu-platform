@@ -15,8 +15,6 @@ function appendHistory(existing: unknown, entry: Record<string, unknown>) {
   return [...(Array.isArray(existing) ? existing : []), entry];
 }
 
-/** Best-effort push notifications for the anti-ragging complaint lifecycle — never throw. */
-
 async function notifyStudentOfStatusChange(
   complaint: { id: string; studentId: string; subject: string },
   status: "acknowledged" | "investigating" | "resolved",

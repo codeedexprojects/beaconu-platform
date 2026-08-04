@@ -6,7 +6,6 @@ export function HelpAndTrust() {
   return (
     <section className="px-4 md:px-6 lg:px-8 pb-2">
       <div className="lg:flex lg:gap-10 lg:items-start">
-        {/* Still Confused CTA */}
         <div className="lg:flex-1 mb-6 lg:mb-0">
           <div className="flex items-center justify-center gap-2 mb-3">
             <span className="text-yellow-400 text-base" aria-hidden>
@@ -21,7 +20,6 @@ export function HelpAndTrust() {
           </div>
 
           <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-gray-100">
-            {/* Accent bar */}
             <div className="h-1 w-12 rounded-full bg-gradient-to-r from-orange-400 to-amber-400 mb-4" />
 
             <h3 className="text-[20px] sm:text-[24px] font-bold text-[#111827] mb-1.5">
@@ -38,9 +36,7 @@ export function HelpAndTrust() {
           </div>
         </div>
 
-        {/* Trusted by */}
         <div className="lg:flex-1 lg:flex lg:flex-col lg:justify-center lg:min-h-full">
-          {/* Overlapping avatars */}
           <div className="flex items-center mb-4 sm:mb-5">
             <div className="flex">
               {avatarColors.map((color, i) => (

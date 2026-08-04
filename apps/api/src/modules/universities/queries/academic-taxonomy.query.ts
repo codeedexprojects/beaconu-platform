@@ -157,7 +157,6 @@ export class AcademicTaxonomyQuery {
     };
   }
 
-  /** Public-facing stream list: flat array shape with active-course counts. */
   static async listStreamsForPublic(filters: PublicListQuery) {
     const { data: streams, meta } = await this.listStreams(filters);
 

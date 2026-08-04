@@ -15,7 +15,6 @@ const router: Router = Router();
 const staffAuth = [authenticate, authorizeUserType("staff_member")];
 const staffWriteAuth = [...staffAuth, denyRoleSlugs("sub_admin")];
 
-// ── Courses CRUD ──────────────────────────────────────────────────────────────
 router.get(
   "/",
   ...staffAuth,
@@ -51,7 +50,6 @@ router.delete(
   CollegeRegistrationController.deleteCourse,
 );
 
-// ── Course Quotas ─────────────────────────────────────────────────────────────
 router.get(
   "/:id/quotas",
   ...staffAuth,
@@ -80,7 +78,6 @@ router.delete(
   CourseQuotasController.detachQuota,
 );
 
-// ── Course Tabs ───────────────────────────────────────────────────────────────
 router.get(
   "/:id/tabs",
   ...staffAuth,

@@ -17,8 +17,6 @@ import {
 } from "../validators/event.validator";
 import { PaginationHelper } from "@/shared/responses/pagination";
 
-// ─── Formatter ────────────────────────────────────────────────
-
 function formatEvent(event: any) {
   if (!event) return event;
   return {
@@ -137,11 +135,7 @@ function generateSlug(title: string): string {
   );
 }
 
-// ─── Service ──────────────────────────────────────────────────
-
 export class EventService {
-  // ── Admin: Create ────────────────────────────────────────
-
   static async create(
     data: CreateEventInput,
     createdByType: string,

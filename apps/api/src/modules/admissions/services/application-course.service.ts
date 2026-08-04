@@ -18,9 +18,6 @@ function toDto(row: ApplicationCourseRow) {
   };
 }
 
-/** Bidirectional: positive appFeeAdjustmentValue surcharges the base fee
- * (e.g. NRI Quota), negative discounts it — mirrors CourseQuota's semantics.
- * Clamped at 0 so a discount can never push the fee negative. */
 export function applyFeeAdjustment(
   baseFee: number,
   type: string | null | undefined,
@@ -35,14 +32,6 @@ export function applyFeeAdjustment(
   return Math.max(0, adjusted);
 }
 
-/** Courses/quota are freely editable while the student is still building
- * up their application (primary + any extra courses, each with a
- * preference order) — the whole set gets paid for together in one order.
- * requireNotLocked defaults to true for every course-mutating call
- * (add, withdraw, change quota); it locks the instant a payment order
- * exists (pending or completed — see isPaymentLocked's doc comment), even
- * before that order is confirmed, so the total can't shift out from under
- * a payment already in flight. Read-only calls (list) pass false. */
 async function assertOwnDraftApplication(
   applicationId: string,
   studentId: string,
@@ -79,9 +68,6 @@ export class ApplicationCourseService {
     options: { isPrimary?: boolean } = {},
   ) {
     const isPrimary = options.isPrimary ?? false;
-    // A brand-new application (Start Application creating the primary
-    // course) can never already be payment-locked — nothing to check yet
-    // — so this is just the normal gate, no special-casing needed.
     const application = await assertOwnDraftApplication(
       applicationId,
       studentId,
@@ -106,11 +92,6 @@ export class ApplicationCourseService {
       );
     }
 
-    // Cross-application guard (Plan N, broadened in Plan R to the whole
-    // college): the student may have a *different* Application at this
-    // college that already has this course active — a course can only
-    // ever be live in one of a student's applications at a college at a
-    // time, regardless of cycle.
     const crossAppSelection =
       await ApplicationRepository.findActiveCourseSelectionInCollege(
         studentId,
@@ -139,9 +120,6 @@ export class ApplicationCourseService {
         throw new NotFoundError("Quota");
       }
 
-      // Availability check only — not a reservation. Seats are decremented
-      // atomically at final submit, with a re-check at that point, so an
-      // abandoned draft never holds a seat hostage.
       const effectiveOpenSeats = seat.seatPool
         ? seat.seatPool.openSeats
         : seat.openSeats;
@@ -208,10 +186,6 @@ export class ApplicationCourseService {
     await ApplicationCourseService.recalculateTotalFee(applicationId);
   }
 
-  /** Changes the quota (and recomputes the fee) on a course already added
-   * to the application — including the primary course, which can have its
-   * quota revised even though it can't be withdrawn. Locked the same as
-   * every other course mutation once a payment order exists. */
   static async changeQuota(
     applicationId: string,
     studentId: string,
@@ -290,9 +264,6 @@ export class ApplicationCourseService {
     );
   }
 
-  /** Called from the assessments module (evaluation.service.ts) once an
-   * attempt's result is published — via this service, never its
-   * repository, per the "modules talk via services only" rule. */
   static async markAssessmentCompleted(
     applicationCourseId: string,
     publishedByStaffId: string,
@@ -317,11 +288,6 @@ export class ApplicationCourseService {
     });
   }
 
-  /** Fan-out entry point for the assessments module — one AssessmentAttempt
-   * now covers the whole Application (every course listed on it), so
-   * publishing a result marks every one of its active (non-withdrawn)
-   * courses, not just one. Reuses the existing per-course
-   * markAssessmentCompleted (and its own idempotency check) for each. */
   static async markAssessmentCompletedForApplication(
     applicationId: string,
     publishedByStaffId: string,
@@ -333,10 +299,6 @@ export class ApplicationCourseService {
     }
   }
 
-  /** Cross-module ownership + status read — used by the `interviews`
-   * module (never touches this module's repository directly, per the
-   * "modules talk via services only" rule) to verify a student owns an
-   * ApplicationCourse before booking/rescheduling against it. */
   static async getForStudentWithStatus(
     applicationCourseId: string,
     studentId: string,
@@ -382,10 +344,6 @@ export class ApplicationCourseService {
     });
   }
 
-  /** Called by interviews/services/interview-booking.service.ts the first
-   * time a student successfully books a slot for this course — idempotent
-   * no-op if already at/past this stage (e.g. re-booking after a
-   * cancellation). */
   static async markInterviewPending(
     applicationCourseId: string,
     studentId: string,
@@ -398,7 +356,6 @@ export class ApplicationCourseService {
     );
   }
 
-  /** Called once an evaluator records the interview's outcome. */
   static async markInterviewCompleted(
     applicationCourseId: string,
     staffId: string,
@@ -411,9 +368,6 @@ export class ApplicationCourseService {
     );
   }
 
-  /** Shortlisting is its own explicit staff action, only meaningful once
-   * the interview is done — no OfferLetter/token payment triggered here
-   * (deferred to a later feature). */
   static async markShortlisted(applicationCourseId: string, staffId: string) {
     const course =
       await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);

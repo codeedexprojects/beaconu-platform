@@ -1,8 +1,6 @@
 import { prisma } from "@beaconu/db";
 import { applyFeeAdjustment } from "../services/application-course.service";
 
-/** Shared by the course catalogue and payment summary queries — both need
- * "every quota option for this course, with its computed fee." */
 export async function quotaOptionsForCourse(
   admissionCycleCourseId: string,
   courseId: string,

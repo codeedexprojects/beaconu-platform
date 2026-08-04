@@ -1,9 +1,7 @@
-// prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // 1. Lookup tables
   const stream = await prisma.stream.create({
     data: {
       name: "Engineering & Technology",
@@ -28,7 +26,6 @@ async function main() {
     },
   });
 
-  // 2. University + College
   const uniType = await prisma.universityType.create({
     data: { name: "Private University", slug: "private", sortOrder: 1 },
   });
@@ -53,7 +50,6 @@ async function main() {
     },
   });
 
-  // 3. Seed system roles for the college
   const roles = [
     "college_admin",
     "evaluator",
@@ -73,7 +69,6 @@ async function main() {
     });
   }
 
-  // 4. Test student
   const student = await prisma.student.create({
     data: {
       fullName: "Test Student",

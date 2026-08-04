@@ -47,7 +47,6 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Counsellor detail retrieved", detail));
   }
 
-  // GET /api/v1/admin/counsellors/:id/wallet-transactions
   static async getWalletTransactions(req: Request, res: Response) {
     const wallet = await SessionService.getWallet(
       req.params["id"] as string,
@@ -58,7 +57,6 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Wallet transactions retrieved", wallet));
   }
 
-  // GET /api/v1/admin/counsellors/:id/slots
   static async getSlots(req: Request, res: Response) {
     const { data, meta } = await SessionService.listCounsellorSlotsForAdmin(
       req.params["id"] as string,
@@ -69,7 +67,6 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Slots retrieved", data, meta));
   }
 
-  // GET /api/v1/admin/counsellors/:id/sessions
   static async getSessions(req: Request, res: Response) {
     const { data, meta } = await SessionService.listCounsellorSessions(
       req.params["id"] as string,
@@ -90,7 +87,6 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Status updated", counsellor));
   }
 
-  // GET /api/v1/admin/counsellor-requests
   static async listRequests(req: Request, res: Response) {
     const filters = counsellorRequestSchemas.list.parse(req.query);
     const result = await CounsellorRequestService.list(filters);
@@ -104,7 +100,6 @@ export class CounsellingPlatformAdminController {
       );
   }
 
-  // GET /api/v1/admin/counsellor-requests/:id
   static async getRequestById(req: Request, res: Response) {
     const result = await CounsellorRequestService.getById(
       req.params["id"] as string,
@@ -119,7 +114,6 @@ export class CounsellingPlatformAdminController {
       );
   }
 
-  // PATCH /api/v1/admin/counsellor-requests/:id/status
   static async updateRequestStatus(req: Request, res: Response) {
     const data = counsellorRequestSchemas.updateStatus.parse(req.body);
     const result = await CounsellorRequestService.updateStatus(
@@ -137,7 +131,6 @@ export class CounsellingPlatformAdminController {
       );
   }
 
-  // GET /api/v1/admin/counsellors/withdrawals
   static async listWithdrawalRequests(req: Request, res: Response) {
     const result = await SessionService.listWithdrawalRequests(
       req.query as unknown as ListWithdrawalRequestsQueryInput,
@@ -153,7 +146,6 @@ export class CounsellingPlatformAdminController {
       );
   }
 
-  // PATCH /api/v1/admin/counsellors/withdrawals/:id/status
   static async updateWithdrawalStatus(req: Request, res: Response) {
     const result = await SessionService.updateWithdrawalStatus(
       req.params["id"] as string,
@@ -165,7 +157,6 @@ export class CounsellingPlatformAdminController {
       .json(ApiResponse.success("Withdrawal request status updated", result));
   }
 
-  // GET /api/v1/admin/counsellors/refund-requests
   static async listRefundRequests(req: Request, res: Response) {
     const result = await RefundService.listAllForAdmin(
       req.query as unknown as ListRefundRequestsQueryInput,
@@ -181,7 +172,6 @@ export class CounsellingPlatformAdminController {
       );
   }
 
-  // PATCH /api/v1/admin/counsellors/refund-requests/:id/status
   static async updateRefundStatus(req: Request, res: Response) {
     const result = await RefundService.updateStatus(
       req.params["id"] as string,

@@ -42,13 +42,11 @@ export default function LoginPage(): React.JSX.Element {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070B14] flex items-center justify-center p-4">
-      {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
       </div>
 
-      {/* Dot-grid texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
@@ -58,7 +56,6 @@ export default function LoginPage(): React.JSX.Element {
       />
 
       <div className="relative w-full max-w-sm animate-fade-in">
-        {/* Brand */}
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-xl shadow-primary/40">
             <span className="text-xl font-black text-white">B</span>
@@ -69,7 +66,6 @@ export default function LoginPage(): React.JSX.Element {
           <p className="mt-1 text-sm text-white/40">Super Admin Panel</p>
         </div>
 
-        {/* Card */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-md shadow-2xl">
           <h2 className="mb-1 text-lg font-semibold text-white">
             Welcome back
@@ -83,7 +79,6 @@ export default function LoginPage(): React.JSX.Element {
             noValidate
             className="space-y-4"
           >
-            {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-white/70">
                 Email
@@ -104,7 +99,6 @@ export default function LoginPage(): React.JSX.Element {
               )}
             </div>
 
-            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-white/70">
                 Password

@@ -31,9 +31,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Cycle+course lookup used both to browse fee/quota options and to
-   * validate a selection at add-time — course must still be active on the
-   * cycle. */
   static async findAdmissionCycleCourse(
     admissionCycleId: string,
     courseId: string,
@@ -83,15 +80,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Courses/quota are freely editable while building up the application,
-   * and lock the instant a payment order exists — even before it's
-   * confirmed, so the total can't shift out from under a pending order.
-   * "pending" or "completed" locks; "failed" doesn't, so a failed attempt
-   * lets the student go back and adjust courses before retrying. Reads the
-   * Transaction table directly (shared table, not the payments module's
-   * repository/service) — same one-directional pattern used by the
-   * payments module reading ApplicationCourse directly, avoiding a
-   * circular import between the two modules. */
   static async isPaymentLocked(applicationId: string) {
     const txn = await prisma.transaction.findFirst({
       where: {
@@ -124,12 +112,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** A prior withdraw soft-deletes (status: "withdrawn") rather than
-   * removing the row, so re-adding the same course must reactivate that row
-   * instead of violating the (applicationId, courseId) unique constraint.
-   * isPrimary is intentionally not part of the reactivate payload — a
-   * withdrawn-then-re-added course never reclaims primary status; the
-   * primary slot is fixed at Start Application. */
   static async reactivate(
     id: string,
     data: {
@@ -152,8 +134,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Soft-delete only — sets status to "withdrawn" rather than removing the
-   * row, so the fee snapshot and history survive. */
   static async withdraw(id: string) {
     return prisma.applicationCourse.update({
       where: { id },
@@ -196,9 +176,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Read inside the transaction to avoid a TOCTOU gap between checking
-   * pool linkage and decrementing — seatPoolId rarely changes, but the seat
-   * count itself does, and this keeps both reads under the same snapshot. */
   static async findSeatPoolLink(
     tx: Prisma.TransactionClient,
     courseQuotaSeatId: string,
@@ -209,9 +186,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Atomic conditional decrement — the WHERE openSeats > 0 clause is
-   * evaluated by Postgres at UPDATE time, so concurrent submits racing for
-   * the last seat can't both succeed; count === 0 means we lost the race. */
   static async decrementExclusiveSeat(
     tx: Prisma.TransactionClient,
     courseQuotaSeatId: string,
@@ -247,9 +221,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Cross-module ownership read — used by other modules (e.g.
-   * `interviews`) that need to verify a student owns an ApplicationCourse
-   * and check its current pipeline status before acting on it. */
   static async findByIdWithOwnership(id: string) {
     return prisma.applicationCourse.findUnique({
       where: { id },
@@ -272,9 +243,6 @@ export class ApplicationCourseRepository {
     });
   }
 
-  /** Generic status transition, reused by every new interview-pipeline
-   * status update (markInterviewPending/Completed/markShortlisted) instead
-   * of one near-identical repo method per status. */
   static async updateStatus(
     tx: Prisma.TransactionClient,
     id: string,

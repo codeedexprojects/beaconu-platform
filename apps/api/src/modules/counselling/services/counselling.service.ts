@@ -6,12 +6,6 @@ import {
   UpdateCounsellorStatusInput,
 } from "../validators/counselling.validator";
 
-/**
- * `expertise`/`education` are normally explicit arrays in `profile_metadata`,
- * but counsellors approved before those fields existed only have a
- * comma-separated `specialization` string / a single `qualification`
- * string — fall back to deriving arrays from those.
- */
 function deriveExpertise(metadata: Record<string, unknown>): string[] {
   if (Array.isArray(metadata.expertise)) return metadata.expertise;
   if (typeof metadata.specialization === "string") {
@@ -49,7 +43,6 @@ function formatCounsellor(counsellor: any) {
     status: counsellor.status,
     rating: Number(counsellor.rating ?? 0.0),
     known_languages: counsellor.knownLanguages,
-    // MindCare doesn't take session payments — no wallet/withdrawal access.
     session_fee: isMindcare ? null : Number(counsellor.sessionFee ?? 0.0),
     wallet_balance: isMindcare
       ? null
@@ -77,9 +70,6 @@ export class CounsellingService {
     const counsellor = await CounsellingRepository.findById(userId);
     if (!counsellor) throw new NotFoundError("Counsellor not found");
 
-    // MindCare counsellors don't take session payments (no wallet/withdrawal
-    // access — see authorizeCounsellorType("academic") on /wallet routes),
-    // so payout/fee details are academic-only.
     const resolvedType = data.counsellor_type ?? counsellor.counsellorType;
     if (resolvedType === "mindcare") {
       if (

@@ -98,7 +98,70 @@ function OrderComparison({ answer }: { answer: EvaluationAnswerDetail }) {
   );
 }
 
+function BlankAnswersComparison({
+  answer,
+}: {
+  answer: EvaluationAnswerDetail;
+}) {
+  const blanks = answer.content.blanks ?? [];
+  const givenByBlank = new Map(
+    (answer.response?.blankAnswers ?? []).map((b) => [b.blankId, b.optionId]),
+  );
+  const correctByBlank = new Map(
+    (answer.answerKey?.blankAnswers ?? []).map((b) => [b.blankId, b.optionId]),
+  );
+
+  return (
+    <ul className="space-y-2">
+      {blanks.map((blank) => {
+        const givenOptionId = givenByBlank.get(blank.id);
+        const correctOptionId = correctByBlank.get(blank.id);
+        const isCorrect =
+          givenOptionId !== undefined && givenOptionId === correctOptionId;
+        return (
+          <li
+            key={blank.id}
+            className={
+              isCorrect
+                ? "rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1.5 text-sm dark:border-emerald-900 dark:bg-emerald-950"
+                : "rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-sm"
+            }
+          >
+            <div className="flex items-center gap-2 font-medium">
+              {blank.imageUrl && (
+                <img
+                  src={blank.imageUrl}
+                  alt=""
+                  className="h-8 w-8 rounded border object-cover"
+                />
+              )}
+              {blank.label || "(image)"}
+            </div>
+            <p className="mt-1 text-xs">
+              Student&apos;s answer:{" "}
+              {givenOptionId
+                ? optionText(answer.content, givenOptionId)
+                : "No answer"}
+            </p>
+            {!isCorrect && (
+              <p className="text-xs text-muted-foreground">
+                Correct:{" "}
+                {correctOptionId
+                  ? optionText(answer.content, correctOptionId)
+                  : "—"}
+              </p>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function AnswerBody({ answer }: { answer: EvaluationAnswerDetail }) {
+  if (answer.content.blanks && answer.answerKey?.blankAnswers) {
+    return <BlankAnswersComparison answer={answer} />;
+  }
   if (answer.content.options && answer.answerKey?.correctOptionIds) {
     return <OptionsComparison answer={answer} />;
   }

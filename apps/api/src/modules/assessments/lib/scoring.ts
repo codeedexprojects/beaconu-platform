@@ -6,10 +6,6 @@ import type {
 
 const CHOICE_FORMATS = ["single_choice", "multi_choice"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
-// "matching" (Match the Following) reuses this exact mechanic — content
-// options/blanks + answerKey/response blankAnswers — a pairing between two
-// sets is structurally identical whether it's "fill this blank" or "match
-// this left item," all-or-nothing scored the same way.
 const FILL_BLANK_FORMATS = [
   "fill_blank_drag_drop",
   "fill_blank_dropdown",
@@ -55,10 +51,6 @@ function isCorrect(
   return false;
 }
 
-/** Only meaningful for autoScorable question types — returns null otherwise,
- * since non-autoscorable answers are always evaluator-scored, never machine-scored.
- * "proportional" negative marking has no partial-credit model in this schema
- * (no schema field for it), so it's treated identically to "fixed". */
 export function scoreAutoAnswer(params: {
   autoScorable: boolean;
   responseFormat: string;

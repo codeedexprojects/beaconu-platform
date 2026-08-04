@@ -1,10 +1,6 @@
 export type ScholarshipDiscountType = "flat" | "percentage";
 export type ScholarshipApplicationStatus = "pending" | "approved" | "rejected";
 
-/** A scholarship "category" a college offers — college-admin defines the
- * name, discount, and which supporting documents it requires; students
- * apply against a specific one (optional, never required to proceed with
- * an application). */
 export interface ScholarshipConfigItem {
   id: string;
   collegeId: string;
@@ -12,9 +8,6 @@ export interface ScholarshipConfigItem {
   scholarshipType: string;
   discountType: ScholarshipDiscountType;
   discountValue: string;
-  /** Names of documents a student must attach when applying, e.g.
-   * ["Income Certificate", "Caste Certificate"] — not files themselves,
-   * just the checklist a student uploads against. */
   requiredDocuments: string[];
   isActive: boolean;
   createdAt: string;
@@ -39,11 +32,6 @@ export interface ScholarshipSupportingDocument {
   fileUrl: string;
 }
 
-/** One student's request against one ScholarshipConfig, scoped to a whole
- * Application (not one specific course on it) — an Application can carry
- * several courses (via Add Course), each possibly at a different pipeline
- * stage, so the scholarship applies to all of them together. A student
- * with multiple separate Applications applies separately per Application. */
 export interface ScholarshipApplicationItem {
   id: string;
   scholarshipConfigId: string;
@@ -52,10 +40,7 @@ export interface ScholarshipApplicationItem {
   studentName: string;
   applicationId: string;
   applicationNumber: string;
-  /** Every non-withdrawn course on this application, not just the primary. */
   courseNames: string[];
-  /** The student's own reason for applying — not an internal admin note
-   * (see reviewRemarks for that). */
   reason: string;
   annualFamilyIncomeRange: string;
   supportingDocuments: ScholarshipSupportingDocument[];
@@ -77,8 +62,6 @@ export interface CreateScholarshipApplicationInput {
 
 export interface ReviewScholarshipApplicationInput {
   action: "approve" | "reject";
-  /** Approve-only — defaults to the config's own discountValue if omitted,
-   * lets the reviewer award a different amount for this specific student. */
   discount_amount?: number;
   review_remarks?: string;
 }

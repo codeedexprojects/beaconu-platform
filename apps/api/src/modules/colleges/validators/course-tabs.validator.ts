@@ -17,8 +17,6 @@ export const COURSE_SETUP_TAB_IDS = [
   "demo_graphics",
 ] as const;
 
-// ── Tab Name → Prisma Field Mapping ──────────────────────────────────────────
-
 export const TAB_FIELD_MAP: Record<string, string> = {
   highlights: "highlights",
   curriculum: "curriculum",
@@ -45,8 +43,6 @@ export const VALID_TAB_NAMES = [
   ...Object.keys(TAB_FIELD_MAP),
   ...COURSE_SETUP_TAB_IDS,
 ];
-
-// ── Param Schemas ────────────────────────────────────────────────────────────
 
 export const courseTabParamSchema = z.object({
   id: z.string().min(1, "Course ID is required"),

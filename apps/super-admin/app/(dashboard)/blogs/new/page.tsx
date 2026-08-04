@@ -90,7 +90,6 @@ export default function NewBlogPage() {
         <Card className="border-none shadow-sm max-w-3xl">
           <CardContent className="pt-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* Title */}
               <div className="space-y-1.5">
                 <Label htmlFor="title">
                   Title <span className="text-destructive">*</span>
@@ -107,7 +106,6 @@ export default function NewBlogPage() {
                 )}
               </div>
 
-              {/* Summary */}
               <div className="space-y-1.5">
                 <Label htmlFor="summary">
                   Summary{" "}
@@ -124,7 +122,6 @@ export default function NewBlogPage() {
                 />
               </div>
 
-              {/* Content */}
               <div className="space-y-1.5">
                 <Label htmlFor="content">
                   Content <span className="text-destructive">*</span>
@@ -143,7 +140,6 @@ export default function NewBlogPage() {
                 )}
               </div>
 
-              {/* Cover image */}
               <ImageUpload
                 label="Cover Image "
                 value={form.watch("cover_image_url") ?? ""}
@@ -160,7 +156,6 @@ export default function NewBlogPage() {
                 </p>
               )}
 
-              {/* Tags */}
               <div className="space-y-1.5">
                 <Label>
                   Tags{" "}
@@ -198,7 +193,6 @@ export default function NewBlogPage() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center justify-end gap-3 pt-2">
                 <Button
                   type="button"

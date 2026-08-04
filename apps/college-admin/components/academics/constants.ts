@@ -17,7 +17,6 @@ import {
   Percent,
 } from "lucide-react";
 
-// 19 course-specific tabs plus the basic configuration tab
 export const COURSE_TABS = [
   {
     id: "basic",

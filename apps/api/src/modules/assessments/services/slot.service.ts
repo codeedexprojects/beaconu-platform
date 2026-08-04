@@ -21,12 +21,6 @@ export class SlotService {
     return new Date(windowStart.getTime() + durationSecs * 1000);
   }
 
-  /** A fixed slot's end time must match how long the assessment actually
-   * runs — the sum of the template's sections' time_limit_mins (plus the
-   * buffer) — not an admin-declared single duration field (removed) and
-   * not the paper's questions either (see computeTemplateDurationSecs's
-   * doc comment for why). No paper needs to exist yet — sections are
-   * available as soon as the template has them. */
   private static resolveFixedWindowEnd(
     templateSections: { timeLimitMins: number }[],
     start: Date,
@@ -117,8 +111,6 @@ export class SlotService {
     }
 
     if (isActive) {
-      // Only one active slot per template — activating this one
-      // deactivates whichever slot currently holds that spot.
       await SlotRepository.deactivateOtherActive(slot.templateId, id);
     }
 

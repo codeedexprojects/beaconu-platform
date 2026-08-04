@@ -78,9 +78,6 @@ export class AdmissionCycleQuery {
         ...(filters.admission_year && {
           admissionYear: filters.admission_year,
         }),
-        // Only cycles that actually have this course attached and open for
-        // applications — not just any cycle at a college that offers it
-        // elsewhere/in a different cycle.
         ...(filters.course_id && {
           admissionCycleCourses: {
             some: { courseId: filters.course_id, isActive: true },
@@ -99,12 +96,6 @@ export class AdmissionCycleQuery {
     return row ? mapAdmissionCycle(row) : null;
   }
 
-  /** Which of these course ids currently have an actively-attached course
-   * on a cycle that's genuinely open right now — same "open" + date-window
-   * rule Start Application enforces (status "open", today on/after
-   * startsOn, today on/before the whole endsOn day). Used by the public
-   * course listing to show a "you can apply now" flag without exposing
-   * which specific cycle it is. */
   static async findCourseIdsWithActiveOpenCycle(
     courseIds: string[],
   ): Promise<string[]> {

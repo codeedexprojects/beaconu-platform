@@ -487,7 +487,6 @@ export class BlinkQuery {
     };
   }
 
-  /** University basic details + paginated active colleges under it. */
   static async getUniversityDetailForEmployee(
     universityId: string,
     filters: CollegeListQuery,
@@ -574,7 +573,6 @@ export class BlinkQuery {
     };
   }
 
-  /** Streams with their active course count — pagination applies to streams only. */
   static async listStreamsWithDisciplinesForEmployee(filters: StreamListQuery) {
     const { search, page, limit } = filters;
     const skip = (page - 1) * limit;
@@ -622,7 +620,6 @@ export class BlinkQuery {
     };
   }
 
-  /** Stream basic details + paginated active disciplines under it. */
   static async getStreamDetailForEmployee(
     streamId: string,
     filters: StreamListQuery,
@@ -804,8 +801,6 @@ export class BlinkQuery {
       quotas: course.quotas.map((q) => ({
         id: q.id,
         quotaName: q.collegeQuota.name,
-        // Seats now live in the shared seat_matrix pool per admission cycle,
-        // not on the course-quota config; kept null to preserve DTO shape.
         seats: null as number | null,
         tuitionFeeOverride: q.tuitionFeeOverride
           ? Number(q.tuitionFeeOverride)
@@ -924,8 +919,6 @@ export class BlinkQuery {
       quotas: course.quotas.map((q) => ({
         id: q.id,
         quotaName: q.collegeQuota.name,
-        // Seats now live in the shared seat_matrix pool per admission cycle,
-        // not on the course-quota config; kept null to preserve DTO shape.
         seats: null as number | null,
         tuitionFeeOverride: q.tuitionFeeOverride
           ? Number(q.tuitionFeeOverride)

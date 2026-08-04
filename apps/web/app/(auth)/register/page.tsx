@@ -66,22 +66,18 @@ function RegisterPageContent(): React.JSX.Element {
 
   return (
     <div className="flex flex-col">
-      {/* Heading */}
       <p className="text-sm text-gray-500 font-medium">Complete Profile</p>
       <h1 className="text-3xl font-bold text-primary mt-0.5">Create Account</h1>
 
-      {/* Illustration */}
       <div className="my-4">
         <AuthIllustration />
       </div>
 
-      {/* Form */}
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
         className="flex flex-col gap-4"
       >
-        {/* Full Name */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-800">
             Full Name
@@ -100,7 +96,6 @@ function RegisterPageContent(): React.JSX.Element {
           )}
         </div>
 
-        {/* Email */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-800">
             Email Address
@@ -119,7 +114,6 @@ function RegisterPageContent(): React.JSX.Element {
           )}
         </div>
 
-        {/* Phone — read-only */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-800">
             Phone Number

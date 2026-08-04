@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 4 — ADMISSIONS
-// ============================================================
-
 model AdmissionCycle {
   id                   String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
   collegeId            String    @map("college_id")
@@ -14,20 +10,11 @@ model AdmissionCycle {
   endsOn               DateTime? @map("ends_on") @db.Date
   status               String    @default("open") @db.VarChar(20)
   settings             Json      @default("{}")
-  // Whether the whole application form requires an assessment — the single
-  // source of truth AttemptService.start() gates on. AdmissionCycleCourse's
-  // own (per-course) assessmentRequired is unrelated to this and stays
-  // unused for this purpose.
   assessmentRequired   Boolean   @default(false) @map("assessment_required")
-  // One assessment template for the whole application form — every course
-  // under this cycle shares it (an assessment attempt covers the whole
-  // Application, not one course at a time). null = no assessment
-  // configured for this cycle yet.
   assessmentTemplateId String?   @map("assessment_template_id")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college               College                @relation(fields: [collegeId], references: [id])
   assessmentTemplate    AssessmentTemplate?    @relation(fields: [assessmentTemplateId], references: [id])
   admissionCycleCourses AdmissionCycleCourse[]
@@ -56,7 +43,6 @@ model AdmissionCycleCourse {
   isActive               Boolean  @default(true) @map("is_active")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   admissionCycle AdmissionCycle     @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
   course         Course             @relation(fields: [courseId], references: [id])
   quotaSeats     CourseQuotaSeats[]
@@ -67,9 +53,6 @@ model AdmissionCycleCourse {
   @@map("admission_cycle_courses")
 }
 
-// Seats for one course's quota, within one admission cycle. Entered right
-// alongside attaching the quota to the course. Either holds its own
-// totalSeats (exclusive to this course) or defers to a shared SeatPool.
 model CourseQuotaSeats {
   id                     String   @id @default(dbgenerated("('CQS-'::text || (nextval('course_quota_seats_seq'::regclass))::text)"))
   admissionCycleCourseId String   @map("admission_cycle_course_id")
@@ -81,7 +64,6 @@ model CourseQuotaSeats {
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   admissionCycleCourse AdmissionCycleCourse @relation(fields: [admissionCycleCourseId], references: [id], onDelete: Cascade)
   collegeQuota         CollegeQuota         @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
   seatPool             SeatPool?            @relation(fields: [seatPoolId], references: [id], onDelete: SetNull)
@@ -127,7 +109,6 @@ model Application {
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student                 Student                  @relation(fields: [studentId], references: [id])
   college                 College                  @relation(fields: [collegeId], references: [id])
   campus                  Campus?                  @relation(fields: [campusId], references: [id])
@@ -135,21 +116,10 @@ model Application {
   referralCode            ReferralCode?            @relation(fields: [referralCodeId], references: [id])
   applicationCourses      ApplicationCourse[]
   documents               ApplicationDocument[]
-  // One assessment attempt per Application (covers every course listed on
-  // it), not per ApplicationCourse.
   assessmentAttempts      AssessmentAttempt[]
-  // Scholarship applies to the whole Application (a student may have
-  // several courses on one Application, at different pipeline stages),
-  // not one specific course — see ScholarshipApplicationService.
   scholarshipApplications ScholarshipApplication[]
-  // One shared interview booking per Application (covers every course
-  // listed on it) — see InterviewBookingService.
   interviewBooking        InterviewBooking?
 
-  // A student can have several Applications for the same cycle now (one
-  // per course, enforced at the service layer against the whole COLLEGE,
-  // not just the current cycle) — see application.service.ts's
-  // start()/addCourse().
   @@index([studentId], name: "idx_applications_student")
   @@index([collegeId], name: "idx_applications_college")
   @@index([admissionCycleId], name: "idx_applications_cycle")
@@ -166,9 +136,6 @@ model ApplicationCourse {
   status            String    @default("draft") @db.VarChar(30)
   rejectionReason   String?   @map("rejection_reason") @db.Text
   courseQuotaSeatId String?   @map("course_quota_seat_id")
-  // The course selected at Start Application — its fee gates the rest of
-  // the flow. Exactly one per application; additional courses added later
-  // are isPrimary: false and don't block anything on their own payment.
   isPrimary         Boolean   @default(false) @map("is_primary")
   preferenceOrder   Int       @default(1) @map("preference_order") @db.SmallInt
   statusHistory     Json      @default("[]") @map("status_history")
@@ -176,7 +143,6 @@ model ApplicationCourse {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   application       Application            @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   course            Course                 @relation(fields: [courseId], references: [id])
   courseQuotaSeat   CourseQuotaSeats?      @relation(fields: [courseQuotaSeatId], references: [id])
@@ -210,11 +176,8 @@ model ApplicationDocument {
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   application Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   verifier    StaffMember? @relation("VerifiedByStaff", fields: [verifiedBy], references: [id])
-  // Note: verifiedBy is polymorphic (staff or student). Prisma FK points to staff_members.
-  // Resolve student verification at application layer.
 
   @@index([applicationId], name: "idx_app_docs_application")
   @@index([documentType], name: "idx_app_docs_type")
@@ -232,7 +195,6 @@ model ApplicationStatusLog {
   remarks             String?  @db.Text
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id], onDelete: Cascade)
 
   @@index([applicationCourseId], name: "idx_status_logs_app_course")
@@ -254,7 +216,6 @@ model SeatCancellation {
   requestedAt         DateTime  @default(now()) @map("requested_at") @db.Timestamptz
   processedAt         DateTime? @map("processed_at") @db.Timestamptz
 
-  // Relations
   applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
   student           Student           @relation(fields: [studentId], references: [id])
   processor         StaffMember?      @relation(fields: [processedBy], references: [id])
@@ -281,7 +242,6 @@ model Enrollment {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student                 Student               @relation(fields: [studentId], references: [id])
   college                 College               @relation(fields: [collegeId], references: [id])
   course                  Course                @relation(fields: [courseId], references: [id])
@@ -319,7 +279,6 @@ model CourseSwitchRequest {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student       Student      @relation(fields: [studentId], references: [id])
   college       College      @relation(fields: [collegeId], references: [id])
   enrollment    Enrollment   @relation("EnrollmentSwitchRequests", fields: [enrollmentId], references: [id])
@@ -345,7 +304,6 @@ model AdmissionFormConfig {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college        College         @relation(fields: [collegeId], references: [id])
   admissionCycle AdmissionCycle? @relation(fields: [admissionCycleId], references: [id])
 
@@ -356,10 +314,6 @@ model AdmissionFormConfig {
   @@map("admission_form_configs")
 }
 
-// A document a student must upload for a given admission cycle. Empty
-// courses/quotas join = applies to every course/quota in the cycle;
-// populated = restricted to just those. appliesToNationalities stays JSON —
-// nationality is free-text on the student profile, no entity to reference.
 model DocumentUploadConfig {
   id                     String   @id @default(dbgenerated("('DUC-'::text || (nextval('document_upload_config_seq'::regclass))::text)"))
   collegeId              String   @map("college_id")
@@ -369,17 +323,12 @@ model DocumentUploadConfig {
   documentLabel          String   @map("document_label") @db.VarChar(100)
   isRequired             Boolean  @default(true) @map("is_required")
   appliesToNationalities Json?    @map("applies_to_nationalities")
-  // Subset of the platform's ALLOWED_MIME_TYPES relevant to documents
-  // (images + PDF) — null means the upload module's document-default set
-  // applies. Not an entity, so JSON is correct here (same reasoning as
-  // appliesToNationalities).
   acceptedMimeTypes      Json?    @map("accepted_mime_types")
   sortOrder              Int      @default(0) @map("sort_order")
   isActive               Boolean  @default(true) @map("is_active")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college        College                      @relation(fields: [collegeId], references: [id])
   admissionCycle AdmissionCycle               @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
   courses        DocumentUploadConfigCourse[]
@@ -398,7 +347,6 @@ model DocumentUploadConfigCourse {
   courseId               String   @map("course_id")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   documentUploadConfig DocumentUploadConfig @relation(fields: [documentUploadConfigId], references: [id], onDelete: Cascade)
   course               Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -414,7 +362,6 @@ model DocumentUploadConfigQuota {
   collegeQuotaId         String   @map("college_quota_id")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   documentUploadConfig DocumentUploadConfig @relation(fields: [documentUploadConfigId], references: [id], onDelete: Cascade)
   collegeQuota         CollegeQuota         @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
 
@@ -424,9 +371,6 @@ model DocumentUploadConfigQuota {
   @@map("document_upload_config_quotas")
 }
 
-// An optional shared bucket of seats. A CourseQuotaSeats row can either hold
-// its own totalSeats (exclusive to that course) or point at a SeatPool here
-// to share seats with other courses' CourseQuotaSeats rows for the same quota.
 model SeatPool {
   id               String   @id @default(dbgenerated("('SPL-'::text || (nextval('seat_pool_seq'::regclass))::text)"))
   collegeQuotaId   String   @map("college_quota_id")
@@ -437,7 +381,6 @@ model SeatPool {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   collegeQuota   CollegeQuota       @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
   admissionCycle AdmissionCycle     @relation(fields: [admissionCycleId], references: [id], onDelete: Cascade)
   courseQuotas   CourseQuotaSeats[]

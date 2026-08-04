@@ -109,10 +109,6 @@ export class AuthRepository {
     });
   }
 
-  /**
-   * Clears the FCM token from all OTHER active sessions for this user so only
-   * the newly created session receives push notifications.
-   */
   static async clearFcmTokensExcept(
     userId: string,
     userType: string,
@@ -129,7 +125,6 @@ export class AuthRepository {
     });
   }
 
-  // Blink user lookups
   static async findBlinkUserByEmail(email: string) {
     return prisma.blinkUser.findUnique({
       where: { email },
@@ -201,7 +196,6 @@ export class AuthRepository {
     });
   }
 
-  // Counsellor lookups
   static async findCounsellorByEmail(email: string) {
     return prisma.counsellor.findUnique({ where: { email } });
   }
@@ -247,7 +241,6 @@ export class AuthRepository {
     });
   }
 
-  // Platform admin lookups
   static async findPlatformAdminByEmail(email: string) {
     return prisma.platformAdmin.findUnique({
       where: { email },
@@ -269,7 +262,6 @@ export class AuthRepository {
     });
   }
 
-  // Staff member lookup
   static async findStaffMemberById(id: string) {
     return prisma.staffMember.findUnique({
       where: { id },
@@ -277,12 +269,10 @@ export class AuthRepository {
     });
   }
 
-  // Student lookup
   static async findStudentById(id: string) {
     return prisma.student.findUnique({ where: { id } });
   }
 
-  // Student lookups + writes
   static async findStudentByPhone(
     phoneNumber: string,
     phoneCountryCode: string,
@@ -349,7 +339,6 @@ export class AuthRepository {
       });
     }
 
-    // Link existing phone-auth account that shares the same email
     const byEmail = await prisma.student.findUnique({
       where: { email: data.email },
     });
@@ -373,7 +362,6 @@ export class AuthRepository {
     });
   }
 
-  // Blog author lookups
   static async findBlogAuthorByEmail(email: string) {
     return prisma.blogAuthor.findUnique({ where: { email } });
   }

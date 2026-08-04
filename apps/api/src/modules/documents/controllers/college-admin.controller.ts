@@ -17,8 +17,6 @@ import {
 } from "../validators/documents.validator";
 
 export class CollegeAdminDocumentsController {
-  // ── Direction A: request a document from a student, then verify it ──────
-
   static async createSubmissionRequest(req: Request, res: Response) {
     const data = createSubmissionRequestSchema.parse(req.body);
     const result = await DocumentSubmissionRequestService.create(
@@ -55,8 +53,6 @@ export class CollegeAdminDocumentsController {
     );
     return res.json(ApiResponse.success("Document reviewed", result));
   }
-
-  // ── Direction B: fulfill/reject documents students requested from us ────
 
   static async listDocumentRequests(req: Request, res: Response) {
     const filters = documentRequestListQuerySchema.parse(req.query);
@@ -124,8 +120,6 @@ export class CollegeAdminDocumentsController {
     );
     return res.json(ApiResponse.success("Document request rejected", result));
   }
-
-  // ── Document templates: catalog of requestable documents ────────────────
 
   static async createTemplate(req: Request, res: Response) {
     const data = createDocumentTemplateSchema.parse(req.body);

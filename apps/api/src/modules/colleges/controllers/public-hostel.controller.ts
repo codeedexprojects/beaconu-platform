@@ -7,9 +7,6 @@ import {
 } from "../validators/hostel.validator";
 
 export class PublicHostelController {
-  /**
-   * GET /public/colleges/by-slug/:slug/hostels
-   */
   static async listPublicHostels(req: Request, res: Response) {
     const { slug } = publicHostelListParamSchema.parse(req.params);
 
@@ -19,9 +16,6 @@ export class PublicHostelController {
       .json(ApiResponse.success("College hostels fetched", hostels));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/hostels/:hostelId
-   */
   static async getPublicHostelDetail(req: Request, res: Response) {
     const { slug, hostelId } = publicHostelDetailParamSchema.parse(req.params);
 

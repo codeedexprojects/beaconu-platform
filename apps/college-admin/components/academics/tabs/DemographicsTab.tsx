@@ -20,7 +20,6 @@ export function DemographicsTab({
 
   return (
     <div className="space-y-6">
-      {/* Age Distribution */}
       <div className="space-y-3 border rounded-lg p-4">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Age Distribution</Label>
@@ -111,7 +110,6 @@ export function DemographicsTab({
         )}
       </div>
 
-      {/* Gender Diversity */}
       <div className="space-y-3 border rounded-lg p-4">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Gender Diversity</Label>
@@ -203,7 +201,6 @@ export function DemographicsTab({
         )}
       </div>
 
-      {/* Work Experience */}
       <div className="space-y-3 border rounded-lg p-4">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Work Experience</Label>
@@ -302,7 +299,6 @@ export function DemographicsTab({
         )}
       </div>
 
-      {/* International Presence */}
       <div className="space-y-3 border rounded-lg p-4">
         <div className="flex justify-between items-center">
           <Label className="font-bold">International Presence</Label>

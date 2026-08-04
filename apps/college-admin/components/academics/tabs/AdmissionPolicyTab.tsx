@@ -17,7 +17,6 @@ export function AdmissionPolicyTab({
 
   return (
     <div className="space-y-6">
-      {/* Header fields */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1">
           <Label>Section Title</Label>
@@ -46,7 +45,6 @@ export function AdmissionPolicyTab({
         </div>
       </div>
 
-      {/* Seat Matrix */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>
@@ -83,7 +81,6 @@ export function AdmissionPolicyTab({
           </Button>
         </div>
 
-        {/* Seat matrix title & columns */}
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-1">
             <Label className="text-xs">Table Title</Label>
@@ -136,7 +133,6 @@ export function AdmissionPolicyTab({
           </div>
         </div>
 
-        {/* Rows */}
         <div className="space-y-2">
           {(Array.isArray((getActiveTabPayload().seat_matrix as any)?.rows)
             ? (getActiveTabPayload().seat_matrix as any).rows
@@ -236,7 +232,6 @@ export function AdmissionPolicyTab({
         </div>
       </div>
 
-      {/* Entrance Exams Accepted */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>

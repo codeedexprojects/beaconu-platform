@@ -297,7 +297,6 @@ export default function UniversityTypesPage() {
         </Card>
       </div>
 
-      {/* Create Modal Overlay */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
@@ -369,7 +368,6 @@ export default function UniversityTypesPage() {
         </div>
       )}
 
-      {/* Edit Modal Overlay */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">

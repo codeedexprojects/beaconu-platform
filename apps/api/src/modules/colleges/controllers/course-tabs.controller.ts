@@ -15,8 +15,6 @@ import {
   clubDetailParamSchema,
 } from "../validators/course-tabs.validator";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function isRec(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
@@ -42,12 +40,9 @@ function arr<T>(v: unknown, map: (item: unknown) => T): T[] {
   return Array.isArray(v) ? v.map(map) : [];
 }
 
-// ── course_info formatter ─────────────────────────────────────────────────────
-
 function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
   const d = isRec(raw) ? raw : {};
 
-  // overview
   const ov = isRec(d.overview) ? d.overview : {};
   const overview = {
     credits: num(ov.credits),
@@ -58,7 +53,6 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     gender_accepted: str(ov.gender_accepted),
   };
 
-  // admissions
   const admissions = arr(d.admissions, (item) => {
     const a = isRec(item) ? item : {};
     return {
@@ -67,7 +61,6 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     };
   });
 
-  // admission_status
   const as_ = isRec(d.admission_status) ? d.admission_status : {};
   const admissionStatus = {
     tag: str(as_.tag),
@@ -75,7 +68,6 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     seat_availability_percent: num(as_.seat_availability_percent),
   };
 
-  // admission_batches — derive from admissions[] when not stored explicitly
   const rawBatches = Array.isArray(d.admission_batches)
     ? d.admission_batches
     : Array.isArray(d.admissions)
@@ -103,14 +95,12 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     };
   });
 
-  // curriculum
   const cur = isRec(d.curriculum) ? d.curriculum : {};
   const curriculum = {
     semesters: Array.isArray(cur.semesters) ? cur.semesters : [],
     brochure_link: str(cur.brochure_link) || str(cur.brochure_upload),
   };
 
-  // student_forum — also maps legacy keys {admission_team_contact, ex_student_chat}
   const sf = isRec(d.student_forum) ? d.student_forum : {};
   const studentForum = {
     icon: str(sf.icon),
@@ -122,7 +112,6 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     description: str(sf.description),
   };
 
-  // bonus_certification
   const bc = isRec(d.bonus_certification) ? d.bonus_certification : {};
   const bonusCertification = {
     tag: str(bc.tag),
@@ -132,7 +121,6 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
     description: str(bc.description) || str(bc.note),
   };
 
-  // higher_education
   const he = isRec(d.higher_education) ? d.higher_education : {};
   const higherEd = isRec(d.higher_education_and_certifications)
     ? d.higher_education_and_certifications
@@ -194,12 +182,9 @@ function formatCourseInfoTab(raw: unknown): Record<string, unknown> {
   };
 }
 
-// ── admission_policy formatter ────────────────────────────────────────────────
-
 function formatAdmissionPolicyTab(raw: unknown): Record<string, unknown> {
   const d = isRec(raw) ? raw : {};
 
-  // seat_matrix
   const sm = isRec(d.seat_matrix) ? d.seat_matrix : {};
   const smRows = arr(sm.rows, (item) => {
     const r = isRec(item) ? item : {};
@@ -217,7 +202,6 @@ function formatAdmissionPolicyTab(raw: unknown): Record<string, unknown> {
     rows: smRows,
   };
 
-  // entrance_exams_accepted
   const ee = isRec(d.entrance_exams_accepted) ? d.entrance_exams_accepted : {};
   const levels = arr(ee.levels, (item) => {
     const lv = isRec(item) ? item : {};
@@ -250,12 +234,6 @@ function formatAdmissionPolicyTab(raw: unknown): Record<string, unknown> {
 }
 
 export class CourseTabsController {
-  // ── College-Admin Endpoints ──────────────────────────────────────────────
-
-  /**
-   * GET /college-admin/courses/:id/tabs
-   * Returns all tab data for a course (admin view).
-   */
   static async getTabsAdmin(req: Request, res: Response) {
     const { id } = courseIdParamSchema.parse(req.params);
     const collegeId = req.collegeId!;
@@ -266,10 +244,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Course tabs fetched", result));
   }
 
-  /**
-   * GET /college-admin/courses/:id/tabs/:tabName
-   * Returns a single tab's data (admin view).
-   */
   static async getTabAdmin(req: Request, res: Response) {
     const { id, tabName } = courseTabParamSchema.parse(req.params);
     const collegeId = req.collegeId!;
@@ -293,10 +267,6 @@ export class CourseTabsController {
     );
   }
 
-  /**
-   * PATCH /college-admin/courses/:id/tabs/:tabName
-   * Updates a single tab's data.
-   */
   static async updateTabAdmin(req: Request, res: Response) {
     const { id, tabName } = courseTabParamSchema.parse(req.params);
     const { data } = updateCourseTabSchema.parse(req.body);
@@ -313,12 +283,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Course tab updated", result));
   }
 
-  // ── Public Endpoints ─────────────────────────────────────────────────────
-
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId
-   * Returns course detail page with available tabs list.
-   */
   static async getPublicCourseDetail(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
 
@@ -331,10 +295,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Course detail fetched", result));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/tabs/:tabName
-   * Returns a single tab's data (public view).
-   */
   static async getPublicCourseTab(req: Request, res: Response) {
     const { slug, courseId, tabName } = publicCourseTabParamSchema.parse(
       req.params,
@@ -356,11 +316,6 @@ export class CourseTabsController {
     return res.status(200).json(ApiResponse.success(message, result));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/eligibility-criteria
-   * Returns eligibility criteria with filters_applied resolved from the
-   * query string (public view).
-   */
   static async getPublicEligibilityCriteria(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
     const { student_type, quota_category } =
@@ -381,11 +336,6 @@ export class CourseTabsController {
       );
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/scholarship-details
-   * Returns the resolved scholarship calculator details (criteria, discount,
-   * payable amount) for a port of entry + score range selection.
-   */
   static async getPublicScholarshipDetails(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
     const { port_entry_id, score_range_id } =
@@ -403,10 +353,6 @@ export class CourseTabsController {
       );
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/reviews
-   * Paginated list of reviews for a course (public).
-   */
   static async listPublicCourseReviews(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
     const { page, per_page } = reviewsQuerySchema.parse(req.query);
@@ -422,11 +368,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Reviews fetched successfully", result));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/other-courses-offered
-   * Paginated + searchable list of other courses offered by the college
-   * (public).
-   */
   static async listPublicOtherCoursesOffered(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
     const { page, per_page, search } = otherCoursesOfferedQuerySchema.parse(
@@ -445,10 +386,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Other courses offered fetched", result));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations
-   * Paginated + searchable list of clubs & associations (public).
-   */
   static async listPublicClubsAssociations(req: Request, res: Response) {
     const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
     const { page, per_page, search } = clubsAssociationsQuerySchema.parse(
@@ -467,10 +404,6 @@ export class CourseTabsController {
       .json(ApiResponse.success("Clubs & associations fetched", result));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/clubs-associations/:clubId
-   * Single club's full detail view (public).
-   */
   static async getPublicClubDetail(req: Request, res: Response) {
     const { slug, courseId, clubId } = clubDetailParamSchema.parse(req.params);
 

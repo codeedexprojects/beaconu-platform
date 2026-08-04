@@ -50,8 +50,6 @@ const slotSchema = z
   .object({
     slot_type: z.enum(["window", "fixed"]),
     window_start: z.string().trim().min(1, "Start is required"),
-    // Only required for "window" — a "fixed" slot's end time is derived
-    // server-side from window_start + the template's duration.
     window_end: z.string().trim().optional(),
     max_capacity: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),

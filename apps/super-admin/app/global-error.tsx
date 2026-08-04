@@ -8,7 +8,6 @@ interface GlobalErrorProps {
   reset: () => void;
 }
 
-// global-error replaces the root layout — must include <html> and <body>
 export default function GlobalError({
   error,
   reset,

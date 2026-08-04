@@ -190,7 +190,6 @@ export default function SettingsPage() {
 
       <div className="flex-1 p-6">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar */}
           <div className="w-full md:w-64 space-y-1">
             {SETTINGS_SECTIONS.map((section) => (
               <button

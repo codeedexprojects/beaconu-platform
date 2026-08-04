@@ -65,11 +65,6 @@ const EMPTY_FORM: BoardForm = {
   subjects: [{ ...EMPTY_SUBJECT }],
 };
 
-// Defined at module scope (not nested inside the page component) — a
-// component defined inside another component's render body gets recreated
-// as a new function identity on every render, which makes React treat it
-// as an unrelated component type and remount it, dropping input focus
-// after every keystroke.
 function SubjectRowsEditor({
   subjects,
   subjectsInvalid,
@@ -244,8 +239,6 @@ export default function EducationBoardsPage() {
     }));
   };
 
-  // Client-side pass_mark <= max_mark check for fast feedback — server
-  // re-validates regardless.
   const subjectsInvalid = form.subjects.some((s) => {
     if (!s.name.trim()) return false;
     return Number(s.pass_mark) > Number(s.max_mark);
@@ -445,7 +438,6 @@ export default function EducationBoardsPage() {
         )}
       </div>
 
-      {/* Create Modal Overlay */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
@@ -523,7 +515,6 @@ export default function EducationBoardsPage() {
         </div>
       )}
 
-      {/* Edit Modal Overlay */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">

@@ -10,7 +10,6 @@ export const createPlatformAdminSchema = z.object({
 export const updatePlatformAdminSchema = createPlatformAdminSchema
   .partial()
   .extend({
-    // Password remains optional during update
     password: z.string().min(6).optional(),
   });
 

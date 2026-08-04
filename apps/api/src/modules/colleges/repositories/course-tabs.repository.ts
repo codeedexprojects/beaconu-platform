@@ -1,6 +1,5 @@
 import { prisma } from "@beaconu/db";
 
-// All tab JSON fields on the Course model that we expose as tabs
 const TAB_FIELDS_SELECT = {
   highlights: true,
   curriculum: true,
@@ -47,10 +46,6 @@ const COURSE_DETAIL_INCLUDE = {
 } as const;
 
 export class CourseTabsRepository {
-  /**
-   * Fetch a course with all tab JSON fields + relation data.
-   * Used by college-admin (scoped by collegeId).
-   */
   static async findCourseWithTabs(courseId: string, collegeId: string) {
     return prisma.course.findFirst({
       where: { id: courseId, collegeId, status: "active" },
@@ -70,9 +65,6 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Fetch a single tab field for a course (admin, scoped by collegeId).
-   */
   static async findCourseTabField(
     courseId: string,
     collegeId: string,
@@ -88,16 +80,12 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Update a single tab JSON column for a course.
-   */
   static async updateCourseTab(
     courseId: string,
     collegeId: string,
     prismaFieldName: string,
     data: unknown,
   ) {
-    // Verify course belongs to this college first
     const existing = await prisma.course.findFirst({
       where: { id: courseId, collegeId, status: "active" },
       select: { id: true },
@@ -115,9 +103,6 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Fetch a course for public view — verifies it belongs to a college by slug.
-   */
   static async findPublicCourseByIdAndSlug(
     courseId: string,
     collegeSlug: string,
@@ -223,9 +208,6 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Fetch a single tab field for public view (verifies college slug).
-   */
   static async findPublicCourseTabField(
     courseId: string,
     collegeSlug: string,
@@ -244,11 +226,6 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Other active courses offered by the same college (excluding the
-   * current course), with study level for tree grouping. Capped at 10
-   * for the inline course-detail tab preview.
-   */
   static async findOtherCollegeCourses(
     collegeId: string,
     excludeCourseId: string,
@@ -271,11 +248,6 @@ export class CourseTabsRepository {
     });
   }
 
-  /**
-   * Paginated + searchable list of other active courses offered by the
-   * same college (excluding the current course). Used by the dedicated
-   * "other courses offered" listing endpoint.
-   */
   static async findOtherCollegeCoursesPaginated(
     collegeId: string,
     excludeCourseId: string,

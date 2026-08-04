@@ -50,9 +50,6 @@ export class AdmissionCycleCourseService {
     );
     if (!course) throw new NotFoundError("Course not found");
 
-    // A prior detach soft-deletes the (admissionCycleId, courseId) row rather
-    // than removing it, so re-attaching must reactivate that row instead of
-    // creating a new one, which would violate the unique constraint.
     const existing = await AdmissionCycleCourseRepository.findByCycleAndCourse(
       admissionCycleId,
       body.course_id,

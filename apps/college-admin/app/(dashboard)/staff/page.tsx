@@ -176,7 +176,6 @@ export default function StaffDirectoryPage() {
         </Button>
       </div>
 
-      {/* Staff directory table listing */}
       <Card className="border-0 shadow-sm bg-card/60 backdrop-blur-md">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -200,7 +199,6 @@ export default function StaffDirectoryPage() {
                     key={member.id}
                     className="border-b border-border/40 hover:bg-muted/10 transition-colors"
                   >
-                    {/* User profile details cell */}
                     <TableCell className="py-4 pl-6">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary select-none">
@@ -225,7 +223,6 @@ export default function StaffDirectoryPage() {
                       </div>
                     </TableCell>
 
-                    {/* Role allocation cell */}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4 text-muted-foreground" />
@@ -250,7 +247,6 @@ export default function StaffDirectoryPage() {
                       </div>
                     </TableCell>
 
-                    {/* Security credentials status */}
                     <TableCell>
                       {member.status === "active" ? (
                         <Badge
@@ -273,7 +269,6 @@ export default function StaffDirectoryPage() {
                       {new Date(member.createdAt).toLocaleDateString()}
                     </TableCell>
 
-                    {/* Status switcher button */}
                     <TableCell className="text-right pr-6">
                       {canManageStaff && !isSelf(member.id) ? (
                         <Button

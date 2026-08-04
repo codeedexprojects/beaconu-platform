@@ -1,23 +1,7 @@
-/**
- * One-off dev seed: adds a realistic test question to every active
- * question type for college CLG-2 that doesn't already have one — so the
- * question bank, paper generation, and evaluation screens all have
- * something to work with across every response format (single/multi
- * choice, sequence, ranking, text, likert, audio-response) and every
- * section (5 core + the one active calculator section).
- *
- * Idempotent — each question is created with a "[SEED] " title prefix and
- * skipped on re-run if a question with that exact title already exists.
- *
- * Run from the monorepo root:
- *   npx tsx apps/api/src/modules/assessments/scripts/seed-question-bank-test-data.ts
- */
-
 import { prisma, Prisma } from "@beaconu/db";
 
 const COLLEGE_ID = "CLG-2";
 
-// Sections (already enabled/seeded for CLG-2 — confirmed via live DB read).
 const SECTION = {
   verbal: "ASC-1",
   aptitude: "ASC-2",
@@ -27,7 +11,6 @@ const SECTION = {
   scientificCalculator: "ASC-6",
 } as const;
 
-// Question types (already seeded for CLG-2 via the section-enable flow).
 const QTYPE = {
   audioComprehension: "QTP-1",
   repeatSentence: "QTP-2",
@@ -47,8 +30,6 @@ const QTYPE = {
   scientificCalculationProblem: "QTP-16",
 } as const;
 
-// Courses under CLG-2 — scientific calculator is course-specific (non-core
-// section), mapped to the tech-adjacent courses.
 const COURSE_IDS_FOR_CALCULATOR = ["CRS-1", "CRS-8"];
 
 interface SeedQuestion {

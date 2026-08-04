@@ -17,7 +17,6 @@ export function SpecialCasesTab({
 
   return (
     <div className="space-y-8">
-      {/* Projects & Dissertation */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
         <h4 className="font-bold text-sm">Projects & Dissertation</h4>
         <div className="space-y-3">
@@ -528,7 +527,6 @@ export function SpecialCasesTab({
         </div>
       </div>
 
-      {/* OJT Evaluation */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
         <h4 className="font-bold text-sm">OJT Evaluation</h4>
         <div className="grid gap-4 md:grid-cols-2">
@@ -710,7 +708,6 @@ export function SpecialCasesTab({
         </div>
       </div>
 
-      {/* Internship Evaluation */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/5">
         <h4 className="font-bold text-sm">Internship Evaluation</h4>
         <div className="grid gap-4 md:grid-cols-2">

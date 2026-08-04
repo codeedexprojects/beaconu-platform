@@ -17,10 +17,6 @@ async function assertOwnApplication(applicationId: string, studentId: string) {
   return application;
 }
 
-/** A requirement applies when its nationality/course/quota scopes are
- * either unset (= applies to everyone) or intersect with what the student
- * has actually selected — mirrors the admin-side scoping semantics from
- * DocumentUploadConfigService. */
 function isApplicable(
   config: ApplicableConfig,
   nationality: string | null,

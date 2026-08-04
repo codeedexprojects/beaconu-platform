@@ -66,7 +66,6 @@ export default function CommutePage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
 
-  // States to dynamically build transit stops & fleets rows inside modal sheet
   const [stops, setStops] = useState<
     { stopName: string; landmark: string | null; stopOrder: number }[]
   >([]);
@@ -211,7 +210,6 @@ export default function CommutePage() {
         </Button>
       </div>
 
-      {/* Transit Routes grid listing */}
       <div className="grid gap-6 md:grid-cols-2">
         {routes.map((route) => {
           const isExpanded = expandedRoute === route.id;
@@ -275,7 +273,6 @@ export default function CommutePage() {
                   </div>
                 </div>
 
-                {/* Toggle details drawer */}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -294,10 +291,8 @@ export default function CommutePage() {
                   )}
                 </Button>
 
-                {/* Route stops chronology and fleet roster */}
                 {isExpanded && (
                   <div className="space-y-4 mt-3 pt-3 border-t border-border/30 animate-fadeIn">
-                    {/* Stops Chronology */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> Stop Chronology Sequence
@@ -325,7 +320,6 @@ export default function CommutePage() {
                       )}
                     </div>
 
-                    {/* Fleet lists */}
                     <div className="space-y-2 pt-2 border-t border-border/20">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                         <Truck className="h-3 w-3" /> Fleet Allocations &
@@ -390,7 +384,6 @@ export default function CommutePage() {
         )}
       </div>
 
-      {/* Transit Route Modal form sheet */}
       {showAddModal && canManageCommute && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
           <Card className="w-full max-w-lg shadow-2xl border-border bg-card/90 my-8">
@@ -426,7 +419,6 @@ export default function CommutePage() {
                   />
                 </div>
 
-                {/* Stops Chronology Sequencing Builder */}
                 <div className="border-t pt-4 border-border/40 space-y-3">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">
@@ -499,7 +491,6 @@ export default function CommutePage() {
                   </div>
                 </div>
 
-                {/* Fleet Registry Builder */}
                 <div className="border-t pt-4 border-border/40 space-y-3">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">

@@ -23,7 +23,6 @@ async function resolveStaffPermissions(req: Request): Promise<string[]> {
     throw new ForbiddenError("Role is inactive or no longer available");
   }
 
-  // College admin must always retain full access across all modules.
   if (role.slug === "college_admin") {
     return ["*"];
   }
@@ -50,8 +49,6 @@ export function authorize(...requiredPermissions: string[]) {
     try {
       let userPermissions = req.permissions ?? [];
 
-      // Platform admin permissions are always enforced from DB so updates
-      // take effect immediately for active sessions.
       if (req.userType === "platform_admin") {
         if (!req.roleId) {
           next(new ForbiddenError("Role context is missing for this admin"));
@@ -79,13 +76,11 @@ export function authorize(...requiredPermissions: string[]) {
         req.permissions = userPermissions;
       }
 
-      // Staff permissions are always refreshed from DB for consistency.
       if (req.userType === "staff_member") {
         userPermissions = await resolveStaffPermissions(req);
         req.permissions = userPermissions;
       }
 
-      // super_admin has wildcard — bypasses all permission checks
       if (userPermissions.includes("*")) {
         next();
         return;

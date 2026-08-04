@@ -85,7 +85,7 @@ export interface CollegeRoleDto {
   slug: string;
   isSystemRole: boolean;
   isActive: boolean;
-  permissions: string[]; // array of permissionCodes
+  permissions: string[];
 }
 
 export interface CreateCollegeRoleInput {
@@ -98,8 +98,6 @@ export interface UpdateCollegeRoleInput {
   isActive?: boolean;
   permissionCodes?: string[];
 }
-
-// ── Public college profile (college-web landing page) ──────────────────────
 
 export interface PublicUniversitySummary {
   id: string;
@@ -151,7 +149,6 @@ export interface PublicCollegeDetail {
   collegeType: string | null;
   genderType: string | null;
   avgStudentCount: number | null;
-  // Prisma `Decimal` fields — serialized as numeric strings over JSON, not numbers.
   campusSizeAcres: string | null;
   outsideStatePct: string | null;
   avgRating: string | null;
@@ -171,8 +168,6 @@ export interface PublicCollegeDetail {
   institutionGroups: {
     members: { college: PublicAffiliateCollegeSummary }[];
   }[];
-  // true only when the request carried a logged-in student's token — false
-  // for anonymous requests, never omitted.
   isWishlisted: boolean;
 }
 
@@ -195,8 +190,6 @@ export interface PublicCollegeListItem {
   updatedAt: string;
   university: PublicUniversitySummary | null;
   campuses: PublicCampusSummary[];
-  // true only when the request carried a logged-in student's token — false
-  // for anonymous requests, never omitted.
   isWishlisted: boolean;
 }
 
@@ -347,8 +340,6 @@ export interface PublicCollegeReview {
   createdAt: string;
 }
 
-// ── Institutions Across the World (college-level tab) ──────────────────────
-
 export interface PublicInstitutionCourse {
   id: string;
   name: string;
@@ -390,10 +381,6 @@ export interface PublicInstitutionsAcrossWorldSection {
   institutions: PublicInstitutionMember[];
   group: { id: string; name: string; groupCode: string; status: string } | null;
 }
-
-// ── Commute (college-level tab) ─────────────────────────────────────────────
-// Freeform JSON on the backend (z.unknown()) — every field is optional since
-// college-admin's editor coerces-with-fallback rather than strictly validating.
 
 export interface PublicCommuteTiming {
   label?: string;
@@ -453,10 +440,6 @@ export interface PublicCommuteSection {
   route_count?: number;
 }
 
-// ── Happenings (college-level tab) ──────────────────────────────────────────
-// Freeform JSON on the backend (z.unknown()) — the public route returns the
-// raw stored object with no server-side filtering/pagination.
-
 export interface PublicHappeningItem {
   category?: string;
   date?: string;
@@ -474,10 +457,6 @@ export interface PublicHappeningsSection {
   happenings?: PublicHappeningItem[];
 }
 
-// ── Student Code of Conduct (college-level tab) ─────────────────────────────
-// Freeform JSON on the backend (z.unknown()) — `number` isn't guaranteed on
-// every rule (seed data omits it), so it must be treated as optional.
-
 export interface PublicCodeOfConductRule {
   number?: number;
   rule?: string;
@@ -489,11 +468,6 @@ export interface PublicCodeOfConductSection {
   section_title?: string;
   rules?: PublicCodeOfConductRule[];
 }
-
-// ── Course detail page (course_info tab + shell) ────────────────────────────
-// GET /by-slug/:slug/courses/:courseId — normalizeCourseInfoData shape.
-// Every block is optional/freeform-ish since it's assembled from
-// college-admin-entered JSONB course metadata columns.
 
 export interface PublicCourseAdmissionBatch {
   label?: string;
@@ -716,10 +690,6 @@ export interface PublicCourseDetail {
   certifications?: PublicCourseCertificationsBlock;
 }
 
-// ── Admission Policy (course tab) ───────────────────────────────────────────
-// GET /courses/:courseId/tabs/admission_policy — raw pass-through of
-// tabData.admission_policy on the public route (no server-side formatter).
-
 export interface PublicAdmissionSeatMatrixRow {
   quota_category?: string;
   total?: number;
@@ -768,11 +738,6 @@ export interface PublicAdmissionPolicyTab {
   quota_options?: PublicAdmissionQuotaOptions;
   entrance_exams_accepted?: PublicAdmissionExamsAccepted;
 }
-
-// ── Fees (course tab) ────────────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/fees — transformPublicFeeTab(raw). Unlike
-// admission_policy, this response is NOT wrapped in {sectionName,...,data} —
-// it's the fee object directly.
 
 export interface PublicFeePdf {
   icon?: string;
@@ -847,10 +812,6 @@ export interface PublicFeesTab {
   refund_policy?: PublicFeeTextListBlock;
 }
 
-// ── Financial Aid (course tab) ───────────────────────────────────────────────
-// GET /courses/:courseId/tabs/financial_aid — wrapped in the standard
-// {sectionName,...,data} envelope (transformPublicFinancialAidTab).
-
 export interface PublicScholarshipScoreRange {
   id?: string;
   range_label?: string;
@@ -904,10 +865,6 @@ export interface PublicFinancialAidTab {
   merit_scholarship?: PublicMeritScholarship;
   financial_concessions?: PublicFinancialConcessions;
 }
-
-// ── Exam Policy (course tab) ─────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/exam_policy — transformPublicExamPolicyTab.
-// Genuinely deep/freeform JSON (admin-authored) — every level optional.
 
 export interface PublicExamChartSegment {
   color?: string;
@@ -1023,9 +980,6 @@ export interface PublicExamPolicyTab {
   important_guidelines_banner?: PublicGuidelinesBanner;
 }
 
-// ── Demographics (course tab) ────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/demo_graphics — transformPublicDemoGraphicsTab.
-
 export interface PublicDemographicsTab {
   tab?: string;
   age_distribution?: { items?: { label?: string; percent?: number }[] };
@@ -1043,9 +997,6 @@ export interface PublicDemographicsTab {
   };
   national_presence?: { items?: { state?: string; percent?: number }[] };
 }
-
-// ── Placements (course tab) ──────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/placements — raw pass-through, freeform JSON.
 
 export interface PublicPlacementStat {
   icon?: string;
@@ -1123,10 +1074,6 @@ export interface PublicPlacementsTab {
   industry_salary_report?: { title?: string; rows?: PublicIndustryStatRow[] };
 }
 
-// ── Faculty (course tab) ─────────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/faculty — response IS the array directly
-// (no envelope beyond the standard ApiResponse.data unwrap).
-
 export interface PublicFacultyEducation {
   degree?: string;
   duration?: string;
@@ -1151,8 +1098,6 @@ export interface PublicFacultyMember {
   designation?: string;
   professional_experience?: PublicFacultyExperience[];
 }
-
-// ── Review (course tab + paginated reviews endpoint) ────────────────────────
 
 export interface PublicCourseReviewItem {
   id?: string;
@@ -1192,11 +1137,6 @@ export interface PublicCourseReviewsPage {
   pagination?: PublicPaginationMeta;
 }
 
-// ── Student Housing (course tab) ─────────────────────────────────────────────
-// GET /courses/:courseId/tabs/student_housing — a lighter projection of the
-// standalone hostel records (see PublicHostelSummary/PublicHostelDetail in
-// hostels.ts) for the ids the admin linked to this course.
-
 export interface PublicHostelRoomTypeFromCourseTab {
   id?: string;
   name?: string;
@@ -1222,8 +1162,6 @@ export interface PublicStudentHousingTab {
   summary?: string;
   hostels?: PublicHostelListItemFromCourseTab[];
 }
-
-// ── Clubs & Associations (course tab + list/detail endpoints) ───────────────
 
 export interface PublicClubPreview {
   id: string;
@@ -1255,10 +1193,6 @@ export interface PublicClubsListPage {
   pagination?: PublicPaginationMeta;
 }
 
-// ── Alliance (course tab) ────────────────────────────────────────────────────
-// GET /courses/:courseId/tabs/alliance — full list on the tab route itself,
-// no separate detail endpoint.
-
 export interface PublicAllianceLegalDoc {
   title?: string;
   download_icon?: string;
@@ -1289,8 +1223,6 @@ export interface PublicAlliancePartner {
   };
 }
 
-// ── Other Courses Offered (course tab / dedicated paginated endpoint) ──────
-
 export interface PublicOtherCourseItem {
   id: string;
   name?: string;
@@ -1307,9 +1239,6 @@ export interface PublicOtherCoursesPage {
   list?: PublicOtherCoursesGroup[];
   pagination?: PublicPaginationMeta;
 }
-
-// ── Eligibility Criteria (course drill-down endpoint) ────────────────────────
-// GET /courses/:courseId/eligibility-criteria?student_type&quota_category
 
 export interface PublicEligibilityOption {
   value?: string;
@@ -1335,9 +1264,6 @@ export interface PublicEligibilityCriteria {
     quota_category?: string | null;
   };
 }
-
-// ── Scholarship Details (course drill-down endpoint) ─────────────────────────
-// GET /courses/:courseId/scholarship-details?port_entry_id&score_range_id
 
 export interface PublicScholarshipPortEntryOption {
   id?: string;

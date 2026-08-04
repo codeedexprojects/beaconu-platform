@@ -47,7 +47,6 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
   const [adjustmentValue, setAdjustmentValue] = useState("");
   const [tuitionOverride, setTuitionOverride] = useState("");
 
-  // Row-level edit drafts, keyed by CourseQuota.id
   const [rowDrafts, setRowDrafts] = useState<
     Record<
       string,
@@ -67,9 +66,6 @@ export function QuotasFeesTab({ courseId }: { courseId: string }) {
     );
   }
 
-  // Detached rows (isActive: false) are soft-deleted only so re-attaching can
-  // reuse the same row — they carry no useful info for the admin and are
-  // filtered out of both the list below and the "already attached" check.
   const activeAttachedRows = (attached ?? []).filter((row) => row.isActive);
   const attachedQuotaIds = new Set(
     activeAttachedRows.map((row) => row.collegeQuotaId),

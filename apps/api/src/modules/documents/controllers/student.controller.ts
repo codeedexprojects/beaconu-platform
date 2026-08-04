@@ -14,8 +14,6 @@ import {
 } from "../validators/documents.validator";
 
 export class StudentDocumentsController {
-  // ── Direction A: documents the college has requested from this student ──
-
   static async listSubmissionRequests(req: Request, res: Response) {
     const filters = submissionRequestListQuerySchema.parse(req.query);
     const result = await DocumentsQuery.listSubmissionRequestsForStudent(
@@ -41,8 +39,6 @@ export class StudentDocumentsController {
       ApiResponse.success("Document submitted successfully", result),
     );
   }
-
-  // ── Direction B: official documents this student has requested from the college ──
 
   static async createDocumentRequest(req: Request, res: Response) {
     const data = createDocumentRequestSchema.parse(req.body);

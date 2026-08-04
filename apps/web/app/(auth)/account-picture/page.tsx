@@ -19,7 +19,6 @@ export default function AccountPicturePage(): React.JSX.Element {
   }
 
   function handleContinue() {
-    // TODO: upload avatar via signed S3 URL, then update student profile
     router.replace("/home");
   }
 
@@ -29,21 +28,17 @@ export default function AccountPicturePage(): React.JSX.Element {
 
   return (
     <div className="flex flex-col">
-      {/* Heading */}
       <p className="text-sm text-gray-500 font-medium">Profile Setup</p>
       <h1 className="text-3xl font-bold text-primary mt-0.5">
         Account Picture
       </h1>
 
-      {/* Illustration */}
       <div className="my-4">
         <AuthIllustration />
       </div>
 
-      {/* Avatar picker */}
       <div className="flex justify-center my-6">
         <div className="relative">
-          {/* Avatar circle */}
           <div className="w-28 h-28 rounded-full bg-[#FACCB0]/40 flex items-center justify-center overflow-hidden border-2 border-[#FACCB0]">
             {preview ? (
               <Image
@@ -91,7 +86,6 @@ export default function AccountPicturePage(): React.JSX.Element {
             )}
           </div>
 
-          {/* Camera button */}
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -111,7 +105,6 @@ export default function AccountPicturePage(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col gap-4 mt-4">
         <button
           type="button"

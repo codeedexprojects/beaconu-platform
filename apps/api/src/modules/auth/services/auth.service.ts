@@ -31,7 +31,6 @@ import {
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
-// Swap both Maps with Redis (setex/get/del) when moving to production.
 const otpStore = new Map<string, { otp: string; expiresAt: Date }>();
 const resetTokenStore = new Map<string, { userId: string; expiresAt: Date }>();
 

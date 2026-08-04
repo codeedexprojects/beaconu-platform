@@ -29,16 +29,11 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  // Mount-gated: avoids an SSR/hydration mismatch on document.body access.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   if (!open || !mounted) return null;
 
-  // Rendered via a portal straight to <body> — rendering this inline inside
-  // the dashboard's scrollable <main> left a gap at the top of the backdrop,
-  // since fixed-position descendants of a scrolling/stacking ancestor can
-  // still misalign with the true viewport in some browsers.
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"

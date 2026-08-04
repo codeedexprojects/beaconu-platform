@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { BLOG_TOKEN_KEY } from "@/lib/constants";
 
-// Only these paths require authentication
 const PROTECTED_PREFIXES = ["/my"];
 
-// Redirect logged-in users away from auth pages
 const AUTH_PATHS = ["/login", "/register"];
 
 export function proxy(request: NextRequest) {

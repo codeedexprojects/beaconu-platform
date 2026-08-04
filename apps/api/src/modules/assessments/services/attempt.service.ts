@@ -20,9 +20,6 @@ import type { Prisma } from "@beaconu/db";
 const TAB_HIDDEN_GRACE_MS = 10 * 1000;
 
 export class AttemptService {
-  /** One attempt per Application (covers every course listed on it), not
-   * per ApplicationCourse — a student submits one application, takes one
-   * assessment for it. */
   static async start(studentId: string, data: StartAttemptInput) {
     const application = await AttemptRepository.findApplicationForAttempt(
       data.application_id,
@@ -30,10 +27,6 @@ export class AttemptService {
     if (!application || application.studentId !== studentId) {
       throw new NotFoundError("Application not found");
     }
-    // Application.formStatus is a simple draft/submitted flow — Submit
-    // Application already flips every ApplicationCourse under it to
-    // "submitted" atomically, so this is the correct whole-application
-    // equivalent of the old per-course status check.
     if (application.formStatus !== "submitted") {
       throw new ConflictError(
         "This application is not currently at the assessment stage",
@@ -44,10 +37,6 @@ export class AttemptService {
       throw new ConflictError("Assessment not required for this application");
     }
 
-    // Resolved from the application's own admission cycle — never
-    // client-supplied. See SlotRepository.findCurrentActiveForTemplate's
-    // doc comment: a slot is just a timing wrapper around a template, the
-    // student never picks one directly.
     const templateId = application.admissionCycle.assessmentTemplateId;
     if (!templateId) {
       throw new ConflictError(
@@ -80,12 +69,6 @@ export class AttemptService {
       );
     }
 
-    // Create already starts the clock — there's no separate screen between
-    // "attempt created" and "timer running" in the actual take-test flow
-    // (the Room screen's instructions/countdown are all pre-attempt), so a
-    // standalone begin() step only added a failure window (create
-    // succeeds, begin never gets called) for no UX benefit. One call does
-    // both.
     const now = new Date();
     return AttemptRepository.create({
       applicationId: data.application_id,
@@ -98,19 +81,6 @@ export class AttemptService {
     });
   }
 
-  /** College-admin action: hard-deletes the attempt entirely (not a reset
-   * in place) so the student's application goes back to having NO
-   * attempt at all — the next POST /attempts they make is a genuinely
-   * fresh start, not blocked by the "you already have an attempt for
-   * this application" uniqueness check. Works from ANY status. Per the
-   * confirmed scope: only the attempt is removed — the linked
-   * ApplicationCourse's pipeline status is deliberately left untouched
-   * (no revert to an earlier stage). StudentAnswer rows cascade-delete
-   * automatically (onDelete: Cascade in schema); AssessmentReschedule has
-   * no cascade and (per a full-codebase grep) no module code writes to it
-   * yet, but its rows for this attempt are cleared defensively so this
-   * doesn't start failing with a FK violation the day that feature is
-   * actually built. */
   static async restart(collegeId: string, attemptId: string) {
     const attempt = await AttemptRepository.findById(attemptId);
     if (!attempt || attempt.paper.template.collegeId !== collegeId) {
@@ -137,9 +107,6 @@ export class AttemptService {
     return this.loadOwn(studentId, attemptId);
   }
 
-  /** Cross-module status read for `admissions`' cycle-status API — never
-   * throws, returns `null` when the student hasn't started an attempt for
-   * this application yet (not an error there, just "not_started"). */
   static async findStatusForApplication(
     studentId: string,
     applicationId: string,
@@ -182,10 +149,6 @@ export class AttemptService {
 
     const questionType = paperQuestion.question.questionType;
     let autoScore: number | null = null;
-    // Undefined = flag/time-only save, leaves any prior evaluationStatus
-    // untouched (see AnswerRepository.upsert). Only set when an actual
-    // response is present — flagging without answering shouldn't move
-    // an answer through the evaluation pipeline at all.
     let evaluationStatus: string | undefined;
 
     if (data.response !== undefined) {
@@ -253,10 +216,6 @@ export class AttemptService {
     return this.finalize(attempt.id, attempt.startedAt, "completed");
   }
 
-  /** Shared terminal transition for the student's own submit() and the
-   * auto-submit job's graceful/disqualifying paths — every attempt needs
-   * an evaluator review step regardless of how it ended, so the terminal
-   * status is immediately followed by under_evaluation. */
   private static async finalize(
     attemptId: string,
     startedAt: Date | null,
@@ -281,11 +240,6 @@ export class AttemptService {
     });
   }
 
-  /** Called by the assessment-auto-submit job (every minute). Applies two
-   * rules from docs/context.md §8/§18: tab-hidden >10s -> terminated,
-   * duration/window expiry -> auto_submitted. No disconnect/idle-timeout
-   * rule — a student can go quiet (reading, thinking, between sections)
-   * for as long as they like without being auto-submitted for it. */
   static async runAutoSubmitSweep(): Promise<{
     terminated: number;
     autoSubmitted: number;

@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 1 — AUTHORIZATION
-// ============================================================
-
 model Student {
   id                   String    @id @default(dbgenerated("('STU-'::text || (nextval('student_seq'::regclass))::text)"))
   fullName             String    @map("full_name") @db.VarChar(255)
@@ -16,11 +12,6 @@ model Student {
   source               String    @default("beaconu_app") @db.VarChar(30)
   status               String    @default("active") @db.VarChar(20)
   profileMetadata      Json      @default("{}") @map("profile_metadata")
-  // Live source of truth for the admission-application form's four detail
-  // steps, reusable across every application the student submits.
-  // AdmissionCycle applications keep their own copies of these as a
-  // frozen, point-in-time snapshot taken once at submit — see
-  // Application.personalDetails etc. in 04-admissions.prisma.
   personalDetails      Json      @default("{}") @map("personal_details")
   familyDetails        Json      @default("{}") @map("family_details")
   addressDetails       Json      @default("{}") @map("address_details")
@@ -29,7 +20,6 @@ model Student {
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   studentLead                StudentLead?
   applications               Application[]
   enrollments                Enrollment[]
@@ -89,7 +79,6 @@ model PlatformAdmin {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   studentLeadsAssigned           StudentLead[]                   @relation("AssignedAdmin")
   newsAlerts                     NewsAlert[]
   entranceExams                  EntranceExam[]
@@ -114,7 +103,6 @@ model PlatformRole {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   permissions    PlatformRolePermission[]
   platformAdmins PlatformAdmin[]
 
@@ -128,7 +116,6 @@ model PlatformPermission {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   rolePermissions PlatformRolePermission[]
 
   @@map("platform_permissions")
@@ -140,7 +127,6 @@ model PlatformRolePermission {
   permissionCode String   @map("permission_code") @db.VarChar(100)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   platformRole       PlatformRole       @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
   platformPermission PlatformPermission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
 
@@ -160,7 +146,6 @@ model CollegeRole {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college      College                 @relation(fields: [collegeId], references: [id])
   permissions  CollegeRolePermission[]
   staffMembers StaffMember[]
@@ -176,7 +161,6 @@ model CollegeRolePermission {
   permissionCode String   @map("permission_code") @db.VarChar(100)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   collegeRole CollegeRole @relation(fields: [collegeRoleId], references: [id], onDelete: Cascade)
 
   @@unique([collegeRoleId, permissionCode], name: "uq_role_permission")
@@ -200,7 +184,6 @@ model StaffMember {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college     College       @relation(fields: [collegeId], references: [id])
   collegeRole CollegeRole   @relation(fields: [collegeRoleId], references: [id])
   inviter     StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
@@ -246,7 +229,6 @@ model BlinkRole {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   blinkUsers BlinkUser[]
 
   @@map("blink_roles")
@@ -281,7 +263,6 @@ model BlinkUser {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   blinkRole       BlinkRole    @relation(fields: [blinkRoleId], references: [id])
   college         College?     @relation(fields: [collegeId], references: [id])
   associateParent BlinkUser?   @relation("BlinkHierarchy", fields: [associateParentId], references: [id])
@@ -326,7 +307,6 @@ model Counsellor {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   availability                 CounsellorAvailability[]
   sessions                     CounsellingSession[]
   wallet                       CounsellorWallet?
@@ -349,9 +329,6 @@ model UserSession {
   expiresAt    DateTime @map("expires_at") @db.Timestamptz
   lastActiveAt DateTime @default(now()) @map("last_active_at") @db.Timestamptz
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  // Polymorphic: userId resolved at application layer based on userType.
-  // No Prisma FK relations here — Prisma cannot model a single field referencing multiple tables.
 
   @@index([userType, userId], name: "idx_sessions_user")
   @@index([refreshToken], name: "idx_sessions_token")
@@ -393,7 +370,6 @@ model StudentLead {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student       Student        @relation(fields: [studentId], references: [id])
   assignedAdmin PlatformAdmin? @relation("AssignedAdmin", fields: [assignedTo], references: [id])
 

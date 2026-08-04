@@ -152,7 +152,6 @@ export default function HostelDetailPage() {
   const [newTransitStop, setNewTransitStop] = useState("");
   const [newTransitTiming, setNewTransitTiming] = useState("");
 
-  // Room types
   const { mutate: createRoomType, isPending: isAddingRoomType } =
     useCreateHostelRoomType();
   const { mutate: deleteRoomType } = useDeleteHostelRoomType();
@@ -168,7 +167,6 @@ export default function HostelDetailPage() {
   );
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
-  // Mess plans
   const { mutate: createMessPlan, isPending: isAddingMessPlan } =
     useCreateHostelMessPlan();
   const { mutate: deleteMessPlan } = useDeleteHostelMessPlan();
@@ -179,7 +177,6 @@ export default function HostelDetailPage() {
   const [mealDietaryOptions, setMealDietaryOptions] = useState("");
   const [mealCompulsory, setMealCompulsory] = useState(false);
 
-  // Addon services
   const { mutate: createAddonService, isPending: isAddingAddon } =
     useCreateHostelAddonService();
   const { mutate: deleteAddonService } = useDeleteHostelAddonService();
@@ -508,7 +505,6 @@ export default function HostelDetailPage() {
         </div>
       </div>
 
-      {/* Profile: description, warden, amenities, rules, location */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-bold">Hostel Profile</CardTitle>

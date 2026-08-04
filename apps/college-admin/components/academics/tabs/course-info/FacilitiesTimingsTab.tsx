@@ -28,7 +28,6 @@ export function FacilitiesTimingsTab({
 
   return (
     <div className="space-y-6">
-      {/* Class Timings — fixed day rows */}
       <div className="space-y-3">
         <Label className="font-bold">Class Timings</Label>
         <div className="space-y-2">
@@ -103,7 +102,6 @@ export function FacilitiesTimingsTab({
         </div>
       </div>
 
-      {/* Industry Tools Array */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Industry Tools</Label>
@@ -160,7 +158,6 @@ export function FacilitiesTimingsTab({
         )}
       </div>
 
-      {/* Lab Facilities Array */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Lab Facilities</Label>
@@ -217,7 +214,6 @@ export function FacilitiesTimingsTab({
         )}
       </div>
 
-      {/* Classroom Facilities Array */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Classroom Facilities</Label>
@@ -274,7 +270,6 @@ export function FacilitiesTimingsTab({
         )}
       </div>
 
-      {/* Bonus Certification Object */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <h4 className="font-bold text-sm text-foreground">
           Bonus Certification

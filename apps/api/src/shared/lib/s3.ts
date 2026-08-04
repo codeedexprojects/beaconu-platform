@@ -32,9 +32,6 @@ function getS3Client(): S3Client {
         accessKeyId: env.AWS_ACCESS_KEY_ID,
         secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
       },
-      // SDK v3 ≥3.536 defaults to "when_supported", injecting CRC32 into
-      // presigned URLs. Clients (Flutter, Bruno) that don't send the matching
-      // header cause S3 to reject with AuthorizationQueryParametersError.
       requestChecksumCalculation: "WHEN_REQUIRED",
       responseChecksumValidation: "WHEN_REQUIRED",
     });

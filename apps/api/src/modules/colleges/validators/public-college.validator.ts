@@ -16,7 +16,6 @@ const optionalListSortFromQuery = z.preprocess(
       .toLowerCase()
       .replace(/[\s-]+/g, "_");
 
-    // Accept common typo variant while normalizing to canonical option.
     if (normalized === "fees_low_to_heigh") return "fees_low_to_high";
 
     return normalized || undefined;

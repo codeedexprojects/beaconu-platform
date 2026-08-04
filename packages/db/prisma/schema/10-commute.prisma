@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 10 — COMMUTE
-// ============================================================
-
 model CommuteRoute {
   id          String   @id @default(dbgenerated("('CMR-'::text || (nextval('commute_route_seq'::regclass))::text)"))
   collegeId   String   @map("college_id")
@@ -12,9 +8,8 @@ model CommuteRoute {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   isVerified    Boolean @default(false) @map("is_verified")
-  conductPolicy Json    @default("[]") @map("conduct_policy") // [{title, description}]
+  conductPolicy Json    @default("[]") @map("conduct_policy")
 
-  // Relations
   college     College             @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   stops       CommuteRouteStop[]
   buses       CommuteBus[]
@@ -37,7 +32,6 @@ model CommuteRouteStop {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   route       CommuteRoute        @relation(fields: [routeId], references: [id], onDelete: Cascade)
   enrollments CommuteEnrollment[]
 
@@ -62,10 +56,9 @@ model CommuteBus {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  busModel              String? @map("bus_model") @db.VarChar(100) // "Tata Marcopolo (AC)"
+  busModel              String? @map("bus_model") @db.VarChar(100)
   paymentStructureNotes String? @map("payment_structure_notes") @db.Text
 
-  // Relations
   route       CommuteRoute         @relation(fields: [routeId], references: [id], onDelete: Cascade)
   enrollments CommuteEnrollment[]
   rideHistory CommuteRideHistory[]
@@ -89,7 +82,6 @@ model CommuteEnrollment {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student     Student              @relation(fields: [studentId], references: [id])
   college     College              @relation(fields: [collegeId], references: [id])
   route       CommuteRoute         @relation(fields: [routeId], references: [id])
@@ -118,7 +110,6 @@ model CommuteRideHistory {
   status       String    @default("completed") @db.VarChar(20)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   enrollment CommuteEnrollment @relation(fields: [enrollmentId], references: [id])
   student    Student           @relation(fields: [studentId], references: [id])
   bus        CommuteBus        @relation(fields: [busId], references: [id])

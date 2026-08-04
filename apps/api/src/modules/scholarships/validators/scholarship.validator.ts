@@ -15,9 +15,6 @@ export const updateScholarshipConfigSchema = z.object({
   scholarship_type: z.string().trim().min(1).max(30).optional(),
   discount_type: z.enum(["flat", "percentage"]).optional(),
   discount_value: z.coerce.number().positive().optional(),
-  // Optional at the top level (omit to leave unchanged), but if included,
-  // can't be cleared to empty — a scholarship always needs at least one
-  // required document.
   required_documents: z
     .array(z.string().trim().min(1))
     .min(1, "Add at least one required supporting document")
@@ -26,9 +23,6 @@ export const updateScholarshipConfigSchema = z.object({
 });
 
 export const listScholarshipConfigsQuerySchema = z.object({
-  // Students aren't scoped to one college via their JWT — required for
-  // the student-facing browse endpoint, matching the same pattern used
-  // for List Available Interview Slots / Course Catalogue.
   college_id: z.string().trim().min(1).optional(),
   active_only: z.coerce.boolean().optional(),
 });

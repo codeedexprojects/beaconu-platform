@@ -22,11 +22,6 @@ export class StudentPaymentController {
       req.userId as string,
       body,
     );
-    // Deliberately sequential, two-service orchestration at the controller
-    // boundary — this is the one seam where payments (owns the
-    // Transaction/ledger write) and admissions (owns Application's
-    // feePaymentStatus flag) meet, kept out of either module's service
-    // layer to avoid a circular import between the two modules.
     await ApplicationService.markFeePaid(req.params.applicationId as string);
     return res.json(ApiResponse.success("Payment confirmed", result));
   }

@@ -45,7 +45,6 @@ export function PlacementsTab({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1">
           <Label>Section Title</Label>
@@ -74,7 +73,6 @@ export function PlacementsTab({
         </div>
       </div>
 
-      {/* Summary Stats */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
@@ -166,7 +164,6 @@ export function PlacementsTab({
         </CardContent>
       </Card>
 
-      {/* Notable Offers */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>

@@ -22,8 +22,6 @@ import type {
   PublicScholarshipDetailsResponse,
 } from "@beaconu/types";
 
-// Cached: called from the [courseId] layout AND from each tab page under it
-// in the same render pass.
 export const getCourseDetail = cache(
   async (slug: string, courseId: string): Promise<PublicCourseDetail> => {
     return api.get(

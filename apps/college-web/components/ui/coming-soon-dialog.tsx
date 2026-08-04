@@ -10,7 +10,6 @@ interface ComingSoonDialogProps {
 }
 
 export function ComingSoonDialog({ open, onClose }: ComingSoonDialogProps) {
-  // Mount-gated: avoids an SSR/hydration mismatch on document.body access.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 

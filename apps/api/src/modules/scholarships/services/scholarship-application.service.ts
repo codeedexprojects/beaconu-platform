@@ -11,14 +11,6 @@ import type {
   ScholarshipSupportingDocument,
 } from "@beaconu/types";
 
-// Scholarship applications only make sense once a course is at least
-// shortlisted (per the user's own admission-flow description: "after
-// interview shortlist, the student can apply for scholarship") — earlier
-// than that there's nothing to award a discount against yet. Same
-// pipeline-stage set used elsewhere for "shortlisted or later". An
-// Application can have several courses (added via Add Course), each at a
-// different pipeline stage — ANY one of them reaching this set is enough,
-// since the scholarship applies to the whole Application, not one course.
 const SCHOLARSHIP_ELIGIBLE_STATUSES = new Set([
   "shortlisted",
   "offer_issued",

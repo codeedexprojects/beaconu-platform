@@ -11,8 +11,6 @@ interface AuthApiResponse {
   };
 }
 
-// Direct fetch — a failed login returns 401 (wrong credentials) which the api
-// client would misinterpret as session expiry and fire the redirect event.
 export async function loginBlogAuthor(payload: {
   email: string;
   password: string;

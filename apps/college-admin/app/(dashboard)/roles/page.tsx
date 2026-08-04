@@ -65,7 +65,6 @@ export default function RolesBuilderPage() {
   const { mutate: updateRole, isPending: updating } = useUpdateCollegeRole();
   const { mutate: deleteRole, isPending: isDeleting } = useDeleteCollegeRole();
 
-  // Mode & Modal states
   const [editingRole, setEditingRole] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -188,7 +187,6 @@ export default function RolesBuilderPage() {
         </Button>
       </div>
 
-      {/* Roles grid list layout */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {roles.map((role) => (
           <Card

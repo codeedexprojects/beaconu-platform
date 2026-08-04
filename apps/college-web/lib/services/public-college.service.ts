@@ -15,9 +15,6 @@ import type {
   AmbassadorOption,
 } from "@beaconu/types";
 
-// Cached: called from the [subdomain] layout AND from each page under it
-// (home + every tab subpage) in the same render pass — React.cache() dedupes
-// those into a single request per navigation instead of one per component.
 export const getCollegeBySlug = cache(
   async (slug: string): Promise<PublicCollegeBySlugResponse> => {
     return api.get(`/api/v1/public/colleges/by-slug/${slug}`);

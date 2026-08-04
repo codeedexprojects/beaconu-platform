@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 9 — HOSTEL
-// ============================================================
-
 model Hostel {
   id                 String   @id @default(dbgenerated("('HST-'::text || (nextval('hostel_seq'::regclass))::text)"))
   collegeId          String   @map("college_id")
@@ -25,10 +21,9 @@ model Hostel {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  safetyTier String? @map("safety_tier") @db.VarChar(100) // "Safe & Secure - Premium PG Partner"
+  safetyTier String? @map("safety_tier") @db.VarChar(100)
   badge      String? @db.VarChar(50)
 
-  // Relations
   college       College              @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   roomTypes     HostelRoomType[]
   messPlans     HostelMessPlan[]
@@ -61,7 +56,6 @@ model HostelRoomType {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   enrollments HostelEnrollment[]
 
@@ -86,7 +80,6 @@ model HostelMessPlan {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   enrollments HostelEnrollment[]
 
@@ -108,7 +101,6 @@ model HostelAddonService {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   hostel Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
   @@index([hostelId], name: "idx_addon_hostel")
@@ -127,7 +119,6 @@ model HostelReview {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   hostel  Hostel  @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   student Student @relation(fields: [studentId], references: [id])
 
@@ -154,7 +145,6 @@ model HostelEnrollment {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student  Student         @relation(fields: [studentId], references: [id])
   college  College         @relation(fields: [collegeId], references: [id])
   hostel   Hostel          @relation(fields: [hostelId], references: [id])
@@ -174,7 +164,6 @@ model HostelWishlist {
   hostelId  String   @map("hostel_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   hostel  Hostel  @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 

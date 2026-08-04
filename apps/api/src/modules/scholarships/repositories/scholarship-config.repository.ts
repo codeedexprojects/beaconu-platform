@@ -31,10 +31,6 @@ export class ScholarshipConfigRepository {
         discountType: data.discountType,
         discountValue: data.discountValue,
         requiredDocuments: data.requiredDocuments,
-        // Not exposed in this feature's create form — no UI/API consumer
-        // for per-scholarship eligibility rules yet, so this stays an
-        // empty object rather than asking the admin to fill in a shape
-        // nothing reads.
         eligibility: {},
       },
       select: CONFIG_SELECT,

@@ -38,9 +38,7 @@ function getCalendarClient(): calendar_v3.Calendar {
 export interface CreateMeetEventParams {
   summary: string;
   description?: string;
-  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:00:00 */
   startDateTime: string;
-  /** Timezone-naive datetime in Asia/Kolkata, e.g. 2026-06-15T10:45:00 */
   endDateTime: string;
   attendeeEmails: string[];
 }
@@ -51,11 +49,6 @@ export interface MeetEventResult {
   meetingId: string | null;
 }
 
-/**
- * Creates a Google Calendar event with an auto-generated Google Meet link.
- * Returns null if Meet creation fails — booking should not fail because of
- * a calendar/Meet outage; the counsellor can add a meeting link manually.
- */
 export async function createMeetEvent(
   params: CreateMeetEventParams,
 ): Promise<MeetEventResult | null> {
@@ -105,7 +98,6 @@ export async function createMeetEvent(
   }
 }
 
-/** Best-effort update of an existing event's time, e.g. on reschedule. */
 export async function updateMeetEventTime(
   eventId: string,
   startDateTime: string,
@@ -130,10 +122,6 @@ export async function updateMeetEventTime(
   }
 }
 
-/**
- * Best-effort: adds an attendee (e.g. the booking student) to an existing
- * Calendar event without removing existing attendees.
- */
 export async function addEventAttendee(
   eventId: string,
   attendeeEmail: string,
@@ -167,7 +155,6 @@ export async function addEventAttendee(
   }
 }
 
-/** Best-effort cancellation of a Google Calendar event for a session. */
 export async function deleteMeetEvent(eventId: string): Promise<void> {
   try {
     const calendar = getCalendarClient();

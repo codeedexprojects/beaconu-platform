@@ -12,7 +12,6 @@ export function ShortsSection() {
         Shorts
       </h2>
 
-      {/* Mobile: horizontal scroll | sm+: 2-col | lg+: 4-col */}
       <div
         className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -23,13 +22,11 @@ export function ShortsSection() {
             className="flex-shrink-0 w-[158px] h-[112px] sm:w-auto sm:h-[160px] lg:h-[180px] rounded-2xl overflow-hidden relative"
             style={{ background: short.bg }}
           >
-            {/* Top dots */}
             <div className="absolute top-2.5 left-3 flex gap-1">
               <div className="w-2 h-2 rounded-full bg-white/50" />
               <div className="w-2 h-2 rounded-full bg-white/25" />
             </div>
 
-            {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
@@ -38,7 +35,6 @@ export function ShortsSection() {
               </div>
             </div>
 
-            {/* Duration */}
             <div className="absolute bottom-2.5 left-3">
               <span className="bg-black/50 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
                 {short.label}

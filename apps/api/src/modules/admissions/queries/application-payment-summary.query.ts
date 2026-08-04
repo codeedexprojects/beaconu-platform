@@ -13,14 +13,6 @@ async function isLocked(applicationId: string): Promise<boolean> {
 }
 
 export class ApplicationPaymentSummaryQuery {
-  /** Everything the payment summary page needs in one call: every course
-   * already added to the application (primary + any extra, in preference
-   * order), each with its currently-chosen quota and the full list of
-   * alternative quota options so the page can offer a picker inline —
-   * plus the grand total and whether courses/quota are still editable
-   * (isLocked, true once a payment order exists). Selecting a different
-   * quota on this page is a separate mutation (changeQuota); this query
-   * itself never writes anything. */
   static async getForApplication(applicationId: string) {
     const [application, courses, locked] = await Promise.all([
       prisma.application.findUniqueOrThrow({
@@ -55,9 +47,6 @@ export class ApplicationPaymentSummaryQuery {
 
     const courseSummaries = await Promise.all(
       courses.map(async (c) => {
-        // Resolve the AdmissionCycleCourse row for the base fee — via the
-        // currently-selected seat's link if a quota is chosen, else by
-        // (cycle, course) the same way addCourse looks it up.
         const cycleCourse = c.courseQuotaSeat
           ? await prisma.admissionCycleCourse.findUnique({
               where: { id: c.courseQuotaSeat.admissionCycleCourseId },

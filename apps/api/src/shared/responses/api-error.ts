@@ -1,9 +1,5 @@
 import { ErrorCode } from "./error-codes";
 
-/**
- * Enterprise-grade custom error class for BeaconU.
- * Allows passing standardized error codes and detailed metadata.
- */
 export class ApiError extends Error {
   public readonly success: boolean = false;
   public readonly timestamp: string;
@@ -20,9 +16,6 @@ export class ApiError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  /**
-   * Helper to format error for JSON response
-   */
   toJSON() {
     return {
       success: this.success,

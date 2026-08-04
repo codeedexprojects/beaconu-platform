@@ -160,8 +160,6 @@ export class CampusVisitsQuery {
     const { status, date, page, limit } = filters;
     const skip = (page - 1) * limit;
 
-    // Own assigned visits, plus college-wide unclaimed "arrived" visits any
-    // ambassador can claim (arrived visits have no ambassadorId until accepted).
     const where = {
       ...(status ? { status } : {}),
       ...(date ? { proposedDate: new Date(date) } : {}),

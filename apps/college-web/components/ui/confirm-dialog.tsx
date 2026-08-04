@@ -28,7 +28,6 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  // Mount-gated: avoids an SSR/hydration mismatch on document.body access.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 

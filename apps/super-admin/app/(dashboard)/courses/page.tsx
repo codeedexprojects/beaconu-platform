@@ -59,7 +59,6 @@ export default function SuperAdminCoursesPage() {
       />
 
       <div className="space-y-6 p-6 max-w-7xl mx-auto w-full">
-        {/* Selection Bar */}
         <Card className="border-0 shadow-sm">
           <CardContent className="pt-6 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="space-y-1.5 w-full md:max-w-md">
@@ -108,7 +107,6 @@ export default function SuperAdminCoursesPage() {
           </CardContent>
         </Card>
 
-        {/* Loading Detail State */}
         {selectedCollegeId && isLoadingDetail && (
           <div className="grid gap-6">
             <div className="h-32 rounded-xl bg-card animate-pulse border border-muted/20" />
@@ -123,10 +121,8 @@ export default function SuperAdminCoursesPage() {
           </div>
         )}
 
-        {/* Selected College Detail & Courses */}
         {selectedCollegeId && collegeDetail && !isLoadingDetail && (
           <div className="space-y-6">
-            {/* College Metadata Summary */}
             <Card className="border-0 shadow-sm overflow-hidden bg-gradient-to-r from-primary/5 via-transparent to-transparent border-l-4 border-primary">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

@@ -9,14 +9,9 @@ import { WishlistService } from "@/modules/wishlist/services/wishlist.service";
 import { AdmissionCycleService } from "@/modules/admissions/services/admission-cycle.service";
 import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
 
-// req.userId is only populated for students on public routes (via
-// authenticateOptional) — staff/admin JWTs never carry wishlist data.
 function requestingStudentId(req: Request): string | null {
   return req.userType === "student" && req.userId ? req.userId : null;
 }
-// Exhaustive list of valid college-level tab IDs.
-// Only these IDs will appear in the public college tabs array.
-// Course-level tabs (fees, faculty, etc.) are implicitly excluded.
 const VALID_COLLEGE_TAB_IDS = new Set([
   "commute",
   "happenings",
@@ -298,7 +293,6 @@ export class PublicCollegeController {
       filters.courses = {
         some: {
           status: "active",
-          // If disciplineId is present, it already implies stream and avoids over-constraining.
           ...(!disciplineId && streamId && { discipline: { streamId } }),
           ...(disciplineId && { disciplineId }),
           ...(studyLevelId && { studyLevelId }),
@@ -480,9 +474,6 @@ export class PublicCollegeController {
     );
 
     const overlayFn = SECTION_DYNAMIC_OVERLAYS[sectionIdentifier];
-    // institutions_across_world is always-live (computed from institution
-    // group membership) — like `commute` on the college-admin read path, it
-    // exists even if the college never saved anything for this section.
     const isAlwaysLiveOnly = sectionIdentifier === "institutions_across_world";
 
     if (!matchedSection && !isAlwaysLiveOnly) {

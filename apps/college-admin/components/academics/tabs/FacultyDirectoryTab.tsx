@@ -21,7 +21,6 @@ export function FacultyDirectoryTab({
 
   return (
     <div className="space-y-6">
-      {/* Faculty header */}
       <div className="flex justify-between items-center">
         <Label className="font-bold">Faculty Directory</Label>
         <Button

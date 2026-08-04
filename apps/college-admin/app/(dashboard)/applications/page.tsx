@@ -96,7 +96,6 @@ export default function ApplicationsPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
@@ -112,7 +111,6 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -188,7 +186,6 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Table */}
       <div className="flex-1 overflow-hidden rounded-xl border shadow-sm">
         <div className="overflow-x-auto">
           <Table>

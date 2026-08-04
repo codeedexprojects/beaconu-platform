@@ -22,7 +22,6 @@ const CORE_SECTIONS = [
   { id: "ambassadors", label: "Ambassadors" },
 ];
 
-// Standalone feature pages, not gated by the college_overview tabs list.
 const EXTRA_LINKS = [
   { id: "hostels", label: "Hostels", path: "hostels" },
   { id: "libraries", label: "Libraries", path: "libraries" },

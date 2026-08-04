@@ -31,7 +31,7 @@ export interface HostelAddonPlanItem {
 
 export interface HostelAddonServiceDto {
   id: string;
-  serviceType: string; // "laundry" | "gym" | "parking" | freeform
+  serviceType: string;
   name: string;
   description: string | null;
   isOptional: boolean;
@@ -135,10 +135,6 @@ export interface HostelDetailDto extends HostelSummaryDto {
   messPlans: HostelMessPlanDto[];
   addonServices: HostelAddonServiceDto[];
 }
-
-// ── Public hostel endpoints (college-web) ────────────────────────────────────
-// UI-ready shapes built by buildPublicHostelDetail — distinct from the admin
-// DTOs above, which mirror the raw DB columns.
 
 export interface PublicHostelSummary extends HostelSummaryDto {
   gallery: string[];

@@ -39,9 +39,6 @@ export class AdmissionCycleCourseRepository {
     });
   }
 
-  /** Includes soft-deleted (isActive: false) rows — used to detect a prior
-   * detach so re-attaching reactivates the existing row instead of violating
-   * the (admissionCycleId, courseId) unique constraint. */
   static async findByCycleAndCourse(
     admissionCycleId: string,
     courseId: string,

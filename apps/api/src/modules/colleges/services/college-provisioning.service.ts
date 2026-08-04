@@ -31,7 +31,6 @@ export interface ProvisionCollegeResult {
     fullName: string;
   };
   setupToken: string;
-  /** Full setup URL for the college-admin portal */
   setupUrl: string;
 }
 
@@ -39,7 +38,6 @@ export class CollegeProvisioningService {
   static async provisionFromLead(
     input: ProvisionCollegeInput,
   ): Promise<ProvisionCollegeResult> {
-    // Generate unique slug and code
     const baseSlug = toSlug(input.collegeName);
     const baseCode = toCollegeCode(input.collegeName);
 
@@ -81,10 +79,6 @@ export class CollegeProvisioningService {
     };
   }
 
-  /**
-   * Verify a setup token is valid and not expired.
-   * Returns college + staff info for the setup page to display.
-   */
   static async verifySetupToken(token: string) {
     const result = await CollegeProvisioningRepository.findBySetupToken(token);
     if (!result) return null;

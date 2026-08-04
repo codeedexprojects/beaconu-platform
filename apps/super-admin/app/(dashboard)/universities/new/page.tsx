@@ -31,8 +31,6 @@ import { useCreateUniversity } from "@/hooks/use-universities";
 import { useAllActiveStreams } from "@/hooks/use-academic-taxonomy";
 import { useUniversityTypes } from "@/hooks/use-university-types";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function toSlug(value: string): string {
   return value
     .toLowerCase()

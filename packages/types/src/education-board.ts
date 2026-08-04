@@ -38,8 +38,6 @@ export interface UpdateEducationBoardInput {
   subjects?: EducationBoardSubjectInput[];
 }
 
-/** Student-facing board picker item — name/grade only, no subjects (that's
- * a separate per-board fetch via Get Education Board). */
 export interface EducationBoardNameItem {
   id: string;
   name: string;

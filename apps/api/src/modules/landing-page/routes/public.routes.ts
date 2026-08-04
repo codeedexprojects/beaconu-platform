@@ -3,7 +3,6 @@ import { CollegeOnboardingController } from "../controllers/college-onboarding.c
 
 const router: Router = Router();
 
-// Public — no auth required
 router.post("/", CollegeOnboardingController.submit);
 
 export default router;

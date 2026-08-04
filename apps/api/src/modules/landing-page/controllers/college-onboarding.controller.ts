@@ -4,7 +4,6 @@ import { collegeOnboardingSchemas } from "../validators/college-onboarding.valid
 import { CollegeOnboardingService } from "../services/college-onboarding.service";
 
 export class CollegeOnboardingController {
-  // POST /api/v1/public/college-onboarding — public, no auth
   static async submit(req: Request, res: Response) {
     const data = collegeOnboardingSchemas.submit.parse(req.body);
     const result = await CollegeOnboardingService.submit(data);

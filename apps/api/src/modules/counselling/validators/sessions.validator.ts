@@ -1,6 +1,5 @@
 import z from "zod";
 
-// Counsellor: add a slot
 export const addSlotSchema = z.object({
   available_date: z
     .string()
@@ -158,12 +157,10 @@ export const listAvailableSlotsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-// Student: create a Razorpay order for a slot before booking
 export const createPaymentOrderSchema = z.object({
   availability_id: z.string().min(1),
 });
 
-// Student: book a session
 export const bookSessionSchema = z.object({
   availability_id: z.string().min(1),
   session_mode: z.enum(["voice_call", "video_call"]),
@@ -171,13 +168,11 @@ export const bookSessionSchema = z.object({
   booking_reason: z.string().max(500).optional(),
 });
 
-// Student: reschedule
 export const rescheduleSessionSchema = z.object({
   new_availability_id: z.string().min(1),
   reason: z.string().max(500).optional(),
 });
 
-// Student/Counsellor: cancel
 export const cancelSessionSchema = z.object({
   cancellation_reason: z.string().max(500).optional(),
 });

@@ -36,7 +36,6 @@ export function AcademicsCurriculumTab({
         </div>
       </div>
 
-      {/* Semesters inside Curriculum */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Semesters</Label>

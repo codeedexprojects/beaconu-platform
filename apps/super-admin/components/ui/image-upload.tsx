@@ -16,7 +16,6 @@ interface ImageUploadProps {
   label?: string;
   className?: string;
   disabled?: boolean;
-  /** Force a crop step to this aspect ratio before upload (e.g. 1 for square). Disallows SVG, since it can't be cropped. */
   aspect?: number;
 }
 
@@ -150,7 +149,6 @@ export function ImageUpload({
         )}
       </div>
 
-      {/* Fallback: show URL text input when image fails or for direct paste */}
       <input
         type="text"
         value={value}

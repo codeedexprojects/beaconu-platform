@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { uploadService } from "@/lib/services/upload.service";
 
 const ALLOWED_TYPES = ["application/pdf"];
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export function useFileUpload() {
   const [isUploading, setIsUploading] = useState(false);
