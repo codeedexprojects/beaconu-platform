@@ -55,11 +55,24 @@ export const listInterviewSlotsQuerySchema = z.object({
   status: z.enum(["active", "cancelled"]).optional(),
 });
 
-export const listAvailableSlotsQuerySchema = z.object({
-  college_id: z.string().trim().min(1),
-  mode: z.enum(MODES).optional(),
-  scheduled_date: dateOnly.optional(),
-});
+export const listAvailableSlotsQuerySchema = z
+  .object({
+    college_id: z.string().trim().min(1),
+    mode: z.enum(MODES).optional(),
+    scheduled_date: dateOnly.optional(),
+    date_from: dateOnly.optional(),
+    date_to: dateOnly.optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(100).default(20),
+  })
+  .refine(
+    (data) =>
+      !(data.date_from && data.date_to) || data.date_from <= data.date_to,
+    {
+      message: "date_from must be before or equal to date_to",
+      path: ["date_from"],
+    },
+  );
 
 export const bookInterviewSlotSchema = z.object({
   application_id: z.string().trim().min(1),

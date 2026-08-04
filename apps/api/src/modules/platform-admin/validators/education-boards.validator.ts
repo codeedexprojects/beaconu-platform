@@ -10,6 +10,7 @@ const optionalBooleanFromQuery = z
 
 const subjectSchema = z
   .object({
+    course: z.string().trim().max(100).optional(),
     name: z.string().trim().min(1, "Subject name is required").max(100),
     max_mark: z.number().positive("Max mark must be greater than 0"),
     pass_mark: z.number().min(0, "Pass mark cannot be negative"),
@@ -19,11 +20,27 @@ const subjectSchema = z
     path: ["pass_mark"],
   });
 
-const createEducationBoardSchema = z.object({
-  name: z.string().trim().min(1, "Board name is required").max(150),
-  grade: z.enum(GRADES),
-  subjects: z.array(subjectSchema).min(1, "At least one subject is required"),
-});
+export function validateSubjectsMatchGrade(
+  grade: (typeof GRADES)[number],
+  subjects: { course?: string }[],
+) {
+  if (grade === "12th") {
+    return subjects.every((s) => !!s.course?.trim());
+  }
+  return subjects.every((s) => !s.course?.trim());
+}
+
+const createEducationBoardSchema = z
+  .object({
+    name: z.string().trim().min(1, "Board name is required").max(150),
+    grade: z.enum(GRADES),
+    subjects: z.array(subjectSchema).min(1, "At least one subject is required"),
+  })
+  .refine((data) => validateSubjectsMatchGrade(data.grade, data.subjects), {
+    message:
+      "12th-grade subjects each need a course/stream; 10th-grade subjects must not have one",
+    path: ["subjects"],
+  });
 
 const updateEducationBoardSchema = z
   .object({

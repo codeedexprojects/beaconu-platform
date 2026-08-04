@@ -14,11 +14,23 @@ export class InterviewStudentController {
     const query = listAvailableSlotsQuerySchema.parse(req.query);
     const result = await InterviewBookingService.listAvailableSlots(
       query.college_id,
-      query.mode,
-      query.scheduled_date ? parseDateOnly(query.scheduled_date) : undefined,
+      {
+        mode: query.mode,
+        scheduledDate: query.scheduled_date
+          ? parseDateOnly(query.scheduled_date)
+          : undefined,
+        dateFrom: query.date_from ? parseDateOnly(query.date_from) : undefined,
+        dateTo: query.date_to ? parseDateOnly(query.date_to) : undefined,
+        page: query.page,
+        limit: query.limit,
+      },
     );
     return res.json(
-      ApiResponse.success("Available interview slots fetched", result),
+      ApiResponse.success(
+        "Available interview slots fetched",
+        result.data,
+        result.meta,
+      ),
     );
   }
 

@@ -50,6 +50,10 @@ docs {
     each with their own subject list) — 409 if (name, grade) already exists.
   - subjects: at least 1 required. pass_mark cannot exceed max_mark for any
     subject (validation error otherwise).
+  - subjects[].course: required (non-empty) for grade "12th" — subjects are
+    grouped by course/stream, e.g. { "course": "Science", "name": "Physics",
+    "max_mark": 100, "pass_mark": 33 }. Must be omitted for grade "10th" —
+    validation error either way if the course/grade pairing is wrong.
   - slug is auto-generated from name + grade (e.g. "cbse-10th"), not
     user-supplied.
 }

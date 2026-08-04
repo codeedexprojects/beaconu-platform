@@ -43,4 +43,9 @@ docs {
   If `name` and/or `grade` change, uniqueness is re-checked (409 if the new
   combination already exists on another board) and the slug is
   regenerated.
+
+  subjects[].course: required (non-empty) for grade "12th" (whichever
+  grade is effective after this update — the request's own `grade` if
+  provided, else the board's existing one), must be omitted for "10th".
+  Validation error if the course/grade pairing is wrong.
 }

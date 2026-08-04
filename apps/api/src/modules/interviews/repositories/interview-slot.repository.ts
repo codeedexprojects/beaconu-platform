@@ -96,21 +96,45 @@ export class InterviewSlotRepository {
 
   static async listAvailableForCollege(
     collegeId: string,
-    mode?: string,
-    scheduledDate?: Date,
+    filters: {
+      mode?: string;
+      scheduledDate?: Date;
+      dateFrom?: Date;
+      dateTo?: Date;
+      page: number;
+      limit: number;
+    },
   ) {
-    return prisma.interviewSlot.findMany({
-      where: {
-        collegeId,
-        status: "active",
-        ...(scheduledDate
-          ? { scheduledDate }
-          : { scheduledDate: { gte: new Date(new Date().toDateString()) } }),
-        ...(mode && { mode }),
-      },
-      select: SLOT_SELECT,
-      orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
-    });
+    const dateWhere = filters.scheduledDate
+      ? { scheduledDate: filters.scheduledDate }
+      : filters.dateFrom || filters.dateTo
+        ? {
+            scheduledDate: {
+              ...(filters.dateFrom && { gte: filters.dateFrom }),
+              ...(filters.dateTo && { lte: filters.dateTo }),
+            },
+          }
+        : { scheduledDate: { gte: new Date(new Date().toDateString()) } };
+
+    const where = {
+      collegeId,
+      status: "active" as const,
+      ...dateWhere,
+      ...(filters.mode && { mode: filters.mode }),
+    };
+
+    const [rows, total] = await prisma.$transaction([
+      prisma.interviewSlot.findMany({
+        where,
+        select: SLOT_SELECT,
+        orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.interviewSlot.count({ where }),
+    ]);
+
+    return { rows, total };
   }
 
   static async update(id: string, data: Partial<InterviewSlotCreateData>) {
@@ -133,6 +157,13 @@ export class InterviewSlotRepository {
         }),
       },
       select: SLOT_SELECT,
+    });
+  }
+
+  static async findExpiredActive(beforeDate: Date) {
+    return prisma.interviewSlot.findMany({
+      where: { status: "active", scheduledDate: { lt: beforeDate } },
+      select: { id: true, collegeId: true },
     });
   }
 

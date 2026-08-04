@@ -165,19 +165,6 @@ export class InterviewSlotService {
     return rows.map(mapSlot);
   }
 
-  static async listAvailable(
-    collegeId: string,
-    mode?: string,
-    scheduledDate?: Date,
-  ) {
-    const rows = await InterviewSlotRepository.listAvailableForCollege(
-      collegeId,
-      mode,
-      scheduledDate,
-    );
-    return rows.map(mapSlot);
-  }
-
   private static async loadForCollege(id: string, collegeId: string) {
     const slot = await InterviewSlotRepository.findById(id);
     if (!slot || slot.collegeId !== collegeId) {
@@ -227,5 +214,14 @@ export class InterviewSlotService {
     }
     const row = await InterviewSlotRepository.setStatus(id, "cancelled");
     return mapSlot(row);
+  }
+
+  static async cleanupExpiredSlots(): Promise<number> {
+    const today = new Date(new Date().toDateString());
+    const expired = await InterviewSlotRepository.findExpiredActive(today);
+    for (const slot of expired) {
+      await this.cancel(slot.collegeId, slot.id);
+    }
+    return expired.length;
   }
 }

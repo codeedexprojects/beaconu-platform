@@ -43,8 +43,12 @@ docs {
   409 ConflictError "This application is not currently at the interview
   stage" unless at least one non-withdrawn course's status is
   "assessment_completed" or already "interview_pending". 409 "You already
-  have an interview booking for this application". 409 "This interview
-  slot is fully booked" (capacity race lost).
+  have an interview booking for this application". 409 "You already have
+  an active interview booking. Cancel it before booking another." — a
+  student can only have ONE booking with status "booked" at a time, across
+  every one of their Applications (not just this one) — cancel the
+  existing booking first. 409 "This interview slot is fully booked"
+  (capacity race lost).
 
   On success, every course that was at "assessment_completed" moves to
   "interview_pending" (idempotent no-op for ones already there, e.g. after
