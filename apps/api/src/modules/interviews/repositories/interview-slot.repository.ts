@@ -123,16 +123,22 @@ export class InterviewSlotRepository {
       ...(filters.mode && { mode: filters.mode }),
     };
 
-    const [rows, total] = await prisma.$transaction([
-      prisma.interviewSlot.findMany({
-        where,
-        select: SLOT_SELECT,
-        orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
-        skip: (filters.page - 1) * filters.limit,
-        take: filters.limit,
-      }),
-      prisma.interviewSlot.count({ where }),
-    ]);
+    // Prisma's `where` can't compare two columns of the same row
+    // (bookedCount < maxCapacity) directly, so full slots are filtered out
+    // in-memory rather than at the DB level — fine at this table's realistic
+    // per-college scale (interview slots number in the tens/hundreds, not
+    // thousands).
+    const matching = await prisma.interviewSlot.findMany({
+      where,
+      select: SLOT_SELECT,
+      orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
+    });
+    const withOpenCapacity = matching.filter(
+      (s) => s.bookedCount < s.maxCapacity,
+    );
+    const total = withOpenCapacity.length;
+    const start = (filters.page - 1) * filters.limit;
+    const rows = withOpenCapacity.slice(start, start + filters.limit);
 
     return { rows, total };
   }

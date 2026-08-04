@@ -20,8 +20,6 @@ export interface InterviewSlotItem {
   startTime: string;
   endTime: string;
   durationMins: number;
-  maxCapacity: number;
-  bookedCount: number;
   meetingUrl: string | null;
   meetingId: string | null;
   meetingPasscode: string | null;
