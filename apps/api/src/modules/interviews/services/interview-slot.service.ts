@@ -31,8 +31,6 @@ export function mapSlot(row: SlotRow): InterviewSlotItem {
     startTime: formatTimeOnly(row.startTime),
     endTime: formatTimeOnly(row.endTime),
     durationMins: row.durationMins,
-    maxCapacity: row.maxCapacity,
-    bookedCount: row.bookedCount,
     meetingUrl: row.zoomMeetingUrl,
     meetingId: row.zoomMeetingId,
     meetingPasscode: row.zoomPasscode,
