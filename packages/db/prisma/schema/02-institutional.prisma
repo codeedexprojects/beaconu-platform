@@ -383,6 +383,7 @@ model EducationBoard {
 model EducationBoardSubject {
   id               String   @id @default(dbgenerated("('EBS-'::text || (nextval('education_board_subject_seq'::regclass))::text)"))
   educationBoardId String   @map("education_board_id")
+  course           String   @default("") @db.VarChar(100)
   name             String   @db.VarChar(100)
   maxMark          Decimal  @map("max_mark") @db.Decimal(6, 2)
   passMark         Decimal  @map("pass_mark") @db.Decimal(6, 2)
@@ -392,7 +393,7 @@ model EducationBoardSubject {
 
   educationBoard EducationBoard @relation(fields: [educationBoardId], references: [id], onDelete: Cascade)
 
-  @@unique([educationBoardId, name], name: "uq_board_subject_name")
+  @@unique([educationBoardId, course, name], name: "uq_board_subject_course_name")
   @@index([educationBoardId], name: "idx_board_subjects_board")
   @@map("education_board_subjects")
 }

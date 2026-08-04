@@ -85,6 +85,13 @@ export class InterviewBookingRepository {
     });
   }
 
+  static async findActiveByStudent(studentId: string) {
+    return prisma.interviewBooking.findFirst({
+      where: { studentId, status: "booked" },
+      select: BOOKING_SELECT,
+    });
+  }
+
   static async findByIdForStudent(id: string, studentId: string) {
     return prisma.interviewBooking.findFirst({
       where: { id, studentId },

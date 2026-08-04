@@ -1,12 +1,18 @@
 import { prisma } from "@beaconu/db";
-import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/shared/errors";
 import { toSlug } from "@/shared/utils/slug.utils";
 import { PaginationHelper } from "@/shared/responses/pagination";
 import { EducationBoardsRepository } from "../repositories/education-boards.repository";
-import type {
-  CreateEducationBoardInput,
-  ListEducationBoardsQuery,
-  UpdateEducationBoardInput,
+import {
+  validateSubjectsMatchGrade,
+  type CreateEducationBoardInput,
+  type ListEducationBoardsQuery,
+  type UpdateEducationBoardInput,
 } from "../validators/education-boards.validator";
 
 async function ensureUniqueSlug(base: string): Promise<string> {
@@ -74,6 +80,7 @@ export class EducationBoardsService {
     const created = await EducationBoardsRepository.create(
       { name: data.name, grade: data.grade, slug },
       data.subjects.map((s) => ({
+        course: s.course?.trim() ?? "",
         name: s.name,
         maxMark: s.max_mark,
         passMark: s.pass_mark,
@@ -107,6 +114,15 @@ export class EducationBoardsService {
       ? await ensureUniqueSlug(toSlug(`${nextName}-${nextGrade}`))
       : undefined;
 
+    if (
+      data.subjects &&
+      !validateSubjectsMatchGrade(nextGrade as "10th" | "12th", data.subjects)
+    ) {
+      throw new ValidationError(
+        "12th-grade subjects each need a course/stream; 10th-grade subjects must not have one",
+      );
+    }
+
     await prisma.$transaction(async (tx) => {
       await EducationBoardsRepository.updateFields(tx, id, {
         ...(data.name !== undefined ? { name: data.name } : {}),
@@ -120,6 +136,7 @@ export class EducationBoardsService {
           tx,
           id,
           data.subjects.map((s) => ({
+            course: s.course?.trim() ?? "",
             name: s.name,
             maxMark: s.max_mark,
             passMark: s.pass_mark,
@@ -156,15 +173,10 @@ export class EducationBoardsService {
     return toDto(updated);
   }
 
-  /** Student-facing board picker — active boards only, name/grade/slug
-   * only (no subjects, that's a separate per-board fetch). */
   static async listNamesForStudent(grade?: string, search?: string) {
     return EducationBoardsRepository.listActiveNames({ grade, search });
   }
 
-  /** Student-facing subjects/marks read for one board — 404s (not just an
-   * empty result) if the board doesn't exist OR isn't currently active, so
-   * a student can never select/see a deactivated board's details. */
   static async getActiveById(id: string) {
     const board = await EducationBoardsRepository.findActiveById(id);
     if (!board) throw new NotFoundError("Education board not found");

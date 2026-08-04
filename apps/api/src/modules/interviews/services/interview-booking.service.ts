@@ -1,5 +1,6 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { InterviewBookingRepository } from "../repositories/interview-booking.repository";
 import { InterviewSlotRepository } from "../repositories/interview-slot.repository";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
@@ -54,15 +55,21 @@ async function mapBooking(row: BookingRow): Promise<InterviewBookingItem> {
 export class InterviewBookingService {
   static async listAvailableSlots(
     collegeId: string,
-    mode?: string,
-    scheduledDate?: Date,
+    filters: {
+      mode?: string;
+      scheduledDate?: Date;
+      dateFrom?: Date;
+      dateTo?: Date;
+      page: number;
+      limit: number;
+    },
   ) {
-    const rows = await InterviewSlotRepository.listAvailableForCollege(
-      collegeId,
-      mode,
-      scheduledDate,
-    );
-    return rows.map(mapSlot);
+    const { rows, total } =
+      await InterviewSlotRepository.listAvailableForCollege(collegeId, filters);
+    return {
+      data: rows.map(mapSlot),
+      meta: PaginationHelper.createMeta(total, filters.page, filters.limit),
+    };
   }
 
   static async bookSlot(
@@ -103,6 +110,14 @@ export class InterviewBookingService {
     if (existing) {
       throw new ConflictError(
         "You already have an interview booking for this application",
+      );
+    }
+
+    const activeElsewhere =
+      await InterviewBookingRepository.findActiveByStudent(studentId);
+    if (activeElsewhere) {
+      throw new ConflictError(
+        "You already have an active interview booking. Cancel it before booking another.",
       );
     }
 

@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { BookOpen, Search, Plus, MoreHorizontal, Edit, X } from "lucide-react";
+import {
+  BookOpen,
+  Search,
+  Plus,
+  MoreHorizontal,
+  Edit,
+  X,
+  Trash2,
+} from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +51,7 @@ import {
 import type { EducationBoardItem, EducationBoardGrade } from "@beaconu/types";
 
 interface SubjectRow {
+  course: string;
   name: string;
   max_mark: string;
   pass_mark: string;
@@ -52,9 +61,10 @@ interface BoardForm {
   name: string;
   grade: EducationBoardGrade;
   subjects: SubjectRow[];
+  courseGroups: string[];
 }
 
-const EMPTY_SUBJECT: SubjectRow = {
+const EMPTY_SUBJECT: Omit<SubjectRow, "course"> = {
   name: "",
   max_mark: "100",
   pass_mark: "33",
@@ -62,8 +72,12 @@ const EMPTY_SUBJECT: SubjectRow = {
 const EMPTY_FORM: BoardForm = {
   name: "",
   grade: "10th",
-  subjects: [{ ...EMPTY_SUBJECT }],
+  subjects: [{ ...EMPTY_SUBJECT, course: "" }],
+  courseGroups: [],
 };
+
+const GRADE_BADGE_CLASS =
+  "text-[10px] font-mono border-border bg-muted text-foreground";
 
 function SubjectRowsEditor({
   subjects,
@@ -93,53 +107,60 @@ function SubjectRowsEditor({
           Add Subject
         </Button>
       </div>
-      <div className="flex items-center gap-2 px-0.5">
-        <span className="flex-1 text-xs font-medium text-muted-foreground">
-          Subject Name
-        </span>
-        <span className="w-20 text-xs font-medium text-muted-foreground">
-          Max Mark
-        </span>
-        <span className="w-20 text-xs font-medium text-muted-foreground">
-          Pass Mark
-        </span>
-        <span className="w-8 shrink-0" />
-      </div>
-      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-        {subjects.map((subject, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <Input
-              placeholder="e.g. Mathematics"
-              value={subject.name}
-              onChange={(e) => onUpdate(index, "name", e.target.value)}
-              className="flex-1"
-            />
-            <Input
-              type="number"
-              placeholder="100"
-              value={subject.max_mark}
-              onChange={(e) => onUpdate(index, "max_mark", e.target.value)}
-              className="w-20"
-            />
-            <Input
-              type="number"
-              placeholder="33"
-              value={subject.pass_mark}
-              onChange={(e) => onUpdate(index, "pass_mark", e.target.value)}
-              className="w-20"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => onRemove(index)}
-              disabled={subjects.length === 1}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+      {subjects.length > 0 && (
+        <div className="flex items-center gap-2 px-0.5">
+          <span className="flex-1 text-xs font-medium text-muted-foreground">
+            Subject Name
+          </span>
+          <span className="w-20 text-xs font-medium text-muted-foreground">
+            Max Mark
+          </span>
+          <span className="w-20 text-xs font-medium text-muted-foreground">
+            Pass Mark
+          </span>
+          <span className="w-8 shrink-0" />
+        </div>
+      )}
+      <div className="space-y-2 pr-1">
+        {subjects.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No subjects yet — click Add Subject.
+          </p>
+        ) : (
+          subjects.map((subject, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input
+                placeholder="e.g. Mathematics"
+                value={subject.name}
+                onChange={(e) => onUpdate(index, "name", e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                placeholder="100"
+                value={subject.max_mark}
+                onChange={(e) => onUpdate(index, "max_mark", e.target.value)}
+                className="w-20"
+              />
+              <Input
+                type="number"
+                placeholder="33"
+                value={subject.pass_mark}
+                onChange={(e) => onUpdate(index, "pass_mark", e.target.value)}
+                className="w-20"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => onRemove(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        )}
       </div>
       {subjectsInvalid && (
         <p className="text-sm text-destructive">
@@ -154,17 +175,228 @@ function toSubjectInputs(subjects: SubjectRow[]) {
   return subjects
     .filter((s) => s.name.trim().length > 0)
     .map((s) => ({
+      course: s.course || undefined,
       name: s.name.trim(),
       max_mark: Number(s.max_mark),
       pass_mark: Number(s.pass_mark),
     }));
 }
 
+function isSubjectsInvalid(subjects: SubjectRow[]) {
+  return subjects.some((s) => {
+    if (!s.name.trim()) return false;
+    return Number(s.pass_mark) > Number(s.max_mark);
+  });
+}
+
+function BoardFormFields({
+  form,
+  setForm,
+  idPrefix,
+}: {
+  form: BoardForm;
+  setForm: React.Dispatch<React.SetStateAction<BoardForm>>;
+  idPrefix: string;
+}) {
+  const [newCourseName, setNewCourseName] = useState("");
+
+  function handleGradeChange(grade: EducationBoardGrade) {
+    setForm((prev) => ({
+      ...prev,
+      grade,
+      subjects: grade === "10th" ? [{ ...EMPTY_SUBJECT, course: "" }] : [],
+      courseGroups: [],
+    }));
+  }
+
+  function addCourseGroup() {
+    const name = newCourseName.trim();
+    if (!name) return;
+    if (form.courseGroups.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      toast.error("That course is already added");
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      courseGroups: [...prev.courseGroups, name],
+    }));
+    setNewCourseName("");
+  }
+
+  function removeCourseGroup(name: string) {
+    setForm((prev) => ({
+      ...prev,
+      courseGroups: prev.courseGroups.filter((c) => c !== name),
+      subjects: prev.subjects.filter((s) => s.course !== name),
+    }));
+  }
+
+  function addSubjectRow(course: string) {
+    setForm((prev) => ({
+      ...prev,
+      subjects: [...prev.subjects, { ...EMPTY_SUBJECT, name: "", course }],
+    }));
+  }
+
+  function removeSubjectRow(course: string, localIndex: number) {
+    setForm((prev) => {
+      let seen = -1;
+      return {
+        ...prev,
+        subjects: prev.subjects.filter((s) => {
+          if (s.course !== course) return true;
+          seen += 1;
+          return seen !== localIndex;
+        }),
+      };
+    });
+  }
+
+  function updateSubjectRow(
+    course: string,
+    localIndex: number,
+    field: keyof SubjectRow,
+    value: string,
+  ) {
+    setForm((prev) => {
+      let seen = -1;
+      return {
+        ...prev,
+        subjects: prev.subjects.map((s) => {
+          if (s.course !== course) return s;
+          seen += 1;
+          return seen === localIndex ? { ...s, [field]: value } : s;
+        }),
+      };
+    });
+  }
+
+  const subjectsInvalid = isSubjectsInvalid(form.subjects);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-name`}>Board Name</Label>
+          <Input
+            id={`${idPrefix}-name`}
+            value={form.name}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, name: e.target.value }))
+            }
+            placeholder="e.g. CBSE, ICSE, State Board"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-grade`}>Grade</Label>
+          <Select value={form.grade} onValueChange={handleGradeChange}>
+            <SelectTrigger id={`${idPrefix}-grade`}>
+              <SelectValue placeholder="Select grade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10th">10th</SelectItem>
+              <SelectItem value="12th">12th</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {form.grade === "10th" ? (
+        <SubjectRowsEditor
+          subjects={form.subjects}
+          subjectsInvalid={subjectsInvalid}
+          onAdd={() => addSubjectRow("")}
+          onRemove={(index) => removeSubjectRow("", index)}
+          onUpdate={(index, field, value) =>
+            updateSubjectRow("", index, field, value)
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Courses</Label>
+            <p className="text-xs text-muted-foreground">
+              Select a course/stream (e.g. Science, Commerce), then add its
+              subjects below.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="e.g. Science"
+                value={newCourseName}
+                onChange={(e) => setNewCourseName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCourseGroup();
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addCourseGroup}
+                className="gap-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Course
+              </Button>
+            </div>
+          </div>
+
+          {form.courseGroups.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Add a course above to start adding its subjects.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {form.courseGroups.map((course) => {
+                const courseSubjects = form.subjects.filter(
+                  (s) => s.course === course,
+                );
+                return (
+                  <div key={course} className="space-y-3 rounded-lg border p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{course}</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => removeCourseGroup(course)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <SubjectRowsEditor
+                      subjects={courseSubjects}
+                      subjectsInvalid={isSubjectsInvalid(courseSubjects)}
+                      onAdd={() => addSubjectRow(course)}
+                      onRemove={(index) => removeSubjectRow(course, index)}
+                      onUpdate={(index, field, value) =>
+                        updateSubjectRow(course, index, field, value)
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EducationBoardsPage() {
   const [search, setSearch] = useState("");
+  const [gradeFilter, setGradeFilter] = useState<string>("all");
 
   const { data, isLoading } = useEducationBoards({
     search: search || undefined,
+    grade: gradeFilter === "all" ? undefined : gradeFilter,
     limit: 100,
   });
   const boards = data?.data ?? [];
@@ -194,55 +426,35 @@ export default function EducationBoardsPage() {
   };
 
   const handleCreateClick = () => {
-    setForm({ ...EMPTY_FORM, subjects: [{ ...EMPTY_SUBJECT }] });
+    setForm({
+      ...EMPTY_FORM,
+      subjects: [{ ...EMPTY_SUBJECT, course: "" }],
+    });
     setIsCreateModalOpen(true);
   };
 
   const handleEditClick = (board: EducationBoardItem) => {
     setEditingBoard(board);
+    const subjects = board.subjects.map((s) => ({
+      course: s.course,
+      name: s.name,
+      max_mark: s.maxMark,
+      pass_mark: s.passMark,
+    }));
+    const courseGroups =
+      board.grade === "12th"
+        ? Array.from(new Set(subjects.map((s) => s.course).filter(Boolean)))
+        : [];
     setForm({
       name: board.name,
       grade: board.grade,
-      subjects: board.subjects.map((s) => ({
-        name: s.name,
-        max_mark: s.maxMark,
-        pass_mark: s.passMark,
-      })),
+      subjects,
+      courseGroups,
     });
     setIsEditModalOpen(true);
   };
 
-  const addSubjectRow = () => {
-    setForm((prev) => ({
-      ...prev,
-      subjects: [...prev.subjects, { ...EMPTY_SUBJECT, name: "" }],
-    }));
-  };
-
-  const removeSubjectRow = (index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      subjects: prev.subjects.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateSubjectRow = (
-    index: number,
-    field: keyof SubjectRow,
-    value: string,
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      subjects: prev.subjects.map((s, i) =>
-        i === index ? { ...s, [field]: value } : s,
-      ),
-    }));
-  };
-
-  const subjectsInvalid = form.subjects.some((s) => {
-    if (!s.name.trim()) return false;
-    return Number(s.pass_mark) > Number(s.max_mark);
-  });
+  const subjectsInvalid = isSubjectsInvalid(form.subjects);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,8 +510,8 @@ export default function EducationBoardsPage() {
 
       <div className="flex-1 space-y-4 p-6">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-1 items-center gap-2 max-w-sm">
-            <div className="relative w-full">
+          <div className="flex flex-1 items-center gap-2">
+            <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search education boards..."
@@ -308,6 +520,16 @@ export default function EducationBoardsPage() {
                 className="pl-9 bg-background"
               />
             </div>
+            <Select value={gradeFilter} onValueChange={setGradeFilter}>
+              <SelectTrigger className="w-[140px] bg-background">
+                <SelectValue placeholder="All grades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Grades</SelectItem>
+                <SelectItem value="10th">10th</SelectItem>
+                <SelectItem value="12th">12th</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Badge variant="info" className="px-3 py-1 gap-1.5">
             {activeCount}/{boards.length} Active
@@ -363,7 +585,7 @@ export default function EducationBoardsPage() {
                         <TableCell className="text-center">
                           <Badge
                             variant="secondary"
-                            className="text-[10px] font-mono"
+                            className={GRADE_BADGE_CLASS}
                           >
                             {board.grade}
                           </Badge>
@@ -440,8 +662,8 @@ export default function EducationBoardsPage() {
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b">
+          <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b shrink-0">
               <h3 className="font-semibold text-lg">Add Education Board</h3>
               <Button
                 variant="ghost"
@@ -451,51 +673,18 @@ export default function EducationBoardsPage() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <form onSubmit={handleCreate}>
-              <CardContent className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="create-name">Board Name</Label>
-                    <Input
-                      id="create-name"
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                      placeholder="e.g. CBSE, ICSE, State Board"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="create-grade">Grade</Label>
-                    <Select
-                      value={form.grade}
-                      onValueChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          grade: value as EducationBoardGrade,
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="create-grade">
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10th">10th</SelectItem>
-                        <SelectItem value="12th">12th</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <SubjectRowsEditor
-                  subjects={form.subjects}
-                  subjectsInvalid={subjectsInvalid}
-                  onAdd={addSubjectRow}
-                  onRemove={removeSubjectRow}
-                  onUpdate={updateSubjectRow}
+            <form
+              onSubmit={handleCreate}
+              className="flex flex-col overflow-hidden"
+            >
+              <CardContent className="p-6 overflow-y-auto">
+                <BoardFormFields
+                  form={form}
+                  setForm={setForm}
+                  idPrefix="create"
                 />
               </CardContent>
-              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20 shrink-0">
                 <Button
                   type="button"
                   variant="ghost"
@@ -517,8 +706,8 @@ export default function EducationBoardsPage() {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b">
+          <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b shrink-0">
               <h3 className="font-semibold text-lg">Edit Education Board</h3>
               <Button
                 variant="ghost"
@@ -528,51 +717,18 @@ export default function EducationBoardsPage() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <form onSubmit={handleUpdate}>
-              <CardContent className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-name">Board Name</Label>
-                    <Input
-                      id="edit-name"
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                      placeholder="e.g. CBSE, ICSE, State Board"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-grade">Grade</Label>
-                    <Select
-                      value={form.grade}
-                      onValueChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          grade: value as EducationBoardGrade,
-                        }))
-                      }
-                    >
-                      <SelectTrigger id="edit-grade">
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10th">10th</SelectItem>
-                        <SelectItem value="12th">12th</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <SubjectRowsEditor
-                  subjects={form.subjects}
-                  subjectsInvalid={subjectsInvalid}
-                  onAdd={addSubjectRow}
-                  onRemove={removeSubjectRow}
-                  onUpdate={updateSubjectRow}
+            <form
+              onSubmit={handleUpdate}
+              className="flex flex-col overflow-hidden"
+            >
+              <CardContent className="p-6 overflow-y-auto">
+                <BoardFormFields
+                  form={form}
+                  setForm={setForm}
+                  idPrefix="edit"
                 />
               </CardContent>
-              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+              <div className="flex justify-end gap-2 p-4 border-t bg-muted/20 shrink-0">
                 <Button
                   type="button"
                   variant="ghost"

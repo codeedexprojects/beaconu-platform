@@ -2,6 +2,7 @@ export type EducationBoardGrade = "10th" | "12th";
 
 export interface EducationBoardSubjectItem {
   id: string;
+  course: string;
   name: string;
   maxMark: string;
   passMark: string;
@@ -20,6 +21,7 @@ export interface EducationBoardItem {
 }
 
 export interface EducationBoardSubjectInput {
+  course?: string;
   name: string;
   max_mark: number;
   pass_mark: number;

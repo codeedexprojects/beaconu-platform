@@ -11,12 +11,16 @@ const EDUCATION_BOARD_SELECT = {
   subjects: {
     select: {
       id: true,
+      course: true,
       name: true,
       maxMark: true,
       passMark: true,
       sortOrder: true,
     },
-    orderBy: { sortOrder: "asc" as const },
+    orderBy: [
+      { course: "asc" },
+      { sortOrder: "asc" },
+    ] as Prisma.EducationBoardSubjectOrderByWithRelationInput[],
   },
 } as const;
 
@@ -96,7 +100,12 @@ export class EducationBoardsRepository {
 
   static async create(
     data: { name: string; grade: string; slug: string },
-    subjects: { name: string; maxMark: number; passMark: number }[],
+    subjects: {
+      course: string;
+      name: string;
+      maxMark: number;
+      passMark: number;
+    }[],
   ) {
     return prisma.educationBoard.create({
       data: {
@@ -104,6 +113,7 @@ export class EducationBoardsRepository {
         subjects: {
           createMany: {
             data: subjects.map((s, index) => ({
+              course: s.course,
               name: s.name,
               maxMark: s.maxMark,
               passMark: s.passMark,
@@ -131,7 +141,12 @@ export class EducationBoardsRepository {
   static async replaceSubjects(
     tx: Prisma.TransactionClient,
     educationBoardId: string,
-    subjects: { name: string; maxMark: number; passMark: number }[],
+    subjects: {
+      course: string;
+      name: string;
+      maxMark: number;
+      passMark: number;
+    }[],
   ) {
     await tx.educationBoardSubject.deleteMany({
       where: { educationBoardId },
@@ -139,6 +154,7 @@ export class EducationBoardsRepository {
     await tx.educationBoardSubject.createMany({
       data: subjects.map((s, index) => ({
         educationBoardId,
+        course: s.course,
         name: s.name,
         maxMark: s.maxMark,
         passMark: s.passMark,

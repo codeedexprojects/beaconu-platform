@@ -19,6 +19,10 @@ import {
   startAssessmentAutoSubmitJob,
   stopAssessmentAutoSubmitJob,
 } from "@/modules/assessments/jobs/assessment-auto-submit.job";
+import {
+  startInterviewSlotExpiryJob,
+  stopInterviewSlotExpiryJob,
+} from "@/modules/interviews/jobs/slot-expiry.job";
 
 const JOBS = [
   {
@@ -45,6 +49,11 @@ const JOBS = [
     name: "Assessment auto-submit",
     start: startAssessmentAutoSubmitJob,
     stop: stopAssessmentAutoSubmitJob,
+  },
+  {
+    name: "Interview slot expiry",
+    start: startInterviewSlotExpiryJob,
+    stop: stopInterviewSlotExpiryJob,
   },
 ];
 
