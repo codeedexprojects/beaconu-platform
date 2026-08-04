@@ -1,0 +1,49 @@
+meta {
+  name: Verify Audio Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/audio/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "key": "{{audioUploadKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.permanentUrl) {
+      bru.setEnvVar("audioFileUrl", data.data.permanentUrl);
+    }
+  }
+}
+
+docs {
+  Step 3 of 3 — Confirm the audio file was successfully uploaded to S3.
+
+  Saves `permanentUrl` to {{audioFileUrl}} for use as the answer's
+  `audioUrl` in PATCH .../attempts/:id/answers/:questionId.
+
+  Body:
+  - key (required): the S3 key returned by presign-audio
+
+  Response:
+  - verified: true
+  - permanentUrl: permanent public S3 URL
+  - viewUrl: signed URL valid for 1 hour
+}

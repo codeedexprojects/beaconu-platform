@@ -1,0 +1,35 @@
+meta {
+  name: Upload Audio To S3 (PUT)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{audioUploadUrl}}
+  body: file
+  auth: none
+}
+
+headers {
+  Content-Type: audio/mp4
+}
+
+body:file {
+  @file:
+}
+
+docs {
+  Step 2 of 3 — PUT the audio file directly to S3 using the pre-signed URL.
+
+  IMPORTANT:
+  - auth must be "none" — the presigned URL already contains AWS credentials in its query params.
+  - Content-Type must exactly match what was sent to the presign endpoint.
+  - Do NOT paste the URL manually — {{audioUploadUrl}} is captured automatically by
+    presign-audio.bru.
+
+  Setup:
+  1. Run presign-audio first — it sets {{audioUploadUrl}} in the environment
+  2. Click the body field and select your file
+  3. Run this request — expect HTTP 200 (no body) from S3
+  4. Run verify-audio to confirm and get the permanent URL
+}

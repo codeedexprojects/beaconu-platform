@@ -1,0 +1,56 @@
+meta {
+  name: Presign Audio Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/audio/presign
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "mimeType": "audio/mp4",
+    "fileSizeBytes": 204800
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.key) {
+      bru.setEnvVar("audioUploadKey", data.data.key);
+      bru.setEnvVar("audioUploadUrl", data.data.uploadUrl);
+    }
+  }
+}
+
+docs {
+  Step 1 of 3 — Request a pre-signed PUT URL to upload an audio recording,
+  e.g. a student's answer to an "audio_response" assessment question.
+
+  After receiving the response:
+  1. PUT the file binary to `uploadUrl` with the matching Content-Type header
+  2. Call verify-audio with the returned `key`
+  3. Pass the resulting `permanentUrl` as the answer's `audioUrl` in
+     PATCH .../attempts/:id/answers/:questionId
+
+  Body:
+  - mimeType (required): audio/mpeg | audio/mp4 | audio/wav
+  - fileSizeBytes (required): file size in bytes, max 10 MB (10485760)
+
+  Response:
+  - uploadUrl: pre-signed S3 PUT URL, valid for 5 minutes
+  - key: S3 object key — pass this to the verify endpoint
+  - expiresIn: 300 (seconds)
+}
