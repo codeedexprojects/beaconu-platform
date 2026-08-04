@@ -122,8 +122,6 @@ export class CollegeRegistrationRepository {
     });
   }
 
-  // ── College Profile ────────────────────────────────────────────────────────
-
   static async findCollegeById(collegeId: string) {
     return prisma.college.findUnique({
       where: { id: collegeId },
@@ -258,8 +256,6 @@ export class CollegeRegistrationRepository {
     });
   }
 
-  // ── Campuses ───────────────────────────────────────────────────────────────
-
   static async getCampuses(collegeId: string) {
     return prisma.campus.findMany({
       where: { collegeId, status: "active" },
@@ -268,7 +264,6 @@ export class CollegeRegistrationRepository {
   }
 
   static async createCampus(collegeId: string, data: CreateCampusData) {
-    // If setting as main campus, unset all others first
     if (data.isMainCampus) {
       await prisma.campus.updateMany({
         where: { collegeId, isMainCampus: true },
@@ -297,7 +292,6 @@ export class CollegeRegistrationRepository {
     collegeId: string,
     data: UpdateCampusData,
   ) {
-    // Verify campus belongs to this college
     const existing = await this.existsCampusInCollege(campusId, collegeId);
     if (!existing) return null;
 
@@ -329,8 +323,6 @@ export class CollegeRegistrationRepository {
 
     return this.softDeleteCampus(campusId);
   }
-
-  // ── Courses ────────────────────────────────────────────────────────────────
 
   static async getCourses(collegeId: string) {
     return prisma.course.findMany({
@@ -444,8 +436,6 @@ export class CollegeRegistrationRepository {
     return this.softDeleteCourse(courseId);
   }
 
-  // ── Lookups ────────────────────────────────────────────────────────────────
-
   static async getActiveDepartmentsByCollegeId(collegeId: string) {
     void collegeId;
     return prisma.discipline.findMany({
@@ -482,7 +472,6 @@ export class CollegeRegistrationRepository {
       return streamsWithActiveDisciplines;
     }
 
-    // Fallback for legacy/inconsistent seed data where isActive flags are not set as expected.
     const streamsWithAllDisciplines = await prisma.stream.findMany({
       where: {
         isActive: true,
@@ -504,8 +493,6 @@ export class CollegeRegistrationRepository {
       return streamsWithAllDisciplines;
     }
 
-    // Final fallback: if university-level stream restrictions point to empty/misconfigured streams,
-    // return all active streams so course discipline selection is still usable.
     const globalStreamsWithActiveDisciplines = await prisma.stream.findMany({
       where: { isActive: true },
       include: {

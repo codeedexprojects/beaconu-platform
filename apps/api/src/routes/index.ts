@@ -21,6 +21,6 @@ router.use("/api/v1/public", publicRoutes);
 router.use("/api/v1/webhooks", webhookRoutes);
 router.use("/api/v1/blog", blogRoutes);
 router.use("/api/v1/health", healthRoutes);
-router.use("/health", healthRoutes); // Render health-check probe hits /health directly
+router.use("/health", healthRoutes);
 
 export default router;

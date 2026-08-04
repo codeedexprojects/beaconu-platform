@@ -20,12 +20,7 @@ export const createAdmissionCycleSchema = z
       .max(30),
     starts_on: z.coerce.date(),
     ends_on: z.coerce.date().optional(),
-    // Whether the whole application form requires an assessment — the
-    // single source of truth AttemptService.start() gates on.
     assessment_required: z.boolean().optional(),
-    // One assessment template for the whole application form — every
-    // course under this cycle shares it. Optional/nullable — a cycle can
-    // have no assessment configured.
     assessment_template_id: z.string().trim().min(1).optional().nullable(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
@@ -59,12 +54,6 @@ export const admissionCycleListQuerySchema = z.object({
   admission_year: z.string().trim().optional(),
 });
 
-// college_id is optional — omitting it (e.g. the client hitting this
-// endpoint with no cycle/college context yet) lists open cycles across
-// every college instead of scoping to one. course_id is also optional —
-// narrows to cycles that actually have that course attached (active
-// AdmissionCycleCourse), for a "find where I can apply for this course"
-// search.
 export const studentAdmissionCycleListQuerySchema =
   admissionCycleListQuerySchema.extend({
     college_id: z.string().trim().min(1).optional(),

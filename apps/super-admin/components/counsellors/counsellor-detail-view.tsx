@@ -71,7 +71,6 @@ export function CounsellorDetailView({
       </Header>
 
       <div className="flex-1 space-y-6 p-6">
-        {/* Profile header */}
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xl shrink-0">
@@ -126,7 +125,6 @@ export function CounsellorDetailView({
           </CardContent>
         </Card>
 
-        {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-none shadow-sm">
             <CardContent className="p-4 space-y-1">
@@ -185,7 +183,6 @@ export function CounsellorDetailView({
           </Card>
         </div>
 
-        {/* Slots */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <CounsellorSlotsTable
             counsellorId={counsellor.id}

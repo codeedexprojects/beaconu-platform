@@ -46,8 +46,6 @@ export class SeatPoolRepository {
     });
   }
 
-  /** Only courses actively attached to this admission cycle can be pooled —
-   * returns the AdmissionCycleCourse id needed to key CourseQuotaSeats rows. */
   static async findActiveCycleCourses(
     admissionCycleId: string,
     courseIds: string[],
@@ -58,9 +56,6 @@ export class SeatPoolRepository {
     });
   }
 
-  /** For each candidate cycle-course, find its existing CourseQuotaSeats row
-   * (active or soft-deleted) for this quota — used to detect conflicts with
-   * other exclusive/pooled configs and reactivation candidates. */
   static async findCourseQuotaSeatsFor(
     collegeQuotaId: string,
     admissionCycleCourseIds: string[],
@@ -94,9 +89,6 @@ export class SeatPoolRepository {
     });
   }
 
-  /** Creates the pool and attaches each given course's CourseQuotaSeats row,
-   * reactivating a prior soft-deleted row where one exists (the unique
-   * (cycleCourse, quota) slot must be reused, not duplicated). */
   static async create(data: {
     collegeQuotaId: string;
     admissionCycleId: string;
@@ -143,9 +135,6 @@ export class SeatPoolRepository {
     });
   }
 
-  /** Updates the pool's own fields and, if `courses` is given, detaches every
-   * current member and reattaches the given set (mirrors create's
-   * reactivate-or-create logic). */
   static async update(
     admissionCycleId: string,
     id: string,
@@ -196,8 +185,6 @@ export class SeatPoolRepository {
         data: {
           ...(data.totalSeats !== undefined && {
             totalSeats: data.totalSeats,
-            // No seat-consumption flow exists yet (applications aren't
-            // live), so open_seats always tracks total_seats here.
             openSeats: data.totalSeats,
           }),
           ...(data.isActive !== undefined && { isActive: data.isActive }),

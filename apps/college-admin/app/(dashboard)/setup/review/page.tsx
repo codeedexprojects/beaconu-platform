@@ -79,7 +79,6 @@ export default function SetupReviewPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Profile Summary */}
         <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
           <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
             <h3 className="font-bold flex items-center gap-2">
@@ -136,7 +135,6 @@ export default function SetupReviewPage() {
           </CardContent>
         </Card>
 
-        {/* Campuses Summary */}
         <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
           <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
             <h3 className="font-bold flex items-center gap-2">
@@ -182,7 +180,6 @@ export default function SetupReviewPage() {
           </CardContent>
         </Card>
 
-        {/* Academics Summary */}
         <Card className="col-span-1 lg:col-span-1 border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col hover:border-primary/30 transition-all hover:shadow-lg">
           <div className="bg-primary/5 border-b border-border/50 p-4 flex items-center justify-between">
             <h3 className="font-bold flex items-center gap-2">

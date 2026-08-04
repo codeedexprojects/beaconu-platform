@@ -7,7 +7,6 @@ interface Stat {
 
 interface StatsStripProps {
   stats: Stat[];
-  /** Prisma `Decimal` — arrives as a numeric string, not a number. */
   avgRating: string | null;
   reviewCount: number | null;
 }

@@ -1,5 +1,3 @@
-// ─── Event DTOs ───────────────────────────────────────────────
-
 export interface EventListItem {
   id: string;
   title: string;

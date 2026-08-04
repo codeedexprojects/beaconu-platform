@@ -21,8 +21,6 @@ export class IconsService {
     };
   }
 
-  /** College-admin icon picker — active icons only, optionally
-   * name-filtered, no pagination (small reference list). */
   static async listActiveForCollegeAdmin(search?: string) {
     return IconsRepository.listActive(search);
   }

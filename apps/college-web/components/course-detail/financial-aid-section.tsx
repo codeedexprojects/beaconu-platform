@@ -35,7 +35,6 @@ function ScholarshipCalculator({
   const [loadingEntries, setLoadingEntries] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Load the port entry / score range options once.
   useEffect(() => {
     let cancelled = false;
     setLoadingEntries(true);
@@ -57,7 +56,6 @@ function ScholarshipCalculator({
     };
   }, [slug, courseId]);
 
-  // Resolve the discount details for the current selection.
   useEffect(() => {
     if (!portId || !rangeId) return;
     let cancelled = false;

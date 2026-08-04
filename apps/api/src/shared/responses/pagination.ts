@@ -1,6 +1,3 @@
-/**
- * Standardized Pagination Metadata for BeaconU
- */
 export interface PaginationMeta {
   page: number;
   limit: number;

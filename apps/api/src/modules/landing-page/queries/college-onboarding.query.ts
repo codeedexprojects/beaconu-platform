@@ -1,6 +1,3 @@
-// Query helpers for college onboarding requests
-// These can be used for complex query building if needed in the future.
-
 export const collegeOnboardingQueries = {
   buildStatusFilter: (status?: string) => (status ? { status } : {}),
 

@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 2 — INSTITUTIONAL HIERARCHY
-// ============================================================
-
 model UniversityType {
   id        String   @id @default(dbgenerated("('UVT-'::text || (nextval('university_type_seq'::regclass))::text)"))
   name      String   @unique @db.VarChar(100)
@@ -10,7 +6,6 @@ model UniversityType {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   universities University[]
 
   @@map("university_types")
@@ -31,7 +26,6 @@ model University {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   universityType UniversityType @relation(fields: [universityTypeId], references: [id])
   colleges       College[]
 
@@ -55,7 +49,6 @@ model InstitutionGroup {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   createdByCollege College                  @relation(fields: [createdByCollegeId], references: [id])
   createdByStaff   StaffMember?             @relation(fields: [createdByStaffId], references: [id])
   members          InstitutionGroupMember[]
@@ -75,7 +68,6 @@ model InstitutionGroupMember {
   joinedVia String   @default("code") @map("joined_via") @db.VarChar(20)
   joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
 
-  // Relations
   group   InstitutionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   college College          @relation(fields: [collegeId], references: [id])
 
@@ -109,35 +101,30 @@ model College {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // College Overview
   establishedYear  Int?     @map("established_year")
-  collegeType      String?  @map("college_type") @db.VarChar(30) // public|private|deemed|autonomous
-  genderType       String?  @map("gender_type") @db.VarChar(20) // co_ed|boys|girls
+  collegeType      String?  @map("college_type") @db.VarChar(30)
+  genderType       String?  @map("gender_type") @db.VarChar(20)
   avgStudentCount  Int?     @map("avg_student_count")
   campusSizeAcres  Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
   outsideStatePct  Decimal? @map("outside_state_pct") @db.Decimal(5, 2)
   avgRating        Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
   reviewCount      Int      @default(0) @map("review_count")
-  amenities        Json     @default("[]") // [{name, iconKey}]
-  campusFacilities Json     @default("[]") @map("campus_facilities") // [{name, category, iconUrl}]
-  nearbyAccess     Json     @default("{}") @map("nearby_access") // {transit:[], essentials:[], utility:[]}
-  socialLinks      Json     @default("{}") @map("social_links") // {facebook, linkedin, instagram}
-  campusReels      Json     @default("[]") @map("campus_reels") // [{videoUrl, title, duration}]
+  amenities        Json     @default("[]")
+  campusFacilities Json     @default("[]") @map("campus_facilities")
+  nearbyAccess     Json     @default("{}") @map("nearby_access")
+  socialLinks      Json     @default("{}") @map("social_links")
+  campusReels      Json     @default("[]") @map("campus_reels")
   view360Url       String?  @map("view_360_url") @db.Text
 
-  // Student Code of Conduct
-  codeOfConduct Json @default("[]") @map("code_of_conduct") // [{order, rule}]
+  codeOfConduct Json @default("[]") @map("code_of_conduct")
 
-  // Clubs & Alliances
-  clubs     Json @default("[]") // [{id, name, slug, category, ...}]
-  alliances Json @default("[]") // [{id, partnerName, allianceType, ...}]
+  clubs     Json @default("[]")
+  alliances Json @default("[]")
 
-  // Placements & Demographics
-  placementData           Json      @default("{}") @map("placement_data") // {academicYear: {...}}
-  demographics            Json      @default("{}") // college-level demographics
+  placementData           Json      @default("{}") @map("placement_data")
+  demographics            Json      @default("{}")
   demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
-  // Relations
   university                 University                  @relation(fields: [universityId], references: [id])
   departments                Department[]
   campuses                   Campus[]
@@ -209,7 +196,6 @@ model CollegeWishlist {
   collegeId String   @map("college_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
@@ -238,7 +224,6 @@ model CollegeOnboardingRequest {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   reviewer       PlatformAdmin? @relation(fields: [reviewedBy], references: [id])
   createdCollege College?       @relation(fields: [createdCollegeId], references: [id])
 
@@ -261,7 +246,6 @@ model Campus {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college        College         @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   departments    Department[]
   courses        Course[]
@@ -280,13 +264,12 @@ model Department {
   campusId  String?  @map("campus_id")
   name      String   @db.VarChar(255)
   slug      String   @db.VarChar(100)
-  faculty   Json     @default("[]") // [{id, name, designation, avatarUrl, education[], experience[]}]
+  faculty   Json     @default("[]")
   status    String   @default("active") @db.VarChar(20)
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   campus     Campus?     @relation(fields: [campusId], references: [id])
   courses    Course[]
@@ -302,9 +285,9 @@ model Library {
   id                 String   @id @default(dbgenerated("('LIB-'::text || (nextval('library_seq'::regclass))::text)"))
   collegeId          String   @map("college_id")
   departmentId       String?  @map("department_id")
-  type               String   @db.VarChar(20) // "central" | "department"
+  type               String   @db.VarChar(20)
   name               String   @db.VarChar(255)
-  stats              Json     @default("[]") // [{value, label}]
+  stats              Json     @default("[]")
   availableResources Json     @default("{\"items\":[]}") @map("available_resources")
   libraryHours       Json     @default("{\"days\":[]}") @map("library_hours")
   facilities         Json     @default("{\"items\":[]}")
@@ -312,7 +295,6 @@ model Library {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college    College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   department Discipline? @relation(fields: [departmentId], references: [id])
 
@@ -330,7 +312,6 @@ model Stream {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   disciplines Discipline[]
 
   @@map("streams")
@@ -346,7 +327,6 @@ model Discipline {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   stream    Stream    @relation(fields: [streamId], references: [id])
   courses   Course[]
   libraries Library[]
@@ -365,7 +345,6 @@ model StudyLevel {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   courses Course[]
 
   @@map("study_levels")
@@ -380,7 +359,6 @@ model ProgramType {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   courses Course[]
 
   @@map("program_types")
@@ -389,13 +367,12 @@ model ProgramType {
 model EducationBoard {
   id        String   @id @default(dbgenerated("('EDB-'::text || (nextval('education_board_seq'::regclass))::text)"))
   name      String   @db.VarChar(150)
-  grade     String   @db.VarChar(10) // "10th" | "12th"
+  grade     String   @db.VarChar(10)
   slug      String   @unique @db.VarChar(180)
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   subjects EducationBoardSubject[]
 
   @@unique([name, grade], name: "uq_board_name_grade")
@@ -413,7 +390,6 @@ model EducationBoardSubject {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   educationBoard EducationBoard @relation(fields: [educationBoardId], references: [id], onDelete: Cascade)
 
   @@unique([educationBoardId, name], name: "uq_board_subject_name")
@@ -455,17 +431,16 @@ model Course {
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Course Detail Page (display-only, write-once)
   departmentId String? @map("department_id")
 
   highlights                    Json      @default("[]")
-  curriculum                    Json      @default("[]") // [{semester, subjects[], specializations[]}]
-  courseStructure               Json      @default("{}") @map("course_structure") // credit breakdown
-  valueAddedCourses             Json      @default("[]") @map("value_added_courses") // [{name, credits, deliveryMode}]
-  careerOpportunities           Json      @default("[]") @map("career_opportunities") // [{role, salaryRange}]
-  higherEducationCertifications Json      @default("{}") @map("higher_education_certifications") // {global[], postGraduation[]}
-  flexibleExitOptions           Json      @default("[]") @map("flexible_exit_options") // [{afterYears, awardName}]
-  classTimings                  Json      @default("{}") @map("class_timings") // {monday: {start,end,status}, ...}
+  curriculum                    Json      @default("[]")
+  courseStructure               Json      @default("{}") @map("course_structure")
+  valueAddedCourses             Json      @default("[]") @map("value_added_courses")
+  careerOpportunities           Json      @default("[]") @map("career_opportunities")
+  higherEducationCertifications Json      @default("{}") @map("higher_education_certifications")
+  flexibleExitOptions           Json      @default("[]") @map("flexible_exit_options")
+  classTimings                  Json      @default("{}") @map("class_timings")
   industryTools                 Json      @default("[]") @map("industry_tools")
   labFacilities                 Json      @default("[]") @map("lab_facilities")
   roomFacilities                Json      @default("[]") @map("room_facilities")
@@ -476,10 +451,9 @@ model Course {
   eligibilityCriteria           Json      @default("{}") @map("eligibility_criteria")
   accreditations                Json      @default("[]")
   keyDates                      Json      @default("[]") @map("key_dates")
-  demographics                  Json      @default("{}") // course-level demographics
+  demographics                  Json      @default("{}")
   demographicsRefreshedAt       DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
-  // Relations
   college                     College                      @relation(fields: [collegeId], references: [id])
   campus                      Campus?                      @relation(fields: [campusId], references: [id])
   department                  Department?                  @relation(fields: [departmentId], references: [id])
@@ -515,9 +489,6 @@ model CourseQuota {
   id                    String   @id @default(dbgenerated("('CRQ-'::text || (nextval('course_quota_seq'::regclass))::text)"))
   courseId              String   @map("course_id")
   collegeQuotaId        String   @map("college_quota_id")
-  // Bidirectional: positive value surcharges the application fee (e.g. NRI
-  // Quota), negative discounts it. "flat" | "percentage" describes how the
-  // value is applied, not its direction.
   appFeeAdjustmentType  String?  @map("app_fee_adjustment_type") @db.VarChar(10)
   appFeeAdjustmentValue Decimal? @map("app_fee_adjustment_value") @db.Decimal(10, 2)
   tuitionFeeOverride    Decimal? @map("tuition_fee_override") @db.Decimal(12, 2)
@@ -525,7 +496,6 @@ model CourseQuota {
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   collegeQuota CollegeQuota @relation(fields: [collegeQuotaId], references: [id], onDelete: Cascade)
 
@@ -540,14 +510,13 @@ model CollegeQuota {
   collegeId   String   @map("college_id")
   name        String   @db.VarChar(100)
   slug        String   @db.VarChar(100)
-  bucketType  String   @map("bucket_type") @db.VarChar(20) // "in_state" | "out_of_state"
+  bucketType  String   @map("bucket_type") @db.VarChar(20)
   description String?  @db.Text
   isActive    Boolean  @default(true) @map("is_active")
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college                    College                     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   courseQuotas               CourseQuota[]
   seatPools                  SeatPool[]
@@ -570,7 +539,6 @@ model CollegeGallery {
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
   @@index([collegeId], name: "idx_gallery_college")
@@ -587,12 +555,11 @@ model CollegeReview {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  courseId        String? @map("course_id") // null = campus_life, filled = faculty_course
+  courseId        String? @map("course_id")
   reviewType      String  @default("campus_life") @map("review_type") @db.VarChar(20)
-  categoryRatings Json    @default("{}") @map("category_ratings") // {facultyAndCourse: 4, campusLife: 4}
+  categoryRatings Json    @default("{}") @map("category_ratings")
   isAnonymous     Boolean @default(true) @map("is_anonymous")
 
-  // Relations
   college College @relation(fields: [collegeId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
   course  Course? @relation(fields: [courseId], references: [id])

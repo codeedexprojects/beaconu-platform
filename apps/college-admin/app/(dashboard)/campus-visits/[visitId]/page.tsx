@@ -132,7 +132,6 @@ export default function CampusVisitDetailPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -160,9 +159,7 @@ export default function CampusVisitDetailPage() {
         </Badge>
       </div>
 
-      {/* Body */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Visitor */}
         <Section title="Visitor">
           <DetailRow
             icon={<User className="h-4 w-4" />}

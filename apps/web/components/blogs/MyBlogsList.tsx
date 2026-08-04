@@ -72,7 +72,6 @@ export function MyBlogsList() {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-5xl mx-auto px-4 md:px-6">
-        {/* Page controls — title + action + tabs */}
         <div className="pt-6 pb-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-[18px] font-bold text-gray-900">My Blogs</h1>
@@ -86,7 +85,6 @@ export function MyBlogsList() {
             </Link>
           </div>
 
-          {/* Status tabs */}
           <div
             className="flex gap-2 overflow-x-auto"
             style={{ scrollbarWidth: "none" }}
@@ -112,7 +110,6 @@ export function MyBlogsList() {
           </div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3">
@@ -122,7 +119,6 @@ export function MyBlogsList() {
           </div>
         )}
 
-        {/* Error */}
         {isError && !isLoading && (
           <div className="bg-white rounded-2xl border border-red-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-6 flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
@@ -137,7 +133,6 @@ export function MyBlogsList() {
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && !isError && blogs.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] py-16 px-6 flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-2xl bg-[#FEF0EB] flex items-center justify-center">
@@ -163,7 +158,6 @@ export function MyBlogsList() {
           </div>
         )}
 
-        {/* Blog list — 2-col grid on desktop */}
         {!isLoading && !isError && blogs.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
             {blogs.map((blog) => (
@@ -183,7 +177,6 @@ function MyBlogCard({ blog }: { blog: Blog }) {
   return (
     <article className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
       <div className="flex-1 p-4">
-        {/* Status + action */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <span
             className={cn(

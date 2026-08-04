@@ -7,8 +7,6 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("student"));
 
-// No slot id — resolved server-side from the student's own application
-// (admission cycle -> assessment template -> current active slot).
 router.get("/start", StudentAssessmentController.getStartInfo);
 
 router.get(
@@ -20,9 +18,6 @@ router.post(
   StudentAssessmentController.submitTrial,
 );
 
-// Creates the attempt AND starts the clock in one call — no separate
-// "begin" step (there's no screen between attempt-creation and the timer
-// running in the real take-test flow).
 router.post("/attempts", StudentAssessmentController.startAttempt);
 router.get("/attempts/:id", StudentAssessmentController.getMyAttempt);
 router.get(

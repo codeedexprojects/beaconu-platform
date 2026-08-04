@@ -34,7 +34,6 @@ export function ExamPolicyTab({
 }) {
   return (
     <div className="space-y-4">
-      {/* Sub-tab nav */}
       <div className="flex border-b overflow-x-auto scrollbar-none gap-2 pb-2">
         {EXAM_POLICY_SUB_TABS.map((st) => (
           <button

@@ -54,7 +54,6 @@ export function InsightsUpdates() {
         Insights & Updates
       </h2>
 
-      {/* Mobile: horizontal scroll | sm+: 4-column grid */}
       <div
         className="flex gap-5 overflow-x-auto sm:grid sm:grid-cols-4 sm:overflow-visible sm:gap-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}

@@ -21,10 +21,6 @@ function isJsonBodyParseError(error: Error): error is JsonBodyParseError {
   );
 }
 
-/**
- * Global Error Handler Middleware
- * Standardizes all errors into the enterprise response format.
- */
 export function errorHandler(
   error: Error,
   req: Request,
@@ -43,7 +39,6 @@ export function errorHandler(
     return;
   }
 
-  // Handle Prisma Errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     const userMessage = getPrismaErrorMessage(
       error.code,
@@ -53,7 +48,6 @@ export function errorHandler(
     return;
   }
 
-  // Handle Custom ApiError
   if (error instanceof ApiError) {
     logger.warn({
       requestId: req.requestId,
@@ -66,7 +60,6 @@ export function errorHandler(
     return;
   }
 
-  // Handle Zod Validation Errors
   if (error instanceof z.ZodError) {
     const details = error.issues.map((err) => ({
       path: err.path.join("."),
@@ -84,7 +77,6 @@ export function errorHandler(
     return;
   }
 
-  // Handle Generic Errors
   logger.error(
     {
       requestId: req.requestId,

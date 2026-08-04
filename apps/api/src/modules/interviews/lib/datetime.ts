@@ -1,7 +1,3 @@
-// Same "@db.Date"/"@db.Time" <-> string conversion idiom already used in
-// counselling/services/sessions.service.ts — kept local to this module
-// rather than shared, since it's a two-line helper.
-
 export function parseDateOnly(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
 }

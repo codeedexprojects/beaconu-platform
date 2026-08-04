@@ -34,10 +34,6 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** A "pending" transaction means courses are already locked (see
-   * admissions' isPaymentLocked) — reusing it instead of creating a new
-   * one on a repeat initiate() call is always safe, since the total can't
-   * have drifted while locked. */
   static async findPendingTransaction(applicationId: string) {
     return prisma.transaction.findFirst({
       where: {
@@ -48,12 +44,6 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** The application-fee ledger entry — one per application, linked via
-   * the primary ApplicationCourse (StudentFeeLedger.applicationCourseId is
-   * a single FK, so it anchors there), but its amount tracks the whole
-   * application's total, not just the primary course's own fee. Looked up
-   * via the relation since the FK is applicationCourseId, not
-   * applicationId directly. */
   static async findLedgerEntry(applicationId: string) {
     return prisma.studentFeeLedger.findFirst({
       where: {
@@ -70,11 +60,6 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** Reads the primary ApplicationCourse directly (shared table, not
-   * another module's repository/service) so this module doesn't have to
-   * depend on the admissions module's service layer — that would create a
-   * circular import, since admissions' own gating logic already needs to
-   * read payment state back. */
   static async findPrimaryApplicationCourse(applicationId: string) {
     return prisma.applicationCourse.findFirst({
       where: { applicationId, isPrimary: true },
@@ -82,12 +67,6 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** Created lazily on first initiate() call, using the application's
-   * current running total (not the primary course's own fee alone — the
-   * student may have added more courses since) — not pre-created at Start
-   * Application, so the two modules stay decoupled in both directions.
-   * See updateLedgerAmount for refreshing an existing entry when a prior
-   * attempt failed and the total has since changed. */
   static async createLedgerEntry(data: {
     studentId: string;
     collegeId: string;
@@ -141,8 +120,6 @@ export class ApplicationPaymentRepository {
     });
   }
 
-  /** transactionNumber is @unique @db.VarChar(30) with no DB default — same
-   * placeholder-then-finalize pattern as Application.applicationNumber. */
   static async createTransaction(data: {
     studentId: string;
     collegeId: string;

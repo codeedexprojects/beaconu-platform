@@ -67,9 +67,6 @@ import type {
   QuestionBlank,
 } from "@beaconu/types";
 
-// Mirrors question-bank.service.ts's validation groups — word_highlight
-// (Highlight Incorrect Words) is structurally identical to multi_choice
-// (options + correct option ids), just a different answer widget.
 const CHOICE_FORMATS = ["single_choice", "multi_choice", "word_highlight"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
 const FILL_BLANK_FORMATS = ["fill_blank_drag_drop", "fill_blank_dropdown"];
@@ -116,11 +113,6 @@ function newOptionId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-// Fill-in-the-blank passages mark each blank's position inline with this
-// token (e.g. "The cat sat on the [[blank]] and looked at the [[blank]].")
-// instead of a separate, position-less "Add Blank" button — the blank list
-// is derived from the passage text itself, so it can never drift out of
-// sync with where the blanks actually are.
 const BLANK_MARKER_REGEX = /\[\[blank\]\]/gi;
 
 function detectBlanks(text: string): QuestionBlank[] {

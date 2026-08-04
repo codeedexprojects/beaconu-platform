@@ -17,13 +17,6 @@ import type {
 } from "@beaconu/types";
 
 export class AssessmentStartQuery {
-  /** Resolves everything from the student's own application — no slot id
-   * (or even template id) is ever supplied by the client. One attempt
-   * covers the whole Application (every course listed on it), not a
-   * single course, so this resolves off applicationId. Chain:
-   * Application.admissionCycle.assessmentTemplateId -> the template's
-   * currently active slot (see SlotRepository doc comment — a slot is
-   * just a timing wrapper, the student never picks one). */
   static async getForApplication(
     studentId: string,
     applicationId: string,
@@ -63,9 +56,6 @@ export class AssessmentStartQuery {
       PaperRepository.findActiveByTemplateAndType(template.id, "normal"),
       PaperRepository.findActiveByTemplateAndType(template.id, "trial"),
     ]);
-    // Duration comes from the template's own sections (time_limit_mins),
-    // available as soon as the template has sections — unlike totalMarks,
-    // it doesn't need an approved paper to exist yet.
     const totalDurationSecs = computeTemplateDurationSecs(
       template.templateSections,
     );

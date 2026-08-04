@@ -13,7 +13,6 @@ const router: Router = Router();
 const staffAuth = [authenticate, authorizeUserType("staff_member")];
 const staffWriteAuth = [...staffAuth, denyRoleSlugs("sub_admin")];
 
-// ── Permissions ───────────────────────────────────────────────────────────────
 router.get(
   "/permissions",
   ...staffAuth,
@@ -21,7 +20,6 @@ router.get(
   CollegeRolesController.listPermissions,
 );
 
-// ── Roles ─────────────────────────────────────────────────────────────────────
 router.get(
   "/roles",
   ...staffAuth,
@@ -50,7 +48,6 @@ router.delete(
   CollegeRolesController.deleteRole,
 );
 
-// ── Staff Directory ───────────────────────────────────────────────────────────
 router.get(
   "/staff",
   ...staffAuth,

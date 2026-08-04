@@ -1,5 +1,3 @@
-// ─── Counsellor Registration Request DTOs ────────────────────
-
 export type CounsellorType = "academic" | "mindcare";
 
 export type CounsellorRequestStatus = "pending" | "approved" | "rejected";
@@ -56,8 +54,6 @@ export interface UpdateCounsellorRequestStatusResult {
   counsellor_code: string | null;
 }
 
-// ─── Counselling Session DTOs ───────────────────────────────
-
 export type CounsellingSessionStatus = "booked" | "completed" | "cancelled";
 
 export interface ListCounsellingSessionsQuery {
@@ -67,8 +63,6 @@ export interface ListCounsellingSessionsQuery {
   status?: CounsellingSessionStatus;
   search?: string;
 }
-
-// ─── Counsellor (Admin) DTOs ────────────────────────────────
 
 export type CounsellorStatus = "active" | "inactive" | "pending_verification";
 

@@ -28,8 +28,6 @@ import type {
   UpdateDocumentTemplateInput,
 } from "@beaconu/types";
 
-// ── Direction A: documents requested FROM students ─────────────────────────
-
 export function useSubmissionRequests(filters: DocumentListFilters = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.submissionRequests(filters),
@@ -73,8 +71,6 @@ export function useReviewSubmission() {
     },
   });
 }
-
-// ── Direction B: documents requested BY students ────────────────────────────
 
 export function useDocumentRequests(filters: DocumentListFilters = {}) {
   return useQuery({
@@ -170,8 +166,6 @@ export function useRejectDocumentRequest() {
     },
   });
 }
-
-// ── Document templates: catalog of documents students can request ────────
 
 export function useDocumentTemplates(includeInactive = false) {
   return useQuery({

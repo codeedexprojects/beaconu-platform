@@ -1,20 +1,3 @@
-/**
- * One-off dev seed: creates two AssessmentAttempts against real, already-seeded
- * question-bank data (college CLG-2, template AST-4, its approved normal paper
- * ASP-5 — 3 questions across 3 sections: one non-autoscorable "describe-image"
- * and two autoscorable choice questions) so the evaluator dashboard
- * (/assessments/evaluation) has something to review.
- *
- * Builds the full chain the real Start-Attempt flow requires (AdmissionCycle
- * with assessment_required + assessment_template_id, Application +
- * ApplicationCourse, an active Slot) via direct Prisma writes rather than the
- * API, since this is test-data setup, not a flow being verified. Idempotent —
- * re-running skips anything already created.
- *
- * Run from the monorepo root:
- *   npx tsx apps/api/src/modules/assessments/scripts/seed-evaluation-test-data.ts
- */
-
 import { prisma } from "@beaconu/db";
 
 const COLLEGE_ID = "CLG-2";
@@ -55,10 +38,6 @@ async function ensureAdmissionCycleCourse() {
   return created.id;
 }
 
-/** Plan R: the attempt-start gate now reads AdmissionCycle.assessmentRequired
- * + assessmentTemplateId (the whole application form's config), not the
- * per-course AdmissionCycleCourse.assessmentRequired above (kept for other
- * purposes, but no longer read by AttemptService.start()). */
 async function ensureAdmissionCycleAssessmentConfig() {
   await prisma.admissionCycle.update({
     where: { id: ADMISSION_CYCLE_ID },
@@ -67,10 +46,6 @@ async function ensureAdmissionCycleAssessmentConfig() {
 }
 
 async function ensureApplicationCourse(studentId: string) {
-  // A student can now have multiple Applications per cycle (Plan N) —
-  // this seed script only ever wants its own EVALSEED-* one, identified by
-  // the stable applicationNumber, not by (studentId, admissionCycleId)
-  // alone anymore.
   let application = await prisma.application.findUnique({
     where: { applicationNumber: `EVALSEED-${studentId}` },
   });
@@ -221,8 +196,6 @@ async function main() {
   const startedAt = new Date(Date.now() - 30 * 60 * 1000);
   const completedAt = new Date();
 
-  // Attempt A: under_evaluation, one question (describe-image) still pending
-  // manual scoring — the primary case for testing the evaluator scoring UI.
   await prisma.assessmentAttempt.update({
     where: { id: attemptA.id },
     data: {
@@ -241,7 +214,7 @@ async function main() {
       attemptId: attemptA.id,
       questionId: "QST-2",
       sectionId: dataInterpretation.sectionId,
-      response: { selectedOptionIds: ["6s8umn2t"] }, // correct
+      response: { selectedOptionIds: ["6s8umn2t"] },
       autoScore: 5,
       finalScore: 5,
       evaluationStatus: "auto_scored",
@@ -257,7 +230,7 @@ async function main() {
       attemptId: attemptA.id,
       questionId: "QST-5",
       sectionId: mcq.sectionId,
-      response: { selectedOptionIds: ["nfdns4cp"] }, // incorrect (correct is ziagqvdj)
+      response: { selectedOptionIds: ["nfdns4cp"] },
       autoScore: 0,
       finalScore: 0,
       evaluationStatus: "auto_scored",
@@ -283,8 +256,6 @@ async function main() {
     update: {},
   });
 
-  // Attempt B: fully evaluated and published, to show the "already scored"
-  // state in the queue/detail views.
   const staff = await prisma.staffMember.findFirst({
     where: { collegeId: COLLEGE_ID },
   });

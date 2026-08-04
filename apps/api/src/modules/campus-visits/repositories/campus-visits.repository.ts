@@ -69,7 +69,6 @@ export class CampusVisitsRepository {
     });
   }
 
-  /** Atomic first-accept-wins claim: only succeeds if the visit is still unclaimed. */
   static async claimByAmbassador(id: string, ambassadorId: string) {
     return prisma.campusVisit.updateMany({
       where: { id, status: "arrived", ambassadorId: null },
@@ -77,7 +76,6 @@ export class CampusVisitsRepository {
     });
   }
 
-  /** Atomic pending -> arrived transition: only succeeds if still pending (guards double-submit). */
   static async markArrived(id: string, arrivedAt: Date) {
     return prisma.campusVisit.updateMany({
       where: { id, status: "pending" },
@@ -108,7 +106,6 @@ export class CampusVisitsRepository {
     });
   }
 
-  /** Active visits proposed for today or tomorrow (UTC) — used by the reminder job. */
   static async findUpcomingActiveVisits(nowUtc: Date) {
     const todayStart = new Date(
       Date.UTC(
@@ -136,7 +133,6 @@ export class CampusVisitsRepository {
     });
   }
 
-  /** Visits still unclaimed a while after arrival — used to re-broadcast to ambassadors. */
   static async findStaleArrivedVisits(olderThan: Date) {
     return prisma.campusVisit.findMany({
       where: {

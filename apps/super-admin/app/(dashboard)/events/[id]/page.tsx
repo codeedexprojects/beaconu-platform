@@ -135,7 +135,6 @@ export default function EventDetailPage() {
   const isArchived = event?.status === "archived";
   const isCompleted = event?.status === "completed";
 
-  // Edit form
   const form = useForm<EditFormInput>({
     resolver: zodResolver(editSchema),
     defaultValues: {
@@ -159,7 +158,6 @@ export default function EventDetailPage() {
     },
   });
 
-  // Recording form
   const recForm = useForm<RecordingFormInput>({
     resolver: zodResolver(recordingSchema),
     defaultValues: {
@@ -172,7 +170,6 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     if (!event) return;
-    // Parse date + time from ISO
     const dateStr = event.event_date
       ? new Date(event.event_date).toISOString().split("T")[0]
       : "";
@@ -203,7 +200,6 @@ export default function EventDetailPage() {
       total_seats: event.total_seats ?? undefined,
     });
 
-    // Pre-fill recording form if exists
     if (event.recording_url) {
       recForm.reset({
         recording_url: event.recording_url,
@@ -386,7 +382,6 @@ export default function EventDetailPage() {
           Back to Events
         </Link>
 
-        {/* Status + stats */}
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={cn(

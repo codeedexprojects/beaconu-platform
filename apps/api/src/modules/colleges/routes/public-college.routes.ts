@@ -15,7 +15,6 @@ router.get(
   PublicCollegeController.getCollegeSection,
 );
 
-// ── Course Detail + Tabs (public) ─────────────────────────────────────────────
 router.get(
   "/by-slug/:slug/courses/:courseId/tabs/:tabName",
   CourseTabsController.getPublicCourseTab,
@@ -49,14 +48,12 @@ router.get(
   CourseTabsController.getPublicCourseDetail,
 );
 
-// ── Hostels (public) ──────────────────────────────────────────────────────────
 router.get(
   "/by-slug/:slug/hostels/:hostelId",
   PublicHostelController.getPublicHostelDetail,
 );
 router.get("/by-slug/:slug/hostels", PublicHostelController.listPublicHostels);
 
-// ── Libraries (public) ────────────────────────────────────────────────────────
 router.get(
   "/by-slug/:slug/libraries/:libraryId",
   PublicLibraryController.getPublicLibraryDetail,
@@ -70,7 +67,6 @@ router.get(
   "/:collegeId/ambassadors",
   PublicCampusVisitController.listAmbassadors,
 );
-// ── Profile extras (public) ───────────────────────────────────────────────────
 router.get(
   "/by-slug/:slug/scholarships",
   PublicCollegeController.getCollegeScholarships,

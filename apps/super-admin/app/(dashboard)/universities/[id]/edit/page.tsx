@@ -34,7 +34,6 @@ import {
   useUniversityTypes,
 } from "@/hooks/use-university-types";
 
-// ── types ────────────────────────────────────────────────────────────────────
 type GovernanceMemberForm = {
   userPhotoUrl: string;
   name: string;
@@ -80,7 +79,6 @@ type UniversityMetadataForm = {
   };
 };
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 function toSlug(v: string) {
   return v
     .toLowerCase()
@@ -321,7 +319,6 @@ const EMPTY_GOV: UniversityGovernanceForm = {
   organizational_organogram: { title: "", fileUrl: "", description: "" },
 };
 
-// ── page ─────────────────────────────────────────────────────────────────────
 export default function EditUniversityPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -342,7 +339,6 @@ export default function EditUniversityPage() {
     "overview",
   );
 
-  // Debug logging to diagnose type fetching
   useEffect(() => {
     console.log("🔍 University Type Debug Info:", {
       hasUniversity: !!university,
@@ -381,7 +377,6 @@ export default function EditUniversityPage() {
     setGovForm(toGovernanceForm(meta));
   }, [university]);
 
-  // Sync fetched university type back to form if not already set
   useEffect(() => {
     if (currentUniversityType && !form.university_type_id) {
       setForm((prev) => ({
@@ -394,7 +389,6 @@ export default function EditUniversityPage() {
   const universityTypeOptions = useMemo(() => {
     const options = [...universityTypes];
 
-    // Add fetched current type if not already in list
     if (currentUniversityType) {
       const exists = options.some((t) => t.id === currentUniversityType.id);
       if (!exists) {
@@ -402,8 +396,6 @@ export default function EditUniversityPage() {
       }
     }
 
-    // If form has a type ID that's not in options, it will still show as selected
-    // because Select component just checks value equality
     return options;
   }, [universityTypes, currentUniversityType]);
 

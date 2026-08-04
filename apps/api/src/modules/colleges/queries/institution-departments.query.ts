@@ -17,18 +17,6 @@ function minActiveFee(feeStructures: { amount: unknown }[]): string | null {
 }
 
 export class InstitutionDepartmentsQuery {
-  /**
-   * Course groups + courses for a single college, formatted as a UI-ready
-   * DTO for the "institutions_across_world" widget. Only ever called for
-   * the specific college being viewed, not every group member (sibling
-   * colleges only show name/logo, not their course catalog).
-   *
-   * Grouped by `Discipline` rather than `Department`: `Department` has no
-   * admin UI/API yet (college staff can't create one or assign a course to
-   * it), while every course already has a `disciplineId` set via the
-   * existing course form. The response field stays named `departments` for
-   * API stability — group by Department instead once that feature exists.
-   */
   static async getDepartmentsWithCoursesForCollege(collegeId: string) {
     const courses = await prisma.course.findMany({
       where: { collegeId, status: "active" },

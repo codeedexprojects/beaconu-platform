@@ -25,7 +25,6 @@ export const listUniversityTypesQuerySchema = z.object({
   is_active: z.boolean().optional(),
 });
 
-// Use z.input so fields with .default() stay optional in the input type.
 export type CreateUniversityTypeInput = z.input<
   typeof createUniversityTypeSchema
 >;

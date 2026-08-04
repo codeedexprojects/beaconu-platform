@@ -282,7 +282,6 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-72 flex-col bg-navy border-r border-transparent shrink-0">
-      {/* Logo */}
       <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-navy-dark/50">
         <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-white">
           <span className="text-sm font-bold text-navy-dark font-serif">B</span>
@@ -297,7 +296,6 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Nav */}
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-5 px-3">
           {navSections.map((section) => {
@@ -345,7 +343,6 @@ export function Sidebar() {
         </nav>
       </ScrollArea>
 
-      {/* User Profile Footer */}
       <div className="p-4 border-t border-navy-dark/50">
         <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-navy-dark">
           <Avatar className="h-9 w-9 border border-navy-dark">

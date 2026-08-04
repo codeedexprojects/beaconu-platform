@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 
 export interface DateTimePickerProps {
   id?: string;
-  /** "yyyy-MM-ddTHH:mm" (same shape as an <input type="datetime-local"> value) */
   value: string;
   onChange: (value: string) => void;
 }

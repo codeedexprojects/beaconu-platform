@@ -9,8 +9,6 @@ import {
 } from "../validators/scholarship.validator";
 
 export class ScholarshipStudentController {
-  /** Browse scholarships a student could optionally apply for — applying
-   * is never required to proceed with an admission application. */
   static async listConfigs(req: Request, res: Response) {
     const query = listScholarshipConfigsQuerySchema.parse(req.query);
     if (!query.college_id) {

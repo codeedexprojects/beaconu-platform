@@ -4,6 +4,7 @@ import { InterviewBookingRepository } from "../repositories/interview-booking.re
 import { InterviewSlotRepository } from "../repositories/interview-slot.repository";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { ApplicationService } from "@/modules/admissions/services/application.service";
+import { AttemptService } from "@/modules/assessments/services/attempt.service";
 import { InterviewSlotService, mapSlot } from "./interview-slot.service";
 import { InterviewSettingsService } from "./interview-settings.service";
 import type {
@@ -11,23 +12,15 @@ import type {
   InterviewBookingItem,
 } from "@beaconu/types";
 
-// A course is eligible for the shared interview once its assessment stage
-// is done, or if it's already at interview_pending (re-booking after a
-// cancelled booking) — forward-compatible with whatever review stage
-// precedes this, same reasoning as AttemptService.start()'s course-status
-// gate in the assessments module.
-const BOOKABLE_STATUSES = new Set([
+const READY_FOR_INTERVIEW_STATUSES = new Set([
+  "submitted",
   "assessment_completed",
-  "interview_pending",
 ]);
 
 type BookingRow = NonNullable<
   Awaited<ReturnType<typeof InterviewBookingRepository.findById>>
 >;
 
-// "Get my booking" is meant to be fully self-contained (no separate
-// settings call needed post-booking) — bakes in whichever mode-specific
-// instructions block matches the booked slot's mode.
 async function mapBooking(row: BookingRow): Promise<InterviewBookingItem> {
   const settings = await InterviewSettingsService.get(row.slot.collegeId);
   const instructions =
@@ -81,10 +74,27 @@ export class InterviewBookingService {
         data.application_id,
         studentId,
       );
-    if (!application.courses.some((c) => BOOKABLE_STATUSES.has(c.status))) {
-      throw new ConflictError(
-        "This application is not currently at the interview stage",
-      );
+
+    const alreadyAtInterviewStage = application.courses.some(
+      (c) => c.status === "interview_pending",
+    );
+    if (!alreadyAtInterviewStage) {
+      if (application.formStatus !== "submitted") {
+        throw new ConflictError(
+          "This application is not currently at the interview stage",
+        );
+      }
+      if (application.assessmentRequired) {
+        const attempt = await AttemptService.findStatusForApplication(
+          studentId,
+          data.application_id,
+        );
+        if (attempt?.status !== "result_published") {
+          throw new ConflictError(
+            "This application's assessment must be completed before booking an interview",
+          );
+        }
+      }
     }
 
     const existing = await InterviewBookingRepository.findByApplicationId(
@@ -120,13 +130,9 @@ export class InterviewBookingService {
       });
     });
 
-    // Advance every course that was actually eligible (assessment_completed
-    // → interview_pending) — courses not yet at that stage are left alone,
-    // and markInterviewPending is a no-op for ones already there (e.g. a
-    // re-booking after cancellation).
     await Promise.all(
       application.courses
-        .filter((c) => BOOKABLE_STATUSES.has(c.status))
+        .filter((c) => READY_FOR_INTERVIEW_STATUSES.has(c.status))
         .map((c) =>
           ApplicationCourseService.markInterviewPending(
             c.applicationCourseId,
@@ -135,10 +141,6 @@ export class InterviewBookingService {
         ),
     );
 
-    // First booking against this slot is what actually creates the
-    // Google Meet event — see InterviewSlotService.ensureMeetEvent's doc
-    // comment. A second student booking the same shared slot just reuses
-    // the link already created (no-op inside ensureMeetEvent).
     await InterviewSlotService.ensureMeetEvent(slot);
 
     const finalBooking = await InterviewBookingRepository.findById(booking.id);
@@ -207,9 +209,6 @@ export class InterviewBookingService {
       evaluatedBy: staffId,
     });
 
-    // Advance every course still awaiting this outcome — courses not at
-    // interview_pending (e.g. never eligible in the first place) are left
-    // untouched.
     const application =
       await ApplicationService.getForCollegeWithCourseStatuses(
         booking.applicationId,

@@ -146,7 +146,6 @@ export function CounsellorRequestForm({
           className="space-y-6"
           noValidate
         >
-          {/* ── Personal Details ── */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
               Personal Details
@@ -241,7 +240,6 @@ export function CounsellorRequestForm({
             </div>
           </div>
 
-          {/* ── Professional Details ── */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
               Professional Details
@@ -321,7 +319,6 @@ export function CounsellorRequestForm({
             </div>
           </div>
 
-          {/* ── Account Password ── */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
               Account Password

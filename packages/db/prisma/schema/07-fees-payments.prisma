@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 7 — FEES, PAYMENTS & FINANCIALS
-// ============================================================
-
 model FeeStructure {
   id                String   @id @default(dbgenerated("('FST-'::text || (nextval('fee_structure_seq'::regclass))::text)"))
   collegeId         String   @map("college_id")
@@ -16,14 +12,13 @@ model FeeStructure {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  gender         String? @default("both") @db.VarChar(10) // boys|girls|both
+  gender         String? @default("both") @db.VarChar(10)
   feePdfUrl      String? @map("fee_pdf_url") @db.Text
-  oneTimeFees    Json    @default("[]") @map("one_time_fees") // [{label, amount}]
-  additionalFees Json    @default("[]") @map("additional_fees") // [{label, amount}]
-  whatsIncluded  Json    @default("[]") @map("whats_included") // [string]
-  whatsExcluded  Json    @default("[]") @map("whats_excluded") // [string]
+  oneTimeFees    Json    @default("[]") @map("one_time_fees")
+  additionalFees Json    @default("[]") @map("additional_fees")
+  whatsIncluded  Json    @default("[]") @map("whats_included")
+  whatsExcluded  Json    @default("[]") @map("whats_excluded")
 
-  // Relations
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])
 
@@ -52,7 +47,6 @@ model StudentFeeLedger {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student           Student            @relation(fields: [studentId], references: [id])
   college           College            @relation(fields: [collegeId], references: [id])
   applicationCourse ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
@@ -100,7 +94,6 @@ model Transaction {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   student     Student           @relation(fields: [studentId], references: [id])
   college     College           @relation(fields: [collegeId], references: [id])
   ledgerEntry StudentFeeLedger? @relation(fields: [ledgerEntryId], references: [id])
@@ -135,7 +128,6 @@ model PaymentReceipt {
   documentUrl   String?  @map("document_url") @db.Text
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   transaction Transaction @relation(fields: [transactionId], references: [id])
   student     Student     @relation(fields: [studentId], references: [id])
   college     College     @relation(fields: [collegeId], references: [id])
@@ -163,7 +155,6 @@ model Refund {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   transaction Transaction  @relation(fields: [transactionId], references: [id])
   student     Student      @relation(fields: [studentId], references: [id])
   college     College      @relation(fields: [collegeId], references: [id])
@@ -190,12 +181,11 @@ model ScholarshipConfig {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  calculatorConfig  Json    @default("{}") @map("calculator_config") // {portOfEntryOptions[], rankRangeBrackets[]}
-  displayLabel      String? @map("display_label") @db.VarChar(100) // "Defence personnel"
-  discountDisplay   String? @map("discount_display") @db.VarChar(20) // "20% OFF"
-  requiredDocuments Json    @default("[]") @map("required_documents") // string[] of doc names, e.g. ["Income Certificate", "Caste Certificate"]
+  calculatorConfig  Json    @default("{}") @map("calculator_config")
+  displayLabel      String? @map("display_label") @db.VarChar(100)
+  discountDisplay   String? @map("discount_display") @db.VarChar(20)
+  requiredDocuments Json    @default("[]") @map("required_documents")
 
-  // Relations
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   applications ScholarshipApplication[]
 
@@ -209,18 +199,9 @@ model ScholarshipApplication {
   id                      String    @id @default(dbgenerated("('SCA-'::text || (nextval('scholarship_application_seq'::regclass))::text)"))
   scholarshipConfigId     String    @map("scholarship_config_id")
   studentId               String    @map("student_id")
-  // Whole-Application, not one specific course — a student can have
-  // several courses on one Application (added via Add Course), at
-  // different pipeline stages; the scholarship isn't tied to just one of
-  // them.
   applicationId           String    @map("application_id")
-  // Student-entered, at application time — the range they select/type
-  // (e.g. "2,00,000 - 5,00,000"), not a config-defined bracket.
   annualFamilyIncomeRange String    @map("annual_family_income_range") @db.VarChar(50)
   supportingDocuments     Json      @default("[]") @map("supporting_documents")
-  // The student's reason for applying — despite the generic column name,
-  // this is a required student-facing field for this application, not an
-  // internal admin note (that's reviewRemarks, below).
   remarks                 String?   @db.Text
   discountAmount          Decimal?  @map("discount_amount") @db.Decimal(12, 2)
   status                  String    @default("pending") @db.VarChar(20)
@@ -230,7 +211,6 @@ model ScholarshipApplication {
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   scholarshipConfig ScholarshipConfig @relation(fields: [scholarshipConfigId], references: [id])
   student           Student           @relation(fields: [studentId], references: [id])
   application       Application       @relation(fields: [applicationId], references: [id])
@@ -259,7 +239,6 @@ model CollegePaymentAccount {
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college College @relation(fields: [collegeId], references: [id])
 
   @@index([collegeId], name: "idx_cpa_college")

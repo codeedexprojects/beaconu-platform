@@ -55,11 +55,6 @@ export class CourseQuotaService {
       );
     }
 
-    // A prior detach soft-deletes the (courseId, collegeQuotaId) row rather
-    // than removing it (soft-delete only; the row may also carry historical
-    // fee data referenced by past applications). Re-attaching must reactivate
-    // that row instead of creating a new one, which would violate the unique
-    // constraint on the pair.
     const existing = await CourseQuotaRepository.findByCourseAndCollegeQuota(
       courseId,
       body.collegeQuotaId,

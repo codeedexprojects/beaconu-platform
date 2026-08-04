@@ -29,7 +29,6 @@ export function VideoTestimonials() {
         Video Testimonial&apos;s
       </h2>
 
-      {/* Mobile: horizontal scroll | sm+: 3-col grid */}
       <div
         className="flex gap-3 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -40,7 +39,6 @@ export function VideoTestimonials() {
             className="flex-shrink-0 w-[205px] h-[178px] sm:w-auto sm:h-[220px] lg:h-[260px] rounded-2xl overflow-hidden relative"
             style={{ background: t.bg }}
           >
-            {/* Dot pattern overlay */}
             <div
               className="absolute inset-0 opacity-20"
               style={{
@@ -50,11 +48,9 @@ export function VideoTestimonials() {
               }}
             />
 
-            {/* Accent dots */}
             <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-orange-400/70" />
             <div className="absolute top-3 right-7 w-2 h-2 rounded-full bg-white/30" />
 
-            {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-11 h-11 rounded-full bg-white/25 border border-white/40 flex items-center justify-center backdrop-blur-sm">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
@@ -63,7 +59,6 @@ export function VideoTestimonials() {
               </div>
             </div>
 
-            {/* User info overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border border-white/30"

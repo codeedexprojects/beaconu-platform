@@ -71,7 +71,6 @@ const applicationFormSchema = z
     starts_on: z.string().trim().min(1, "Start date is required"),
     ends_on: z.string().trim().optional(),
     assessment_required: z.boolean(),
-    // "" means "no assessment configured" — coerced to null on submit.
     assessment_template_id: z.string(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {

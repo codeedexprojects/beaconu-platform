@@ -4,7 +4,7 @@ import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
 const DOCUMENT_TYPES = ["application/pdf"];
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB (backend cap for all types)
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export function useUpload() {
   const [isUploading, setIsUploading] = useState(false);

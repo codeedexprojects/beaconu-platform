@@ -35,11 +35,6 @@ async function assertCycleInCollege(
   if (!cycle) throw new NotFoundError("Application form not found");
 }
 
-/** Validates every course_id is actively attached to the cycle, then checks
- * each one's existing CourseQuotaSeats row for this quota — a row active
- * outside the pool being edited is a conflict (already exclusive or pooled
- * elsewhere); an inactive row is a reactivation candidate. Returns what
- * SeatPoolRepository needs to attach/reactivate each course. */
 async function resolveCoursesForPool(
   admissionCycleId: string,
   collegeQuotaId: string,

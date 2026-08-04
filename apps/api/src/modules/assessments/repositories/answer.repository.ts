@@ -6,19 +6,11 @@ export class AnswerRepository {
     questionId: string,
     sectionId: string,
     data: {
-      // Omitted (undefined) means "flag/time-only save" — leave any
-      // existing response untouched on update, and store null on create
-      // (StudentAnswer.response is nullable) rather than overwriting a
-      // real answer with null.
       response?: Prisma.InputJsonValue;
       isFlagged?: boolean;
       timeSpentSecs?: number;
       autoScore?: number | null;
       finalScore?: number | null;
-      // Omitted (undefined) on a flag-only save leaves a prior
-      // evaluationStatus untouched (e.g. doesn't downgrade an
-      // already-auto_scored answer back to "pending"); the column's DB
-      // default ("pending") covers a genuinely new row.
       evaluationStatus?: string;
     },
   ) {

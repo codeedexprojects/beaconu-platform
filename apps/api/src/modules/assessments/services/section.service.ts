@@ -30,8 +30,6 @@ export class SectionService {
     }
 
     if (isActive) {
-      // Backfills any question types added to this section's seed after the
-      // college first enabled it — not just on first creation.
       await this.syncQuestionTypes(collegeId, seedEntry.questionTypeSlugs);
     }
 
@@ -44,7 +42,7 @@ export class SectionService {
   ) {
     for (const typeSlug of questionTypeSlugs) {
       const seed = QUESTION_TYPE_SEEDS[typeSlug];
-      if (!seed) continue; // Guards against a stale slug left in a section's list.
+      if (!seed) continue;
       const existing = await prisma.questionType.findFirst({
         where: { collegeId, slug: seed.slug },
       });

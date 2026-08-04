@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Query strings send booleans as "true"/"false" strings — transform them for this route only.
 const optionalBooleanFromQuery = z
   .union([z.boolean(), z.enum(["true", "false"])])
   .transform((value) =>
@@ -33,7 +32,6 @@ const idParamSchema = z.object({
   id: z.string(),
 });
 
-// College-admin icon picker — search only, no pagination (small reference list).
 const listActiveIconsQuerySchema = z.object({
   search: z.string().trim().optional(),
 });

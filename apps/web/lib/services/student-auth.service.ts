@@ -8,9 +8,6 @@ interface ApiResponse<T> {
   data: T;
 }
 
-// Direct fetch — bypass the api client so that 401 responses (wrong OTP)
-// don't trigger the session-expired redirect.
-
 export async function sendStudentOtp(
   phone_number: string,
   phone_country_code: string = "+91",

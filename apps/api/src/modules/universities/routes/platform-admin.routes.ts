@@ -5,7 +5,6 @@ import { UniversityPlatformAdminController } from "../controllers/platform-admin
 
 const router: Router = Router();
 
-// ── Academic taxonomy ──────────────────────────────────────────────────────
 router.get(
   "/streams",
   authenticate,
@@ -166,7 +165,6 @@ router.delete(
   UniversityPlatformAdminController.deleteProgramType,
 );
 
-// ── University types ────────────────────────────────────────────────────────
 router.get(
   "/types",
   authenticate,
@@ -215,7 +213,6 @@ router.delete(
   UniversityPlatformAdminController.deleteType,
 );
 
-// ── Universities ────────────────────────────────────────────────────────────
 router.get(
   "/",
   authenticate,

@@ -161,7 +161,6 @@ export default function NewEducationLoanPage() {
         </Link>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          {/* Card Info */}
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -365,7 +364,6 @@ export default function NewEducationLoanPage() {
             </CardContent>
           </Card>
 
-          {/* Detail Info */}
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

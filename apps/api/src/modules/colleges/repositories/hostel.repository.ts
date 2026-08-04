@@ -186,8 +186,6 @@ export class HostelRepository {
     });
   }
 
-  // ── Room Types ──────────────────────────────────────────────────────────────
-
   static async createRoomType(hostelId: string, data: Record<string, unknown>) {
     return prisma.hostelRoomType.create({
       data: { ...data, hostelId } as any,
@@ -222,8 +220,6 @@ export class HostelRepository {
     });
   }
 
-  // ── Mess Plans ──────────────────────────────────────────────────────────────
-
   static async createMessPlan(hostelId: string, data: Record<string, unknown>) {
     return prisma.hostelMessPlan.create({
       data: { ...data, hostelId } as any,
@@ -257,8 +253,6 @@ export class HostelRepository {
       data: { isActive: false },
     });
   }
-
-  // ── Addon Services ──────────────────────────────────────────────────────────
 
   static async createAddonService(
     hostelId: string,

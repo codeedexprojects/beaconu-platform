@@ -31,9 +31,6 @@ function mapSettings(row: SettingsRow): InterviewSettingsItem {
   };
 }
 
-// Defaults for a college that has never touched its interview settings —
-// both modes open, no instructions yet, matching pre-settings behavior so
-// nothing breaks for colleges that never visit this screen.
 const DEFAULT_SETTINGS: Omit<InterviewSettingsItem, "collegeId" | "updatedAt"> =
   {
     allowGmeet: true,

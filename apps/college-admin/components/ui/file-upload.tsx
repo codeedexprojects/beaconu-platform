@@ -12,7 +12,6 @@ interface FileUploadProps {
   label?: string;
   className?: string;
   disabled?: boolean;
-  /** Defaults to PDF only. Pass video mime types for a video field. */
   accept?: string[];
   helperText?: string;
 }

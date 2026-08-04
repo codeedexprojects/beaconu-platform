@@ -13,7 +13,6 @@ const router: Router = Router();
 const staffAuth = [authenticate, authorizeUserType("staff_member")];
 const staffWriteAuth = [...staffAuth, denyRoleSlugs("sub_admin")];
 
-// ── Hostels ───────────────────────────────────────────────────────────────────
 router.get(
   "/hostels",
   ...staffAuth,
@@ -112,7 +111,6 @@ router.delete(
   CollegeFacilitiesController.deleteAddonService,
 );
 
-// ── Libraries ─────────────────────────────────────────────────────────────────
 router.get(
   "/libraries",
   ...staffAuth,
@@ -148,7 +146,6 @@ router.delete(
   CollegeFacilitiesController.deleteLibrary,
 );
 
-// ── Commute / Bus Fleet ───────────────────────────────────────────────────────
 router.get(
   "/commute",
   ...staffAuth,

@@ -175,8 +175,6 @@ function mapDocumentTemplate(row: {
 }
 
 export class DocumentsQuery {
-  // ── Direction A: DocumentSubmissionRequest ──────────────────────────────
-
   static async listSubmissionRequestsForStudent(
     studentId: string,
     filters: { status?: string; search?: string; page: number; limit: number },
@@ -273,8 +271,6 @@ export class DocumentsQuery {
 
     return { requests: rows.map(mapSubmissionRequest), meta };
   }
-
-  // ── Direction B: DocumentRequest (student → college) ────────────────────
 
   static async listDocumentRequestsForStudent(
     studentId: string,
@@ -389,8 +385,6 @@ export class DocumentsQuery {
 
     return { requests: rows.map(mapDocumentRequest), meta };
   }
-
-  // ── Document templates: catalog of requestable documents ────────────────
 
   static async listTemplatesForCollege(
     collegeId: string,

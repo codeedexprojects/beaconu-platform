@@ -52,7 +52,6 @@ function asNumber(value: unknown): number {
   }
   return 0;
 }
-//
 function getAdmissionBatches(courseInfo: Record<string, unknown>): unknown[] {
   if (Array.isArray(courseInfo.admission_batches)) {
     return courseInfo.admission_batches;

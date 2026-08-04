@@ -28,9 +28,6 @@ interface LoginApiResponse {
   };
 }
 
-// Login uses a direct fetch instead of the shared api client because
-// a failed login returns 401 (wrong credentials), which the api client
-// would misinterpret as a session expiry and redirect away from the login page.
 export async function loginAdmin(
   payload: LoginPayload,
 ): Promise<{ admin: AdminProfile; token: string }> {

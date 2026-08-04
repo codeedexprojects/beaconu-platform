@@ -58,9 +58,6 @@ export function mapSlot(row: SlotRow): InterviewSlotItem {
   };
 }
 
-// Same naive "YYYY-MM-DDTHH:MM:SS" (no offset — timeZone is passed
-// separately as "Asia/Kolkata") combiner used in
-// counselling/services/sessions.service.ts's toISODateTime.
 function toNaiveISODateTime(date: Date, time: Date): string {
   const datePart = date.toISOString().slice(0, 10);
   const timePart = time.toISOString().slice(11, 19);

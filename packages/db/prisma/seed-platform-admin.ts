@@ -5,7 +5,6 @@ import { prisma } from "../src/index";
 
 async function main() {
   const platformPermissionsToSeed = [
-    // ── Platform Management ─────────────────────────────────────────────
     {
       code: "platform.roles.view",
       description: "View platform roles and permissions",
@@ -31,7 +30,6 @@ async function main() {
       description: "Manage platform-level settings",
     },
 
-    // ── Institutions ────────────────────────────────────────────────────
     { code: "colleges.view", description: "View colleges" },
     { code: "colleges.manage", description: "Create and manage colleges" },
     { code: "universities.view", description: "View universities" },
@@ -54,7 +52,6 @@ async function main() {
       description: "Manage academic taxonomy",
     },
 
-    // ── People ──────────────────────────────────────────────────────────
     { code: "students.view", description: "View student profiles" },
     { code: "students.manage", description: "Manage student accounts" },
     { code: "leads.view", description: "View college and blink leads" },
@@ -65,7 +62,6 @@ async function main() {
       description: "Create and manage counsellors",
     },
 
-    // ── Content ─────────────────────────────────────────────────────────
     {
       code: "content.view",
       description: "View blogs, articles, news alerts, and financial aid",
@@ -92,7 +88,6 @@ async function main() {
       description: "Send and manage push notifications",
     },
 
-    // ── Blink (Associates & Ambassadors) ────────────────────────────────
     {
       code: "blink.view",
       description: "View blink users (associates, ambassadors)",

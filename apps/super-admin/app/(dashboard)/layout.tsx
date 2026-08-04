@@ -7,7 +7,6 @@ import { useAuthStore } from "@/store";
 import { useRbac } from "@/hooks/use-rbac";
 import { ShieldOff } from "lucide-react";
 
-// Routes that require a specific permission to access
 const ROUTE_PERMISSIONS: Record<string, string> = {
   "/platform-admins": "platform.admins.view",
   "/roles": "platform.roles.view",
@@ -81,7 +80,6 @@ export default function DashboardLayout({
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-cream text-navy-dark">
-      {/* Main dashboard content container */}
       <div className="relative z-10 flex h-full w-full overflow-hidden">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">

@@ -143,7 +143,6 @@ export default function NewEventPage() {
         <Card className="border-none shadow-sm max-w-3xl">
           <CardContent className="pt-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* Title */}
               <div className="space-y-1.5">
                 <Label htmlFor="title">
                   Title <span className="text-destructive">*</span>
@@ -160,7 +159,6 @@ export default function NewEventPage() {
                 )}
               </div>
 
-              {/* Description */}
               <div className="space-y-1.5">
                 <Label htmlFor="description">
                   Description{" "}
@@ -177,7 +175,6 @@ export default function NewEventPage() {
                 />
               </div>
 
-              {/* Cover Image */}
               <ImageUpload
                 label="Cover Image"
                 value={form.watch("cover_image_url") ?? ""}
@@ -189,7 +186,6 @@ export default function NewEventPage() {
                 context="event-covers"
               />
 
-              {/* Category + Event Mode */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>
@@ -247,7 +243,6 @@ export default function NewEventPage() {
                 </div>
               </div>
 
-              {/* Speaker Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="speaker_name">Speaker Name</Label>
@@ -267,7 +262,6 @@ export default function NewEventPage() {
                 </div>
               </div>
 
-              {/* Organizer */}
               <div className="space-y-1.5">
                 <Label htmlFor="organizer">Organizer</Label>
                 <Input
@@ -277,7 +271,6 @@ export default function NewEventPage() {
                 />
               </div>
 
-              {/* Date + Time */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="event_date">
@@ -312,7 +305,6 @@ export default function NewEventPage() {
                 </div>
               </div>
 
-              {/* Duration */}
               <div className="space-y-1.5">
                 <Label htmlFor="duration">
                   Duration{" "}
@@ -327,7 +319,6 @@ export default function NewEventPage() {
                 />
               </div>
 
-              {/* Venue / Online Link (conditional) */}
               {(eventMode === "offline" || eventMode === "hybrid") && (
                 <div className="space-y-1.5">
                   <Label htmlFor="venue">Venue</Label>
@@ -354,7 +345,6 @@ export default function NewEventPage() {
                 </div>
               )}
 
-              {/* Free / Paid toggle */}
               <div className="flex items-center gap-3 rounded-lg border p-4">
                 <Switch
                   checked={isFree}
@@ -380,7 +370,6 @@ export default function NewEventPage() {
                 </div>
               )}
 
-              {/* Total Seats */}
               <div className="space-y-1.5">
                 <Label htmlFor="total_seats">
                   Total Seats{" "}
@@ -397,7 +386,6 @@ export default function NewEventPage() {
                 />
               </div>
 
-              {/* Submit */}
               <div className="flex items-center justify-end gap-3 pt-2">
                 <Button
                   type="button"

@@ -12,5 +12,4 @@ router.get("/program-types", UniversityPublicController.listProgramTypes);
 router.get("/", UniversityPublicController.listAll);
 router.get("/:id", UniversityPublicController.getById);
 
-// Trigger reload
 export default router;

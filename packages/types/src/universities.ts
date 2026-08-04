@@ -1,11 +1,9 @@
-// Nested university type reference — returned embedded inside University responses.
 export interface UniversityTypeRef {
   id: string;
   name: string;
   slug: string;
 }
 
-// Full university response DTO.
 export interface University {
   id: string;
   universityTypeId: string | null;
@@ -23,7 +21,6 @@ export interface University {
   universityType: UniversityTypeRef | null;
 }
 
-// Full university type response DTO — returned by /universities/types endpoints.
 export interface UniversityType {
   id: string;
   name: string;

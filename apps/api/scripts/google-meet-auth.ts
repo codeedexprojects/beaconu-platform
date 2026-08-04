@@ -1,16 +1,3 @@
-/**
- * One-time helper to obtain a Google OAuth refresh token for the account
- * that should own the counselling Calendar/Meet events.
- *
- * Usage:
- *   1. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env (OAuth client of
- *      type "Web application" with redirect URI
- *      http://localhost:4000/oauth/callback added in Google Cloud Console).
- *   2. Run: pnpm --filter api exec tsx scripts/google-meet-auth.ts
- *   3. Open the printed URL, sign in with the account that should own the
- *      counselling calendar, and grant access.
- *   4. Copy the printed GOOGLE_MEET_REFRESH_TOKEN into .env.
- */
 import http from "http";
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../src/shared/config/env";

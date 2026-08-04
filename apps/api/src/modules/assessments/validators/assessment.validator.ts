@@ -12,17 +12,11 @@ const questionOptionSchema = z.object({
 const questionBlankSchema = z.object({
   id: z.string().trim().min(1),
   label: z.string().trim().max(100).optional(),
-  // "matching" only — a left-column item can be an image instead of (or
-  // alongside) text, e.g. "match this picture to its label."
   imageUrl: z.string().trim().url().optional(),
 });
 
 const questionContentSchema = z.object({
   text: z.string().trim().max(2000).optional(),
-  // For prompt/passage-based question types (dataInterpretation, essay,
-  // summarizeSpokenText, etc.) — `text` holds the passage/prompt, this
-  // holds the actual question being asked about it. Optional everywhere
-  // else.
   question: z.string().trim().max(1000).optional(),
   audioUrl: z.string().trim().url().optional(),
   imageUrl: z.string().trim().url().optional(),
@@ -158,9 +152,6 @@ export const createSlotSchema = z
   .object({
     slot_type: z.enum(["window", "fixed"]),
     window_start: z.coerce.date(),
-    // Required for "window" (defines the latest start time); for "fixed"
-    // it's derived server-side from window_start + the template's
-    // totalDurationMins, since a fixed slot only ever has one start time.
     window_end: z.coerce.date().optional(),
     max_capacity: z.preprocess(
       (v) => (v === "" || v === null ? undefined : v),
@@ -198,20 +189,9 @@ const answerResponseSchema = z.object({
     .array(z.object({ blankId: z.string(), optionId: z.string() }))
     .optional(),
   text: z.string().optional(),
-  // "audio_response" format (audioSpeakingResponse/repeatSentence/
-  // readAloud/describeImage — all autoScorable: false, always
-  // evaluator-scored). Uploaded first via the existing generic student
-  // upload flow (presign -> PUT -> verify), same pattern as a question's
-  // own content.audioUrl; this field carries the STUDENT's recorded
-  // answer, not the prompt.
   audioUrl: z.string().trim().min(1).optional(),
 });
 
-// slot_id was removed — the slot is auto-resolved server-side from the
-// student's application (admission cycle -> assessment template -> current
-// active slot for that template). application_id (not
-// application_course_id) — one attempt now covers the whole Application,
-// not a single course on it.
 export const startAttemptSchema = z.object({
   application_id: z.string().trim().min(1),
 });
@@ -232,8 +212,6 @@ export type SectionQuestionQuery = z.infer<typeof sectionQuestionQuerySchema>;
 
 export const submitAnswerSchema = z
   .object({
-    // Optional — a student can flag a question "for review" without
-    // having answered it yet.
     response: answerResponseSchema.optional(),
     is_flagged: z.boolean().optional(),
     time_spent_secs: z.number().int().nonnegative().optional(),

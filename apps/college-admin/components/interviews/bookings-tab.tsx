@@ -122,9 +122,6 @@ export function InterviewBookingsTab() {
     const eligible = booking.courses.filter(
       (c) => c.status === "interview_completed",
     );
-    // Nothing to ask when there's only one eligible course — same
-    // single-click behavior as before this application could carry
-    // several courses.
     setSelectedCourseIds(new Set(eligible.map((c) => c.applicationCourseId)));
     setShortlisting(booking);
   }

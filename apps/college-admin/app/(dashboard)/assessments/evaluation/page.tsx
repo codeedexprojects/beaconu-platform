@@ -29,9 +29,6 @@ type StatusFilter = "all" | "needs_review" | "published";
 
 const STATUS_FILTER_PARAMS: Record<StatusFilter, string[] | undefined> = {
   all: undefined,
-  // "evaluated" is a transient in-between state (publish() sets it, then
-  // immediately "result_published" in the same call) — grouped with
-  // "under_evaluation" since it still means "not yet published".
   needs_review: ["under_evaluation", "evaluated"],
   published: ["result_published"],
 };

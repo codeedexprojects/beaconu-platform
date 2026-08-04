@@ -55,7 +55,6 @@ export function VideoUpload({
     <div className={cn("space-y-2", className)}>
       {label && <p className="text-sm font-medium text-foreground">{label}</p>}
 
-      {/* Upload zone — always visible; compact when a video is already set */}
       <div
         onClick={() => !disabled && !isUploading && inputRef.current?.click()}
         onDragOver={(e) => {
@@ -91,7 +90,6 @@ export function VideoUpload({
         )}
       </div>
 
-      {/* Video preview */}
       {value && !isUploading && (
         <div className="relative rounded-lg overflow-hidden border bg-black">
           <video
@@ -113,7 +111,6 @@ export function VideoUpload({
         </div>
       )}
 
-      {/* URL fallback */}
       <input
         type="text"
         value={value}

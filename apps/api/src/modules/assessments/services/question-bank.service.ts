@@ -9,18 +9,8 @@ import type {
   UpdateQuestionInput,
 } from "@beaconu/types";
 
-// word_highlight (highlightWords) is structurally identical to
-// multi_choice — options + a set of correct option ids (the "wrong"
-// words) — just a different UI widget (tap-to-toggle words in a passage
-// vs a discrete options list), so it shares the same choice validation.
 const CHOICE_FORMATS = ["single_choice", "multi_choice", "word_highlight"];
 const ORDERED_FORMATS = ["ranking", "sequence"];
-// audioDropdownFill/audioDragAndDropFill reuse the exact same
-// responseFormat as their non-audio counterparts (fill_blank_dropdown/
-// fill_blank_drag_drop) — the audio flag (hasAudio) is what distinguishes
-// them, not a separate format value.
-// "matching" (Match the Following) reuses this exact validation — see
-// lib/scoring.ts's FILL_BLANK_FORMATS for why.
 const FILL_BLANK_FORMATS = [
   "fill_blank_drag_drop",
   "fill_blank_dropdown",

@@ -50,8 +50,6 @@ import {
 
 const MAX_ROOM_PHOTOS = 4;
 
-// ── Form schema ───────────────────────────────────────────────────────────────
-
 const roomTypeFormSchema = z.object({
   name: z.string().trim().min(2, "Required"),
   description: z.string().trim().optional().default(""),
@@ -194,7 +192,6 @@ const STEPS = [
   { key: "location", label: "Warden & Location" },
 ] as const;
 
-// Fields validated before advancing past each step.
 const STEP_FIELDS: Record<number, (keyof HostelFormData)[]> = {
   0: ["name", "hostelType", "totalBeds", "distanceFromCampus"],
   1: ["roomTypes"],
@@ -506,7 +503,6 @@ export default function HostelsPage() {
         </Button>
       </div>
 
-      {/* Hostels cards list layout */}
       <div className="grid gap-6 md:grid-cols-2">
         {hostels.map((hostel) => {
           const isExpanded = expandedHostel === hostel.id;

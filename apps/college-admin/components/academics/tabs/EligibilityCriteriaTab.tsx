@@ -23,7 +23,6 @@ export function EligibilityCriteriaTab({
 
   return (
     <div className="space-y-6">
-      {/* Indian Students — quotas, each with its own criteria */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
@@ -187,7 +186,6 @@ export function EligibilityCriteriaTab({
         </CardContent>
       </Card>
 
-      {/* Foreign Students — no quota concept, one shared criteria list */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>

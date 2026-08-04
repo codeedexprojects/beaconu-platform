@@ -88,9 +88,6 @@ export class PaperRepository {
         select: { paperType: true },
       });
 
-      // Only one active paper per type — approving a trial paper only
-      // demotes the other approved trial paper, leaving an approved normal
-      // paper (and vice versa) untouched.
       await tx.assessmentPaper.updateMany({
         where: {
           templateId,

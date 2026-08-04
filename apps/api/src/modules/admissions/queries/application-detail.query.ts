@@ -10,9 +10,6 @@ import type {
   QualificationDetailsInput,
 } from "@beaconu/types";
 
-/** `{}` (the default for every Application detail JSON column until
- * submit) should fall back to the Student's live profile value — anything
- * else, even a sparsely-filled object, is real data. */
 function isEmptyJson(value: unknown): boolean {
   return (
     !value || (typeof value === "object" && Object.keys(value).length === 0)

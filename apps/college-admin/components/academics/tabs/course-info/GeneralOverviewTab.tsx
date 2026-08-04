@@ -41,7 +41,6 @@ export function GeneralOverviewTab({
         />
       </div>
 
-      {/* Quick Info - Key-Value pairs */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <h4 className="font-bold text-sm text-foreground">Quick Info</h4>
@@ -116,7 +115,6 @@ export function GeneralOverviewTab({
         )}
       </div>
 
-      {/* Highlights */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>
@@ -205,7 +203,6 @@ export function GeneralOverviewTab({
         )}
       </div>
 
-      {/* Accreditations */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>

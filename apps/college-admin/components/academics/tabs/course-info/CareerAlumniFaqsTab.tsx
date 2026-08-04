@@ -56,7 +56,6 @@ export function CareerAlumniFaqsTab({
 
   return (
     <div className="space-y-6">
-      {/* Career Opportunities Array */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <Label className="font-bold">Career Opportunities</Label>
@@ -142,7 +141,6 @@ export function CareerAlumniFaqsTab({
         )}
       </div>
 
-      {/* Featured Alumni Array */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <Label className="font-bold text-foreground">Featured Alumni</Label>
@@ -247,7 +245,6 @@ export function CareerAlumniFaqsTab({
                   />
                 </div>
 
-                {/* Career Progression */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label className="text-xs text-muted-foreground">
@@ -334,7 +331,6 @@ export function CareerAlumniFaqsTab({
         )}
       </div>
 
-      {/* FAQs Section */}
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>

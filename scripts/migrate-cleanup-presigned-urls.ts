@@ -1,11 +1,3 @@
-/**
- * Database Migration: Clean up presigned URLs
- * Remove X-Amz query parameters from all S3 URLs stored in database
- *
- * Run from workspace root:
- * npx ts-node scripts/migrate-cleanup-presigned-urls.ts
- */
-
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -17,9 +9,6 @@ interface CleanupResult {
   recordsRemaining: number;
 }
 
-/**
- * Remove query parameters from presigned URLs
- */
 function cleanUrl(url: string | null): string | null {
   if (!url) return null;
   if (!url.includes("?")) return url;
@@ -28,9 +17,6 @@ function cleanUrl(url: string | null): string | null {
   return cleanPart;
 }
 
-/**
- * Check if URL contains presigned parameters
- */
 function isPresignedUrl(url: string | null): boolean {
   if (!url) return false;
   return url.includes("X-Amz") || url.includes("?");
@@ -42,7 +28,6 @@ async function main() {
   const results: CleanupResult[] = [];
 
   try {
-    // 1. Colleges table - logoUrl
     console.log("📝 Cleaning colleges.logoUrl...");
     const colleges = await prisma.college.findMany({
       where: {
@@ -76,7 +61,6 @@ async function main() {
       recordsRemaining: collegesLogoRemaining,
     });
 
-    // 2. Colleges table - coverImageUrl
     console.log("📝 Cleaning colleges.coverImageUrl...");
     const collegesCoverImage = await prisma.college.findMany({
       where: {
@@ -110,7 +94,6 @@ async function main() {
       recordsRemaining: collegesCoverRemaining,
     });
 
-    // 3. StudentProfile table - avatarUrl
     console.log("📝 Cleaning student_profiles.avatarUrl...");
     const studentProfiles = await prisma.studentProfile.findMany({
       where: {
@@ -144,7 +127,6 @@ async function main() {
       recordsRemaining: studentRemaining,
     });
 
-    // 4. StaffMember table - avatarUrl
     console.log("📝 Cleaning staff_members.avatarUrl...");
     const staffMembers = await prisma.staffMember.findMany({
       where: {
@@ -178,7 +160,6 @@ async function main() {
       recordsRemaining: staffRemaining,
     });
 
-    // Print results
     console.log("\n✅ Cleanup Complete!\n");
     console.log("Summary:");
     console.log("─".repeat(70));

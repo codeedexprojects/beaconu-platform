@@ -86,7 +86,6 @@ export class PushService {
       };
     }
 
-    // send() per token gives richer error detail than sendEachForMulticast
     const results = await Promise.allSettled(
       entries.map((entry) =>
         messaging!.send({

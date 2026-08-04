@@ -8,7 +8,7 @@ const ALLOWED_TYPES = [
   "image/webp",
   "image/svg+xml",
 ];
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export function useUpload() {
   const [isUploading, setIsUploading] = useState(false);

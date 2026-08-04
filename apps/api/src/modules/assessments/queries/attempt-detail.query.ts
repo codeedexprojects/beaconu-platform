@@ -68,11 +68,6 @@ export class AttemptDetailQuery {
       string,
       Awaited<ReturnType<typeof AnswerRepository.listByAttempt>>[number]
     >,
-    // 1-based position within THIS section — not pq.questionOrder, which is
-    // a 0-based counter that increments across the whole paper (every
-    // section shares one sequence), so it's neither 1-based nor
-    // section-relative. Using position here is what actually makes
-    // "question N of this section" / hasNext / hasPrevious correct.
     displayOrder: number,
   ): AttemptQuestionItem {
     const answer = answerByQuestion.get(pq.questionId);
@@ -99,10 +94,6 @@ export class AttemptDetailQuery {
     };
   }
 
-  /** One question per response, for a "one question per screen, Next
-   * button" take-test UI — not the whole section dumped in one call.
-   * `questionOrder` is 1-based; defaults to 1 (the first question) when
-   * omitted. */
   static async getSectionQuestions(
     studentId: string,
     attemptId: string,
@@ -115,9 +106,6 @@ export class AttemptDetailQuery {
       AnswerRepository.listByAttempt(attemptId),
     ]);
 
-    // Position within THIS section's already-filtered, already-ordered
-    // array — see toAttemptQuestionItem's doc comment for why this can't
-    // be a lookup against the raw pq.questionOrder DB field.
     const target = paperQuestions[questionOrder - 1];
     if (!target) {
       throw new NotFoundError("Question not found");
@@ -164,9 +152,6 @@ export class AttemptDetailQuery {
       if (isAnswered) answeredCount++;
       if (isFlagged) flaggedCount++;
       return {
-        // 1-based position within this section — see
-        // toAttemptQuestionItem's doc comment for why this isn't
-        // pq.questionOrder.
         questionOrder: index + 1,
         questionId: pq.questionId,
         isAnswered,

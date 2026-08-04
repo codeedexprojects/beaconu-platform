@@ -29,11 +29,7 @@ import { useUniversity } from "@/hooks/use-universities";
 import { useUniversityType } from "@/hooks/use-university-types";
 import type { University } from "@beaconu/types";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
 type Tab = "overview" | "governance" | "media";
-
-// ── Constants ──────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -61,8 +57,6 @@ const STATUS_CONFIG: Record<
     icon: <AlertCircle className="h-3 w-3" />,
   },
 };
-
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -102,8 +96,6 @@ function formatDate(iso: string) {
     year: "numeric",
   });
 }
-
-// ── Metadata accessors ─────────────────────────────────────────────────────
 
 function getOverview(university: University) {
   const meta = university.metadata;
@@ -181,8 +173,6 @@ function getGovernance(university: University) {
     },
   };
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? {
@@ -307,8 +297,6 @@ function MemberCard({
   );
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────
-
 export default function UniversityDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -319,8 +307,6 @@ export default function UniversityDetailPage() {
   const { data: resolvedUniversityType } = useUniversityType(
     resolvedUniversityTypeId,
   );
-
-  // ── Loading ────────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
@@ -343,8 +329,6 @@ export default function UniversityDetailPage() {
       </>
     );
   }
-
-  // ── Not found ──────────────────────────────────────────────────────────
 
   if (error || !university) {
     return (
@@ -369,7 +353,6 @@ export default function UniversityDetailPage() {
       <Header title="University Detail" />
 
       <div className="p-6 space-y-6 max-w-5xl mx-auto">
-        {/* Back */}
         <Link
           href="/universities"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -378,7 +361,6 @@ export default function UniversityDetailPage() {
           All Universities
         </Link>
 
-        {/* Hero */}
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="h-16 w-16 rounded-xl bg-violet-100 flex items-center justify-center shrink-0 overflow-hidden border">
             {university.logoUrl ? (
@@ -416,14 +398,11 @@ export default function UniversityDetailPage() {
           </div>
         </div>
 
-        {/* Tabs */}
         <TabNav active={activeTab} onChange={setActiveTab} />
 
-        {/* ── Overview ──────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Basic Info */}
               <SectionCard title="Basic Info">
                 <InfoRow
                   icon={<Hash className="h-4 w-4" />}
@@ -475,7 +454,6 @@ export default function UniversityDetailPage() {
                 />
               </SectionCard>
 
-              {/* University Details from metadata */}
               <SectionCard title="University Details">
                 {overview.details.estDate && (
                   <InfoRow
@@ -532,7 +510,6 @@ export default function UniversityDetailPage() {
               </SectionCard>
             </div>
 
-            {/* Description */}
             {overview.description && (
               <SectionCard title="Overview Description">
                 <p className="text-sm leading-relaxed text-foreground">
@@ -541,7 +518,6 @@ export default function UniversityDetailPage() {
               </SectionCard>
             )}
 
-            {/* Discipline Streams */}
             {overview.streams.length > 0 && (
               <SectionCard title="Discipline Streams">
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -554,7 +530,6 @@ export default function UniversityDetailPage() {
               </SectionCard>
             )}
 
-            {/* Accolades */}
             {overview.accolades.length > 0 && (
               <SectionCard title="Accolades">
                 <div className="space-y-3">
@@ -596,10 +571,8 @@ export default function UniversityDetailPage() {
           </div>
         )}
 
-        {/* ── Governance ────────────────────────────────────────────── */}
         {activeTab === "governance" && (
           <div className="space-y-6">
-            {/* Governance details text */}
             {university.governanceDetails && (
               <SectionCard title="Governance Details">
                 <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
@@ -608,7 +581,6 @@ export default function UniversityDetailPage() {
               </SectionCard>
             )}
 
-            {/* Academic Council */}
             <SectionCard title="Academic Council">
               {governance.academic.description && (
                 <p className="text-sm text-muted-foreground mb-4">
@@ -628,7 +600,6 @@ export default function UniversityDetailPage() {
               )}
             </SectionCard>
 
-            {/* Management Council */}
             <SectionCard title="Management Council">
               {governance.management.description && (
                 <p className="text-sm text-muted-foreground mb-4">
@@ -648,7 +619,6 @@ export default function UniversityDetailPage() {
               )}
             </SectionCard>
 
-            {/* Organogram */}
             {(governance.organogram.title ||
               governance.organogram.fileUrl ||
               governance.organogram.description) && (
@@ -695,10 +665,8 @@ export default function UniversityDetailPage() {
           </div>
         )}
 
-        {/* ── Media ─────────────────────────────────────────────────── */}
         {activeTab === "media" && (
           <div className="space-y-6">
-            {/* Logo */}
             {university.logoUrl && (
               <SectionCard title="Logo">
                 <div className="flex items-start gap-4">
@@ -726,7 +694,6 @@ export default function UniversityDetailPage() {
               </SectionCard>
             )}
 
-            {/* Videos */}
             {overview.videos.length > 0 && (
               <SectionCard title="Videos">
                 <div className="space-y-3">

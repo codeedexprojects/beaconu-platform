@@ -1,7 +1,3 @@
-// ============================================================
-// MODULE 5 — ASSESSMENT
-// ============================================================
-
 model AssessmentSection {
   id            String   @id @default(dbgenerated("('ASC-'::text || (nextval('assessment_section_seq'::regclass))::text)"))
   collegeId     String   @map("college_id")
@@ -14,7 +10,6 @@ model AssessmentSection {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college          College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   templateSections TemplateSection[]
   paperQuestions   PaperQuestion[]
@@ -32,16 +27,8 @@ model QuestionType {
   collegeId      String   @map("college_id")
   name           String   @db.VarChar(100)
   slug           String   @db.VarChar(50)
-  // Rendering category for the frontend's UI (selection/textInput/
-  // audioListening/visualHighlight/audioSpeaking/visualImage) — NOT the
-  // assessment topic/section, which is tracked via which AssessmentSection
-  // a Question belongs to, not via this field.
   category       String   @db.VarChar(30)
   responseFormat String   @map("response_format") @db.VarChar(30)
-  // Coarser-grained answer widget the frontend renders (multiOptionSelection/
-  // singleOptionSelection/slotFillSelection/freeText/wordHighlightSelection/
-  // audioRecording) — a grouping of responseFormat values; e.g. both
-  // fill_blank_drag_drop and fill_blank_dropdown share "slotFillSelection".
   answerFormat   String   @map("answer_format") @db.VarChar(30)
   hasAudio       Boolean  @default(false) @map("has_audio")
   hasImage       Boolean  @default(false) @map("has_image")
@@ -53,7 +40,6 @@ model QuestionType {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college   College    @relation(fields: [collegeId], references: [id])
   questions Question[]
 
@@ -82,7 +68,6 @@ model Question {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college        College                 @relation(fields: [collegeId], references: [id])
   section        AssessmentSection       @relation(fields: [sectionId], references: [id])
   questionType   QuestionType            @relation(fields: [questionTypeId], references: [id])
@@ -105,7 +90,6 @@ model QuestionCourseMapping {
   questionId String @map("question_id")
   courseId   String @map("course_id")
 
-  // Relations
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -128,7 +112,6 @@ model AssessmentTemplate {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college          College           @relation(fields: [collegeId], references: [id])
   templateSections TemplateSection[]
   assessmentPapers AssessmentPaper[]
@@ -150,7 +133,6 @@ model TemplateSection {
   sortOrder              Int      @default(0) @map("sort_order")
   difficultyDistribution Json     @default("{}") @map("difficulty_distribution")
 
-  // Relations
   template AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   section  AssessmentSection  @relation(fields: [sectionId], references: [id])
 
@@ -172,7 +154,6 @@ model AssessmentPaper {
   approvedAt     DateTime? @map("approved_at") @db.Timestamptz
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   template           AssessmentTemplate  @relation(fields: [templateId], references: [id])
   paperQuestions     PaperQuestion[]
   assessmentAttempts AssessmentAttempt[]
@@ -189,7 +170,6 @@ model PaperQuestion {
   sectionId     String @map("section_id")
   questionOrder Int    @map("question_order")
 
-  // Relations
   paper    AssessmentPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
   question Question          @relation(fields: [questionId], references: [id])
   section  AssessmentSection @relation(fields: [sectionId], references: [id])
@@ -213,7 +193,6 @@ model AssessmentSlot {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   college        College                @relation(fields: [collegeId], references: [id])
   template       AssessmentTemplate     @relation(fields: [templateId], references: [id])
   attempts       AssessmentAttempt[]
@@ -229,9 +208,6 @@ model AssessmentSlot {
 
 model AssessmentAttempt {
   id             String    @id @default(dbgenerated("('AAT-'::text || (nextval('assessment_attempt_seq'::regclass))::text)"))
-  // One attempt per Application (covers every course listed on it), not
-  // per ApplicationCourse — a student submits one application, takes one
-  // assessment for it, regardless of how many courses are on it.
   applicationId  String    @map("application_id")
   studentId      String    @map("student_id")
   paperId        String    @map("paper_id")
@@ -248,7 +224,6 @@ model AssessmentAttempt {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  // Relations
   application    Application            @relation(fields: [applicationId], references: [id])
   student        Student                @relation(fields: [studentId], references: [id])
   paper          AssessmentPaper        @relation(fields: [paperId], references: [id])
@@ -281,7 +256,6 @@ model StudentAnswer {
   evaluationRemarks String?   @map("evaluation_remarks") @db.Text
   answeredAt        DateTime? @map("answered_at") @db.Timestamptz
 
-  // Relations
   attempt   AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   question  Question          @relation(fields: [questionId], references: [id])
   section   AssessmentSection @relation(fields: [sectionId], references: [id])
@@ -307,7 +281,6 @@ model AssessmentReschedule {
   reviewedAt DateTime? @map("reviewed_at") @db.Timestamptz
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  // Relations
   attempt  AssessmentAttempt @relation(fields: [attemptId], references: [id])
   student  Student           @relation(fields: [studentId], references: [id])
   fromSlot AssessmentSlot    @relation("RescheduleFromSlot", fields: [fromSlotId], references: [id])

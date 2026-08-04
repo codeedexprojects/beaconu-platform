@@ -8,10 +8,8 @@ export default function UniversityDetailLoading() {
       <Header title="University Detail" />
 
       <div className="p-6 space-y-6 max-w-5xl mx-auto">
-        {/* Back link */}
         <Skeleton className="h-4 w-32" />
 
-        {/* Hero */}
         <div className="flex items-start gap-4">
           <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
           <div className="flex-1 space-y-2">
@@ -26,14 +24,12 @@ export default function UniversityDetailLoading() {
           </div>
         </div>
 
-        {/* Tab bar */}
         <div className="flex gap-4 border-b pb-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-5 w-20" />
           ))}
         </div>
 
-        {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {Array.from({ length: 2 }).map((_, i) => (
             <Card key={i}>

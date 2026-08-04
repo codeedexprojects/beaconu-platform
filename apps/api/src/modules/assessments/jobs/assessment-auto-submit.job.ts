@@ -5,7 +5,7 @@ import { AttemptService } from "../services/attempt.service";
 
 const QUEUE_NAME = "assessment-auto-submit";
 const REPEAT_JOB_ID = "assessment-auto-submit-repeat";
-const EVERY_MS = 60 * 1000; // every minute
+const EVERY_MS = 60 * 1000;
 
 let queue: Queue | null = null;
 let worker: Worker | null = null;

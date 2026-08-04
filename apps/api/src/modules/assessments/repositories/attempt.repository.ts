@@ -1,12 +1,6 @@
 import { prisma, Prisma } from "@beaconu/db";
 
 export class AttemptRepository {
-  /** Reads Application directly (shared table, not the admissions module's
-   * repository) — same cross-module read pattern already used in
-   * payments/repositories/application-payment.repository.ts, to avoid a
-   * circular module dependency. One attempt covers the whole Application
-   * (every course listed on it), so this resolves off applicationId, not
-   * applicationCourseId. */
   static async findApplicationForAttempt(applicationId: string) {
     return prisma.application.findUnique({
       where: { id: applicationId },
@@ -63,11 +57,6 @@ export class AttemptRepository {
     });
   }
 
-  /** Hard delete — a college-admin "restart" action that removes the
-   * attempt entirely so the student can start a genuinely new one (not
-   * just reset the existing row in place). StudentAnswer rows cascade
-   * automatically (onDelete: Cascade); call deleteReschedulesByAttempt
-   * first — AssessmentReschedule has no cascade for attemptId. */
   static async delete(id: string, tx?: Prisma.TransactionClient) {
     const client = tx ?? prisma;
     return client.assessmentAttempt.delete({ where: { id } });
@@ -117,9 +106,6 @@ export class AttemptRepository {
     });
   }
 
-  /** Every check the auto-submit job needs, in one pass — the job itself
-   * decides which of the three rules (tab-hidden, disconnect, duration
-   * expiry) applies per row. */
   static async listInProgressForAutoSubmit() {
     return prisma.assessmentAttempt.findMany({
       where: { status: "in_progress" },

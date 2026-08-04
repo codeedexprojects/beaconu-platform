@@ -57,12 +57,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** The cross-application duplicate-course guard: is `courseId` already
-   * actively (non-withdrawn) selected in ANY of this student's
-   * Applications at this COLLEGE — across every admission cycle, not just
-   * the current one? Used by both start() (the primary course) and
-   * addCourse() (any additional course) — a course can only ever be "live"
-   * in one of the student's applications at a college at a time. */
   static async findActiveCourseSelectionInCollege(
     studentId: string,
     collegeId: string,
@@ -85,10 +79,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** For other modules that need "does this student own this application,
-   * and which colleges/courses is it tied to" without duplicating a raw
-   * Prisma read of their own — e.g. ScholarshipApplicationService's
-   * eligibility check (any non-withdrawn course on the application). */
   static async findByIdWithCoursesForStudent(id: string, studentId: string) {
     return prisma.application.findFirst({
       where: { id, studentId },
@@ -96,6 +86,8 @@ export class ApplicationRepository {
         id: true,
         collegeId: true,
         applicationNumber: true,
+        formStatus: true,
+        admissionCycle: { select: { assessmentRequired: true } },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },
           select: {
@@ -108,10 +100,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Same shape as findByIdWithCoursesForStudent, but scoped by collegeId
-   * instead of studentId — for staff-driven flows (e.g. college-admin
-   * completing an interview) that have no student identity to check
-   * ownership against. */
   static async findByIdWithCoursesForCollege(id: string, collegeId: string) {
     return prisma.application.findFirst({
       where: { id, collegeId },
@@ -119,6 +107,8 @@ export class ApplicationRepository {
         id: true,
         collegeId: true,
         applicationNumber: true,
+        formStatus: true,
+        admissionCycle: { select: { assessmentRequired: true } },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },
           select: {
@@ -131,10 +121,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** applicationNumber is @unique @db.VarChar(30) with no DB default, so we
-   * seed it with a throwaway placeholder (guaranteed unique, fits the column)
-   * and overwrite it right after with the human-readable number derived from
-   * the row's own atomically-generated `id` — see ApplicationService.start(). */
   static async create(data: {
     studentId: string;
     collegeId: string;
@@ -172,11 +158,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Full-replace write for a JSON blob that genuinely lives on Application
-   * itself (only "declaration" left — personal/family/address/qualification
-   * moved to the Student profile, see StudentsService). Advances currentStep
-   * to the furthest step reached so far — never regresses it if the student
-   * revisits an earlier step. */
   static async updateDetailStep(
     id: string,
     jsonField: "declaration",
@@ -199,11 +180,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Progress-tracking-only advance for the four steps whose actual data
-   * now lives on Student (see StudentsService.update*Details) — this just
-   * bumps currentStep (never regressing) and, for personal details only,
-   * patches the handful of top-level Application columns that conceptually
-   * belong to it (profile photo, WhatsApp) which weren't part of the move. */
   static async advanceStep(
     id: string,
     stepNumber: number,
@@ -237,10 +213,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** `detailsSnapshot` freezes the student's current personal/family/
-   * address/qualification details onto this specific Application row —
-   * a one-time copy taken here at submit, never updated again even if the
-   * student's Student-level profile changes afterward. */
   static async markSubmitted(
     tx: Prisma.TransactionClient,
     id: string,
@@ -263,14 +235,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Compensating rollback for Start Application only: if primary-course
-   * creation fails after the draft Application row was already created
-   * (bad course/quota id, no seats), the half-created draft must not
-   * survive — the idempotent "existing draft" check on retry would
-   * otherwise return this broken, course-less row forever, permanently
-   * blocking the student from starting over. This is not a general delete
-   * capability; the row being removed never became a real business
-   * record. */
   static async markFeePaid(id: string) {
     return prisma.application.update({
       where: { id },
@@ -291,17 +255,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** For the admission-status API — one row per Application the student
-   * has (optionally narrowed to one cycle and/or one college), each with
-   * what's needed to compute its pending action (fee status, form status,
-   * currentStep), the owning college's + cycle's own id/name (every
-   * college runs its own independent admission cycles — this is what lets
-   * results spanning colleges be told apart), and every non-withdrawn
-   * course on it (not just the primary — an application can carry
-   * several). Omitting both filters spans every cycle/college the student
-   * has ever applied to. `collegeId` alone (no `admissionCycleId`) covers
-   * a college that runs several concurrent cycles — narrower than "all
-   * colleges", broader than "one specific cycle". */
   static async findStatusRows(
     studentId: string,
     filters?: { admissionCycleId?: string; collegeId?: string },
@@ -340,10 +293,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Cross-module read into `interviews`' own table (no service method
-   * fits this exact shape) — InterviewBooking is now keyed directly by
-   * applicationId (one shared booking per whole Application), so this is
-   * a single findFirst, not a per-course join. */
   static async findInterviewBookingForApplication(applicationId: string) {
     return prisma.interviewBooking.findFirst({
       where: { applicationId },
@@ -351,8 +300,6 @@ export class ApplicationRepository {
     });
   }
 
-  /** Same reasoning as findInterviewBookingsByCourseIds, for OfferLetter —
-   * no service layer exists for that model yet either. */
   static async findOfferLettersByCourseIds(applicationCourseIds: string[]) {
     if (applicationCourseIds.length === 0) return [];
     return prisma.offerLetter.findMany({

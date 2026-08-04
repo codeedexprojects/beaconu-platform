@@ -245,8 +245,6 @@ export function useCreateSeatPool(admissionCycleId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
       });
-      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
-      // every course's quota-seats view for this cycle, not just the pool.
       queryClient.invalidateQueries({
         queryKey: ["college-course-quota-seats", admissionCycleId],
       });
@@ -266,8 +264,6 @@ export function useUpdateSeatPool(admissionCycleId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
       });
-      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
-      // every course's quota-seats view for this cycle, not just the pool.
       queryClient.invalidateQueries({
         queryKey: ["college-course-quota-seats", admissionCycleId],
       });
@@ -286,8 +282,6 @@ export function useDeleteSeatPool(admissionCycleId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.seatPools(admissionCycleId),
       });
-      // Pooling attaches/detaches CourseQuotaSeats rows too — invalidate
-      // every course's quota-seats view for this cycle, not just the pool.
       queryClient.invalidateQueries({
         queryKey: ["college-course-quota-seats", admissionCycleId],
       });

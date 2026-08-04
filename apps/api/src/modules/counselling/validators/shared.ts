@@ -2,12 +2,6 @@ import { z } from "zod";
 
 const LANGUAGE_NAME_REGEX = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
-/**
- * Comma-separated list of language names (e.g. "English, Hindi, Malayalam").
- * Normalizes whitespace around/within each entry and rejects entries that
- * aren't plain letters + single spaces, so values like "E nglish " or
- * "english" / "English" duplicates can't slip into known_languages.
- */
 export const knownLanguagesSchema = z
   .string()
   .trim()

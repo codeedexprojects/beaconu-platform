@@ -59,9 +59,6 @@ export class InterviewSettingsRepository {
     });
   }
 
-  /** Find-or-create-then-update in one call — there's no separate "create
-   * settings" step from the college-admin's point of view, just "update
-   * settings" (defaults apply until the first real edit). */
   static async upsert(collegeId: string, data: InterviewSettingsUpdateData) {
     const fields = toPrismaData(data);
     return prisma.interviewSettings.upsert({

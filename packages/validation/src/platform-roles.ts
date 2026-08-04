@@ -15,7 +15,6 @@ export const updateRolePermissionsSchema = z.object({
   permissions: z.array(z.string().trim().min(1)).min(1),
 });
 
-// Use z.input so fields with .default() stay optional in the input type.
 export type CreatePlatformRoleInput = z.input<typeof createPlatformRoleSchema>;
 export type UpdateRolePermissionsInput = z.input<
   typeof updateRolePermissionsSchema

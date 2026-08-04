@@ -455,7 +455,6 @@ export default function DocumentRequestsFromStudentsPage() {
         </div>
       )}
 
-      {/* Details Dialog */}
       <Dialog
         open={!!viewingRequest}
         onOpenChange={(v) => !v && setViewingRequest(null)}

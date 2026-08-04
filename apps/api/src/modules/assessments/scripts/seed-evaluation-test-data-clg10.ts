@@ -1,26 +1,3 @@
-/**
- * One-off dev seed: builds the FULL assessment chain from scratch for college
- * CLG-10 (Beacon Institute of Technology), which had zero assessment data
- * (no sections, question types, questions, templates, papers, or slots) —
- * unlike CLG-2 (see seed-evaluation-test-data.ts), which already had all of
- * that and only needed attempts wired on top.
- *
- * Creates: 3 assessment sections + question types (verbal-communication,
- * aptitude-logical-reasoning, listening-reading), 3 questions (one per
- * section, mirroring CLG-2's QST-1/2/5 shapes), one AssessmentTemplate +
- * TemplateSections, one manually-assembled + approved AssessmentPaper, one
- * active AssessmentSlot, AdmissionCycle (ACV-3) assessment config, two
- * dedicated EVALSEED Applications + ApplicationCourses (not touching the
- * students' real draft applications), and two AssessmentAttempts (one
- * under_evaluation with a pending answer, one result_published) so the
- * evaluator dashboard has something to review for this college too.
- *
- * Idempotent — re-running skips anything already created.
- *
- * Run from apps/api:
- *   DATABASE_URL="..." pnpm exec tsx src/modules/assessments/scripts/seed-evaluation-test-data-clg10.ts
- */
-
 import { prisma } from "@beaconu/db";
 import { SectionService } from "../services/section.service";
 

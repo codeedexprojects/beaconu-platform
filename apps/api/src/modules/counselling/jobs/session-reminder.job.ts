@@ -5,7 +5,7 @@ import { SessionService } from "../services/sessions.service";
 
 const QUEUE_NAME = "counselling-session-reminder";
 const REPEAT_JOB_ID = "session-reminder-repeat";
-const EVERY_MS = 60 * 1000; // every minute
+const EVERY_MS = 60 * 1000;
 
 let queue: Queue | null = null;
 let worker: Worker | null = null;

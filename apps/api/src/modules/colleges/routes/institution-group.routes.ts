@@ -3,8 +3,6 @@ import { authenticate } from "@/shared/middleware/authenticate";
 import { authorize, authorizeUserType } from "@/shared/middleware/authorize";
 import { InstitutionGroupController } from "../controllers/institution-group.controller";
 
-// ── Admin routes (mounted under /api/v1/admin/colleges/:id/) ──────────────
-
 export const adminInstitutionGroupRouter: Router = Router({
   mergeParams: true,
 });
@@ -31,8 +29,6 @@ adminInstitutionGroupRouter.post(
   authorize("colleges.manage"),
   InstitutionGroupController.disableGroup,
 );
-
-// ── College staff routes (mounted under /api/v1/college/) ─────────────────
 
 export const collegeInstitutionGroupRouter: Router = Router();
 

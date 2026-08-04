@@ -6,9 +6,6 @@ import type {
   VerifyPaymentParams,
 } from "../payment-provider";
 
-/** Dev/testing stand-in until a real gateway is plugged in behind the same
- * PaymentProvider interface. No real money moves — createOrder fabricates
- * an order id, verifyPayment always succeeds. */
 export class MockPaymentProvider implements PaymentProvider {
   readonly name = "mock";
 

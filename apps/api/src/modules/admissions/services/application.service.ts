@@ -37,11 +37,6 @@ function toDto(row: ApplicationRow) {
   };
 }
 
-/** Derives a human-readable application number from the row's own
- * atomically-generated `id` (format "APP-<n>"), so it's guaranteed unique
- * without a separate counter or race condition. Must fit
- * applications.application_number's @db.VarChar(30) — college.code can be up
- * to 20 chars, so every segment is capped. */
 function buildApplicationNumber(
   collegeCode: string,
   admissionYear: string,
@@ -710,6 +705,8 @@ export class ApplicationService {
       id: row.id,
       collegeId: row.collegeId,
       applicationNumber: row.applicationNumber,
+      formStatus: row.formStatus,
+      assessmentRequired: row.admissionCycle.assessmentRequired,
       courses: row.applicationCourses.map((ac) => ({
         applicationCourseId: ac.id,
         status: ac.status,
@@ -735,6 +732,8 @@ export class ApplicationService {
       id: row.id,
       collegeId: row.collegeId,
       applicationNumber: row.applicationNumber,
+      formStatus: row.formStatus,
+      assessmentRequired: row.admissionCycle.assessmentRequired,
       courses: row.applicationCourses.map((ac) => ({
         applicationCourseId: ac.id,
         status: ac.status,

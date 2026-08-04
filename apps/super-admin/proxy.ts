@@ -9,12 +9,10 @@ export function proxy(request: NextRequest) {
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
-  // Authenticated user hitting /login → send to dashboard
   if (isPublic && token) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Unauthenticated user hitting a protected route → send to login
   if (!isPublic && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
@@ -26,12 +24,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except:
-     * - _next/static, _next/image (Next.js internals)
-     * - favicon.ico, public assets
-     * - api routes (handled separately)
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

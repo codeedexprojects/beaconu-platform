@@ -5,7 +5,7 @@ import { SessionService } from "../services/sessions.service";
 
 const QUEUE_NAME = "counselling-slot-cleanup";
 const REPEAT_JOB_ID = "slot-cleanup-repeat";
-const EVERY_MS = 24 * 60 * 60 * 1000; // daily
+const EVERY_MS = 24 * 60 * 60 * 1000;
 
 let queue: Queue | null = null;
 let worker: Worker | null = null;

@@ -7,7 +7,6 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("staff_member"));
 
-// Direction A — request a document from a student, then verify it
 router.post(
   "/submission-requests",
   CollegeAdminDocumentsController.createSubmissionRequest,
@@ -21,7 +20,6 @@ router.patch(
   CollegeAdminDocumentsController.reviewSubmission,
 );
 
-// Direction B — fulfill/reject documents students requested from us
 router.get("/requests", CollegeAdminDocumentsController.listDocumentRequests);
 router.patch(
   "/requests/:requestId/start-review",
@@ -44,7 +42,6 @@ router.patch(
   CollegeAdminDocumentsController.rejectDocumentRequest,
 );
 
-// Document templates — catalog of documents students can request
 router.post("/templates", CollegeAdminDocumentsController.createTemplate);
 router.get("/templates", CollegeAdminDocumentsController.listTemplates);
 router.patch(

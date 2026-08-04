@@ -10,10 +10,6 @@ const SLOT_SELECT = {
   durationMins: true,
   maxCapacity: true,
   bookedCount: true,
-  // Columns are still named "zoom*" from the schema's original design —
-  // reused generically for whatever online-meeting provider is actually
-  // configured (Google Meet in practice). Cosmetic mismatch, not fixed
-  // here (would need a migration for zero functional benefit).
   zoomMeetingUrl: true,
   zoomMeetingId: true,
   zoomPasscode: true,
@@ -38,11 +34,6 @@ const SLOT_SELECT = {
   createdAt: true,
 } as const;
 
-// No meetingUrl/meetingId/meetingPasscode here — for "gmeet" slots those
-// are always written separately via updateMeetingInfo(), once the Google
-// Meet event has actually been created. No maxCapacity either — every slot
-// is a fixed 1-on-1 booking now, left at the schema's own default (1),
-// never set explicitly from here.
 export interface InterviewSlotCreateData {
   mode: string;
   scheduledDate: Date;
@@ -103,9 +94,6 @@ export class InterviewSlotRepository {
     });
   }
 
-  /** Available-for-booking slots — active, upcoming, with open capacity.
-   * `scheduledDate`, when given, replaces the default "any upcoming date"
-   * lower bound with an exact-day filter ("date wise" browsing). */
   static async listAvailableForCollege(
     collegeId: string,
     mode?: string,
@@ -156,11 +144,6 @@ export class InterviewSlotRepository {
     });
   }
 
-  /** Atomically claims one seat — the conditional `bookedCount: { lt:
-   * maxCapacity }` in the WHERE clause means this only ever succeeds if
-   * capacity was actually available at the moment of the update, closing
-   * the race a plain read-then-write would leave open. Returns the
-   * updated count of affected rows (0 = slot was full or didn't exist). */
   static async incrementBooked(
     tx: Prisma.TransactionClient,
     id: string,

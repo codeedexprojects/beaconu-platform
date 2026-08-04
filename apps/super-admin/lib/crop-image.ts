@@ -44,8 +44,5 @@ export async function getCroppedImageFile(
   );
   if (!blob) throw new Error("Failed to crop image");
 
-  // Use the blob's actual encoded type, not the requested one — canvas
-  // silently falls back to image/png if the browser can't encode the
-  // requested mimeType (e.g. incomplete WebP support in some browsers).
   return new File([blob], fileName, { type: blob.type || mimeType });
 }

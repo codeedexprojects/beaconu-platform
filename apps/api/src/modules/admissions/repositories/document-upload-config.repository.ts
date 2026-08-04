@@ -34,7 +34,6 @@ export class DocumentUploadConfigRepository {
     });
   }
 
-  /** For validating course_ids belong to this cycle. */
   static async findActiveCycleCourseIds(
     admissionCycleId: string,
     courseIds: string[],
@@ -46,7 +45,6 @@ export class DocumentUploadConfigRepository {
     return new Set(rows.map((r) => r.courseId));
   }
 
-  /** For validating quota_ids belong to this college. */
   static async findActiveCollegeQuotaIds(
     collegeId: string,
     quotaIds: string[],

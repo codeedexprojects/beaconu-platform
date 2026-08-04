@@ -1,11 +1,5 @@
 import type { QuestionTypeSeed } from "./types";
 
-// The canonical, shared set of question types — one entry per slug,
-// referenced by slug from multiple sections' `questionTypeSlugs` (see
-// SectionSeedEntry's doc comment). `slug` matches the frontend's exact
-// question-type enum values one-for-one, so the client can switch on
-// `question_type.slug`/`response_format`/`answer_format` directly with no
-// translation table.
 export const QUESTION_TYPE_SEEDS: Record<string, QuestionTypeSeed> = {
   mcqSingle: {
     slug: "mcqSingle",
@@ -51,13 +45,6 @@ export const QUESTION_TYPE_SEEDS: Record<string, QuestionTypeSeed> = {
     hasPassage: true,
     autoScorable: true,
   },
-  // Course-specific — offered only on calculator sections (isCoreSection:
-  // false), so every question of this type must have course_ids mapped,
-  // per the existing calculator-section rule. Reuses the exact same
-  // content/answerKey/response mechanic as the fill-blank types (left
-  // items -> content.blanks, right-column pool -> content.options,
-  // pairing -> answerKey/response.blankAnswers) — see FILL_BLANK_FORMATS
-  // in lib/scoring.ts and question-bank.service.ts.
   matchTheFollowing: {
     slug: "matchTheFollowing",
     name: "Match the Following",
@@ -201,11 +188,6 @@ export const QUESTION_TYPE_SEEDS: Record<string, QuestionTypeSeed> = {
     hasPassage: false,
     autoScorable: true,
   },
-  // Structurally identical to mcqMultiple (options + correctOptionIds) —
-  // student taps each word they think is wrong, validated the same way a
-  // multi-select MCQ is (see CHOICE_FORMATS in question-bank.service.ts).
-  // content.options holds the tappable words; answer_key.correctOptionIds
-  // holds which of those word-option-ids are actually wrong.
   highlightWords: {
     slug: "highlightWords",
     name: "Highlight Incorrect Words",

@@ -5,12 +5,11 @@ import { SessionService } from "../services/sessions.service";
 
 const QUEUE_NAME = "counselling-session-auto-complete";
 const REPEAT_JOB_ID = "session-auto-complete-repeat";
-const EVERY_MS = 5 * 60 * 1000; // every 5 minutes
+const EVERY_MS = 5 * 60 * 1000;
 
 let queue: Queue | null = null;
 let worker: Worker | null = null;
 
-/** Starts the worker and schedules the repeatable auto-complete job. */
 export async function startSessionAutoCompleteJob(): Promise<void> {
   queue = createQueue(QUEUE_NAME);
 

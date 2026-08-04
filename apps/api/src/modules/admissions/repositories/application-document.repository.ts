@@ -83,11 +83,6 @@ export class ApplicationDocumentRepository {
     });
   }
 
-  /** Upsert-by-(applicationId, documentType) — no DB unique constraint
-   * enforces this (schema allows duplicates), so uniqueness is an
-   * app-level convention: a re-upload always replaces the prior file for
-   * that document type rather than creating a second row, and resets
-   * verification back to "pending" since the new file hasn't been reviewed. */
   static async upsert(data: {
     applicationId: string;
     documentType: string;

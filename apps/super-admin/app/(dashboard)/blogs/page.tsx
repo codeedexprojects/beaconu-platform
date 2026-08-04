@@ -75,7 +75,6 @@ export default function BlogsPage() {
       </Header>
 
       <div className="flex-1 p-6 space-y-4">
-        {/* Search + filter */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <form onSubmit={handleSearch} className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -88,7 +87,6 @@ export default function BlogsPage() {
           </form>
         </div>
 
-        {/* Status tabs */}
         <div className="flex gap-1 border-b">
           {STATUS_TABS.map((tab) => (
             <button
@@ -106,7 +104,6 @@ export default function BlogsPage() {
           ))}
         </div>
 
-        {/* Table */}
         <Card className="border-none shadow-sm">
           <CardContent className="p-0">
             {isLoading ? (

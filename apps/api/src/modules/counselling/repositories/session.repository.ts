@@ -1,10 +1,6 @@
 import { prisma, Prisma } from "@beaconu/db";
 import { ConflictError } from "@/shared/errors";
 
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
-
 interface PaginationOptions {
   page?: number;
   limit?: number;
@@ -28,17 +24,10 @@ interface WalletTransactionFilters {
 interface SlotFilters {
   counsellorId?: string;
   fromDate?: Date;
-  toDate?: Date; // ← NEW: always cap how far ahead you query
+  toDate?: Date;
 }
 
-// ─────────────────────────────────────────────
-// Repository
-// ─────────────────────────────────────────────
-
 export class SessionRepository {
-  // ── HELPERS ───────────────────────────────────────────────
-
-  /** Convert page/limit → Prisma skip/take */
   private static paginate({ page = 1, limit = 20 }: PaginationOptions) {
     const normalizedPage = Math.max(1, Number(page) || 1);
     const normalizedLimit = Math.max(1, Number(limit) || 20);
@@ -48,8 +37,6 @@ export class SessionRepository {
       take: normalizedLimit,
     };
   }
-
-  // ── SLOTS ─────────────────────────────────────────────────
 
   static async createSlot(data: {
     counsellorId: string;
@@ -92,10 +79,6 @@ export class SessionRepository {
     return prisma.counsellorAvailability.update({ where: { id }, data });
   }
 
-  /**
-   * All slots for a counsellor (paginated).
-   * Default: page 1, 20 per page.
-   */
   static async listSlotsByCounsellor(
     counsellorId: string,
     fromDate?: Date,
@@ -184,11 +167,6 @@ export class SessionRepository {
     };
   }
 
-  /**
-   * Available (unbooked) slots — always scoped to a date window
-   * to avoid returning slots from years into the future.
-   * Default window: today → +30 days.
-   */
   static async listAvailableSlots(
     filters: SlotFilters,
     pagination: PaginationOptions = {},
@@ -233,8 +211,6 @@ export class SessionRepository {
     });
   }
 
-  // ── SESSIONS ──────────────────────────────────────────────
-
   static async createSession(data: {
     studentId: string;
     counsellorId: string;
@@ -273,7 +249,6 @@ export class SessionRepository {
     });
   }
 
-  /** Paginated session list for a student (newest first). */
   static async listSessionsByStudent(
     studentId: string,
     filters: SessionFilters = {},
@@ -331,7 +306,6 @@ export class SessionRepository {
     });
   }
 
-  /** Paginated session list for a counsellor (newest first). */
   static async listSessionsByCounsellor(
     counsellorId: string,
     filters: SessionFilters = {},
@@ -402,10 +376,6 @@ export class SessionRepository {
     return { sessions, total };
   }
 
-  /**
-   * Atomically claim an availability slot and create the session.
-   * Credits the counsellor's wallet when finalFee > 0.
-   */
   static async bookSlotAndCreateSession(params: {
     slot: {
       id: string;
@@ -487,10 +457,6 @@ export class SessionRepository {
     });
   }
 
-  /**
-   * Mark a session cancelled, free its slot, and refund the counsellor's
-   * wallet when sufficient balance is available.
-   */
   static async cancelSessionAndRefund(params: {
     sessionId: string;
     availabilityId: string;

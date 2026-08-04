@@ -454,7 +454,6 @@ export default function AmbassadorDetailPage() {
         </Dialog>
       </div>
 
-      {/* Campus Visit Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 pt-4">
@@ -500,7 +499,6 @@ export default function AmbassadorDetailPage() {
         </Card>
       </div>
 
-      {/* Profile Details */}
       <Card>
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-2">
           <div className="flex items-center gap-2 text-sm">

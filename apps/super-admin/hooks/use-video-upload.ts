@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { uploadService } from "@/lib/services/upload.service";
 
 const ALLOWED_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
-const MAX_BYTES = 500 * 1024 * 1024; // 500 MB
+const MAX_BYTES = 500 * 1024 * 1024;
 
 export function useVideoUpload() {
   const [isUploading, setIsUploading] = useState(false);

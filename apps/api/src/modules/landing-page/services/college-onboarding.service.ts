@@ -27,8 +27,6 @@ export class CollegeOnboardingService {
         ? (college.settings as Record<string, unknown>)
         : {};
 
-    // Setup is pending as long as the token exists in settings.
-    // completeSetup() clears settings to {} — that's the source of truth.
     const setupToken =
       typeof settings.setupToken === "string" ? settings.setupToken : null;
     const adminSetupCompleted = !setupToken;
@@ -179,14 +177,12 @@ export class CollegeOnboardingService {
     if (!existing)
       throw new NotFoundError("College onboarding request not found");
 
-    // Auto-provision college when approved
     let provisionedCollege: Awaited<
       ReturnType<typeof CollegeProvisioningService.provisionFromLead>
     > | null = null;
     let generatedGroupCode: string | null = null;
 
     if (data.status === "approved" && !existing.createdCollegeId) {
-      // Provision FIRST — if this fails, the lead stays "pending"
       provisionedCollege = await CollegeProvisioningService.provisionFromLead({
         collegeName: existing.collegeName,
         contactEmail: existing.contactEmail,

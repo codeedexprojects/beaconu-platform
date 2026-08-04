@@ -24,7 +24,6 @@ export function AdmissionsTimelineTab({
 
   return (
     <div className="space-y-6">
-      {/* Admission Batches */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <Label className="font-bold text-foreground">Admission Batches</Label>
@@ -227,7 +226,6 @@ export function AdmissionsTimelineTab({
         )}
       </div>
 
-      {/* Key Dates */}
       <div className="space-y-3 pt-4 border-t">
         <div className="flex justify-between items-center">
           <div>

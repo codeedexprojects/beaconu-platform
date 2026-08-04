@@ -14,7 +14,6 @@ import { EventPlatformAdminController } from "../controllers/platform-admin.cont
 
 const router: Router = Router();
 
-// List all events (admin)
 router.get(
   "/",
   authenticate,
@@ -24,7 +23,6 @@ router.get(
   EventPlatformAdminController.listAll,
 );
 
-// Create event
 router.post(
   "/",
   authenticate,
@@ -34,7 +32,6 @@ router.post(
   EventPlatformAdminController.create,
 );
 
-// Get event detail
 router.get(
   "/:id",
   authenticate,
@@ -44,7 +41,6 @@ router.get(
   EventPlatformAdminController.getById,
 );
 
-// Update event
 router.patch(
   "/:id",
   authenticate,
@@ -55,7 +51,6 @@ router.patch(
   EventPlatformAdminController.update,
 );
 
-// Update event status (publish, cancel, complete, archive)
 router.patch(
   "/:id/status",
   authenticate,
@@ -66,7 +61,6 @@ router.patch(
   EventPlatformAdminController.updateStatus,
 );
 
-// Soft delete (archive) event
 router.delete(
   "/:id",
   authenticate,
@@ -76,7 +70,6 @@ router.delete(
   EventPlatformAdminController.softDelete,
 );
 
-// Upload recording for completed event
 router.patch(
   "/:id/recording",
   authenticate,
@@ -87,7 +80,6 @@ router.patch(
   EventPlatformAdminController.uploadRecording,
 );
 
-// List registrations for an event
 router.get(
   "/:id/registrations",
   authenticate,

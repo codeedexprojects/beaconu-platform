@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { IMAGE_MIME_TYPES } from "@/modules/upload/upload.constants";
 
-// Documents only ever need images or PDFs — video/audio mime types from the
-// platform's general ALLOWED_MIME_TYPES don't apply here.
 export const DOCUMENT_MIME_TYPES = [
   ...IMAGE_MIME_TYPES,
   "application/pdf",

@@ -97,7 +97,6 @@ export function BlogSubmitForm() {
           noValidate
           className="flex flex-col gap-4"
         >
-          {/* ── Title ── */}
           <FormField
             label="Title"
             required
@@ -116,7 +115,6 @@ export function BlogSubmitForm() {
             />
           </FormField>
 
-          {/* ── Summary ── */}
           <FormField
             label="Summary"
             hint="optional · max 500 chars"

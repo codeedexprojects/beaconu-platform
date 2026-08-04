@@ -79,9 +79,6 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const { data: profile, isLoading } = useCollegeProfile();
   const { mutate: updateProfile, isPending } = useUpdateCollegeProfile();
-  // Guards the form-hydration effect below so a background refetch of
-  // `profile` (e.g. on window refocus) can't wipe in-progress edits —
-  // including an already-uploaded logo/cover URL — by re-running `reset()`.
   const hasHydratedFormRef = useRef(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -194,7 +191,6 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid gap-6 md:grid-cols-3">
-          {/* Logo and Assets Column */}
           <div className="space-y-6 md:col-span-1">
             <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
               <CardHeader className="pb-3">
@@ -311,7 +307,6 @@ export default function SettingsPage() {
             </Card>
           </div>
 
-          {/* Profile details column */}
           <div className="space-y-6 md:col-span-2">
             <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
               <CardHeader>
@@ -497,7 +492,6 @@ export default function SettingsPage() {
         </div>
       </form>
 
-      {/* Public Listing Toggle */}
       {(() => {
         const isListed = profile?.settings?.isListed === true;
         return (
@@ -521,7 +515,6 @@ export default function SettingsPage() {
                     </CardDescription>
                   </div>
 
-                  {/* Toggle */}
                   <button
                     type="button"
                     role="switch"
@@ -563,7 +556,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Confirmation modal */}
             <Dialog
               open={listingModal.open}
               onOpenChange={(open) => setListingModal((s) => ({ ...s, open }))}
@@ -655,7 +647,6 @@ function InstitutionGroupCard() {
     );
   }
 
-  // 1. Owner of a group
   if (groupData?.type === "owner" && groupData.group) {
     const group = groupData.group;
     return (
@@ -777,7 +768,6 @@ function InstitutionGroupCard() {
     );
   }
 
-  // 2. Member of a group
   if (groupData?.type === "member" && groupData.membership) {
     const group = groupData.membership.group;
     return (
@@ -818,7 +808,6 @@ function InstitutionGroupCard() {
     );
   }
 
-  // 3. Not in any group
   return (
     <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
       <CardHeader>

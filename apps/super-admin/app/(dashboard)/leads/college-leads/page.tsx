@@ -84,7 +84,6 @@ export default function CollegeLeadsPage() {
     UpdateStatusResponse["provisionedCollege"] | null
   >(null);
 
-  // Data fetching with TanStack Query
   const { data: leadsData, isLoading: isLeadsLoading } = useCollegeLeads({
     status: statusFilter || undefined,
     search: search || undefined,
@@ -180,7 +179,6 @@ export default function CollegeLeadsPage() {
       />
 
       <div className="flex-1 space-y-4 p-6">
-        {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             {
@@ -233,7 +231,6 @@ export default function CollegeLeadsPage() {
           ))}
         </div>
 
-        {/* Filters */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-1 items-center gap-2 max-w-sm">
             <div className="relative w-full">
@@ -265,7 +262,6 @@ export default function CollegeLeadsPage() {
           </div>
         </div>
 
-        {/* Table */}
         <Card className="border-none shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {isLoading ? (
@@ -424,7 +420,6 @@ export default function CollegeLeadsPage() {
         </Card>
       </div>
 
-      {/* Modals */}
       <CollegeLeadDetailModal
         lead={selectedLead}
         isOpen={isDetailOpen}

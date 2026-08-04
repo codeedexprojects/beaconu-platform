@@ -7,8 +7,6 @@ import type {
   UpdateDocumentRequirementInput,
 } from "../validators/document-upload-config.validator";
 
-// documentType is an internal key derived from the admin-facing label — the
-// admin never types it directly (e.g. "NEET Scorecard" -> "neet_scorecard").
 function toDocumentType(label: string): string {
   return toSlug(label).replace(/-/g, "_");
 }
@@ -21,8 +19,6 @@ function toDto(row: DocumentRequirementRow) {
   const { courses, quotas, acceptedMimeTypes, ...rest } = row;
   return {
     ...rest,
-    // null means "not customized" in the DB — resolve to the default set so
-    // the client always gets a concrete list to render/enforce.
     acceptedMimeTypes: (acceptedMimeTypes as string[] | null) ?? [
       ...DOCUMENT_MIME_TYPES,
     ],

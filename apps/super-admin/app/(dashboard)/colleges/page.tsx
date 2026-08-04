@@ -68,8 +68,6 @@ const STATUS_CONFIG: Record<
   },
 };
 
-// ── Institution Group Modal ─────────────────────────────────────────────
-
 function InstitutionGroupModal({
   college,
   onClose,
@@ -143,7 +141,6 @@ function InstitutionGroupModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <Card className="w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
@@ -163,16 +160,13 @@ function InstitutionGroupModal({
           </Button>
         </div>
 
-        {/* Content */}
         <CardContent className="p-6 space-y-6 overflow-y-auto flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : hasGroup ? (
-            /* ── Group is ACTIVE ──────────────────────────── */
             <>
-              {/* Group Code */}
               <div className="rounded-lg border bg-emerald-50 dark:bg-emerald-950/20 p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -202,7 +196,6 @@ function InstitutionGroupModal({
                 </p>
               </div>
 
-              {/* Group Info */}
               <div className="space-y-1.5">
                 <p className="text-sm font-medium">{group.name}</p>
                 {group.description && (
@@ -212,7 +205,6 @@ function InstitutionGroupModal({
                 )}
               </div>
 
-              {/* Member List */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">
@@ -268,7 +260,6 @@ function InstitutionGroupModal({
                 )}
               </div>
 
-              {/* Disable Button / Inline Confirm */}
               <div className="pt-2 border-t">
                 {showDisableConfirm ? (
                   <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
@@ -316,7 +307,6 @@ function InstitutionGroupModal({
               </div>
             </>
           ) : (
-            /* ── Group NOT active (create or reactivate) ──── */
             <div className="space-y-4">
               {hasInactiveGroup && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3">
@@ -391,8 +381,6 @@ function InstitutionGroupModal({
   );
 }
 
-// ── Main Page ───────────────────────────────────────────────────────────
-
 export default function CollegesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -401,8 +389,6 @@ export default function CollegesPage() {
   const [selectedCollege, setSelectedCollege] = useState<CollegeSummary | null>(
     null,
   );
-
-  // getCollegeLink is imported from @/lib/college-url
 
   const { data: stats } = useCollegeStats();
   const {
@@ -440,7 +426,6 @@ export default function CollegesPage() {
       />
 
       <div className="p-6 space-y-6">
-        {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-4">
@@ -466,7 +451,6 @@ export default function CollegesPage() {
           </Card>
         </div>
 
-        {/* Filters */}
         <Card>
           <CardContent className="pt-4">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -512,7 +496,6 @@ export default function CollegesPage() {
           </CardContent>
         </Card>
 
-        {/* Table */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">

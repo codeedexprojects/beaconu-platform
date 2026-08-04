@@ -533,7 +533,6 @@ export default function DocumentSubmissionRequestsPage() {
         </div>
       )}
 
-      {/* Details Dialog */}
       <Dialog
         open={!!viewingRequest}
         onOpenChange={(v) => !v && setViewingRequest(null)}
@@ -639,7 +638,6 @@ export default function DocumentSubmissionRequestsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject Modal */}
       {rejectingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">

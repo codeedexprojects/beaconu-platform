@@ -7,9 +7,6 @@ import {
 } from "../validators/library.validator";
 
 export class PublicLibraryController {
-  /**
-   * GET /public/colleges/by-slug/:slug/libraries
-   */
   static async listPublicLibraries(req: Request, res: Response) {
     const { slug } = publicLibraryListParamSchema.parse(req.params);
 
@@ -19,9 +16,6 @@ export class PublicLibraryController {
       .json(ApiResponse.success("College libraries fetched", libraries));
   }
 
-  /**
-   * GET /public/colleges/by-slug/:slug/libraries/:libraryId
-   */
   static async getPublicLibraryDetail(req: Request, res: Response) {
     const { slug, libraryId } = publicLibraryDetailParamSchema.parse(
       req.params,

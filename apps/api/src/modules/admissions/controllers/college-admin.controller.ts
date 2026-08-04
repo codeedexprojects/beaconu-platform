@@ -74,8 +74,6 @@ export class CollegeAdminAdmissionCycleController {
     return res.json(ApiResponse.success("Application form deleted", result));
   }
 
-  // ── Courses attached to this application form ─────────────────────────────
-
   static async listCourses(req: Request, res: Response) {
     const result = await AdmissionCycleCourseService.listCourses(
       req.params.id as string,
@@ -121,8 +119,6 @@ export class CollegeAdminAdmissionCycleController {
       ApiResponse.success("Course detached from application form", result),
     );
   }
-
-  // ── Quota seats for one course attached to this application form ──────────
 
   static async listCourseQuotas(req: Request, res: Response) {
     const result = await CourseQuotaSeatsService.listForCourse(
@@ -170,8 +166,6 @@ export class CollegeAdminAdmissionCycleController {
     );
   }
 
-  // ── Seat pools for this application form ───────────────────────────────────
-
   static async listSeatPools(req: Request, res: Response) {
     const result = await SeatPoolService.listPools(
       req.params.id as string,
@@ -211,8 +205,6 @@ export class CollegeAdminAdmissionCycleController {
     );
     return res.json(ApiResponse.success("Seat pool removed", result));
   }
-
-  // ── Document requirements for this application form ────────────────────────
 
   static async listDocumentRequirements(req: Request, res: Response) {
     const result = await DocumentUploadConfigService.listForCycle(

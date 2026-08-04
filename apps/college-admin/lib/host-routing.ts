@@ -1,14 +1,5 @@
 const RESERVED_HOST_LABELS = new Set(["www", "admin"]);
 
-/**
- * Extracts college slug from host across localhost, legacy wildcard,
- * and namespaced wildcard domains.
- *
- * Supported:
- * - slug.localhost:3002
- * - slug.beaconuedx.com
- * - slug.admin.beaconuedx.com
- */
 export function extractCollegeSlugFromHost(
   host?: string | null,
 ): string | null {
@@ -26,12 +17,10 @@ export function extractCollegeSlugFromHost(
     return null;
   }
 
-  // namespaced pattern: slug.admin.beaconuedx.com
   if (parts.length >= 4) {
     return parts[0] ?? null;
   }
 
-  // legacy pattern: slug.beaconuedx.com
   if (parts.length === 3) {
     const candidate = parts[0];
     return RESERVED_HOST_LABELS.has(candidate) ? null : candidate;

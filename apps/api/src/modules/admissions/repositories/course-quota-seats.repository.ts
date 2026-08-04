@@ -55,9 +55,6 @@ export class CourseQuotaSeatsRepository {
     });
   }
 
-  /** Includes soft-deleted rows — a prior detach soft-deletes the row rather
-   * than removing it, since the unique (cycleCourse, quota) slot must be
-   * reactivated rather than duplicated on re-attach. */
   static async findByCourseAndQuota(
     admissionCycleCourseId: string,
     collegeQuotaId: string,
@@ -86,8 +83,6 @@ export class CourseQuotaSeatsRepository {
     });
   }
 
-  /** Reactivates a previously-detached exclusive entry, clearing any stale
-   * pool link so it goes back to holding its own seat count. */
   static async reactivateExclusive(id: string, totalSeats: number) {
     return prisma.courseQuotaSeats.update({
       where: { id },
@@ -117,10 +112,6 @@ export class CourseQuotaSeatsRepository {
       data: {
         ...(data.totalSeats !== undefined && {
           totalSeats: data.totalSeats,
-          // No seat-consumption flow exists yet (applications aren't live),
-          // so open_seats always tracks total_seats here. Once application
-          // submission decrements open_seats, this must instead preserve the
-          // already-consumed count: openSeats = data.totalSeats - consumed.
           openSeats: data.totalSeats,
         }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),

@@ -25,7 +25,6 @@ const guides = [
 export function StarterGuide() {
   return (
     <section className="pt-5 sm:pt-6">
-      {/* Header */}
       <div className="flex items-center justify-center gap-2 mb-4 px-4 sm:px-6">
         <span className="text-yellow-400 text-base" aria-hidden>
           ★
@@ -38,7 +37,6 @@ export function StarterGuide() {
         </span>
       </div>
 
-      {/* Mobile: horizontal scroll | sm+: 3-column grid */}
       <div
         className="flex gap-3 px-4 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-4 md:px-6 lg:px-8"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -49,7 +47,6 @@ export function StarterGuide() {
             className="flex-shrink-0 w-[150px] h-[178px] sm:w-auto sm:h-[200px] lg:h-[230px] rounded-2xl overflow-hidden relative flex flex-col justify-end"
             style={{ backgroundColor: guide.bg }}
           >
-            {/* Decorative circles */}
             <div
               className="absolute top-4 right-4 w-16 h-16 rounded-full opacity-50"
               style={{ backgroundColor: guide.accent }}
@@ -59,7 +56,6 @@ export function StarterGuide() {
               style={{ backgroundColor: guide.accent }}
             />
 
-            {/* Play button */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 shadow-md flex items-center justify-center">
                 <svg
@@ -73,7 +69,6 @@ export function StarterGuide() {
               </div>
             </div>
 
-            {/* Title */}
             <div className="relative p-3 sm:p-4">
               <p className="text-[#1A1A1A] text-[13px] sm:text-[14px] font-semibold leading-tight text-left">
                 {guide.title}
@@ -81,7 +76,6 @@ export function StarterGuide() {
             </div>
           </button>
         ))}
-        {/* Trailing spacer — only visible in scroll mode */}
         <div className="w-2 flex-shrink-0 sm:hidden" />
       </div>
     </section>

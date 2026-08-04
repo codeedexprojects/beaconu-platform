@@ -57,12 +57,10 @@ function formatStudentCodeOfConductSection(section: unknown) {
 function formatCommuteSection(section: unknown) {
   if (!isRecord(section)) return section;
 
-  // ── routes ────────────────────────────────────────────────────────────────
   const routes = Array.isArray(section.routes)
     ? section.routes
         .filter((r): r is Record<string, unknown> => isRecord(r))
         .map((route) => {
-          // timings → flat array [{label, time}]
           const timings = Array.isArray(route.timings)
             ? route.timings
                 .filter((t): t is Record<string, unknown> => isRecord(t))
@@ -72,7 +70,6 @@ function formatCommuteSection(section: unknown) {
                 }))
             : [];
 
-          // transport_fee → {amount, payment_structure}
           const rawFee = isRecord(route.transport_fee)
             ? (route.transport_fee as Record<string, unknown>)
             : {};
@@ -84,7 +81,6 @@ function formatCommuteSection(section: unknown) {
                 : "",
           };
 
-          // bus_information → {model, seats, registration_number}
           const rawBus = isRecord(route.bus_information)
             ? (route.bus_information as Record<string, unknown>)
             : {};
@@ -100,7 +96,6 @@ function formatCommuteSection(section: unknown) {
                 : "",
           };
 
-          // stop normalizer → [{time, point, landmark}]
           const normalizeStops = (arr: unknown[]) =>
             arr
               .filter((s): s is Record<string, unknown> => isRecord(s))
@@ -131,7 +126,6 @@ function formatCommuteSection(section: unknown) {
         })
     : [];
 
-  // ── pickup points ─────────────────────────────────────────────────────────
   const pickupPoints = Array.isArray(section.pickup_points)
     ? section.pickup_points.filter(
         (p): p is string => typeof p === "string" && p.trim() !== "",
@@ -143,7 +137,6 @@ function formatCommuteSection(section: unknown) {
       ? section.selected_pickup_point
       : (pickupPoints[0] ?? "");
 
-  // ── rules & code of conduct ───────────────────────────────────────────────
   const rawRules = isRecord(section.rules_and_code_of_conduct)
     ? (section.rules_and_code_of_conduct as Record<string, unknown>)
     : {};
@@ -202,7 +195,6 @@ function normalizeIsoLikeDate(value: unknown): string {
 function formatCollegeOverviewSection(section: unknown) {
   if (!isRecord(section)) return section;
 
-  // accolades
   const accolades = Array.isArray(section.accolades)
     ? section.accolades
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -213,7 +205,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // university_details
   const universityDetails = Array.isArray(section.university_details)
     ? section.university_details
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -223,7 +214,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // amenities
   const amenities = Array.isArray(section.amenities)
     ? section.amenities
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -233,7 +223,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // inside_campus_facilities
   const insideCampusFacilities = Array.isArray(section.inside_campus_facilities)
     ? section.inside_campus_facilities
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -244,7 +233,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // location
   const rawLocation = isRecord(section.location)
     ? (section.location as Record<string, unknown>)
     : {};
@@ -258,7 +246,6 @@ function formatCollegeOverviewSection(section: unknown) {
       typeof rawLocation.map_link === "string" ? rawLocation.map_link : "",
   };
 
-  // nearby_access
   const nearbyAccess = Array.isArray(section.nearby_access)
     ? section.nearby_access
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -275,7 +262,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // campus_ambassadors
   const campusAmbassadors = Array.isArray(section.campus_ambassadors)
     ? section.campus_ambassadors
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -290,7 +276,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // social
   const social = Array.isArray(section.social)
     ? section.social
         .filter((item): item is Record<string, unknown> => isRecord(item))
@@ -301,7 +286,6 @@ function formatCollegeOverviewSection(section: unknown) {
         }))
     : [];
 
-  // campus_reels
   const campusReels = Array.isArray(section.campus_reels)
     ? section.campus_reels
         .filter((item): item is Record<string, unknown> => isRecord(item))

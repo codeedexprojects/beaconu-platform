@@ -3,9 +3,6 @@ import jwt from "jsonwebtoken";
 import { env } from "@/shared/config/env";
 import { JwtPayload } from "@/modules/auth/auth.types";
 
-// Populates req.userId/userType when a valid Bearer token is present, but
-// never rejects the request — used on public routes that personalize the
-// response (e.g. isWishlisted) for logged-in students without requiring login.
 export function authenticateOptional(
   req: Request,
   _res: Response,
@@ -28,9 +25,7 @@ export function authenticateOptional(
     req.roleId = payload.roleId;
     req.permissions = payload.permissions;
     req.counsellorType = payload.counsellorType;
-  } catch {
-    // Invalid/expired token on a public route — proceed anonymously.
-  }
+  } catch {}
 
   next();
 }

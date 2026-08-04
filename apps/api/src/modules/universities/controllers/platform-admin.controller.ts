@@ -9,8 +9,6 @@ import { AcademicTaxonomyService } from "../services/academic-taxonomy.service";
 import { UniversityQuery } from "../queries/universities.query";
 
 export class UniversityPlatformAdminController {
-  // ── Academic taxonomy ────────────────────────────────────────────────────
-
   static async listStreams(req: Request, res: Response): Promise<void> {
     const query = academicTaxonomySchemas.adminListQuery.parse(req.query);
     const streams = await AcademicTaxonomyService.listStreams(query);
@@ -139,8 +137,6 @@ export class UniversityPlatformAdminController {
     res.status(200).json(ApiResponse.success("Program type deleted", null));
   }
 
-  // ── University types ──────────────────────────────────────────────────────
-
   static async listAllTypes(req: Request, res: Response): Promise<void> {
     const query = universityTypeSchemas.listQuery.parse(req.query);
     const types = await UniversityTypeService.listAll(query);
@@ -179,8 +175,6 @@ export class UniversityPlatformAdminController {
     await UniversityTypeService.delete(id);
     res.status(200).json(ApiResponse.success("University type deleted", null));
   }
-
-  // ── Universities ──────────────────────────────────────────────────────────
 
   static async listAll(req: Request, res: Response): Promise<void> {
     const query = universitySchemas.listQuery.parse(req.query);

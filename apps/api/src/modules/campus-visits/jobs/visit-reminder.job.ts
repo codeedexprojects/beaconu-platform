@@ -5,7 +5,7 @@ import { CampusVisitsService } from "../services/campus-visits.service";
 
 const QUEUE_NAME = "campus-visit-reminder";
 const REPEAT_JOB_ID = "campus-visit-reminder-repeat";
-const EVERY_MS = 5 * 60 * 1000; // every 5 minutes
+const EVERY_MS = 5 * 60 * 1000;
 
 let queue: Queue | null = null;
 let worker: Worker | null = null;

@@ -73,11 +73,6 @@ export class AdmissionCycleService {
     return AdmissionCycleRepository.archive(id);
   }
 
-  /** For other modules (e.g. colleges' public course listing) to check
-   * "can a student apply to this course right now" without reaching into
-   * this module's Query/Repository directly — cross-module access goes
-   * through Services only. Returns just the subset of `courseIds` that
-   * currently have an active, genuinely-open admission cycle attached. */
   static async getCourseIdsWithActiveForm(
     courseIds: string[],
   ): Promise<string[]> {

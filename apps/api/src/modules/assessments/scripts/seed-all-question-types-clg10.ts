@@ -1,31 +1,3 @@
-/**
- * One-off dev seed: creates ONE sample Question for every canonical
- * question type (see constants/section-seeds/question-type-seeds.ts) for
- * college CLG-10, wires them into an approved paper + active slot, points
- * admission cycle ACV-3 at that template, and creates a ready-to-answer
- * ("in_progress") attempt for STU-1 — so the full take-test flow can be
- * exercised end to end against all 23 types with no further manual setup.
- *
- * Enables every assessment section for CLG-10 first (idempotent — always
- * calls toggle(true) even if a section is already active, since
- * SectionService.toggleSection re-syncs question types on every
- * activation — this also backfills the new canonical slugs for a
- * college that had enabled sections before the question-type-seeds
- * restructure).
- *
- * NOTE: this repoints ACV-3's assessment_template_id at this script's
- * "CLG-10 All Question Types Seed" template — if seed-evaluation-test-data-clg10.ts's
- * smaller 3-question template was previously active on this same cycle,
- * this overrides it (any attempts already created there are unaffected,
- * since they reference their own paperId directly, not the cycle).
- *
- * Idempotent — re-running skips any question/application/attempt that
- * already exists.
- *
- * Run from apps/api:
- *   DATABASE_URL="..." pnpm exec tsx src/modules/assessments/scripts/seed-all-question-types-clg10.ts
- */
-
 import { prisma } from "@beaconu/db";
 import { SectionService } from "../services/section.service";
 

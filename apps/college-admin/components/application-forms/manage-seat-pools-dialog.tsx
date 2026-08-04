@@ -43,10 +43,6 @@ const BUCKET_LABELS: Record<"in_state" | "out_of_state", string> = {
   out_of_state: "Out-of-State",
 };
 
-/** Only courses already linked to this quota in Academics Catalog → Quotas
- * & Fees, intersected with courses actually attached to this cycle —
- * Academics Catalog is the source of truth for which courses a quota
- * applies to at all. */
 function useQuotaEligibleCourses(
   quotaId: string,
   cycleCourses: {

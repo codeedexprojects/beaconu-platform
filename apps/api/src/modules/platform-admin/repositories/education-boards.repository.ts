@@ -57,11 +57,6 @@ export class EducationBoardsRepository {
     });
   }
 
-  /** Active board found by id, with its subjects — for the student-facing
-   * "get subjects/marks for this board" read. Deliberately separate from
-   * findById (which admin uses regardless of isActive, e.g. to reactivate
-   * one) — a student should never be able to select/see a deactivated
-   * board's details. */
   static async findActiveById(id: string) {
     return prisma.educationBoard.findFirst({
       where: { id, isActive: true },
@@ -69,10 +64,6 @@ export class EducationBoardsRepository {
     });
   }
 
-  /** Names-only, active boards, optionally filtered by grade — for the
-   * student-facing board picker. No subjects included (that's a separate,
-   * per-board fetch), no pagination (the active board list is small
-   * reference data, same reasoning as UniversityType's unpaginated list). */
   static async listActiveNames(
     filters: { grade?: string; search?: string } = {},
   ) {
@@ -103,9 +94,6 @@ export class EducationBoardsRepository {
     });
   }
 
-  /** Board + its subjects created atomically as one nested Prisma write —
-   * no explicit $transaction needed here since a nested create is already
-   * a single statement. */
   static async create(
     data: { name: string; grade: string; slug: string },
     subjects: { name: string; maxMark: number; passMark: number }[],
@@ -140,11 +128,6 @@ export class EducationBoardsRepository {
     });
   }
 
-  /** Wholesale-replace, same pattern as assessments' TemplateRepository
-   * section-replace — delete every existing subject row for this board and
-   * recreate from the given list, rather than diffing/patching individual
-   * subjects. Must be called inside the same $transaction as any sibling
-   * updateFields call (the service owns the transaction). */
   static async replaceSubjects(
     tx: Prisma.TransactionClient,
     educationBoardId: string,

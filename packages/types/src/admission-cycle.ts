@@ -11,12 +11,7 @@ export interface AdmissionCycleItem {
   startsOn: string;
   endsOn: string | null;
   status: AdmissionCycleStatus;
-  // Whether the whole application form requires an assessment — the single
-  // source of truth for gating an assessment attempt. AdmissionCycleCourse's
-  // own (per-course) assessmentRequired is unrelated to this.
   assessmentRequired: boolean;
-  // The one assessment template shared by every course under this cycle —
-  // null if no assessment is configured for this cycle yet.
   assessmentTemplateId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -114,10 +109,6 @@ export interface UpdateSeatPoolInput {
   is_active?: boolean;
 }
 
-// A course's quota+seat config within one application form — either
-// exclusive to that course (its own totalSeats/openSeats) or pooled, sharing
-// seats with other courses via a SeatPool (isPooled: true, totalSeats/
-// openSeats resolved from the pool).
 export interface CourseQuotaSeatsItem {
   id: string;
   admissionCycleCourseId: string;
@@ -157,8 +148,6 @@ export interface DocumentRequirementQuotaRef {
   bucketType: QuotaBucketType;
 }
 
-// Documents only ever need images or PDFs — matches the API's
-// DOCUMENT_MIME_TYPES (a subset of the platform's general upload mime types).
 export type DocumentMimeType =
   | "image/jpeg"
   | "image/png"
@@ -166,10 +155,6 @@ export type DocumentMimeType =
   | "image/svg+xml"
   | "application/pdf";
 
-// A document a student must upload for this application form. Empty
-// courses/quotas = applies to every course/quota in the cycle; populated =
-// restricted to just those. documentType is an internal key auto-derived
-// from documentLabel by the backend — never set directly by an admin.
 export interface DocumentRequirementItem {
   id: string;
   collegeId: string;

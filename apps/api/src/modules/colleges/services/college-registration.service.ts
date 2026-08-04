@@ -134,7 +134,6 @@ export class CollegeRegistrationService {
   }
 
   private static buildProfileResponse(college: any) {
-    // Dynamically compute institutional overview details from DB relation counts/values
     const totalCourses = college._count?.courses ?? 0;
     const instituteType = college.university?.universityType?.name ?? null;
     const campusAmbassadors = (college.blinkUsers ?? []).map((u: any) => ({

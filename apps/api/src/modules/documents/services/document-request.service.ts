@@ -23,8 +23,6 @@ function appendHistory(existing: unknown, entry: Record<string, unknown>) {
   return [...(Array.isArray(existing) ? existing : []), entry];
 }
 
-/** Best-effort push notifications for the document-request lifecycle — never throw. */
-
 async function notifyStudentOfRejection(request: {
   id: string;
   studentId: string;

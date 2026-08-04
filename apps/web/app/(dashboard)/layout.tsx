@@ -26,12 +26,10 @@ export default function DashboardLayout({
     if (!isAuthenticated) router.replace("/blog-login");
   }, [isAuthenticated, hasHydrated, router]);
 
-  /* ── Loading / unauthenticated splash ── */
   if (!hasHydrated || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6]">
         <div className="flex flex-col items-center gap-3">
-          {/* BeaconU logo mark */}
           <div className="w-12 h-12 rounded-2xl bg-[#E8521A] flex items-center justify-center shadow-[0_4px_16px_rgba(232,82,26,0.3)]">
             <span className="text-[18px] font-black text-white tracking-tight">
               B
@@ -48,15 +46,12 @@ export default function DashboardLayout({
     if (token) {
       try {
         await logoutBlogAuthor(token);
-      } catch {
-        // best-effort
-      }
+      } catch {}
     }
     clearAuth();
     router.push("/blog-login");
   }
 
-  /* Derive author initials for avatar */
   const initials = user?.fullName
     ? user.fullName
         .split(" ")
@@ -71,10 +66,8 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#F3F4F6]">
-      {/* ── Sticky top nav ── */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          {/* Brand */}
           <Link
             href="/my/blogs"
             className="flex items-center gap-2 shrink-0 group"
@@ -90,7 +83,6 @@ export default function DashboardLayout({
             </span>
           </Link>
 
-          {/* Nav pills — same pill pattern as sort tabs */}
           <nav
             className="flex items-center gap-1.5"
             aria-label="Main navigation"
@@ -105,7 +97,6 @@ export default function DashboardLayout({
                   : "bg-white border-[1.5px] border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800",
               ].join(" ")}
             >
-              {/* Book icon */}
               <svg
                 width="14"
                 height="14"
@@ -133,7 +124,6 @@ export default function DashboardLayout({
                   : "bg-white border-[1.5px] border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800",
               ].join(" ")}
             >
-              {/* Pen icon */}
               <svg
                 width="14"
                 height="14"
@@ -152,9 +142,7 @@ export default function DashboardLayout({
             </Link>
           </nav>
 
-          {/* Right side: avatar + logout */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Author avatar */}
             <div
               className="w-8 h-8 rounded-full bg-[#FEF0EB] border-2 border-white ring-1 ring-[#E8521A]/20 flex items-center justify-center"
               title={user?.fullName ?? "Author"}
