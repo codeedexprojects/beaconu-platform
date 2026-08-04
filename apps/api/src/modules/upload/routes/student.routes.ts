@@ -61,6 +61,20 @@ router.post(
   StudentUploadController.verifyAntiRaggingEvidence,
 );
 
+router.post(
+  "/audio/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignAudio,
+);
+
+router.post(
+  "/audio/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyAudio,
+);
+
 router.delete(
   "/file",
   authenticate,
