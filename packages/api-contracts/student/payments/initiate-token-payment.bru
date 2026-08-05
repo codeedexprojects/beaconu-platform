@@ -1,0 +1,42 @@
+meta {
+  name: Initiate Token Payment (Student)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/courses/{{applicationCourseId}}/token/initiate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("tokenTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a payment order for one course's admission token — same
+  Transaction/StudentFeeLedger/PaymentProvider mechanism as Initiate
+  Application Payment, just a different fee category ("token_fee") keyed
+  by applicationCourseId instead of the whole application.
+
+  404 if the course doesn't exist or doesn't belong to this student. 409
+  if the course isn't currently "shortlisted" (token payment isn't open
+  yet), 409 if it's already "token_paid", 409 if no token_amount has been
+  configured for this course on the application form yet (see Attach
+  Course to Application Form / Update Application Form Course).
+
+  Idempotent while a "pending" transaction already exists: calling again
+  just returns that same transaction rather than creating a duplicate
+  order. The amount is always read fresh from the course's configured
+  token_amount, never typed in by the student.
+}

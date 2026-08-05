@@ -385,4 +385,22 @@ export class ApplicationCourseService {
       staffId,
     );
   }
+
+  static async markTokenPaid(applicationCourseId: string, studentId: string) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
+    if (!course) throw new NotFoundError("Application course not found");
+    if (course.status === "token_paid") return;
+    if (course.status !== "shortlisted") {
+      throw new ConflictError(
+        "This course must be shortlisted before the token can be paid",
+      );
+    }
+    await this.transitionStatus(
+      applicationCourseId,
+      "token_paid",
+      "student",
+      studentId,
+    );
+  }
 }

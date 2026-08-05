@@ -1,0 +1,36 @@
+meta {
+  name: Confirm Token Payment (Student)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/courses/{{applicationCourseId}}/token/confirm
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{tokenTransactionId}}",
+    "provider_payment_id": "mock_pay_test123",
+    "provider_signature": null
+  }
+}
+
+docs {
+  Confirms a token payment — same verification flow as Confirm Application
+  Payment (mock provider always succeeds today; a real gateway plugs into
+  the same PaymentProvider interface later with no contract change here).
+
+  Idempotent: re-confirming an already-completed transaction just returns
+  it unchanged rather than erroring.
+
+  On success: Transaction.status -> "completed", the StudentFeeLedger
+  entry -> "paid", and ApplicationCourse.status -> "token_paid".
+}
