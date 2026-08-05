@@ -54,14 +54,13 @@ docs {
   if Google Meet isn't configured or the call fails at booking time, the
   link just stays `null`, same fallback behavior as counselling.
 
-  `interviewer_email` (optional, "gmeet" only): added as an attendee on
-  the Meet calendar event when it's created — this is what actually
-  grants the interviewer access/an invite to the call. Without it, nobody
-  is invited to the event at all (the booked student only ever receives
-  the raw meeting URL, never a calendar invite). Independent of
-  `interviewer_id` (a StaffMember reference, used only for display) — if
-  both are set and the referenced staff member also has an email on
-  file, both get added as attendees.
+  `interviewer_email` — required when `mode` is "gmeet" (400
+  ValidationError if missing), not used/not required for "on_campus".
+  Added as an attendee on the Meet calendar event when it's created —
+  this is what actually grants the interviewer access/an invite to the
+  call. Independent of `interviewer_id` (a StaffMember reference, used
+  only for display) — if both are set and the referenced staff member
+  also has an email on file, both get added as attendees.
 
   For "on_campus": pass `campus_id` (must be one of this college's own
   Campus rows — 404 "Campus not found" otherwise) so the student-facing

@@ -59,8 +59,28 @@ const updateProfileSchema = z.object({
   category: categoryEnum.optional().nullable(),
 });
 
+const STUDENT_STATUSES = ["active", "suspended", "inactive"] as const;
+
+const listStudentsQuerySchema = z.object({
+  search: z.string().trim().min(1).optional(),
+  status: z.enum(STUDENT_STATUSES).optional(),
+  source: z.string().trim().min(1).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+const updateStudentStatusSchema = z.object({
+  status: z.enum(STUDENT_STATUSES),
+});
+
 export const studentSchemas = {
   updateProfile: updateProfileSchema,
+  listStudentsQuery: listStudentsQuerySchema,
+  updateStudentStatus: updateStudentStatusSchema,
 };
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type ListStudentsQueryInput = z.infer<typeof listStudentsQuerySchema>;
+export type UpdateStudentStatusInput = z.infer<
+  typeof updateStudentStatusSchema
+>;

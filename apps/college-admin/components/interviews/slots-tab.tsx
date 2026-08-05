@@ -59,6 +59,10 @@ const slotSchema = z
   .refine((data) => data.end_time > data.start_time, {
     message: "End time must be after start time",
     path: ["end_time"],
+  })
+  .refine((data) => data.mode !== "gmeet" || !!data.interviewer_email, {
+    message: "Interviewer email is required for Google Meet slots",
+    path: ["interviewer_email"],
   });
 type SlotFormValues = z.infer<typeof slotSchema>;
 
@@ -265,11 +269,12 @@ export function InterviewSlotsTab() {
                   <div className="space-y-1.5">
                     <Label htmlFor="interviewer_email">
                       Interviewer Email{" "}
-                      <span className="text-muted-foreground">(optional)</span>
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="interviewer_email"
                       type="email"
+                      required
                       placeholder="interviewer@college.edu"
                       {...form.register("interviewer_email")}
                     />

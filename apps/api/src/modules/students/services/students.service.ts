@@ -1,7 +1,7 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { StudentsRepository } from "../repositories/students.repository";
 import { StudentsQuery } from "../queries/students.query";
-import type { StudentProfile } from "@beaconu/types";
+import type { ListStudentsQuery, StudentProfile } from "@beaconu/types";
 import type { Prisma } from "@beaconu/db";
 import type { UpdateProfileInput } from "../validators/students.validator";
 
@@ -103,5 +103,29 @@ export class StudentsService {
     const row = await StudentsRepository.findDetailsForSnapshot(studentId);
     if (!row) throw new NotFoundError("Student not found");
     return row;
+  }
+
+  static async listForAdmin(query: ListStudentsQuery) {
+    return StudentsQuery.listForAdmin({
+      search: query.search,
+      status: query.status,
+      source: query.source,
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+    });
+  }
+
+  static async getForAdmin(id: string): Promise<StudentProfile> {
+    return StudentsQuery.getProfile(id);
+  }
+
+  static async setStatus(id: string, status: string): Promise<StudentProfile> {
+    const existing = await StudentsRepository.findById(id);
+    if (!existing) throw new NotFoundError("Student not found");
+    if (existing.status === status) {
+      throw new ConflictError(`This student's account is already ${status}`);
+    }
+    await StudentsRepository.setStatus(id, status);
+    return StudentsQuery.getProfile(id);
   }
 }

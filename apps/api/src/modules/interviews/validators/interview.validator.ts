@@ -6,17 +6,22 @@ const timeOnly = z.string().regex(HHMM, "HH:MM");
 
 const MODES = ["gmeet", "on_campus"] as const;
 
-export const createInterviewSlotSchema = z.object({
-  mode: z.enum(MODES),
-  scheduled_date: dateOnly,
-  start_time: timeOnly,
-  end_time: timeOnly,
-  duration_mins: z.coerce.number().int().positive().optional(),
-  campus_id: z.string().trim().min(1).optional(),
-  venue: z.string().trim().max(255).optional(),
-  interviewer_id: z.string().trim().min(1).optional(),
-  interviewer_email: z.email().trim().optional(),
-});
+export const createInterviewSlotSchema = z
+  .object({
+    mode: z.enum(MODES),
+    scheduled_date: dateOnly,
+    start_time: timeOnly,
+    end_time: timeOnly,
+    duration_mins: z.coerce.number().int().positive().optional(),
+    campus_id: z.string().trim().min(1).optional(),
+    venue: z.string().trim().max(255).optional(),
+    interviewer_id: z.string().trim().min(1).optional(),
+    interviewer_email: z.email().trim().optional(),
+  })
+  .refine((data) => data.mode !== "gmeet" || !!data.interviewer_email, {
+    message: "interviewer_email is required for gmeet slots",
+    path: ["interviewer_email"],
+  });
 
 export const updateInterviewSlotSchema = z.object({
   mode: z.enum(MODES).optional(),
