@@ -77,6 +77,8 @@ const SHORTLISTED_OR_LATER = new Set([
   "enrolled",
 ]);
 
+const TOKEN_PAID_OR_LATER = new Set(["token_paid", "enrolled"]);
+
 async function resolveAssessmentStatus(studentId: string, row: StatusRow) {
   if (!row.admissionCycle.assessmentRequired) {
     return {
@@ -221,7 +223,15 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         validUntil: offer.validUntil.toISOString(),
         documentUrl: offer.documentUrl,
       }
-    : { ...NOT_ISSUED_AMOUNT_DETAILS, tokenAmount: configuredTokenAmount };
+    : {
+        ...NOT_ISSUED_AMOUNT_DETAILS,
+        tokenAmount: configuredTokenAmount,
+        tokenPaymentStatus: tokenAmountCourse
+          ? TOKEN_PAID_OR_LATER.has(tokenAmountCourse.status)
+            ? "paid"
+            : "pending"
+          : null,
+      };
 
   return {
     application: {

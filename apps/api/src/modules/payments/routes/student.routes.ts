@@ -16,4 +16,13 @@ router.post(
   StudentPaymentController.confirmApplicationPayment,
 );
 
+router.post(
+  "/courses/:applicationCourseId/token/initiate",
+  StudentPaymentController.initiateTokenPayment,
+);
+router.post(
+  "/courses/:applicationCourseId/token/confirm",
+  StudentPaymentController.confirmTokenPayment,
+);
+
 export default router;
