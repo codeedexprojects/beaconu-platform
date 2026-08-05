@@ -76,32 +76,6 @@ export interface ApplicationAmountDetails {
   documentUrl: string | null;
 }
 
-export interface ApplicationDocumentStatusItem {
-  documentType: string;
-  documentLabel: string;
-  isRequired: boolean;
-  uploaded: boolean;
-  verificationStatus: string | null;
-}
-
-export interface ApplicationDocumentsStatus {
-  totalRequired: number;
-  uploadedCount: number;
-  missingCount: number;
-  pendingVerificationCount: number;
-  rejectedCount: number;
-  items: ApplicationDocumentStatusItem[];
-}
-
-export interface ApplicationStatusCourse {
-  courseId: string;
-  courseName: string;
-  courseCode: string;
-  isPrimary: boolean;
-  status: string;
-  isShortlisted: boolean;
-}
-
 export interface ApplicationStatusApplication {
   applicationId: string;
   applicationNumber: string;
@@ -112,15 +86,34 @@ export interface ApplicationStatusApplication {
   formStatus: string;
   feePaymentStatus: string;
   pendingAction: PendingApplicationAction;
-  courses: ApplicationStatusCourse[];
   createdAt: string;
+}
+
+export interface ApplicationShortlistCourse {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  status: string;
+}
+
+export interface ApplicationShortlistStatus {
+  isShortlisted: boolean;
+  courses: ApplicationShortlistCourse[];
+}
+
+export interface ApplicationStatusScholarship {
+  scholarshipApplicationId: string;
+  scholarshipConfigId: string;
+  scholarshipName: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 export interface ApplicationStatusSummary {
   application: ApplicationStatusApplication;
-  documents: ApplicationDocumentsStatus;
   assessment: ApplicationAssessmentStatus;
   interview: ApplicationInterviewStatus;
+  shortlist: ApplicationShortlistStatus;
+  scholarships: ApplicationStatusScholarship[];
   amountDetails: ApplicationAmountDetails;
 }
 

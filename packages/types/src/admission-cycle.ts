@@ -49,6 +49,7 @@ export interface AdmissionCycleCourseItem {
   interviewRequired: boolean;
   assessmentRequired: boolean;
   tokenPaymentStage: TokenPaymentStage | null;
+  tokenAmount: string | null;
   workExperienceRequired: boolean;
   isActive: boolean;
   createdAt: string;
@@ -62,6 +63,7 @@ export interface AttachAdmissionCycleCourseInput {
   interview_required: boolean;
   assessment_required: boolean;
   token_payment_stage?: TokenPaymentStage | null;
+  token_amount?: number | null;
   work_experience_required: boolean;
 }
 
@@ -70,6 +72,7 @@ export interface UpdateAdmissionCycleCourseInput {
   interview_required?: boolean;
   assessment_required?: boolean;
   token_payment_stage?: TokenPaymentStage | null;
+  token_amount?: number | null;
   work_experience_required?: boolean;
   is_active?: boolean;
 }

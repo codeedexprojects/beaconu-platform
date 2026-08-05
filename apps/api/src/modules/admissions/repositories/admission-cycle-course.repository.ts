@@ -8,6 +8,7 @@ const ADMIN_SELECT = {
   interviewRequired: true,
   assessmentRequired: true,
   tokenPaymentStage: true,
+  tokenAmount: true,
   workExperienceRequired: true,
   isActive: true,
   createdAt: true,
@@ -56,6 +57,7 @@ export class AdmissionCycleCourseRepository {
     interviewRequired: boolean;
     assessmentRequired: boolean;
     tokenPaymentStage: string | null;
+    tokenAmount: number | null;
     workExperienceRequired: boolean;
   }) {
     return prisma.admissionCycleCourse.create({
@@ -71,6 +73,7 @@ export class AdmissionCycleCourseRepository {
       interviewRequired: boolean;
       assessmentRequired: boolean;
       tokenPaymentStage: string | null;
+      tokenAmount: number | null;
       workExperienceRequired: boolean;
     },
   ) {

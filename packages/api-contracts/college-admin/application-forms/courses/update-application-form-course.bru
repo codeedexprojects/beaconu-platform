@@ -18,10 +18,12 @@ headers {
 body:json {
   {
     "application_fee": 2000,
-    "interview_required": false
+    "interview_required": false,
+    "token_amount": 5000
   }
 }
 
 docs {
   Partially updates a course's config within this application form.
+  token_amount accepts null to clear it.
 }

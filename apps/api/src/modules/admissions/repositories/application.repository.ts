@@ -306,4 +306,30 @@ export class ApplicationRepository {
       where: { applicationCourseId: { in: applicationCourseIds } },
     });
   }
+
+  static async findScholarshipApplicationsForApplication(
+    applicationId: string,
+  ) {
+    return prisma.scholarshipApplication.findMany({
+      where: { applicationId },
+      select: {
+        id: true,
+        status: true,
+        scholarshipConfigId: true,
+        scholarshipConfig: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async findTokenAmountsForCourses(
+    admissionCycleId: string,
+    courseIds: string[],
+  ) {
+    if (courseIds.length === 0) return [];
+    return prisma.admissionCycleCourse.findMany({
+      where: { admissionCycleId, courseId: { in: courseIds } },
+      select: { courseId: true, tokenAmount: true },
+    });
+  }
 }
