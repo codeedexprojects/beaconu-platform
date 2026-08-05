@@ -1,0 +1,47 @@
+meta {
+  name: List Students
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/students
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~search: john
+  ~status: active
+  ~source: beaconu_app
+  ~page: 1
+  ~limit: 20
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0) {
+      bru.setEnvVar("studentId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists registered students, paginated. Requires platform_admin auth +
+  students.view.
+
+  Query (all optional):
+  - search: matches fullName, email, or phoneNumber (case-insensitive)
+  - status: "active" | "suspended" | "inactive"
+  - source: e.g. "beaconu_app" | "google"
+  - page: default 1
+  - limit: default 20, max 100
+
+  Response includes `meta` (page, limit, total, totalPages, hasNextPage,
+  hasPreviousPage) alongside `data`.
+}

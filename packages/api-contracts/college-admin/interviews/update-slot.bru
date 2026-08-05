@@ -35,6 +35,12 @@ docs {
   booked this slot) — see Create Interview Slot's docs for how/when that
   event actually gets created.
 
+  interviewer_email is required whenever the slot's EFFECTIVE mode
+  (this request's `mode` if provided, else the slot's existing mode) is
+  "gmeet" — 400 ValidationError if it would end up empty, whether that's
+  from explicitly clearing it or from switching `mode` to "gmeet" on a
+  slot that never had one set.
+
   If scheduled_date or start_time is being changed, 400 ValidationError
   "Interview slots cannot be scheduled in the past" if the resulting
   scheduled_date + start_time combined is at or before the current time.

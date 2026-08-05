@@ -1,22 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
-  Users,
   Search,
-  Filter,
-  MoreHorizontal,
   GraduationCap,
   Mail,
-  MapPin,
-  Calendar,
+  Phone,
   CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -25,57 +30,70 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useStudents, useUpdateStudentStatus } from "@/hooks/use-students";
+import { getErrorMessage } from "@/lib/api";
+import type {
+  AdminStudentListItem,
+  StudentAccountStatus,
+} from "@beaconu/types";
 
-const DUMMY_STUDENTS = [
+const STATUS_VARIANT: Record<string, "success" | "secondary" | "destructive"> =
   {
-    id: "1",
-    name: "Arjun Verma",
-    email: "arjun.v@gmail.com",
-    city: "Delhi",
-    course: "Computer Science",
-    status: "enrolled",
-    joined: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Sneha Reddy",
-    email: "sneha.r@outlook.com",
-    city: "Hyderabad",
-    course: "Business Analytics",
-    status: "applied",
-    joined: "2024-02-20",
-  },
-  {
-    id: "3",
-    name: "Karthik S",
-    email: "karthik.s@yahoo.com",
-    city: "Bangalore",
-    course: "Mechanical Engineering",
-    status: "verified",
-    joined: "2024-03-05",
-  },
-  {
-    id: "4",
-    name: "Anjali Gupta",
-    email: "anjali.g@gmail.com",
-    city: "Mumbai",
-    course: "Psychology",
-    status: "enrolled",
-    joined: "2024-01-22",
-  },
-  {
-    id: "5",
-    name: "Rohan Mehra",
-    email: "rohan.m@gmail.com",
-    city: "Pune",
-    course: "Fine Arts",
-    status: "dropped",
-    joined: "2024-02-10",
-  },
-];
+    active: "success",
+    suspended: "destructive",
+    inactive: "secondary",
+  };
 
 export default function StudentsPage() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, error } = useStudents({
+    search: search || undefined,
+    status:
+      statusFilter === "all"
+        ? undefined
+        : (statusFilter as StudentAccountStatus),
+    page,
+    limit: 20,
+  });
+  const students = data?.data ?? [];
+  const meta = data?.meta;
+
+  const updateStatusMutation = useUpdateStudentStatus();
+  const [statusTarget, setStatusTarget] = useState<{
+    student: AdminStudentListItem;
+    nextStatus: StudentAccountStatus;
+  } | null>(null);
+
+  function handleToggleClick(student: AdminStudentListItem) {
+    setStatusTarget({
+      student,
+      nextStatus: student.status === "suspended" ? "active" : "suspended",
+    });
+  }
+
+  function confirmStatusChange() {
+    if (!statusTarget) return;
+    updateStatusMutation.mutate(
+      {
+        id: statusTarget.student.id,
+        data: { status: statusTarget.nextStatus },
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            statusTarget.nextStatus === "suspended"
+              ? `"${statusTarget.student.fullName}" suspended`
+              : `"${statusTarget.student.fullName}" activated`,
+          );
+          setStatusTarget(null);
+        },
+      },
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -86,87 +104,209 @@ export default function StudentsPage() {
 
       <div className="flex-1 space-y-4 p-6">
         <div className="flex items-center justify-between gap-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search students..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-background"
-            />
+          <div className="flex flex-1 items-center gap-2">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or phone..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-9 bg-background"
+              />
+            </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[160px] bg-background">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
+          {meta && (
+            <Badge variant="info" className="px-3 py-1 gap-1.5">
+              {meta.total} Students
+            </Badge>
+          )}
         </div>
 
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Course Interested</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {DUMMY_STUDENTS.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                          {student.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {student.email}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm">
-                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                        {student.course}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {student.city}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          student.status === "enrolled"
-                            ? "success"
-                            : student.status === "dropped"
-                              ? "destructive"
-                              : "secondary"
-                        }
-                      >
-                        {student.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(student.joined).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  Loading students...
+                </p>
+              </div>
+            ) : error ? (
+              <div className="py-20 text-center text-sm text-destructive">
+                {getErrorMessage(error)}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Verification</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="w-[100px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {students.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-10 text-muted-foreground"
+                      >
+                        No students found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    students.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                              <GraduationCap className="h-5 w-5" />
+                            </div>
+                            <span className="font-medium text-sm">
+                              {student.fullName}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                            {student.email && (
+                              <span className="flex items-center gap-1.5">
+                                <Mail className="h-3 w-3" />
+                                {student.email}
+                              </span>
+                            )}
+                            {student.phoneNumber && (
+                              <span className="flex items-center gap-1.5">
+                                <Phone className="h-3 w-3" />
+                                {student.phoneCountryCode}
+                                {student.phoneNumber}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {student.source}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-xs">
+                            {student.isEmailVerified ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                            ) : (
+                              <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            )}
+                            Email
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              STATUS_VARIANT[student.status] ?? "secondary"
+                            }
+                          >
+                            {student.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(student.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleClick(student)}
+                          >
+                            {student.status === "suspended"
+                              ? "Activate"
+                              : "Suspend"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
+
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Showing {students.length} of {meta.total} students
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {meta.page} of {meta.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= meta.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={statusTarget !== null}
+        title={
+          statusTarget?.nextStatus === "suspended"
+            ? "Suspend Student"
+            : "Activate Student"
+        }
+        description={
+          statusTarget
+            ? `${statusTarget.nextStatus === "suspended" ? "Suspend" : "Activate"} "${statusTarget.student.fullName}"'s account?`
+            : ""
+        }
+        confirmLabel={
+          statusTarget?.nextStatus === "suspended" ? "Suspend" : "Activate"
+        }
+        variant={
+          statusTarget?.nextStatus === "suspended" ? "destructive" : "default"
+        }
+        loading={updateStatusMutation.isPending}
+        onCancel={() => setStatusTarget(null)}
+        onConfirm={confirmStatusChange}
+      />
     </div>
   );
 }

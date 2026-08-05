@@ -1,0 +1,31 @@
+meta {
+  name: Update Student Status
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/students/{{studentId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "suspended"
+  }
+}
+
+docs {
+  Updates a student's account status. Requires platform_admin auth +
+  students.manage.
+
+  Body:
+  - status: "active" | "suspended" | "inactive"
+
+  409 if the student is already in the requested status.
+}

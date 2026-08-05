@@ -76,4 +76,12 @@ export class StudentsRepository {
       },
     });
   }
+
+  static async setStatus(id: string, status: string) {
+    return prisma.student.update({
+      where: { id },
+      data: { status },
+      select: STUDENT_SELECT,
+    });
+  }
 }

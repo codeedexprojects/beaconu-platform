@@ -73,3 +73,32 @@ export interface UpdateStudentProfileInput {
   nationality?: string | null;
   category?: "general" | "obc" | "sc" | "st" | "ews" | "other" | null;
 }
+
+export type StudentAccountStatus = "active" | "suspended" | "inactive";
+
+export interface AdminStudentListItem {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phoneNumber: string | null;
+  phoneCountryCode: string | null;
+  avatarUrl: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  source: string;
+  status: string;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export interface ListStudentsQuery {
+  search?: string;
+  status?: StudentAccountStatus;
+  source?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UpdateStudentStatusInput {
+  status: StudentAccountStatus;
+}

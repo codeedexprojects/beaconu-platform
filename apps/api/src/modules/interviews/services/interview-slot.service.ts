@@ -185,6 +185,16 @@ export class InterviewSlotService {
     if (data.mode !== undefined && data.mode !== existing.mode) {
       await InterviewSettingsService.assertModeAllowed(collegeId, data.mode);
     }
+    const effectiveMode = data.mode ?? existing.mode;
+    const effectiveInterviewerEmail =
+      data.interviewerEmail !== undefined
+        ? data.interviewerEmail
+        : existing.interviewerEmail;
+    if (effectiveMode === "gmeet" && !effectiveInterviewerEmail) {
+      throw new ValidationError(
+        "interviewer_email is required for gmeet slots",
+      );
+    }
     if (data.campusId !== undefined) {
       await this.validateCampus(collegeId, data.campusId);
     }

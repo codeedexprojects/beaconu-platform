@@ -96,6 +96,12 @@ async function main() {
       code: "blink.manage",
       description: "Manage blink users and their assignments",
     },
+
+    { code: "students.view", description: "View student accounts" },
+    {
+      code: "students.manage",
+      description: "Manage student accounts (e.g. suspend/activate)",
+    },
   ];
 
   console.log("Seeding Platform Permissions...");

@@ -1,6 +1,8 @@
 import { prisma } from "@beaconu/db";
 import { NotFoundError } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import type {
+  AdminStudentListItem,
   StudentCounsellingReview,
   StudentHostelReview,
   StudentCollegeReview,
@@ -8,7 +10,98 @@ import type {
   StudentProfileMetadata,
 } from "@beaconu/types";
 
+const ADMIN_LIST_SELECT = {
+  id: true,
+  fullName: true,
+  email: true,
+  phoneNumber: true,
+  phoneCountryCode: true,
+  avatarUrl: true,
+  isEmailVerified: true,
+  isPhoneVerified: true,
+  source: true,
+  status: true,
+  lastLoginAt: true,
+  createdAt: true,
+} as const;
+
+function mapAdminListItem(row: {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phoneNumber: string | null;
+  phoneCountryCode: string | null;
+  avatarUrl: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  source: string;
+  status: string;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+}): AdminStudentListItem {
+  return {
+    id: row.id,
+    fullName: row.fullName,
+    email: row.email,
+    phoneNumber: row.phoneNumber,
+    phoneCountryCode: row.phoneCountryCode,
+    avatarUrl: row.avatarUrl,
+    isEmailVerified: row.isEmailVerified,
+    isPhoneVerified: row.isPhoneVerified,
+    source: row.source,
+    status: row.status,
+    lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 export class StudentsQuery {
+  static async listForAdmin(filters: {
+    search?: string;
+    status?: string;
+    source?: string;
+    page: number;
+    limit: number;
+  }) {
+    const where = {
+      ...(filters.status && { status: filters.status }),
+      ...(filters.source && { source: filters.source }),
+      ...(filters.search && {
+        OR: [
+          {
+            fullName: {
+              contains: filters.search,
+              mode: "insensitive" as const,
+            },
+          },
+          { email: { contains: filters.search, mode: "insensitive" as const } },
+          {
+            phoneNumber: {
+              contains: filters.search,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      }),
+    };
+
+    const [rows, total] = await prisma.$transaction([
+      prisma.student.findMany({
+        where,
+        select: ADMIN_LIST_SELECT,
+        orderBy: { createdAt: "desc" },
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    return {
+      data: rows.map(mapAdminListItem),
+      meta: PaginationHelper.createMeta(total, filters.page, filters.limit),
+    };
+  }
+
   static async getProfile(id: string): Promise<StudentProfile> {
     const student = await prisma.student.findUnique({
       where: { id },
