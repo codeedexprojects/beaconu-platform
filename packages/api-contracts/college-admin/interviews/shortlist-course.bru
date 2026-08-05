@@ -6,7 +6,7 @@ meta {
 
 patch {
   url: {{baseUrl}}/api/v1/college-admin/interviews/courses/{{applicationCourseId}}/shortlist
-  body: none
+  body: json
   auth: bearer
 }
 
@@ -14,12 +14,43 @@ auth:bearer {
   token: {{staffAccessToken}}
 }
 
+body:json {
+  {
+    "document_url": "https://cdn.example.com/offer-letters/OFR-ABC12345.pdf",
+    "valid_until": "2026-09-15"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("offerLetterId", data.data.id);
+    }
+  }
+}
+
 docs {
-  Marks an ApplicationCourse "shortlisted" — only allowed once its
-  interview has been completed (status "interview_completed").
+  Marks an ApplicationCourse "shortlisted" and issues its OfferLetter in the
+  same action — only allowed once its interview has been completed (status
+  "interview_completed").
+
+  Body (both required):
+  - document_url: URL of the uploaded offer letter document (upload via
+    college-admin's generic presign/verify flow first)
+  - valid_until: ISO date (YYYY-MM-DD) the offer expires on
 
   409 ConflictError "This course's interview hasn't been completed yet" if
-  the course isn't at that stage. No OfferLetter / token payment is
-  triggered by this action — that's a separate, later feature (explicitly
-  out of scope for this pass).
+  the course isn't at that stage. 409 ConflictError "Set a token amount for
+  this course on the admission cycle before shortlisting" if
+  AdmissionCycleCourse.tokenAmount isn't configured yet.
+
+  tokenAmount on the created OfferLetter is copied from the admission
+  cycle's configured AdmissionCycleCourse.tokenAmount. The document_url is
+  only exposed to the student (via the application status endpoint) once
+  the token payment status is "paid" — before that, the student can see the
+  offer's amount/status but not download the letter.
+
+  Re-calling this on an already-shortlisted course is a no-op that returns
+  the existing OfferLetter (idempotent, does not re-issue).
 }

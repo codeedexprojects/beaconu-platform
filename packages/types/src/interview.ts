@@ -118,6 +118,27 @@ export interface CompleteInterviewInput {
   interview_remarks?: string;
 }
 
+export interface ShortlistCourseInput {
+  document_url: string;
+  valid_until: string;
+}
+
+export interface OfferLetterItem {
+  id: string;
+  applicationCourseId: string;
+  studentId: string;
+  collegeId: string;
+  offerNumber: string;
+  offerDate: string;
+  validUntil: string;
+  tokenAmount: string;
+  tokenPaymentStatus: string;
+  documentUrl: string;
+  status: string;
+  issuedBy: string | null;
+  createdAt: string;
+}
+
 export type InterviewRescheduleStatus = "pending" | "approved" | "rejected";
 
 export interface InterviewRescheduleItem {

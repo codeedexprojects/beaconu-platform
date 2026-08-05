@@ -221,7 +221,11 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         tokenAmount: offer.tokenAmount.toString(),
         tokenPaymentStatus: offer.tokenPaymentStatus,
         validUntil: offer.validUntil.toISOString(),
-        documentUrl: offer.documentUrl,
+        // Only surface the offer letter document once the token has
+        // actually been paid — before that, the student can see the
+        // amount/status but not download the letter itself.
+        documentUrl:
+          offer.tokenPaymentStatus === "paid" ? offer.documentUrl : null,
       }
     : {
         ...NOT_ISSUED_AMOUNT_DETAILS,

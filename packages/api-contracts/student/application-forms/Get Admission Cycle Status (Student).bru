@@ -80,7 +80,11 @@ docs {
     // on one application, unlike assessment/interview.
     amountDetails: {
       status: "not_issued" | "issued" | "expired" | "withdrawn",
-      offerNumber, tokenAmount, tokenPaymentStatus, validUntil, documentUrl
+      offerNumber, tokenAmount, tokenPaymentStatus, validUntil,
+      // documentUrl is only non-null once tokenPaymentStatus === "paid" —
+      // before that the student can see the offer's amount/status but not
+      // download the letter itself.
+      documentUrl
     }
   }
 
@@ -95,14 +99,10 @@ docs {
     Application)
   - formStatus "submitted" -> "none"
 
-  `amountDetails` will show "not_issued" for every application today — the
-  offer-letter backend isn't built yet (schema-only, `OfferLetter` model
-  exists but no write flow triggers it). `interview` IS live — Interview
-  Slots/Bookings are a fully built module; it'll show "not_scheduled"
-  simply when the student hasn't booked one yet. This response shape is
-  final; the other `amountDetails` fields (offerNumber, tokenPaymentStatus,
-  validUntil, documentUrl) will start returning real data automatically
-  once the offer-letter flow is built, no further contract change needed.
+  `amountDetails` shows "not_issued" until a course is shortlisted —
+  shortlisting a course (College Admin > Interviews > Shortlist &amp; Issue
+  Offer Letter) now issues the OfferLetter in the same action, so
+  `amountDetails` reflects real offer data ("issued") from that point on.
 
   `amountDetails.tokenAmount` is the ONE exception — even with
   status "not_issued", it's populated as soon as a course is shortlisted:
