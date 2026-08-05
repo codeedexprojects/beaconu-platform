@@ -27,6 +27,7 @@ export interface InterviewSlotItem {
   venue: string | null;
   interviewerId: string | null;
   interviewerName: string | null;
+  interviewerEmail: string | null;
   status: InterviewSlotStatus;
   createdAt: string;
 }
@@ -40,6 +41,7 @@ export interface CreateInterviewSlotInput {
   campus_id?: string;
   venue?: string;
   interviewer_id?: string;
+  interviewer_email?: string;
 }
 
 export type UpdateInterviewSlotInput = Partial<CreateInterviewSlotInput>;

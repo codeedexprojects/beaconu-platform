@@ -1,23 +1,24 @@
 model InterviewSlot {
-  id             String   @id @default(dbgenerated("('ITS-'::text || (nextval('interview_slot_seq'::regclass))::text)"))
-  collegeId      String   @map("college_id")
-  mode           String   @db.VarChar(20)
-  scheduledDate  DateTime @map("scheduled_date") @db.Date
-  startTime      DateTime @map("start_time") @db.Time
-  endTime        DateTime @map("end_time") @db.Time
-  durationMins   Int      @default(30) @map("duration_mins")
-  maxCapacity    Int      @default(1) @map("max_capacity")
-  bookedCount    Int      @default(0) @map("booked_count")
-  zoomMeetingUrl String?  @map("zoom_meeting_url") @db.Text
-  zoomMeetingId  String?  @map("zoom_meeting_id") @db.VarChar(50)
-  zoomPasscode   String?  @map("zoom_passcode") @db.VarChar(20)
-  googleEventId  String?  @map("google_event_id") @db.VarChar(255)
-  campusId       String?  @map("campus_id")
-  venue          String?  @db.VarChar(255)
-  interviewerId  String?  @map("interviewer_id")
-  status         String   @default("active") @db.VarChar(20)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id               String   @id @default(dbgenerated("('ITS-'::text || (nextval('interview_slot_seq'::regclass))::text)"))
+  collegeId        String   @map("college_id")
+  mode             String   @db.VarChar(20)
+  scheduledDate    DateTime @map("scheduled_date") @db.Date
+  startTime        DateTime @map("start_time") @db.Time
+  endTime          DateTime @map("end_time") @db.Time
+  durationMins     Int      @default(30) @map("duration_mins")
+  maxCapacity      Int      @default(1) @map("max_capacity")
+  bookedCount      Int      @default(0) @map("booked_count")
+  zoomMeetingUrl   String?  @map("zoom_meeting_url") @db.Text
+  zoomMeetingId    String?  @map("zoom_meeting_id") @db.VarChar(50)
+  zoomPasscode     String?  @map("zoom_passcode") @db.VarChar(20)
+  googleEventId    String?  @map("google_event_id") @db.VarChar(255)
+  campusId         String?  @map("campus_id")
+  venue            String?  @db.VarChar(255)
+  interviewerId    String?  @map("interviewer_id")
+  interviewerEmail String?  @map("interviewer_email") @db.VarChar(255)
+  status           String   @default("active") @db.VarChar(20)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   college        College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   campus         Campus?               @relation(fields: [campusId], references: [id])

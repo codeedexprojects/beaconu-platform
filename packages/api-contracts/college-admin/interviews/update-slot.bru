@@ -26,8 +26,14 @@ body:json {
 
 docs {
   Updates any subset of an interview slot's fields (mode, scheduled_date,
-  start_time, end_time, duration_mins, campus_id, venue, interviewer_id).
-  No max_capacity — every slot is a fixed 1-on-1 booking, not configurable.
+  start_time, end_time, duration_mins, campus_id, venue, interviewer_id,
+  interviewer_email). No max_capacity — every slot is a fixed 1-on-1
+  booking, not configurable.
+
+  Changing interviewer_email only affects the Meet calendar event if it's
+  updated before the event is first created (i.e. before any student has
+  booked this slot) — see Create Interview Slot's docs for how/when that
+  event actually gets created.
 
   If scheduled_date or start_time is being changed, 400 ValidationError
   "Interview slots cannot be scheduled in the past" if the resulting

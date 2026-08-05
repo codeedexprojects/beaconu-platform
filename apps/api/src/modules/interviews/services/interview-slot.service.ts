@@ -51,6 +51,7 @@ export function mapSlot(row: SlotRow): InterviewSlotItem {
     venue: row.venue,
     interviewerId: row.interviewerId,
     interviewerName: row.interviewer?.fullName ?? null,
+    interviewerEmail: row.interviewerEmail ?? row.interviewer?.email ?? null,
     status: row.status as InterviewSlotItem["status"],
     createdAt: row.createdAt.toISOString(),
   };
@@ -92,9 +93,13 @@ export class InterviewSlotService {
     }
 
     try {
-      const attendeeEmails = row.interviewer?.email
-        ? [row.interviewer.email]
-        : [];
+      const attendeeEmails = Array.from(
+        new Set(
+          [row.interviewerEmail, row.interviewer?.email].filter(
+            (email): email is string => !!email,
+          ),
+        ),
+      );
 
       const meetEvent = await createMeetEvent({
         summary: row.interviewer?.fullName
