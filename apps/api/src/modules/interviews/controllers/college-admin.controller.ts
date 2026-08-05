@@ -29,6 +29,7 @@ export class InterviewCollegeAdminController {
       campusId: body.campus_id,
       venue: body.venue,
       interviewerId: body.interviewer_id,
+      interviewerEmail: body.interviewer_email,
     });
     return res
       .status(201)
@@ -64,6 +65,9 @@ export class InterviewCollegeAdminController {
         ...(body.venue !== undefined && { venue: body.venue }),
         ...(body.interviewer_id !== undefined && {
           interviewerId: body.interviewer_id,
+        }),
+        ...(body.interviewer_email !== undefined && {
+          interviewerEmail: body.interviewer_email,
         }),
       },
     );

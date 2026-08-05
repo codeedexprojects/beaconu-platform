@@ -52,6 +52,9 @@ const slotSchema = z
     end_time: z.string().trim().min(1, "End time is required"),
     campus_id: z.string().trim().optional(),
     venue: z.string().trim().optional(),
+    interviewer_email: z
+      .union([z.string().trim().email(), z.literal("")])
+      .optional(),
   })
   .refine((data) => data.end_time > data.start_time, {
     message: "End time must be after start time",
@@ -66,6 +69,7 @@ const EMPTY_VALUES: SlotFormValues = {
   end_time: "",
   campus_id: undefined,
   venue: "",
+  interviewer_email: "",
 };
 
 const STATUS_VARIANT: Record<
@@ -126,6 +130,7 @@ export function InterviewSlotsTab() {
       end_time: slot.endTime,
       campus_id: slot.campus?.id,
       venue: slot.venue ?? "",
+      interviewer_email: slot.interviewerEmail ?? "",
     });
     setOpen(true);
   }
@@ -138,6 +143,7 @@ export function InterviewSlotsTab() {
       end_time: values.end_time,
       campus_id: values.mode === "on_campus" ? values.campus_id : undefined,
       venue: values.mode === "on_campus" ? values.venue : undefined,
+      interviewer_email: values.interviewer_email || undefined,
     };
 
     if (editing) {
@@ -251,10 +257,33 @@ export function InterviewSlotsTab() {
               </div>
 
               {mode === "gmeet" && (
-                <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                  A Google Meet link is generated automatically once this slot
-                  is created — no need to add one manually.
-                </p>
+                <>
+                  <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                    A Google Meet link is generated automatically once this slot
+                    is created — no need to add one manually.
+                  </p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="interviewer_email">
+                      Interviewer Email{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="interviewer_email"
+                      type="email"
+                      placeholder="interviewer@college.edu"
+                      {...form.register("interviewer_email")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Added as an attendee on the Meet calendar event, so they
+                      get the invite and can join directly.
+                    </p>
+                    {form.formState.errors.interviewer_email && (
+                      <p className="text-xs text-destructive">
+                        {form.formState.errors.interviewer_email.message}
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
               {mode === "on_campus" && (
                 <>
@@ -379,6 +408,11 @@ export function InterviewSlotsTab() {
                         {slot.mode === "gmeet" && !slot.meetingUrl && (
                           <span className="text-xs text-muted-foreground">
                             Link pending...
+                          </span>
+                        )}
+                        {slot.mode === "gmeet" && slot.interviewerEmail && (
+                          <span className="text-xs text-muted-foreground">
+                            {slot.interviewerEmail}
                           </span>
                         )}
                         {slot.mode === "on_campus" && slot.campus && (

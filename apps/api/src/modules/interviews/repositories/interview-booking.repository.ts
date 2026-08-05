@@ -30,6 +30,7 @@ const SLOT_SELECT = {
   venue: true,
   interviewerId: true,
   interviewer: { select: { fullName: true, email: true } },
+  interviewerEmail: true,
   status: true,
   createdAt: true,
 } as const;

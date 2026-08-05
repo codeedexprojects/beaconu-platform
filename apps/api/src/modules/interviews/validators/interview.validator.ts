@@ -15,6 +15,7 @@ export const createInterviewSlotSchema = z.object({
   campus_id: z.string().trim().min(1).optional(),
   venue: z.string().trim().max(255).optional(),
   interviewer_id: z.string().trim().min(1).optional(),
+  interviewer_email: z.email().trim().optional(),
 });
 
 export const updateInterviewSlotSchema = z.object({
@@ -26,6 +27,7 @@ export const updateInterviewSlotSchema = z.object({
   campus_id: z.string().trim().min(1).optional(),
   venue: z.string().trim().max(255).optional(),
   interviewer_id: z.string().trim().min(1).optional(),
+  interviewer_email: z.email().trim().optional(),
 });
 
 const modeInstructionsSchema = z.object({

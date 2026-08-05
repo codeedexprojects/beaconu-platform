@@ -30,6 +30,7 @@ const SLOT_SELECT = {
   venue: true,
   interviewerId: true,
   interviewer: { select: { fullName: true, email: true } },
+  interviewerEmail: true,
   status: true,
   createdAt: true,
 } as const;
@@ -43,6 +44,7 @@ export interface InterviewSlotCreateData {
   campusId?: string;
   venue?: string;
   interviewerId?: string;
+  interviewerEmail?: string;
 }
 
 export class InterviewSlotRepository {
@@ -67,6 +69,7 @@ export class InterviewSlotRepository {
         campusId: data.campusId,
         venue: data.venue,
         interviewerId: data.interviewerId,
+        interviewerEmail: data.interviewerEmail,
       },
       select: SLOT_SELECT,
     });
@@ -160,6 +163,9 @@ export class InterviewSlotRepository {
         ...(data.venue !== undefined && { venue: data.venue }),
         ...(data.interviewerId !== undefined && {
           interviewerId: data.interviewerId,
+        }),
+        ...(data.interviewerEmail !== undefined && {
+          interviewerEmail: data.interviewerEmail,
         }),
       },
       select: SLOT_SELECT,

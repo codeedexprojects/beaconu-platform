@@ -23,7 +23,8 @@ body:json {
     "mode": "gmeet",
     "scheduled_date": "2026-08-15",
     "start_time": "10:00",
-    "end_time": "10:30"
+    "end_time": "10:30",
+    "interviewer_email": "interviewer@college.edu"
   }
 }
 
@@ -52,6 +53,15 @@ docs {
   slot that never gets booked never gets a calendar event. Best-effort:
   if Google Meet isn't configured or the call fails at booking time, the
   link just stays `null`, same fallback behavior as counselling.
+
+  `interviewer_email` (optional, "gmeet" only): added as an attendee on
+  the Meet calendar event when it's created — this is what actually
+  grants the interviewer access/an invite to the call. Without it, nobody
+  is invited to the event at all (the booked student only ever receives
+  the raw meeting URL, never a calendar invite). Independent of
+  `interviewer_id` (a StaffMember reference, used only for display) — if
+  both are set and the referenced staff member also has an email on
+  file, both get added as attendees.
 
   For "on_campus": pass `campus_id` (must be one of this college's own
   Campus rows — 404 "Campus not found" otherwise) so the student-facing
