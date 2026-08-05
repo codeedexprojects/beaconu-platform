@@ -39,6 +39,7 @@ model AdmissionCycleCourse {
   interviewRequired      Boolean  @default(true) @map("interview_required")
   assessmentRequired     Boolean  @default(true) @map("assessment_required")
   tokenPaymentStage      String?  @map("token_payment_stage") @db.VarChar(20)
+  tokenAmount            Decimal? @map("token_amount") @db.Decimal(10, 2)
   workExperienceRequired Boolean  @default(true) @map("work_experience_required")
   isActive               Boolean  @default(true) @map("is_active")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz

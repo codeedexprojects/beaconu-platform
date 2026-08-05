@@ -321,9 +321,10 @@ export function ManageCoursesDialog({
   const [tokenPaymentStage, setTokenPaymentStage] = useState<
     "none" | TokenPaymentStage
   >("none");
+  const [tokenAmount, setTokenAmount] = useState("");
 
   const [rowDrafts, setRowDrafts] = useState<
-    Record<string, { applicationFee: string }>
+    Record<string, { applicationFee?: string; tokenAmount?: string }>
   >({});
 
   const activeAttached = (attached ?? []).filter((row) => row.isActive);
@@ -339,6 +340,7 @@ export function ManageCoursesDialog({
     setAssessmentRequired(true);
     setWorkExperienceRequired(false);
     setTokenPaymentStage("none");
+    setTokenAmount("");
   }
 
   function handleAttach() {
@@ -354,6 +356,7 @@ export function ManageCoursesDialog({
         assessment_required: assessmentRequired,
         token_payment_stage:
           tokenPaymentStage === "none" ? null : tokenPaymentStage,
+        token_amount: tokenAmount ? Number(tokenAmount) : null,
         work_experience_required: workExperienceRequired,
       },
       {
@@ -408,8 +411,34 @@ export function ManageCoursesDialog({
         onSuccess: () => {
           toast.success("Application fee updated");
           setRowDrafts((prev) => {
-            const next = { ...prev };
-            delete next[row.id];
+            const next = { ...prev, [row.id]: { ...prev[row.id] } };
+            delete next[row.id].applicationFee;
+            return next;
+          });
+        },
+      },
+    );
+  }
+
+  function getTokenAmountDraft(row: AdmissionCycleCourseItem) {
+    return rowDrafts[row.id]?.tokenAmount ?? row.tokenAmount ?? "";
+  }
+
+  function handleSaveTokenAmount(row: AdmissionCycleCourseItem) {
+    const draft = getTokenAmountDraft(row);
+    const value = draft === "" ? null : Number(draft);
+    if (value !== null && (Number.isNaN(value) || value < 0)) {
+      toast.error("Enter a valid token amount");
+      return;
+    }
+    updateCourse(
+      { id: row.id, data: { token_amount: value } },
+      {
+        onSuccess: () => {
+          toast.success("Token amount updated");
+          setRowDrafts((prev) => {
+            const next = { ...prev, [row.id]: { ...prev[row.id] } };
+            delete next[row.id].tokenAmount;
             return next;
           });
         },
@@ -448,7 +477,7 @@ export function ManageCoursesDialog({
   return (
     <>
       <Dialog open={!!cycle} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Manage Courses — {cycle?.name}</DialogTitle>
             <DialogDescription>
@@ -517,6 +546,16 @@ export function ManageCoursesDialog({
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Token Amount</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="e.g. 5000"
+                      value={tokenAmount}
+                      onChange={(e) => setTokenAmount(e.target.value)}
+                    />
+                  </div>
                   <div className="flex items-end gap-4 pb-1.5">
                     <label className="flex items-center gap-2 text-xs">
                       <input
@@ -583,6 +622,9 @@ export function ManageCoursesDialog({
                 activeAttached.map((row) => {
                   const feeDraft = getFeeDraft(row);
                   const feeDirty = feeDraft !== row.applicationFee;
+                  const tokenAmountDraft = getTokenAmountDraft(row);
+                  const tokenAmountDirty =
+                    tokenAmountDraft !== (row.tokenAmount ?? "");
                   const isExpanded = expandedIds.has(row.id);
                   return (
                     <div
@@ -635,7 +677,7 @@ export function ManageCoursesDialog({
 
                       {isExpanded && (
                         <div className="p-4 pt-0 space-y-3">
-                          <div className="grid gap-3 md:grid-cols-4 items-end">
+                          <div className="grid gap-3 md:grid-cols-5 items-end">
                             <div className="space-y-1">
                               <Label className="text-xs">Application Fee</Label>
                               <div className="flex gap-1.5">
@@ -647,6 +689,7 @@ export function ManageCoursesDialog({
                                     setRowDrafts((prev) => ({
                                       ...prev,
                                       [row.id]: {
+                                        ...prev[row.id],
                                         applicationFee: e.target.value,
                                       },
                                     }))
@@ -658,6 +701,37 @@ export function ManageCoursesDialog({
                                   variant={feeDirty ? "default" : "outline"}
                                   disabled={!feeDirty}
                                   onClick={() => handleSaveFee(row)}
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Token Amount</Label>
+                              <div className="flex gap-1.5">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  placeholder="e.g. 5000"
+                                  value={tokenAmountDraft}
+                                  onChange={(e) =>
+                                    setRowDrafts((prev) => ({
+                                      ...prev,
+                                      [row.id]: {
+                                        ...prev[row.id],
+                                        tokenAmount: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={
+                                    tokenAmountDirty ? "default" : "outline"
+                                  }
+                                  disabled={!tokenAmountDirty}
+                                  onClick={() => handleSaveTokenAmount(row)}
                                 >
                                   Save
                                 </Button>

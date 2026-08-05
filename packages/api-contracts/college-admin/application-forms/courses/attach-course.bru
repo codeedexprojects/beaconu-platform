@@ -22,6 +22,7 @@ body:json {
     "interview_required": true,
     "assessment_required": true,
     "token_payment_stage": "after_shortlisting",
+    "token_amount": 5000,
     "work_experience_required": false
   }
 }
@@ -38,7 +39,11 @@ script:post-response {
 docs {
   Attaches a course to this application form with its own fee/requirements
   config. token_payment_stage is "before_assessment" | "after_shortlisting" |
-  omitted. If this course was previously detached from this same application
-  form, the existing row is reactivated with the new config instead of
-  erroring — only a currently-active attachment returns 409.
+  omitted. token_amount is the token/seat-confirmation amount for this
+  course — meant to be read from here (not typed in by hand) whenever the
+  offer-issuance flow later creates an OfferLetter for a shortlisted
+  student on this course. If this course was previously detached from this
+  same application form, the existing row is reactivated with the new
+  config instead of erroring — only a currently-active attachment returns
+  409.
 }

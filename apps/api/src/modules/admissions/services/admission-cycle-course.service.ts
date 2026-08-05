@@ -12,10 +12,11 @@ type CycleCourseRow = NonNullable<
 >;
 
 function toDto(row: CycleCourseRow) {
-  const { course, applicationFee, ...rest } = row;
+  const { course, applicationFee, tokenAmount, ...rest } = row;
   return {
     ...rest,
     applicationFee: applicationFee.toString(),
+    tokenAmount: tokenAmount ? tokenAmount.toString() : null,
     courseName: course.name,
     courseCode: course.code,
   };
@@ -66,6 +67,7 @@ export class AdmissionCycleCourseService {
         interviewRequired: body.interview_required,
         assessmentRequired: body.assessment_required,
         tokenPaymentStage: body.token_payment_stage ?? null,
+        tokenAmount: body.token_amount ?? null,
         workExperienceRequired: body.work_experience_required,
       });
       return toDto(row);
@@ -78,6 +80,7 @@ export class AdmissionCycleCourseService {
       interviewRequired: body.interview_required,
       assessmentRequired: body.assessment_required,
       tokenPaymentStage: body.token_payment_stage ?? null,
+      tokenAmount: body.token_amount ?? null,
       workExperienceRequired: body.work_experience_required,
     });
     return toDto(row);
@@ -100,6 +103,7 @@ export class AdmissionCycleCourseService {
       data.assessmentRequired = body.assessment_required;
     if (body.token_payment_stage !== undefined)
       data.tokenPaymentStage = body.token_payment_stage;
+    if (body.token_amount !== undefined) data.tokenAmount = body.token_amount;
     if (body.work_experience_required !== undefined)
       data.workExperienceRequired = body.work_experience_required;
     if (body.is_active !== undefined) data.isActive = body.is_active;

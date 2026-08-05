@@ -15,10 +15,13 @@ headers {
 }
 
 docs {
-  Full onboarding-process status — application progress, documents,
-  assessment, interview, and token/offer amount details, all in one call —
-  one entry per Application the student has here (there can be several
-  now, one per course, see Start Application).
+  Onboarding-process status — application progress, assessment, interview,
+  and token/offer amount details, all in one call — one entry per
+  Application the student has here (there can be several now, one per
+  course, see Start Application). Courses and documents are NOT part of
+  this response — courses live on the application form itself (Get
+  Application Details), and documents have their own dedicated endpoint
+  (Get Required Documents).
 
   `data` is `null` if the student hasn't started any application for this
   admission cycle yet. Otherwise an array, each entry shaped:
@@ -32,27 +35,7 @@ docs {
       pendingAction: "payment" | "personal_details" | "family_details"
                    | "address_details" | "qualification_details"
                    | "declaration" | "submit" | "none",
-      // Every non-withdrawn course on this application, not just the
-      // primary. isShortlisted is the only per-course field here (a
-      // student can be shortlisted for one course on an application but
-      // not another) — everything else below is whole-application.
-      courses: [
-        { courseId, courseName, courseCode, isPrimary, status, isShortlisted }, ...
-      ],
       createdAt
-    },
-
-    // The same checklist Get Required Documents already computes, reused
-    // and summarized here so a full onboarding overview doesn't need a
-    // second call. `items` mirrors Get Required Documents' shape
-    // (minus acceptedMimeTypes/rejectionReason — call that endpoint
-    // directly if you need the upload form itself).
-    documents: {
-      totalRequired, uploadedCount, missingCount,
-      pendingVerificationCount, rejectedCount,
-      items: [
-        { documentType, documentLabel, isRequired, uploaded, verificationStatus }, ...
-      ]
     },
 
     // One assessment attempt covers the WHOLE application (every course
@@ -64,14 +47,37 @@ docs {
       attemptId, startedAt, completedAt, totalScore, maxScore
     },
 
-    // Whole-application, not per-course — a student interviews once for
-    // the application, resolved off its primary course's booking.
+    // Whole-application, not per-course — one shared InterviewBooking
+    // covers every course on the application.
     interview: {
       status: "not_scheduled" | "booked" | "completed" | "cancelled" | "rescheduled",
       scheduledAt, completedAt, outcome, score, remarks
     },
 
-    // Whole-application, resolved off the primary course's offer letter.
+    // isShortlisted is true if ANY non-withdrawn course on this
+    // application has reached "shortlisted" or later
+    // (offer_issued/token_paid/enrolled). `courses` lists exactly which
+    // ones — only the courses that reached that stage (a student could be
+    // shortlisted for one course but not another on the same
+    // application), empty array when isShortlisted is false.
+    shortlist: {
+      isShortlisted,
+      courses: [
+        { courseId, courseName, courseCode, status }, ...
+      ]
+    },
+
+    // Every scholarship application submitted against this Application
+    // (a student can apply to multiple different scholarships for the
+    // same application) — empty array if none applied yet.
+    scholarships: [
+      { scholarshipApplicationId, scholarshipConfigId, scholarshipName,
+        status: "pending" | "approved" | "rejected" }, ...
+    ],
+
+    // Still per-course under the hood (resolved off the primary course's
+    // offer letter) — shortlisting/offers can genuinely differ per course
+    // on one application, unlike assessment/interview.
     amountDetails: {
       status: "not_issued" | "issued" | "expired" | "withdrawn",
       offerNumber, tokenAmount, tokenPaymentStatus, validUntil, documentUrl
@@ -89,18 +95,21 @@ docs {
     Application)
   - formStatus "submitted" -> "none"
 
-  Documents are NOT part of the pendingAction sequence above (Submit
-  doesn't require them and currentStep doesn't track them) — that's
-  exactly why the separate `documents` section exists on this response,
-  so the client can still surface "N of M documents uploaded" without a
-  second call.
+  `amountDetails` will show "not_issued" for every application today — the
+  offer-letter backend isn't built yet (schema-only, `OfferLetter` model
+  exists but no write flow triggers it). `interview` IS live — Interview
+  Slots/Bookings are a fully built module; it'll show "not_scheduled"
+  simply when the student hasn't booked one yet. This response shape is
+  final; the other `amountDetails` fields (offerNumber, tokenPaymentStatus,
+  validUntil, documentUrl) will start returning real data automatically
+  once the offer-letter flow is built, no further contract change needed.
 
-  `amountDetails` will show "not_issued" (all detail fields null) for
-  every application today — the offer-letter backend isn't built yet
-  (schema-only, `OfferLetter` model exists but no write flow triggers it).
-  `interview` IS live — Interview Slots/Bookings are a fully built module;
-  it'll show "not_scheduled" simply when the student hasn't booked one
-  yet. This response shape is final; `amountDetails` will start returning
-  real data automatically once the offer-letter flow is built, no further
-  contract change needed.
+  `amountDetails.tokenAmount` is the ONE exception — even with
+  status "not_issued", it's populated as soon as a course is shortlisted:
+  resolved from that course's own admission-form config (Attach Course to
+  Application Form's `token_amount`), off the primary course if it's the
+  shortlisted one, else the first shortlisted course found. This is a
+  preview of what the student will owe once an offer is actually issued,
+  not a real offer amount — stays `null` until at least one course is
+  shortlisted.
 }

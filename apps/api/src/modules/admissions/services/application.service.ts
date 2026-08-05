@@ -5,7 +5,6 @@ import { ApplicationCourseRepository } from "../repositories/application-course.
 import { ApplicationCourseService } from "./application-course.service";
 import { StudentsService } from "@/modules/students/services/students.service";
 import { AttemptService } from "@/modules/assessments/services/attempt.service";
-import { ApplicationDocumentService } from "./application-document.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -71,8 +70,6 @@ type StatusRow = Awaited<
   ReturnType<typeof ApplicationRepository.findStatusRows>
 >[number];
 
-// Every pipeline stage at/after "shortlisted" — see root CLAUDE.md's
-// Application status flow ordering.
 const SHORTLISTED_OR_LATER = new Set([
   "shortlisted",
   "offer_issued",
@@ -106,43 +103,6 @@ async function resolveAssessmentStatus(studentId: string, row: StatusRow) {
     };
   }
   return attempt;
-}
-
-/** Summarizes the same applicable-document checklist Get Required Documents
- * already computes (same module, reused directly) into counts + a compact
- * per-document list — so the onboarding overview covers documents too,
- * not just application/assessment/interview/offer. */
-async function resolveDocumentsStatus(
-  applicationId: string,
-  studentId: string,
-) {
-  const required = await ApplicationDocumentService.listRequired(
-    applicationId,
-    studentId,
-  );
-  const requiredOnly = required.filter((d) => d.isRequired);
-  const uploadedCount = requiredOnly.filter((d) => d.uploaded !== null).length;
-  const rejectedCount = requiredOnly.filter(
-    (d) => d.uploaded?.verificationStatus === "rejected",
-  ).length;
-  const pendingVerificationCount = requiredOnly.filter(
-    (d) => d.uploaded?.verificationStatus === "pending",
-  ).length;
-
-  return {
-    totalRequired: requiredOnly.length,
-    uploadedCount,
-    missingCount: requiredOnly.length - uploadedCount,
-    pendingVerificationCount,
-    rejectedCount,
-    items: required.map((d) => ({
-      documentType: d.documentType,
-      documentLabel: d.documentLabel,
-      isRequired: d.isRequired,
-      uploaded: d.uploaded !== null,
-      verificationStatus: d.uploaded?.verificationStatus ?? null,
-    })),
-  };
 }
 
 const NOT_SCHEDULED_INTERVIEW = {
@@ -200,21 +160,38 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
     row.applicationCourses.find((ac) => ac.isPrimary) ??
     row.applicationCourses[0];
 
-  const [assessment, booking, offerLetters, documents] = await Promise.all([
+  const shortlistedCourses = row.applicationCourses.filter((ac) =>
+    SHORTLISTED_OR_LATER.has(ac.status),
+  );
+  const tokenAmountCourse =
+    shortlistedCourses.find((ac) => ac.isPrimary) ?? shortlistedCourses[0];
+
+  const [
+    assessment,
+    booking,
+    offerLetters,
+    scholarshipApplications,
+    tokenAmountRows,
+  ] = await Promise.all([
     resolveAssessmentStatus(studentId, row),
     ApplicationRepository.findInterviewBookingForApplication(row.id),
     ApplicationRepository.findOfferLettersByCourseIds(applicationCourseIds),
-    resolveDocumentsStatus(row.id, studentId),
+    ApplicationRepository.findScholarshipApplicationsForApplication(row.id),
+    tokenAmountCourse
+      ? ApplicationRepository.findTokenAmountsForCourses(
+          row.admissionCycle.id,
+          [tokenAmountCourse.course.id],
+        )
+      : Promise.resolve([]),
   ]);
 
-  // Token/offer is still keyed per ApplicationCourse (unaffected by this
-  // rework) — resolve off the primary course, same as before. Interview is
-  // now a genuine whole-Application concept at the schema level (one
-  // shared InterviewBooking per Application), so no per-course lookup is
-  // needed anymore.
   const offer = primaryCourse
     ? offerLetters.find((o) => o.applicationCourseId === primaryCourse.id)
     : undefined;
+
+  const configuredTokenAmount = tokenAmountRows[0]?.tokenAmount
+    ? tokenAmountRows[0].tokenAmount.toString()
+    : null;
 
   const interview = booking
     ? {
@@ -244,7 +221,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         validUntil: offer.validUntil.toISOString(),
         documentUrl: offer.documentUrl,
       }
-    : NOT_ISSUED_AMOUNT_DETAILS;
+    : { ...NOT_ISSUED_AMOUNT_DETAILS, tokenAmount: configuredTokenAmount };
 
   return {
     application: {
@@ -261,20 +238,30 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         row.feePaymentStatus,
         row.currentStep,
       ),
-      courses: row.applicationCourses.map((ac) => ({
-        courseId: ac.course.id,
-        courseName: ac.course.name,
-        courseCode: ac.course.code,
-        isPrimary: ac.isPrimary,
-        status: ac.status,
-        isShortlisted: SHORTLISTED_OR_LATER.has(ac.status),
-      })),
       createdAt: row.createdAt.toISOString(),
     },
     assessment,
     interview,
+    shortlist: {
+      isShortlisted: row.applicationCourses.some((ac) =>
+        SHORTLISTED_OR_LATER.has(ac.status),
+      ),
+      courses: row.applicationCourses
+        .filter((ac) => SHORTLISTED_OR_LATER.has(ac.status))
+        .map((ac) => ({
+          courseId: ac.course.id,
+          courseName: ac.course.name,
+          courseCode: ac.course.code,
+          status: ac.status,
+        })),
+    },
+    scholarships: scholarshipApplications.map((s) => ({
+      scholarshipApplicationId: s.id,
+      scholarshipConfigId: s.scholarshipConfigId,
+      scholarshipName: s.scholarshipConfig.name,
+      status: s.status as "pending" | "approved" | "rejected",
+    })),
     amountDetails,
-    documents,
   };
 }
 
