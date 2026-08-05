@@ -111,6 +111,11 @@ export const listInterviewReschedulesQuerySchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
+export const shortlistCourseSchema = z.object({
+  document_url: z.string().trim().min(1, "Offer letter document is required"),
+  valid_until: dateOnly,
+});
+
 export type CreateInterviewSlotBody = z.infer<typeof createInterviewSlotSchema>;
 export type UpdateInterviewSlotBody = z.infer<typeof updateInterviewSlotSchema>;
 export type UpdateInterviewSettingsBody = z.infer<

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Star } from "lucide-react";
+import { CheckCircle2, Star, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,8 @@ import {
   useCompleteInterview,
   useShortlistCourse,
 } from "@/hooks/use-interviews";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
+import { getErrorMessage } from "@/lib/api";
 import type { InterviewBookingItem, InterviewOutcome } from "@beaconu/types";
 
 const completeSchema = z.object({
@@ -85,15 +87,17 @@ export function InterviewBookingsTab() {
   const [shortlisting, setShortlisting] = useState<InterviewBookingItem | null>(
     null,
   );
-  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [offerFile, setOfferFile] = useState<File | null>(null);
+  const [validUntil, setValidUntil] = useState("");
+  const [isUploadingOffer, setIsUploadingOffer] = useState(false);
 
   const { data: bookings, isLoading } = useInterviewBookings(
     statusFilter || undefined,
   );
   const { mutate: complete, isPending: isCompleting } = useCompleteInterview();
   const { mutate: shortlist, isPending: isShortlisting } = useShortlistCourse();
+  const isSavingShortlist = isUploadingOffer || isShortlisting;
 
   const form = useForm<CompleteFormValues>({
     resolver: zodResolver(completeSchema),
@@ -122,42 +126,42 @@ export function InterviewBookingsTab() {
     const eligible = booking.courses.filter(
       (c) => c.status === "interview_completed",
     );
-    setSelectedCourseIds(new Set(eligible.map((c) => c.applicationCourseId)));
+    setSelectedCourseId(eligible[0]?.applicationCourseId ?? null);
+    setOfferFile(null);
+    setValidUntil("");
     setShortlisting(booking);
   }
 
-  function toggleCourse(applicationCourseId: string) {
-    setSelectedCourseIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(applicationCourseId)) next.delete(applicationCourseId);
-      else next.add(applicationCourseId);
-      return next;
-    });
-  }
+  async function confirmShortlist() {
+    if (!shortlisting || !selectedCourseId || !offerFile || !validUntil) {
+      return;
+    }
+    setIsUploadingOffer(true);
+    let documentUrl: string;
+    try {
+      documentUrl = await uploadCollegeAdminFile(
+        offerFile,
+        "interviews/offer-letters",
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      setIsUploadingOffer(false);
+      return;
+    }
+    setIsUploadingOffer(false);
 
-  function confirmShortlist() {
-    if (!shortlisting || selectedCourseIds.size === 0) return;
-    const ids = Array.from(selectedCourseIds);
-    Promise.all(
-      ids.map(
-        (id) =>
-          new Promise<void>((resolve, reject) =>
-            shortlist(id, {
-              onSuccess: () => resolve(),
-              onError: reject,
-            }),
-          ),
-      ),
-    )
-      .then(() => {
-        toast.success(
-          ids.length > 1 ? "Courses shortlisted" : "Course shortlisted",
-        );
-        setShortlisting(null);
-      })
-      .catch(() => {
-        setShortlisting(null);
-      });
+    shortlist(
+      {
+        applicationCourseId: selectedCourseId,
+        data: { document_url: documentUrl, valid_until: validUntil },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Course shortlisted and offer letter issued");
+          setShortlisting(null);
+        },
+      },
+    );
   }
 
   return (
@@ -374,30 +378,58 @@ export function InterviewBookingsTab() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Shortlist</DialogTitle>
+            <DialogTitle>Shortlist & Issue Offer Letter</DialogTitle>
           </DialogHeader>
           {shortlisting && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {`"${shortlisting.studentName}" — choose which course(s) on this application to shortlist. This doesn't issue an offer letter yet.`}
+                {`"${shortlisting.studentName}" — choose the course to shortlist and attach its offer letter. The document link is only shown to the student after the token payment is done.`}
               </p>
-              <div className="space-y-2 rounded-md border p-3">
-                {shortlisting.courses
-                  .filter((c) => c.status === "interview_completed")
-                  .map((c) => (
-                    <label
-                      key={c.applicationCourseId}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-input"
-                        checked={selectedCourseIds.has(c.applicationCourseId)}
-                        onChange={() => toggleCourse(c.applicationCourseId)}
-                      />
-                      {c.courseName}
-                    </label>
-                  ))}
+              <div className="space-y-1.5">
+                <Label htmlFor="shortlist-course">Course</Label>
+                <Select
+                  value={selectedCourseId ?? ""}
+                  onValueChange={(v) => setSelectedCourseId(v)}
+                >
+                  <SelectTrigger id="shortlist-course">
+                    <SelectValue placeholder="Select course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shortlisting.courses
+                      .filter((c) => c.status === "interview_completed")
+                      .map((c) => (
+                        <SelectItem
+                          key={c.applicationCourseId}
+                          value={c.applicationCourseId}
+                        >
+                          {c.courseName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="offer-letter-file">
+                  Offer Letter Document{" "}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="offer-letter-file"
+                  type="file"
+                  accept="application/pdf,image/*"
+                  onChange={(e) => setOfferFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="offer-valid-until">
+                  Valid Until <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="offer-valid-until"
+                  type="date"
+                  value={validUntil}
+                  onChange={(e) => setValidUntil(e.target.value)}
+                />
               </div>
             </div>
           )}
@@ -406,16 +438,24 @@ export function InterviewBookingsTab() {
               type="button"
               variant="outline"
               onClick={() => setShortlisting(null)}
-              disabled={isShortlisting}
+              disabled={isSavingShortlist}
             >
               Cancel
             </Button>
             <Button
               type="button"
               onClick={confirmShortlist}
-              disabled={isShortlisting || selectedCourseIds.size === 0}
+              disabled={
+                isSavingShortlist ||
+                !selectedCourseId ||
+                !offerFile ||
+                !validUntil
+              }
             >
-              {isShortlisting ? "Saving..." : "Shortlist"}
+              {isSavingShortlist && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              )}
+              {isSavingShortlist ? "Saving..." : "Shortlist"}
             </Button>
           </div>
         </DialogContent>

@@ -4,7 +4,7 @@ import { InterviewSlotService } from "../services/interview-slot.service";
 import { InterviewBookingService } from "../services/interview-booking.service";
 import { InterviewRescheduleService } from "../services/interview-reschedule.service";
 import { InterviewSettingsService } from "../services/interview-settings.service";
-import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
+import { OfferLetterService } from "../services/offer-letter.service";
 import { parseDateOnly, parseTimeOnly } from "../lib/datetime";
 import {
   createInterviewSlotSchema,
@@ -15,6 +15,7 @@ import {
   reviewInterviewRescheduleSchema,
   listInterviewReschedulesQuerySchema,
   updateInterviewSettingsSchema,
+  shortlistCourseSchema,
 } from "../validators/interview.validator";
 
 export class InterviewCollegeAdminController {
@@ -143,12 +144,18 @@ export class InterviewCollegeAdminController {
   }
 
   static async shortlist(req: Request, res: Response) {
-    await ApplicationCourseService.markShortlisted(
-      req.params.applicationCourseId as string,
+    const body = shortlistCourseSchema.parse(req.body);
+    const result = await OfferLetterService.issueForShortlist(
+      req.collegeId!,
       req.userId!,
+      req.params.applicationCourseId as string,
+      {
+        documentUrl: body.document_url,
+        validUntil: parseDateOnly(body.valid_until),
+      },
     );
     return res.json(
-      ApiResponse.success("Application course shortlisted", null),
+      ApiResponse.success("Application course shortlisted", result),
     );
   }
 }

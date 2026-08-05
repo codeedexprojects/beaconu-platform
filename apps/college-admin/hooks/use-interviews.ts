@@ -21,6 +21,7 @@ import type {
   CompleteInterviewInput,
   ReviewInterviewRescheduleInput,
   UpdateInterviewSettingsInput,
+  ShortlistCourseInput,
 } from "@beaconu/types";
 
 export function useInterviewSlots(filters?: {
@@ -155,8 +156,13 @@ export function useUpdateInterviewSettings() {
 export function useShortlistCourse() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (applicationCourseId: string) =>
-      shortlistCourse(applicationCourseId),
+    mutationFn: ({
+      applicationCourseId,
+      data,
+    }: {
+      applicationCourseId: string;
+      data: ShortlistCourseInput;
+    }) => shortlistCourse(applicationCourseId, data),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({

@@ -317,6 +317,39 @@ export class ApplicationCourseService {
     };
   }
 
+  /** Cross-module read for `interviews`' OfferLetterService — everything it
+   * needs to issue an offer letter off an ApplicationCourse without reaching
+   * into this module's repository directly. */
+  static async getForOfferIssuance(applicationCourseId: string) {
+    const course =
+      await ApplicationCourseRepository.findByIdForOfferIssuance(
+        applicationCourseId,
+      );
+    if (!course) throw new NotFoundError("Application course not found");
+    return {
+      id: course.id,
+      status: course.status,
+      courseId: course.courseId,
+      studentId: course.application.studentId,
+      collegeId: course.application.collegeId,
+      admissionCycleId: course.application.admissionCycleId,
+    };
+  }
+
+  /** Cross-module read for `interviews`' OfferLetterService — the token
+   * amount configured on the admission cycle's course, used as the offer
+   * letter's tokenAmount. */
+  static async getConfiguredTokenAmount(
+    admissionCycleId: string,
+    courseId: string,
+  ) {
+    const rows = await ApplicationRepository.findTokenAmountsForCourses(
+      admissionCycleId,
+      [courseId],
+    );
+    return rows[0]?.tokenAmount ?? null;
+  }
+
   private static async transitionStatus(
     applicationCourseId: string,
     toStatus: string,
