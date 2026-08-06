@@ -69,6 +69,7 @@ export interface ApplicationInterviewStatus {
 
 export interface ApplicationAmountDetails {
   status: "not_issued" | "issued" | "expired" | "withdrawn";
+  applicationCourseId: string | null;
   offerNumber: string | null;
   tokenAmount: string | null;
   tokenPaymentStatus: string | null;
