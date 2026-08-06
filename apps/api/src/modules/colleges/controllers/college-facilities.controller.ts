@@ -388,9 +388,13 @@ export class CollegeFacilitiesController {
           z.object({
             busNumber: z.string().trim().min(2),
             busName: z.string().optional().nullable(),
+            busType: z.string().optional().nullable(),
             totalSeats: z.number().int().positive(),
             driverName: z.string().optional().nullable(),
             driverPhone: z.string().optional().nullable(),
+            driverStatus: z
+              .enum(["on_route", "off_duty", "on_leave"])
+              .optional(),
             monthlyFee: z.number().positive().optional(),
             busModel: z.string().optional().nullable(),
             paymentStructureNotes: z.string().optional().nullable(),
@@ -433,10 +437,12 @@ export class CollegeFacilitiesController {
             routeId: route.id,
             busNumber: bus.busNumber,
             busName: bus.busName || null,
+            busType: bus.busType || null,
             totalSeats: bus.totalSeats,
             availableSeats: bus.totalSeats,
             driverName: bus.driverName || null,
             driverPhone: bus.driverPhone || null,
+            driverStatus: bus.driverStatus || "off_duty",
             monthlyFee: bus.monthlyFee || 0,
             busModel: bus.busModel || null,
             paymentStructureNotes: bus.paymentStructureNotes || null,
@@ -468,8 +474,9 @@ export class CollegeFacilitiesController {
       throw new NotFoundError("Commuter transit route not found");
     }
 
-    await prisma.commuteRoute.delete({
+    await prisma.commuteRoute.update({
       where: { id },
+      data: { isActive: false },
     });
 
     return res

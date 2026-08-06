@@ -1,0 +1,30 @@
+meta {
+  name: List Commute Payments
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/payments?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Backs the "Payment History" screen. Paginated commute_fee ledger entries
+  for the student, newest first — each with its period ("YYYY-MM"), amount,
+  status, and its latest transaction's paidAt.
+
+  No receipt/PDF download — nothing in this codebase generates one for any
+  payment type yet (application_fee/token_fee included). The download icon
+  shown in the design has no backend counterpart today.
+}

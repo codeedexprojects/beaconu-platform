@@ -1,0 +1,30 @@
+meta {
+  name: Confirm Commute Payment
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/commute/payments/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{commuteTransactionId}}",
+    "provider_payment_id": "pay_mock_123",
+    "provider_signature": "mock_signature"
+  }
+}
+
+docs {
+  Confirms a commute-fee transaction — verifies via the payment provider,
+  marks the Transaction "completed" and its StudentFeeLedger entry "paid".
+  Idempotent if already completed. 404 if the transaction doesn't belong to
+  this student or isn't a commute_fee transaction.
+}

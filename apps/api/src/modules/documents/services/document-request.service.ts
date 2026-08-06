@@ -6,6 +6,7 @@ import {
 } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
+import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { DocumentRequestRepository } from "../repositories/document-request.repository";
 import { DocumentTemplateRepository } from "../repositories/document-template.repository";
 import type {
@@ -71,6 +72,14 @@ export class DocumentRequestService {
     collegeId: string,
     data: CreateDocumentRequestInput,
   ) {
+    const hasApplication = await ApplicationService.hasApplicationAtCollege(
+      studentId,
+      collegeId,
+    );
+    if (!hasApplication) {
+      throw new ForbiddenError("You don't have an application at this college");
+    }
+
     let resolvedDocumentName = data.document_name;
 
     if (data.document_template_id) {

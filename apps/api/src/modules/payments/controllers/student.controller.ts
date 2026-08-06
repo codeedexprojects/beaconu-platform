@@ -1,11 +1,23 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import { ApiResponse } from "@/shared/responses/api-response";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { ApplicationPaymentService } from "../services/application-payment.service";
 import { TokenPaymentService } from "../services/token-payment.service";
+import { CommutePaymentService } from "../services/commute-payment.service";
 import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
 import { confirmPaymentSchema } from "../validators/application-payment.validator";
+
+const initiateCommutePaymentSchema = z.object({
+  college_id: z.string().trim().min(1, "college_id is required"),
+});
+
+const commutePaymentsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
 
 export class StudentPaymentController {
   static async initiateApplicationPayment(req: Request, res: Response) {
@@ -55,5 +67,40 @@ export class StudentPaymentController {
       result.id,
     );
     return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async initiateCommutePayment(req: Request, res: Response) {
+    const body = initiateCommutePaymentSchema.parse(req.body);
+    const result = await CommutePaymentService.initiate(
+      req.userId as string,
+      body.college_id,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmCommutePayment(req: Request, res: Response) {
+    const body = confirmPaymentSchema.parse(req.body);
+    const result = await CommutePaymentService.confirm(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async listCommutePayments(req: Request, res: Response) {
+    const query = commutePaymentsQuerySchema.parse(req.query);
+    const result = await CommutePaymentService.listMine(
+      req.userId as string,
+      query,
+    );
+    return res.json(
+      ApiResponse.success(
+        "Commute payments fetched",
+        result.data,
+        PaginationHelper.createMeta(result.total, query.page, query.limit),
+      ),
+    );
   }
 }

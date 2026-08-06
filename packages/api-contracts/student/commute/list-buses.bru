@@ -1,0 +1,35 @@
+meta {
+  name: List Buses
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/routes/{{commuteRouteId}}/buses?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.length > 0) {
+      bru.setEnvVar("commuteBusId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists active buses for a route, with availableSeats/totalSeats and
+  driver info (name, phone, status). A bus with availableSeats: 0 is
+  full — the client should disable selecting it, but the server also
+  enforces this atomically on Setup/Modify.
+}

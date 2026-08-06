@@ -1,0 +1,26 @@
+meta {
+  name: List Ride History
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/ride-history?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Backs the "Ride History" quick action. Paginated CommuteRideHistory rows
+  for the student, newest first. Empty array is a valid/expected state —
+  nothing currently seeds this table.
+}

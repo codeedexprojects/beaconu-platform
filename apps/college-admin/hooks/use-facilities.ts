@@ -24,6 +24,7 @@ import {
   getCollegeCommuteRoutes,
   createCollegeCommuteRoute,
   deleteCollegeCommuteRoute,
+  type CreateCommuteRouteInput,
 } from "@/lib/services/colleges.service";
 
 export function useCollegeHostels(enabled = true) {
@@ -304,7 +305,8 @@ export function useCreateCollegeCommute() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => createCollegeCommuteRoute(data),
+    mutationFn: (data: CreateCommuteRouteInput) =>
+      createCollegeCommuteRoute(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.commutes });
     },

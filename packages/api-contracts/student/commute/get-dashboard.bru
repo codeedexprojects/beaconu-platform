@@ -1,0 +1,31 @@
+meta {
+  name: Get Commute Dashboard
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/enrollment?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+docs {
+  Backs the "Commute Management" screen. Returns:
+  {
+    enrollment: { id, status, enrolledFrom, enrolledUntil, route: {id,name},
+      bus: {id,busNumber,busName,monthlyFee,driverName,driverPhone,driverStatus},
+      pickupStop: {id,stopName,morningTime,eveningTime} } | null,
+    paymentDue: { period: "YYYY-MM", amount, status: "unpaid"|"pending"|"paid" } | null
+  }
+
+  Both fields are null if the student has no active commute enrollment.
+}

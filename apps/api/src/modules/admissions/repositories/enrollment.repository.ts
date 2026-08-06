@@ -19,6 +19,14 @@ const ENROLLMENT_SELECT = {
 } as const;
 
 export class EnrollmentRepository {
+  static async existsForStudentAtCollege(studentId: string, collegeId: string) {
+    const row = await prisma.enrollment.findFirst({
+      where: { studentId, collegeId },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+
   static async findByApplicationCourseId(applicationCourseId: string) {
     return prisma.enrollment.findUnique({
       where: { applicationCourseId },

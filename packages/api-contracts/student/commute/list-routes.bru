@@ -1,0 +1,26 @@
+meta {
+  name: List Commute Routes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/routes?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+docs {
+  Lists active commute routes for a college. Requires the student to have a
+  real Enrollment at that college — 403 ForbiddenError "You are not
+  enrolled at this college" otherwise (commute is a post-admission benefit,
+  not open to applicants).
+}

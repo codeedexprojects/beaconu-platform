@@ -541,11 +541,13 @@ export interface CommuteBusDto {
   id: string;
   busNumber: string;
   busName: string | null;
+  busType?: string | null;
   busModel?: string | null;
   totalSeats: number;
   availableSeats: number;
   driverName: string | null;
   driverPhone: string | null;
+  driverStatus?: string;
   monthlyFee: number;
   paymentStructureNotes?: string | null;
 }
@@ -559,6 +561,37 @@ export interface CommuteRouteDto {
   conductPolicy?: { title: string; description: string }[];
   stops: CommuteStopDto[];
   buses: CommuteBusDto[];
+}
+
+export interface CreateCommuteStopInput {
+  stopName: string;
+  landmark?: string | null;
+  morningTime?: string | null;
+  eveningTime?: string | null;
+  isPickupPoint?: boolean;
+  stopOrder: number;
+}
+
+export interface CreateCommuteBusInput {
+  busNumber: string;
+  busName?: string | null;
+  busType?: string | null;
+  busModel?: string | null;
+  totalSeats: number;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  driverStatus?: "on_route" | "off_duty" | "on_leave";
+  monthlyFee?: number;
+  paymentStructureNotes?: string | null;
+}
+
+export interface CreateCommuteRouteInput {
+  name: string;
+  description?: string | null;
+  isVerified?: boolean;
+  conductPolicy?: { title: string; description: string }[];
+  stops?: CreateCommuteStopInput[];
+  buses?: CreateCommuteBusInput[];
 }
 
 export async function getCollegeHostels(): Promise<HostelDto[]> {
@@ -847,7 +880,7 @@ export async function getCollegeCommuteRoutes(): Promise<CommuteRouteDto[]> {
 }
 
 export async function createCollegeCommuteRoute(
-  data: any,
+  data: CreateCommuteRouteInput,
 ): Promise<CommuteRouteDto> {
   return api.post<CommuteRouteDto>("/api/v1/college-admin/commute", data);
 }

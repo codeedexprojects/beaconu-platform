@@ -693,6 +693,13 @@ export class ApplicationService {
     await ApplicationRepository.markFeePaid(applicationId);
   }
 
+  static async hasApplicationAtCollege(studentId: string, collegeId: string) {
+    return ApplicationRepository.existsForStudentAtCollege(
+      studentId,
+      collegeId,
+    );
+  }
+
   static async getById(applicationId: string, studentId: string) {
     const row = await ApplicationRepository.findByIdForStudent(
       applicationId,
