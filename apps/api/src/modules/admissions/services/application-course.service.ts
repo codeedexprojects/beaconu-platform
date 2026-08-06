@@ -317,9 +317,6 @@ export class ApplicationCourseService {
     };
   }
 
-  /** Cross-module read for `interviews`' OfferLetterService — everything it
-   * needs to issue an offer letter off an ApplicationCourse without reaching
-   * into this module's repository directly. */
   static async getForOfferIssuance(applicationCourseId: string) {
     const course =
       await ApplicationCourseRepository.findByIdForOfferIssuance(
@@ -336,9 +333,6 @@ export class ApplicationCourseService {
     };
   }
 
-  /** Cross-module read for `interviews`' OfferLetterService — the token
-   * amount configured on the admission cycle's course, used as the offer
-   * letter's tokenAmount. */
   static async getConfiguredTokenAmount(
     admissionCycleId: string,
     courseId: string,
