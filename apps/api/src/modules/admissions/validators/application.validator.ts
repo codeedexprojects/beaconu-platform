@@ -26,6 +26,10 @@ export const getStatusAllCyclesQuerySchema = z.object({
   college_id: z.string().trim().min(1).optional(),
 });
 
+export const getStatusQuerySchema = z.object({
+  application_id: z.string().trim().min(1).optional(),
+});
+
 export const listApplicationsQuerySchema = z.object({
   admission_cycle_id: z.string().trim().min(1).optional(),
   form_status: z.string().trim().min(1).optional(),
@@ -41,4 +45,5 @@ export type GetFormDetailsQuery = z.infer<typeof getFormDetailsQuerySchema>;
 export type GetStatusAllCyclesQuery = z.infer<
   typeof getStatusAllCyclesQuerySchema
 >;
+export type GetStatusQuery = z.infer<typeof getStatusQuerySchema>;
 export type ListApplicationsQuery = z.infer<typeof listApplicationsQuerySchema>;
