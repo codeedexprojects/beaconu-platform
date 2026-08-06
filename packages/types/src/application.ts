@@ -116,6 +116,10 @@ export interface ApplicationStatusSummary {
   shortlist: ApplicationShortlistStatus;
   scholarships: ApplicationStatusScholarship[];
   amountDetails: ApplicationAmountDetails;
+  // "not_enrolled" if no course on this application has reached Enrollment
+  // yet, else the Enrollment row's own status (active|on_leave|suspended|
+  // completed|withdrawn|course_switched).
+  enrollmentStatus: string;
 }
 
 export interface ApplicationStatusSummaryCourseBasic {
