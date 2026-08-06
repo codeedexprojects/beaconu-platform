@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import { listApplicationsQuerySchema } from "../validators/application.validator";
 import { ApplicationListQuery } from "../queries/application-list.query";
 import { ApplicationDetailQuery } from "../queries/application-detail.query";
+import { EnrollmentService } from "../services/enrollment.service";
 
 export class ApplicationsCollegeAdminController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -25,5 +26,14 @@ export class ApplicationsCollegeAdminController {
       req.collegeId!,
     );
     res.status(200).json(ApiResponse.success("Application fetched", result));
+  }
+
+  static async enrollCourse(req: Request, res: Response): Promise<void> {
+    const result = await EnrollmentService.enroll(
+      req.collegeId!,
+      req.userId!,
+      req.params.applicationCourseId as string,
+    );
+    res.status(200).json(ApiResponse.success("Student enrolled", result));
   }
 }

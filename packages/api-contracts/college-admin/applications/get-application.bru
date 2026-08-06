@@ -17,9 +17,15 @@ auth:bearer {
 docs {
   Full read-only detail for one Application — personal/family/address/
   qualification details, declaration, every non-withdrawn course (with fee
-  + chosen quota name), and every uploaded document. Requires staff_member
-  auth, no special permission code. 404 if the application doesn't exist or
-  belongs to a different college.
+  + chosen quota name), every uploaded document, and every payment
+  (application fee + token fee, each with its own transaction history).
+  Requires staff_member auth, no special permission code. 404 if the
+  application doesn't exist or belongs to a different college.
+
+  `payments[]` — one entry per StudentFeeLedger row tied to any of this
+  application's courses (application_fee and token_fee both key off
+  applicationCourseId), each with its nested `transactions[]` (usually one,
+  more than one only on a retried/failed-then-succeeded payment).
 
   Response is a single object (not `{applications, meta}` like List
   Applications) — `data` is the `ApplicationDetailDto` directly.

@@ -246,6 +246,29 @@ export class ApplicationCourseRepository {
     });
   }
 
+  static async findByIdForEnrollment(id: string) {
+    return prisma.applicationCourse.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        courseId: true,
+        courseQuotaSeatId: true,
+        course: { select: { name: true, code: true } },
+        application: {
+          select: {
+            studentId: true,
+            collegeId: true,
+            admissionCycleId: true,
+            campusId: true,
+            college: { select: { code: true } },
+            admissionCycle: { select: { admissionYear: true } },
+          },
+        },
+      },
+    });
+  }
+
   static async markAssessmentCompleted(
     tx: Prisma.TransactionClient,
     id: string,

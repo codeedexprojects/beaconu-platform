@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import type {
   ApplicationDetailDto,
   ApplicationListItem,
+  EnrollmentItem,
   PaginationMeta,
 } from "@beaconu/types";
 
@@ -36,4 +37,13 @@ export async function getApplicationById(
   id: string,
 ): Promise<ApplicationDetailDto> {
   return api.get(`/api/v1/college-admin/applications/${id}`);
+}
+
+export async function enrollApplicationCourse(
+  applicationCourseId: string,
+): Promise<EnrollmentItem> {
+  return api.post(
+    `/api/v1/college-admin/applications/courses/${applicationCourseId}/enroll`,
+    {},
+  );
 }

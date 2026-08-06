@@ -28,6 +28,16 @@ export class OfferLetterRepository {
     });
   }
 
+  static async markTokenPaid(
+    applicationCourseId: string,
+    tokenTransactionId: string,
+  ) {
+    return prisma.offerLetter.updateMany({
+      where: { applicationCourseId },
+      data: { tokenPaymentStatus: "paid", tokenTransactionId },
+    });
+  }
+
   static async create(data: {
     applicationCourseId: string;
     studentId: string;

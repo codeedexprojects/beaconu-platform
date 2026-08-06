@@ -70,7 +70,7 @@ export class ApplicationDetailQuery {
       throw new NotFoundError("Application not found");
     }
 
-    const [courses, documents] = await Promise.all([
+    const [courses, documents, payments] = await Promise.all([
       prisma.applicationCourse.findMany({
         where: { applicationId, status: { not: "withdrawn" } },
         select: {
@@ -89,6 +89,39 @@ export class ApplicationDetailQuery {
         orderBy: { preferenceOrder: "asc" },
       }),
       ApplicationDocumentRepository.findUploadedByApplicationId(applicationId),
+      prisma.studentFeeLedger.findMany({
+        where: { applicationCourse: { applicationId } },
+        select: {
+          id: true,
+          applicationCourseId: true,
+          applicationCourse: { select: { course: { select: { name: true } } } },
+          feeCategory: true,
+          description: true,
+          totalAmount: true,
+          scholarshipDiscount: true,
+          netAmount: true,
+          paidAmount: true,
+          balanceAmount: true,
+          status: true,
+          createdAt: true,
+          transactions: {
+            select: {
+              id: true,
+              transactionNumber: true,
+              amount: true,
+              currency: true,
+              paymentMethod: true,
+              razorpayOrderId: true,
+              razorpayPaymentId: true,
+              status: true,
+              paidAt: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
 
     return {
@@ -152,6 +185,32 @@ export class ApplicationDetailQuery {
         verificationStatus: d.verificationStatus,
         rejectionReason: d.rejectionReason,
         createdAt: d.createdAt.toISOString(),
+      })),
+      payments: payments.map((p) => ({
+        id: p.id,
+        applicationCourseId: p.applicationCourseId,
+        courseName: p.applicationCourse?.course.name ?? null,
+        feeCategory: p.feeCategory,
+        description: p.description,
+        totalAmount: p.totalAmount.toString(),
+        scholarshipDiscount: p.scholarshipDiscount.toString(),
+        netAmount: p.netAmount.toString(),
+        paidAmount: p.paidAmount.toString(),
+        balanceAmount: p.balanceAmount.toString(),
+        status: p.status,
+        transactions: p.transactions.map((t) => ({
+          id: t.id,
+          transactionNumber: t.transactionNumber,
+          amount: t.amount.toString(),
+          currency: t.currency,
+          paymentMethod: t.paymentMethod,
+          providerOrderId: t.razorpayOrderId,
+          providerPaymentId: t.razorpayPaymentId,
+          status: t.status,
+          paidAt: t.paidAt ? t.paidAt.toISOString() : null,
+          createdAt: t.createdAt.toISOString(),
+        })),
+        createdAt: p.createdAt.toISOString(),
       })),
       submittedAt: application.submittedAt
         ? application.submittedAt.toISOString()

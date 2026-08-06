@@ -4,6 +4,7 @@ import { ApplicationPaymentService } from "../services/application-payment.servi
 import { TokenPaymentService } from "../services/token-payment.service";
 import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
+import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
 import { confirmPaymentSchema } from "../validators/application-payment.validator";
 
 export class StudentPaymentController {
@@ -48,6 +49,10 @@ export class StudentPaymentController {
     await ApplicationCourseService.markTokenPaid(
       req.params.applicationCourseId as string,
       req.userId as string,
+    );
+    await OfferLetterService.markTokenPaid(
+      req.params.applicationCourseId as string,
+      result.id,
     );
     return res.json(ApiResponse.success("Payment confirmed", result));
   }
