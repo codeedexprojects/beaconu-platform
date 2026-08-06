@@ -1,0 +1,46 @@
+meta {
+  name: Set Up Commute
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/commute/enrollment
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "route_id": "{{commuteRouteId}}",
+    "pickup_stop_id": "{{commuteStopId}}",
+    "bus_id": "{{commuteBusId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("commuteEnrollmentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  First-time commute setup. Atomically decrements the chosen bus's
+  availableSeats and creates an active CommuteEnrollment.
+
+  409 ConflictError "You already have an active commute enrollment — use
+  Modify Commute instead" if one already exists — use Modify Commute (PATCH
+  /commute/enrollment) instead.
+  409 ConflictError "This bus has no seats available" if the seat was taken
+  in a race.
+  404 NotFoundError if the route/bus/pickup point don't belong together, or
+  the route doesn't belong to college_id.
+}

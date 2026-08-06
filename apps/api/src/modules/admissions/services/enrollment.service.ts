@@ -42,6 +42,10 @@ function toDto(
 }
 
 export class EnrollmentService {
+  static async hasEnrollmentAtCollege(studentId: string, collegeId: string) {
+    return EnrollmentRepository.existsForStudentAtCollege(studentId, collegeId);
+  }
+
   static async enroll(
     collegeId: string,
     staffId: string,

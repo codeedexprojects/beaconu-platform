@@ -1,0 +1,36 @@
+meta {
+  name: Modify Commute
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/commute/enrollment
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "route_id": "{{commuteRouteId}}",
+    "pickup_stop_id": "{{commuteStopId}}",
+    "bus_id": "{{commuteBusId}}"
+  }
+}
+
+docs {
+  Switches the student's active commute enrollment to a different
+  route/bus/pickup point. Keeps history: the old CommuteEnrollment row is
+  closed (status: "inactive", enrolledUntil: today), a new "active" row is
+  created for the new selection — same shape response as Set Up Commute.
+
+  Old bus's seat is released, new bus's seat is decremented, atomically.
+
+  404 NotFoundError "No active commute enrollment to modify — use Setup
+  Commute instead" if the student has no active enrollment yet.
+}

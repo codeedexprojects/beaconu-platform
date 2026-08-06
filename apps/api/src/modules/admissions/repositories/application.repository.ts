@@ -247,6 +247,14 @@ export class ApplicationRepository {
     await prisma.application.delete({ where: { id } });
   }
 
+  static async existsForStudentAtCollege(studentId: string, collegeId: string) {
+    const row = await prisma.application.findFirst({
+      where: { studentId, collegeId },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+
   static async findAllForStudent(studentId: string, admissionCycleId?: string) {
     return prisma.application.findMany({
       where: { studentId, ...(admissionCycleId && { admissionCycleId }) },

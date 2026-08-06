@@ -1,0 +1,42 @@
+meta {
+  name: Initiate Commute Payment
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/commute/payments/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("commuteTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a payment order for the CURRENT month's commute fee ("YYYY-MM",
+  UTC) — same Transaction/StudentFeeLedger/PaymentProvider mechanism as
+  Initiate Token Payment, feeCategory "commute_fee". Amount is always the
+  student's active CommuteEnrollment's bus.monthlyFee, never client-typed.
+
+  409 ConflictError "Set up commute before paying" if no active
+  enrollment. 409 "This month's commute fee is already paid" if already
+  settled. Idempotent while a "pending" transaction already exists for this
+  month — calling again returns that same transaction.
+}

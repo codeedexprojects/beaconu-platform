@@ -1,0 +1,24 @@
+meta {
+  name: List Pickup Points
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/routes/{{commuteRouteId}}/stops?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+docs {
+  Lists pickup points (isPickupPoint: true stops) for a route, ordered by
+  stopOrder. Each includes morningTime/eveningTime.
+}

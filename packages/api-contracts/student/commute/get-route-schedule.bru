@@ -1,0 +1,31 @@
+meta {
+  name: Get Route Schedule
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/commute/routes/{{commuteRouteId}}/schedule?college_id={{collegeId}}&period=morning
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+  period: morning
+}
+
+docs {
+  Backs the "Bus Route" screen. Returns every stop on the route (not just
+  pickup points) in stopOrder, with the scheduled time for the requested
+  period (morning|evening), and isMyPickup: true on the stop matching the
+  student's own active enrollment's pickup point on this route.
+
+  Static schedule only — no live GPS/ETA (no location data source exists
+  anywhere in this codebase yet). isMyPickup is the only thing available
+  for client-side highlighting.
+}

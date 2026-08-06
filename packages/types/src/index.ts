@@ -26,3 +26,4 @@ export * from "./education-board";
 export * from "./icon";
 export * from "./interview";
 export * from "./scholarships";
+export * from "./commute";

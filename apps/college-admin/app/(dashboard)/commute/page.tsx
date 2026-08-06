@@ -9,10 +9,8 @@ import {
   Plus,
   Trash2,
   MapPin,
-  Clock,
   User,
   Phone,
-  DollarSign,
   Loader2,
   ChevronDown,
   ChevronUp,
@@ -40,6 +38,23 @@ import {
   useCreateCollegeCommute,
   useDeleteCollegeCommute,
 } from "@/hooks/use-facilities";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type {
+  CreateCommuteBusInput,
+  CreateCommuteStopInput,
+} from "@/lib/services/colleges.service";
+
+const DRIVER_STATUS_OPTIONS = ["off_duty", "on_route", "on_leave"] as const;
+
+function toEpochTime(hhmm: string): string {
+  return `1970-01-01T${hhmm}:00.000Z`;
+}
 
 const routeSchema = z.object({
   name: z.string().trim().min(2, "Route name is required").max(255),
@@ -67,27 +82,36 @@ export default function CommutePage() {
   const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
 
   const [stops, setStops] = useState<
-    { stopName: string; landmark: string | null; stopOrder: number }[]
+    (Omit<CreateCommuteStopInput, "morningTime" | "eveningTime"> & {
+      morningTime: string;
+      eveningTime: string;
+    })[]
   >([]);
   const [newStopName, setNewStopName] = useState("");
   const [newStopLandmark, setNewStopLandmark] = useState("");
+  const [newStopMorningTime, setNewStopMorningTime] = useState("");
+  const [newStopEveningTime, setNewStopEveningTime] = useState("");
+  const [newStopIsPickupPoint, setNewStopIsPickupPoint] = useState(true);
 
-  const [buses, setBuses] = useState<
-    {
-      busNumber: string;
-      busName: string | null;
-      totalSeats: number;
-      driverName: string | null;
-      driverPhone: string | null;
-      monthlyFee: number;
-    }[]
-  >([]);
+  const [buses, setBuses] = useState<CreateCommuteBusInput[]>([]);
   const [newBusNumber, setNewBusNumber] = useState("");
   const [newBusName, setNewBusName] = useState("");
+  const [newBusType, setNewBusType] = useState("");
+  const [newBusModel, setNewBusModel] = useState("");
   const [newBusSeats, setNewBusSeats] = useState("");
   const [newBusDriver, setNewBusDriver] = useState("");
   const [newBusPhone, setNewBusPhone] = useState("");
+  const [newBusDriverStatus, setNewBusDriverStatus] =
+    useState<(typeof DRIVER_STATUS_OPTIONS)[number]>("off_duty");
   const [newBusFee, setNewBusFee] = useState("");
+  const [newBusPaymentNotes, setNewBusPaymentNotes] = useState("");
+
+  const [isVerified, setIsVerified] = useState(false);
+  const [conductPolicy, setConductPolicy] = useState<
+    { title: string; description: string }[]
+  >([]);
+  const [newPolicyTitle, setNewPolicyTitle] = useState("");
+  const [newPolicyDescription, setNewPolicyDescription] = useState("");
 
   const {
     register,
@@ -106,11 +130,17 @@ export default function CommutePage() {
         {
           stopName: newStopName.trim(),
           landmark: newStopLandmark.trim() || null,
+          morningTime: newStopMorningTime,
+          eveningTime: newStopEveningTime,
+          isPickupPoint: newStopIsPickupPoint,
           stopOrder: stops.length + 1,
         },
       ]);
       setNewStopName("");
       setNewStopLandmark("");
+      setNewStopMorningTime("");
+      setNewStopEveningTime("");
+      setNewStopIsPickupPoint(true);
     } else {
       toast.error("Please fill in stop name");
     }
@@ -123,20 +153,44 @@ export default function CommutePage() {
         {
           busNumber: newBusNumber.trim(),
           busName: newBusName.trim() || null,
+          busType: newBusType.trim() || null,
+          busModel: newBusModel.trim() || null,
           totalSeats: parseInt(newBusSeats) || 0,
           driverName: newBusDriver.trim() || null,
           driverPhone: newBusPhone.trim() || null,
+          driverStatus: newBusDriverStatus,
           monthlyFee: parseFloat(newBusFee) || 0,
+          paymentStructureNotes: newBusPaymentNotes.trim() || null,
         },
       ]);
       setNewBusNumber("");
       setNewBusName("");
+      setNewBusType("");
+      setNewBusModel("");
       setNewBusSeats("");
       setNewBusDriver("");
       setNewBusPhone("");
+      setNewBusDriverStatus("off_duty");
       setNewBusFee("");
+      setNewBusPaymentNotes("");
     } else {
       toast.error("Please fill in bus license number and seat capacity");
+    }
+  };
+
+  const addPolicy = () => {
+    if (newPolicyTitle.trim() && newPolicyDescription.trim()) {
+      setConductPolicy([
+        ...conductPolicy,
+        {
+          title: newPolicyTitle.trim(),
+          description: newPolicyDescription.trim(),
+        },
+      ]);
+      setNewPolicyTitle("");
+      setNewPolicyDescription("");
+    } else {
+      toast.error("Please fill in both policy title and description");
     }
   };
 
@@ -144,6 +198,8 @@ export default function CommutePage() {
     if (!canManageCommute) return;
     setStops([]);
     setBuses([]);
+    setIsVerified(false);
+    setConductPolicy([]);
     reset();
     setShowAddModal(true);
   };
@@ -168,7 +224,13 @@ export default function CommutePage() {
   const onSubmit = (data: RouteFormData) => {
     const payload = {
       ...data,
-      stops: stops,
+      isVerified,
+      conductPolicy,
+      stops: stops.map((s) => ({
+        ...s,
+        morningTime: s.morningTime ? toEpochTime(s.morningTime) : null,
+        eveningTime: s.eveningTime ? toEpochTime(s.eveningTime) : null,
+      })),
       buses: buses,
     };
 
@@ -264,14 +326,45 @@ export default function CommutePage() {
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Status
                     </p>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] text-green-600 border-green-600 bg-green-50/50 mt-1"
-                    >
-                      Active
-                    </Badge>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Badge
+                        variant="outline"
+                        className={
+                          route.isActive
+                            ? "text-[10px] text-green-600 border-green-600 bg-green-50/50"
+                            : "text-[10px] text-muted-foreground"
+                        }
+                      >
+                        {route.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                      {route.isVerified && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-blue-600 border-blue-600 bg-blue-50/50"
+                        >
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {route.conductPolicy && route.conductPolicy.length > 0 && (
+                  <div className="space-y-1.5 border-t border-border/30 pt-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Conduct Policy
+                    </p>
+                    {route.conductPolicy.map((policy, idx) => (
+                      <div key={idx} className="text-xs">
+                        <span className="font-semibold">{policy.title}</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          — {policy.description}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <Button
                   variant="ghost"
@@ -304,10 +397,28 @@ export default function CommutePage() {
                               <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border border-primary bg-background flex items-center justify-center font-bold text-[8px] text-primary">
                                 {stop.stopOrder}
                               </span>
-                              <p className="font-semibold">{stop.stopName}</p>
+                              <p className="font-semibold">
+                                {stop.stopName}
+                                {stop.isPickupPoint === false && (
+                                  <span className="ml-1.5 text-[9px] text-muted-foreground font-normal">
+                                    (waypoint only)
+                                  </span>
+                                )}
+                              </p>
                               {stop.landmark && (
                                 <p className="text-[10px] text-muted-foreground mt-0.5">
                                   Landmark: {stop.landmark}
+                                </p>
+                              )}
+                              {(stop.morningTime || stop.eveningTime) && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {stop.morningTime &&
+                                    `AM ${new Date(stop.morningTime).toISOString().slice(11, 16)}`}
+                                  {stop.morningTime &&
+                                    stop.eveningTime &&
+                                    " · "}
+                                  {stop.eveningTime &&
+                                    `PM ${new Date(stop.eveningTime).toISOString().slice(11, 16)}`}
                                 </p>
                               )}
                             </div>
@@ -337,14 +448,31 @@ export default function CommutePage() {
                                   <p className="font-bold">
                                     {bus.busNumber}{" "}
                                     {bus.busName ? `(${bus.busName})` : ""}
+                                    {bus.busType && (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-1.5 h-4 px-1 text-[9px] align-middle"
+                                      >
+                                        {bus.busType}
+                                      </Badge>
+                                    )}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                                    {bus.totalSeats} seats capacity
+                                    {bus.availableSeats}/{bus.totalSeats} seats
+                                    available
+                                    {bus.busModel ? ` · ${bus.busModel}` : ""}
                                   </p>
                                 </div>
-                                <span className="font-mono text-primary font-bold">
-                                  ${bus.monthlyFee}/mo
-                                </span>
+                                <div className="text-right shrink-0">
+                                  <span className="font-mono text-primary font-bold block">
+                                    ${bus.monthlyFee}/mo
+                                  </span>
+                                  {bus.driverStatus && (
+                                    <span className="text-[9px] text-muted-foreground capitalize">
+                                      {bus.driverStatus.replace("_", " ")}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               {bus.driverName && (
                                 <div className="flex gap-4 border-t border-border/20 pt-2 mt-2 text-[10px] text-muted-foreground">
@@ -359,6 +487,11 @@ export default function CommutePage() {
                                     </span>
                                   )}
                                 </div>
+                              )}
+                              {bus.paymentStructureNotes && (
+                                <p className="text-[10px] text-muted-foreground border-t border-border/20 pt-2 mt-2">
+                                  {bus.paymentStructureNotes}
+                                </p>
                               )}
                             </div>
                           ))}
@@ -419,6 +552,81 @@ export default function CommutePage() {
                   />
                 </div>
 
+                <div className="flex items-center gap-2">
+                  <input
+                    id="route-verified"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-input"
+                    checked={isVerified}
+                    onChange={(e) => setIsVerified(e.target.checked)}
+                  />
+                  <Label htmlFor="route-verified" className="text-sm">
+                    Route verified
+                  </Label>
+                </div>
+
+                <div className="border-t pt-4 border-border/40 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-semibold">
+                      Conduct Policy
+                    </Label>
+                    <span className="text-[11px] font-bold text-muted-foreground">
+                      {conductPolicy.length} configured
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {conductPolicy.map((policy, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-start p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                      >
+                        <div>
+                          <p className="font-bold">{policy.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {policy.description}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="text-destructive hover:scale-105 shrink-0"
+                          onClick={() =>
+                            setConductPolicy(
+                              conductPolicy.filter((_, i) => i !== idx),
+                            )
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 p-2 border rounded-lg bg-muted/10 border-border/30">
+                    <Input
+                      placeholder="Policy title (e.g. No smoking)"
+                      className="h-8 text-xs flex-1"
+                      value={newPolicyTitle}
+                      onChange={(e) => setNewPolicyTitle(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Description"
+                      className="h-8 text-xs flex-1"
+                      value={newPolicyDescription}
+                      onChange={(e) => setNewPolicyDescription(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={addPolicy}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="border-t pt-4 border-border/40 space-y-3">
                   <div className="flex justify-between items-center">
                     <Label className="text-sm font-semibold">
@@ -448,6 +656,21 @@ export default function CommutePage() {
                               ({stop.landmark})
                             </span>
                           )}
+                          {!stop.isPickupPoint && (
+                            <Badge
+                              variant="outline"
+                              className="ml-2 h-4 px-1 text-[9px]"
+                            >
+                              Waypoint only
+                            </Badge>
+                          )}
+                          {(stop.morningTime || stop.eveningTime) && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {stop.morningTime && `AM ${stop.morningTime}`}
+                              {stop.morningTime && stop.eveningTime && " · "}
+                              {stop.eveningTime && `PM ${stop.eveningTime}`}
+                            </p>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -466,24 +689,65 @@ export default function CommutePage() {
                     ))}
                   </div>
 
-                  <div className="flex gap-2 p-2 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Stop Name (e.g. Noida Sector 15)"
-                      className="h-8 text-xs flex-1"
-                      value={newStopName}
-                      onChange={(e) => setNewStopName(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Landmark (e.g. Near Metro Station)"
-                      className="h-8 text-xs flex-1"
-                      value={newStopLandmark}
-                      onChange={(e) => setNewStopLandmark(e.target.value)}
-                    />
+                  <div className="space-y-2 p-2 border rounded-lg bg-muted/10 border-border/30">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Stop Name (e.g. Noida Sector 15)"
+                        className="h-8 text-xs flex-1"
+                        value={newStopName}
+                        onChange={(e) => setNewStopName(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Landmark (e.g. Near Metro Station)"
+                        className="h-8 text-xs flex-1"
+                        value={newStopLandmark}
+                        onChange={(e) => setNewStopLandmark(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">
+                          Morning time
+                        </Label>
+                        <Input
+                          type="time"
+                          className="h-8 text-xs"
+                          value={newStopMorningTime}
+                          onChange={(e) =>
+                            setNewStopMorningTime(e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">
+                          Evening time
+                        </Label>
+                        <Input
+                          type="time"
+                          className="h-8 text-xs"
+                          value={newStopEveningTime}
+                          onChange={(e) =>
+                            setNewStopEveningTime(e.target.value)
+                          }
+                        />
+                      </div>
+                      <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-4">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-input"
+                          checked={newStopIsPickupPoint}
+                          onChange={(e) =>
+                            setNewStopIsPickupPoint(e.target.checked)
+                          }
+                        />
+                        Pickup point
+                      </label>
+                    </div>
                     <Button
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="h-8 text-xs"
+                      className="h-8 text-xs w-full"
                       onClick={addStop}
                     >
                       Add Stop
@@ -509,11 +773,22 @@ export default function CommutePage() {
                       >
                         <div>
                           <span className="font-bold">{bus.busNumber}</span>
+                          {bus.busType && (
+                            <Badge
+                              variant="outline"
+                              className="ml-2 h-4 px-1 text-[9px]"
+                            >
+                              {bus.busType}
+                            </Badge>
+                          )}
                           {bus.driverName && (
                             <span className="text-[10px] text-muted-foreground ml-2">
                               ({bus.driverName})
                             </span>
                           )}
+                          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">
+                            {bus.driverStatus?.replace("_", " ")}
+                          </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-primary font-bold">
@@ -547,6 +822,18 @@ export default function CommutePage() {
                       onChange={(e) => setNewBusName(e.target.value)}
                     />
                     <Input
+                      placeholder="Bus Type (e.g. AC / Non-AC)"
+                      className="h-8 text-xs"
+                      value={newBusType}
+                      onChange={(e) => setNewBusType(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Bus Model"
+                      className="h-8 text-xs"
+                      value={newBusModel}
+                      onChange={(e) => setNewBusModel(e.target.value)}
+                    />
+                    <Input
                       type="number"
                       placeholder="Seat Capacity"
                       className="h-8 text-xs"
@@ -571,6 +858,31 @@ export default function CommutePage() {
                       className="h-8 text-xs"
                       value={newBusPhone}
                       onChange={(e) => setNewBusPhone(e.target.value)}
+                    />
+                    <Select
+                      value={newBusDriverStatus}
+                      onValueChange={(v) =>
+                        setNewBusDriverStatus(
+                          v as (typeof DRIVER_STATUS_OPTIONS)[number],
+                        )
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Driver status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DRIVER_STATUS_OPTIONS.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status.replace("_", " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Textarea
+                      placeholder="Payment structure notes"
+                      className="text-xs sm:col-span-2 min-h-16"
+                      value={newBusPaymentNotes}
+                      onChange={(e) => setNewBusPaymentNotes(e.target.value)}
                     />
                     <Button
                       type="button"
