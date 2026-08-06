@@ -5,6 +5,7 @@ import { PaginationHelper } from "@/shared/responses/pagination";
 import { ApplicationPaymentService } from "../services/application-payment.service";
 import { TokenPaymentService } from "../services/token-payment.service";
 import { CommutePaymentService } from "../services/commute-payment.service";
+import { HostelPaymentService } from "../services/hostel-payment.service";
 import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
@@ -18,6 +19,23 @@ const commutePaymentsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
+
+const selectedAddonSchema = z.object({
+  addon_service_id: z.string().trim().min(1),
+  plan_label: z.string().trim().min(1),
+});
+
+const initiateHostelTokenFeeSchema = z.object({
+  room_type_id: z.string().trim().min(1, "room_type_id is required"),
+  room_plan_type: z.enum(["monthly", "annual"]),
+  mess_plan_id: z.string().trim().min(1).optional(),
+  dietary_preference: z.string().trim().min(1).optional(),
+  selected_addons: z.array(selectedAddonSchema).optional(),
+});
+
+const confirmHostelTokenFeeSchema = confirmPaymentSchema.extend(
+  initiateHostelTokenFeeSchema.shape,
+);
 
 export class StudentPaymentController {
   static async initiateApplicationPayment(req: Request, res: Response) {
@@ -98,6 +116,60 @@ export class StudentPaymentController {
     return res.json(
       ApiResponse.success(
         "Commute payments fetched",
+        result.data,
+        PaginationHelper.createMeta(result.total, query.page, query.limit),
+      ),
+    );
+  }
+
+  static async initiateHostelApplicationFee(req: Request, res: Response) {
+    const result = await HostelPaymentService.initiateApplicationFee(
+      req.userId as string,
+      req.params.roomTypeId as string,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmHostelApplicationFee(req: Request, res: Response) {
+    const body = confirmPaymentSchema.parse(req.body);
+    const result = await HostelPaymentService.confirmApplicationFee(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async initiateHostelTokenFee(req: Request, res: Response) {
+    const body = initiateHostelTokenFeeSchema.parse(req.body);
+    const result = await HostelPaymentService.initiateTokenFee(
+      req.userId as string,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmHostelTokenFee(req: Request, res: Response) {
+    const body = confirmHostelTokenFeeSchema.parse(req.body);
+    const result = await HostelPaymentService.confirmTokenFee(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async listHostelPayments(req: Request, res: Response) {
+    const query = commutePaymentsQuerySchema.parse(req.query);
+    const result = await HostelPaymentService.listMine(
+      req.userId as string,
+      query,
+    );
+    return res.json(
+      ApiResponse.success(
+        "Hostel payments fetched",
         result.data,
         PaginationHelper.createMeta(result.total, query.page, query.limit),
       ),

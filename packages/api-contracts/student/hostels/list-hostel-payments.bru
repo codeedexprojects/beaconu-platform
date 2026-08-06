@@ -1,0 +1,27 @@
+meta {
+  name: List Hostel Payments
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/hostels/payments?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Payment history covering both hostel_application_fee and
+  hostel_token_fee ledger entries together, newest first — each with its
+  feeCategory, roomTypeId, amount, status, and latest transaction's
+  paidAt.
+}

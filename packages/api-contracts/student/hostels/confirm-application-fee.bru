@@ -1,0 +1,30 @@
+meta {
+  name: Confirm Hostel Application Fee
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/hostels/application-fee/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{hostelTransactionId}}",
+    "provider_payment_id": "pay_mock_123",
+    "provider_signature": "mock_signature"
+  }
+}
+
+docs {
+  Confirms the application-fee transaction — verifies via the payment
+  provider, marks Transaction "completed" and its StudentFeeLedger entry
+  "paid". No other side effect (no enrollment is created here — that only
+  happens once the token fee is confirmed).
+}
