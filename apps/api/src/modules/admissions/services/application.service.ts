@@ -172,6 +172,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
     offerLetters,
     scholarshipApplications,
     tokenAmountRows,
+    enrollments,
   ] = await Promise.all([
     resolveAssessmentStatus(studentId, row),
     ApplicationRepository.findInterviewBookingForApplication(row.id),
@@ -183,7 +184,10 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
           [tokenAmountCourse.course.id],
         )
       : Promise.resolve([]),
+    ApplicationRepository.findEnrollmentsByCourseIds(applicationCourseIds),
   ]);
+
+  const enrollmentStatus = enrollments[0]?.status ?? "not_enrolled";
 
   // Matched against the shortlisted course (not necessarily the primary
   // one) — amountDetails describes whichever course actually has an offer,
@@ -279,6 +283,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
       status: s.status as "pending" | "approved" | "rejected",
     })),
     amountDetails,
+    enrollmentStatus,
   };
 }
 

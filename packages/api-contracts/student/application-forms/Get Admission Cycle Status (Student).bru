@@ -98,7 +98,12 @@ docs {
       // before that the student can see the offer's amount/status but not
       // download the letter itself.
       documentUrl
-    }
+    },
+    // "not_enrolled" until a course reaches Enrollment (College Admin >
+    // Applications > Mark Enrolled, only possible once token_paid), else
+    // the Enrollment row's own status: active|on_leave|suspended|
+    // completed|withdrawn|course_switched.
+    enrollmentStatus: "not_enrolled" | string
   }
 
   pendingAction — the single next thing to do for this application, not a

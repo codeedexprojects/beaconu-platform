@@ -312,6 +312,14 @@ export class ApplicationRepository {
     });
   }
 
+  static async findEnrollmentsByCourseIds(applicationCourseIds: string[]) {
+    if (applicationCourseIds.length === 0) return [];
+    return prisma.enrollment.findMany({
+      where: { applicationCourseId: { in: applicationCourseIds } },
+      select: { applicationCourseId: true, status: true },
+    });
+  }
+
   static async findScholarshipApplicationsForApplication(
     applicationId: string,
   ) {
