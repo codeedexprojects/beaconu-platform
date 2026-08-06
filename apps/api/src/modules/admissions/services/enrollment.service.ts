@@ -42,13 +42,6 @@ function toDto(
 }
 
 export class EnrollmentService {
-  /** Final step of the admission pipeline (token_paid -> enrolled) — a
-   * college-admin action, mirroring how OfferLetterService.issueForShortlist
-   * pairs a status transition with creating the entity that records it.
-   * Seat consumption happens here, not at application-submit or shortlist
-   * time — a seat is only truly spoken for once the student is actually
-   * enrolled (see ApplicationService.submit's doc comment for why it was
-   * deliberately deferred to this point). */
   static async enroll(
     collegeId: string,
     staffId: string,
