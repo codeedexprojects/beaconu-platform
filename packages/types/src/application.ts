@@ -413,6 +413,35 @@ export interface ApplicationDetailDocumentItem {
   createdAt: string;
 }
 
+export interface ApplicationDetailTransactionItem {
+  id: string;
+  transactionNumber: string;
+  amount: string;
+  currency: string;
+  paymentMethod: string;
+  providerOrderId: string | null;
+  providerPaymentId: string | null;
+  status: string;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface ApplicationDetailPaymentItem {
+  id: string;
+  applicationCourseId: string | null;
+  courseName: string | null;
+  feeCategory: string;
+  description: string | null;
+  totalAmount: string;
+  scholarshipDiscount: string;
+  netAmount: string;
+  paidAmount: string;
+  balanceAmount: string;
+  status: string;
+  transactions: ApplicationDetailTransactionItem[];
+  createdAt: string;
+}
+
 export interface ApplicationDetailDto {
   id: string;
   applicationNumber: string;
@@ -441,6 +470,7 @@ export interface ApplicationDetailDto {
   declaration: Partial<DeclarationInput>;
   courses: ApplicationDetailCourseItem[];
   documents: ApplicationDetailDocumentItem[];
+  payments: ApplicationDetailPaymentItem[];
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -450,4 +480,22 @@ export interface ConfirmPaymentInput {
   transaction_id: string;
   provider_payment_id: string;
   provider_signature?: string;
+}
+
+export interface EnrollmentItem {
+  id: string;
+  studentId: string;
+  collegeId: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  campusId: string | null;
+  applicationCourseId: string;
+  admissionCycleId: string;
+  enrollmentNumber: string;
+  academicYear: string;
+  enrolledAt: string;
+  status: string;
+  completedAt: string | null;
+  createdAt: string;
 }

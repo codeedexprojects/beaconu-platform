@@ -1,0 +1,42 @@
+meta {
+  name: Enroll Application Course
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/applications/courses/{{applicationCourseId}}/enroll
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("enrollmentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Final step of the admission pipeline — token_paid -> enrolled. Creates the
+  Enrollment record (the real student<->college link — see docs/context.md
+  §11 "Post-Admission") and flips the ApplicationCourse's status to
+  "enrolled". Requires staff_member auth, no special permission code.
+
+  409 ConflictError "This course's token must be paid before enrolling" if
+  the course isn't at "token_paid" yet. 409 ConflictError "No seats
+  available for this quota" if the course's chosen quota seat pool is
+  exhausted at the moment of enrolling (seat is decremented here, not
+  earlier in the pipeline).
+
+  Idempotent — re-calling this on an already-enrolled course just returns
+  the existing Enrollment, does not re-issue or double-decrement a seat.
+
+  404 if the course doesn't exist or belongs to a different college.
+}

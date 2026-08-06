@@ -83,4 +83,23 @@ export class OfferLetterService {
     });
     return toDto(created);
   }
+
+  /** Called from the payments module right after a token payment is
+   * confirmed — keeps the OfferLetter's own tokenPaymentStatus in sync
+   * with the payment, since that's the field the student status endpoint's
+   * amountDetails (and its documentUrl gate) actually reads. Best-effort:
+   * no offer existing at this point would mean the course reached
+   * "token_paid" without ever having an offer issued, which shouldn't
+   * happen given markTokenPaid requires "shortlisted" first — but a missing
+   * offer here shouldn't fail an already-successful payment confirmation,
+   * so this silently no-ops rather than throwing. */
+  static async markTokenPaid(
+    applicationCourseId: string,
+    transactionId: string,
+  ) {
+    await OfferLetterRepository.markTokenPaid(
+      applicationCourseId,
+      transactionId,
+    );
+  }
 }

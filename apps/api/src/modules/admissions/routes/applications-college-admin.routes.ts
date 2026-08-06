@@ -9,5 +9,9 @@ router.use(authenticate, authorizeUserType("staff_member"));
 
 router.get("/", ApplicationsCollegeAdminController.list);
 router.get("/:id", ApplicationsCollegeAdminController.getById);
+router.post(
+  "/courses/:applicationCourseId/enroll",
+  ApplicationsCollegeAdminController.enrollCourse,
+);
 
 export default router;

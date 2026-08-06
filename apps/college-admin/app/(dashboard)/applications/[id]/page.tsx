@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useApplication } from "@/hooks/use-applications";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  useApplication,
+  useEnrollApplicationCourse,
+} from "@/hooks/use-applications";
+import type { ApplicationDetailCourseItem } from "@beaconu/types";
 
 const FORM_STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
@@ -90,6 +97,19 @@ export default function ApplicationDetailPage() {
   const router = useRouter();
 
   const { data: app, isLoading, error } = useApplication(id);
+  const enrollMutation = useEnrollApplicationCourse(id);
+  const [enrollTarget, setEnrollTarget] =
+    useState<ApplicationDetailCourseItem | null>(null);
+
+  function confirmEnroll() {
+    if (!enrollTarget) return;
+    enrollMutation.mutate(enrollTarget.id, {
+      onSuccess: () => {
+        toast.success(`"${enrollTarget.courseName}" enrolled`);
+        setEnrollTarget(null);
+      },
+    });
+  }
 
   if (isLoading) {
     return (
@@ -400,13 +420,14 @@ export default function ApplicationDetailPage() {
               <TableHead>Status</TableHead>
               <TableHead>Quota</TableHead>
               <TableHead>Fee</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {app.courses.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center text-muted-foreground"
                 >
                   No courses selected.
@@ -427,6 +448,17 @@ export default function ApplicationDetailPage() {
                   </TableCell>
                   <TableCell>{c.quotaName ?? "—"}</TableCell>
                   <TableCell>₹{c.applicationFee}</TableCell>
+                  <TableCell className="text-right">
+                    {c.status === "token_paid" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEnrollTarget(c)}
+                      >
+                        Mark Enrolled
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -498,6 +530,118 @@ export default function ApplicationDetailPage() {
           </TableBody>
         </Table>
       </Section>
+
+      {/* Payments */}
+      <Section title="Payments">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fee</TableHead>
+              <TableHead>Course</TableHead>
+              <TableHead>Net Amount</TableHead>
+              <TableHead>Paid</TableHead>
+              <TableHead>Balance</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Transactions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {app.payments.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center text-muted-foreground"
+                >
+                  No payments yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              app.payments.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <p className="font-medium capitalize">
+                      {p.feeCategory.replace(/_/g, " ")}
+                    </p>
+                    {p.description && (
+                      <p className="text-xs text-muted-foreground">
+                        {p.description}
+                      </p>
+                    )}
+                  </TableCell>
+                  <TableCell>{p.courseName ?? "—"}</TableCell>
+                  <TableCell>₹{p.netAmount}</TableCell>
+                  <TableCell>₹{p.paidAmount}</TableCell>
+                  <TableCell>₹{p.balanceAmount}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        p.status === "paid"
+                          ? "default"
+                          : p.status === "overdue"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                    >
+                      {p.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {p.transactions.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {p.transactions.map((t) => (
+                          <div key={t.id} className="text-xs">
+                            <span className="font-medium">
+                              {t.transactionNumber}
+                            </span>{" "}
+                            · {t.paymentMethod} ·{" "}
+                            <Badge
+                              variant={
+                                t.status === "completed"
+                                  ? "default"
+                                  : t.status === "failed" ||
+                                      t.status === "rejected"
+                                    ? "destructive"
+                                    : "secondary"
+                              }
+                              className="text-[10px]"
+                            >
+                              {t.status}
+                            </Badge>
+                            {t.providerPaymentId && (
+                              <p className="text-muted-foreground">
+                                {t.providerPaymentId}
+                              </p>
+                            )}
+                            <p className="text-muted-foreground">
+                              {formatDateTime(t.paidAt ?? t.createdAt)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Section>
+
+      <ConfirmDialog
+        open={enrollTarget !== null}
+        title="Mark Enrolled"
+        description={
+          enrollTarget
+            ? `Enroll "${enrollTarget.courseName}"? This decrements the course's quota seat count and cannot be undone.`
+            : ""
+        }
+        confirmLabel="Enroll"
+        loading={enrollMutation.isPending}
+        onCancel={() => setEnrollTarget(null)}
+        onConfirm={confirmEnroll}
+      />
     </div>
   );
 }
