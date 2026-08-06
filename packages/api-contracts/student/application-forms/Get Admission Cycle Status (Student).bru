@@ -14,6 +14,10 @@ headers {
   Authorization: Bearer {{studentAccessToken}}
 }
 
+params:query {
+  ~application_id: {{applicationId}}
+}
+
 docs {
   Onboarding-process status — application progress, assessment, interview,
   and token/offer amount details, all in one call — one entry per
@@ -22,6 +26,11 @@ docs {
   this response — courses live on the application form itself (Get
   Application Details), and documents have their own dedicated endpoint
   (Get Required Documents).
+
+  Optional query param `application_id` narrows the result to that one
+  Application (still returned as a 1-item array, same shape) — useful once
+  the student has several applications under this cycle and only one is
+  needed. Omit it to get every application under this cycle, as before.
 
   `data` is `null` if the student hasn't started any application for this
   admission cycle yet. Otherwise an array, each entry shaped:

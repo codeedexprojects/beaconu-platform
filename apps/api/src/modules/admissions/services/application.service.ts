@@ -625,13 +625,18 @@ export class ApplicationService {
    * ApplicationRepository.advanceStep's doc comment) and Submit doesn't
    * require them either, so they're left for the client to check
    * separately via List Required/Uploaded Documents. */
-  static async getStatus(studentId: string, admissionCycleId: string) {
+  static async getStatus(
+    studentId: string,
+    admissionCycleId: string,
+    applicationId?: string,
+  ) {
     const cycle =
       await ApplicationRepository.findCycleForApply(admissionCycleId);
     if (!cycle) throw new NotFoundError("Application form not found");
 
     const rows = await ApplicationRepository.findStatusRows(studentId, {
       admissionCycleId,
+      applicationId,
     });
     if (rows.length === 0) return null;
     return Promise.all(rows.map((row) => buildStatusSummary(studentId, row)));

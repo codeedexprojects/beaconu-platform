@@ -12,6 +12,7 @@ import {
   startApplicationSchema,
   getFormDetailsQuerySchema,
   getStatusAllCyclesQuerySchema,
+  getStatusQuerySchema,
 } from "../validators/application.validator";
 import {
   addApplicationCourseSchema,
@@ -74,9 +75,11 @@ export class StudentApplicationController {
   }
 
   static async getStatus(req: Request, res: Response) {
+    const query = getStatusQuerySchema.parse(req.query);
     const result = await ApplicationService.getStatus(
       req.userId as string,
       req.params.id as string,
+      query.application_id,
     );
     return res.json(ApiResponse.success("Application status fetched", result));
   }

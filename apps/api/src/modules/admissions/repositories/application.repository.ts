@@ -257,7 +257,11 @@ export class ApplicationRepository {
 
   static async findStatusRows(
     studentId: string,
-    filters?: { admissionCycleId?: string; collegeId?: string },
+    filters?: {
+      admissionCycleId?: string;
+      collegeId?: string;
+      applicationId?: string;
+    },
   ) {
     return prisma.application.findMany({
       where: {
@@ -266,6 +270,7 @@ export class ApplicationRepository {
           admissionCycleId: filters.admissionCycleId,
         }),
         ...(filters?.collegeId && { collegeId: filters.collegeId }),
+        ...(filters?.applicationId && { id: filters.applicationId }),
       },
       select: {
         id: true,
