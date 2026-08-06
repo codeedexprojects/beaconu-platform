@@ -1,0 +1,52 @@
+meta {
+  name: Initiate Hostel Token Fee
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/hostels/token-fee/initiate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "room_type_id": "{{hostelRoomTypeId}}",
+    "room_plan_type": "monthly",
+    "mess_plan_id": "",
+    "dietary_preference": "vegetarian",
+    "selected_addons": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("hostelTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a payment order for the room type's security deposit ("token
+  fee"). feeCategory "hostel_token_fee".
+
+  Body:
+  - room_type_id: required
+  - room_plan_type: "monthly" | "annual"
+  - mess_plan_id, dietary_preference, selected_addons: optional — the full
+    booking configuration, since confirming this payment immediately
+    creates the HostelEnrollment (see confirm-token-fee.bru), so it all
+    needs to be known up front.
+
+  409 ConflictError "Pay the application fee for this room type before
+  paying the token fee" if the application fee isn't paid yet.
+  409 ConflictError "You already have an active hostel enrollment" if one
+  exists already.
+}

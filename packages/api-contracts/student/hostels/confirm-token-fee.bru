@@ -1,0 +1,53 @@
+meta {
+  name: Confirm Hostel Token Fee
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/hostels/token-fee/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{hostelTransactionId}}",
+    "provider_payment_id": "pay_mock_456",
+    "provider_signature": "mock_signature",
+    "room_type_id": "{{hostelRoomTypeId}}",
+    "room_plan_type": "monthly",
+    "mess_plan_id": "",
+    "dietary_preference": "vegetarian",
+    "selected_addons": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("hostelTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Confirms the token-fee transaction, then immediately creates the
+  HostelEnrollment (atomic bed decrement + enrollment row) using the same
+  room_type_id/room_plan_type/mess_plan_id/dietary_preference/
+  selected_addons passed here — no manual college-admin confirmation step,
+  self-service booking.
+
+  Repeats the same booking-config fields as Initiate Hostel Token Fee
+  because nothing bridges initiate → confirm server-side (mirrors how
+  every other confirm endpoint in this codebase only takes payment-proof
+  fields, not business data).
+
+  409 ConflictError "No beds available in this room type" if the bed was
+  taken in a race between initiate and confirm.
+}

@@ -27,3 +27,4 @@ export * from "./icon";
 export * from "./interview";
 export * from "./scholarships";
 export * from "./commute";
+export * from "./hostel";

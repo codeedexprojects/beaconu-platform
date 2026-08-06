@@ -1,0 +1,21 @@
+meta {
+  name: Get My Hostel Enrollment
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/hostels/enrollment
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Returns the student's active HostelEnrollment (hostel/room type/mess plan
+  resolved to names, not just ids, plus the frozen feeBreakdown snapshot),
+  or null if none.
+}
