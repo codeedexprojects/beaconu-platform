@@ -89,6 +89,10 @@ docs {
     // on one application, unlike assessment/interview.
     amountDetails: {
       status: "not_issued" | "issued" | "expired" | "withdrawn",
+      // The shortlisted ApplicationCourse this amountDetails describes —
+      // null until at least one course is shortlisted. Use this to call
+      // the token payment endpoints (.../payments/courses/{applicationCourseId}/token/initiate|confirm).
+      applicationCourseId,
       offerNumber, tokenAmount, tokenPaymentStatus, validUntil,
       // documentUrl is only non-null once tokenPaymentStatus === "paid" —
       // before that the student can see the offer's amount/status but not
@@ -113,12 +117,12 @@ docs {
   Offer Letter) now issues the OfferLetter in the same action, so
   `amountDetails` reflects real offer data ("issued") from that point on.
 
-  `amountDetails.tokenAmount` is the ONE exception — even with
-  status "not_issued", it's populated as soon as a course is shortlisted:
-  resolved from that course's own admission-form config (Attach Course to
-  Application Form's `token_amount`), off the primary course if it's the
-  shortlisted one, else the first shortlisted course found. This is a
-  preview of what the student will owe once an offer is actually issued,
-  not a real offer amount — stays `null` until at least one course is
-  shortlisted.
+  `amountDetails.tokenAmount` and `amountDetails.applicationCourseId` are
+  the exception — even with status "not_issued", they're populated as
+  soon as a course is shortlisted: resolved off the primary course if it's
+  the shortlisted one, else the first shortlisted course found.
+  `tokenAmount` here is a preview of what the student will owe (from that
+  course's admission-form config, Attach Course to Application Form's
+  `token_amount`), not a real offer amount yet — both fields stay `null`
+  until at least one course is shortlisted.
 }

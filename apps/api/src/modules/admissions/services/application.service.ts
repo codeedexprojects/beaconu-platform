@@ -118,6 +118,7 @@ const NOT_SCHEDULED_INTERVIEW = {
 
 const NOT_ISSUED_AMOUNT_DETAILS = {
   status: "not_issued" as const,
+  applicationCourseId: null,
   offerNumber: null,
   tokenAmount: null,
   tokenPaymentStatus: null,
@@ -158,9 +159,6 @@ function toBasicStatusSummary(row: StatusRow) {
 
 async function buildStatusSummary(studentId: string, row: StatusRow) {
   const applicationCourseIds = row.applicationCourses.map((ac) => ac.id);
-  const primaryCourse =
-    row.applicationCourses.find((ac) => ac.isPrimary) ??
-    row.applicationCourses[0];
 
   const shortlistedCourses = row.applicationCourses.filter((ac) =>
     SHORTLISTED_OR_LATER.has(ac.status),
@@ -187,8 +185,11 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
       : Promise.resolve([]),
   ]);
 
-  const offer = primaryCourse
-    ? offerLetters.find((o) => o.applicationCourseId === primaryCourse.id)
+  // Matched against the shortlisted course (not necessarily the primary
+  // one) — amountDetails describes whichever course actually has an offer,
+  // and only a shortlisted-or-later course can have one.
+  const offer = tokenAmountCourse
+    ? offerLetters.find((o) => o.applicationCourseId === tokenAmountCourse.id)
     : undefined;
 
   const configuredTokenAmount = tokenAmountRows[0]?.tokenAmount
@@ -217,6 +218,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
   const amountDetails = offer
     ? {
         status: offer.status as "issued" | "expired" | "withdrawn",
+        applicationCourseId: offer.applicationCourseId,
         offerNumber: offer.offerNumber,
         tokenAmount: offer.tokenAmount.toString(),
         tokenPaymentStatus: offer.tokenPaymentStatus,
@@ -229,6 +231,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
       }
     : {
         ...NOT_ISSUED_AMOUNT_DETAILS,
+        applicationCourseId: tokenAmountCourse?.id ?? null,
         tokenAmount: configuredTokenAmount,
         tokenPaymentStatus: tokenAmountCourse
           ? TOKEN_PAID_OR_LATER.has(tokenAmountCourse.status)
