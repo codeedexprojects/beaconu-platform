@@ -163,6 +163,12 @@ export class StudentsQuery {
 
     if (!student) throw new NotFoundError("Student not found");
 
+    const enrollment = await prisma.enrollment.findFirst({
+      where: { studentId: id, status: "active" },
+      select: { collegeId: true, college: { select: { name: true } } },
+      orderBy: { enrolledAt: "desc" },
+    });
+
     const collegeReviews: StudentCollegeReview[] = student.collegeReviews.map(
       (review) => ({
         id: review.id,
@@ -212,6 +218,9 @@ export class StudentsQuery {
       status: student.status,
       profileMetadata: (student.profileMetadata ??
         {}) as StudentProfileMetadata,
+      enrolledCollege: enrollment
+        ? { collegeId: enrollment.collegeId, name: enrollment.college.name }
+        : null,
       lastLoginAt: student.lastLoginAt
         ? student.lastLoginAt.toISOString()
         : null,
