@@ -47,7 +47,7 @@ import { CourseInfoTab } from "@/components/academics/tabs/CourseInfoTab";
 import { AdmissionPolicyTab } from "@/components/academics/tabs/AdmissionPolicyTab";
 import { EligibilityCriteriaTab } from "@/components/academics/tabs/EligibilityCriteriaTab";
 import { PlacementsTab } from "@/components/academics/tabs/PlacementsTab";
-import { FeesTab } from "@/components/academics/tabs/FeesTab";
+import { FeeStructureTab } from "@/components/academics/tabs/FeeStructureTab";
 import { FinancialAidTab } from "@/components/academics/tabs/FinancialAidTab";
 import { StudentHousingTab } from "@/components/academics/tabs/StudentHousingTab";
 import { ExamPolicyTab } from "@/components/academics/tabs/ExamPolicyTab";
@@ -278,9 +278,10 @@ export default function SetupAcademicsPage() {
 
   const saveActiveTab = () => {
     if (!editingCourse?.id) return;
-    // Quotas & Fees is a relational tab (courses/:id/quotas) — each row saves
-    // immediately via its own mutation, there is no draft JSON to persist here.
-    if (activeTab === "course_quotas") return;
+    // Quotas and Fee Structure are relational tabs (courses/:id/quotas,
+    // courses/:id/fee-structures) — each row saves immediately via its own
+    // mutation, there is no draft JSON to persist here.
+    if (activeTab === "course_quotas" || activeTab === "fees") return;
 
     const validationError = validateActiveTabPayload();
     if (validationError) {
@@ -342,9 +343,9 @@ export default function SetupAcademicsPage() {
   };
 
   const saveAndGoToTab = (nextTabId: CourseTabId) => {
-    // Quotas & Fees has no draft JSON — each attach/update/detach action saves
-    // immediately, so Back/Next just navigates.
-    if (activeTab === "course_quotas") {
+    // Quotas and Fee Structure have no draft JSON — each add/update/delete
+    // action saves immediately, so Back/Next just navigates.
+    if (activeTab === "course_quotas" || activeTab === "fees") {
       setActiveTab(nextTabId);
       return;
     }
@@ -373,7 +374,7 @@ export default function SetupAcademicsPage() {
   };
 
   const saveAndExit = () => {
-    if (activeTab === "course_quotas") {
+    if (activeTab === "course_quotas" || activeTab === "fees") {
       setEditingCourse(null);
       setIsAdding(false);
       return;
@@ -497,7 +498,7 @@ export default function SetupAcademicsPage() {
                       Configure tab data for &apos;{editingCourse.name}&apos;.
                     </CardDescription>
                   </div>
-                  {activeTab !== "course_quotas" && (
+                  {activeTab !== "course_quotas" && activeTab !== "fees" && (
                     <Button
                       onClick={saveActiveTab}
                       disabled={isUpdatingTab}
@@ -515,6 +516,8 @@ export default function SetupAcademicsPage() {
                 <CardContent className="space-y-6 min-h-[300px]">
                   {activeTab === "course_quotas" ? (
                     <QuotasFeesTab courseId={editingCourse.id} />
+                  ) : activeTab === "fees" ? (
+                    <FeeStructureTab courseId={editingCourse.id} />
                   ) : isLoadingTabs ? (
                     <div className="flex h-48 items-center justify-center">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -554,15 +557,6 @@ export default function SetupAcademicsPage() {
                           onChange={updateActiveTabPayload}
                           uploadingField={uploadingField}
                           onFieldUpload={handleCourseFieldUpload}
-                        />
-                      )}
-
-                      {/* FEES */}
-                      {activeTab === "fees" && (
-                        <FeesTab
-                          payload={getActiveTabPayload()}
-                          onChange={updateActiveTabPayload}
-                          editingCourseId={editingCourse?.id}
                         />
                       )}
 

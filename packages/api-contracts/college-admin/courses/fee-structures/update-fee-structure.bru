@@ -1,0 +1,27 @@
+meta {
+  name: Update Fee Structure Row
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/fee-structures/{{feeStructureId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "amount": 65000
+  }
+}
+
+docs {
+  Partial update — only send the fields that changed. Same
+  installment-sum validation as create applies when both `amount` and
+  `instalmentConfig` are sent together.
+}

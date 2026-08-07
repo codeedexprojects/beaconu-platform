@@ -25,4 +25,31 @@ router.post(
   StudentPaymentController.confirmTokenPayment,
 );
 
+router.get("/finance/summary", StudentPaymentController.getFinanceSummary);
+router.get("/finance/course-fees", StudentPaymentController.listCourseFees);
+router.post(
+  "/finance/fee-structures/:feeStructureId/pay/initiate",
+  StudentPaymentController.initiateFullFeePayment,
+);
+router.post(
+  "/finance/pay/confirm",
+  StudentPaymentController.confirmFullFeePayment,
+);
+router.post(
+  "/finance/fee-structures/:feeStructureId/installments/setup",
+  StudentPaymentController.setupInstallmentPlan,
+);
+router.get(
+  "/finance/fee-structures/:feeStructureId/installments",
+  StudentPaymentController.listInstallments,
+);
+router.post(
+  "/finance/installments/:ledgerEntryId/pay/initiate",
+  StudentPaymentController.initiateInstallmentPayment,
+);
+router.post(
+  "/finance/installments/pay/confirm",
+  StudentPaymentController.confirmInstallmentPayment,
+);
+
 export default router;

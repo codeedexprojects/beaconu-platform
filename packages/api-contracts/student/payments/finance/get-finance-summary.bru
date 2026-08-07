@@ -1,0 +1,30 @@
+meta {
+  name: Get Finance Summary
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/finance/summary?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Student Hub Finance dashboard header: { totalFee, paidAmount, dueAmount,
+  percentPaid }. Computed from every active FeeStructure row for the
+  student's enrolled course + academic year, against every StudentFeeLedger
+  entry marked "paid".
+
+  Requires an active Enrollment at college_id — returns all zeros if the
+  student isn't enrolled there (does not throw, since this endpoint backs
+  a dashboard header that should degrade gracefully).
+}

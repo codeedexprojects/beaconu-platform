@@ -32,6 +32,8 @@ export class EnrollmentRepository {
       where: { studentId, status: "active" },
       select: {
         collegeId: true,
+        courseId: true,
+        academicYear: true,
         college: { select: { name: true } },
         course: { select: { name: true, duration: true } },
       },

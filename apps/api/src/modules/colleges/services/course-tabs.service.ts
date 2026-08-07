@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError } from "@/shared/errors";
 import { CourseTabsRepository } from "../repositories/course-tabs.repository";
+import { FeeStructureRepository } from "../repositories/fee-structure.repository";
 import { HostelService } from "./hostel.service";
 import { LibraryService } from "./library.service";
 import {
@@ -246,7 +247,6 @@ function normalizeKeyDateStatus(value: unknown): KeyDateStatus | "" {
     : "";
 }
 
-const FEE_DETAIL_GENDERS = ["Boys", "Girls", "Other"] as const;
 const FINANCIAL_AID_DISCOUNT_TYPES = ["percentage", "amount"] as const;
 
 function normalizeAccreditationItems(
@@ -755,73 +755,113 @@ function normalizeCourseInfoData(data: unknown): Record<string, unknown> {
   };
 }
 
-function transformPublicFeeTab(raw: Record<string, unknown>) {
-  const feeDetails = Array.isArray(raw.fee_details)
-    ? (raw.fee_details as Record<string, unknown>[]).map((detail) => {
-        const summary = asRecord(detail.fees_summary);
-        const tuitionRows = Array.isArray(detail.tuition_fees)
-          ? (detail.tuition_fees as Record<string, unknown>[]).map((r) => ({
-              year: asText(r.year),
-              amount: asText(r.amount).replace(/^Rs\s?/, "₹ "),
-            }))
-          : [];
-        const mapItems = (arr: unknown) =>
-          Array.isArray(arr)
-            ? (arr as Record<string, unknown>[]).map((i) => ({
-                label: asText(i.label),
-                amount: asText(i.amount).replace(/^Rs\s?/, "₹ "),
-              }))
-            : [];
-        const installments = Array.isArray(detail.deadlines_and_installments)
-          ? (
-              detail.deadlines_and_installments as Record<string, unknown>[]
-            ).map((i) => ({
-              due: asText(i.due).toUpperCase(),
+function humanizeFeeCategory(feeCategory: string): string {
+  return feeCategory
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatFeeAmount(amount: { toString(): string }): string {
+  return `₹ ${Number(amount.toString()).toLocaleString("en-IN")}`;
+}
+
+type PublicFeeStructureRow = {
+  feeCategory: string;
+  amount: { toString(): string };
+  yearOrSemester: string | null;
+  gender: string | null;
+  instalmentAllowed: boolean;
+  instalmentConfig: unknown;
+  feePdfUrl: string | null;
+};
+
+function buildPublicFeesTabFromFeeStructures(rows: PublicFeeStructureRow[]) {
+  const groups = new Map<string, PublicFeeStructureRow[]>();
+  for (const row of rows) {
+    const gender = row.gender ?? "both";
+    if (!groups.has(gender)) groups.set(gender, []);
+    groups.get(gender)!.push(row);
+  }
+  if (groups.size === 0) groups.set("both", []);
+
+  const feeDetails = Array.from(groups.entries()).map(([gender, group]) => {
+    const tuitionRows = group
+      .filter((r) => r.feeCategory === "tuition_fee")
+      .map((r) => ({
+        year: r.yearOrSemester ?? "",
+        amount: formatFeeAmount(r.amount),
+      }));
+
+    const oneTime = group.filter((r) => r.yearOrSemester === "One-time");
+    const additional = group.filter(
+      (r) => r.feeCategory !== "tuition_fee" && r.yearOrSemester !== "One-time",
+    );
+
+    const installments = group
+      .filter((r) => r.instalmentAllowed)
+      .flatMap((r) => {
+        const config = asRecord(r.instalmentConfig);
+        return Array.isArray(config.instalments)
+          ? (config.instalments as Record<string, unknown>[]).map((i) => ({
+              due: asText(
+                i.dueDate || i.dueBy || i.dueWithin || i.dueAfter,
+              ).toUpperCase(),
               label: asText(i.label),
-              amount: asText(i.amount).replace(/^Rs\s?/, "₹ "),
+              amount: `₹ ${Number(asText(i.amount) || 0).toLocaleString("en-IN")}`,
             }))
           : [];
+      });
 
-        return {
-          quota: asText(detail.quota),
-          gender: asText(detail.gender),
-          tuition_fees: {
-            title: "Tuition Amount",
-            rows: tuitionRows,
-          },
-          one_time_payable_fees: {
-            title: "One-time Payable Fees",
-            icon: "",
-            items: mapItems(detail.one_time_payable_fees),
-          },
-          additional_fees: {
-            title: "Additional Fees",
-            icon: "",
-            items: mapItems(detail.additional_fees),
-          },
-          deadlines_and_installments: {
-            title: "Deadlines & Installments",
-            icon: "",
-            items: installments,
-          },
-          fees_summary: {
-            title: "Fees Summary",
-            icon: "",
-            full_course_fee: {
-              label: "Full course fee",
-              amount: asText(summary.full_course_fee),
-            },
-            booking_amount: {
-              label: "Booking Amount",
-              amount: asText(summary.booking_amount),
-            },
-          },
-        };
-      })
-    : [];
+    const fullCourseFee = tuitionRows.reduce(
+      (sum, r) => sum + Number(r.amount.replace(/[^\d.]/g, "")),
+      0,
+    );
+    const bookingAmount =
+      oneTime.length > 0 ? Number(oneTime[0].amount.toString()) : 0;
 
-  const pdfRaw = asRecord(raw.fee_structure_pdf);
-  const pdfSize = asText(pdfRaw.size);
+    return {
+      quota: "",
+      gender,
+      tuition_fees: { title: "Tuition Amount", rows: tuitionRows },
+      one_time_payable_fees: {
+        title: "One-time Payable Fees",
+        icon: "",
+        items: oneTime.map((r) => ({
+          label: humanizeFeeCategory(r.feeCategory),
+          amount: formatFeeAmount(r.amount),
+        })),
+      },
+      additional_fees: {
+        title: "Additional Fees",
+        icon: "",
+        items: additional.map((r) => ({
+          label: humanizeFeeCategory(r.feeCategory),
+          amount: formatFeeAmount(r.amount),
+        })),
+      },
+      deadlines_and_installments: {
+        title: "Deadlines & Installments",
+        icon: "",
+        items: installments,
+      },
+      fees_summary: {
+        title: "Fees Summary",
+        icon: "",
+        full_course_fee: {
+          label: "Full course fee",
+          amount: `₹ ${fullCourseFee.toLocaleString("en-IN")}`,
+        },
+        booking_amount: {
+          label: "Booking Amount",
+          amount: `₹ ${bookingAmount.toLocaleString("en-IN")}`,
+        },
+      },
+    };
+  });
+
+  const rowWithPdf = rows.find((r) => r.feePdfUrl);
+  const pdfUrl = rowWithPdf?.feePdfUrl ?? "";
 
   return {
     tab: "fees",
@@ -829,27 +869,15 @@ function transformPublicFeeTab(raw: Record<string, unknown>) {
     fee_structure_pdf: {
       icon: "",
       label: "Download Fee Structure",
-      subtitle: `Detailed breakdown PDF${pdfSize ? ` (${pdfSize})` : ""}`,
-      size: pdfSize,
+      subtitle: "Detailed breakdown PDF",
+      size: "",
       download_icon: "",
-      url: asText(pdfRaw.url),
+      url: pdfUrl,
     },
     fee_details: feeDetails,
-    whats_included: {
-      title: "WHAT'S INCLUDED",
-      icon: "",
-      items: Array.isArray(raw.whats_included) ? raw.whats_included : [],
-    },
-    whats_excluded: {
-      title: "WHAT'S EXCLUDED",
-      icon: "",
-      items: Array.isArray(raw.whats_excluded) ? raw.whats_excluded : [],
-    },
-    refund_policy: {
-      title: "Refund Policy",
-      icon: "",
-      items: Array.isArray(raw.refund_policy) ? raw.refund_policy : [],
-    },
+    whats_included: { title: "WHAT'S INCLUDED", icon: "", items: [] },
+    whats_excluded: { title: "WHAT'S EXCLUDED", icon: "", items: [] },
+    refund_policy: { title: "Refund Policy", icon: "", items: [] },
   };
 }
 
@@ -1724,62 +1752,6 @@ function validatePlacementsTabData(data: unknown): void {
   );
 }
 
-function validateFeesTabData(data: unknown): void {
-  const record = asRecord(data);
-
-  asArray(record.fee_details).forEach((item, idx) => {
-    const detail = asRecord(item);
-    const context = `Fee Detail #${idx + 1}`;
-
-    assertCompleteOrEmpty(detail, ["quota", "gender"], context);
-    if (
-      asText(detail.gender) &&
-      !(FEE_DETAIL_GENDERS as readonly string[]).includes(asText(detail.gender))
-    ) {
-      throw new ValidationError(
-        `${context}: gender must be one of ${FEE_DETAIL_GENDERS.join(", ")}`,
-      );
-    }
-    assertCompleteOrEmpty(
-      asRecord(detail.fees_summary),
-      ["full_course_fee", "booking_amount"],
-      `${context} Fees Summary`,
-    );
-
-    asArray(detail.tuition_fees).forEach((row, rIdx) => {
-      assertCompleteOrEmpty(
-        asRecord(row),
-        ["year", "amount"],
-        `${context} Tuition Fee #${rIdx + 1}`,
-      );
-    });
-
-    asArray(detail.additional_fees).forEach((row, rIdx) => {
-      assertCompleteOrEmpty(
-        asRecord(row),
-        ["label", "amount"],
-        `${context} Additional Fee #${rIdx + 1}`,
-      );
-    });
-
-    asArray(detail.one_time_payable_fees).forEach((row, rIdx) => {
-      assertCompleteOrEmpty(
-        asRecord(row),
-        ["label", "amount"],
-        `${context} One-Time Payable Fee #${rIdx + 1}`,
-      );
-    });
-
-    asArray(detail.deadlines_and_installments).forEach((row, rIdx) => {
-      assertCompleteOrEmpty(
-        asRecord(row),
-        ["due", "label", "amount"],
-        `${context} Installment #${rIdx + 1}`,
-      );
-    });
-  });
-}
-
 function validateFinancialAidTabData(data: unknown): void {
   const record = asRecord(data);
   const meritScholarship = asRecord(record.merit_scholarship);
@@ -2081,17 +2053,6 @@ function normalizeSetupTabData(tabName: string, data: unknown): unknown {
       ...record,
       download_report: downloadReport,
       summary_stats: summaryStats,
-    });
-  }
-
-  if (tabName === "fees") {
-    // The "PDF Size" field was dropped from the Fee Structure PDF form —
-    // drop the stale leftover from older saves.
-    const feeStructurePdf = { ...asRecord(record.fee_structure_pdf) };
-    delete feeStructurePdf.size;
-    return deepStripBlankEntries({
-      ...record,
-      fee_structure_pdf: feeStructurePdf,
     });
   }
 
@@ -2474,9 +2435,6 @@ export class CourseTabsService {
       if (tabName === "placements") {
         validatePlacementsTabData(data);
       }
-      if (tabName === "fees") {
-        validateFeesTabData(data);
-      }
       if (tabName === "financial_aid") {
         validateFinancialAidTabData(data);
       }
@@ -2813,6 +2771,21 @@ export class CourseTabsService {
     collegeSlug: string,
     tabName: string,
   ) {
+    if (tabName === "fees") {
+      const course =
+        await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
+          courseId,
+          collegeSlug,
+        );
+      if (!course) throw new NotFoundError("Course not found");
+
+      const rows = await FeeStructureRepository.findActivePublicByCourseId(
+        courseId,
+        collegeSlug,
+      );
+      return buildPublicFeesTabFromFeeStructures(rows);
+    }
+
     if (isSetupTabName(tabName)) {
       const course =
         await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
@@ -2822,10 +2795,6 @@ export class CourseTabsService {
       if (!course) throw new NotFoundError("Course not found");
 
       const rawData = getSetupTabDataFromMetadata(course.metadata, tabName);
-
-      if (tabName === "fees") {
-        return transformPublicFeeTab(asRecord(rawData));
-      }
 
       if (tabName === "student_housing") {
         const raw = asRecord(rawData);

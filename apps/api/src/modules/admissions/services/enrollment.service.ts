@@ -53,6 +53,8 @@ export class EnrollmentService {
     if (!enrollment) return null;
     return {
       collegeId: enrollment.collegeId,
+      courseId: enrollment.courseId,
+      academicYear: enrollment.academicYear,
       collegeName: enrollment.college.name,
       courseName: enrollment.course.name,
       courseDuration: enrollment.course.duration,

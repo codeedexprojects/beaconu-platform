@@ -1,0 +1,28 @@
+meta {
+  name: Confirm Full Fee Payment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/finance/pay/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{courseFeeTransactionId}}",
+    "provider_payment_id": "pay_mock_123",
+    "provider_signature": "mock_signature"
+  }
+}
+
+docs {
+  Verifies the payment, marks the Transaction "completed" and its
+  StudentFeeLedger entry "paid".
+}

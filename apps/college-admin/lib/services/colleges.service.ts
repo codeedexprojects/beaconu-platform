@@ -781,6 +781,85 @@ export async function detachCourseQuota(
   );
 }
 
+export interface FeeStructureInstalmentItem {
+  label: string;
+  amount: number;
+  dueDate?: string;
+  dueWithin?: string;
+  dueBy?: string;
+  dueAfter?: string;
+}
+
+export interface FeeStructureDto {
+  id: string;
+  courseId: string;
+  collegeId: string;
+  academicYear: string;
+  feeCategory: string;
+  amount: string;
+  yearOrSemester: string | null;
+  gender: "both" | "male" | "female";
+  instalmentAllowed: boolean;
+  instalmentConfig: { instalments?: FeeStructureInstalmentItem[] };
+  feePdfUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFeeStructureInput {
+  academicYear: string;
+  feeCategory: string;
+  amount: number;
+  yearOrSemester?: string | null;
+  gender?: "both" | "male" | "female";
+  instalmentAllowed?: boolean;
+  instalmentConfig?: { instalments: FeeStructureInstalmentItem[] };
+  feePdfUrl?: string | null;
+}
+
+export type UpdateFeeStructureInput = Partial<CreateFeeStructureInput> & {
+  isActive?: boolean;
+};
+
+export async function getFeeStructures(
+  courseId: string,
+): Promise<FeeStructureDto[]> {
+  return api.get<FeeStructureDto[]>(
+    `/api/v1/college-admin/courses/${courseId}/fee-structures`,
+  );
+}
+
+export async function createFeeStructure(
+  courseId: string,
+  data: CreateFeeStructureInput,
+): Promise<FeeStructureDto> {
+  return api.post<FeeStructureDto>(
+    `/api/v1/college-admin/courses/${courseId}/fee-structures`,
+    data,
+  );
+}
+
+export async function updateFeeStructure(
+  courseId: string,
+  feeStructureId: string,
+  data: UpdateFeeStructureInput,
+): Promise<FeeStructureDto> {
+  return api.patch<FeeStructureDto>(
+    `/api/v1/college-admin/courses/${courseId}/fee-structures/${feeStructureId}`,
+    data,
+  );
+}
+
+export async function deleteFeeStructure(
+  courseId: string,
+  feeStructureId: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/courses/${courseId}/fee-structures/${feeStructureId}`,
+  );
+}
+
 export async function getCollegeDepartments(): Promise<DepartmentDto[]> {
   return api.get<DepartmentDto[]>("/api/v1/college-admin/lookups/departments");
 }

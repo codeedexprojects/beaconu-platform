@@ -19,6 +19,7 @@ export const QUERY_KEYS = {
   quotas: ["college-quotas"] as const,
   quotaUsage: (id: string) => ["college-quota-usage", id] as const,
   courseQuotas: (courseId: string) => ["course-quotas", courseId] as const,
+  feeStructures: (courseId: string) => ["fee-structures", courseId] as const,
   lookupsDepartments: ["lookups", "departments"] as const,
   icons: (search?: string) =>
     search ? (["icons", search] as const) : (["icons"] as const),

@@ -33,6 +33,15 @@ import {
 } from "@/hooks/use-facilities";
 
 const ADDON_SERVICE_TYPES = ["laundry", "gym", "parking", "other"] as const;
+const ADDON_PLAN_PERIODS = ["monthly", "quarterly", "annual"] as const;
+const ADDON_PLAN_PERIOD_LABELS: Record<
+  (typeof ADDON_PLAN_PERIODS)[number],
+  string
+> = {
+  monthly: "Per Month",
+  quarterly: "Per Quarter",
+  annual: "Per Year",
+};
 const MAX_ROOM_PHOTOS = 4;
 
 export default function HostelDetailPage() {
@@ -184,6 +193,8 @@ export default function HostelDetailPage() {
   const [addonName, setAddonName] = useState("");
   const [addonPlanLabel, setAddonPlanLabel] = useState("");
   const [addonPlanPrice, setAddonPlanPrice] = useState("");
+  const [addonPlanPeriod, setAddonPlanPeriod] =
+    useState<(typeof ADDON_PLAN_PERIODS)[number]>("monthly");
   const [addonNotes, setAddonNotes] = useState("");
   const [addonPlanFeatureTags, setAddonPlanFeatureTags] = useState("");
 
@@ -458,6 +469,7 @@ export default function HostelDetailPage() {
             {
               label: addonPlanLabel.trim(),
               price: Number(addonPlanPrice),
+              period: addonPlanPeriod,
               feature_tags: addonPlanFeatureTags
                 .split(",")
                 .map((s) => s.trim())
@@ -473,6 +485,7 @@ export default function HostelDetailPage() {
           setAddonName("");
           setAddonPlanLabel("");
           setAddonPlanPrice("");
+          setAddonPlanPeriod("monthly");
           setAddonNotes("");
           setAddonPlanFeatureTags("");
         },
@@ -1374,6 +1387,21 @@ export default function HostelDetailPage() {
               value={addonPlanPrice}
               onChange={(e) => setAddonPlanPrice(e.target.value)}
             />
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={addonPlanPeriod}
+              onChange={(e) =>
+                setAddonPlanPeriod(
+                  e.target.value as (typeof ADDON_PLAN_PERIODS)[number],
+                )
+              }
+            >
+              {ADDON_PLAN_PERIODS.map((p) => (
+                <option key={p} value={p}>
+                  {ADDON_PLAN_PERIOD_LABELS[p]}
+                </option>
+              ))}
+            </select>
             <Input
               placeholder="Feature tags (comma separated, e.g. Detergent, Ironing)"
               className="sm:col-span-2"

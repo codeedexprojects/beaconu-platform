@@ -1,0 +1,19 @@
+meta {
+  name: Delete Fee Structure Row
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/fee-structures/{{feeStructureId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Soft delete — sets isActive: false. Row is never hard-deleted.
+}

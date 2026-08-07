@@ -1,0 +1,53 @@
+meta {
+  name: Create Fee Structure Row
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/fee-structures
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "academicYear": "2026-27",
+    "feeCategory": "tuition_fee",
+    "amount": 60000,
+    "yearOrSemester": "Semester 1",
+    "gender": "both",
+    "instalmentAllowed": true,
+    "instalmentConfig": {
+      "instalments": [
+        { "label": "Installment 1", "amount": 30000, "dueDate": "2026-08-01" },
+        { "label": "Installment 2", "amount": 30000, "dueDate": "2026-09-15" }
+      ]
+    }
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("feeStructureId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates one fee-structure line item. `feeCategory` is free text (no
+  fixed enum) — conventionally: "tuition_fee" for per-year/semester
+  tuition, "application_fee"/"admission_fee" with yearOrSemester
+  "One-time" for one-time fees, anything else (library_fee, lab_fee,
+  examination_fee, sports_fee...) with yearOrSemester "Annual" or similar
+  for recurring extras.
+
+  If `instalmentAllowed` is true, `instalmentConfig.instalments[]`
+  amounts must sum to `amount` (409 ConflictError otherwise).
+}
