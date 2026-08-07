@@ -55,7 +55,6 @@ export interface HostelWardenInfo {
 
 export interface HostelTag {
   label: string;
-  color?: string;
 }
 
 export interface HostelAmenity {
@@ -197,7 +196,7 @@ export interface PublicHostelRoomItem {
 
 export interface PublicHostelHeader {
   cover_image?: string;
-  tags?: { color?: string; label?: string }[];
+  tags?: { label?: string }[];
   rating_badge?: { rating?: number; review_count?: number };
   name?: string;
   verified_badge?: { text?: string };

@@ -1,0 +1,38 @@
+meta {
+  name: Get My BeaconU Card
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/beaconu-card
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Returns the student's BeaconU card (card number, holder name, validity,
+  wallet balance, total earned/withdrawn, status), plus enrollment context:
+
+  - college_id / college_name: from the student's active admissions
+    Enrollment, null if not currently enrolled anywhere.
+  - duration: the enrolled course's duration + 1 year (e.g. course
+    duration "3 Years" -> "4 Years"), null if not enrolled or the
+    course's duration field couldn't be parsed.
+  - commute_enrolled: true if the student has an active CommuteEnrollment.
+  - housing_enrolled: true if the student has an active HostelEnrollment.
+
+  The card itself is auto-issued the first time a student is enrolled at
+  any college (college-admin "Mark Enrolled" action) — one card per
+  student, reused across every subsequent enrollment.
+
+  Self-healing: if the student doesn't have a card yet for any reason
+  (e.g. not enrolled anywhere), calling this endpoint creates one on the
+  spot instead of 404ing — every student is guaranteed a card once they
+  call this. The enrollment-context fields above are computed fresh on
+  every call regardless of when the card itself was issued.
+}

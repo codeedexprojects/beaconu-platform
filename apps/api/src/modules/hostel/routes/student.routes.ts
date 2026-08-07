@@ -26,5 +26,7 @@ router.post(
 );
 router.get("/hostels/enrollment", HostelStudentController.getMyEnrollment);
 router.get("/hostels/payments", StudentPaymentController.listHostelPayments);
+router.get("/hostels", HostelStudentController.listHostels);
+router.get("/hostels/:hostelId", HostelStudentController.getHostelDetail);
 
 export default router;

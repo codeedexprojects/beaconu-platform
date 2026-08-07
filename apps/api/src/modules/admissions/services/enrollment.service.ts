@@ -1,5 +1,6 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
 
@@ -44,6 +45,18 @@ function toDto(
 export class EnrollmentService {
   static async hasEnrollmentAtCollege(studentId: string, collegeId: string) {
     return EnrollmentRepository.existsForStudentAtCollege(studentId, collegeId);
+  }
+
+  static async getActiveSummary(studentId: string) {
+    const enrollment =
+      await EnrollmentRepository.findActiveForStudent(studentId);
+    if (!enrollment) return null;
+    return {
+      collegeId: enrollment.collegeId,
+      collegeName: enrollment.college.name,
+      courseName: enrollment.course.name,
+      courseDuration: enrollment.course.duration,
+    };
   }
 
   static async enroll(
@@ -121,6 +134,12 @@ export class EnrollmentService {
         changedByType: "staff_member",
         changedById: staffId,
       });
+
+      await BeaconuCardService.ensureCardForStudent(
+        tx,
+        course.application.studentId,
+        course.application.student.fullName,
+      );
 
       return withNumber;
     });

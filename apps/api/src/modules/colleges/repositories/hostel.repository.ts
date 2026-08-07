@@ -126,6 +126,24 @@ export class HostelRepository {
     });
   }
 
+  static async findListByCollegeId(collegeId: string) {
+    return prisma.hostel.findMany({
+      where: { status: "active", collegeId },
+      select: SUMMARY_SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async findDetailByCollegeIdAndHostelId(
+    collegeId: string,
+    hostelId: string,
+  ) {
+    return prisma.hostel.findFirst({
+      where: { id: hostelId, status: "active", collegeId },
+      select: DETAIL_SELECT,
+    });
+  }
+
   static async findPublicReviewsByHostelId(hostelId: string, take: number) {
     return prisma.hostelReview.findMany({
       where: { hostelId, status: "approved" },

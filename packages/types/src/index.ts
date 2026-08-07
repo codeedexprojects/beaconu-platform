@@ -28,3 +28,4 @@ export * from "./interview";
 export * from "./scholarships";
 export * from "./commute";
 export * from "./hostel";
+export * from "./beaconu-card";

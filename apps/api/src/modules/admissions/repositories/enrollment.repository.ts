@@ -27,6 +27,18 @@ export class EnrollmentRepository {
     return row !== null;
   }
 
+  static async findActiveForStudent(studentId: string) {
+    return prisma.enrollment.findFirst({
+      where: { studentId, status: "active" },
+      select: {
+        collegeId: true,
+        college: { select: { name: true } },
+        course: { select: { name: true, duration: true } },
+      },
+      orderBy: { enrolledAt: "desc" },
+    });
+  }
+
   static async findByApplicationCourseId(applicationCourseId: string) {
     return prisma.enrollment.findUnique({
       where: { applicationCourseId },

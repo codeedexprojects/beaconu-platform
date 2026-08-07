@@ -95,6 +95,11 @@ async function assertEnrolled(studentId: string, collegeId: string) {
 }
 
 export class CommuteService {
+  static async isEnrolled(studentId: string): Promise<boolean> {
+    const enrollment = await CommuteRepository.findActiveEnrollment(studentId);
+    return enrollment !== null;
+  }
+
   static async listRoutes(studentId: string, collegeId: string) {
     await assertEnrolled(studentId, collegeId);
     const rows = await CommuteRepository.listActiveRoutesForCollege(collegeId);
