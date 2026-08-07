@@ -1,0 +1,32 @@
+meta {
+  name: List Hostels (Student Hub)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/hostels?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Student Hub hostel listing — enrolled students only. Requires an active
+  admissions Enrollment at `college_id` (403 "You are not enrolled at this
+  college" otherwise).
+
+  Each item: id, name, slug, hostelType, isOnCampus, distanceFromCampus,
+  totalBeds, coverImageUrl (thumbnail), avgRating, reviewCount, gallery.
+
+  Distinct from the public `GET /public/colleges/by-slug/:slug/hostels`
+  endpoint (unauthenticated, browsable by anyone) — this one is gated to
+  the student's own enrolled college.
+}

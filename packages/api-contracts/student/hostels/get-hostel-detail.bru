@@ -1,0 +1,31 @@
+meta {
+  name: Get Hostel Detail (Student Hub)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/hostels/{{hostelId}}?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Student Hub hostel detail — enrolled students only. Requires an active
+  admissions Enrollment at `college_id` (403 "You are not enrolled at this
+  college" otherwise). 404 if the hostel doesn't belong to that college.
+
+  Full response: header, rooms_and_types, hostel_fees, mess_plan,
+  laundry_charges, gym_packages, parking_charges, other_charges,
+  safety_and_warden, amenities, rules, reviews_and_ratings,
+  location_and_access — identical shape to the public detail endpoint,
+  just gated to the student's own enrolled college instead of open browsing.
+}

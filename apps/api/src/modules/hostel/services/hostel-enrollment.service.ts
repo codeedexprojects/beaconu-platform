@@ -41,6 +41,12 @@ function mapEnrollment(
 }
 
 export class HostelEnrollmentService {
+  static async isEnrolled(studentId: string): Promise<boolean> {
+    const enrollment =
+      await HostelEnrollmentRepository.findActiveEnrollment(studentId);
+    return enrollment !== null;
+  }
+
   static async validateRoomTypeAccess(studentId: string, roomTypeId: string) {
     const roomType =
       await HostelEnrollmentRepository.findRoomTypeWithHostel(roomTypeId);

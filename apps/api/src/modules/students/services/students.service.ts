@@ -6,6 +6,12 @@ import type { Prisma } from "@beaconu/db";
 import type { UpdateProfileInput } from "../validators/students.validator";
 
 export class StudentsService {
+  static async getFullName(id: string): Promise<string> {
+    const student = await StudentsRepository.findById(id);
+    if (!student) throw new NotFoundError("Student not found");
+    return student.fullName;
+  }
+
   static async updateProfile(
     id: string,
     data: UpdateProfileInput,

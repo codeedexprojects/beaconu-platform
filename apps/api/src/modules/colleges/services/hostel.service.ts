@@ -119,16 +119,10 @@ function buildHeader(hostel: Record<string, unknown>) {
   const seededTags = asArray(hostel.tags);
   const tags =
     seededTags.length > 0
-      ? seededTags
+      ? seededTags.map((tag) => ({ label: asText(tag.label) }))
       : [
-          {
-            label: hostel.isOnCampus ? "On-Campus" : "Off-Campus",
-            color: "blue",
-          },
-          {
-            label: HOSTEL_TYPE_LABELS[asText(hostel.hostelType)] ?? "Co-Ed",
-            color: "blue",
-          },
+          { label: hostel.isOnCampus ? "On-Campus" : "Off-Campus" },
+          { label: HOSTEL_TYPE_LABELS[asText(hostel.hostelType)] ?? "Co-Ed" },
         ];
 
   return {
@@ -543,6 +537,25 @@ export class HostelService {
   static async getPublicHostelDetail(collegeSlug: string, hostelId: string) {
     const hostel = await HostelRepository.findPublicDetailById(
       collegeSlug,
+      hostelId,
+    );
+    if (!hostel) throw new NotFoundError("Hostel not found");
+
+    const reviews = await HostelRepository.findPublicReviewsByHostelId(
+      hostel.id,
+      5,
+    );
+    return buildPublicHostelDetail(hostel, reviews);
+  }
+
+  static async getStudentHostelList(collegeId: string) {
+    const hostels = await HostelRepository.findListByCollegeId(collegeId);
+    return hostels.map(serializeHostelSummary);
+  }
+
+  static async getStudentHostelDetail(collegeId: string, hostelId: string) {
+    const hostel = await HostelRepository.findDetailByCollegeIdAndHostelId(
+      collegeId,
       hostelId,
     );
     if (!hostel) throw new NotFoundError("Hostel not found");

@@ -263,6 +263,7 @@ export class ApplicationCourseRepository {
             campusId: true,
             college: { select: { code: true } },
             admissionCycle: { select: { admissionYear: true } },
+            student: { select: { fullName: true } },
           },
         },
       },
