@@ -1,7 +1,7 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
-import { ApplicationService } from "@/modules/admissions/services/application.service";
+import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { AntiRaggingRepository } from "../repositories/anti-ragging.repository";
 import type {
   CreateComplaintInput,
@@ -50,12 +50,12 @@ export class AntiRaggingService {
     collegeId: string,
     data: CreateComplaintInput,
   ) {
-    const hasApplication = await ApplicationService.hasApplicationAtCollege(
+    const hasEnrollment = await EnrollmentService.hasEnrollmentAtCollege(
       studentId,
       collegeId,
     );
-    if (!hasApplication) {
-      throw new ForbiddenError("You don't have an application at this college");
+    if (!hasEnrollment) {
+      throw new ForbiddenError("You are not enrolled at this college");
     }
     return AntiRaggingRepository.create(studentId, collegeId, data, [
       historyEntry("submitted", null),

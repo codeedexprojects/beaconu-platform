@@ -44,6 +44,11 @@ export interface StudentReviews {
   counsellingReviews: StudentCounsellingReview[];
 }
 
+export interface StudentEnrolledCollege {
+  collegeId: string;
+  name: string;
+}
+
 export interface StudentProfile {
   id: string;
   fullName: string;
@@ -56,6 +61,7 @@ export interface StudentProfile {
   source: string;
   status: string;
   profileMetadata: StudentProfileMetadata;
+  enrolledCollege: StudentEnrolledCollege | null;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
