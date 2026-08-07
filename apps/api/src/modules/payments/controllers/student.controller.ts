@@ -25,7 +25,7 @@ const selectedAddonSchema = z.object({
   plan_label: z.string().trim().min(1),
 });
 
-const initiateHostelTokenFeeSchema = z.object({
+const initiateHostelBookingSchema = z.object({
   room_type_id: z.string().trim().min(1, "room_type_id is required"),
   room_plan_type: z.enum(["monthly", "annual"]),
   mess_plan_id: z.string().trim().min(1).optional(),
@@ -33,8 +33,8 @@ const initiateHostelTokenFeeSchema = z.object({
   selected_addons: z.array(selectedAddonSchema).optional(),
 });
 
-const confirmHostelTokenFeeSchema = confirmPaymentSchema.extend(
-  initiateHostelTokenFeeSchema.shape,
+const confirmHostelBookingSchema = confirmPaymentSchema.extend(
+  initiateHostelBookingSchema.shape,
 );
 
 export class StudentPaymentController {
@@ -122,28 +122,9 @@ export class StudentPaymentController {
     );
   }
 
-  static async initiateHostelApplicationFee(req: Request, res: Response) {
-    const result = await HostelPaymentService.initiateApplicationFee(
-      req.userId as string,
-      req.params.roomTypeId as string,
-    );
-    return res
-      .status(201)
-      .json(ApiResponse.success("Payment order created", result));
-  }
-
-  static async confirmHostelApplicationFee(req: Request, res: Response) {
-    const body = confirmPaymentSchema.parse(req.body);
-    const result = await HostelPaymentService.confirmApplicationFee(
-      req.userId as string,
-      body,
-    );
-    return res.json(ApiResponse.success("Payment confirmed", result));
-  }
-
-  static async initiateHostelTokenFee(req: Request, res: Response) {
-    const body = initiateHostelTokenFeeSchema.parse(req.body);
-    const result = await HostelPaymentService.initiateTokenFee(
+  static async initiateHostelBooking(req: Request, res: Response) {
+    const body = initiateHostelBookingSchema.parse(req.body);
+    const result = await HostelPaymentService.initiateBooking(
       req.userId as string,
       body,
     );
@@ -152,9 +133,9 @@ export class StudentPaymentController {
       .json(ApiResponse.success("Payment order created", result));
   }
 
-  static async confirmHostelTokenFee(req: Request, res: Response) {
-    const body = confirmHostelTokenFeeSchema.parse(req.body);
-    const result = await HostelPaymentService.confirmTokenFee(
+  static async confirmHostelBooking(req: Request, res: Response) {
+    const body = confirmHostelBookingSchema.parse(req.body);
+    const result = await HostelPaymentService.confirmBooking(
       req.userId as string,
       body,
     );

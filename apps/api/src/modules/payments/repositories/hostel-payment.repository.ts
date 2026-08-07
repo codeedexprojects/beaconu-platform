@@ -18,46 +18,33 @@ const TRANSACTION_SELECT = {
   updatedAt: true,
 } as const;
 
-function feeDescription(
-  feeCategory: "hostel_application_fee" | "hostel_token_fee",
-  roomTypeId: string,
-): string {
-  const label =
-    feeCategory === "hostel_application_fee"
-      ? "Hostel application fee"
-      : "Hostel token fee";
-  return `${label} — ${roomTypeId}`;
+const HOSTEL_BOOKING_FEE_CATEGORY = "hostel_booking_fee" as const;
+
+function feeDescription(roomTypeId: string): string {
+  return `Hostel booking fee — ${roomTypeId}`;
 }
 
 export class HostelPaymentRepository {
-  static async findPendingTransaction(
-    studentId: string,
-    feeCategory: "hostel_application_fee" | "hostel_token_fee",
-    roomTypeId: string,
-  ) {
+  static async findPendingTransaction(studentId: string, roomTypeId: string) {
     return prisma.transaction.findFirst({
       where: {
         studentId,
         status: "pending",
         ledgerEntry: {
-          feeCategory,
-          description: feeDescription(feeCategory, roomTypeId),
+          feeCategory: HOSTEL_BOOKING_FEE_CATEGORY,
+          description: feeDescription(roomTypeId),
         },
       },
       select: TRANSACTION_SELECT,
     });
   }
 
-  static async findLedgerEntry(
-    studentId: string,
-    feeCategory: "hostel_application_fee" | "hostel_token_fee",
-    roomTypeId: string,
-  ) {
+  static async findLedgerEntry(studentId: string, roomTypeId: string) {
     return prisma.studentFeeLedger.findFirst({
       where: {
         studentId,
-        feeCategory,
-        description: feeDescription(feeCategory, roomTypeId),
+        feeCategory: HOSTEL_BOOKING_FEE_CATEGORY,
+        description: feeDescription(roomTypeId),
       },
       select: {
         id: true,
@@ -72,7 +59,6 @@ export class HostelPaymentRepository {
   static async createLedgerEntry(data: {
     studentId: string;
     collegeId: string;
-    feeCategory: "hostel_application_fee" | "hostel_token_fee";
     roomTypeId: string;
     amount: number;
   }) {
@@ -80,8 +66,8 @@ export class HostelPaymentRepository {
       data: {
         studentId: data.studentId,
         collegeId: data.collegeId,
-        feeCategory: data.feeCategory,
-        description: feeDescription(data.feeCategory, data.roomTypeId),
+        feeCategory: HOSTEL_BOOKING_FEE_CATEGORY,
+        description: feeDescription(data.roomTypeId),
         totalAmount: data.amount,
         netAmount: data.amount,
         balanceAmount: data.amount,
@@ -186,7 +172,7 @@ export class HostelPaymentRepository {
   ) {
     const where = {
       studentId,
-      feeCategory: { in: ["hostel_application_fee", "hostel_token_fee"] },
+      feeCategory: HOSTEL_BOOKING_FEE_CATEGORY,
     };
     const [rows, total] = await prisma.$transaction([
       prisma.studentFeeLedger.findMany({

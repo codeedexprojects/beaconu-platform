@@ -6,13 +6,9 @@ import { HostelEnrollmentService } from "@/modules/hostel/services/hostel-enroll
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 import type { InitiateHostelTokenFeeInput } from "@beaconu/types";
 
-function buildTransactionNumber(
-  id: string,
-  feeCategory: "hostel_application_fee" | "hostel_token_fee",
-) {
-  const prefix = feeCategory === "hostel_application_fee" ? "HAF" : "HTF";
+function buildTransactionNumber(id: string) {
   const numericSuffix = (id.split("-").pop() ?? id).padStart(6, "0");
-  return `${prefix}-${numericSuffix}`;
+  return `HBK-${numericSuffix}`;
 }
 
 function toDto(row: {
@@ -43,26 +39,22 @@ async function initiate(
   studentId: string,
   collegeId: string,
   roomTypeId: string,
-  feeCategory: "hostel_application_fee" | "hostel_token_fee",
   amount: number,
 ) {
   const pending = await HostelPaymentRepository.findPendingTransaction(
     studentId,
-    feeCategory,
     roomTypeId,
   );
   if (pending) return toDto(pending);
 
   let ledgerEntry = await HostelPaymentRepository.findLedgerEntry(
     studentId,
-    feeCategory,
     roomTypeId,
   );
   if (!ledgerEntry) {
     ledgerEntry = await HostelPaymentRepository.createLedgerEntry({
       studentId,
       collegeId,
-      feeCategory,
       roomTypeId,
       amount,
     });
@@ -76,8 +68,8 @@ async function initiate(
   const order = await provider.createOrder({
     amount: orderAmount,
     currency: "INR",
-    receipt: `${studentId}-${roomTypeId}-${feeCategory}`,
-    notes: { studentId, roomTypeId, feeCategory },
+    receipt: `${studentId}-${roomTypeId}-hostel-booking`,
+    notes: { studentId, roomTypeId },
   });
 
   const created = await HostelPaymentRepository.createTransaction({
@@ -92,25 +84,17 @@ async function initiate(
   });
   const finalized = await HostelPaymentRepository.setTransactionNumber(
     created.id,
-    buildTransactionNumber(created.id, feeCategory),
+    buildTransactionNumber(created.id),
   );
 
   return toDto(finalized);
 }
 
-async function confirm(
-  studentId: string,
-  body: ConfirmPaymentInput,
-  feeCategory: "hostel_application_fee" | "hostel_token_fee",
-) {
+async function confirm(studentId: string, body: ConfirmPaymentInput) {
   const transaction = await HostelPaymentRepository.findById(
     body.transaction_id,
   );
-  if (
-    !transaction ||
-    transaction.studentId !== studentId ||
-    transaction.ledgerEntry?.feeCategory !== feeCategory
-  ) {
+  if (!transaction || transaction.studentId !== studentId) {
     throw new NotFoundError("Transaction");
   }
   if (transaction.status === "completed") {
@@ -146,28 +130,7 @@ async function confirm(
 }
 
 export class HostelPaymentService {
-  static async initiateApplicationFee(studentId: string, roomTypeId: string) {
-    const roomType = await HostelEnrollmentService.validateRoomTypeAccess(
-      studentId,
-      roomTypeId,
-    );
-    return initiate(
-      studentId,
-      roomType.hostel.collegeId,
-      roomTypeId,
-      "hostel_application_fee",
-      roomType.admissionFee.toNumber(),
-    );
-  }
-
-  static async confirmApplicationFee(
-    studentId: string,
-    body: ConfirmPaymentInput,
-  ) {
-    return confirm(studentId, body, "hostel_application_fee");
-  }
-
-  static async initiateTokenFee(
+  static async initiateBooking(
     studentId: string,
     data: InitiateHostelTokenFeeInput,
   ) {
@@ -177,31 +140,22 @@ export class HostelPaymentService {
     );
     await HostelEnrollmentService.assertNoActiveEnrollment(studentId);
 
-    const applicationFeeLedger = await HostelPaymentRepository.findLedgerEntry(
-      studentId,
-      "hostel_application_fee",
-      data.room_type_id,
-    );
-    if (!applicationFeeLedger || applicationFeeLedger.status !== "paid") {
-      throw new ConflictError(
-        "Pay the application fee for this room type before paying the token fee",
-      );
-    }
+    const amount =
+      roomType.admissionFee.toNumber() + roomType.securityDeposit.toNumber();
 
     return initiate(
       studentId,
       roomType.hostel.collegeId,
       data.room_type_id,
-      "hostel_token_fee",
-      roomType.securityDeposit.toNumber(),
+      amount,
     );
   }
 
-  static async confirmTokenFee(
+  static async confirmBooking(
     studentId: string,
     body: ConfirmPaymentInput & InitiateHostelTokenFeeInput,
   ) {
-    const result = await confirm(studentId, body, "hostel_token_fee");
+    const result = await confirm(studentId, body);
     await HostelEnrollmentService.createEnrollment(
       studentId,
       body.room_type_id,
