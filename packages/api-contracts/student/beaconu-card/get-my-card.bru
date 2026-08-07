@@ -18,8 +18,8 @@ docs {
   Returns the student's BeaconU card (card number, holder name, validity,
   wallet balance, total earned/withdrawn, status), plus enrollment context:
 
-  - college_id / college_name: from the student's active admissions
-    Enrollment, null if not currently enrolled anywhere.
+  - college_id / college_name / course_name: from the student's active
+    admissions Enrollment, null if not currently enrolled anywhere.
   - duration: the enrolled course's duration + 1 year (e.g. course
     duration "3 Years" -> "4 Years"), null if not enrolled or the
     course's duration field couldn't be parsed.
