@@ -5,6 +5,7 @@ import { HostelBrowseService } from "../services/hostel-browse.service";
 import {
   collegeIdQuerySchema,
   hostelIdParamSchema,
+  hostelListQuerySchema,
 } from "../validators/hostel.validator";
 
 export class HostelStudentController {
@@ -16,12 +17,16 @@ export class HostelStudentController {
   }
 
   static async listHostels(req: Request, res: Response) {
-    const { college_id } = collegeIdQuerySchema.parse(req.query);
+    const { college_id, page, limit } = hostelListQuerySchema.parse(req.query);
     const result = await HostelBrowseService.listForStudent(
       req.userId as string,
       college_id,
+      page,
+      limit,
     );
-    return res.json(ApiResponse.success("Hostels fetched", result));
+    return res.json(
+      ApiResponse.success("Hostels fetched", result.data, result.meta),
+    );
   }
 
   static async getHostelDetail(req: Request, res: Response) {

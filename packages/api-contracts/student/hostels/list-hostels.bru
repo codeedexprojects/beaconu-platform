@@ -5,13 +5,15 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/hostels?college_id={{collegeId}}
+  url: {{baseUrl}}/api/v1/student/hostels?college_id={{collegeId}}&page=1&limit=20
   body: none
   auth: bearer
 }
 
 params:query {
   college_id: {{collegeId}}
+  page: 1
+  limit: 20
 }
 
 auth:bearer {
@@ -23,10 +25,14 @@ docs {
   admissions Enrollment at `college_id` (403 "You are not enrolled at this
   college" otherwise).
 
+  Paginated: `page` (default 1), `limit` (default 20, max 100). Response
+  includes `meta: { page, limit, total, totalPages, hasNextPage,
+  hasPreviousPage }`.
+
   Each item: id, name, slug, hostelType, isOnCampus, distanceFromCampus,
   totalBeds, coverImageUrl (thumbnail), avgRating, reviewCount, gallery.
 
   Distinct from the public `GET /public/colleges/by-slug/:slug/hostels`
-  endpoint (unauthenticated, browsable by anyone) — this one is gated to
-  the student's own enrolled college.
+  endpoint (unauthenticated, browsable by anyone, unpaginated) — this one
+  is gated to the student's own enrolled college and paginated.
 }

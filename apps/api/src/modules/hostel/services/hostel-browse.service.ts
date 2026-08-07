@@ -13,9 +13,14 @@ async function assertEnrolled(studentId: string, collegeId: string) {
 }
 
 export class HostelBrowseService {
-  static async listForStudent(studentId: string, collegeId: string) {
+  static async listForStudent(
+    studentId: string,
+    collegeId: string,
+    page: number,
+    limit: number,
+  ) {
     await assertEnrolled(studentId, collegeId);
-    return HostelService.getStudentHostelList(collegeId);
+    return HostelService.getStudentHostelList(collegeId, page, limit);
   }
 
   static async getDetailForStudent(
