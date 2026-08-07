@@ -126,12 +126,22 @@ export class HostelRepository {
     });
   }
 
-  static async findListByCollegeId(collegeId: string) {
-    return prisma.hostel.findMany({
-      where: { status: "active", collegeId },
-      select: SUMMARY_SELECT,
-      orderBy: { createdAt: "desc" },
-    });
+  static async findListByCollegeId(
+    collegeId: string,
+    page: number,
+    limit: number,
+  ) {
+    const where = { status: "active", collegeId } as const;
+    return prisma.$transaction([
+      prisma.hostel.findMany({
+        where,
+        select: SUMMARY_SELECT,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.hostel.count({ where }),
+    ]);
   }
 
   static async findDetailByCollegeIdAndHostelId(

@@ -1,4 +1,5 @@
 import { NotFoundError } from "@/shared/errors";
+import { PaginationHelper } from "@/shared/responses/pagination";
 import { HostelRepository } from "../repositories/hostel.repository";
 
 function toNumber(value: unknown): number {
@@ -548,9 +549,20 @@ export class HostelService {
     return buildPublicHostelDetail(hostel, reviews);
   }
 
-  static async getStudentHostelList(collegeId: string) {
-    const hostels = await HostelRepository.findListByCollegeId(collegeId);
-    return hostels.map(serializeHostelSummary);
+  static async getStudentHostelList(
+    collegeId: string,
+    page: number,
+    limit: number,
+  ) {
+    const [hostels, total] = await HostelRepository.findListByCollegeId(
+      collegeId,
+      page,
+      limit,
+    );
+    return {
+      data: hostels.map(serializeHostelSummary),
+      meta: PaginationHelper.createMeta(total, page, limit),
+    };
   }
 
   static async getStudentHostelDetail(collegeId: string, hostelId: string) {
