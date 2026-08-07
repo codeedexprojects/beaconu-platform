@@ -24,9 +24,13 @@ export interface HostelMessPlanDto {
   dietaryOptions: string[];
 }
 
+export type HostelAddonPlanPeriod = "monthly" | "quarterly" | "annual";
+
 export interface HostelAddonPlanItem {
   label: string;
   price: number;
+  period?: HostelAddonPlanPeriod;
+  feature_tags?: string[];
 }
 
 export interface HostelAddonServiceDto {

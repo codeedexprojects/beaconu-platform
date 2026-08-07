@@ -9,6 +9,7 @@ import {
 import { CollegeRegistrationController } from "../controllers/college-registration.controller";
 import { CourseTabsController } from "../controllers/course-tabs.controller";
 import { CourseQuotasController } from "../controllers/course-quotas.controller";
+import { FeeStructuresController } from "../controllers/fee-structures.controller";
 
 const router: Router = Router();
 
@@ -76,6 +77,34 @@ router.delete(
   ...staffWriteAuth,
   authorize("academics.manage"),
   CourseQuotasController.detachQuota,
+);
+
+router.get(
+  "/:id/fee-structures",
+  ...staffAuth,
+  authorizeAny("academics.view", "academics.manage"),
+  FeeStructuresController.listFeeStructures,
+);
+
+router.post(
+  "/:id/fee-structures",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  FeeStructuresController.createFeeStructure,
+);
+
+router.patch(
+  "/:id/fee-structures/:feeStructureId",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  FeeStructuresController.updateFeeStructure,
+);
+
+router.delete(
+  "/:id/fee-structures/:feeStructureId",
+  ...staffWriteAuth,
+  authorize("academics.manage"),
+  FeeStructuresController.deleteFeeStructure,
 );
 
 router.get(

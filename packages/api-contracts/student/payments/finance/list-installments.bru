@@ -1,0 +1,20 @@
+meta {
+  name: List Installments
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/finance/fee-structures/{{feeStructureId}}/installments
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  The Installment Plan screen — ordered list of installments for this fee,
+  each tagged status "paid" | "due_now" (earliest unpaid) | "upcoming".
+}

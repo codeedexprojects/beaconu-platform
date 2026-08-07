@@ -3,11 +3,13 @@ export interface HostelSelectedAddonInput {
   plan_label: string;
 }
 
+export type HostelDietaryPreference = "vegetarian" | "non_vegetarian";
+
 export interface InitiateHostelTokenFeeInput {
   room_type_id: string;
   room_plan_type: "monthly" | "annual";
   mess_plan_id?: string;
-  dietary_preference?: string;
+  dietary_preference?: HostelDietaryPreference;
   selected_addons?: HostelSelectedAddonInput[];
 }
 
@@ -25,7 +27,7 @@ export interface HostelEnrollmentItem {
     annualPlanPrice: string | null;
   };
   messPlan: { id: string; name: string } | null;
-  dietaryPreference: string | null;
+  dietaryPreference: HostelDietaryPreference | null;
   selectedAddons: HostelSelectedAddonInput[];
   feeBreakdown: Record<string, unknown>;
 }

@@ -126,6 +126,8 @@ export const messPlanSchema = z.object({
   dietaryOptions: z.array(z.string().trim().min(1)).default([]),
 });
 
+export const ADDON_PLAN_PERIODS = ["monthly", "quarterly", "annual"] as const;
+
 export const addonServiceSchema = z.object({
   serviceType: z.string().trim().min(2).max(30),
   name: z.string().trim().min(2).max(100),
@@ -136,6 +138,7 @@ export const addonServiceSchema = z.object({
       z.object({
         label: z.string().trim().min(1),
         price: z.number().nonnegative(),
+        period: z.enum(ADDON_PLAN_PERIODS).default("monthly"),
         feature_tags: z.array(z.string().trim()).optional().default([]),
       }),
     )

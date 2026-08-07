@@ -1,0 +1,34 @@
+meta {
+  name: List Course Fees
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/finance/course-fees?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  The Course Fees screen: { oneTime[], currentDue[], additional[] } — each
+  item is a FeeStructure row with its ledger status
+  ("not_started"|"pending"|"paid") and, if paid, the transactionId/paidAt
+  of the completed payment.
+
+  - oneTime: rows with yearOrSemester "One-time" (admission fee, university
+    registration, etc).
+  - currentDue: tuition_fee rows / rows whose yearOrSemester looks like
+    "Year N" or "Semester N" — these are the per-semester line items
+    (Tuition Fee, Development Fee, Laboratory Fee show up here as separate
+    rows sharing the same yearOrSemester).
+  - additional: everything else (library, sports, clinical, etc).
+}

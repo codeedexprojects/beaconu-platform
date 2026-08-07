@@ -238,6 +238,7 @@ function buildMessPlan(hostel: Record<string, unknown>) {
         ? (plan.mealsIncluded as unknown[]).map((m) => asText(m))
         : [];
       return {
+        id: asText(plan.id),
         name: asText(plan.name),
         subtitle: mealSubtitle(meals),
         price: formatAmount(plan.priceMonthly),
@@ -250,11 +251,22 @@ function buildMessPlan(hostel: Record<string, unknown>) {
   };
 }
 
+const PERIOD_LABELS: Record<string, string> = {
+  monthly: "Per Month",
+  quarterly: "Per Quarter",
+  annual: "Per Year",
+};
+
 function inferPeriod(label: string): string {
   const lower = label.toLowerCase();
   if (lower.includes("year") || lower.includes("annual")) return "Per Year";
   if (lower.includes("quarter")) return "Per Quarter";
   return "Per Month";
+}
+
+function resolvePeriod(period: unknown, label: string): string {
+  const stored = asText(period);
+  return PERIOD_LABELS[stored] ?? inferPeriod(label);
 }
 
 function buildAddonSection(
@@ -266,8 +278,13 @@ function buildAddonSection(
   const addons = asArray(hostel.addonServices).filter(
     (service) => service.serviceType === serviceType,
   );
-  const allPlans = addons.flatMap((service) =>
-    asArray(service.plans as unknown),
+  const allPlans: Record<string, unknown>[] = addons.flatMap((service) =>
+    asArray(service.plans as unknown).map(
+      (plan): Record<string, unknown> => ({
+        ...plan,
+        addon_service_id: asText(service.id),
+      }),
+    ),
   );
   const note = addons
     .map((s) => asText(s.notes))
@@ -280,11 +297,13 @@ function buildAddonSection(
     plans: allPlans.map((plan) => {
       const label = asText(plan.label) || asText(plan.name);
       return {
+        addon_service_id: asText(plan.addon_service_id),
+        plan_label: label,
         name: label,
         subtitle: "",
         price: formatAmount(plan.price),
         currency: "₹",
-        period: inferPeriod(label),
+        period: resolvePeriod(plan.period, label),
         feature_tags: asArray(plan.feature_tags as unknown).map((t) =>
           asText(t),
         ),
@@ -298,8 +317,13 @@ function buildParkingCharges(hostel: Record<string, unknown>) {
   const addons = asArray(hostel.addonServices).filter(
     (service) => service.serviceType === "parking",
   );
-  const allPlans = addons.flatMap((service) =>
-    asArray(service.plans as unknown),
+  const allPlans: Record<string, unknown>[] = addons.flatMap((service) =>
+    asArray(service.plans as unknown).map(
+      (plan): Record<string, unknown> => ({
+        ...plan,
+        addon_service_id: asText(service.id),
+      }),
+    ),
   );
   const note = addons
     .map((s) => asText(s.notes))
@@ -309,12 +333,17 @@ function buildParkingCharges(hostel: Record<string, unknown>) {
   return {
     step_number: 5,
     title: "PARKING CHARGES",
-    items: allPlans.map((plan) => ({
-      name: asText(plan.label) || asText(plan.name),
-      price: formatAmount(plan.price),
-      currency: "₹",
-      period: inferPeriod(asText(plan.label) || asText(plan.name)),
-    })),
+    items: allPlans.map((plan) => {
+      const label = asText(plan.label) || asText(plan.name);
+      return {
+        addon_service_id: asText(plan.addon_service_id),
+        plan_label: label,
+        name: label,
+        price: formatAmount(plan.price),
+        currency: "₹",
+        period: resolvePeriod(plan.period, label),
+      };
+    }),
     note:
       note ||
       "Parking slots are limited and allotted on a first-come, first-served basis.",

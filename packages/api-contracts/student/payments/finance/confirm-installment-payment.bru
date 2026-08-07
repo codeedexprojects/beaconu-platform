@@ -1,0 +1,29 @@
+meta {
+  name: Confirm Installment Payment
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/finance/installments/pay/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{courseFeeTransactionId}}",
+    "provider_payment_id": "pay_mock_123",
+    "provider_signature": "mock_signature"
+  }
+}
+
+docs {
+  Same confirm shape as every other payment flow — marks this one
+  installment's ledger row "paid". Re-fetch List Installments afterward to
+  see the next installment become "due_now".
+}

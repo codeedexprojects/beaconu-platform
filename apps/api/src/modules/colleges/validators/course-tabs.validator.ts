@@ -4,7 +4,6 @@ export const COURSE_SETUP_TAB_IDS = [
   "course_info",
   "admission_policy",
   "placements",
-  "fees",
   "financial_aid",
   "student_housing",
   "exam_policy",
@@ -16,6 +15,11 @@ export const COURSE_SETUP_TAB_IDS = [
   "other_courses_offered",
   "demo_graphics",
 ] as const;
+
+// Tabs backed by a real relational table (not the generic Course.metadata
+// JSON blob) — public read only via this generic tabs system. Writes go
+// through their own dedicated CRUD (e.g. /courses/:id/fee-structures).
+export const RELATIONAL_TAB_IDS = ["fees"] as const;
 
 export const TAB_FIELD_MAP: Record<string, string> = {
   highlights: "highlights",
@@ -42,6 +46,7 @@ export const TAB_FIELD_MAP: Record<string, string> = {
 export const VALID_TAB_NAMES = [
   ...Object.keys(TAB_FIELD_MAP),
   ...COURSE_SETUP_TAB_IDS,
+  ...RELATIONAL_TAB_IDS,
 ];
 
 export const courseTabParamSchema = z.object({

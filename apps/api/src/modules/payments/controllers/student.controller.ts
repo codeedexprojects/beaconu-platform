@@ -6,6 +6,8 @@ import { ApplicationPaymentService } from "../services/application-payment.servi
 import { TokenPaymentService } from "../services/token-payment.service";
 import { CommutePaymentService } from "../services/commute-payment.service";
 import { HostelPaymentService } from "../services/hostel-payment.service";
+import { CourseFeePaymentService } from "../services/course-fee-payment.service";
+import { CourseFeeSummaryQuery } from "../queries/course-fee-summary.query";
 import { ApplicationService } from "@/modules/admissions/services/application.service";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
@@ -29,13 +31,17 @@ const initiateHostelBookingSchema = z.object({
   room_type_id: z.string().trim().min(1, "room_type_id is required"),
   room_plan_type: z.enum(["monthly", "annual"]),
   mess_plan_id: z.string().trim().min(1).optional(),
-  dietary_preference: z.string().trim().min(1).optional(),
+  dietary_preference: z.enum(["vegetarian", "non_vegetarian"]).optional(),
   selected_addons: z.array(selectedAddonSchema).optional(),
 });
 
 const confirmHostelBookingSchema = confirmPaymentSchema.extend(
   initiateHostelBookingSchema.shape,
 );
+
+const financeCollegeIdQuerySchema = z.object({
+  college_id: z.string().trim().min(1, "college_id is required"),
+});
 
 export class StudentPaymentController {
   static async initiateApplicationPayment(req: Request, res: Response) {
@@ -155,5 +161,79 @@ export class StudentPaymentController {
         PaginationHelper.createMeta(result.total, query.page, query.limit),
       ),
     );
+  }
+
+  static async getFinanceSummary(req: Request, res: Response) {
+    const { college_id } = financeCollegeIdQuerySchema.parse(req.query);
+    const result = await CourseFeeSummaryQuery.getSummary(
+      req.userId as string,
+      college_id,
+    );
+    return res.json(ApiResponse.success("Finance summary fetched", result));
+  }
+
+  static async listCourseFees(req: Request, res: Response) {
+    const { college_id } = financeCollegeIdQuerySchema.parse(req.query);
+    const result = await CourseFeeSummaryQuery.listCourseFees(
+      req.userId as string,
+      college_id,
+    );
+    return res.json(ApiResponse.success("Course fees fetched", result));
+  }
+
+  static async initiateFullFeePayment(req: Request, res: Response) {
+    const result = await CourseFeePaymentService.initiateFull(
+      req.userId as string,
+      req.params.feeStructureId as string,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmFullFeePayment(req: Request, res: Response) {
+    const body = confirmPaymentSchema.parse(req.body);
+    const result = await CourseFeePaymentService.confirmFull(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async setupInstallmentPlan(req: Request, res: Response) {
+    const result = await CourseFeePaymentService.setupInstallmentPlan(
+      req.userId as string,
+      req.params.feeStructureId as string,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Installment plan created", result));
+  }
+
+  static async listInstallments(req: Request, res: Response) {
+    const result = await CourseFeePaymentService.listInstallments(
+      req.userId as string,
+      req.params.feeStructureId as string,
+    );
+    return res.json(ApiResponse.success("Installments fetched", result));
+  }
+
+  static async initiateInstallmentPayment(req: Request, res: Response) {
+    const result = await CourseFeePaymentService.initiateInstallment(
+      req.userId as string,
+      req.params.ledgerEntryId as string,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmInstallmentPayment(req: Request, res: Response) {
+    const body = confirmPaymentSchema.parse(req.body);
+    const result = await CourseFeePaymentService.confirmInstallment(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
   }
 }

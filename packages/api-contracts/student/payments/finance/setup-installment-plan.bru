@@ -1,0 +1,33 @@
+meta {
+  name: Setup Installment Plan
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/finance/fee-structures/{{feeStructureId}}/installments/setup
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (Array.isArray(data.data) && data.data[0]) {
+      bru.setEnvVar("installmentLedgerId", data.data[0].ledgerEntryId);
+    }
+  }
+}
+
+docs {
+  "Pay in Installment" — one-time setup. Reads the FeeStructure row's
+  instalmentConfig.instalments[] and creates one StudentFeeLedger row per
+  installment (idempotent — calling again just returns the existing
+  plan). 409 ConflictError "Installment payment is not available for this
+  fee" if instalmentAllowed is false. Returns the full installment list,
+  each with ledgerEntryId/description/amount/dueDate/status.
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Initiate Full Fee Payment
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/finance/fee-structures/{{feeStructureId}}/pay/initiate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("courseFeeTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  "Pay Full Amount" — creates a payment order for the whole FeeStructure
+  row's amount. Requires an active Enrollment at the fee's college (403
+  otherwise). Idempotent while a pending transaction already exists.
+}

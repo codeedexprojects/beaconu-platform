@@ -1,0 +1,24 @@
+meta {
+  name: List Fee Structures
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/fee-structures
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Lists every active FeeStructure row for the course — one row per line
+  item (feeCategory + yearOrSemester + amount), e.g. tuition_fee/Year 1,
+  admission_fee/One-time, library_fee/Annual.
+
+  This is the real relational replacement for the old JSON-blob "Fees"
+  tab (Course.metadata.tabData.fees) — that path has been removed.
+}

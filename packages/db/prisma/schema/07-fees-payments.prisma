@@ -22,6 +22,8 @@ model FeeStructure {
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])
 
+  studentFeeLedgers StudentFeeLedger[]
+
   @@index([collegeId], name: "idx_fees_college")
   @@index([courseId], name: "idx_fees_course")
   @@index([feeCategory], name: "idx_fees_category")
@@ -35,6 +37,7 @@ model StudentFeeLedger {
   collegeId           String    @map("college_id")
   applicationCourseId String?   @map("application_course_id")
   enrollmentId        String?   @map("enrollment_id")
+  feeStructureId      String?   @map("fee_structure_id")
   feeCategory         String    @map("fee_category") @db.VarChar(30)
   description         String?   @db.VarChar(255)
   totalAmount         Decimal   @map("total_amount") @db.Decimal(12, 2)
@@ -51,11 +54,13 @@ model StudentFeeLedger {
   college           College            @relation(fields: [collegeId], references: [id])
   applicationCourse ApplicationCourse? @relation(fields: [applicationCourseId], references: [id])
   enrollment        Enrollment?        @relation(fields: [enrollmentId], references: [id])
+  feeStructure      FeeStructure?      @relation(fields: [feeStructureId], references: [id])
   transactions      Transaction[]
 
   @@index([studentId], name: "idx_ledger_student")
   @@index([collegeId], name: "idx_ledger_college")
   @@index([applicationCourseId], name: "idx_ledger_app_course")
+  @@index([feeStructureId], name: "idx_ledger_fee_structure")
   @@index([feeCategory], name: "idx_ledger_category")
   @@index([status], name: "idx_ledger_status")
   @@index([dueDate], name: "idx_ledger_due")
