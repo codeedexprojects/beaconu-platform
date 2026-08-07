@@ -9,6 +9,7 @@ export interface BeaconuCardItem {
   status: string;
   collegeId: string | null;
   collegeName: string | null;
+  courseName: string | null;
   duration: string | null;
   commuteEnrolled: boolean;
   housingEnrolled: boolean;
