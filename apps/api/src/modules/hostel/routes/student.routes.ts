@@ -9,20 +9,12 @@ const router: Router = Router();
 router.use(authenticate, authorizeUserType("student"));
 
 router.post(
-  "/hostels/room-types/:roomTypeId/application-fee/initiate",
-  StudentPaymentController.initiateHostelApplicationFee,
+  "/hostels/booking/initiate",
+  StudentPaymentController.initiateHostelBooking,
 );
 router.post(
-  "/hostels/application-fee/confirm",
-  StudentPaymentController.confirmHostelApplicationFee,
-);
-router.post(
-  "/hostels/token-fee/initiate",
-  StudentPaymentController.initiateHostelTokenFee,
-);
-router.post(
-  "/hostels/token-fee/confirm",
-  StudentPaymentController.confirmHostelTokenFee,
+  "/hostels/booking/confirm",
+  StudentPaymentController.confirmHostelBooking,
 );
 router.get("/hostels/enrollment", HostelStudentController.getMyEnrollment);
 router.get("/hostels/payments", StudentPaymentController.listHostelPayments);

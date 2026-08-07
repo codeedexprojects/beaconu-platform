@@ -1,0 +1,50 @@
+meta {
+  name: Confirm Hostel Booking
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/hostels/booking/confirm
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "transaction_id": "{{hostelTransactionId}}",
+    "provider_payment_id": "pay_mock_123",
+    "provider_signature": "mock_signature",
+    "room_type_id": "{{hostelRoomTypeId}}",
+    "room_plan_type": "monthly",
+    "mess_plan_id": "",
+    "dietary_preference": "vegetarian",
+    "selected_addons": []
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("hostelTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Verifies the payment, marks the Transaction "completed" and its
+  StudentFeeLedger entry "paid", then immediately creates the
+  HostelEnrollment — atomic bed decrement + enrollment row, using the same
+  room_type_id/room_plan_type/mess_plan_id/dietary_preference/
+  selected_addons re-sent from the initiate call (nothing bridges
+  initiate→confirm server-side, so the client resends the full booking
+  config here).
+
+  409 ConflictError "No beds available in this room type" if the room
+  filled up between initiate and confirm.
+}
