@@ -27,6 +27,7 @@ import {
   Mic,
   Image as ImageIcon,
   Award,
+  LifeBuoy,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -403,6 +404,12 @@ export default function DashboardLayout({
                     name: "Scholarships",
                     path: "/scholarships",
                     icon: Award,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Student Queries",
+                    path: "/support",
+                    icon: LifeBuoy,
                     permission: "staff.view",
                   },
                   {
