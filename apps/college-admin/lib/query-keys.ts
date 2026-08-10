@@ -39,6 +39,11 @@ export const QUERY_KEYS = {
       ? ["scholarship-applications", status]
       : ["scholarship-applications"],
   commutes: ["college-commutes"] as const,
+  commuteEnrollments: (filters?: unknown) =>
+    filters
+      ? (["commute-enrollments", filters] as const)
+      : (["commute-enrollments"] as const),
+  commuteEnrollment: (id: string) => ["commute-enrollment", id] as const,
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,
   ambassador: (id: string) => ["college-ambassadors", id] as const,

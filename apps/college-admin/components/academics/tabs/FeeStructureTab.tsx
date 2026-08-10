@@ -27,6 +27,63 @@ import type {
 
 const GENDERS = ["both", "male", "female"] as const;
 
+const FEE_CATEGORIES = [
+  "tuition_fee",
+  "admission_fee",
+  "application_fee",
+  "registration_fee",
+  "development_fee",
+  "examination_fee",
+  "library_fee",
+  "laboratory_fee",
+  "sports_fee",
+  "clinical_fee",
+  "hostel_fee",
+  "caution_deposit",
+  "other_fee",
+] as const;
+
+const FEE_CATEGORY_LABELS: Record<(typeof FEE_CATEGORIES)[number], string> = {
+  tuition_fee: "Tuition Fee",
+  admission_fee: "Admission Fee",
+  application_fee: "Application Fee",
+  registration_fee: "Registration Fee",
+  development_fee: "Development Fee",
+  examination_fee: "Examination Fee",
+  library_fee: "Library Fee",
+  laboratory_fee: "Laboratory Fee",
+  sports_fee: "Sports Fee",
+  clinical_fee: "Clinical Fee",
+  hostel_fee: "Hostel Fee",
+  caution_deposit: "Caution Deposit",
+  other_fee: "Other Fee",
+};
+
+const YEAR_OR_SEMESTER_OPTIONS = [
+  "One-time",
+  "Annual",
+  "Year 1",
+  "Year 2",
+  "Year 3",
+  "Year 4",
+  "Year 5",
+  "Year 6",
+  "Semester 1",
+  "Semester 2",
+  "Semester 3",
+  "Semester 4",
+  "Semester 5",
+  "Semester 6",
+  "Semester 7",
+  "Semester 8",
+  "Semester 9",
+  "Semester 10",
+  "Semester 11",
+  "Semester 12",
+] as const;
+
+const ACADEMIC_YEAR_REGEX = /^\d{4}-\d{2}$/;
+
 interface DraftInstalment {
   label: string;
   amount: string;
@@ -46,9 +103,11 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const [academicYear, setAcademicYear] = useState("");
-  const [feeCategory, setFeeCategory] = useState("");
+  const [feeCategory, setFeeCategory] =
+    useState<(typeof FEE_CATEGORIES)[number]>("tuition_fee");
   const [amount, setAmount] = useState("");
-  const [yearOrSemester, setYearOrSemester] = useState("");
+  const [yearOrSemester, setYearOrSemester] =
+    useState<(typeof YEAR_OR_SEMESTER_OPTIONS)[number]>("One-time");
   const [gender, setGender] = useState<(typeof GENDERS)[number]>("both");
   const [instalmentAllowed, setInstalmentAllowed] = useState(false);
   const [instalments, setInstalments] = useState<DraftInstalment[]>([]);
@@ -66,9 +125,9 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
 
   function resetForm() {
     setAcademicYear("");
-    setFeeCategory("");
+    setFeeCategory("tuition_fee");
     setAmount("");
-    setYearOrSemester("");
+    setYearOrSemester("One-time");
     setGender("both");
     setInstalmentAllowed(false);
     setInstalments([]);
@@ -108,8 +167,12 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   }
 
   function handleCreate() {
-    if (!academicYear.trim() || !feeCategory.trim() || !amount.trim()) {
+    if (!academicYear.trim() || !feeCategory || !amount.trim()) {
       toast.error("Academic year, fee category, and amount are required");
+      return;
+    }
+    if (!ACADEMIC_YEAR_REGEX.test(academicYear.trim())) {
+      toast.error("Academic year must be in YYYY-YY format (e.g. 2026-27)");
       return;
     }
 
@@ -141,9 +204,9 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
     createRow(
       {
         academicYear: academicYear.trim(),
-        feeCategory: feeCategory.trim(),
+        feeCategory,
         amount: Number(amount),
-        yearOrSemester: yearOrSemester.trim() || null,
+        yearOrSemester,
         gender,
         instalmentAllowed,
         instalmentConfig,
@@ -186,14 +249,30 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
             />
+            <p className="text-[10px] text-muted-foreground">
+              Format: YYYY-YY (must match the admission cycle&apos;s academic
+              year, e.g. 2026-27)
+            </p>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Fee Category</Label>
-            <Input
-              placeholder="e.g. tuition_fee, library_fee"
+            <Select
               value={feeCategory}
-              onChange={(e) => setFeeCategory(e.target.value)}
-            />
+              onValueChange={(v) =>
+                setFeeCategory(v as (typeof FEE_CATEGORIES)[number])
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FEE_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {FEE_CATEGORY_LABELS[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Amount</Label>
@@ -207,11 +286,25 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Year / Semester</Label>
-            <Input
-              placeholder="e.g. Year 1, Semester 1, One-time, Annual"
+            <Select
               value={yearOrSemester}
-              onChange={(e) => setYearOrSemester(e.target.value)}
-            />
+              onValueChange={(v) =>
+                setYearOrSemester(
+                  v as (typeof YEAR_OR_SEMESTER_OPTIONS)[number],
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {YEAR_OR_SEMESTER_OPTIONS.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Gender</Label>

@@ -49,6 +49,7 @@ import type {
   CreateCommuteBusInput,
   CreateCommuteStopInput,
 } from "@/lib/services/colleges.service";
+import { EnrolledStudentsTab } from "@/components/commute/enrolled-students-tab";
 
 const DRIVER_STATUS_OPTIONS = ["off_duty", "on_route", "on_leave"] as const;
 
@@ -65,6 +66,7 @@ type RouteFormData = z.infer<typeof routeSchema>;
 
 export default function CommutePage() {
   const user = useAuthStore((state) => state.user);
+  const [activeTab, setActiveTab] = useState<"routes" | "students">("routes");
   const { data: routes = [], isLoading: loadingRoutes } = useCollegeCommutes();
   const { mutate: createRoute, isPending: creating } =
     useCreateCollegeCommute();
@@ -263,259 +265,293 @@ export default function CommutePage() {
             and track bus driver logs.
           </p>
         </div>
-        <Button
-          onClick={handleOpenAdd}
-          className="shadow-lg shadow-primary/10"
-          disabled={!canManageCommute}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Configure Transit Route
-        </Button>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {routes.map((route) => {
-          const isExpanded = expandedRoute === route.id;
-          return (
-            <Card
-              key={route.id}
-              className="border border-border/50 bg-card/60 backdrop-blur-md transition-all duration-300 hover:shadow-md hover:border-border/80"
-            >
-              <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-bold">
-                      {route.name}
-                    </CardTitle>
-                  </div>
-                  <CardDescription className="text-xs flex items-center gap-2 mt-1">
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {route.stops?.length ?? 0} stops configured
-                    </span>
-                  </CardDescription>
-                </div>
-                {canManageCommute ? (
-                  <button
-                    type="button"
-                    className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
-                    onClick={() => handleDelete(route.id, route.name)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                {route.description && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {route.description}
-                  </p>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 border-t border-b border-border/40 py-3 my-2">
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Fleet Registry
-                    </p>
-                    <p className="text-lg font-bold text-foreground flex items-center gap-1">
-                      {route.buses?.length ?? 0} active buses
-                    </p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Badge
-                        variant="outline"
-                        className={
-                          route.isActive
-                            ? "text-[10px] text-green-600 border-green-600 bg-green-50/50"
-                            : "text-[10px] text-muted-foreground"
-                        }
-                      >
-                        {route.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                      {route.isVerified && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] text-blue-600 border-blue-600 bg-blue-50/50"
-                        >
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {route.conductPolicy && route.conductPolicy.length > 0 && (
-                  <div className="space-y-1.5 border-t border-border/30 pt-3">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Conduct Policy
-                    </p>
-                    {route.conductPolicy.map((policy, idx) => (
-                      <div key={idx} className="text-xs">
-                        <span className="font-semibold">{policy.title}</span>
-                        <span className="text-muted-foreground">
-                          {" "}
-                          — {policy.description}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-xs font-semibold flex items-center justify-center gap-1 h-8"
-                  onClick={() => setExpandedRoute(isExpanded ? null : route.id)}
-                >
-                  {isExpanded ? (
-                    <>
-                      Hide Route Matrix <ChevronUp className="h-3.5 w-3.5" />
-                    </>
-                  ) : (
-                    <>
-                      Expand Route Matrix{" "}
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </Button>
-
-                {isExpanded && (
-                  <div className="space-y-4 mt-3 pt-3 border-t border-border/30 animate-fadeIn">
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> Stop Chronology Sequence
-                      </p>
-                      {route.stops && route.stops.length > 0 ? (
-                        <div className="relative border-l border-border pl-4 ml-2 space-y-3.5 py-1">
-                          {route.stops.map((stop) => (
-                            <div key={stop.id} className="relative text-xs">
-                              <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border border-primary bg-background flex items-center justify-center font-bold text-[8px] text-primary">
-                                {stop.stopOrder}
-                              </span>
-                              <p className="font-semibold">
-                                {stop.stopName}
-                                {stop.isPickupPoint === false && (
-                                  <span className="ml-1.5 text-[9px] text-muted-foreground font-normal">
-                                    (waypoint only)
-                                  </span>
-                                )}
-                              </p>
-                              {stop.landmark && (
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  Landmark: {stop.landmark}
-                                </p>
-                              )}
-                              {(stop.morningTime || stop.eveningTime) && (
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  {stop.morningTime &&
-                                    `AM ${new Date(stop.morningTime).toISOString().slice(11, 16)}`}
-                                  {stop.morningTime &&
-                                    stop.eveningTime &&
-                                    " · "}
-                                  {stop.eveningTime &&
-                                    `PM ${new Date(stop.eveningTime).toISOString().slice(11, 16)}`}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">
-                          No stops sequence logged.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                        <Truck className="h-3 w-3" /> Fleet Allocations &
-                        Drivers
-                      </p>
-                      {route.buses && route.buses.length > 0 ? (
-                        <div className="space-y-2">
-                          {route.buses.map((bus) => (
-                            <div
-                              key={bus.id}
-                              className="p-2.5 rounded-lg border border-border/40 bg-muted/20 text-xs"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <p className="font-bold">
-                                    {bus.busNumber}{" "}
-                                    {bus.busName ? `(${bus.busName})` : ""}
-                                    {bus.busType && (
-                                      <Badge
-                                        variant="outline"
-                                        className="ml-1.5 h-4 px-1 text-[9px] align-middle"
-                                      >
-                                        {bus.busType}
-                                      </Badge>
-                                    )}
-                                  </p>
-                                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                                    {bus.availableSeats}/{bus.totalSeats} seats
-                                    available
-                                    {bus.busModel ? ` · ${bus.busModel}` : ""}
-                                  </p>
-                                </div>
-                                <div className="text-right shrink-0">
-                                  <span className="font-mono text-primary font-bold block">
-                                    ${bus.monthlyFee}/mo
-                                  </span>
-                                  {bus.driverStatus && (
-                                    <span className="text-[9px] text-muted-foreground capitalize">
-                                      {bus.driverStatus.replace("_", " ")}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              {bus.driverName && (
-                                <div className="flex gap-4 border-t border-border/20 pt-2 mt-2 text-[10px] text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />{" "}
-                                    {bus.driverName}
-                                  </span>
-                                  {bus.driverPhone && (
-                                    <span className="flex items-center gap-1">
-                                      <Phone className="h-3 w-3" />{" "}
-                                      {bus.driverPhone}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {bus.paymentStructureNotes && (
-                                <p className="text-[10px] text-muted-foreground border-t border-border/20 pt-2 mt-2">
-                                  {bus.paymentStructureNotes}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">
-                          No fleet registered.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {routes.length === 0 && (
-          <div className="col-span-2 py-12 text-center text-muted-foreground">
-            <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground/60 mb-2" />
-            No commute transit routes configured yet.
-          </div>
+        {activeTab === "routes" && (
+          <Button
+            onClick={handleOpenAdd}
+            className="shadow-lg shadow-primary/10"
+            disabled={!canManageCommute}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Configure Transit Route
+          </Button>
         )}
       </div>
+
+      <div className="flex gap-2 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab("routes")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "routes"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Routes & Buses
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("students")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "students"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Enrolled Students
+        </button>
+      </div>
+
+      {activeTab === "students" && <EnrolledStudentsTab />}
+
+      {activeTab === "routes" && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {routes.map((route) => {
+            const isExpanded = expandedRoute === route.id;
+            return (
+              <Card
+                key={route.id}
+                className="border border-border/50 bg-card/60 backdrop-blur-md transition-all duration-300 hover:shadow-md hover:border-border/80"
+              >
+                <CardHeader className="pb-3 flex flex-row justify-between items-start gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg font-bold">
+                        {route.name}
+                      </CardTitle>
+                    </div>
+                    <CardDescription className="text-xs flex items-center gap-2 mt-1">
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {route.stops?.length ?? 0} stops configured
+                      </span>
+                    </CardDescription>
+                  </div>
+                  {canManageCommute ? (
+                    <button
+                      type="button"
+                      className="text-destructive hover:scale-105 p-1 rounded-md hover:bg-destructive/10"
+                      onClick={() => handleDelete(route.id, route.name)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {route.description && (
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {route.description}
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-b border-border/40 py-3 my-2">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Fleet Registry
+                      </p>
+                      <p className="text-lg font-bold text-foreground flex items-center gap-1">
+                        {route.buses?.length ?? 0} active buses
+                      </p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Status
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Badge
+                          variant="outline"
+                          className={
+                            route.isActive
+                              ? "text-[10px] text-green-600 border-green-600 bg-green-50/50"
+                              : "text-[10px] text-muted-foreground"
+                          }
+                        >
+                          {route.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        {route.isVerified && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-blue-600 border-blue-600 bg-blue-50/50"
+                          >
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {route.conductPolicy && route.conductPolicy.length > 0 && (
+                    <div className="space-y-1.5 border-t border-border/30 pt-3">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        Conduct Policy
+                      </p>
+                      {route.conductPolicy.map((policy, idx) => (
+                        <div key={idx} className="text-xs">
+                          <span className="font-semibold">{policy.title}</span>
+                          <span className="text-muted-foreground">
+                            {" "}
+                            — {policy.description}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs font-semibold flex items-center justify-center gap-1 h-8"
+                    onClick={() =>
+                      setExpandedRoute(isExpanded ? null : route.id)
+                    }
+                  >
+                    {isExpanded ? (
+                      <>
+                        Hide Route Matrix <ChevronUp className="h-3.5 w-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        Expand Route Matrix{" "}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </Button>
+
+                  {isExpanded && (
+                    <div className="space-y-4 mt-3 pt-3 border-t border-border/30 animate-fadeIn">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> Stop Chronology
+                          Sequence
+                        </p>
+                        {route.stops && route.stops.length > 0 ? (
+                          <div className="relative border-l border-border pl-4 ml-2 space-y-3.5 py-1">
+                            {route.stops.map((stop) => (
+                              <div key={stop.id} className="relative text-xs">
+                                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border border-primary bg-background flex items-center justify-center font-bold text-[8px] text-primary">
+                                  {stop.stopOrder}
+                                </span>
+                                <p className="font-semibold">
+                                  {stop.stopName}
+                                  {stop.isPickupPoint === false && (
+                                    <span className="ml-1.5 text-[9px] text-muted-foreground font-normal">
+                                      (waypoint only)
+                                    </span>
+                                  )}
+                                </p>
+                                {stop.landmark && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    Landmark: {stop.landmark}
+                                  </p>
+                                )}
+                                {(stop.morningTime || stop.eveningTime) && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {stop.morningTime &&
+                                      `AM ${new Date(stop.morningTime).toISOString().slice(11, 16)}`}
+                                    {stop.morningTime &&
+                                      stop.eveningTime &&
+                                      " · "}
+                                    {stop.eveningTime &&
+                                      `PM ${new Date(stop.eveningTime).toISOString().slice(11, 16)}`}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground italic">
+                            No stops sequence logged.
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 pt-2 border-t border-border/20">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          <Truck className="h-3 w-3" /> Fleet Allocations &
+                          Drivers
+                        </p>
+                        {route.buses && route.buses.length > 0 ? (
+                          <div className="space-y-2">
+                            {route.buses.map((bus) => (
+                              <div
+                                key={bus.id}
+                                className="p-2.5 rounded-lg border border-border/40 bg-muted/20 text-xs"
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-bold">
+                                      {bus.busNumber}{" "}
+                                      {bus.busName ? `(${bus.busName})` : ""}
+                                      {bus.busType && (
+                                        <Badge
+                                          variant="outline"
+                                          className="ml-1.5 h-4 px-1 text-[9px] align-middle"
+                                        >
+                                          {bus.busType}
+                                        </Badge>
+                                      )}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                      {bus.availableSeats}/{bus.totalSeats}{" "}
+                                      seats available
+                                      {bus.busModel ? ` · ${bus.busModel}` : ""}
+                                    </p>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="font-mono text-primary font-bold block">
+                                      ${bus.monthlyFee}/mo
+                                    </span>
+                                    {bus.driverStatus && (
+                                      <span className="text-[9px] text-muted-foreground capitalize">
+                                        {bus.driverStatus.replace("_", " ")}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {bus.driverName && (
+                                  <div className="flex gap-4 border-t border-border/20 pt-2 mt-2 text-[10px] text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <User className="h-3 w-3" />{" "}
+                                      {bus.driverName}
+                                    </span>
+                                    {bus.driverPhone && (
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="h-3 w-3" />{" "}
+                                        {bus.driverPhone}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                {bus.paymentStructureNotes && (
+                                  <p className="text-[10px] text-muted-foreground border-t border-border/20 pt-2 mt-2">
+                                    {bus.paymentStructureNotes}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground italic">
+                            No fleet registered.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {routes.length === 0 && (
+            <div className="col-span-2 py-12 text-center text-muted-foreground">
+              <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground/60 mb-2" />
+              No commute transit routes configured yet.
+            </div>
+          )}
+        </div>
+      )}
 
       {showAddModal && canManageCommute && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">

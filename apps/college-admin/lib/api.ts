@@ -8,6 +8,21 @@ interface RequestOptions extends RequestInit {
   suppress401Redirect?: boolean;
 }
 
+// `packages/types`' PaginationMeta reflects an older, inconsistent shape
+// (`hasNext`) that doesn't match `PaginationHelper.createMeta`'s actual
+// runtime output (`totalPages`/`hasNextPage`/`hasPreviousPage`), which is
+// what every recently-built paginated endpoint returns. Typed locally here
+// rather than fixing the shared type, since that type is still relied on
+// by several older endpoints using the other shape.
+export interface OffsetPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 export interface ApiErrorDetail {
   path: string;
   message: string;
@@ -41,10 +56,10 @@ class ApiClient {
     return headers;
   }
 
-  private async request<T>(
+  private async requestFull<T>(
     endpoint: string,
     options: RequestOptions = {},
-  ): Promise<T> {
+  ): Promise<{ data: T; meta: unknown }> {
     const {
       data,
       skipAuth = false,
@@ -115,11 +130,30 @@ class ApiClient {
       );
     }
 
-    return result.data as T;
+    return { data: result.data as T, meta: result.meta };
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestOptions = {},
+  ): Promise<T> {
+    const { data } = await this.requestFull<T>(endpoint, options);
+    return data;
   }
 
   get<T>(endpoint: string, options?: RequestOptions) {
     return this.request<T>(endpoint, { ...options, method: "GET" });
+  }
+
+  async getPaginated<T>(
+    endpoint: string,
+    options?: RequestOptions,
+  ): Promise<{ data: T; meta: OffsetPaginationMeta }> {
+    const { data, meta } = await this.requestFull<T>(endpoint, {
+      ...options,
+      method: "GET",
+    });
+    return { data, meta: meta as OffsetPaginationMeta };
   }
 
   post<T>(endpoint: string, data?: unknown, options?: RequestOptions) {
