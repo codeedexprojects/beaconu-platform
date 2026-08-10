@@ -20,6 +20,7 @@ import {
   useCreateFeeStructure,
   useDeleteFeeStructure,
 } from "@/hooks/use-fee-structures";
+import { useAdmissionCycles } from "@/hooks/use-admission-cycles";
 import type {
   FeeStructureDto,
   FeeStructureInstalmentItem,
@@ -82,33 +83,43 @@ const YEAR_OR_SEMESTER_OPTIONS = [
   "Semester 12",
 ] as const;
 
-const ACADEMIC_YEAR_REGEX = /^\d{4}-\d{2}$/;
-
 interface DraftInstalment {
   label: string;
   amount: string;
   dueDate: string;
 }
 
+interface DraftFeeItem {
+  feeCategory: (typeof FEE_CATEGORIES)[number];
+  amount: string;
+  description: string;
+}
+
+function newFeeItem(): DraftFeeItem {
+  return { feeCategory: "tuition_fee", amount: "", description: "" };
+}
+
 export function FeeStructureTab({ courseId }: { courseId: string }) {
   const { data: rows, isLoading } = useFeeStructures(courseId);
-  const { mutate: createRow, isPending: isCreating } =
-    useCreateFeeStructure(courseId);
+  const { data: admissionCycles } = useAdmissionCycles();
+  const { mutateAsync: createRow } = useCreateFeeStructure(courseId);
   const { mutate: deleteRow, isPending: isDeleting } =
     useDeleteFeeStructure(courseId);
+
+  const academicYearOptions = Array.from(
+    new Set((admissionCycles ?? []).map((c) => c.admissionYear)),
+  ).sort();
 
   const [deleteTarget, setDeleteTarget] = useState<FeeStructureDto | null>(
     null,
   );
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [isSubmittingBatch, setIsSubmittingBatch] = useState(false);
 
   const [academicYear, setAcademicYear] = useState("");
-  const [feeCategory, setFeeCategory] =
-    useState<(typeof FEE_CATEGORIES)[number]>("tuition_fee");
-  const [amount, setAmount] = useState("");
+  const [feeItems, setFeeItems] = useState<DraftFeeItem[]>([newFeeItem()]);
   const [yearOrSemester, setYearOrSemester] =
     useState<(typeof YEAR_OR_SEMESTER_OPTIONS)[number]>("One-time");
-  const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [gender, setGender] = useState<(typeof GENDERS)[number]>("both");
   const [instalmentAllowed, setInstalmentAllowed] = useState(false);
@@ -127,15 +138,27 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
 
   function resetForm() {
     setAcademicYear("");
-    setFeeCategory("tuition_fee");
-    setAmount("");
+    setFeeItems([newFeeItem()]);
     setYearOrSemester("One-time");
-    setDescription("");
     setDueDate("");
     setGender("both");
     setInstalmentAllowed(false);
     setInstalments([]);
     setFeePdfUrl("");
+  }
+
+  function handleAddFeeItem() {
+    setFeeItems((prev) => [...prev, newFeeItem()]);
+  }
+
+  function updateFeeItem(idx: number, patch: Partial<DraftFeeItem>) {
+    setFeeItems((prev) =>
+      prev.map((item, i) => (i === idx ? { ...item, ...patch } : item)),
+    );
+  }
+
+  function removeFeeItem(idx: number) {
+    setFeeItems((prev) => prev.filter((_, i) => i !== idx));
   }
 
   async function handlePdfUpload(file: File | null) {
@@ -170,13 +193,16 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
     setInstalments((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function handleCreate() {
-    if (!academicYear.trim() || !feeCategory || !amount.trim()) {
-      toast.error("Academic year, fee category, and amount are required");
+  async function handleCreate() {
+    if (!academicYear.trim()) {
+      toast.error("Academic year is required");
       return;
     }
-    if (!ACADEMIC_YEAR_REGEX.test(academicYear.trim())) {
-      toast.error("Academic year must be in YYYY-YY format (e.g. 2026-27)");
+    if (
+      feeItems.length === 0 ||
+      feeItems.some((item) => !item.feeCategory || !item.amount.trim())
+    ) {
+      toast.error("Every fee line needs a category and an amount");
       return;
     }
 
@@ -199,36 +225,50 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
       const siblingTotal = activeRows
         .filter((r) => r.yearOrSemester === yearOrSemester)
         .reduce((s, r) => s + Number(r.amount), 0);
-      const groupTotal = siblingTotal + Number(amount);
+      const newItemsTotal = feeItems.reduce(
+        (s, item) => s + (Number(item.amount) || 0),
+        0,
+      );
+      const groupTotal = siblingTotal + newItemsTotal;
       if (Math.abs(sum - groupTotal) > 0.01) {
         toast.error(
-          `Installment amounts (${sum}) must sum to the total of every fee row under "${yearOrSemester}" (${groupTotal}), not just this row`,
+          `Installment amounts (${sum}) must sum to the total of every fee row under "${yearOrSemester}" (${groupTotal}), not just the new lines`,
         );
         return;
       }
       instalmentConfig = { instalments: parsedInstalments };
     }
 
-    createRow(
-      {
-        academicYear: academicYear.trim(),
-        feeCategory,
-        amount: Number(amount),
-        yearOrSemester,
-        description: description.trim() || null,
-        dueDate: dueDate || null,
-        gender,
-        instalmentAllowed,
-        instalmentConfig,
-        feePdfUrl: feePdfUrl || null,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Fee structure row added");
-          resetForm();
-        },
-      },
-    );
+    setIsSubmittingBatch(true);
+    try {
+      for (let i = 0; i < feeItems.length; i++) {
+        const item = feeItems[i];
+        await createRow({
+          academicYear: academicYear.trim(),
+          feeCategory: item.feeCategory,
+          amount: Number(item.amount),
+          yearOrSemester,
+          description: item.description.trim() || null,
+          dueDate: dueDate || null,
+          gender,
+          // Only the first row in the batch carries the installment plan —
+          // resolveGroup() picks one anchor row per semester group anyway.
+          instalmentAllowed: i === 0 ? instalmentAllowed : false,
+          instalmentConfig: i === 0 ? instalmentConfig : undefined,
+          feePdfUrl: feePdfUrl || null,
+        });
+      }
+      toast.success(
+        feeItems.length > 1
+          ? `${feeItems.length} fee rows added`
+          : "Fee structure row added",
+      );
+      resetForm();
+    } catch {
+      // useCreateFeeStructure's onError already toasts the specific failure
+    } finally {
+      setIsSubmittingBatch(false);
+    }
   }
 
   function handleDelete(row: FeeStructureDto) {
@@ -254,45 +294,22 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
             <Label className="text-xs">Academic Year</Label>
-            <Input
-              placeholder="e.g. 2026-27"
-              value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)}
-            />
-            <p className="text-[10px] text-muted-foreground">
-              Format: YYYY-YY (must match the admission cycle&apos;s academic
-              year, e.g. 2026-27)
-            </p>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Fee Category</Label>
-            <Select
-              value={feeCategory}
-              onValueChange={(v) =>
-                setFeeCategory(v as (typeof FEE_CATEGORIES)[number])
-              }
-            >
+            <Select value={academicYear} onValueChange={setAcademicYear}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select academic year" />
               </SelectTrigger>
               <SelectContent>
-                {FEE_CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {FEE_CATEGORY_LABELS[c]}
+                {academicYearOptions.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Amount</Label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <p className="text-[10px] text-muted-foreground">
+              Pulled from this college&apos;s admission cycles — create an
+              application form first if none show here.
+            </p>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Year / Semester</Label>
@@ -315,14 +332,6 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Description / Subtitle (optional)</Label>
-            <Input
-              placeholder="e.g. Annual subscription, Semester requirement"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Due Date (optional)</Label>
@@ -359,6 +368,77 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
               onChange={(e) => handlePdfUpload(e.target.files?.[0] ?? null)}
             />
           </div>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-bold">
+              Fee Lines (Category, Amount, Description)
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddFeeItem}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Another Fee
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Each line becomes its own fee row under the same Academic Year /
+            Year-Semester above — e.g. add Library Fee, Clinical Fee, and Sports
+            Fee together here instead of one at a time.
+          </p>
+          {feeItems.map((item, idx) => (
+            <div key={idx} className="flex gap-2 items-start">
+              <div className="flex-1">
+                <Select
+                  value={item.feeCategory}
+                  onValueChange={(v) =>
+                    updateFeeItem(idx, {
+                      feeCategory: v as (typeof FEE_CATEGORIES)[number],
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FEE_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {FEE_CATEGORY_LABELS[c]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Amount"
+                className="flex-1"
+                value={item.amount}
+                onChange={(e) => updateFeeItem(idx, { amount: e.target.value })}
+              />
+              <Input
+                placeholder="Description / Subtitle (optional)"
+                className="flex-1"
+                value={item.description}
+                onChange={(e) =>
+                  updateFeeItem(idx, { description: e.target.value })
+                }
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={feeItems.length === 1}
+                onClick={() => removeFeeItem(idx)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-2 pt-2 border-t">
@@ -435,15 +515,17 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         <Button
           type="button"
           onClick={handleCreate}
-          disabled={isCreating}
+          disabled={isSubmittingBatch}
           size="sm"
         >
-          {isCreating ? (
+          {isSubmittingBatch ? (
             <Loader2 className="h-4 w-4 mr-1 animate-spin" />
           ) : (
             <Plus className="h-4 w-4 mr-1" />
           )}
-          Add Fee Row
+          {feeItems.length > 1
+            ? `Add ${feeItems.length} Fee Rows`
+            : "Add Fee Row"}
         </Button>
       </div>
 
