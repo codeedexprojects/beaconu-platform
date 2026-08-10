@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { CourseFeePaymentRepository } from "../repositories/course-fee-payment.repository";
 import { getPaymentProvider } from "../lib/get-payment-provider";
+import { normalizeAcademicYear } from "../lib/academic-year";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -145,7 +146,156 @@ async function confirm(studentId: string, body: ConfirmPaymentInput) {
   return toDto(finalized);
 }
 
+async function resolveGroup(
+  studentId: string,
+  collegeId: string,
+  yearOrSemester: string,
+) {
+  const enrollment = await EnrollmentService.getActiveSummary(studentId);
+  if (!enrollment || enrollment.collegeId !== collegeId) {
+    throw new ForbiddenError("You are not enrolled at this college");
+  }
+
+  const enrollmentYear = normalizeAcademicYear(enrollment.academicYear);
+  const allRows =
+    await CourseFeePaymentRepository.findFeeStructuresForCourseGroup(
+      enrollment.courseId,
+      yearOrSemester,
+    );
+  const rows = allRows.filter(
+    (row) => normalizeAcademicYear(row.academicYear) === enrollmentYear,
+  );
+  if (rows.length === 0) {
+    throw new NotFoundError("No fees found for this year/semester");
+  }
+
+  const anchor =
+    rows.find((r) => r.instalmentAllowed) ??
+    rows.find((r) => r.feeCategory === "tuition_fee") ??
+    rows[0];
+  const totalPayable = rows.reduce((sum, r) => sum + r.amount.toNumber(), 0);
+  const groupKey = `${yearOrSemester} — Semester Fees`;
+
+  return { collegeId: rows[0].collegeId, rows, anchor, totalPayable, groupKey };
+}
+
 export class CourseFeePaymentService {
+  static async initiateSemesterFull(
+    studentId: string,
+    collegeId: string,
+    yearOrSemester: string,
+  ) {
+    const { anchor, totalPayable, groupKey } = await resolveGroup(
+      studentId,
+      collegeId,
+      yearOrSemester,
+    );
+
+    let ledgerEntry =
+      await CourseFeePaymentRepository.findLedgerEntryForFeeStructure(
+        studentId,
+        anchor.id,
+      );
+    if (!ledgerEntry) {
+      ledgerEntry = await CourseFeePaymentRepository.createLedgerEntry({
+        studentId,
+        collegeId,
+        feeStructureId: anchor.id,
+        feeCategory: "semester_fees",
+        description: groupKey,
+        amount: totalPayable,
+      });
+    }
+
+    return createOrder(studentId, collegeId, ledgerEntry);
+  }
+
+  static async confirmSemesterFull(
+    studentId: string,
+    body: ConfirmPaymentInput,
+  ) {
+    return confirm(studentId, body);
+  }
+
+  static async setupSemesterInstallmentPlan(
+    studentId: string,
+    collegeId: string,
+    yearOrSemester: string,
+  ) {
+    const { rows, anchor, totalPayable, groupKey } = await resolveGroup(
+      studentId,
+      collegeId,
+      yearOrSemester,
+    );
+
+    if (!rows.some((r) => r.instalmentAllowed)) {
+      throw new ConflictError(
+        "Installment payment is not available for this semester",
+      );
+    }
+
+    const existing =
+      await CourseFeePaymentRepository.findInstallmentLedgerEntries(
+        studentId,
+        anchor.id,
+      );
+    if (existing.length > 0) return existing.map(toInstallmentDto);
+
+    const config = anchor.instalmentConfig as {
+      instalments?: { label: string; amount: number; dueDate?: string }[];
+    } | null;
+    const instalments = config?.instalments ?? [];
+    if (instalments.length === 0) {
+      throw new ConflictError(
+        "No installment schedule is configured for this semester",
+      );
+    }
+
+    const instalmentSum = instalments.reduce((sum, i) => sum + i.amount, 0);
+    if (Math.abs(instalmentSum - totalPayable) > 0.01) {
+      throw new ConflictError(
+        `Installment amounts (${instalmentSum}) must sum to the semester total (${totalPayable}) — ask college-admin to fix the installment schedule`,
+      );
+    }
+
+    const created =
+      await CourseFeePaymentRepository.createInstallmentLedgerEntries(
+        instalments.map((inst, idx) => ({
+          studentId,
+          collegeId,
+          feeStructureId: anchor.id,
+          feeCategory: "semester_fees",
+          description: `${groupKey} — Installment ${idx + 1} of ${instalments.length}`,
+          amount: inst.amount,
+          dueDate: inst.dueDate ? new Date(inst.dueDate) : null,
+        })),
+      );
+
+    return created.map(toInstallmentDto);
+  }
+
+  static async listSemesterInstallments(
+    studentId: string,
+    collegeId: string,
+    yearOrSemester: string,
+  ) {
+    const { anchor } = await resolveGroup(studentId, collegeId, yearOrSemester);
+    const rows = await CourseFeePaymentRepository.findInstallmentLedgerEntries(
+      studentId,
+      anchor.id,
+    );
+    const firstUnpaidIndex = rows.findIndex((r) => r.status !== "paid");
+    return rows.map((row, idx) => ({
+      ...toInstallmentDto(row),
+      status:
+        row.status === "paid"
+          ? "paid"
+          : idx === firstUnpaidIndex
+            ? "due_now"
+            : "upcoming",
+    }));
+  }
+
   static async initiateFull(studentId: string, feeStructureId: string) {
     const feeStructure =
       await CourseFeePaymentRepository.findFeeStructure(feeStructureId);

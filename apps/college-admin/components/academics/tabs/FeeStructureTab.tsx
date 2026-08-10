@@ -108,6 +108,8 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   const [amount, setAmount] = useState("");
   const [yearOrSemester, setYearOrSemester] =
     useState<(typeof YEAR_OR_SEMESTER_OPTIONS)[number]>("One-time");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [gender, setGender] = useState<(typeof GENDERS)[number]>("both");
   const [instalmentAllowed, setInstalmentAllowed] = useState(false);
   const [instalments, setInstalments] = useState<DraftInstalment[]>([]);
@@ -128,6 +130,8 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
     setFeeCategory("tuition_fee");
     setAmount("");
     setYearOrSemester("One-time");
+    setDescription("");
+    setDueDate("");
     setGender("both");
     setInstalmentAllowed(false);
     setInstalments([]);
@@ -192,9 +196,13 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         }),
       );
       const sum = parsedInstalments.reduce((s, i) => s + i.amount, 0);
-      if (sum !== Number(amount)) {
+      const siblingTotal = activeRows
+        .filter((r) => r.yearOrSemester === yearOrSemester)
+        .reduce((s, r) => s + Number(r.amount), 0);
+      const groupTotal = siblingTotal + Number(amount);
+      if (Math.abs(sum - groupTotal) > 0.01) {
         toast.error(
-          `Installment amounts (${sum}) must sum to the fee amount (${amount})`,
+          `Installment amounts (${sum}) must sum to the total of every fee row under "${yearOrSemester}" (${groupTotal}), not just this row`,
         );
         return;
       }
@@ -207,6 +215,8 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         feeCategory,
         amount: Number(amount),
         yearOrSemester,
+        description: description.trim() || null,
+        dueDate: dueDate || null,
         gender,
         instalmentAllowed,
         instalmentConfig,
@@ -307,6 +317,22 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
             </Select>
           </div>
           <div className="space-y-1">
+            <Label className="text-xs">Description / Subtitle (optional)</Label>
+            <Input
+              placeholder="e.g. Annual subscription, Semester requirement"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Due Date (optional)</Label>
+            <Input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
             <Label className="text-xs">Gender</Label>
             <Select
               value={gender}
@@ -350,6 +376,13 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
 
         {instalmentAllowed && (
           <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground">
+              For Year/Semester fees, installment amounts must sum to the TOTAL
+              of every fee row under the same Year/Semester (e.g. Tuition +
+              Development + Laboratory combined), not just this row&apos;s own
+              amount — since students pay the whole semester&apos;s fees
+              together as one bundle.
+            </p>
             <div className="flex items-center justify-between">
               <Label className="text-xs font-bold">Installments</Label>
               <Button
@@ -448,6 +481,16 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
                 <p className="text-xs text-muted-foreground mt-1">
                   {row.academicYear} · ₹{row.amount} · {row.gender}
                 </p>
+                {row.description && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {row.description}
+                  </p>
+                )}
+                {row.dueDate && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Due by {row.dueDate}
+                  </p>
+                )}
               </div>
               <Button
                 type="button"

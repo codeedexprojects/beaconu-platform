@@ -52,4 +52,21 @@ router.post(
   StudentPaymentController.confirmInstallmentPayment,
 );
 
+router.post(
+  "/finance/semester-fees/pay/initiate",
+  StudentPaymentController.initiateSemesterFeePayment,
+);
+router.post(
+  "/finance/semester-fees/pay/confirm",
+  StudentPaymentController.confirmSemesterFeePayment,
+);
+router.post(
+  "/finance/semester-fees/installments/setup",
+  StudentPaymentController.setupSemesterInstallmentPlan,
+);
+router.get(
+  "/finance/semester-fees/installments",
+  StudentPaymentController.listSemesterInstallments,
+);
+
 export default router;
