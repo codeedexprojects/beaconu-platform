@@ -43,6 +43,16 @@ const financeCollegeIdQuerySchema = z.object({
   college_id: z.string().trim().min(1, "college_id is required"),
 });
 
+const semesterGroupBodySchema = z.object({
+  college_id: z.string().trim().min(1, "college_id is required"),
+  year_or_semester: z.string().trim().min(1, "year_or_semester is required"),
+});
+
+const semesterGroupQuerySchema = z.object({
+  college_id: z.string().trim().min(1, "college_id is required"),
+  year_or_semester: z.string().trim().min(1, "year_or_semester is required"),
+});
+
 export class StudentPaymentController {
   static async initiateApplicationPayment(req: Request, res: Response) {
     const result = await ApplicationPaymentService.initiate(
@@ -235,5 +245,48 @@ export class StudentPaymentController {
       body,
     );
     return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async initiateSemesterFeePayment(req: Request, res: Response) {
+    const body = semesterGroupBodySchema.parse(req.body);
+    const result = await CourseFeePaymentService.initiateSemesterFull(
+      req.userId as string,
+      body.college_id,
+      body.year_or_semester,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Payment order created", result));
+  }
+
+  static async confirmSemesterFeePayment(req: Request, res: Response) {
+    const body = confirmPaymentSchema.parse(req.body);
+    const result = await CourseFeePaymentService.confirmSemesterFull(
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Payment confirmed", result));
+  }
+
+  static async setupSemesterInstallmentPlan(req: Request, res: Response) {
+    const body = semesterGroupBodySchema.parse(req.body);
+    const result = await CourseFeePaymentService.setupSemesterInstallmentPlan(
+      req.userId as string,
+      body.college_id,
+      body.year_or_semester,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Installment plan created", result));
+  }
+
+  static async listSemesterInstallments(req: Request, res: Response) {
+    const query = semesterGroupQuerySchema.parse(req.query);
+    const result = await CourseFeePaymentService.listSemesterInstallments(
+      req.userId as string,
+      query.college_id,
+      query.year_or_semester,
+    );
+    return res.json(ApiResponse.success("Installments fetched", result));
   }
 }

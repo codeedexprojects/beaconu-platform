@@ -12,12 +12,14 @@ model FeeStructure {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  gender         String? @default("both") @db.VarChar(10)
-  feePdfUrl      String? @map("fee_pdf_url") @db.Text
-  oneTimeFees    Json    @default("[]") @map("one_time_fees")
-  additionalFees Json    @default("[]") @map("additional_fees")
-  whatsIncluded  Json    @default("[]") @map("whats_included")
-  whatsExcluded  Json    @default("[]") @map("whats_excluded")
+  gender         String?   @default("both") @db.VarChar(10)
+  feePdfUrl      String?   @map("fee_pdf_url") @db.Text
+  oneTimeFees    Json      @default("[]") @map("one_time_fees")
+  additionalFees Json      @default("[]") @map("additional_fees")
+  whatsIncluded  Json      @default("[]") @map("whats_included")
+  whatsExcluded  Json      @default("[]") @map("whats_excluded")
+  description    String?   @db.VarChar(255)
+  dueDate        DateTime? @map("due_date") @db.Date
 
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])

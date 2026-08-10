@@ -798,6 +798,8 @@ export interface FeeStructureDto {
   feeCategory: string;
   amount: string;
   yearOrSemester: string | null;
+  description: string | null;
+  dueDate: string | null;
   gender: "both" | "male" | "female";
   instalmentAllowed: boolean;
   instalmentConfig: { instalments?: FeeStructureInstalmentItem[] };
@@ -812,6 +814,8 @@ export interface CreateFeeStructureInput {
   feeCategory: string;
   amount: number;
   yearOrSemester?: string | null;
+  description?: string | null;
+  dueDate?: string | null;
   gender?: "both" | "male" | "female";
   instalmentAllowed?: boolean;
   instalmentConfig?: { instalments: FeeStructureInstalmentItem[] };

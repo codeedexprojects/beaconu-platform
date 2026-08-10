@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "@/shared/errors";
+import { NotFoundError } from "@/shared/errors";
 import { FeeStructureRepository } from "../repositories/fee-structure.repository";
 import type {
   CreateFeeStructureInput,
@@ -13,6 +13,7 @@ function toDto(row: FeeStructureRow) {
   return {
     ...row,
     amount: row.amount.toString(),
+    dueDate: row.dueDate ? row.dueDate.toISOString().slice(0, 10) : null,
   };
 }
 
@@ -22,22 +23,6 @@ async function assertCourseInCollege(courseId: string, collegeId: string) {
     collegeId,
   );
   if (!course) throw new NotFoundError("Course not found");
-}
-
-function assertInstalmentsSumMatches(
-  amount: number,
-  instalmentConfig?: { instalments: { amount: number }[] },
-) {
-  if (!instalmentConfig) return;
-  const sum = instalmentConfig.instalments.reduce(
-    (total, i) => total + i.amount,
-    0,
-  );
-  if (Math.abs(sum - amount) > 0.01) {
-    throw new ConflictError(
-      `Instalment amounts (${sum}) must sum to the fee amount (${amount})`,
-    );
-  }
 }
 
 export class FeeStructureService {
@@ -54,10 +39,6 @@ export class FeeStructureService {
   ) {
     await assertCourseInCollege(courseId, collegeId);
 
-    if (data.instalmentAllowed) {
-      assertInstalmentsSumMatches(data.amount, data.instalmentConfig);
-    }
-
     const row = await FeeStructureRepository.create({
       courseId,
       collegeId,
@@ -65,6 +46,8 @@ export class FeeStructureService {
       feeCategory: data.feeCategory,
       amount: data.amount,
       yearOrSemester: data.yearOrSemester ?? null,
+      description: data.description ?? null,
+      dueDate: data.dueDate ?? null,
       gender: data.gender ?? "both",
       instalmentAllowed: data.instalmentAllowed ?? false,
       instalmentConfig: data.instalmentConfig ?? {},
@@ -81,10 +64,6 @@ export class FeeStructureService {
   ) {
     await assertCourseInCollege(courseId, collegeId);
 
-    if (data.instalmentAllowed && data.amount && data.instalmentConfig) {
-      assertInstalmentsSumMatches(data.amount, data.instalmentConfig);
-    }
-
     const updateData: Record<string, unknown> = {};
     if (data.academicYear !== undefined)
       updateData.academicYear = data.academicYear;
@@ -93,6 +72,9 @@ export class FeeStructureService {
     if (data.amount !== undefined) updateData.amount = data.amount;
     if (data.yearOrSemester !== undefined)
       updateData.yearOrSemester = data.yearOrSemester;
+    if (data.description !== undefined)
+      updateData.description = data.description;
+    if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
     if (data.gender !== undefined) updateData.gender = data.gender;
     if (data.instalmentAllowed !== undefined)
       updateData.instalmentAllowed = data.instalmentAllowed;

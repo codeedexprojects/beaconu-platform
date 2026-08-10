@@ -48,6 +48,24 @@ export class CourseFeePaymentRepository {
     });
   }
 
+  static async findFeeStructuresForCourseGroup(
+    courseId: string,
+    yearOrSemester: string,
+  ) {
+    return prisma.feeStructure.findMany({
+      where: { courseId, yearOrSemester, isActive: true },
+      select: {
+        id: true,
+        collegeId: true,
+        feeCategory: true,
+        amount: true,
+        academicYear: true,
+        instalmentAllowed: true,
+        instalmentConfig: true,
+      },
+    });
+  }
+
   static async findPendingTransactionForLedgerEntry(ledgerEntryId: string) {
     return prisma.transaction.findFirst({
       where: { status: "pending", ledgerEntryId },

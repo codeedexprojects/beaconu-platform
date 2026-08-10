@@ -8,6 +8,8 @@ const ADMIN_SELECT = {
   feeCategory: true,
   amount: true,
   yearOrSemester: true,
+  description: true,
+  dueDate: true,
   gender: true,
   instalmentAllowed: true,
   instalmentConfig: true,
@@ -22,6 +24,8 @@ const PUBLIC_SELECT = {
   feeCategory: true,
   amount: true,
   yearOrSemester: true,
+  description: true,
+  dueDate: true,
   gender: true,
   instalmentAllowed: true,
   instalmentConfig: true,
@@ -58,6 +62,8 @@ export class FeeStructureRepository {
     feeCategory: string;
     amount: number;
     yearOrSemester?: string | null;
+    description?: string | null;
+    dueDate?: Date | null;
     gender?: string;
     instalmentAllowed?: boolean;
     instalmentConfig?: Prisma.InputJsonValue;
