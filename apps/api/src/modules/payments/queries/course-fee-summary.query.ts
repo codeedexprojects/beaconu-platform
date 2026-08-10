@@ -5,6 +5,14 @@ function toNumber(value: { toNumber(): number } | null | undefined): number {
   return value ? value.toNumber() : 0;
 }
 
+function normalizeAcademicYear(value: string): string {
+  const parts = value.match(/\d+/g) ?? [];
+  if (parts.length === 0) return value.trim();
+  const start = (parts[0] ?? "").slice(-4).padStart(4, "0");
+  const end = parts[1] ? parts[1].slice(-2).padStart(2, "0") : "";
+  return end ? `${start}-${end}` : start;
+}
+
 export class CourseFeeSummaryQuery {
   static async getSummary(studentId: string, collegeId: string) {
     const enrollment = await EnrollmentService.getActiveSummary(studentId);
@@ -12,14 +20,14 @@ export class CourseFeeSummaryQuery {
       return { totalFee: "0", paidAmount: "0", dueAmount: "0", percentPaid: 0 };
     }
 
-    const feeStructures = await prisma.feeStructure.findMany({
-      where: {
-        courseId: enrollment.courseId,
-        academicYear: enrollment.academicYear,
-        isActive: true,
-      },
-      select: { amount: true },
+    const enrollmentYear = normalizeAcademicYear(enrollment.academicYear);
+    const allFeeStructures = await prisma.feeStructure.findMany({
+      where: { courseId: enrollment.courseId, isActive: true },
+      select: { id: true, amount: true, academicYear: true },
     });
+    const feeStructures = allFeeStructures.filter(
+      (row) => normalizeAcademicYear(row.academicYear) === enrollmentYear,
+    );
     const totalFee = feeStructures.reduce(
       (sum, row) => sum + row.amount.toNumber(),
       0,
@@ -29,10 +37,7 @@ export class CourseFeeSummaryQuery {
       where: {
         studentId,
         status: "paid",
-        feeStructure: {
-          courseId: enrollment.courseId,
-          academicYear: enrollment.academicYear,
-        },
+        feeStructureId: { in: feeStructures.map((f) => f.id) },
       },
       select: { paidAmount: true },
     });
@@ -59,21 +64,22 @@ export class CourseFeeSummaryQuery {
       return { oneTime: [], currentDue: [], additional: [] };
     }
 
-    const feeStructures = await prisma.feeStructure.findMany({
-      where: {
-        courseId: enrollment.courseId,
-        academicYear: enrollment.academicYear,
-        isActive: true,
-      },
+    const enrollmentYear = normalizeAcademicYear(enrollment.academicYear);
+    const allFeeStructures = await prisma.feeStructure.findMany({
+      where: { courseId: enrollment.courseId, isActive: true },
       select: {
         id: true,
         feeCategory: true,
         amount: true,
         yearOrSemester: true,
+        academicYear: true,
         instalmentAllowed: true,
       },
       orderBy: [{ yearOrSemester: "asc" }, { feeCategory: "asc" }],
     });
+    const feeStructures = allFeeStructures.filter(
+      (row) => normalizeAcademicYear(row.academicYear) === enrollmentYear,
+    );
 
     const ledgerRows = await prisma.studentFeeLedger.findMany({
       where: {

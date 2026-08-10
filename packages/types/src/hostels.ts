@@ -144,6 +144,9 @@ export interface PublicHostelSummary extends HostelSummaryDto {
 }
 
 export interface PublicHostelPlan {
+  id?: string;
+  addon_service_id?: string;
+  plan_label?: string;
   name?: string;
   subtitle?: string;
   price?: string;
@@ -179,6 +182,8 @@ export interface PublicHostelParkingBlock {
   step_number?: number;
   title?: string;
   items?: {
+    addon_service_id?: string;
+    plan_label?: string;
     name?: string;
     price?: string;
     currency?: string;

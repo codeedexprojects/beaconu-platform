@@ -1,0 +1,45 @@
+meta {
+  name: List Commute Enrollments (Students)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/commute/enrollments?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  route_id:
+  bus_id:
+  status: active
+  search:
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0]) {
+      bru.setEnvVar("commuteEnrollmentId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Students who have taken commute at this college — paginated roster,
+  each row joined with student identity, route, bus, and pickup stop.
+
+  Optional filters: route_id, bus_id, status (default: no filter, pass
+  "active" to see only currently-active enrollments), search (matches
+  student full name/email/phone).
+
+  Response `data` is an array; pagination info is in the top-level `meta`
+  (page, limit, total, totalPages, hasNextPage, hasPreviousPage).
+}

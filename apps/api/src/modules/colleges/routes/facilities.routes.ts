@@ -167,4 +167,18 @@ router.delete(
   CollegeFacilitiesController.deleteRoute,
 );
 
+router.get(
+  "/commute/enrollments",
+  ...staffAuth,
+  authorizeAny("commute.view", "commute.manage"),
+  CollegeFacilitiesController.listCommuteEnrollments,
+);
+
+router.get(
+  "/commute/enrollments/:id",
+  ...staffAuth,
+  authorizeAny("commute.view", "commute.manage"),
+  CollegeFacilitiesController.getCommuteEnrollment,
+);
+
 export default router;

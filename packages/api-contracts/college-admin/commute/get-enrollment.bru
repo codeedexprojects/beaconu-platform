@@ -1,0 +1,24 @@
+meta {
+  name: Get Commute Enrollment Detail
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/commute/enrollments/{{commuteEnrollmentId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Single enrollment's full detail (student identity, route, bus + driver
+  info, pickup stop with morning/evening times, status, enrolledFrom/Until),
+  plus `payments[]` — every commute_fee StudentFeeLedger entry for this
+  student (each with its own nested transactions[]), newest first.
+
+  404 if the enrollment doesn't belong to this college.
+}

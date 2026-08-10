@@ -1,4 +1,4 @@
-import { api } from "../api";
+import { api, type OffsetPaginationMeta } from "../api";
 import type {
   CollegePermissionDto,
   CollegeRoleDto,
@@ -966,6 +966,95 @@ export async function createCollegeCommuteRoute(
 
 export async function deleteCollegeCommuteRoute(id: string): Promise<void> {
   return api.delete(`/api/v1/college-admin/commute/${id}`);
+}
+
+export interface CommuteEnrollmentDto {
+  id: string;
+  status: string;
+  enrolledFrom: string;
+  enrolledUntil: string | null;
+  createdAt: string;
+  student: {
+    id: string;
+    fullName: string;
+    email: string | null;
+    phoneNumber: string | null;
+    phoneCountryCode: string | null;
+  };
+  route: { id: string; name: string };
+  bus: {
+    id: string;
+    busNumber: string;
+    busName: string | null;
+    driverName: string | null;
+    driverPhone: string | null;
+    driverStatus: string;
+    monthlyFee: string;
+  };
+  pickupStop: {
+    id: string;
+    stopName: string;
+    morningTime: string | null;
+    eveningTime: string | null;
+  };
+}
+
+export interface CommuteEnrollmentFilters {
+  route_id?: string;
+  bus_id?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getCollegeCommuteEnrollments(
+  filters: CommuteEnrollmentFilters = {},
+): Promise<{ data: CommuteEnrollmentDto[]; meta: OffsetPaginationMeta }> {
+  const params = new URLSearchParams();
+  if (filters.route_id) params.set("route_id", filters.route_id);
+  if (filters.bus_id) params.set("bus_id", filters.bus_id);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.search) params.set("search", filters.search);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  return api.getPaginated<CommuteEnrollmentDto[]>(
+    `/api/v1/college-admin/commute/enrollments${qs ? `?${qs}` : ""}`,
+  );
+}
+
+export interface CommuteEnrollmentTransactionDto {
+  id: string;
+  transactionNumber: string;
+  amount: string;
+  status: string;
+  paymentMethod: string;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface CommuteEnrollmentPaymentDto {
+  id: string;
+  description: string | null;
+  amount: string;
+  paidAmount: string;
+  balanceAmount: string;
+  status: string;
+  createdAt: string;
+  transactions: CommuteEnrollmentTransactionDto[];
+}
+
+export interface CommuteEnrollmentDetailDto extends CommuteEnrollmentDto {
+  payments: CommuteEnrollmentPaymentDto[];
+}
+
+export async function getCollegeCommuteEnrollment(
+  id: string,
+): Promise<CommuteEnrollmentDetailDto> {
+  return api.get<CommuteEnrollmentDetailDto>(
+    `/api/v1/college-admin/commute/enrollments/${id}`,
+  );
 }
 
 export interface MyGroupMembershipResponse {

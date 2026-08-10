@@ -6,6 +6,7 @@ import { NotFoundError, BadRequestError } from "@/shared/errors";
 import { generateSlug } from "@/shared/utils";
 import { HostelService, buildHostelGallery } from "../services/hostel.service";
 import { LibraryService } from "../services/library.service";
+import { CommuteEnrollmentListQuery } from "../queries/commute-enrollment-list.query";
 import {
   createHostelSchema,
   updateHostelSchema,
@@ -482,6 +483,53 @@ export class CollegeFacilitiesController {
     return res
       .status(200)
       .json(ApiResponse.success("Commuter transit route removed", null));
+  }
+
+  static async listCommuteEnrollments(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const querySchema = z.object({
+      route_id: z.string().trim().min(1).optional(),
+      bus_id: z.string().trim().min(1).optional(),
+      status: z.string().trim().min(1).optional(),
+      search: z.string().trim().min(1).optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(100).default(20),
+    });
+    const query = querySchema.parse(req.query);
+
+    const result = await CommuteEnrollmentListQuery.listForCollege(
+      collegeId,
+      {
+        routeId: query.route_id,
+        busId: query.bus_id,
+        status: query.status,
+        search: query.search,
+      },
+      { page: query.page, limit: query.limit },
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Commute enrollments fetched",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  static async getCommuteEnrollment(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const result = await CommuteEnrollmentListQuery.getForCollege(
+      collegeId,
+      id as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Commute enrollment fetched", result));
   }
 
   static async listLibraries(req: Request, res: Response) {
