@@ -1,0 +1,25 @@
+meta {
+  name: Get Hostel Enrollment Detail
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/hostels/enrollments/{{hostelEnrollmentId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Single enrollment's full detail (student identity, hostel, room type,
+  plan type, admission fee, security deposit, mess plan, dietary
+  preference, selected addons, fee breakdown, status, enrolledFrom/Until),
+  plus `payments[]` — every hostel_booking_fee StudentFeeLedger entry for
+  this student (each with its own nested transactions[]), newest first.
+
+  404 if the enrollment doesn't belong to this college.
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Send Follow-Up Message
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/support/{{ticketId}}/messages
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "message": "Any update on this?"
+  }
+}
+
+docs {
+  Add a follow-up message to an existing query thread. Either `message` or
+  at least one attachment is required (both optional individually).
+
+  Status side-effects: if the ticket was "resolved", it flips to "reopened";
+  if it was "awaiting_response", it flips back to "in_progress" (ball moves
+  to the support agent). ConflictError if the ticket is "closed" — submit a
+  new query instead.
+}

@@ -16,6 +16,7 @@ import collegeAdminMediaKitRoutes from "@/modules/media-kit/routes/college-admin
 import collegeAdminIconsRoutes from "@/modules/platform-admin/routes/icons-college-admin.routes";
 import collegeAdminInterviewRoutes from "@/modules/interviews/routes/college-admin.routes";
 import collegeAdminScholarshipRoutes from "@/modules/scholarships/routes/college-admin.routes";
+import collegeAdminSupportRoutes from "@/modules/support/routes/college-admin.routes";
 
 const router: Router = Router();
 
@@ -35,5 +36,6 @@ router.use("/media-kit", collegeAdminMediaKitRoutes);
 router.use("/icons", collegeAdminIconsRoutes);
 router.use("/interviews", collegeAdminInterviewRoutes);
 router.use("/scholarships", collegeAdminScholarshipRoutes);
+router.use("/support", collegeAdminSupportRoutes);
 
 export default router;

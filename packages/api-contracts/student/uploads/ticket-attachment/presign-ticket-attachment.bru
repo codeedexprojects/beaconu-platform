@@ -1,0 +1,48 @@
+meta {
+  name: Presign Ticket Attachment Upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/ticket-attachment/presign
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "mimeType": "image/png",
+    "fileSizeBytes": 204800
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.key) {
+      bru.setEnvVar("ticketAttachmentUploadKey", data.data.key);
+      bru.setEnvVar("ticketAttachmentUploadUrl", data.data.uploadUrl);
+    }
+  }
+}
+
+docs {
+  Step 1 of 3 — Request a pre-signed PUT URL for a query attachment.
+
+  Body:
+  - mimeType (required): image/jpeg | image/png | image/webp | application/pdf
+  - fileSizeBytes (required): file size in bytes, max 5MB per the "My
+    Queries" submit form (server allows up to the shared 10MB cap; the
+    frontend enforces the tighter 5MB limit shown in the UI)
+
+  Response: uploadUrl, key, expiresIn (300s)
+}

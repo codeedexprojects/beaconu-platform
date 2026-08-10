@@ -1,0 +1,59 @@
+meta {
+  name: Submit New Query
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/support
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "subject": "Issue with portal login",
+    "description": "I am unable to access the student portal dashboard. After entering my credentials, the page loads indefinitely and then displays a timeout error.",
+    "attachments": [
+      {
+        "url": "{{ticketAttachmentUrl}}",
+        "fileName": "screenshot_error_503.png",
+        "fileType": "image/png",
+        "fileSize": 250880
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("ticketId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Submit a new support query. Creates the ticket (status: in_progress) and
+  its first message (student, containing the description + attachments).
+
+  Body:
+  - college_id (required)
+  - subject (required, max 255 chars)
+  - description (required, max 2000 chars)
+  - attachments (optional, max 5) — each {url, fileName, fileType, fileSize?},
+    obtained via uploads/ticket-attachment/presign + verify first.
+
+  404 (well, 403 ForbiddenError) if the student has no active enrollment at
+  this college.
+}

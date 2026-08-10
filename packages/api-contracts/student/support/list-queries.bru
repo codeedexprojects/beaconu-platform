@@ -1,0 +1,31 @@
+meta {
+  name: List My Queries
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/support?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+  search:
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Paginated list of the authenticated student's own queries, newest-updated
+  first. Optional filters: status (in_progress|awaiting_response|resolved|
+  closed|reopened), search (matches subject/ticketNumber).
+
+  Response `data` = { tickets: [...], meta: {page,limit,total,totalPages,
+  hasNextPage,hasPreviousPage} }.
+}

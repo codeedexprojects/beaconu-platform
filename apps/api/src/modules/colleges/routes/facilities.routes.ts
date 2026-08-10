@@ -20,6 +20,20 @@ router.get(
   CollegeFacilitiesController.listHostels,
 );
 
+router.get(
+  "/hostels/enrollments",
+  ...staffAuth,
+  authorizeAny("hostel.view", "hostel.manage"),
+  CollegeFacilitiesController.listHostelEnrollments,
+);
+
+router.get(
+  "/hostels/enrollments/:id",
+  ...staffAuth,
+  authorizeAny("hostel.view", "hostel.manage"),
+  CollegeFacilitiesController.getHostelEnrollment,
+);
+
 router.post(
   "/hostels",
   ...staffWriteAuth,

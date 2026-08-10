@@ -1,0 +1,26 @@
+meta {
+  name: Upload Ticket Attachment To S3 (PUT)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{ticketAttachmentUploadUrl}}
+  body: file
+  auth: none
+}
+
+headers {
+  Content-Type: image/png
+}
+
+body:file {
+  @file:
+}
+
+docs {
+  Step 2 of 3 — PUT the file directly to S3 using the pre-signed URL.
+
+  auth must be "none" (the presigned URL already carries AWS credentials).
+  Content-Type must exactly match what was sent to the presign endpoint.
+}

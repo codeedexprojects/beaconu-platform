@@ -1,0 +1,33 @@
+meta {
+  name: Update Query Status
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/support/{{ticketId}}/status
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "status": "resolved"
+  }
+}
+
+docs {
+  Explicitly set a query's status: in_progress | awaiting_response |
+  resolved | closed | reopened.
+
+  Setting "resolved" stamps resolvedAt; "closed" stamps closedAt; moving
+  back to "in_progress"/"reopened" clears both timestamps.
+}

@@ -26,8 +26,11 @@ import {
   deleteCollegeCommuteRoute,
   getCollegeCommuteEnrollments,
   getCollegeCommuteEnrollment,
+  getCollegeHostelEnrollments,
+  getCollegeHostelEnrollment,
   type CreateCommuteRouteInput,
   type CommuteEnrollmentFilters,
+  type HostelEnrollmentFilters,
 } from "@/lib/services/colleges.service";
 
 export function useCollegeHostels(enabled = true) {
@@ -317,6 +320,23 @@ export function useCollegeCommuteEnrollment(id: string | null) {
   return useQuery({
     queryKey: QUERY_KEYS.commuteEnrollment(id ?? ""),
     queryFn: () => getCollegeCommuteEnrollment(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useCollegeHostelEnrollments(
+  filters: HostelEnrollmentFilters = {},
+) {
+  return useQuery({
+    queryKey: QUERY_KEYS.hostelEnrollments(filters),
+    queryFn: () => getCollegeHostelEnrollments(filters),
+  });
+}
+
+export function useCollegeHostelEnrollment(id: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.hostelEnrollment(id ?? ""),
+    queryFn: () => getCollegeHostelEnrollment(id as string),
     enabled: !!id,
   });
 }

@@ -6,4 +6,7 @@ export const QUERY_KEYS = {
     ["campus-visit-availability", collegeId] as const,
   myCampusVisits: (collegeId: string) =>
     ["my-campus-visits", collegeId] as const,
+  myTickets: (filters?: unknown) =>
+    filters ? (["my-tickets", filters] as const) : (["my-tickets"] as const),
+  ticketDetail: (id: string) => ["ticket-detail", id] as const,
 } as const;
