@@ -31,6 +31,7 @@ import {
   useCreateHostelAddonService,
   useDeleteHostelAddonService,
 } from "@/hooks/use-facilities";
+import { EnrolledStudentsTab } from "@/components/hostel/enrolled-students-tab";
 
 const ADDON_SERVICE_TYPES = ["laundry", "gym", "parking", "other"] as const;
 const ADDON_PLAN_PERIODS = ["monthly", "quarterly", "annual"] as const;
@@ -56,6 +57,10 @@ export default function HostelDetailPage() {
 
   const { data: hostels = [], isLoading } = useCollegeHostels();
   const hostel = hostels.find((h) => h.id === hostelId);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "students">(
+    "overview",
+  );
 
   const { mutate: updateHostel, isPending: isSavingProfile } =
     useUpdateCollegeHostel();
@@ -518,825 +523,619 @@ export default function HostelDetailPage() {
         </div>
       </div>
 
-      <Card className="border border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Hostel Profile</CardTitle>
-          <CardDescription>
-            Description, capacity, warden contact, amenities, rules, and
-            location.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label>Target Allocation</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none"
-                value={hostelType}
-                onChange={(e) =>
-                  setHostelType(e.target.value as "boys" | "girls" | "co-ed")
-                }
-              >
-                <option value="co-ed">Co-Educational</option>
-                <option value="boys">Boys Only</option>
-                <option value="girls">Girls Only</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  checked={isOnCampus}
-                  onChange={(e) => setIsOnCampus(e.target.checked)}
-                />
-                <Label className="!mb-0">Located On-Campus</Label>
-              </label>
-              {!isOnCampus && (
-                <Input
-                  placeholder="Distance from campus (km), e.g. 1.8"
-                  value={distanceFromCampus}
-                  onChange={(e) => setDistanceFromCampus(e.target.value)}
-                />
-              )}
-            </div>
-            <div className="space-y-1 sm:col-span-2">
-              <Label>Description</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Modern rooms with laundry facility..."
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Total Beds</Label>
-              <Input
-                type="number"
-                value={totalBeds}
-                onChange={(e) => setTotalBeds(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Cover Image</Label>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  disabled={uploadingField === "coverImageUrl"}
-                  onChange={(e) =>
-                    handleImageUpload(
-                      e.target.files?.[0] ?? null,
-                      "coverImageUrl",
-                      `hostels/${hostel.id}/cover`,
-                      setCoverImageUrl,
-                    )
-                  }
-                />
-                {coverImageUrl && (
-                  <img
-                    src={coverImageUrl}
-                    alt="Cover preview"
-                    className="h-10 w-16 rounded-md border object-cover"
-                  />
-                )}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label>Verified Badge Text</Label>
-              <Input
-                value={badge}
-                onChange={(e) => setBadge(e.target.value)}
-                placeholder="Safe & Secure - Premium PG Partnered"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Safety Tier</Label>
-              <Input
-                value={safetyTier}
-                onChange={(e) => setSafetyTier(e.target.value)}
-                placeholder="Premium"
-              />
-            </div>
-          </div>
+      <div className="flex gap-2 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab("overview")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "overview"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Hostel Profile
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("students")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === "students"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Enrolled Students
+        </button>
+      </div>
 
-          <div className="space-y-2 pt-4 border-t">
-            <Label className="font-semibold">Tags</Label>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((t, idx) => (
-                <span
-                  key={idx}
-                  className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
-                >
-                  {t.label}
-                  <button
-                    type="button"
-                    onClick={() => setTags(tags.filter((_, i) => i !== idx))}
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Label (e.g. On-Campus)"
-                value={newTagLabel}
-                onChange={(e) => setNewTagLabel(e.target.value)}
-              />
-              <Input
-                placeholder="Color (e.g. blue)"
-                value={newTagColor}
-                onChange={(e) => setNewTagColor(e.target.value)}
-              />
-              <Button type="button" variant="outline" onClick={addTag}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-          </div>
+      {activeTab === "students" && (
+        <EnrolledStudentsTab
+          hostelId={hostelId as string}
+          roomTypes={hostel.roomTypes}
+        />
+      )}
 
-          <div className="space-y-2 pt-4 border-t">
-            <Label className="font-semibold">Warden Info</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                placeholder="Name"
-                value={wardenName}
-                onChange={(e) => setWardenName(e.target.value)}
-              />
-              <Input
-                placeholder="Designation (e.g. Chief Warden)"
-                value={wardenDesignation}
-                onChange={(e) => setWardenDesignation(e.target.value)}
-              />
-              <Input
-                placeholder="Phone"
-                value={wardenPhone}
-                onChange={(e) => setWardenPhone(e.target.value)}
-              />
-              <Input
-                placeholder="WhatsApp"
-                value={wardenWhatsapp}
-                onChange={(e) => setWardenWhatsapp(e.target.value)}
-              />
-              <Input
-                placeholder="Email"
-                value={wardenEmail}
-                onChange={(e) => setWardenEmail(e.target.value)}
-              />
-              <div className="flex items-center gap-3 sm:col-span-2">
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  disabled={uploadingField === "wardenPhoto"}
-                  onChange={(e) =>
-                    handleImageUpload(
-                      e.target.files?.[0] ?? null,
-                      "wardenPhoto",
-                      `hostels/${hostel.id}/warden-photo`,
-                      setWardenPhoto,
-                    )
-                  }
-                />
-                {wardenPhoto && (
-                  <img
-                    src={wardenPhoto}
-                    alt="Warden preview"
-                    className="h-10 w-10 rounded-full border object-cover"
-                  />
-                )}
-              </div>
-            </div>
-            <div className="space-y-2 pt-2">
-              <Label className="text-xs text-muted-foreground">
-                Safety Features
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {safetyFeatures.map((f, idx) => (
-                  <span
-                    key={idx}
-                    className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
-                  >
-                    {f.label}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSafetyFeatures(
-                          safetyFeatures.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Feature (e.g. CCTV Coverage)"
-                  value={newSafetyFeature}
-                  onChange={(e) => setNewSafetyFeature(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addSafetyFeature}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-4 border-t">
-            <Label className="font-semibold">Amenities</Label>
-            <div className="flex flex-wrap gap-2">
-              {amenities.map((a, idx) => (
-                <span
-                  key={idx}
-                  className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
-                >
-                  {a.name}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAmenities(amenities.filter((_, i) => i !== idx))
-                    }
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Amenity name (e.g. High Speed Wi-Fi)"
-                value={newAmenityName}
-                onChange={(e) => setNewAmenityName(e.target.value)}
-              />
-              <Button type="button" variant="outline" onClick={addAmenity}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-4 border-t">
-            <Label className="font-semibold">Rules</Label>
-            <div className="space-y-2">
-              {rules.map((r, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start justify-between gap-2 border p-2.5 rounded-lg bg-muted/10 text-xs"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold break-words">{r.title}</p>
-                    <p className="text-muted-foreground break-words">
-                      {r.description}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="shrink-0"
-                    onClick={() => setRules(rules.filter((_, i) => i !== idx))}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                placeholder="Rule title (e.g. Curfew Time)"
-                value={newRuleTitle}
-                onChange={(e) => setNewRuleTitle(e.target.value)}
-              />
-              <Input
-                placeholder="Description"
-                value={newRuleDesc}
-                onChange={(e) => setNewRuleDesc(e.target.value)}
-              />
-            </div>
-            <Button type="button" variant="outline" size="sm" onClick={addRule}>
-              <Plus className="h-4 w-4 mr-1" /> Add Rule
-            </Button>
-          </div>
-
-          <div className="space-y-2 pt-4 border-t">
-            <Label className="font-semibold">Location</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                placeholder="Address line 1"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <Input
-                placeholder="Address line 2"
-                value={addressLine2}
-                onChange={(e) => setAddressLine2(e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Latitude"
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Longitude"
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-              />
-              <Input
-                placeholder="Map link (https://maps.google.com/?q=...)"
-                value={mapLink}
-                onChange={(e) => setMapLink(e.target.value)}
-              />
-              <ImageUpload
-                value={mapThumbnail}
-                onChange={setMapThumbnail}
-                context={`hostels/${hostel.id}/map-thumbnail`}
-              />
-              <Input
-                placeholder="College transport description"
-                value={transportDescription}
-                onChange={(e) => setTransportDescription(e.target.value)}
-              />
-              <Input
-                placeholder="Bus stop note (e.g. 50m from gate)"
-                value={busStopNote}
-                onChange={(e) => setBusStopNote(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              {nearbyEssentials.map((ne, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between gap-2 border p-2 rounded-lg bg-muted/10 text-xs"
-                >
-                  <span className="min-w-0 flex-1 break-words">
-                    {ne.type}: {ne.name} ({ne.distance})
-                  </span>
-                  <button
-                    type="button"
-                    className="shrink-0"
-                    onClick={() =>
-                      setNearbyEssentials(
-                        nearbyEssentials.filter((_, i) => i !== idx),
+      {activeTab === "overview" && (
+        <>
+          <Card className="border border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">
+                Hostel Profile
+              </CardTitle>
+              <CardDescription>
+                Description, capacity, warden contact, amenities, rules, and
+                location.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Target Allocation</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none"
+                    value={hostelType}
+                    onChange={(e) =>
+                      setHostelType(
+                        e.target.value as "boys" | "girls" | "co-ed",
                       )
                     }
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </button>
+                    <option value="co-ed">Co-Educational</option>
+                    <option value="boys">Boys Only</option>
+                    <option value="girls">Girls Only</option>
+                  </select>
                 </div>
-              ))}
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Input
-                placeholder="Type (e.g. Hospital)"
-                value={newEssentialType}
-                onChange={(e) => setNewEssentialType(e.target.value)}
-              />
-              <Input
-                placeholder="Name"
-                value={newEssentialName}
-                onChange={(e) => setNewEssentialName(e.target.value)}
-              />
-              <Input
-                placeholder="Distance (e.g. 3.0 km)"
-                value={newEssentialDistance}
-                onChange={(e) => setNewEssentialDistance(e.target.value)}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addNearbyEssential}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Nearby Essential
-            </Button>
-          </div>
-
-          {/* Utilities */}
-          <div className="space-y-2 border-t pt-4 border-border/40">
-            <Label className="text-sm font-semibold">Utilities</Label>
-            {utilities.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">
-                No utilities added yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {utilities.map((u, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold break-words">
-                        {u.category}
-                      </p>
-                      <p className="text-xs text-muted-foreground break-words">
-                        {u.provider}
-                        {u.notes ? ` — ${u.notes}` : ""}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() =>
-                        setUtilities(utilities.filter((_, i) => i !== idx))
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      checked={isOnCampus}
+                      onChange={(e) => setIsOnCampus(e.target.checked)}
+                    />
+                    <Label className="!mb-0">Located On-Campus</Label>
+                  </label>
+                  {!isOnCampus && (
+                    <Input
+                      placeholder="Distance from campus (km), e.g. 1.8"
+                      value={distanceFromCampus}
+                      onChange={(e) => setDistanceFromCampus(e.target.value)}
+                    />
+                  )}
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Modern rooms with laundry facility..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Total Beds</Label>
+                  <Input
+                    type="number"
+                    value={totalBeds}
+                    onChange={(e) => setTotalBeds(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Cover Image</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={uploadingField === "coverImageUrl"}
+                      onChange={(e) =>
+                        handleImageUpload(
+                          e.target.files?.[0] ?? null,
+                          "coverImageUrl",
+                          `hostels/${hostel.id}/cover`,
+                          setCoverImageUrl,
+                        )
                       }
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    />
+                    {coverImageUrl && (
+                      <img
+                        src={coverImageUrl}
+                        alt="Cover preview"
+                        className="h-10 w-16 rounded-md border object-cover"
+                      />
+                    )}
                   </div>
-                ))}
+                </div>
+                <div className="space-y-1">
+                  <Label>Verified Badge Text</Label>
+                  <Input
+                    value={badge}
+                    onChange={(e) => setBadge(e.target.value)}
+                    placeholder="Safe & Secure - Premium PG Partnered"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Safety Tier</Label>
+                  <Input
+                    value={safetyTier}
+                    onChange={(e) => setSafetyTier(e.target.value)}
+                    placeholder="Premium"
+                  />
+                </div>
               </div>
-            )}
-            <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
-              <Input
-                placeholder="Category (e.g. Electricity)"
-                value={newUtilityCategory}
-                onChange={(e) => setNewUtilityCategory(e.target.value)}
-              />
-              <Input
-                placeholder="Provider (e.g. MSEB)"
-                value={newUtilityProvider}
-                onChange={(e) => setNewUtilityProvider(e.target.value)}
-              />
-              <Input
-                placeholder="Notes (optional)"
-                value={newUtilityNotes}
-                onChange={(e) => setNewUtilityNotes(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="sm:col-span-3"
-                onClick={addUtility}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Utility
-              </Button>
-            </div>
-          </div>
 
-          {/* Transit */}
-          <div className="space-y-2 border-t pt-4 border-border/40">
-            <Label className="text-sm font-semibold">Transit Routes</Label>
-            {transit.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">
-                No transit routes added yet.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {transit.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold break-words">
-                        {t.route}
-                      </p>
-                      <p className="text-xs text-muted-foreground break-words">
-                        {[t.stop, t.timing].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() =>
-                        setTransit(transit.filter((_, i) => i !== idx))
-                      }
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="font-semibold">Tags</Label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((t, idx) => (
+                    <span
+                      key={idx}
+                      className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
-              <Input
-                placeholder="Route (e.g. Bus 47 to Campus)"
-                value={newTransitRoute}
-                onChange={(e) => setNewTransitRoute(e.target.value)}
-              />
-              <Input
-                placeholder="Stop (e.g. Gate 2)"
-                value={newTransitStop}
-                onChange={(e) => setNewTransitStop(e.target.value)}
-              />
-              <Input
-                placeholder="Timing (e.g. Every 20 min)"
-                value={newTransitTiming}
-                onChange={(e) => setNewTransitTiming(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="sm:col-span-3"
-                onClick={addTransitRoute}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Transit Route
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={saveProfile} disabled={isSavingProfile}>
-              {isSavingProfile && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Save Profile
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Room types */}
-      <Card className="border border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Room Types</CardTitle>
-          <CardDescription>
-            Bed inventory and pricing per room category.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {(hostel.roomTypes || []).length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No room types yet.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {hostel.roomTypes.map((rt) => (
-                <div
-                  key={rt.id}
-                  className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold break-words">
-                      {rt.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground break-words">
-                      {rt.totalBeds} beds &middot; {rt.availableBeds} available
-                      &middot; ₹{rt.annualPlanPrice}/yr
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() =>
-                      deleteRoomType({ hostelId: hostel.id, id: rt.id })
-                    }
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                      {t.label}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTags(tags.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Label (e.g. On-Campus)"
+                    value={newTagLabel}
+                    onChange={(e) => setNewTagLabel(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Color (e.g. blue)"
+                    value={newTagColor}
+                    onChange={(e) => setNewTagColor(e.target.value)}
+                  />
+                  <Button type="button" variant="outline" onClick={addTag}>
+                    <Plus className="h-4 w-4 mr-1" /> Add
                   </Button>
                 </div>
-              ))}
-            </div>
-          )}
-          <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
-            <Input
-              placeholder="Category (e.g. 2-Sharing AC)"
-              className="sm:col-span-2"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-            />
-            <Input
-              placeholder="Description"
-              className="sm:col-span-2"
-              value={roomDescription}
-              onChange={(e) => setRoomDescription(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Total Beds"
-              value={roomBeds}
-              onChange={(e) => setRoomBeds(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Annual Price"
-              value={roomAnnualPrice}
-              onChange={(e) => setRoomAnnualPrice(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Monthly Price"
-              value={roomMonthlyPrice}
-              onChange={(e) => setRoomMonthlyPrice(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Admission Fee"
-              value={roomAdmissionFee}
-              onChange={(e) => setRoomAdmissionFee(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Security Deposit"
-              value={roomDeposit}
-              onChange={(e) => setRoomDeposit(e.target.value)}
-            />
-            <div className="space-y-1 sm:col-span-2">
-              <Label className="text-xs">
-                Room Photos (up to {MAX_ROOM_PHOTOS})
-              </Label>
-              <div className="grid grid-cols-4 gap-2">
-                {roomPhotos.map((photoUrl, slot) => {
-                  const uploadKey = `roomPhoto_${slot}`;
-                  return (
-                    <div key={slot} className="space-y-1">
-                      {photoUrl ? (
-                        <div className="relative">
-                          <img
-                            src={photoUrl}
-                            alt={`Room photo ${slot + 1}`}
-                            className="h-16 w-full rounded-md border object-cover"
-                          />
-                          <button
-                            type="button"
-                            className="absolute -top-1.5 -right-1.5 rounded-full bg-background border text-destructive p-0.5"
-                            onClick={() =>
-                              setRoomPhotos((prev) =>
-                                prev.map((p, i) => (i === slot ? "" : p)),
-                              )
-                            }
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          className="h-16 text-[10px] p-1"
-                          disabled={uploadingField === uploadKey}
-                          onChange={(e) =>
-                            handleImageUpload(
-                              e.target.files?.[0] ?? null,
-                              uploadKey,
-                              `hostels/${hostel.id}/room-types/photo-${slot}`,
-                              (url) =>
-                                setRoomPhotos((prev) =>
-                                  prev.map((p, i) => (i === slot ? url : p)),
-                                ),
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="font-semibold">Warden Info</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Name"
+                    value={wardenName}
+                    onChange={(e) => setWardenName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Designation (e.g. Chief Warden)"
+                    value={wardenDesignation}
+                    onChange={(e) => setWardenDesignation(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Phone"
+                    value={wardenPhone}
+                    onChange={(e) => setWardenPhone(e.target.value)}
+                  />
+                  <Input
+                    placeholder="WhatsApp"
+                    value={wardenWhatsapp}
+                    onChange={(e) => setWardenWhatsapp(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Email"
+                    value={wardenEmail}
+                    onChange={(e) => setWardenEmail(e.target.value)}
+                  />
+                  <div className="flex items-center gap-3 sm:col-span-2">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={uploadingField === "wardenPhoto"}
+                      onChange={(e) =>
+                        handleImageUpload(
+                          e.target.files?.[0] ?? null,
+                          "wardenPhoto",
+                          `hostels/${hostel.id}/warden-photo`,
+                          setWardenPhoto,
+                        )
+                      }
+                    />
+                    {wardenPhoto && (
+                      <img
+                        src={wardenPhoto}
+                        alt="Warden preview"
+                        className="h-10 w-10 rounded-full border object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2 pt-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Safety Features
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {safetyFeatures.map((f, idx) => (
+                      <span
+                        key={idx}
+                        className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
+                      >
+                        {f.label}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSafetyFeatures(
+                              safetyFeatures.filter((_, i) => i !== idx),
                             )
                           }
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              className="sm:col-span-2"
-              onClick={addRoomType}
-              disabled={isAddingRoomType}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Room Type
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Mess plans */}
-      <Card className="border border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Mess Plans</CardTitle>
-          <CardDescription>Meal plans available to residents.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {(hostel.messPlans || []).length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No mess plans yet.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {hostel.messPlans!.map((mp) => (
-                <div
-                  key={mp.id}
-                  className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold break-words">
-                      {mp.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground break-words">
-                      {mp.mealsIncluded.join(", ")} &middot; ₹{mp.priceMonthly}
-                      /mo
-                      {mp.isCompulsory ? " · Compulsory" : ""}
-                    </p>
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </button>
+                      </span>
+                    ))}
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() =>
-                      deleteMessPlan({ hostelId: hostel.id, id: mp.id })
-                    }
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Feature (e.g. CCTV Coverage)"
+                      value={newSafetyFeature}
+                      onChange={(e) => setNewSafetyFeature(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addSafetyFeature}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="font-semibold">Amenities</Label>
+                <div className="flex flex-wrap gap-2">
+                  {amenities.map((a, idx) => (
+                    <span
+                      key={idx}
+                      className="flex items-center gap-1 text-xs bg-muted/40 border rounded-full px-3 py-1"
+                    >
+                      {a.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAmenities(amenities.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Amenity name (e.g. High Speed Wi-Fi)"
+                    value={newAmenityName}
+                    onChange={(e) => setNewAmenityName(e.target.value)}
+                  />
+                  <Button type="button" variant="outline" onClick={addAmenity}>
+                    <Plus className="h-4 w-4 mr-1" /> Add
                   </Button>
                 </div>
-              ))}
-            </div>
-          )}
-          <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
-            <Input
-              placeholder="Plan name (e.g. Standard Plan)"
-              value={mealName}
-              onChange={(e) => setMealName(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Monthly Price"
-              value={mealPrice}
-              onChange={(e) => setMealPrice(e.target.value)}
-            />
-            <Input
-              placeholder="Meals included (comma separated)"
-              className="sm:col-span-2"
-              value={mealIncluded}
-              onChange={(e) => setMealIncluded(e.target.value)}
-            />
-            <Input
-              placeholder="Duration (e.g. 1 Month)"
-              value={mealDuration}
-              onChange={(e) => setMealDuration(e.target.value)}
-            />
-            <Input
-              placeholder="Dietary options (comma separated, e.g. Veg, Non-Veg)"
-              value={mealDietaryOptions}
-              onChange={(e) => setMealDietaryOptions(e.target.value)}
-            />
-            <label className="flex items-center gap-2 text-xs sm:col-span-2">
-              <input
-                type="checkbox"
-                checked={mealCompulsory}
-                onChange={(e) => setMealCompulsory(e.target.checked)}
-              />
-              Compulsory for all residents
-            </label>
-            <Button
-              type="button"
-              variant="secondary"
-              className="sm:col-span-2"
-              onClick={addMessPlan}
-              disabled={isAddingMessPlan}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Mess Plan
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
 
-      {/* Addon services */}
-      <Card className="border border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Addon Services</CardTitle>
-          <CardDescription>
-            Laundry, gym, parking, and other optional charges.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {addonsByType.map(
-            ({ type, items }) =>
-              items.length > 0 && (
-                <div key={type} className="space-y-2">
-                  <Label className="text-xs uppercase font-bold text-muted-foreground">
-                    {type}
-                  </Label>
-                  {items.map((service) => (
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="font-semibold">Rules</Label>
+                <div className="space-y-2">
+                  {rules.map((r, idx) => (
                     <div
-                      key={service.id}
+                      key={idx}
+                      className="flex items-start justify-between gap-2 border p-2.5 rounded-lg bg-muted/10 text-xs"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold break-words">{r.title}</p>
+                        <p className="text-muted-foreground break-words">
+                          {r.description}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="shrink-0"
+                        onClick={() =>
+                          setRules(rules.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Rule title (e.g. Curfew Time)"
+                    value={newRuleTitle}
+                    onChange={(e) => setNewRuleTitle(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Description"
+                    value={newRuleDesc}
+                    onChange={(e) => setNewRuleDesc(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRule}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Rule
+                </Button>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="font-semibold">Location</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Address line 1"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Address line 2"
+                    value={addressLine2}
+                    onChange={(e) => setAddressLine2(e.target.value)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Latitude"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Longitude"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Map link (https://maps.google.com/?q=...)"
+                    value={mapLink}
+                    onChange={(e) => setMapLink(e.target.value)}
+                  />
+                  <ImageUpload
+                    value={mapThumbnail}
+                    onChange={setMapThumbnail}
+                    context={`hostels/${hostel.id}/map-thumbnail`}
+                  />
+                  <Input
+                    placeholder="College transport description"
+                    value={transportDescription}
+                    onChange={(e) => setTransportDescription(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Bus stop note (e.g. 50m from gate)"
+                    value={busStopNote}
+                    onChange={(e) => setBusStopNote(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  {nearbyEssentials.map((ne, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between gap-2 border p-2 rounded-lg bg-muted/10 text-xs"
+                    >
+                      <span className="min-w-0 flex-1 break-words">
+                        {ne.type}: {ne.name} ({ne.distance})
+                      </span>
+                      <button
+                        type="button"
+                        className="shrink-0"
+                        onClick={() =>
+                          setNearbyEssentials(
+                            nearbyEssentials.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <Input
+                    placeholder="Type (e.g. Hospital)"
+                    value={newEssentialType}
+                    onChange={(e) => setNewEssentialType(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Name"
+                    value={newEssentialName}
+                    onChange={(e) => setNewEssentialName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Distance (e.g. 3.0 km)"
+                    value={newEssentialDistance}
+                    onChange={(e) => setNewEssentialDistance(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addNearbyEssential}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Nearby Essential
+                </Button>
+              </div>
+
+              {/* Utilities */}
+              <div className="space-y-2 border-t pt-4 border-border/40">
+                <Label className="text-sm font-semibold">Utilities</Label>
+                {utilities.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">
+                    No utilities added yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {utilities.map((u, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold break-words">
+                            {u.category}
+                          </p>
+                          <p className="text-xs text-muted-foreground break-words">
+                            {u.provider}
+                            {u.notes ? ` — ${u.notes}` : ""}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() =>
+                            setUtilities(utilities.filter((_, i) => i !== idx))
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
+                  <Input
+                    placeholder="Category (e.g. Electricity)"
+                    value={newUtilityCategory}
+                    onChange={(e) => setNewUtilityCategory(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Provider (e.g. MSEB)"
+                    value={newUtilityProvider}
+                    onChange={(e) => setNewUtilityProvider(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Notes (optional)"
+                    value={newUtilityNotes}
+                    onChange={(e) => setNewUtilityNotes(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="sm:col-span-3"
+                    onClick={addUtility}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add Utility
+                  </Button>
+                </div>
+              </div>
+
+              {/* Transit */}
+              <div className="space-y-2 border-t pt-4 border-border/40">
+                <Label className="text-sm font-semibold">Transit Routes</Label>
+                {transit.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">
+                    No transit routes added yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {transit.map((t, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold break-words">
+                            {t.route}
+                          </p>
+                          <p className="text-xs text-muted-foreground break-words">
+                            {[t.stop, t.timing].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() =>
+                            setTransit(transit.filter((_, i) => i !== idx))
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="grid gap-2 sm:grid-cols-3 p-3 border rounded-lg bg-muted/5">
+                  <Input
+                    placeholder="Route (e.g. Bus 47 to Campus)"
+                    value={newTransitRoute}
+                    onChange={(e) => setNewTransitRoute(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Stop (e.g. Gate 2)"
+                    value={newTransitStop}
+                    onChange={(e) => setNewTransitStop(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Timing (e.g. Every 20 min)"
+                    value={newTransitTiming}
+                    onChange={(e) => setNewTransitTiming(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="sm:col-span-3"
+                    onClick={addTransitRoute}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add Transit Route
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={saveProfile} disabled={isSavingProfile}>
+                  {isSavingProfile && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Room types */}
+          <Card className="border border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Room Types</CardTitle>
+              <CardDescription>
+                Bed inventory and pricing per room category.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(hostel.roomTypes || []).length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">
+                  No room types yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {hostel.roomTypes.map((rt) => (
+                    <div
+                      key={rt.id}
                       className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold break-words">
-                          {service.name}
+                          {rt.name}
                         </p>
                         <p className="text-xs text-muted-foreground break-words">
-                          {service.plans
-                            .map((p) => {
-                              const base = `${p.label}: ₹${p.price}`;
-                              const tags =
-                                p.feature_tags && p.feature_tags.length > 0
-                                  ? ` (${p.feature_tags.join(", ")})`
-                                  : "";
-                              return base + tags;
-                            })
-                            .join(", ")}
+                          {rt.totalBeds} beds &middot; {rt.availableBeds}{" "}
+                          available &middot; ₹{rt.annualPlanPrice}/yr
                         </p>
                       </div>
                       <Button
@@ -1345,10 +1144,7 @@ export default function HostelDetailPage() {
                         size="icon"
                         className="shrink-0"
                         onClick={() =>
-                          deleteAddonService({
-                            hostelId: hostel.id,
-                            id: service.id,
-                          })
+                          deleteRoomType({ hostelId: hostel.id, id: rt.id })
                         }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -1356,76 +1152,341 @@ export default function HostelDetailPage() {
                     </div>
                   ))}
                 </div>
-              ),
-          )}
+              )}
+              <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
+                <Input
+                  placeholder="Category (e.g. 2-Sharing AC)"
+                  className="sm:col-span-2"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                />
+                <Input
+                  placeholder="Description"
+                  className="sm:col-span-2"
+                  value={roomDescription}
+                  onChange={(e) => setRoomDescription(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Total Beds"
+                  value={roomBeds}
+                  onChange={(e) => setRoomBeds(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Annual Price"
+                  value={roomAnnualPrice}
+                  onChange={(e) => setRoomAnnualPrice(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Monthly Price"
+                  value={roomMonthlyPrice}
+                  onChange={(e) => setRoomMonthlyPrice(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Admission Fee"
+                  value={roomAdmissionFee}
+                  onChange={(e) => setRoomAdmissionFee(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Security Deposit"
+                  value={roomDeposit}
+                  onChange={(e) => setRoomDeposit(e.target.value)}
+                />
+                <div className="space-y-1 sm:col-span-2">
+                  <Label className="text-xs">
+                    Room Photos (up to {MAX_ROOM_PHOTOS})
+                  </Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {roomPhotos.map((photoUrl, slot) => {
+                      const uploadKey = `roomPhoto_${slot}`;
+                      return (
+                        <div key={slot} className="space-y-1">
+                          {photoUrl ? (
+                            <div className="relative">
+                              <img
+                                src={photoUrl}
+                                alt={`Room photo ${slot + 1}`}
+                                className="h-16 w-full rounded-md border object-cover"
+                              />
+                              <button
+                                type="button"
+                                className="absolute -top-1.5 -right-1.5 rounded-full bg-background border text-destructive p-0.5"
+                                onClick={() =>
+                                  setRoomPhotos((prev) =>
+                                    prev.map((p, i) => (i === slot ? "" : p)),
+                                  )
+                                }
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="h-16 text-[10px] p-1"
+                              disabled={uploadingField === uploadKey}
+                              onChange={(e) =>
+                                handleImageUpload(
+                                  e.target.files?.[0] ?? null,
+                                  uploadKey,
+                                  `hostels/${hostel.id}/room-types/photo-${slot}`,
+                                  (url) =>
+                                    setRoomPhotos((prev) =>
+                                      prev.map((p, i) =>
+                                        i === slot ? url : p,
+                                      ),
+                                    ),
+                                )
+                              }
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="sm:col-span-2"
+                  onClick={addRoomType}
+                  disabled={isAddingRoomType}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Room Type
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={addonType}
-              onChange={(e) => setAddonType(e.target.value)}
-            >
-              {ADDON_SERVICE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <Input
-              placeholder="Service name (e.g. Laundry Charges)"
-              value={addonName}
-              onChange={(e) => setAddonName(e.target.value)}
-            />
-            <Input
-              placeholder="Plan label (e.g. Monthly)"
-              value={addonPlanLabel}
-              onChange={(e) => setAddonPlanLabel(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Price"
-              value={addonPlanPrice}
-              onChange={(e) => setAddonPlanPrice(e.target.value)}
-            />
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={addonPlanPeriod}
-              onChange={(e) =>
-                setAddonPlanPeriod(
-                  e.target.value as (typeof ADDON_PLAN_PERIODS)[number],
-                )
-              }
-            >
-              {ADDON_PLAN_PERIODS.map((p) => (
-                <option key={p} value={p}>
-                  {ADDON_PLAN_PERIOD_LABELS[p]}
-                </option>
-              ))}
-            </select>
-            <Input
-              placeholder="Feature tags (comma separated, e.g. Detergent, Ironing)"
-              className="sm:col-span-2"
-              value={addonPlanFeatureTags}
-              onChange={(e) => setAddonPlanFeatureTags(e.target.value)}
-            />
-            <Input
-              placeholder="Note (e.g. Drop off on weekends)"
-              className="sm:col-span-2"
-              value={addonNotes}
-              onChange={(e) => setAddonNotes(e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              className="sm:col-span-2"
-              onClick={addAddonService}
-              disabled={isAddingAddon}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add Addon Service
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Mess plans */}
+          <Card className="border border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Mess Plans</CardTitle>
+              <CardDescription>
+                Meal plans available to residents.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(hostel.messPlans || []).length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">
+                  No mess plans yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {hostel.messPlans!.map((mp) => (
+                    <div
+                      key={mp.id}
+                      className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold break-words">
+                          {mp.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground break-words">
+                          {mp.mealsIncluded.join(", ")} &middot; ₹
+                          {mp.priceMonthly}
+                          /mo
+                          {mp.isCompulsory ? " · Compulsory" : ""}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() =>
+                          deleteMessPlan({ hostelId: hostel.id, id: mp.id })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
+                <Input
+                  placeholder="Plan name (e.g. Standard Plan)"
+                  value={mealName}
+                  onChange={(e) => setMealName(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Monthly Price"
+                  value={mealPrice}
+                  onChange={(e) => setMealPrice(e.target.value)}
+                />
+                <Input
+                  placeholder="Meals included (comma separated)"
+                  className="sm:col-span-2"
+                  value={mealIncluded}
+                  onChange={(e) => setMealIncluded(e.target.value)}
+                />
+                <Input
+                  placeholder="Duration (e.g. 1 Month)"
+                  value={mealDuration}
+                  onChange={(e) => setMealDuration(e.target.value)}
+                />
+                <Input
+                  placeholder="Dietary options (comma separated, e.g. Veg, Non-Veg)"
+                  value={mealDietaryOptions}
+                  onChange={(e) => setMealDietaryOptions(e.target.value)}
+                />
+                <label className="flex items-center gap-2 text-xs sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={mealCompulsory}
+                    onChange={(e) => setMealCompulsory(e.target.checked)}
+                  />
+                  Compulsory for all residents
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="sm:col-span-2"
+                  onClick={addMessPlan}
+                  disabled={isAddingMessPlan}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Mess Plan
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Addon services */}
+          <Card className="border border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">
+                Addon Services
+              </CardTitle>
+              <CardDescription>
+                Laundry, gym, parking, and other optional charges.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {addonsByType.map(
+                ({ type, items }) =>
+                  items.length > 0 && (
+                    <div key={type} className="space-y-2">
+                      <Label className="text-xs uppercase font-bold text-muted-foreground">
+                        {type}
+                      </Label>
+                      {items.map((service) => (
+                        <div
+                          key={service.id}
+                          className="flex items-center justify-between gap-2 border p-3 rounded-lg bg-muted/10"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold break-words">
+                              {service.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground break-words">
+                              {service.plans
+                                .map((p) => {
+                                  const base = `${p.label}: ₹${p.price}`;
+                                  const tags =
+                                    p.feature_tags && p.feature_tags.length > 0
+                                      ? ` (${p.feature_tags.join(", ")})`
+                                      : "";
+                                  return base + tags;
+                                })
+                                .join(", ")}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() =>
+                              deleteAddonService({
+                                hostelId: hostel.id,
+                                id: service.id,
+                              })
+                            }
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+              )}
+
+              <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/5">
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={addonType}
+                  onChange={(e) => setAddonType(e.target.value)}
+                >
+                  {ADDON_SERVICE_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  placeholder="Service name (e.g. Laundry Charges)"
+                  value={addonName}
+                  onChange={(e) => setAddonName(e.target.value)}
+                />
+                <Input
+                  placeholder="Plan label (e.g. Monthly)"
+                  value={addonPlanLabel}
+                  onChange={(e) => setAddonPlanLabel(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Price"
+                  value={addonPlanPrice}
+                  onChange={(e) => setAddonPlanPrice(e.target.value)}
+                />
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={addonPlanPeriod}
+                  onChange={(e) =>
+                    setAddonPlanPeriod(
+                      e.target.value as (typeof ADDON_PLAN_PERIODS)[number],
+                    )
+                  }
+                >
+                  {ADDON_PLAN_PERIODS.map((p) => (
+                    <option key={p} value={p}>
+                      {ADDON_PLAN_PERIOD_LABELS[p]}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  placeholder="Feature tags (comma separated, e.g. Detergent, Ironing)"
+                  className="sm:col-span-2"
+                  value={addonPlanFeatureTags}
+                  onChange={(e) => setAddonPlanFeatureTags(e.target.value)}
+                />
+                <Input
+                  placeholder="Note (e.g. Drop off on weekends)"
+                  className="sm:col-span-2"
+                  value={addonNotes}
+                  onChange={(e) => setAddonNotes(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="sm:col-span-2"
+                  onClick={addAddonService}
+                  disabled={isAddingAddon}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Addon Service
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

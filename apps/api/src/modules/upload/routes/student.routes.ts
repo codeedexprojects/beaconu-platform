@@ -75,6 +75,20 @@ router.post(
   StudentUploadController.verifyAudio,
 );
 
+router.post(
+  "/ticket-attachment/presign",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.presignTicketAttachment,
+);
+
+router.post(
+  "/ticket-attachment/verify",
+  authenticate,
+  authorizeUserType("student"),
+  StudentUploadController.verifyTicketAttachment,
+);
+
 router.delete(
   "/file",
   authenticate,

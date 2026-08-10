@@ -1,0 +1,33 @@
+meta {
+  name: Reply to Query
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/support/{{ticketId}}/messages
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "message": "Hello! Thanks for reaching out. I can certainly help you with that. Let me review the current policy for your specific department."
+  }
+}
+
+docs {
+  Post a staff reply to the query thread. Automatically flips the ticket's
+  status to "awaiting_response" (the ball is now in the student's court).
+
+  ConflictError if the ticket is "closed" — change its status first (see
+  Update Query Status) before replying.
+}

@@ -99,6 +99,28 @@ function newFeeItem(): DraftFeeItem {
   return { feeCategory: "tuition_fee", amount: "", description: "" };
 }
 
+// tuition_fee is excluded here — it always lands in the Semester/Year group
+// regardless of yearOrSemester (see isSemesterRow below), so offering it in
+// the Additional Fees form would silently misfile the row.
+const ADDITIONAL_FEE_CATEGORIES = FEE_CATEGORIES.filter(
+  (c) => c !== "tuition_fee",
+);
+
+function newAdditionalFeeItem(): DraftFeeItem {
+  return { feeCategory: "library_fee", amount: "", description: "" };
+}
+
+// Mirrors CourseFeeSummaryQuery.isSemesterRow on the backend — keeps the
+// admin's grouping in sync with how the student side buckets these rows.
+function isSemesterRow(row: FeeStructureDto) {
+  return (
+    row.yearOrSemester !== "One-time" &&
+    (row.feeCategory === "tuition_fee" ||
+      row.yearOrSemester?.startsWith("Year") ||
+      row.yearOrSemester?.startsWith("Semester"))
+  );
+}
+
 export function FeeStructureTab({ courseId }: { courseId: string }) {
   const { data: rows, isLoading } = useFeeStructures(courseId);
   const { data: admissionCycles } = useAdmissionCycles();
@@ -126,6 +148,14 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   const [instalments, setInstalments] = useState<DraftInstalment[]>([]);
   const [feePdfUrl, setFeePdfUrl] = useState("");
 
+  const [additionalAcademicYear, setAdditionalAcademicYear] = useState("");
+  const [additionalFeeItems, setAdditionalFeeItems] = useState<DraftFeeItem[]>([
+    newAdditionalFeeItem(),
+  ]);
+  const [additionalDueDate, setAdditionalDueDate] = useState("");
+  const [isSubmittingAdditionalBatch, setIsSubmittingAdditionalBatch] =
+    useState(false);
+
   if (isLoading) {
     return (
       <div className="flex h-48 items-center justify-center">
@@ -135,6 +165,11 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   }
 
   const activeRows = (rows ?? []).filter((r) => r.isActive);
+  const oneTimeRows = activeRows.filter((r) => r.yearOrSemester === "One-time");
+  const semesterRows = activeRows.filter(isSemesterRow);
+  const additionalRows = activeRows.filter(
+    (r) => r.yearOrSemester !== "One-time" && !isSemesterRow(r),
+  );
 
   function resetForm() {
     setAcademicYear("");
@@ -145,6 +180,70 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
     setInstalmentAllowed(false);
     setInstalments([]);
     setFeePdfUrl("");
+  }
+
+  function resetAdditionalForm() {
+    setAdditionalAcademicYear("");
+    setAdditionalFeeItems([newAdditionalFeeItem()]);
+    setAdditionalDueDate("");
+  }
+
+  function handleAddAdditionalFeeItem() {
+    setAdditionalFeeItems((prev) => [...prev, newAdditionalFeeItem()]);
+  }
+
+  function updateAdditionalFeeItem(idx: number, patch: Partial<DraftFeeItem>) {
+    setAdditionalFeeItems((prev) =>
+      prev.map((item, i) => (i === idx ? { ...item, ...patch } : item)),
+    );
+  }
+
+  function removeAdditionalFeeItem(idx: number) {
+    setAdditionalFeeItems((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function handleCreateAdditional() {
+    if (!additionalAcademicYear.trim()) {
+      toast.error("Academic year is required");
+      return;
+    }
+    if (
+      additionalFeeItems.length === 0 ||
+      additionalFeeItems.some(
+        (item) => !item.feeCategory || !item.amount.trim(),
+      )
+    ) {
+      toast.error("Every fee line needs a category and an amount");
+      return;
+    }
+
+    setIsSubmittingAdditionalBatch(true);
+    try {
+      for (const item of additionalFeeItems) {
+        await createRow({
+          academicYear: additionalAcademicYear.trim(),
+          feeCategory: item.feeCategory,
+          amount: Number(item.amount),
+          yearOrSemester: "Annual",
+          description: item.description.trim() || null,
+          dueDate: additionalDueDate || null,
+          gender: "both",
+          instalmentAllowed: false,
+          instalmentConfig: undefined,
+          feePdfUrl: null,
+        });
+      }
+      toast.success(
+        additionalFeeItems.length > 1
+          ? `${additionalFeeItems.length} additional fees added`
+          : "Additional fee added",
+      );
+      resetAdditionalForm();
+    } catch {
+      // useCreateFeeStructure's onError already toasts the specific failure
+    } finally {
+      setIsSubmittingAdditionalBatch(false);
+    }
   }
 
   function handleAddFeeItem() {
@@ -529,63 +628,153 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         </Button>
       </div>
 
-      <div className="space-y-3">
-        <h4 className="font-bold text-sm text-foreground">
-          Fee Structure Rows ({activeRows.length})
-        </h4>
-        {activeRows.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground bg-muted/5 text-sm">
-            No fee structure rows yet. Students won&apos;t see any fee breakdown
-            for this course until you add rows here.
-          </div>
-        ) : (
-          activeRows.map((row) => (
-            <div
-              key={row.id}
-              className="border p-4 rounded-xl flex items-center justify-between bg-card"
+      <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
+        <div>
+          <h4 className="font-bold text-sm text-foreground">
+            Add Additional Fees
+          </h4>
+          <p className="text-[10px] text-muted-foreground">
+            Library, Clinical, Sports, and similar fees that show up as their
+            own line items on the student side, separate from the bundled
+            semester total. Tagged as &quot;Annual&quot; automatically so they
+            never get pulled into a Semester group.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Academic Year</Label>
+            <Select
+              value={additionalAcademicYear}
+              onValueChange={setAdditionalAcademicYear}
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">
-                    {row.feeCategory}
-                  </span>
-                  {row.yearOrSemester && (
-                    <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {row.yearOrSemester}
-                    </span>
-                  )}
-                  {row.instalmentAllowed && (
-                    <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                      Installments
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {row.academicYear} · ₹{row.amount} · {row.gender}
-                </p>
-                {row.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {row.description}
-                  </p>
-                )}
-                {row.dueDate && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Due by {row.dueDate}
-                  </p>
-                )}
+              <SelectTrigger>
+                <SelectValue placeholder="Select academic year" />
+              </SelectTrigger>
+              <SelectContent>
+                {academicYearOptions.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Due Date (optional)</Label>
+            <Input
+              type="date"
+              value={additionalDueDate}
+              onChange={(e) => setAdditionalDueDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-bold">
+              Fee Lines (Category, Amount, Description)
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddAdditionalFeeItem}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Another Fee
+            </Button>
+          </div>
+          {additionalFeeItems.map((item, idx) => (
+            <div key={idx} className="flex gap-2 items-start">
+              <div className="flex-1">
+                <Select
+                  value={item.feeCategory}
+                  onValueChange={(v) =>
+                    updateAdditionalFeeItem(idx, {
+                      feeCategory: v as (typeof FEE_CATEGORIES)[number],
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ADDITIONAL_FEE_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {FEE_CATEGORY_LABELS[c]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Amount"
+                className="flex-1"
+                value={item.amount}
+                onChange={(e) =>
+                  updateAdditionalFeeItem(idx, { amount: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Description / Subtitle (optional)"
+                className="flex-1"
+                value={item.description}
+                onChange={(e) =>
+                  updateAdditionalFeeItem(idx, {
+                    description: e.target.value,
+                  })
+                }
+              />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => handleDelete(row)}
+                disabled={additionalFeeItems.length === 1}
+                onClick={() => removeAdditionalFeeItem(idx)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ))
-        )}
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          onClick={handleCreateAdditional}
+          disabled={isSubmittingAdditionalBatch}
+          size="sm"
+        >
+          {isSubmittingAdditionalBatch ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4 mr-1" />
+          )}
+          {additionalFeeItems.length > 1
+            ? `Add ${additionalFeeItems.length} Additional Fees`
+            : "Add Additional Fee"}
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        <FeeRowGroup
+          title="One-Time Fees"
+          hint="Application/admission fees — paid once, shown separately on the student side."
+          rows={oneTimeRows}
+          onDelete={handleDelete}
+        />
+        <FeeRowGroup
+          title="Semester / Year Fees"
+          hint="Tuition and any Year-N / Semester-N rows — bundled into ONE payable total per Year/Semester on the student side (Pay Full or Pay in Installments together)."
+          rows={semesterRows}
+          onDelete={handleDelete}
+        />
+        <FeeRowGroup
+          title="Additional Fees"
+          hint="Everything else — e.g. Library, Clinical, Sports fees. Each shows as its own line item on the student side."
+          rows={additionalRows}
+          onDelete={handleDelete}
+        />
       </div>
 
       <ConfirmDialog
@@ -602,6 +791,79 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+    </div>
+  );
+}
+
+function FeeRowGroup({
+  title,
+  hint,
+  rows,
+  onDelete,
+}: {
+  title: string;
+  hint: string;
+  rows: FeeStructureDto[];
+  onDelete: (row: FeeStructureDto) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <h4 className="font-bold text-sm text-foreground">
+          {title} ({rows.length})
+        </h4>
+        <p className="text-[10px] text-muted-foreground">{hint}</p>
+      </div>
+      {rows.length === 0 ? (
+        <div className="text-center py-6 border border-dashed rounded-lg text-muted-foreground bg-muted/5 text-sm">
+          No rows in this group yet.
+        </div>
+      ) : (
+        rows.map((row) => (
+          <div
+            key={row.id}
+            className="border p-4 rounded-xl flex items-center justify-between bg-card"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm">{row.feeCategory}</span>
+                {row.yearOrSemester && (
+                  <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    {row.yearOrSemester}
+                  </span>
+                )}
+                {row.instalmentAllowed && (
+                  <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    Installments
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {row.academicYear} · ₹{row.amount} · {row.gender}
+              </p>
+              {row.description && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {row.description}
+                </p>
+              )}
+              {row.dueDate && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Due by {row.dueDate}
+                </p>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDelete(row)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))
+      )}
     </div>
   );
 }

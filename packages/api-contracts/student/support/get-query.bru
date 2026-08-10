@@ -1,0 +1,21 @@
+meta {
+  name: Get Query Thread
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/support/{{ticketId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Full detail + message thread for one query (student-owned only, 404
+  otherwise). `messages[]` is ordered oldest-first, each with senderType
+  (student|staff), senderName, message, attachments[], isSystem, createdAt.
+}

@@ -1,0 +1,40 @@
+meta {
+  name: Verify Ticket Attachment Upload
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/uploads/ticket-attachment/verify
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "key": "{{ticketAttachmentUploadKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.permanentUrl) {
+      bru.setEnvVar("ticketAttachmentUrl", data.data.permanentUrl);
+    }
+  }
+}
+
+docs {
+  Step 3 of 3 — Confirm the file uploaded successfully. Saves
+  `permanentUrl` to {{ticketAttachmentUrl}}, used as the `url` field inside
+  an attachment object when submitting/replying to a query.
+}

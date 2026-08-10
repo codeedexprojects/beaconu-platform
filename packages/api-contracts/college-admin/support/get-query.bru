@@ -1,0 +1,20 @@
+meta {
+  name: Get Query Thread (College)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/support/{{ticketId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Full detail + message thread for one query at this college (404 if it
+  belongs to a different college).
+}

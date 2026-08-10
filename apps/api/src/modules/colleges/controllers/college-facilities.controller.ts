@@ -7,6 +7,7 @@ import { generateSlug } from "@/shared/utils";
 import { HostelService, buildHostelGallery } from "../services/hostel.service";
 import { LibraryService } from "../services/library.service";
 import { CommuteEnrollmentListQuery } from "../queries/commute-enrollment-list.query";
+import { HostelEnrollmentListQuery } from "../queries/hostel-enrollment-list.query";
 import {
   createHostelSchema,
   updateHostelSchema,
@@ -530,6 +531,53 @@ export class CollegeFacilitiesController {
     return res
       .status(200)
       .json(ApiResponse.success("Commute enrollment fetched", result));
+  }
+
+  static async listHostelEnrollments(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const querySchema = z.object({
+      hostel_id: z.string().trim().min(1).optional(),
+      room_type_id: z.string().trim().min(1).optional(),
+      status: z.string().trim().min(1).optional(),
+      search: z.string().trim().min(1).optional(),
+      page: z.coerce.number().int().positive().default(1),
+      limit: z.coerce.number().int().positive().max(100).default(20),
+    });
+    const query = querySchema.parse(req.query);
+
+    const result = await HostelEnrollmentListQuery.listForCollege(
+      collegeId,
+      {
+        hostelId: query.hostel_id,
+        roomTypeId: query.room_type_id,
+        status: query.status,
+        search: query.search,
+      },
+      { page: query.page, limit: query.limit },
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Hostel enrollments fetched",
+          result.data,
+          result.meta,
+        ),
+      );
+  }
+
+  static async getHostelEnrollment(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    const result = await HostelEnrollmentListQuery.getForCollege(
+      collegeId,
+      id as string,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Hostel enrollment fetched", result));
   }
 
   static async listLibraries(req: Request, res: Response) {

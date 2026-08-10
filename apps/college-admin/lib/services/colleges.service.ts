@@ -1061,6 +1061,93 @@ export async function getCollegeCommuteEnrollment(
   );
 }
 
+export interface HostelEnrollmentDto {
+  id: string;
+  status: string;
+  roomPlanType: string;
+  dietaryPreference: string | null;
+  selectedAddons: { addon_service_id: string; plan_label: string }[];
+  feeBreakdown: Record<string, unknown>;
+  enrolledFrom: string;
+  enrolledUntil: string | null;
+  createdAt: string;
+  student: {
+    id: string;
+    fullName: string;
+    email: string | null;
+    phoneNumber: string | null;
+    phoneCountryCode: string | null;
+  };
+  hostel: { id: string; name: string; hostelType: string };
+  roomType: {
+    id: string;
+    name: string;
+    annualPlanPrice: string | null;
+    monthlyPlanPrice: string | null;
+    admissionFee: string;
+    securityDeposit: string;
+  };
+  messPlan: { id: string; name: string; priceMonthly: string } | null;
+}
+
+export interface HostelEnrollmentFilters {
+  hostel_id?: string;
+  room_type_id?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getCollegeHostelEnrollments(
+  filters: HostelEnrollmentFilters = {},
+): Promise<{ data: HostelEnrollmentDto[]; meta: OffsetPaginationMeta }> {
+  const params = new URLSearchParams();
+  if (filters.hostel_id) params.set("hostel_id", filters.hostel_id);
+  if (filters.room_type_id) params.set("room_type_id", filters.room_type_id);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.search) params.set("search", filters.search);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  return api.getPaginated<HostelEnrollmentDto[]>(
+    `/api/v1/college-admin/hostels/enrollments${qs ? `?${qs}` : ""}`,
+  );
+}
+
+export interface HostelEnrollmentTransactionDto {
+  id: string;
+  transactionNumber: string;
+  amount: string;
+  status: string;
+  paymentMethod: string;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface HostelEnrollmentPaymentDto {
+  id: string;
+  description: string | null;
+  amount: string;
+  paidAmount: string;
+  balanceAmount: string;
+  status: string;
+  createdAt: string;
+  transactions: HostelEnrollmentTransactionDto[];
+}
+
+export interface HostelEnrollmentDetailDto extends HostelEnrollmentDto {
+  payments: HostelEnrollmentPaymentDto[];
+}
+
+export async function getCollegeHostelEnrollment(
+  id: string,
+): Promise<HostelEnrollmentDetailDto> {
+  return api.get<HostelEnrollmentDetailDto>(
+    `/api/v1/college-admin/hostels/enrollments/${id}`,
+  );
+}
+
 export interface MyGroupMembershipResponse {
   type: "owner" | "member";
   group?: {
