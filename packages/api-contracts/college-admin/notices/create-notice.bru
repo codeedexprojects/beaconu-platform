@@ -1,0 +1,66 @@
+meta {
+  name: Publish Notice
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/notices
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "title": "Physical Reporting & Hard Copy Verification",
+    "content": "All newly admitted students must report to the campus for original document verification to finalize their enrollment.",
+    "category": "Administration",
+    "is_pinned": true,
+    "required_documents": [
+      "Original 10th & 12th Marksheets",
+      "Transfer & Migration Certificates",
+      "Aadhaar Card Copy",
+      "Admission Allotment Letter"
+    ],
+    "attachments": [
+      {
+        "url": "{{noticeAttachmentUrl}}",
+        "fileName": "Document_Checklist.pdf",
+        "fileType": "application/pdf",
+        "fileSize": 1258291
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("noticeId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Publish a new notice — status is set to "published" immediately
+  (publishedAt = now), no draft workflow.
+
+  Body:
+  - title, content (required)
+  - category (optional, free text, default "general" — suggested values:
+    Administration | Academics | Student Life | Events | Other)
+  - is_pinned (optional, default false)
+  - required_documents (optional, array of plain strings)
+  - attachments (optional, max 10) — each {url, fileName, fileType,
+    fileSize?}, obtained via the generic college-admin upload presign/verify
+    flow (context: "notices/attachments")
+}

@@ -55,6 +55,8 @@ model Announcement {
   isPinned    Boolean   @default(false) @map("is_pinned")
   status      String    @default("published") @db.VarChar(20)
   publishedAt DateTime? @map("published_at") @db.Timestamptz
+  requiredDocuments Json @default("[]") @map("required_documents")
+  attachments Json      @default("[]")
   createdBy   String    @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz

@@ -1,0 +1,32 @@
+meta {
+  name: Update Notice
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/notices/{{noticeId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "title": "Physical Reporting & Hard Copy Verification (Updated)",
+    "is_pinned": false
+  }
+}
+
+docs {
+  Partial update — every field optional. Passing `required_documents` or
+  `attachments` replaces the whole array wholesale (not merged), so send
+  the complete list back if editing just one entry.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: List Notices (College)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/notices?page=1&limit=20&status=published
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status: published
+  category:
+  search:
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Paginated list of this college's notices, pinned first then
+  newest-published first. Optional filters: status (published|archived,
+  default published), category, search (title/content).
+}

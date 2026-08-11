@@ -17,6 +17,7 @@ import collegeAdminIconsRoutes from "@/modules/platform-admin/routes/icons-colle
 import collegeAdminInterviewRoutes from "@/modules/interviews/routes/college-admin.routes";
 import collegeAdminScholarshipRoutes from "@/modules/scholarships/routes/college-admin.routes";
 import collegeAdminSupportRoutes from "@/modules/support/routes/college-admin.routes";
+import collegeAdminNoticeRoutes from "@/modules/notices/routes/college-admin.routes";
 
 const router: Router = Router();
 
@@ -37,5 +38,6 @@ router.use("/icons", collegeAdminIconsRoutes);
 router.use("/interviews", collegeAdminInterviewRoutes);
 router.use("/scholarships", collegeAdminScholarshipRoutes);
 router.use("/support", collegeAdminSupportRoutes);
+router.use("/notices", collegeAdminNoticeRoutes);
 
 export default router;

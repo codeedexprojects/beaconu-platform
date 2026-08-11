@@ -1,0 +1,42 @@
+meta {
+  name: List Notices
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/notices?college_id={{collegeId}}&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+  page: 1
+  limit: 20
+  status:
+  category:
+  search:
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.notices && data.data.notices[0]) {
+      bru.setEnvVar("noticeId", data.data.notices[0].id);
+    }
+  }
+}
+
+docs {
+  "Latest Notices" list — defaults to status=published (pinned first, then
+  newest-published first). Pass status=archived for "View Archived
+  Notices". Optional: category, search (title/content).
+
+  403 ForbiddenError if the student has no active enrollment at
+  college_id.
+}
