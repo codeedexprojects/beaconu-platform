@@ -1,6 +1,7 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
+import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { DocumentSubmissionRequestRepository } from "../repositories/document-submission-request.repository";
 import type {
   CreateSubmissionRequestInput,
@@ -72,9 +73,32 @@ export class DocumentSubmissionRequestService {
     requestedBy: string,
     data: CreateSubmissionRequestInput,
   ) {
+    if (data.target === "all") {
+      const studentIds =
+        await EnrollmentService.listStudentIdsForCollege(collegeId);
+      if (studentIds.length === 0) {
+        throw new ConflictError("No enrolled students at this college yet");
+      }
+
+      const requests = await DocumentSubmissionRequestRepository.createMany(
+        collegeId,
+        requestedBy,
+        studentIds,
+        data,
+        [historyEntry("pending", requestedBy)],
+      );
+      await Promise.all(
+        requests.map((request) => notifyStudentOfNewRequest(request)),
+      );
+      return requests;
+    }
+
     const request = await DocumentSubmissionRequestRepository.create(
       collegeId,
       requestedBy,
+      // Guaranteed present by createSubmissionRequestSchema's refine when
+      // target !== "all" (the branch above already returned otherwise).
+      data.student_id as string,
       data,
       [historyEntry("pending", requestedBy)],
     );

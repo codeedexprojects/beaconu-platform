@@ -24,9 +24,10 @@ export class CollegeAdminDocumentsController {
       req.userId!,
       data,
     );
-    return res
-      .status(201)
-      .json(ApiResponse.success("Document request created", result));
+    const message = Array.isArray(result)
+      ? `Document requested from ${result.length} student${result.length === 1 ? "" : "s"}`
+      : "Document request created";
+    return res.status(201).json(ApiResponse.success(message, result));
   }
 
   static async listSubmissionRequests(req: Request, res: Response) {

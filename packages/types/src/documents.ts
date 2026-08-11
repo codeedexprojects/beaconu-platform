@@ -61,7 +61,8 @@ export interface SubmissionRequestListResponse {
 }
 
 export interface CreateSubmissionRequestInput {
-  student_id: string;
+  target: "all" | "specific";
+  student_id?: string;
   document_category: DocumentCategory;
   document_name: string;
   instructions?: string;

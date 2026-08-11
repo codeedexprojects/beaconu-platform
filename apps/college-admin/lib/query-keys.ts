@@ -57,6 +57,10 @@ export const QUERY_KEYS = {
   notices: (filters?: unknown) =>
     filters ? (["notices", filters] as const) : (["notices"] as const),
   notice: (id: string) => ["notice", id] as const,
+  collegeStudents: (filters?: unknown) =>
+    filters
+      ? (["college-students", filters] as const)
+      : (["college-students"] as const),
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,
   ambassador: (id: string) => ["college-ambassadors", id] as const,

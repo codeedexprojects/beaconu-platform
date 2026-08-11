@@ -9,15 +9,25 @@ export const documentCategoryValues = [
   "other",
 ] as const;
 
-export const createSubmissionRequestSchema = z.object({
-  student_id: z.string().trim().min(1, "Student is required"),
-  document_category: z.enum(documentCategoryValues, {
-    message: "A valid document category is required",
-  }),
-  document_name: z.string().trim().min(1, "Document name is required").max(255),
-  instructions: z.string().trim().max(1000).optional(),
-  deadline: z.string().date("Valid date is required (YYYY-MM-DD)"),
-});
+export const createSubmissionRequestSchema = z
+  .object({
+    target: z.enum(["all", "specific"]).default("specific"),
+    student_id: z.string().trim().min(1).optional(),
+    document_category: z.enum(documentCategoryValues, {
+      message: "A valid document category is required",
+    }),
+    document_name: z
+      .string()
+      .trim()
+      .min(1, "Document name is required")
+      .max(255),
+    instructions: z.string().trim().max(1000).optional(),
+    deadline: z.string().date("Valid date is required (YYYY-MM-DD)"),
+  })
+  .refine((data) => data.target !== "specific" || !!data.student_id, {
+    message: "Student is required",
+    path: ["student_id"],
+  });
 
 export const submitDocumentSchema = z.object({
   file_url: z.string().trim().url("A valid file URL is required"),

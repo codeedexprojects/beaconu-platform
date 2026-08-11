@@ -97,6 +97,28 @@ export interface AdminStudentListItem {
   createdAt: string;
 }
 
+export interface CollegeStudentListItem {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phoneNumber: string | null;
+  avatarUrl: string | null;
+}
+
+export interface CollegeStudentListMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface CollegeStudentListResponse {
+  students: CollegeStudentListItem[];
+  meta: CollegeStudentListMeta;
+}
+
 export interface ListStudentsQuery {
   search?: string;
   status?: StudentAccountStatus;

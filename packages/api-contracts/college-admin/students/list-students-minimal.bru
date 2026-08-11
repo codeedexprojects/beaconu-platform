@@ -1,0 +1,41 @@
+meta {
+  name: Search Students (Minimal)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/students?search=&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  search:
+  page: 1
+  limit: 20
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.students && data.data.students[0]) {
+      bru.setEnvVar("studentId", data.data.students[0].id);
+    }
+  }
+}
+
+docs {
+  Minimal, searchable list of students enrolled at this college (joined via
+  Enrollment.collegeId — Student itself has no collegeId column). Built for
+  the "Request Document" picker so staff can search-and-select instead of
+  typing a raw student id blind.
+
+  Each row: {id, fullName, email, phoneNumber, avatarUrl} — deliberately
+  lean, no verification flags/status/source (use the platform-admin student
+  list for that). Optional search matches fullName/email/phoneNumber.
+}

@@ -49,7 +49,9 @@ import {
   useReviewSubmission,
   useDocumentTemplates,
 } from "@/hooks/use-documents";
+import { StudentSearchSelect } from "@/components/documents/student-search-select";
 import type {
+  CollegeStudentListItem,
   DocumentCategory,
   DocumentSubmissionStatus,
   SubmissionRequestItem,
@@ -91,7 +93,6 @@ const STATUS_VARIANT: Record<
 };
 
 const createSchema = z.object({
-  student_id: z.string().trim().min(1, "Student ID is required"),
   document_category: z.enum(
     [
       "academic",
@@ -126,6 +127,11 @@ export default function DocumentSubmissionRequestsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [viewingRequest, setViewingRequest] =
     useState<SubmissionRequestItem | null>(null);
+  const [requestTarget, setRequestTarget] = useState<"all" | "specific">(
+    "specific",
+  );
+  const [selectedStudent, setSelectedStudent] =
+    useState<CollegeStudentListItem | null>(null);
 
   const { data, isLoading } = useSubmissionRequests({
     status: statusFilter || undefined,
@@ -140,7 +146,6 @@ export default function DocumentSubmissionRequestsPage() {
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
     defaultValues: {
-      student_id: "",
       document_category: undefined,
       document_name: "",
       instructions: "",
@@ -157,19 +162,32 @@ export default function DocumentSubmissionRequestsPage() {
   }
 
   function onSubmit(values: CreateForm) {
+    if (requestTarget === "specific" && !selectedStudent) {
+      toast.error("Select a student");
+      return;
+    }
+
     create(
       {
-        student_id: values.student_id,
+        target: requestTarget,
+        student_id:
+          requestTarget === "specific" ? selectedStudent!.id : undefined,
         document_category: values.document_category,
         document_name: values.document_name,
         instructions: values.instructions || undefined,
         deadline: values.deadline,
       },
       {
-        onSuccess: () => {
-          toast.success("Document request created");
+        onSuccess: (result) => {
+          toast.success(
+            Array.isArray(result)
+              ? `Document requested from ${result.length} student${result.length === 1 ? "" : "s"}`
+              : "Document request created",
+          );
           setOpen(false);
           form.reset();
+          setRequestTarget("specific");
+          setSelectedStudent(null);
         },
       },
     );
@@ -226,7 +244,17 @@ export default function DocumentSubmissionRequestsPage() {
               Requests From Students
             </Link>
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(next) => {
+              setOpen(next);
+              if (!next) {
+                form.reset();
+                setRequestTarget("specific");
+                setSelectedStudent(null);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-1.5 h-4 w-4" />
@@ -262,15 +290,39 @@ export default function DocumentSubmissionRequestsPage() {
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label htmlFor="student_id">Student ID</Label>
-                  <Input
-                    id="student_id"
-                    placeholder="e.g. STU-3"
-                    {...form.register("student_id")}
-                  />
-                  {form.formState.errors.student_id && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.student_id.message}
+                  <Label>Request From</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        requestTarget === "specific" ? "default" : "outline"
+                      }
+                      onClick={() => setRequestTarget("specific")}
+                    >
+                      Specific Student
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={requestTarget === "all" ? "default" : "outline"}
+                      onClick={() => {
+                        setRequestTarget("all");
+                        setSelectedStudent(null);
+                      }}
+                    >
+                      All Students
+                    </Button>
+                  </div>
+                  {requestTarget === "specific" ? (
+                    <StudentSearchSelect
+                      value={selectedStudent}
+                      onChange={setSelectedStudent}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      A document request will be created for every student
+                      currently enrolled at this college.
                     </p>
                   )}
                 </div>
