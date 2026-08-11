@@ -28,6 +28,7 @@ import {
   Image as ImageIcon,
   Award,
   LifeBuoy,
+  Megaphone,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -410,6 +411,12 @@ export default function DashboardLayout({
                     name: "Student Queries",
                     path: "/support",
                     icon: LifeBuoy,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Notice Board",
+                    path: "/notices",
+                    icon: Megaphone,
                     permission: "staff.view",
                   },
                   {

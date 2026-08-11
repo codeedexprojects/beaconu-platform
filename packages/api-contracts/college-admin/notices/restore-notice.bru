@@ -1,0 +1,19 @@
+meta {
+  name: Restore Notice
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/notices/{{noticeId}}/restore
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  status: "archived" -> "published" again.
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Archive Notice
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/notices/{{noticeId}}/archive
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Soft-delete — status: "published" -> "archived". Never a hard delete.
+  Archived notices drop out of the default student-facing list but remain
+  reachable via "View Archived Notices" (status=archived filter).
+}

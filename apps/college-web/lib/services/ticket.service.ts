@@ -19,9 +19,7 @@ interface UploadVerifyResponse {
   viewUrl: string;
 }
 
-export async function uploadTicketAttachment(
-  file: File,
-): Promise<{
+export async function uploadTicketAttachment(file: File): Promise<{
   url: string;
   fileName: string;
   fileType: string;
@@ -33,7 +31,7 @@ export async function uploadTicketAttachment(
 
   const presigned = await api.post<UploadPresignResponse>(
     "/api/v1/student/uploads/ticket-attachment/presign",
-    { mimeType: file.type },
+    { mimeType: file.type, fileSizeBytes: file.size },
   );
 
   const uploadResponse = await fetch(presigned.uploadUrl, {

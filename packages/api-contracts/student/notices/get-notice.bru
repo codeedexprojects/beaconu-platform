@@ -1,0 +1,27 @@
+meta {
+  name: Get Notice Detail
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/notices/{{noticeId}}?college_id={{collegeId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Notice Details screen — title, content, requiredDocuments[] (checklist),
+  attachments[] (download links).
+
+  404 if the notice doesn't belong to college_id. 403 if the student has
+  no active enrollment there.
+}
