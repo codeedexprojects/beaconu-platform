@@ -73,10 +73,17 @@ const updateStudentStatusSchema = z.object({
   status: z.enum(STUDENT_STATUSES),
 });
 
+const collegeStudentListQuerySchema = z.object({
+  search: z.string().trim().min(1).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
 export const studentSchemas = {
   updateProfile: updateProfileSchema,
   listStudentsQuery: listStudentsQuerySchema,
   updateStudentStatus: updateStudentStatusSchema,
+  collegeStudentListQuery: collegeStudentListQuerySchema,
 };
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

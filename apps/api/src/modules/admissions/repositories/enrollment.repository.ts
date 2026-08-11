@@ -27,6 +27,15 @@ export class EnrollmentRepository {
     return row !== null;
   }
 
+  static async listStudentIdsForCollege(collegeId: string) {
+    const rows = await prisma.enrollment.findMany({
+      where: { collegeId },
+      select: { studentId: true },
+      distinct: ["studentId"],
+    });
+    return rows.map((row) => row.studentId);
+  }
+
   static async findActiveForStudent(studentId: string) {
     return prisma.enrollment.findFirst({
       where: { studentId, status: "active" },

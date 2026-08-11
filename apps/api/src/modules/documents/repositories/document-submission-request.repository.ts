@@ -6,13 +6,14 @@ export class DocumentSubmissionRequestRepository {
   static async create(
     collegeId: string,
     requestedBy: string,
-    data: CreateSubmissionRequestInput,
+    studentId: string,
+    data: Omit<CreateSubmissionRequestInput, "student_id" | "target">,
     initialStatusHistory: Prisma.InputJsonValue,
   ) {
     return prisma.documentSubmissionRequest.create({
       data: {
         collegeId,
-        studentId: data.student_id,
+        studentId,
         requestedBy,
         documentCategory: data.document_category,
         documentName: data.document_name,
@@ -22,6 +23,32 @@ export class DocumentSubmissionRequestRepository {
         statusHistory: initialStatusHistory,
       },
     });
+  }
+
+  static async createMany(
+    collegeId: string,
+    requestedBy: string,
+    studentIds: string[],
+    data: Omit<CreateSubmissionRequestInput, "student_id" | "target">,
+    initialStatusHistory: Prisma.InputJsonValue,
+  ) {
+    return prisma.$transaction(
+      studentIds.map((studentId) =>
+        prisma.documentSubmissionRequest.create({
+          data: {
+            collegeId,
+            studentId,
+            requestedBy,
+            documentCategory: data.document_category,
+            documentName: data.document_name,
+            instructions: data.instructions ?? null,
+            deadline: new Date(data.deadline + "T00:00:00Z"),
+            status: "pending",
+            statusHistory: initialStatusHistory,
+          },
+        }),
+      ),
+    );
   }
 
   static async findById(id: string) {

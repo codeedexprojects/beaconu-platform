@@ -47,6 +47,10 @@ export class EnrollmentService {
     return EnrollmentRepository.existsForStudentAtCollege(studentId, collegeId);
   }
 
+  static async listStudentIdsForCollege(collegeId: string) {
+    return EnrollmentRepository.listStudentIdsForCollege(collegeId);
+  }
+
   static async getActiveSummary(studentId: string) {
     const enrollment =
       await EnrollmentRepository.findActiveForStudent(studentId);

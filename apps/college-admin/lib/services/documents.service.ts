@@ -35,7 +35,7 @@ function toQueryString(filters: DocumentListFilters): string {
 
 export async function createSubmissionRequest(
   data: CreateSubmissionRequestInput,
-): Promise<SubmissionRequestItem> {
+): Promise<SubmissionRequestItem | SubmissionRequestItem[]> {
   return api.post(`${BASE}/submission-requests`, data);
 }
 

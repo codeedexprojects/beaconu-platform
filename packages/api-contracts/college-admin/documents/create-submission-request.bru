@@ -17,6 +17,7 @@ headers {
 
 body:json {
   {
+    "target": "specific",
     "student_id": "{{studentId}}",
     "document_category": "identification",
     "document_name": "Aadhar Card",
@@ -30,12 +31,27 @@ script:post-response {
     const data = res.getBody();
     if (data.data && data.data.id) {
       bru.setEnvVar("submissionRequestId", data.data.id);
+    } else if (data.data && Array.isArray(data.data) && data.data[0]) {
+      bru.setEnvVar("submissionRequestId", data.data[0].id);
     }
   }
 }
 
 docs {
-  College admin requests a document from a specific student, with a document
-  type and deadline. Student sees this as a "pending" request and submits a
-  file against it.
+  College admin requests a document from students, with a document type and
+  deadline. Student(s) see this as a "pending" request and submit a file
+  against it.
+
+  Body:
+  - target: "specific" (default) requires student_id — creates ONE request
+    row for that student.
+  - target: "all" ignores student_id — resolves every student currently
+    enrolled at this college (via Enrollment) and creates one request row
+    per student in a single transaction. Response `data` is then an ARRAY
+    of created requests instead of a single object. 409 ConflictError if
+    the college has no enrolled students yet.
+
+  Use `GET /college-admin/students?search=` (see the Students folder) to
+  find a specific student's id for target: "specific" — no more typing a
+  raw student id blind.
 }

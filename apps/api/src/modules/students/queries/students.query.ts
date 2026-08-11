@@ -56,6 +56,54 @@ function mapAdminListItem(row: {
 }
 
 export class StudentsQuery {
+  static async listMinimalForCollege(
+    collegeId: string,
+    filters: { search?: string; page: number; limit: number },
+  ) {
+    const where = {
+      enrollments: { some: { collegeId } },
+      ...(filters.search && {
+        OR: [
+          {
+            fullName: {
+              contains: filters.search,
+              mode: "insensitive" as const,
+            },
+          },
+          { email: { contains: filters.search, mode: "insensitive" as const } },
+          {
+            phoneNumber: {
+              contains: filters.search,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      }),
+    };
+
+    const [rows, total] = await prisma.$transaction([
+      prisma.student.findMany({
+        where,
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phoneNumber: true,
+          avatarUrl: true,
+        },
+        orderBy: { fullName: "asc" },
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    return {
+      students: rows,
+      meta: PaginationHelper.createMeta(total, filters.page, filters.limit),
+    };
+  }
+
   static async listForAdmin(filters: {
     search?: string;
     status?: string;
