@@ -45,7 +45,10 @@ export class TicketRepository {
         subject: data.subject,
         description: data.description,
         attachments: data.attachments as Prisma.InputJsonValue[],
-        ticketNumber: randomUUID(),
+        // Temporary unique placeholder, immediately overwritten in
+        // setTicketNumber() with the row's own id — ticket_number is
+        // VarChar(30), so a full 36-char UUID doesn't fit here.
+        ticketNumber: randomUUID().slice(0, 30),
       },
     });
   }
