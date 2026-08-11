@@ -17,6 +17,8 @@ params:query {
   status:
   category:
   search:
+  from_date:
+  to_date:
 }
 
 auth:bearer {
@@ -36,6 +38,11 @@ docs {
   "Latest Notices" list — defaults to status=published (pinned first, then
   newest-published first). Pass status=archived for "View Archived
   Notices". Optional: category, search (title/content).
+
+  Date-wise filter (backs "Filter by Date"): from_date / to_date (ISO
+  date, e.g. "2026-11-01"), both optional, inclusive, filtered against
+  publishedAt. Pass either alone for an open-ended range, or both for a
+  bounded range. 400 ValidationError if from_date is after to_date.
 
   403 ForbiddenError if the student has no active enrollment at
   college_id.

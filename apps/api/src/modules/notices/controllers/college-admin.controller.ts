@@ -12,7 +12,13 @@ export class CollegeAdminNoticeController {
     const query = listNoticesQuerySchema.parse(req.query);
     const result = await NoticeService.listForCollege(
       req.collegeId!,
-      { status: query.status, category: query.category, search: query.search },
+      {
+        status: query.status,
+        category: query.category,
+        search: query.search,
+        fromDate: query.from_date,
+        toDate: query.to_date,
+      },
       { page: query.page, limit: query.limit },
     );
     return res.status(200).json(ApiResponse.success("Notices fetched", result));

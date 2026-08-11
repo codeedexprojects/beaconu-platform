@@ -18,18 +18,41 @@ export const createNoticeSchema = z.object({
 
 export const updateNoticeSchema = createNoticeSchema.partial();
 
-export const listNoticesQuerySchema = z.object({
-  status: z.enum(["published", "archived"]).optional(),
-  category: z.string().trim().min(1).optional(),
-  search: z.string().trim().min(1).optional(),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
-});
+export const listNoticesQuerySchema = z
+  .object({
+    status: z.enum(["published", "archived"]).optional(),
+    category: z.string().trim().min(1).optional(),
+    search: z.string().trim().min(1).optional(),
+    from_date: z.coerce.date().optional(),
+    to_date: z.coerce.date().optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(100).default(20),
+  })
+  .refine(
+    (data) =>
+      !data.from_date || !data.to_date || data.from_date <= data.to_date,
+    {
+      message: "from_date must be before or equal to to_date",
+      path: ["to_date"],
+    },
+  );
 
-export const studentNoticesQuerySchema = listNoticesQuerySchema.extend({
-  college_id: z.string().trim().min(1, "college_id is required"),
-});
-
-export const studentNoticeParamsQuerySchema = z.object({
-  college_id: z.string().trim().min(1, "college_id is required"),
-});
+export const studentNoticesQuerySchema = z
+  .object({
+    college_id: z.string().trim().min(1, "college_id is required"),
+    status: z.enum(["published", "archived"]).optional(),
+    category: z.string().trim().min(1).optional(),
+    search: z.string().trim().min(1).optional(),
+    from_date: z.coerce.date().optional(),
+    to_date: z.coerce.date().optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(100).default(20),
+  })
+  .refine(
+    (data) =>
+      !data.from_date || !data.to_date || data.from_date <= data.to_date,
+    {
+      message: "from_date must be before or equal to to_date",
+      path: ["to_date"],
+    },
+  );
