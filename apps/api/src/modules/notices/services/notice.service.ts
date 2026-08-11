@@ -67,7 +67,13 @@ export class NoticeService {
 
   static async listForCollege(
     collegeId: string,
-    filters: { status?: string; category?: string; search?: string },
+    filters: {
+      status?: string;
+      category?: string;
+      search?: string;
+      fromDate?: Date;
+      toDate?: Date;
+    },
     pagination: { page: number; limit: number },
   ) {
     const { rows, total } = await NoticeRepository.list(
@@ -147,6 +153,8 @@ export class NoticeService {
       status?: "published" | "archived";
       category?: string;
       search?: string;
+      fromDate?: Date;
+      toDate?: Date;
     },
     pagination: { page: number; limit: number },
   ) {
@@ -157,6 +165,8 @@ export class NoticeService {
         status: filters.status ?? "published",
         category: filters.category,
         search: filters.search,
+        fromDate: filters.fromDate,
+        toDate: filters.toDate,
       },
       pagination,
     );
@@ -170,10 +180,13 @@ export class NoticeService {
     };
   }
 
-  static async getForStudent(studentId: string, collegeId: string, id: string) {
-    await assertEnrolled(studentId, collegeId);
-    const row = await NoticeRepository.findById(id, collegeId);
+  // No college_id needed from the client here — the notice's own college is
+  // looked up first, then we verify the student is enrolled there. Avoids
+  // trusting a client-supplied collegeId for an authorization decision.
+  static async getForStudent(studentId: string, id: string) {
+    const row = await NoticeRepository.findByIdGlobal(id);
     if (!row) throw new NotFoundError("Notice not found");
+    await assertEnrolled(studentId, row.collegeId);
     return mapDetail(row);
   }
 }

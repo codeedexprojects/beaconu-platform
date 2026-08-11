@@ -19,9 +19,20 @@ const DETAIL_SELECT = {
   attachments: true,
 } as const;
 
+const DETAIL_SELECT_WITH_COLLEGE = {
+  ...DETAIL_SELECT,
+  collegeId: true,
+} as const;
+
 function buildWhere(
   collegeId: string,
-  filters: { status?: string; category?: string; search?: string },
+  filters: {
+    status?: string;
+    category?: string;
+    search?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  },
 ) {
   return {
     collegeId,
@@ -35,13 +46,25 @@ function buildWhere(
         },
       ],
     }),
+    ...((filters.fromDate || filters.toDate) && {
+      publishedAt: {
+        ...(filters.fromDate && { gte: filters.fromDate }),
+        ...(filters.toDate && { lte: filters.toDate }),
+      },
+    }),
   };
 }
 
 export class NoticeRepository {
   static async list(
     collegeId: string,
-    filters: { status?: string; category?: string; search?: string },
+    filters: {
+      status?: string;
+      category?: string;
+      search?: string;
+      fromDate?: Date;
+      toDate?: Date;
+    },
     pagination: { page: number; limit: number },
   ) {
     const where = buildWhere(collegeId, filters);
@@ -62,6 +85,13 @@ export class NoticeRepository {
     return prisma.announcement.findFirst({
       where: { id, collegeId },
       select: DETAIL_SELECT,
+    });
+  }
+
+  static async findByIdGlobal(id: string) {
+    return prisma.announcement.findUnique({
+      where: { id },
+      select: DETAIL_SELECT_WITH_COLLEGE,
     });
   }
 

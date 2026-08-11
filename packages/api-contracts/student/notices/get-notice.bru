@@ -5,13 +5,9 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/student/notices/{{noticeId}}?college_id={{collegeId}}
+  url: {{baseUrl}}/api/v1/student/notices/{{noticeId}}
   body: none
   auth: bearer
-}
-
-params:query {
-  college_id: {{collegeId}}
 }
 
 auth:bearer {
@@ -22,6 +18,13 @@ docs {
   Notice Details screen — title, content, requiredDocuments[] (checklist),
   attachments[] (download links).
 
-  404 if the notice doesn't belong to college_id. 403 if the student has
-  no active enrollment there.
+  No college_id needed — the notice's own college is looked up server-side
+  from its id, then the student's enrollment is checked against that
+  college. (Earlier version of this endpoint required college_id as a
+  query param; removed since the id alone is enough — the server derives
+  and verifies ownership itself rather than trusting a client-supplied
+  collegeId.)
+
+  404 if the notice id doesn't exist. 403 if the student has no active
+  enrollment at the notice's college.
 }
