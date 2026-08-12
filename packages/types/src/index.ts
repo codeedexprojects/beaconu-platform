@@ -31,3 +31,4 @@ export * from "./hostel";
 export * from "./beaconu-card";
 export * from "./ticket";
 export * from "./notice";
+export * from "./seat-cancellation";

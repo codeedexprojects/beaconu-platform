@@ -65,7 +65,12 @@ export class ApplicationRepository {
     return prisma.applicationCourse.findFirst({
       where: {
         courseId,
-        status: { not: "withdrawn" },
+        // "withdrawn" = student removed this course pre-decision, still
+        // filling the application. "dropped_out" = a confirmed seat was
+        // later cancelled (see SeatCancellationService). Both are terminal,
+        // non-blocking states — the student is free to submit a fresh
+        // application for the same course again.
+        status: { notIn: ["withdrawn", "dropped_out"] },
         application: { studentId, collegeId },
       },
       select: { id: true, applicationId: true, status: true },

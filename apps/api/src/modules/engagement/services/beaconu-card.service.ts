@@ -73,6 +73,7 @@ async function withEnrollmentDetails(
     collegeName: enrollmentSummary?.collegeName ?? null,
     courseName: enrollmentSummary?.courseName ?? null,
     duration: addYearToDuration(enrollmentSummary?.courseDuration ?? null),
+    applicationCourseId: enrollmentSummary?.applicationCourseId ?? null,
     commuteEnrolled,
     housingEnrolled,
   };
@@ -112,5 +113,12 @@ export class BeaconuCardService {
     }
 
     return withEnrollmentDetails(studentId, card);
+  }
+
+  static async deactivateForStudent(
+    tx: Prisma.TransactionClient,
+    studentId: string,
+  ) {
+    await BeaconuCardRepository.setStatus(tx, studentId, "inactive");
   }
 }

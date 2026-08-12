@@ -30,6 +30,7 @@ import {
   LifeBuoy,
   Megaphone,
   GraduationCap,
+  XCircle,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -424,6 +425,12 @@ export default function DashboardLayout({
                     name: "Enrolled Students",
                     path: "/students",
                     icon: GraduationCap,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Seat Cancellations",
+                    path: "/seat-cancellations",
+                    icon: XCircle,
                     permission: "staff.view",
                   },
                   {

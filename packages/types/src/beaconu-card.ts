@@ -11,6 +11,7 @@ export interface BeaconuCardItem {
   collegeName: string | null;
   courseName: string | null;
   duration: string | null;
+  applicationCourseId: string | null;
   commuteEnrolled: boolean;
   housingEnrolled: boolean;
   createdAt: string;

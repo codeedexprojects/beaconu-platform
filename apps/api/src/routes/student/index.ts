@@ -27,6 +27,7 @@ import studentHostelRoutes from "@/modules/hostel/routes/student.routes";
 import studentEngagementRoutes from "@/modules/engagement/routes/student.routes";
 import studentSupportRoutes from "@/modules/support/routes/student.routes";
 import studentNoticeRoutes from "@/modules/notices/routes/student.routes";
+import studentSeatCancellationRoutes from "@/modules/admissions/routes/seat-cancellations-student.routes";
 
 const router: Router = Router();
 
@@ -60,5 +61,6 @@ router.use("/", studentProfileRoutes);
 router.use("/", studentEngagementRoutes);
 router.use("/support", studentSupportRoutes);
 router.use("/notices", studentNoticeRoutes);
+router.use("/seat-cancellations", studentSeatCancellationRoutes);
 
 export default router;

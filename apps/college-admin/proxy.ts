@@ -31,6 +31,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "scholarships",
   "students",
   "support",
+  "seat-cancellations",
 ]);
 
 export function proxy(request: NextRequest) {

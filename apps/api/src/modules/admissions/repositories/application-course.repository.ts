@@ -206,6 +206,26 @@ export class ApplicationCourseRepository {
     });
   }
 
+  static async incrementExclusiveSeat(
+    tx: Prisma.TransactionClient,
+    courseQuotaSeatId: string,
+  ) {
+    return tx.courseQuotaSeats.update({
+      where: { id: courseQuotaSeatId },
+      data: { openSeats: { increment: 1 } },
+    });
+  }
+
+  static async incrementPoolSeat(
+    tx: Prisma.TransactionClient,
+    seatPoolId: string,
+  ) {
+    return tx.seatPool.update({
+      where: { id: seatPoolId },
+      data: { openSeats: { increment: 1 } },
+    });
+  }
+
   static async markSubmitted(tx: Prisma.TransactionClient, id: string) {
     return tx.applicationCourse.update({
       where: { id },

@@ -7,6 +7,11 @@ import { AdmissionCycleCourseService } from "../services/admission-cycle-course.
 import { SeatPoolService } from "../services/seat-pool.service";
 import { CourseQuotaSeatsService } from "../services/course-quota-seats.service";
 import { DocumentUploadConfigService } from "../services/document-upload-config.service";
+import { SeatCancellationService } from "../services/seat-cancellation.service";
+import {
+  reviewSeatCancellationSchema,
+  listSeatCancellationsQuerySchema,
+} from "../validators/seat-cancellation.validator";
 import {
   createAdmissionCycleSchema,
   updateAdmissionCycleSchema,
@@ -249,6 +254,31 @@ export class CollegeAdminAdmissionCycleController {
     );
     return res.json(
       ApiResponse.success("Document requirement removed", result),
+    );
+  }
+
+  static async listSeatCancellations(req: Request, res: Response) {
+    const query = listSeatCancellationsQuerySchema.parse(req.query);
+    const result = await SeatCancellationService.listForCollege(
+      req.collegeId!,
+      { status: query.status },
+      { page: query.page, limit: query.limit },
+    );
+    return res.json(
+      ApiResponse.success("Cancellation requests fetched", result),
+    );
+  }
+
+  static async reviewSeatCancellation(req: Request, res: Response) {
+    const body = reviewSeatCancellationSchema.parse(req.body);
+    const result = await SeatCancellationService.review(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(
+      ApiResponse.success("Cancellation request reviewed", result),
     );
   }
 }

@@ -41,4 +41,15 @@ export class BeaconuCardRepository {
       select: CARD_SELECT,
     });
   }
+
+  static async setStatus(
+    tx: Prisma.TransactionClient,
+    studentId: string,
+    status: string,
+  ) {
+    return tx.beaconuCard.updateMany({
+      where: { studentId },
+      data: { status },
+    });
+  }
 }
