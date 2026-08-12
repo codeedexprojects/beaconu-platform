@@ -28,6 +28,7 @@ import studentEngagementRoutes from "@/modules/engagement/routes/student.routes"
 import studentSupportRoutes from "@/modules/support/routes/student.routes";
 import studentNoticeRoutes from "@/modules/notices/routes/student.routes";
 import studentSeatCancellationRoutes from "@/modules/admissions/routes/seat-cancellations-student.routes";
+import studentCourseSwitchRoutes from "@/modules/admissions/routes/course-switch-requests-student.routes";
 
 const router: Router = Router();
 
@@ -62,5 +63,6 @@ router.use("/", studentEngagementRoutes);
 router.use("/support", studentSupportRoutes);
 router.use("/notices", studentNoticeRoutes);
 router.use("/seat-cancellations", studentSeatCancellationRoutes);
+router.use("/course-switch-requests", studentCourseSwitchRoutes);
 
 export default router;

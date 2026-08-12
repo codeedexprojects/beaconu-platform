@@ -98,15 +98,18 @@ export class ApplicationCourseRepository {
     });
   }
 
-  static async create(data: {
-    applicationId: string;
-    courseId: string;
-    applicationFee: number;
-    courseQuotaSeatId: string | null;
-    isPrimary: boolean;
-    preferenceOrder: number;
-  }) {
-    return prisma.applicationCourse.create({
+  static async create(
+    data: {
+      applicationId: string;
+      courseId: string;
+      applicationFee: number;
+      courseQuotaSeatId: string | null;
+      isPrimary: boolean;
+      preferenceOrder: number;
+    },
+    tx: Prisma.TransactionClient | typeof prisma = prisma,
+  ) {
+    return tx.applicationCourse.create({
       data,
       select: APPLICATION_COURSE_SELECT,
     });
@@ -119,8 +122,9 @@ export class ApplicationCourseRepository {
       courseQuotaSeatId: string | null;
       preferenceOrder: number;
     },
+    tx: Prisma.TransactionClient | typeof prisma = prisma,
   ) {
-    return prisma.applicationCourse.update({
+    return tx.applicationCourse.update({
       where: { id },
       data: { ...data, status: "draft", statusUpdatedAt: new Date() },
       select: APPLICATION_COURSE_SELECT,

@@ -70,6 +70,10 @@ export const QUERY_KEYS = {
     filters
       ? (["seat-cancellations", filters] as const)
       : (["seat-cancellations"] as const),
+  courseSwitchRequests: (filters?: unknown) =>
+    filters
+      ? (["course-switch-requests", filters] as const)
+      : (["course-switch-requests"] as const),
   institutionGroup: ["college-institution-group"] as const,
   ambassadors: ["college-ambassadors"] as const,
   ambassador: (id: string) => ["college-ambassadors", id] as const,

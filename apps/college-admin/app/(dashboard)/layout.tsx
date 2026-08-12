@@ -31,6 +31,7 @@ import {
   Megaphone,
   GraduationCap,
   XCircle,
+  Repeat,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -431,6 +432,12 @@ export default function DashboardLayout({
                     name: "Seat Cancellations",
                     path: "/seat-cancellations",
                     icon: XCircle,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Course Switch Requests",
+                    path: "/course-switch-requests",
+                    icon: Repeat,
                     permission: "staff.view",
                   },
                   {

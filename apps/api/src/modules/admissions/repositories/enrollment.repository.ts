@@ -52,6 +52,7 @@ export class EnrollmentRepository {
     return prisma.enrollment.findFirst({
       where: { studentId, status: "active" },
       select: {
+        id: true,
         collegeId: true,
         courseId: true,
         applicationCourseId: true,
@@ -67,6 +68,25 @@ export class EnrollmentRepository {
     return prisma.enrollment.findUnique({
       where: { applicationCourseId },
       select: ENROLLMENT_SELECT,
+    });
+  }
+
+  static async findByIdWithApplicationContext(id: string) {
+    return prisma.enrollment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        studentId: true,
+        collegeId: true,
+        courseId: true,
+        campusId: true,
+        admissionCycleId: true,
+        academicYear: true,
+        status: true,
+        course: { select: { name: true, code: true } },
+        college: { select: { code: true } },
+        applicationCourse: { select: { applicationId: true } },
+      },
     });
   }
 

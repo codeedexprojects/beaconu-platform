@@ -20,6 +20,7 @@ import collegeAdminSupportRoutes from "@/modules/support/routes/college-admin.ro
 import collegeAdminNoticeRoutes from "@/modules/notices/routes/college-admin.routes";
 import collegeAdminStudentsRoutes from "@/modules/students/routes/college-admin.routes";
 import collegeAdminSeatCancellationRoutes from "@/modules/admissions/routes/seat-cancellations-college-admin.routes";
+import collegeAdminCourseSwitchRoutes from "@/modules/admissions/routes/course-switch-requests-college-admin.routes";
 
 const router: Router = Router();
 
@@ -43,5 +44,6 @@ router.use("/support", collegeAdminSupportRoutes);
 router.use("/notices", collegeAdminNoticeRoutes);
 router.use("/students", collegeAdminStudentsRoutes);
 router.use("/seat-cancellations", collegeAdminSeatCancellationRoutes);
+router.use("/course-switch-requests", collegeAdminCourseSwitchRoutes);
 
 export default router;

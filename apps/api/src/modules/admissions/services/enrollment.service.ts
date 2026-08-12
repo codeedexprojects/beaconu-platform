@@ -51,6 +51,13 @@ export class EnrollmentService {
     return EnrollmentRepository.listStudentIdsForCollege(collegeId);
   }
 
+  static async generateEnrollmentNumber(
+    collegeCode: string,
+    academicYear: string,
+  ) {
+    return generateEnrollmentNumber(collegeCode, academicYear);
+  }
+
   static async getActiveSummary(studentId: string) {
     const enrollment =
       await EnrollmentRepository.findActiveForStudent(studentId);
