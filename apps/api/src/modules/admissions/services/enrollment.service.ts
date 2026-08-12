@@ -58,6 +58,7 @@ export class EnrollmentService {
     return {
       collegeId: enrollment.collegeId,
       courseId: enrollment.courseId,
+      applicationCourseId: enrollment.applicationCourseId,
       academicYear: enrollment.academicYear,
       collegeName: enrollment.college.name,
       courseName: enrollment.course.name,

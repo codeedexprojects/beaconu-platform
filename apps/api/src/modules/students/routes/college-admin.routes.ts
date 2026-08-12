@@ -8,5 +8,7 @@ const router: Router = Router();
 router.use(authenticate, authorizeUserType("staff_member"));
 
 router.get("/", CollegeAdminStudentsController.listMinimal);
+router.get("/enrolled", CollegeAdminStudentsController.listEnrolled);
+router.get("/enrolled/:id", CollegeAdminStudentsController.getDetail);
 
 export default router;

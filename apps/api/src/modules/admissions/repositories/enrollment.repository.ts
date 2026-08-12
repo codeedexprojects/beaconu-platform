@@ -21,7 +21,7 @@ const ENROLLMENT_SELECT = {
 export class EnrollmentRepository {
   static async existsForStudentAtCollege(studentId: string, collegeId: string) {
     const row = await prisma.enrollment.findFirst({
-      where: { studentId, collegeId },
+      where: { studentId, collegeId, status: "active" },
       select: { id: true },
     });
     return row !== null;
@@ -29,11 +29,23 @@ export class EnrollmentRepository {
 
   static async listStudentIdsForCollege(collegeId: string) {
     const rows = await prisma.enrollment.findMany({
-      where: { collegeId },
+      where: { collegeId, status: "active" },
       select: { studentId: true },
       distinct: ["studentId"],
     });
     return rows.map((row) => row.studentId);
+  }
+
+  static async updateStatus(
+    tx: Prisma.TransactionClient,
+    id: string,
+    status: string,
+  ) {
+    return tx.enrollment.update({
+      where: { id },
+      data: { status },
+      select: { id: true, studentId: true },
+    });
   }
 
   static async findActiveForStudent(studentId: string) {
@@ -42,6 +54,7 @@ export class EnrollmentRepository {
       select: {
         collegeId: true,
         courseId: true,
+        applicationCourseId: true,
         academicYear: true,
         college: { select: { name: true } },
         course: { select: { name: true, duration: true } },

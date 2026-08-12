@@ -1,0 +1,62 @@
+meta {
+  name: Review Seat Cancellation Request
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/review
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "decision": "approve",
+    "remarks": "Approved per student's relocation request.",
+    "refund_amount": 5000,
+    "refund_status": "processed"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    console.log("Reviewed request status:", data.data && data.data.status);
+  }
+}
+
+docs {
+  College admin approves or rejects a pending request.
+
+  Body:
+  - decision: "approve" | "reject"
+  - remarks: optional, but REQUIRED when decision is "reject"
+  - refund_amount / refund_status: optional, record-keeping only (no
+    automated gateway refund is issued) — refund_status is one of
+    not_applicable | pending | processed | denied
+
+  On approve, inside one transaction:
+  - Enrollment.status -> "withdrawn" (this is what actually revokes
+    Student Hub access — every Student Hub gate now checks
+    Enrollment.status === "active")
+  - ApplicationCourse.status -> "dropped_out" (+ status log entry)
+  - The seat is released back to the course quota / seat pool
+  - The student's BeaconU Card is deactivated
+  - SeatCancellation.status -> "approved"
+
+  The student can submit a brand-new Application for the same course at
+  the same college afterward if they want to rejoin — the duplicate-course
+  guard treats "dropped_out" the same as "withdrawn" (non-blocking).
+
+  409 ConflictError if the request isn't "pending" anymore (already
+  processed). 404 if the request doesn't belong to this college.
+}

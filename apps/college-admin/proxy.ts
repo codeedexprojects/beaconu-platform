@@ -24,6 +24,14 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "applications",
   "assessments",
   "interviews",
+  "libraries",
+  "media-kit",
+  "notices",
+  "quotas",
+  "scholarships",
+  "students",
+  "support",
+  "seat-cancellations",
 ]);
 
 export function proxy(request: NextRequest) {

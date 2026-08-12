@@ -1,0 +1,30 @@
+meta {
+  name: Get Student Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/students/enrolled/{{studentId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Full student profile aggregated from every module: base identity
+  (fullName/email/phone/avatar/status/profileMetadata), enrollment (course,
+  academicYear, enrollmentNumber, status, enrolledAt), hostel enrollment
+  (null if none — hostel/roomType/messPlan/plan/status), commute enrollment
+  (null if none — route/bus/pickupStop/status), payments (courseFees[],
+  hostelFees[], commuteFees[] — each a StudentFeeLedger entry with nested
+  transactions[], plus totalPaid/totalDue rollups), documentRequests[],
+  supportTickets[] (link into the Student Queries inbox via ticketNumber),
+  and beaconuCard (null if not issued).
+
+  404 NotFoundError if this student has no Enrollment at this college
+  (staff can't view students at other colleges).
+}

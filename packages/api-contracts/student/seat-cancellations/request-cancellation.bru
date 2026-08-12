@@ -1,0 +1,46 @@
+meta {
+  name: Request Seat Cancellation
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/seat-cancellations
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "application_course_id": "{{applicationCourseId}}",
+    "reason": "Relocating to a different city and cannot continue this program.",
+    "supporting_doc_urls": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("seatCancellationId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Student requests cancellation of their confirmed seat. Requires an
+  active Enrollment linked to application_course_id (get it from
+  GET /student/beaconu-card's applicationCourseId field, or from your own
+  application records).
+
+  409 ConflictError if there's no active enrollment for this course, or if
+  a pending request already exists for it (one at a time).
+}

@@ -7,6 +7,8 @@ import { ApplicationPaymentSummaryQuery } from "../queries/application-payment-s
 import { ApplicationService } from "../services/application.service";
 import { ApplicationCourseService } from "../services/application-course.service";
 import { ApplicationDocumentService } from "../services/application-document.service";
+import { SeatCancellationService } from "../services/seat-cancellation.service";
+import { requestSeatCancellationSchema } from "../validators/seat-cancellation.validator";
 import { studentAdmissionCycleListQuerySchema } from "../validators/admission-cycle.validator";
 import {
   startApplicationSchema,
@@ -239,5 +241,23 @@ export class StudentApplicationController {
       req.userId as string,
     );
     return res.json(ApiResponse.success("Application fetched", result));
+  }
+
+  static async requestSeatCancellation(req: Request, res: Response) {
+    const body = requestSeatCancellationSchema.parse(req.body);
+    const result = await SeatCancellationService.request(
+      req.userId as string,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Cancellation request submitted", result));
+  }
+
+  static async listMySeatCancellations(req: Request, res: Response) {
+    const result = await SeatCancellationService.listMine(req.userId as string);
+    return res.json(
+      ApiResponse.success("Cancellation requests fetched", result),
+    );
   }
 }

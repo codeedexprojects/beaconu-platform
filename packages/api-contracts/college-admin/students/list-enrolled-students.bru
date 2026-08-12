@@ -1,0 +1,41 @@
+meta {
+  name: List Enrolled Students
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/students/enrolled?search=&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  search:
+  page: 1
+  limit: 20
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.students && data.data.students[0]) {
+      bru.setEnvVar("studentId", data.data.students[0].id);
+    }
+  }
+}
+
+docs {
+  Richer, paginated list of enrolled students for the "Enrolled Students"
+  dashboard — one row per Enrollment at this college (id, name, email,
+  phone, avatar, enrollmentId/Number, course name/code, academicYear,
+  enrollmentStatus, enrolledAt). Newest-enrolled first.
+
+  Different from `GET /students` (the lean search-combobox endpoint used by
+  Request Document) — this one carries course/enrollment context for a
+  browsable table, that one is deliberately minimal for a dropdown.
+}

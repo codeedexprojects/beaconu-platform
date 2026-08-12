@@ -1,0 +1,21 @@
+meta {
+  name: List My Cancellation Requests
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/seat-cancellations
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  All of the authenticated student's own seat cancellation requests,
+  newest first (no pagination — a student realistically has very few of
+  these ever).
+}
