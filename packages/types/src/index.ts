@@ -32,3 +32,4 @@ export * from "./beaconu-card";
 export * from "./ticket";
 export * from "./notice";
 export * from "./seat-cancellation";
+export * from "./course-switch-request";

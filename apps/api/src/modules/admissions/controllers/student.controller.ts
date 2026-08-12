@@ -9,6 +9,8 @@ import { ApplicationCourseService } from "../services/application-course.service
 import { ApplicationDocumentService } from "../services/application-document.service";
 import { SeatCancellationService } from "../services/seat-cancellation.service";
 import { requestSeatCancellationSchema } from "../validators/seat-cancellation.validator";
+import { CourseSwitchRequestService } from "../services/course-switch-request.service";
+import { requestCourseSwitchSchema } from "../validators/course-switch-request.validator";
 import { studentAdmissionCycleListQuerySchema } from "../validators/admission-cycle.validator";
 import {
   startApplicationSchema,
@@ -258,6 +260,26 @@ export class StudentApplicationController {
     const result = await SeatCancellationService.listMine(req.userId as string);
     return res.json(
       ApiResponse.success("Cancellation requests fetched", result),
+    );
+  }
+
+  static async requestCourseSwitch(req: Request, res: Response) {
+    const body = requestCourseSwitchSchema.parse(req.body);
+    const result = await CourseSwitchRequestService.request(
+      req.userId as string,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Course switch request submitted", result));
+  }
+
+  static async listMyCourseSwitchRequests(req: Request, res: Response) {
+    const result = await CourseSwitchRequestService.listMine(
+      req.userId as string,
+    );
+    return res.json(
+      ApiResponse.success("Course switch requests fetched", result),
     );
   }
 }

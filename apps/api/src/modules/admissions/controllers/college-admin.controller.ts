@@ -12,6 +12,11 @@ import {
   reviewSeatCancellationSchema,
   listSeatCancellationsQuerySchema,
 } from "../validators/seat-cancellation.validator";
+import { CourseSwitchRequestService } from "../services/course-switch-request.service";
+import {
+  reviewCourseSwitchSchema,
+  listCourseSwitchRequestsQuerySchema,
+} from "../validators/course-switch-request.validator";
 import {
   createAdmissionCycleSchema,
   updateAdmissionCycleSchema,
@@ -279,6 +284,31 @@ export class CollegeAdminAdmissionCycleController {
     );
     return res.json(
       ApiResponse.success("Cancellation request reviewed", result),
+    );
+  }
+
+  static async listCourseSwitchRequests(req: Request, res: Response) {
+    const query = listCourseSwitchRequestsQuerySchema.parse(req.query);
+    const result = await CourseSwitchRequestService.listForCollege(
+      req.collegeId!,
+      { status: query.status },
+      { page: query.page, limit: query.limit },
+    );
+    return res.json(
+      ApiResponse.success("Course switch requests fetched", result),
+    );
+  }
+
+  static async reviewCourseSwitchRequest(req: Request, res: Response) {
+    const body = reviewCourseSwitchSchema.parse(req.body);
+    const result = await CourseSwitchRequestService.review(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(
+      ApiResponse.success("Course switch request reviewed", result),
     );
   }
 }

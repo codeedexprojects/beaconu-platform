@@ -1,0 +1,49 @@
+meta {
+  name: Request Course Switch
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/course-switch-requests
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "to_course_id": "{{courseId}}",
+    "reason": "I've decided I'm more interested in this program after attending orientation sessions for both.",
+    "supporting_doc_urls": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("courseSwitchRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Student requests to switch from their currently active course to a
+  different one at the same college. The target course must be offered
+  under the same admission cycle the student's original application used.
+
+  409 ConflictError:
+  - "No active enrollment to switch courses from"
+  - "You are already enrolled in this course"
+  - "You already have a pending course switch request"
+
+  404 NotFoundError — target course not offered under this admission cycle.
+}

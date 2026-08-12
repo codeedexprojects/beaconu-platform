@@ -1,0 +1,35 @@
+meta {
+  name: List Course Switch Requests
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/course-switch-requests?status=pending&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  status: pending
+  page: 1
+  limit: 20
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.requests && data.data.requests[0]) {
+      bru.setEnvVar("courseSwitchRequestId", data.data.requests[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated queue of course switch requests at this college, newest first.
+  Optional status filter: pending | approved | rejected (omit for all).
+}

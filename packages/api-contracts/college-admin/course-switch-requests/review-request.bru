@@ -1,0 +1,64 @@
+meta {
+  name: Review Course Switch Request
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/course-switch-requests/{{courseSwitchRequestId}}/review
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "decision": "approve",
+    "remarks": "Approved — target course has open seats and student meets eligibility."
+  }
+}
+
+docs {
+  College admin approves or rejects a pending course switch request.
+
+  Body:
+  - decision: "approve" | "reject"
+  - remarks: optional, but REQUIRED when decision is "reject"
+
+  On approve, inside one transaction:
+  - A new ApplicationCourse row is created (or an existing withdrawn one
+    reactivated) for the target course, under the student's ORIGINAL
+    Application, status set straight to "enrolled" (the assessment/
+    interview/token-payment pipeline is skipped — this is an
+    administrative transfer, not a fresh admission)
+  - A new Enrollment is created from it (new enrollment number,
+    status: "active")
+  - The OLD Enrollment.status -> "course_switched" (a documented terminal
+    status)
+  - CourseSwitchRequest.status -> "approved", newEnrollmentId set
+
+  Every Student Hub read (BeaconU Card, commute/hostel eligibility,
+  finance) automatically reflects the new course afterward — they all
+  resolve off "whichever Enrollment is currently active" for the student,
+  and there's exactly one (the new one) once this completes.
+
+  Known limitations (by design, not bugs):
+  - No seat-capacity check against the target course — the schema has no
+    quota/seat reference on CourseSwitchRequest, so this is a fully manual
+    admin judgment call, not system-enforced.
+  - No automatic fee reconciliation — already-paid fees for the old course
+    aren't touched. Handle any refund/adjustment per college policy and
+    note it in remarks.
+
+  409 ConflictError if the request isn't "pending" anymore, or if the
+  student's original enrollment is no longer active, or if the target
+  course is no longer offered under that admission cycle. 404 if the
+  request doesn't belong to this college.
+}

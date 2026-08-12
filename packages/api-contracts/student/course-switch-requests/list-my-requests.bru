@@ -1,0 +1,20 @@
+meta {
+  name: List My Course Switch Requests
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/course-switch-requests
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  All of the authenticated student's own course switch requests, newest
+  first (no pagination — realistically very few of these ever).
+}
