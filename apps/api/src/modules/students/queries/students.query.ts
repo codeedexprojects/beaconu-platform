@@ -56,6 +56,85 @@ function mapAdminListItem(row: {
 }
 
 export class StudentsQuery {
+  static async listEnrolledForCollege(
+    collegeId: string,
+    filters: { search?: string; page: number; limit: number },
+  ) {
+    const where = {
+      collegeId,
+      ...(filters.search && {
+        student: {
+          OR: [
+            {
+              fullName: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              email: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              phoneNumber: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        },
+      }),
+    };
+
+    const [rows, total] = await prisma.$transaction([
+      prisma.enrollment.findMany({
+        where,
+        select: {
+          id: true,
+          enrollmentNumber: true,
+          academicYear: true,
+          status: true,
+          enrolledAt: true,
+          student: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarUrl: true,
+            },
+          },
+          course: { select: { id: true, name: true, code: true } },
+        },
+        orderBy: { enrolledAt: "desc" },
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.enrollment.count({ where }),
+    ]);
+
+    return {
+      students: rows.map((row) => ({
+        id: row.student.id,
+        fullName: row.student.fullName,
+        email: row.student.email,
+        phoneNumber: row.student.phoneNumber,
+        avatarUrl: row.student.avatarUrl,
+        enrollmentId: row.id,
+        enrollmentNumber: row.enrollmentNumber,
+        courseId: row.course.id,
+        courseName: row.course.name,
+        courseCode: row.course.code,
+        academicYear: row.academicYear,
+        enrollmentStatus: row.status,
+        enrolledAt: row.enrolledAt.toISOString(),
+      })),
+      meta: PaginationHelper.createMeta(total, filters.page, filters.limit),
+    };
+  }
+
   static async listMinimalForCollege(
     collegeId: string,
     filters: { search?: string; page: number; limit: number },

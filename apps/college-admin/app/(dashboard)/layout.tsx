@@ -29,6 +29,7 @@ import {
   Award,
   LifeBuoy,
   Megaphone,
+  GraduationCap,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -417,6 +418,12 @@ export default function DashboardLayout({
                     name: "Notice Board",
                     path: "/notices",
                     icon: Megaphone,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Enrolled Students",
+                    path: "/students",
+                    icon: GraduationCap,
                     permission: "staff.view",
                   },
                   {
