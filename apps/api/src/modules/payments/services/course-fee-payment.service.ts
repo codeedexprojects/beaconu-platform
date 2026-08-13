@@ -4,6 +4,7 @@ import { EnrollmentService } from "@/modules/admissions/services/enrollment.serv
 import { CourseFeePaymentRepository } from "../repositories/course-fee-payment.repository";
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { normalizeAcademicYear } from "../lib/academic-year";
+import { notifyPaymentConfirmed } from "../lib/notify-payment";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -142,6 +143,12 @@ async function confirm(studentId: string, body: ConfirmPaymentInput) {
     );
     return paid;
   });
+
+  await notifyPaymentConfirmed(
+    studentId,
+    "course fee",
+    finalized.amount.toNumber(),
+  );
 
   return toDto(finalized);
 }

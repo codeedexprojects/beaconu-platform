@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { HostelPaymentRepository } from "../repositories/hostel-payment.repository";
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { HostelEnrollmentService } from "@/modules/hostel/services/hostel-enrollment.service";
+import { notifyPaymentConfirmed } from "../lib/notify-payment";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 import type { InitiateHostelTokenFeeInput } from "@beaconu/types";
 
@@ -125,6 +126,12 @@ async function confirm(studentId: string, body: ConfirmPaymentInput) {
     );
     return paid;
   });
+
+  await notifyPaymentConfirmed(
+    studentId,
+    "hostel fee",
+    finalized.amount.toNumber(),
+  );
 
   return toDto(finalized);
 }

@@ -1,5 +1,7 @@
 import { ForbiddenError, NotFoundError } from "@/shared/errors";
 import { PaginationHelper } from "@/shared/responses/pagination";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { NoticeRepository } from "../repositories/notice.repository";
 import type {
@@ -7,6 +9,31 @@ import type {
   NoticeAttachmentItem,
   UpdateNoticeInput,
 } from "@beaconu/types";
+
+async function notifyEnrolledStudents(
+  collegeId: string,
+  noticeId: string,
+  title: string,
+): Promise<void> {
+  try {
+    const studentIds =
+      await EnrollmentService.listStudentIdsForCollege(collegeId);
+    if (studentIds.length === 0) return;
+    await PushService.sendToUsers(
+      studentIds.map((id) => ({ userId: id, userType: "student" })),
+      {
+        title: "New notice from your college",
+        body: title,
+        data: { type: "notice_published", noticeId },
+      },
+    );
+  } catch (error) {
+    logger.error(
+      { err: error, collegeId, noticeId },
+      "Failed to notify students of new notice",
+    );
+  }
+}
 
 function mapListItem(row: {
   id: string;
@@ -112,6 +139,7 @@ export class NoticeService {
       attachments: data.attachments ?? [],
       createdBy: staffId,
     });
+    await notifyEnrolledStudents(collegeId, row.id, row.title);
     return mapDetail(row);
   }
 

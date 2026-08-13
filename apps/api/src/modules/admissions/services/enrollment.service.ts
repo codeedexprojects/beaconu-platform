@@ -1,8 +1,29 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
+
+async function notifyStudentOfEnrollment(
+  studentId: string,
+  courseName: string,
+  enrollmentNumber: string,
+): Promise<void> {
+  try {
+    await PushService.sendToUser(studentId, "student", {
+      title: "You're enrolled!",
+      body: `You've been enrolled in ${courseName} — enrollment #${enrollmentNumber}. Welcome to the Student Hub.`,
+      data: { type: "enrollment_confirmed" },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, studentId },
+      "Failed to notify student of enrollment",
+    );
+  }
+}
 
 function randomSuffix(): string {
   return Array.from({ length: 6 }, () =>
@@ -158,6 +179,12 @@ export class EnrollmentService {
 
       return withNumber;
     });
+
+    await notifyStudentOfEnrollment(
+      course.application.studentId,
+      course.course.name,
+      enrollmentNumber,
+    );
 
     return toDto(created);
   }

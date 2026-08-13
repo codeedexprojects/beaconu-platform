@@ -1,6 +1,8 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { PaginationHelper } from "@/shared/responses/pagination";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
 import { SeatCancellationRepository } from "../repositories/seat-cancellation.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
@@ -9,6 +11,36 @@ import type {
   RequestSeatCancellationInput,
   ReviewSeatCancellationInput,
 } from "../validators/seat-cancellation.validator";
+
+async function notifyStudentOfReview(
+  studentId: string,
+  courseName: string,
+  decision: "approve" | "reject",
+): Promise<void> {
+  try {
+    await PushService.sendToUser(studentId, "student", {
+      title:
+        decision === "approve"
+          ? "Seat cancellation approved"
+          : "Seat cancellation rejected",
+      body:
+        decision === "approve"
+          ? `Your seat cancellation for ${courseName} has been approved.`
+          : `Your seat cancellation request for ${courseName} was rejected.`,
+      data: {
+        type:
+          decision === "approve"
+            ? "seat_cancellation_approved"
+            : "seat_cancellation_rejected",
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, studentId },
+      "Failed to notify student of seat cancellation review",
+    );
+  }
+}
 
 function mapRequest(row: {
   id: string;
@@ -141,6 +173,11 @@ export class SeatCancellationService {
         staffId,
         data.remarks ?? null,
       );
+      await notifyStudentOfReview(
+        request.studentId,
+        request.applicationCourse.course.name,
+        "reject",
+      );
       return mapRequest(rejected);
     }
 
@@ -202,6 +239,12 @@ export class SeatCancellationService {
         refundStatus: data.refund_status ?? null,
       });
     });
+
+    await notifyStudentOfReview(
+      request.studentId,
+      request.applicationCourse.course.name,
+      "approve",
+    );
 
     return mapRequest(approved);
   }
