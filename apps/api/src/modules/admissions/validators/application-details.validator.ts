@@ -11,6 +11,13 @@ export const personalDetailsSchema = z.object({
   marital_status: z.string().trim().max(20).optional().nullable(),
   aadhar_number: z.string().trim().max(20).optional().nullable(),
   profile_photo_url: z.string().trim().url().optional().nullable(),
+  // Contact email/mobile shown on the Personal Information screen —
+  // kept separate from Student.email/Student.phoneNumber (the login
+  // identity columns) so editing this form never touches the account's
+  // authoritative, unique login email.
+  email: z.string().trim().email().optional().nullable(),
+  mobile_country_code: z.string().trim().max(5).optional(),
+  mobile_number: z.string().trim().max(15).optional().nullable(),
   whatsapp_country_code: z.string().trim().max(5).optional(),
   whatsapp_number: z.string().trim().max(15).optional().nullable(),
 });
@@ -38,19 +45,23 @@ const addressSchema = z.object({
   state: z.string().trim().min(1, "State is required").max(100),
   district: z.string().trim().max(100).optional().nullable(),
   pin_code: z.string().trim().min(1, "PIN code is required").max(10),
-  country: z.string().trim().min(1, "Country is required").max(100),
+  country: z.string().trim().max(100).optional().default("India"),
 });
 
+// Correspondence address is the primary/required one (mailing address the
+// college will actually use); permanent address is optional-if-same — the
+// inverse of the old permanent-is-primary shape, matching the new form's
+// "Permanent is same as Correspondence" checkbox direction.
 export const addressDetailsSchema = z
   .object({
-    permanent: addressSchema,
-    same_as_permanent: z.boolean(),
-    current: addressSchema.optional().nullable(),
+    correspondence: addressSchema,
+    same_as_correspondence: z.boolean(),
+    permanent: addressSchema.optional().nullable(),
   })
-  .refine((data) => data.same_as_permanent || data.current, {
+  .refine((data) => data.same_as_correspondence || data.permanent, {
     message:
-      "Current address is required when it differs from the permanent address",
-    path: ["current"],
+      "Permanent address is required when it differs from the correspondence address",
+    path: ["permanent"],
   });
 
 const qualificationEntrySchema = z.object({

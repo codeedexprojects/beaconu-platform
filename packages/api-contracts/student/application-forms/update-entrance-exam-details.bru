@@ -1,0 +1,50 @@
+meta {
+  name: Update Entrance Exam Details (Student)
+  type: http
+  seq: 25
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/entrance-exam-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "has_attempted_entrance_exam": true,
+    "exams": [
+      {
+        "exam_name": "JEE Main",
+        "year_of_appearance": 2024,
+        "roll_number": "24101234",
+        "score_or_percentile": "96.5 percentile",
+        "mark_card_url": "https://example.com/uploads/jee-marks-card.pdf"
+      }
+    ],
+    "recommendation_letters": [
+      {
+        "document_url": "https://example.com/uploads/recommendation-letter.pdf"
+      }
+    ]
+  }
+}
+
+docs {
+  Full-replace write of the "Competitive Exam Records" screen (409 if
+  already submitted). `exams` must have at least one entry when
+  `has_attempted_entrance_exam` is true; can be empty when false.
+
+  Unlike personal/family/address/qualification/achievements, this section
+  is stored directly on the Application row (Application.entranceExamDetails)
+  rather than the reusable Student profile — same as Declaration — since
+  it's a mandatory, gated step in the resume sequence (sits between
+  Achievements and Declaration, advances currentStep to at least 8) and
+  the client should NOT skip it the way the optional Achievements screen
+  can be skipped.
+}

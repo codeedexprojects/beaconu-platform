@@ -105,6 +105,60 @@ export class StudentsService {
     );
   }
 
+  /** The 10th/12th/undergraduate academic-record screens are three
+   * independent forms sharing one JSON column — each write merges its own
+   * key in rather than replacing the whole column, so submitting the 12th
+   * grade screen never clobbers an already-saved 10th grade section. */
+  private static async mergeQualificationSection(
+    studentId: string,
+    key: "tenth_grade" | "twelfth_grade" | "undergraduate",
+    data: Prisma.InputJsonValue,
+  ) {
+    const existing =
+      await StudentsRepository.findQualificationDetails(studentId);
+    const merged = {
+      ...(typeof existing === "object" && existing !== null ? existing : {}),
+      [key]: data,
+    };
+    await StudentsRepository.updateDetailStep(
+      studentId,
+      "qualificationDetails",
+      merged as Prisma.InputJsonValue,
+    );
+  }
+
+  static async updateTenthGradeDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await this.mergeQualificationSection(studentId, "tenth_grade", data);
+  }
+
+  static async updateTwelfthGradeDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await this.mergeQualificationSection(studentId, "twelfth_grade", data);
+  }
+
+  static async updateUndergraduateDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await this.mergeQualificationSection(studentId, "undergraduate", data);
+  }
+
+  static async updateAchievementsDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await StudentsRepository.updateDetailStep(
+      studentId,
+      "achievementsDetails",
+      data,
+    );
+  }
+
   static async getDetailsForSnapshot(studentId: string) {
     const row = await StudentsRepository.findDetailsForSnapshot(studentId);
     if (!row) throw new NotFoundError("Student not found");

@@ -16,6 +16,7 @@ model Student {
   familyDetails        Json      @default("{}") @map("family_details")
   addressDetails       Json      @default("{}") @map("address_details")
   qualificationDetails Json      @default("{}") @map("qualification_details")
+  achievementsDetails  Json      @default("{}") @map("achievements_details")
   lastLoginAt          DateTime? @map("last_login_at") @db.Timestamptz
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz

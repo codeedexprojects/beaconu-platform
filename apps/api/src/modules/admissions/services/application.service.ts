@@ -13,13 +13,22 @@ import type {
   QualificationDetailsInput,
 } from "../validators/application-details.validator";
 import type { DeclarationInput } from "../validators/application-declaration.validator";
+import type {
+  TenthGradeDetailsInput,
+  TwelfthGradeDetailsInput,
+  UndergraduateDetailsInput,
+} from "../validators/academic-records.validator";
+import type { AchievementsDetailsInput } from "../validators/achievements-details.validator";
+import type { EntranceExamDetailsInput } from "../validators/entrance-exam.validator";
 
 const STEP_NUMBERS = {
   personal: 3,
   family: 4,
   address: 5,
   qualification: 6,
-  declaration: 8,
+  achievements: 7,
+  entranceExam: 8,
+  declaration: 9,
 } as const;
 
 type ApplicationRow = NonNullable<
@@ -62,6 +71,9 @@ function resolvePendingAction(
   if (currentStep < STEP_NUMBERS.address) return "address_details" as const;
   if (currentStep < STEP_NUMBERS.qualification)
     return "qualification_details" as const;
+  // achievements (step 7) is optional/supplementary — not gated here.
+  if (currentStep < STEP_NUMBERS.entranceExam)
+    return "entrance_exam_details" as const;
   if (currentStep < STEP_NUMBERS.declaration) return "declaration" as const;
   return "submit" as const;
 }
@@ -410,7 +422,8 @@ export class ApplicationService {
       | "personal_details"
       | "family_details"
       | "address_details"
-      | "qualification_details",
+      | "qualification_details"
+      | "achievements_details",
   ) {
     const application = await ApplicationRepository.findByIdForStudent(
       applicationId,
@@ -424,6 +437,7 @@ export class ApplicationService {
       family_details: details.familyDetails,
       address_details: details.addressDetails,
       qualification_details: details.qualificationDetails,
+      achievements_details: details.achievementsDetails,
     };
     return bySection[section];
   }
@@ -533,6 +547,72 @@ export class ApplicationService {
     return toDto(row);
   }
 
+  /** The three academic-record screens (10th/12th/undergraduate) are
+   * independent sub-forms of the same overall "qualification details"
+   * step — each merges its own section into Student.qualificationDetails
+   * (see StudentsService.mergeQualificationSection) without needing its
+   * own resume-step number; all three share STEP_NUMBERS.qualification. */
+  static async updateTenthGradeDetails(
+    applicationId: string,
+    studentId: string,
+    body: TenthGradeDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updateTenthGradeDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.qualification,
+    );
+    return toDto(row);
+  }
+
+  static async updateTwelfthGradeDetails(
+    applicationId: string,
+    studentId: string,
+    body: TwelfthGradeDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updateTwelfthGradeDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.qualification,
+    );
+    return toDto(row);
+  }
+
+  static async updateUndergraduateDetails(
+    applicationId: string,
+    studentId: string,
+    body: UndergraduateDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updateUndergraduateDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.qualification,
+    );
+    return toDto(row);
+  }
+
+  /** Internships/work-experience/awards/publications/patents/certs/
+   * portfolio-links/recommendations/innovation/volunteering — one big
+   * optional "extracurricular profile" screen. Every field is optional,
+   * so this never blocks resolvePendingAction/submit the way the
+   * mandatory detail steps do. */
+  static async updateAchievementsDetails(
+    applicationId: string,
+    studentId: string,
+    body: AchievementsDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updateAchievementsDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.achievements,
+    );
+    return toDto(row);
+  }
+
   static async updateDeclaration(
     applicationId: string,
     studentId: string,
@@ -542,8 +622,27 @@ export class ApplicationService {
     const row = await ApplicationRepository.updateDetailStep(
       applicationId,
       "declaration",
-      { ...body, accepted_at: new Date().toISOString() },
+      {
+        ...body,
+        date: body.date.toISOString(),
+        accepted_at: new Date().toISOString(),
+      },
       STEP_NUMBERS.declaration,
+    );
+    return toDto(row);
+  }
+
+  static async updateEntranceExamDetails(
+    applicationId: string,
+    studentId: string,
+    body: EntranceExamDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    const row = await ApplicationRepository.updateDetailStep(
+      applicationId,
+      "entranceExamDetails",
+      body,
+      STEP_NUMBERS.entranceExam,
     );
     return toDto(row);
   }
@@ -611,6 +710,8 @@ export class ApplicationService {
         addressDetails: detailsSnapshot.addressDetails as Prisma.InputJsonValue,
         qualificationDetails:
           detailsSnapshot.qualificationDetails as Prisma.InputJsonValue,
+        achievementsDetails:
+          detailsSnapshot.achievementsDetails as Prisma.InputJsonValue,
       });
     });
 

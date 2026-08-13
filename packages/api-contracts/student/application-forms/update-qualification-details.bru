@@ -31,6 +31,15 @@ body:json {
 }
 
 docs {
+  LEGACY flat shape — superseded by the three level-specific screens
+  (10th Grade / 12th Grade / Undergraduate, see
+  "Update Tenth Grade Details" etc.), kept only for old draft data /
+  backward compatibility. New clients should use those three endpoints
+  instead, which merge into the same Student.qualificationDetails column
+  under their own keys rather than overwriting it wholesale like this one
+  does — calling this after using the new endpoints will wipe out
+  tenth_grade/twelfth_grade/undergraduate data.
+
   Full-replace write of the qualification-details step (409 if already
   submitted). At least one qualification entry is required. Advances
   currentStep to at least 6. Lands on the Student profile, not this

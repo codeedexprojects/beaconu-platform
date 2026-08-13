@@ -27,6 +27,9 @@ body:json {
     "marital_status": "single",
     "aadhar_number": "123456789012",
     "profile_photo_url": null,
+    "email": "rahul.sharma@example.com",
+    "mobile_country_code": "+91",
+    "mobile_number": "9876543210",
     "whatsapp_country_code": "+91",
     "whatsapp_number": "9876543210"
   }
@@ -40,8 +43,11 @@ docs {
   application the same student submits. `profile_photo_url` /
   `whatsapp_country_code` / `whatsapp_number` are the one exception: still
   stored as top-level Application columns, accepted together here since
-  they're conceptually part of "personal info." Advances currentStep to at
-  least 3. Application only gets its own frozen copy of personal_details
-  once, at Submit Application (the point-in-time snapshot) — see
+  they're conceptually part of "personal info." `email` / `mobile_number`
+  are new contact fields shown on the redesigned Personal Information
+  screen — deliberately separate from the student's login `Student.email`
+  (never overwritten by this endpoint). Advances currentStep to at least
+  3. Application only gets its own frozen copy of personal_details once,
+  at Submit Application (the point-in-time snapshot) — see
   Get Application Form Details to read the live (pre-submit) values.
 }

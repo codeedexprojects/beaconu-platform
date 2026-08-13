@@ -30,6 +30,13 @@ import {
 } from "../validators/application-details.validator";
 import { registerApplicationDocumentSchema } from "../validators/application-document.validator";
 import { declarationSchema } from "../validators/application-declaration.validator";
+import {
+  tenthGradeDetailsSchema,
+  twelfthGradeDetailsSchema,
+  undergraduateDetailsSchema,
+} from "../validators/academic-records.validator";
+import { achievementsDetailsSchema } from "../validators/achievements-details.validator";
+import { entranceExamDetailsSchema } from "../validators/entrance-exam.validator";
 
 export class StudentAdmissionCycleController {
   static async list(req: Request, res: Response) {
@@ -186,6 +193,63 @@ export class StudentApplicationController {
       body,
     );
     return res.json(ApiResponse.success("Qualification details saved", result));
+  }
+
+  static async updateTenthGradeDetails(req: Request, res: Response) {
+    const body = tenthGradeDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateTenthGradeDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("10th grade details saved", result));
+  }
+
+  static async updateTwelfthGradeDetails(req: Request, res: Response) {
+    const body = twelfthGradeDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateTwelfthGradeDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("12th grade details saved", result));
+  }
+
+  static async updateUndergraduateDetails(req: Request, res: Response) {
+    const body = undergraduateDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateUndergraduateDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Undergraduate details saved", result));
+  }
+
+  static async updateAchievementsDetails(req: Request, res: Response) {
+    const body = achievementsDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateAchievementsDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(
+      ApiResponse.success(
+        "Achievements & extracurricular details saved",
+        result,
+      ),
+    );
+  }
+
+  static async updateEntranceExamDetails(req: Request, res: Response) {
+    const body = entranceExamDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateEntranceExamDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(
+      ApiResponse.success("Competitive exam records saved", result),
+    );
   }
 
   static async listRequiredDocuments(req: Request, res: Response) {

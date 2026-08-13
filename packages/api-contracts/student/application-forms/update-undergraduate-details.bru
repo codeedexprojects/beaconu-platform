@@ -1,0 +1,82 @@
+meta {
+  name: Update Undergraduate Details (Student)
+  type: http
+  seq: 15
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/academic-records/undergraduate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "program_type": "regular",
+    "degree_type": "Bachelor",
+    "program_name": "B.Tech Computer Science",
+    "specialization": "Artificial Intelligence",
+    "university_name": "Anna University",
+    "university_type": "State",
+    "institution_name": "XYZ Engineering College",
+    "institution_type": "Affiliated",
+    "admission_year": "2021",
+    "passing_year": "2025",
+    "duration_years": 4,
+    "register_number": "REG998877",
+    "academic_cycle": "semester",
+    "semester_records": [
+      {
+        "label": "Semester 1",
+        "duration": "6 months",
+        "gpa": 8.5,
+        "cgpa_or_percentage": 8.5,
+        "backlogs": 0
+      }
+    ],
+    "final_summary": {
+      "total_credits": 160,
+      "cgpa": 8.7,
+      "percentage": null,
+      "rank": null,
+      "total_backlogs": 0,
+      "result_status": "Passed",
+      "remarks": null
+    },
+    "documents": {
+      "semester_mark_sheet_urls": [
+        "https://example.com/uploads/sem1-marksheet.pdf"
+      ],
+      "degree_certificate_url": "https://example.com/uploads/degree-cert.pdf",
+      "provisional_certificate_url": "https://example.com/uploads/provisional-cert.pdf",
+      "consolidated_mark_sheet_url": "https://example.com/uploads/consolidated-marksheet.pdf"
+    },
+    "has_projects": true,
+    "projects": [
+      {
+        "title": "Smart Attendance System",
+        "project_type": "Academic Project",
+        "duration": "3 months",
+        "team_size": 4,
+        "role": "Team Lead",
+        "description": "Face-recognition based attendance system.",
+        "key_outcomes": "Deployed in 2 campus labs.",
+        "project_url": "https://github.com/example/smart-attendance"
+      }
+    ]
+  }
+}
+
+docs {
+  Full-replace write of the Undergraduate Details screen — merges into
+  Student.qualificationDetails under the `undergraduate` key without
+  touching `tenth_grade`/`twelfth_grade`. 409 if the application has
+  already been submitted. `projects` should be empty when `has_projects`
+  is false. `semester_records` may be empty if `academic_cycle` grouping
+  isn't finalized yet. Advances currentStep to at least 6.
+}

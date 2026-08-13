@@ -1,0 +1,148 @@
+meta {
+  name: Update Achievements Details (Student)
+  type: http
+  seq: 24
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/achievements-details
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "internships": [
+      {
+        "company_name": "Acme Corp",
+        "role": "Software Engineering Intern",
+        "start_date": "2024-05-01",
+        "end_date": "2024-07-31",
+        "key_responsibilities": "Built internal tooling for the QA team."
+      }
+    ],
+    "has_work_experience": true,
+    "work_experience": [
+      {
+        "company_name": "Beta Systems",
+        "job_title": "UI/UX Designer",
+        "industry": "Software",
+        "employment_type": "Full-Time",
+        "total_experience": "6 Months"
+      }
+    ],
+    "languages": [{ "language": "English", "proficiency": "Native" }],
+    "academic_awards": [
+      {
+        "title": "Dean's List",
+        "year": 2024,
+        "issuing_body": "University Name",
+        "proof_url": "https://example.com/uploads/deans-list.pdf"
+      }
+    ],
+    "sports_achievements": [
+      {
+        "sport_name": "Basketball",
+        "competition_level": "College",
+        "position_secured": "1st Place",
+        "achievement_year": 2023,
+        "certificate_url": "https://example.com/uploads/basketball-cert.pdf"
+      }
+    ],
+    "arts_cultural_achievements": [
+      {
+        "category": "Music",
+        "competition_name": "Inter-College Fest",
+        "achievement_level": "State",
+        "position_secured": "Runner Up",
+        "certificate_url": "https://example.com/uploads/music-cert.pdf"
+      }
+    ],
+    "hobbies": ["Photography", "Coding"],
+    "other_interests": "Tell us more about what you enjoy doing in your free time...",
+    "publications": [
+      {
+        "title": "A Study on AI",
+        "journal_publisher": "IEEE",
+        "url": "https://example.com/publications/a-study-on-ai"
+      }
+    ],
+    "patents": [
+      {
+        "title": "New Solar Panel Tech",
+        "patent_number": "US1234567",
+        "status": "filed",
+        "filing_date": "2024-01-15",
+        "patent_office": "USPTO, EPO",
+        "co_inventors": "Jane Doe, John Smith",
+        "document_url": "https://example.com/uploads/patent-doc.pdf"
+      }
+    ],
+    "professional_certifications": [
+      {
+        "name": "AWS Certified Developer",
+        "issuing_authority": "Amazon Web Services",
+        "certification_id": "CERT-123456",
+        "issue_date": "2023-06-01",
+        "expiry_date": "2026-06-01",
+        "verification_url": "https://example.com/verify/cert-123456",
+        "certificate_url": "https://example.com/uploads/aws-cert.pdf"
+      }
+    ],
+    "portfolio_links": {
+      "linkedin_url": "https://linkedin.com/in/example",
+      "github_url": "https://github.com/example",
+      "researchgate_url": null,
+      "google_scholar_url": null,
+      "orcid_id": "0000-0000-0000-0000",
+      "personal_website_url": null,
+      "behance_url": null,
+      "dribbble_url": null,
+      "kaggle_url": null
+    },
+    "recommendation_letters": [
+      {
+        "document_url": "https://example.com/uploads/recommendation-letter.pdf"
+      }
+    ],
+    "innovation_entrepreneurship": [
+      {
+        "startup_name": "EcoTech Solutions",
+        "role": "Founder, Lead Developer",
+        "contribution": "Led product development and fundraising.",
+        "incubation_support": "T-Hub, NSRCEL",
+        "dpiit_registration_number": "DIPP12345"
+      }
+    ],
+    "volunteering": [
+      {
+        "organization_name": "Red Cross",
+        "role": "Community Volunteer",
+        "start_date": "2023-01-01",
+        "end_date": "2023-06-01",
+        "description": "Organized blood donation drives."
+      }
+    ]
+  }
+}
+
+docs {
+  Full-replace write of the Achievements & Extracurricular Profile screen
+  — internships, work experience, languages, awards (academic/sports/
+  arts & cultural), hobbies & interests, publications, patents,
+  professional certifications, portfolio links, recommendation letters,
+  innovation & entrepreneurship, and volunteering, all in one submission.
+
+  Every field/section is optional — this whole screen is supplementary,
+  unlike personal/family/address/qualification. Not part of the
+  submit-gating pendingAction chain, so leaving it empty never blocks
+  submission. Lands on the Student profile
+  (`Student.achievementsDetails`), reusable across applications, frozen
+  onto the Application row at Submit — same pattern as the other detail
+  steps. Advances currentStep to at least 7.
+}

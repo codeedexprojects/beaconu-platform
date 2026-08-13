@@ -18,7 +18,9 @@ headers {
 body:json {
   {
     "accepted": true,
-    "full_name_confirmation": "Rahul Sharma"
+    "signature_url": "https://example.com/uploads/signature.png",
+    "place": "New York",
+    "date": "2026-08-13"
   }
 }
 
@@ -26,6 +28,15 @@ docs {
   Records the student's declaration acceptance (409 if already submitted).
   `accepted` must be true — false is rejected by validation, it isn't
   meant as an "un-accept" toggle. Server stamps `accepted_at` itself: the
-  client cannot set it. Required before Submit will succeed. Advances
-  currentStep to at least 8.
+  client cannot set it.
+
+  `signature_url`/`place`/`date` replace the old typed
+  `full_name_confirmation` field on the redesigned Declaration screen
+  (upload a signature image instead of typing your name) —
+  `full_name_confirmation` is still accepted if sent, but optional/
+  unused by the new UI.
+
+  Required before Submit will succeed. Advances currentStep to at least
+  9 (declaration is now the step after Competitive Exam Records, see
+  "Update Entrance Exam Details").
 }

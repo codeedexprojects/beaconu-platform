@@ -55,7 +55,8 @@ export class StudentsRepository {
       | "personalDetails"
       | "familyDetails"
       | "addressDetails"
-      | "qualificationDetails",
+      | "qualificationDetails"
+      | "achievementsDetails",
     value: Prisma.InputJsonValue,
   ) {
     return prisma.student.update({
@@ -63,6 +64,14 @@ export class StudentsRepository {
       data: { [field]: value },
       select: { id: true },
     });
+  }
+
+  static async findQualificationDetails(id: string) {
+    const row = await prisma.student.findUnique({
+      where: { id },
+      select: { qualificationDetails: true },
+    });
+    return row?.qualificationDetails ?? {};
   }
 
   static async findDetailsForSnapshot(id: string) {
@@ -73,6 +82,7 @@ export class StudentsRepository {
         familyDetails: true,
         addressDetails: true,
         qualificationDetails: true,
+        achievementsDetails: true,
       },
     });
   }
