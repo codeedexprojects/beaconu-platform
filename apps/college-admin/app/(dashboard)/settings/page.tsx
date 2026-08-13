@@ -15,6 +15,7 @@ import {
   Building2,
   Globe,
   EyeOff,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -64,6 +65,12 @@ const settingsFormSchema = z.object({
     .string()
     .trim()
     .url("Enter a valid cover image URL")
+    .optional()
+    .or(z.literal("")),
+  communityLinkUrl: z
+    .string()
+    .trim()
+    .url("Enter a valid community link URL")
     .optional()
     .or(z.literal("")),
   address: z.string().trim().min(5, "Address is required"),
@@ -146,6 +153,7 @@ export default function SettingsPage() {
         code: profile.code || "",
         logoUrl: profile.logoUrl || "",
         coverImageUrl: profile.coverImageUrl || "",
+        communityLinkUrl: profile.communityLinkUrl || "",
         address: profile.address || "",
         city: profile.city || "",
         state: profile.state || "",
@@ -368,6 +376,30 @@ export default function SettingsPage() {
                       disabled
                       className="bg-muted text-muted-foreground font-mono text-xs"
                     />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="settings-community-link">
+                      Community Link
+                    </Label>
+                    <div className="relative">
+                      <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="settings-community-link"
+                        placeholder="https://chat.whatsapp.com/..."
+                        className="pl-9"
+                        {...register("communityLinkUrl")}
+                      />
+                    </div>
+                    {errors.communityLinkUrl && (
+                      <p className="text-xs text-destructive">
+                        {errors.communityLinkUrl.message}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      Shown to students via their BeaconU Card — link to your
+                      college&apos;s WhatsApp/Telegram community group.
+                    </p>
                   </div>
                 </div>
               </CardContent>

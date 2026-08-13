@@ -209,6 +209,12 @@ export class CollegeRegistrationRepository {
               data.coverImageUrl === "" ? null : data.coverImageUrl,
           }
         : {}),
+      ...(data.communityLinkUrl !== undefined
+        ? {
+            communityLinkUrl:
+              data.communityLinkUrl === "" ? null : data.communityLinkUrl,
+          }
+        : {}),
       ...(data.address !== undefined ? { address: data.address } : {}),
       ...(data.city !== undefined ? { city: data.city } : {}),
       ...(data.district !== undefined ? { district: data.district } : {}),
