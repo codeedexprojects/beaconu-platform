@@ -168,6 +168,20 @@ function AnswerBody({ answer }: { answer: EvaluationAnswerDetail }) {
   if (answer.content.options && answer.answerKey?.correctOrder) {
     return <OrderComparison answer={answer} />;
   }
+  if (answer.response?.audioUrl) {
+    return (
+      <div className="space-y-1">
+        <p className="text-xs font-medium text-muted-foreground">
+          Student&apos;s submitted audio
+        </p>
+        <audio
+          controls
+          src={answer.response.audioUrl}
+          className="mt-1 h-9 w-full"
+        />
+      </div>
+    );
+  }
   return (
     <div className="space-y-1">
       <p className="text-xs font-medium text-muted-foreground">
