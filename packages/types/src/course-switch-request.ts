@@ -1,5 +1,10 @@
 export type CourseSwitchRequestStatus = "pending" | "approved" | "rejected";
 
+export interface AvailableSwitchCourseItem {
+  id: string;
+  name: string;
+}
+
 export interface CourseSwitchRequestItem {
   id: string;
   studentId: string;
