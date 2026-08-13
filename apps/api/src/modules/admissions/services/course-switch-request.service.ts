@@ -1,11 +1,43 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { PaginationHelper } from "@/shared/responses/pagination";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { CourseSwitchRequestRepository } from "../repositories/course-switch-request.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
 import { EnrollmentService } from "./enrollment.service";
 import type { AvailableSwitchCourseItem } from "@beaconu/types";
+
+async function notifyStudentOfReview(
+  studentId: string,
+  toCourseName: string,
+  decision: "approve" | "reject",
+): Promise<void> {
+  try {
+    await PushService.sendToUser(studentId, "student", {
+      title:
+        decision === "approve"
+          ? "Course switch approved"
+          : "Course switch rejected",
+      body:
+        decision === "approve"
+          ? `You've been switched to ${toCourseName}. Your Student Hub has been updated.`
+          : `Your request to switch to ${toCourseName} was rejected.`,
+      data: {
+        type:
+          decision === "approve"
+            ? "course_switch_approved"
+            : "course_switch_rejected",
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, studentId },
+      "Failed to notify student of course switch review",
+    );
+  }
+}
 import type {
   RequestCourseSwitchInput,
   ReviewCourseSwitchInput,
@@ -172,6 +204,11 @@ export class CourseSwitchRequestService {
         staffId,
         data.remarks ?? null,
       );
+      await notifyStudentOfReview(
+        request.studentId,
+        request.toCourse.name,
+        "reject",
+      );
       return mapRequest(rejected);
     }
 
@@ -278,6 +315,12 @@ export class CourseSwitchRequestService {
         newEnrollmentId: newEnrollment.id,
       });
     });
+
+    await notifyStudentOfReview(
+      request.studentId,
+      request.toCourse.name,
+      "approve",
+    );
 
     return mapRequest(approved);
   }

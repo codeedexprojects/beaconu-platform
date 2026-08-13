@@ -1,6 +1,8 @@
 import { prisma } from "@beaconu/db";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { PaginationHelper } from "@/shared/responses/pagination";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { TicketRepository } from "../repositories/ticket.repository";
 import { TicketDetailQuery } from "../queries/ticket-detail.query";
@@ -9,6 +11,26 @@ import type {
   SendTicketMessageInput,
   UpdateTicketStatusInput,
 } from "@beaconu/types";
+
+async function notifyStudentOfAdminReply(ticket: {
+  id: string;
+  studentId: string;
+  subject: string;
+  ticketNumber: string;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(ticket.studentId, "student", {
+      title: "New reply to your query",
+      body: `College support replied to "${ticket.subject}" (#${ticket.ticketNumber.slice(-6).toUpperCase()})`,
+      data: { type: "ticket_admin_reply", ticketId: ticket.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, ticketId: ticket.id },
+      "Failed to notify student of ticket reply",
+    );
+  }
+}
 
 function mapListItem(row: {
   id: string;
@@ -182,6 +204,7 @@ export class TicketService {
     await TicketRepository.updateStatus(ticketId, {
       status: "in_progress",
     });
+    await notifyStudentOfAdminReply(ticket);
 
     return TicketDetailQuery.getForCollege(collegeId, ticketId);
   }

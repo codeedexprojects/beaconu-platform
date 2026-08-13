@@ -2,6 +2,7 @@ import { prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationPaymentRepository } from "../repositories/application-payment.repository";
 import { getPaymentProvider } from "../lib/get-payment-provider";
+import { notifyPaymentConfirmed } from "../lib/notify-payment";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -155,6 +156,12 @@ export class ApplicationPaymentService {
       );
       return paid;
     });
+
+    await notifyPaymentConfirmed(
+      studentId,
+      "application fee",
+      finalized.amount.toNumber(),
+    );
 
     return toDto(finalized);
   }

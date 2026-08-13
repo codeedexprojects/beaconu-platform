@@ -1,6 +1,27 @@
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { OfferLetterRepository } from "../repositories/offer-letter.repository";
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
+
+async function notifyStudentOfOffer(
+  studentId: string,
+  offerNumber: string,
+  tokenAmount: number,
+): Promise<void> {
+  try {
+    await PushService.sendToUser(studentId, "student", {
+      title: "You've received an offer letter!",
+      body: `Offer #${offerNumber} issued — pay the token fee of ₹${tokenAmount} to secure your seat.`,
+      data: { type: "offer_issued", offerNumber },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, studentId },
+      "Failed to notify student of offer letter",
+    );
+  }
+}
 
 function randomOfferSuffix(): string {
   return Array.from({ length: 8 }, () =>
@@ -76,6 +97,11 @@ export class OfferLetterService {
       documentUrl: data.documentUrl,
       issuedBy: staffId,
     });
+    await notifyStudentOfOffer(
+      course.studentId,
+      offerNumber,
+      Number(tokenAmount),
+    );
     return toDto(created);
   }
 
