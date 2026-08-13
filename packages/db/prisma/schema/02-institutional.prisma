@@ -86,6 +86,7 @@ model College {
   domain             String?  @db.VarChar(255)
   logoUrl            String?  @map("logo_url") @db.Text
   coverImageUrl      String?  @map("cover_image_url") @db.Text
+  communityLinkUrl   String?  @map("community_link_url") @db.Text
   leadId             String?  @map("lead_id") @db.VarChar(100)
   addressFromLead    Boolean  @default(false) @map("address_from_lead")
   state              String?  @db.VarChar(100)

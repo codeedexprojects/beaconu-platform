@@ -176,6 +176,7 @@ export const updateCollegeProfileSchema = z.object({
   domain: z.string().trim().max(255).optional().nullable(),
   logoUrl: z.string().url().or(z.literal("")).optional().nullable(),
   coverImageUrl: z.string().url().or(z.literal("")).optional().nullable(),
+  communityLinkUrl: z.string().url().or(z.literal("")).optional().nullable(),
   leadId: z.string().optional().nullable(),
   addressFromLead: z.boolean().optional(),
   address: z.string().trim().optional().nullable(),

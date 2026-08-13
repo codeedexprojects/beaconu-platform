@@ -71,6 +71,7 @@ async function withEnrollmentDetails(
     ...card,
     collegeId: enrollmentSummary?.collegeId ?? null,
     collegeName: enrollmentSummary?.collegeName ?? null,
+    communityLinkUrl: enrollmentSummary?.communityLinkUrl ?? null,
     courseName: enrollmentSummary?.courseName ?? null,
     duration: addYearToDuration(enrollmentSummary?.courseDuration ?? null),
     applicationCourseId: enrollmentSummary?.applicationCourseId ?? null,

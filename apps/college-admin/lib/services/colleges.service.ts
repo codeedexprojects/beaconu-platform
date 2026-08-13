@@ -21,6 +21,7 @@ export interface CollegeProfile {
   pinCode: string | null;
   logoUrl: string | null;
   coverImageUrl: string | null;
+  communityLinkUrl: string | null;
   requestedGroupCode: string | null;
   profileSections?: Record<string, any>;
   tabs?: string[];
@@ -64,6 +65,7 @@ export interface UpdateCollegeProfileInput {
   pinCode?: string;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
+  communityLinkUrl?: string | null;
   requestedGroupCode?: string | null;
   profileSections?: Record<string, any>;
   registrationTabs?: string[];

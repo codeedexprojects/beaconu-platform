@@ -58,7 +58,7 @@ export class EnrollmentRepository {
         applicationCourseId: true,
         admissionCycleId: true,
         academicYear: true,
-        college: { select: { name: true } },
+        college: { select: { name: true, communityLinkUrl: true } },
         course: { select: { name: true, duration: true } },
       },
       orderBy: { enrolledAt: "desc" },

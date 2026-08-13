@@ -68,6 +68,7 @@ export class EnrollmentService {
       applicationCourseId: enrollment.applicationCourseId,
       academicYear: enrollment.academicYear,
       collegeName: enrollment.college.name,
+      communityLinkUrl: enrollment.college.communityLinkUrl,
       courseName: enrollment.course.name,
       courseDuration: enrollment.course.duration,
     };
