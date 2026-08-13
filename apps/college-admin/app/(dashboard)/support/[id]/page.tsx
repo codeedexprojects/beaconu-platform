@@ -29,9 +29,18 @@ import {
 } from "@/hooks/use-support-tickets";
 import type { TicketStatus } from "@beaconu/types";
 
-const STATUS_OPTIONS: { label: string; value: TicketStatus }[] = [
-  { label: "In Progress", value: "in_progress" },
-  { label: "Awaiting Response", value: "awaiting_response" },
+// All 5 statuses, for display (badge label lookup). "in_progress" and
+// "awaiting_response" are set automatically based on who last replied —
+// only "resolved"/"closed"/"reopened" are ever manually selectable below.
+const STATUS_LABELS: Record<TicketStatus, string> = {
+  in_progress: "In Progress",
+  awaiting_response: "Awaiting Response",
+  resolved: "Resolved",
+  closed: "Closed",
+  reopened: "Reopened",
+};
+
+const MANUAL_STATUS_OPTIONS: { label: string; value: TicketStatus }[] = [
   { label: "Resolved", value: "resolved" },
   { label: "Closed", value: "closed" },
   { label: "Reopened", value: "reopened" },
@@ -133,12 +142,12 @@ export default function SupportTicketDetailPage() {
                 variant="outline"
                 className={STATUS_BADGE_CLASS[ticket.status]}
               >
-                {STATUS_OPTIONS.find((o) => o.value === ticket.status)?.label}
+                {STATUS_LABELS[ticket.status]}
               </Badge>
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
+            {MANUAL_STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>

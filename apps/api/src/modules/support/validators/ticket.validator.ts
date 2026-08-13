@@ -8,6 +8,11 @@ const TICKET_STATUSES = [
   "reopened",
 ] as const;
 
+// awaiting_response/in_progress are set automatically by message activity
+// (see TicketService.addMyMessage/addAdminMessage) — staff can only ever
+// manually drive a ticket to one of these three terminal/re-open states.
+const MANUAL_TICKET_STATUSES = ["resolved", "closed", "reopened"] as const;
+
 const attachmentSchema = z.object({
   url: z.string().trim().min(1),
   fileName: z.string().trim().min(1),
@@ -40,5 +45,5 @@ export const listTicketsQuerySchema = z.object({
 });
 
 export const updateTicketStatusSchema = z.object({
-  status: z.enum(TICKET_STATUSES),
+  status: z.enum(MANUAL_TICKET_STATUSES),
 });

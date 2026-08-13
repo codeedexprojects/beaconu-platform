@@ -69,28 +69,6 @@ export class CollegeAdminDocumentsController {
     );
   }
 
-  static async startReview(req: Request, res: Response) {
-    const result = await DocumentRequestService.startReview(
-      req.params.requestId as string,
-      req.collegeId!,
-      req.userId!,
-    );
-    return res.json(
-      ApiResponse.success("Document request under review", result),
-    );
-  }
-
-  static async sendForApproval(req: Request, res: Response) {
-    const result = await DocumentRequestService.sendForApproval(
-      req.params.requestId as string,
-      req.collegeId!,
-      req.userId!,
-    );
-    return res.json(
-      ApiResponse.success("Document request sent for approval", result),
-    );
-  }
-
   static async approveDocumentRequest(req: Request, res: Response) {
     const result = await DocumentRequestService.approve(
       req.params.requestId as string,

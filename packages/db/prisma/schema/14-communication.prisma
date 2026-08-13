@@ -79,7 +79,7 @@ model SupportTicket {
   category     String    @default("general") @db.VarChar(30)
   attachments  Json      @default("[]")
   assignedTo   String?   @map("assigned_to")
-  status       String    @default("in_progress") @db.VarChar(20)
+  status       String    @default("awaiting_response") @db.VarChar(20)
   resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
   closedAt     DateTime? @map("closed_at") @db.Timestamptz
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz

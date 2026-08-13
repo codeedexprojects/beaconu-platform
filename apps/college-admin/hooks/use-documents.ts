@@ -7,8 +7,6 @@ import {
   getSubmissionRequests,
   reviewSubmission,
   getDocumentRequests,
-  startReviewDocumentRequest,
-  sendForApprovalDocumentRequest,
   approveDocumentRequest,
   issueDocumentRequest,
   rejectDocumentRequest,
@@ -76,37 +74,6 @@ export function useDocumentRequests(filters: DocumentListFilters = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.documentRequests(filters),
     queryFn: () => getDocumentRequests(filters),
-  });
-}
-
-export function useStartReviewDocumentRequest() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (requestId: string) => startReviewDocumentRequest(requestId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.documentRequests(),
-      });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-  });
-}
-
-export function useSendForApprovalDocumentRequest() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (requestId: string) =>
-      sendForApprovalDocumentRequest(requestId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.documentRequests(),
-      });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
   });
 }
 
