@@ -19,6 +19,7 @@ export const getFormDetailsQuerySchema = z.object({
     "family_details",
     "address_details",
     "qualification_details",
+    "achievements_details",
   ]),
 });
 

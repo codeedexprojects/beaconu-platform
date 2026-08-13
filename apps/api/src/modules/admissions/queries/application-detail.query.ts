@@ -2,12 +2,14 @@ import { prisma } from "@beaconu/db";
 import { NotFoundError } from "@/shared/errors";
 import { ApplicationDocumentRepository } from "../repositories/application-document.repository";
 import type {
+  AcademicRecords,
+  AchievementsDetailsInput,
   AddressDetailsInput,
   ApplicationDetailDto,
   DeclarationInput,
+  EntranceExamDetailsInput,
   FamilyDetailsInput,
   PersonalDetailsInput,
-  QualificationDetailsInput,
 } from "@beaconu/types";
 
 function isEmptyJson(value: unknown): boolean {
@@ -47,6 +49,8 @@ export class ApplicationDetailQuery {
         familyDetails: true,
         addressDetails: true,
         qualificationDetails: true,
+        achievementsDetails: true,
+        entranceExamDetails: true,
         declaration: true,
         submittedAt: true,
         createdAt: true,
@@ -60,6 +64,7 @@ export class ApplicationDetailQuery {
             familyDetails: true,
             addressDetails: true,
             qualificationDetails: true,
+            achievementsDetails: true,
           },
         },
         admissionCycle: { select: { id: true, name: true } },
@@ -157,10 +162,16 @@ export class ApplicationDetailQuery {
         application.addressDetails,
         application.student.addressDetails,
       ),
-      qualificationDetails: mergeDetails<QualificationDetailsInput>(
+      qualificationDetails: mergeDetails<AcademicRecords>(
         application.qualificationDetails,
         application.student.qualificationDetails,
       ),
+      achievementsDetails: mergeDetails<AchievementsDetailsInput>(
+        application.achievementsDetails,
+        application.student.achievementsDetails,
+      ),
+      entranceExamDetails: (application.entranceExamDetails ??
+        {}) as Partial<EntranceExamDetailsInput>,
       declaration: (application.declaration ?? {}) as Partial<DeclarationInput>,
       courses: courses.map((c) => ({
         id: c.id,

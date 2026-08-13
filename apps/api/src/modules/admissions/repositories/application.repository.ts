@@ -165,7 +165,7 @@ export class ApplicationRepository {
 
   static async updateDetailStep(
     id: string,
-    jsonField: "declaration",
+    jsonField: "declaration" | "entranceExamDetails",
     jsonValue: object,
     stepNumber: number,
   ) {
@@ -226,6 +226,7 @@ export class ApplicationRepository {
       familyDetails: Prisma.InputJsonValue;
       addressDetails: Prisma.InputJsonValue;
       qualificationDetails: Prisma.InputJsonValue;
+      achievementsDetails: Prisma.InputJsonValue;
     },
   ) {
     return tx.application.update({

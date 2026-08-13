@@ -142,11 +142,15 @@ export default function ApplicationDetailPage() {
     );
   }
 
-  const permanent = app.addressDetails.permanent;
-  const current = app.addressDetails.same_as_permanent
-    ? permanent
-    : app.addressDetails.current;
-  const qualifications = app.qualificationDetails.qualifications ?? [];
+  const correspondence = app.addressDetails.correspondence;
+  const permanent = app.addressDetails.same_as_correspondence
+    ? correspondence
+    : app.addressDetails.permanent;
+  const {
+    tenth_grade: tenthGrade,
+    twelfth_grade: twelfthGrade,
+    undergraduate,
+  } = app.qualificationDetails;
 
   return (
     <div className="space-y-6 p-6">
@@ -266,6 +270,15 @@ export default function ApplicationDetailPage() {
             label="Aadhar Number"
             value={app.personalDetails.aadhar_number}
           />
+          <DetailRow label="Email" value={app.personalDetails.email} />
+          <DetailRow
+            label="Mobile"
+            value={
+              app.personalDetails.mobile_number
+                ? `${app.personalDetails.mobile_country_code ?? ""} ${app.personalDetails.mobile_number}`
+                : null
+            }
+          />
         </Section>
 
         {/* Family details */}
@@ -326,7 +339,28 @@ export default function ApplicationDetailPage() {
         <Section title="Address">
           <div>
             <p className="mb-1 text-xs text-muted-foreground">
+              Correspondence Address
+            </p>
+            <p className="text-sm font-medium">
+              {correspondence
+                ? [
+                    correspondence.address_line1,
+                    correspondence.address_line2,
+                    correspondence.city,
+                    correspondence.state,
+                    correspondence.pin_code,
+                    correspondence.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")
+                : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-muted-foreground">
               Permanent Address
+              {app.addressDetails.same_as_correspondence &&
+                " (same as correspondence)"}
             </p>
             <p className="text-sm font-medium">
               {permanent
@@ -343,26 +377,6 @@ export default function ApplicationDetailPage() {
                 : "—"}
             </p>
           </div>
-          <div>
-            <p className="mb-1 text-xs text-muted-foreground">
-              Current Address
-              {app.addressDetails.same_as_permanent && " (same as permanent)"}
-            </p>
-            <p className="text-sm font-medium">
-              {current
-                ? [
-                    current.address_line1,
-                    current.address_line2,
-                    current.city,
-                    current.state,
-                    current.pin_code,
-                    current.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")
-                : "—"}
-            </p>
-          </div>
         </Section>
 
         {/* Declaration */}
@@ -372,41 +386,213 @@ export default function ApplicationDetailPage() {
             value={app.declaration.accepted ? "Yes" : "No"}
           />
           <DetailRow
-            label="Full Name Confirmation"
-            value={app.declaration.full_name_confirmation}
+            label="Signature"
+            value={
+              app.declaration.signature_url && (
+                <a
+                  href={app.declaration.signature_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  View signature
+                </a>
+              )
+            }
+          />
+          <DetailRow label="Place" value={app.declaration.place} />
+          <DetailRow
+            label="Date"
+            value={
+              app.declaration.date ? formatDateTime(app.declaration.date) : null
+            }
+          />
+        </Section>
+
+        {/* Competitive Exam Records */}
+        <Section title="Competitive Exam Records">
+          <DetailRow
+            label="Attempted Entrance Exam"
+            value={
+              app.entranceExamDetails.has_attempted_entrance_exam ? "Yes" : "No"
+            }
+          />
+          {(app.entranceExamDetails.exams ?? []).map((exam, i) => (
+            <DetailRow
+              key={i}
+              label={exam.exam_name}
+              value={
+                [exam.year_of_appearance, exam.score_or_percentile]
+                  .filter(Boolean)
+                  .join(" · ") || "—"
+              }
+            />
+          ))}
+          <DetailRow
+            label="Recommendation Letters"
+            value={
+              app.entranceExamDetails.recommendation_letters?.length || null
+            }
+          />
+        </Section>
+
+        {/* Achievements & Extracurricular */}
+        <Section title="Achievements & Extracurricular">
+          <DetailRow
+            label="Internships"
+            value={app.achievementsDetails.internships?.length || null}
+          />
+          <DetailRow
+            label="Work Experience"
+            value={
+              app.achievementsDetails.has_work_experience
+                ? `${app.achievementsDetails.work_experience?.length ?? 0} entr${
+                    app.achievementsDetails.work_experience?.length === 1
+                      ? "y"
+                      : "ies"
+                  }`
+                : "None"
+            }
+          />
+          <DetailRow
+            label="Languages"
+            value={app.achievementsDetails.languages
+              ?.map((l) => l.language)
+              .join(", ")}
+          />
+          <DetailRow
+            label="Awards"
+            value={
+              (app.achievementsDetails.academic_awards?.length ?? 0) +
+                (app.achievementsDetails.sports_achievements?.length ?? 0) +
+                (app.achievementsDetails.arts_cultural_achievements?.length ??
+                  0) || null
+            }
+          />
+          <DetailRow
+            label="Hobbies"
+            value={app.achievementsDetails.hobbies?.join(", ")}
+          />
+          <DetailRow
+            label="Publications"
+            value={app.achievementsDetails.publications?.length || null}
+          />
+          <DetailRow
+            label="Patents"
+            value={app.achievementsDetails.patents?.length || null}
+          />
+          <DetailRow
+            label="Certifications"
+            value={
+              app.achievementsDetails.professional_certifications?.length ||
+              null
+            }
+          />
+          <DetailRow
+            label="LinkedIn"
+            value={app.achievementsDetails.portfolio_links?.linkedin_url}
+          />
+          <DetailRow
+            label="GitHub"
+            value={app.achievementsDetails.portfolio_links?.github_url}
+          />
+          <DetailRow
+            label="Recommendation Letters"
+            value={
+              app.achievementsDetails.recommendation_letters?.length || null
+            }
+          />
+          <DetailRow
+            label="Innovation / Entrepreneurship"
+            value={
+              app.achievementsDetails.innovation_entrepreneurship?.length ||
+              null
+            }
+          />
+          <DetailRow
+            label="Volunteering"
+            value={app.achievementsDetails.volunteering?.length || null}
           />
         </Section>
       </div>
 
-      {/* Qualifications */}
-      <Section title="Qualifications">
-        {qualifications.length === 0 ? (
+      {/* Academic Records */}
+      <Section title="Academic Records">
+        {!tenthGrade && !twelfthGrade && !undergraduate ? (
           <p className="text-sm text-muted-foreground">
-            No qualifications added yet.
+            No academic records added yet.
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Level</TableHead>
-                <TableHead>Board / University</TableHead>
-                <TableHead>Institution</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead>% / CGPA</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {qualifications.map((q, i) => (
-                <TableRow key={i}>
-                  <TableCell>{q.level}</TableCell>
-                  <TableCell>{q.board_or_university}</TableCell>
-                  <TableCell>{q.institution_name}</TableCell>
-                  <TableCell>{q.year_of_passing}</TableCell>
-                  <TableCell>{q.percentage_or_cgpa}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {tenthGrade && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  10th Grade
+                </p>
+                <DetailRow label="Board" value={tenthGrade.board_name} />
+                <DetailRow label="School" value={tenthGrade.school_name} />
+                <DetailRow
+                  label="Year of Passing"
+                  value={tenthGrade.year_of_passing}
+                />
+                <DetailRow
+                  label="Result"
+                  value={
+                    tenthGrade.result_summary?.percentage != null
+                      ? `${tenthGrade.result_summary.percentage}%`
+                      : (tenthGrade.result_summary?.marks_obtained ?? null)
+                  }
+                />
+              </div>
+            )}
+            {twelfthGrade && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  12th Grade
+                </p>
+                <DetailRow label="Board" value={twelfthGrade.board_name} />
+                <DetailRow label="School" value={twelfthGrade.school_name} />
+                <DetailRow
+                  label="Year of Passing"
+                  value={twelfthGrade.year_of_passing}
+                />
+                <DetailRow
+                  label="Result"
+                  value={
+                    twelfthGrade.result_summary?.percentage != null
+                      ? `${twelfthGrade.result_summary.percentage}%`
+                      : (twelfthGrade.result_summary?.marks_obtained ?? null)
+                  }
+                />
+              </div>
+            )}
+            {undergraduate && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Undergraduate
+                </p>
+                <DetailRow label="Program" value={undergraduate.program_name} />
+                <DetailRow
+                  label="University"
+                  value={undergraduate.university_name}
+                />
+                <DetailRow
+                  label="Result"
+                  value={
+                    undergraduate.final_summary?.cgpa != null
+                      ? `CGPA ${undergraduate.final_summary.cgpa}`
+                      : undergraduate.final_summary?.percentage != null
+                        ? `${undergraduate.final_summary.percentage}%`
+                        : null
+                  }
+                />
+                <DetailRow
+                  label="Backlogs"
+                  value={undergraduate.final_summary?.total_backlogs}
+                />
+              </div>
+            )}
+          </div>
         )}
       </Section>
 

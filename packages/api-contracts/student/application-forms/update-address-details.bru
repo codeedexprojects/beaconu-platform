@@ -17,22 +17,24 @@ headers {
 
 body:json {
   {
-    "permanent": {
+    "correspondence": {
       "address_line1": "12 MG Road",
       "city": "Bengaluru",
       "state": "Karnataka",
       "pin_code": "560001",
       "country": "India"
     },
-    "same_as_permanent": true,
-    "current": null
+    "same_as_correspondence": true,
+    "permanent": null
   }
 }
 
 docs {
   Full-replace write of the address-details step (409 if already
-  submitted). `current` is required (and validated) only when
-  `same_as_permanent` is false. Advances currentStep to at least 5. Lands
-  on the Student profile, not this Application row — see Update Personal
-  Details' docs for why.
+  submitted). `correspondence` (the mailing address) is required;
+  `permanent` is required (and validated) only when
+  `same_as_correspondence` is false. `country` defaults to "India" if
+  omitted. Advances currentStep to at least 5. Lands on the Student
+  profile, not this Application row — see Update Personal Details' docs
+  for why.
 }

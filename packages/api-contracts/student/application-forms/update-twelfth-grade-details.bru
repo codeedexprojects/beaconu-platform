@@ -1,0 +1,64 @@
+meta {
+  name: Update Twelfth Grade Details (Student)
+  type: http
+  seq: 14
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/academic-records/twelfth-grade
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "academic_year": "2024-25",
+    "admission_year": "2024",
+    "year_of_passing": 2025,
+    "board_name": "CBSE",
+    "registration_number": "REG54321",
+    "school_name": "Delhi Public School",
+    "school_code": "DPS001",
+    "school_address": "Sector 45, Gurugram",
+    "school_state": "Haryana",
+    "medium_of_instruction": "English",
+    "has_separate_class_xi_exam": true,
+    "class_xi_status": "declared",
+    "subjects": [
+      {
+        "subject_name": "Mathematics",
+        "evaluation_pattern": "Theory + Practical",
+        "theory_marks": 78,
+        "practical_marks": 20,
+        "internal_marks": null,
+        "max_marks": 100,
+        "obtained_marks": 96,
+        "attempts": 1,
+        "percentage": 96
+      }
+    ],
+    "result_summary": {
+      "marking_scheme": "percentage",
+      "marks_obtained": 480,
+      "max_marks": 500,
+      "percentage": 96,
+      "remarks": "1st Div"
+    },
+    "marksheet_url": "https://example.com/uploads/class12-marksheet.pdf",
+    "migration_certificate_url": "https://example.com/uploads/migration-cert.pdf"
+  }
+}
+
+docs {
+  Full-replace write of the 12th Grade Details screen — merges into
+  Student.qualificationDetails under the `twelfth_grade` key without
+  touching `tenth_grade`/`undergraduate`. 409 if the application has
+  already been submitted. `class_xi_status` only applies when
+  `has_separate_class_xi_exam` is true. At least one subject is required.
+  Advances currentStep to at least 6.
+}

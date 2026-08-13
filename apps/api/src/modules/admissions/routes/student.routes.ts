@@ -56,6 +56,26 @@ router.patch(
   "/my-applications/:applicationId/qualification-details",
   StudentApplicationController.updateQualificationDetails,
 );
+router.patch(
+  "/my-applications/:applicationId/academic-records/tenth-grade",
+  StudentApplicationController.updateTenthGradeDetails,
+);
+router.patch(
+  "/my-applications/:applicationId/academic-records/twelfth-grade",
+  StudentApplicationController.updateTwelfthGradeDetails,
+);
+router.patch(
+  "/my-applications/:applicationId/academic-records/undergraduate",
+  StudentApplicationController.updateUndergraduateDetails,
+);
+router.patch(
+  "/my-applications/:applicationId/achievements-details",
+  StudentApplicationController.updateAchievementsDetails,
+);
+router.patch(
+  "/my-applications/:applicationId/entrance-exam-details",
+  StudentApplicationController.updateEntranceExamDetails,
+);
 router.get(
   "/my-applications/:applicationId/documents/required",
   StudentApplicationController.listRequiredDocuments,

@@ -27,6 +27,7 @@ export type PendingApplicationAction =
   | "family_details"
   | "address_details"
   | "qualification_details"
+  | "entrance_exam_details"
   | "declaration"
   | "submit"
   | "none";
@@ -232,6 +233,9 @@ export interface PersonalDetailsInput {
   marital_status?: string | null;
   aadhar_number?: string | null;
   profile_photo_url?: string | null;
+  email?: string | null;
+  mobile_country_code?: string;
+  mobile_number?: string | null;
   whatsapp_country_code?: string;
   whatsapp_number?: string | null;
 }
@@ -259,13 +263,13 @@ export interface AddressBlock {
   state: string;
   district?: string | null;
   pin_code: string;
-  country: string;
+  country?: string;
 }
 
 export interface AddressDetailsInput {
-  permanent: AddressBlock;
-  same_as_permanent: boolean;
-  current?: AddressBlock | null;
+  correspondence: AddressBlock;
+  same_as_correspondence: boolean;
+  permanent?: AddressBlock | null;
 }
 
 export interface QualificationEntry {
@@ -277,21 +281,262 @@ export interface QualificationEntry {
   subjects?: string | null;
 }
 
+// Legacy flat shape — superseded by the level-specific tenth/twelfth/
+// undergraduate screens below, kept only so old draft data still types.
 export interface QualificationDetailsInput {
   qualifications: QualificationEntry[];
+}
+
+export interface SubjectMarksEntry {
+  subject_name: string;
+  evaluation_pattern: string;
+  theory_marks?: number | null;
+  practical_marks?: number | null;
+  internal_marks?: number | null;
+  max_marks: number;
+  obtained_marks: number;
+  attempts?: number | null;
+  percentage?: number | null;
+}
+
+export type MarkingScheme = "percentage" | "gpa" | "other";
+
+export interface ResultSummary {
+  marking_scheme: MarkingScheme;
+  marks_obtained?: number | null;
+  max_marks?: number | null;
+  percentage?: number | null;
+  remarks?: string | null;
+}
+
+export interface TenthGradeDetailsInput {
+  academic_year: string;
+  admission_year: string;
+  year_of_passing: number;
+  board_name: string;
+  registration_number?: string | null;
+  school_name: string;
+  school_code?: string | null;
+  school_address?: string | null;
+  school_state: string;
+  medium_of_instruction: string;
+  subjects: SubjectMarksEntry[];
+  result_summary: ResultSummary;
+  marksheet_url?: string | null;
+}
+
+export interface TwelfthGradeDetailsInput {
+  academic_year: string;
+  admission_year: string;
+  year_of_passing: number;
+  board_name: string;
+  registration_number?: string | null;
+  school_name: string;
+  school_code?: string | null;
+  school_address?: string | null;
+  school_state: string;
+  medium_of_instruction: string;
+  has_separate_class_xi_exam: boolean;
+  class_xi_status?: "declared" | "undeclared" | null;
+  subjects: SubjectMarksEntry[];
+  result_summary: ResultSummary;
+  marksheet_url?: string | null;
+  migration_certificate_url?: string | null;
+}
+
+export interface SemesterRecord {
+  label: string;
+  duration?: string | null;
+  gpa?: number | null;
+  cgpa_or_percentage?: number | null;
+  backlogs?: number | null;
+}
+
+export interface ProjectEntry {
+  title: string;
+  project_type: string;
+  duration?: string | null;
+  team_size?: number | null;
+  role?: string | null;
+  description?: string | null;
+  key_outcomes?: string | null;
+  project_url?: string | null;
+}
+
+export interface UndergraduateDetailsInput {
+  program_type: "regular" | "distance";
+  degree_type: string;
+  program_name: string;
+  specialization?: string | null;
+  university_name: string;
+  university_type: string;
+  institution_name: string;
+  institution_type: string;
+  admission_year: string;
+  passing_year: string;
+  duration_years: number;
+  register_number?: string | null;
+  academic_cycle: "semester" | "yearly";
+  semester_records: SemesterRecord[];
+  final_summary: {
+    total_credits?: number | null;
+    cgpa?: number | null;
+    percentage?: number | null;
+    rank?: string | null;
+    total_backlogs?: number | null;
+    result_status: string;
+    remarks?: string | null;
+  };
+  documents: {
+    semester_mark_sheet_urls: string[];
+    degree_certificate_url?: string | null;
+    provisional_certificate_url?: string | null;
+    consolidated_mark_sheet_url?: string | null;
+  };
+  has_projects: boolean;
+  projects: ProjectEntry[];
+}
+
+export interface AcademicRecords {
+  tenth_grade?: TenthGradeDetailsInput;
+  twelfth_grade?: TwelfthGradeDetailsInput;
+  undergraduate?: UndergraduateDetailsInput;
+}
+
+export interface InternshipEntry {
+  company_name: string;
+  role: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  key_responsibilities?: string | null;
+}
+
+export interface WorkExperienceEntry {
+  company_name: string;
+  job_title?: string | null;
+  industry?: string | null;
+  employment_type?: string | null;
+  total_experience?: string | null;
+}
+
+export interface LanguageEntry {
+  language: string;
+  proficiency?: string | null;
+}
+
+export interface AcademicAwardEntry {
+  title: string;
+  year?: number | null;
+  issuing_body?: string | null;
+  proof_url?: string | null;
+}
+
+export interface SportsAchievementEntry {
+  sport_name: string;
+  competition_level?: string | null;
+  position_secured?: string | null;
+  achievement_year?: number | null;
+  certificate_url?: string | null;
+}
+
+export interface ArtsCulturalAchievementEntry {
+  category: string;
+  competition_name?: string | null;
+  achievement_level?: string | null;
+  position_secured?: string | null;
+  certificate_url?: string | null;
+}
+
+export interface PublicationEntry {
+  title: string;
+  journal_publisher?: string | null;
+  url?: string | null;
+}
+
+export interface PatentEntry {
+  title: string;
+  patent_number?: string | null;
+  status: "filed" | "published" | "granted";
+  filing_date?: string | null;
+  patent_office?: string | null;
+  co_inventors?: string | null;
+  document_url?: string | null;
+}
+
+export interface CertificationEntry {
+  name: string;
+  issuing_authority: string;
+  certification_id?: string | null;
+  issue_date?: string | null;
+  expiry_date?: string | null;
+  verification_url?: string | null;
+  certificate_url?: string | null;
+}
+
+export interface PortfolioLinks {
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  researchgate_url?: string | null;
+  google_scholar_url?: string | null;
+  orcid_id?: string | null;
+  personal_website_url?: string | null;
+  behance_url?: string | null;
+  dribbble_url?: string | null;
+  kaggle_url?: string | null;
+}
+
+export interface RecommendationLetterEntry {
+  document_url: string;
+}
+
+export interface InnovationEntry {
+  startup_name: string;
+  role?: string | null;
+  contribution?: string | null;
+  incubation_support?: string | null;
+  dpiit_registration_number?: string | null;
+}
+
+export interface VolunteeringEntry {
+  organization_name: string;
+  role?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  description?: string | null;
+}
+
+export interface AchievementsDetailsInput {
+  internships: InternshipEntry[];
+  has_work_experience: boolean;
+  work_experience: WorkExperienceEntry[];
+  languages: LanguageEntry[];
+  academic_awards: AcademicAwardEntry[];
+  sports_achievements: SportsAchievementEntry[];
+  arts_cultural_achievements: ArtsCulturalAchievementEntry[];
+  hobbies: string[];
+  other_interests?: string | null;
+  publications: PublicationEntry[];
+  patents: PatentEntry[];
+  professional_certifications: CertificationEntry[];
+  portfolio_links: PortfolioLinks;
+  recommendation_letters: RecommendationLetterEntry[];
+  innovation_entrepreneurship: InnovationEntry[];
+  volunteering: VolunteeringEntry[];
 }
 
 export type ApplicationFormDetailsSection =
   | "personal_details"
   | "family_details"
   | "address_details"
-  | "qualification_details";
+  | "qualification_details"
+  | "achievements_details";
 
 export interface ApplicationFormDetailsBySection {
   personal_details: Partial<PersonalDetailsInput>;
   family_details: Partial<FamilyDetailsInput>;
   address_details: Partial<AddressDetailsInput>;
-  qualification_details: Partial<QualificationDetailsInput>;
+  qualification_details: Partial<AcademicRecords>;
+  achievements_details: Partial<AchievementsDetailsInput>;
 }
 
 export interface RequiredDocumentDto {
@@ -333,7 +578,25 @@ export interface RegisterApplicationDocumentInput {
 
 export interface DeclarationInput {
   accepted: boolean;
-  full_name_confirmation: string;
+  // Legacy — superseded by signature_url/place/date, kept optional.
+  full_name_confirmation?: string | null;
+  signature_url: string;
+  place: string;
+  date: string;
+}
+
+export interface EntranceExamRecord {
+  exam_name: string;
+  year_of_appearance?: number | null;
+  roll_number?: string | null;
+  score_or_percentile?: string | null;
+  mark_card_url?: string | null;
+}
+
+export interface EntranceExamDetailsInput {
+  has_attempted_entrance_exam: boolean;
+  exams: EntranceExamRecord[];
+  recommendation_letters: RecommendationLetterEntry[];
 }
 
 export interface StudentApplicationListItemDto extends StudentApplicationDto {
@@ -470,7 +733,9 @@ export interface ApplicationDetailDto {
   personalDetails: Partial<PersonalDetailsInput>;
   familyDetails: Partial<FamilyDetailsInput>;
   addressDetails: Partial<AddressDetailsInput>;
-  qualificationDetails: Partial<QualificationDetailsInput>;
+  qualificationDetails: Partial<AcademicRecords>;
+  achievementsDetails: Partial<AchievementsDetailsInput>;
+  entranceExamDetails: Partial<EntranceExamDetailsInput>;
   declaration: Partial<DeclarationInput>;
   courses: ApplicationDetailCourseItem[];
   documents: ApplicationDetailDocumentItem[];

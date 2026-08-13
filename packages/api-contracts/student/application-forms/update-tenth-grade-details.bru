@@ -1,0 +1,62 @@
+meta {
+  name: Update Tenth Grade Details (Student)
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/academic-records/tenth-grade
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "academic_year": "2022-23",
+    "admission_year": "2022",
+    "year_of_passing": 2023,
+    "board_name": "CBSE",
+    "registration_number": "REG12345",
+    "school_name": "Delhi Public School",
+    "school_code": "DPS001",
+    "school_address": "Sector 45, Gurugram",
+    "school_state": "Haryana",
+    "medium_of_instruction": "English",
+    "subjects": [
+      {
+        "subject_name": "Mathematics",
+        "evaluation_pattern": "Theory + Practical",
+        "theory_marks": 78,
+        "practical_marks": 20,
+        "internal_marks": null,
+        "max_marks": 100,
+        "obtained_marks": 98,
+        "attempts": 1,
+        "percentage": 98
+      }
+    ],
+    "result_summary": {
+      "marking_scheme": "percentage",
+      "marks_obtained": 490,
+      "max_marks": 500,
+      "percentage": 98,
+      "remarks": "1st Div"
+    },
+    "marksheet_url": "https://example.com/uploads/class10-marksheet.pdf"
+  }
+}
+
+docs {
+  Full-replace write of the 10th Grade Details screen — merges into
+  Student.qualificationDetails under the `tenth_grade` key without
+  touching `twelfth_grade`/`undergraduate` (see
+  StudentsService.mergeQualificationSection). 409 if the application has
+  already been submitted. At least one subject is required. Advances
+  currentStep to at least 6 (shares the qualification step with the
+  other two academic-record screens).
+}
