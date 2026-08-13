@@ -5,6 +5,7 @@ import { CourseSwitchRequestRepository } from "../repositories/course-switch-req
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
 import { EnrollmentService } from "./enrollment.service";
+import type { AvailableSwitchCourseItem } from "@beaconu/types";
 import type {
   RequestCourseSwitchInput,
   ReviewCourseSwitchInput,
@@ -54,6 +55,28 @@ function mapRequest(row: {
 }
 
 export class CourseSwitchRequestService {
+  static async listAvailableCourses(
+    studentId: string,
+  ): Promise<AvailableSwitchCourseItem[]> {
+    const activeEnrollment =
+      await EnrollmentRepository.findActiveForStudent(studentId);
+    if (!activeEnrollment) {
+      throw new ConflictError("No active enrollment to switch courses from");
+    }
+
+    const rows = await prisma.admissionCycleCourse.findMany({
+      where: {
+        admissionCycleId: activeEnrollment.admissionCycleId,
+        isActive: true,
+        courseId: { not: activeEnrollment.courseId },
+      },
+      select: { course: { select: { id: true, name: true } } },
+      orderBy: { course: { name: "asc" } },
+    });
+
+    return rows.map((row) => ({ id: row.course.id, name: row.course.name }));
+  }
+
   static async request(studentId: string, data: RequestCourseSwitchInput) {
     const activeEnrollment =
       await EnrollmentRepository.findActiveForStudent(studentId);

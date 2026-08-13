@@ -56,6 +56,7 @@ export class EnrollmentRepository {
         collegeId: true,
         courseId: true,
         applicationCourseId: true,
+        admissionCycleId: true,
         academicYear: true,
         college: { select: { name: true } },
         course: { select: { name: true, duration: true } },

@@ -263,6 +263,13 @@ export class StudentApplicationController {
     );
   }
 
+  static async listAvailableSwitchCourses(req: Request, res: Response) {
+    const result = await CourseSwitchRequestService.listAvailableCourses(
+      req.userId as string,
+    );
+    return res.json(ApiResponse.success("Available courses fetched", result));
+  }
+
   static async requestCourseSwitch(req: Request, res: Response) {
     const body = requestCourseSwitchSchema.parse(req.body);
     const result = await CourseSwitchRequestService.request(

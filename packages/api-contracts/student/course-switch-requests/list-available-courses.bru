@@ -1,0 +1,29 @@
+meta {
+  name: List Available Courses For Switch
+  type: http
+  seq: 0
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/course-switch-requests/available-courses
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Minimal course picker for the "Switch Course" target-course selector —
+  every course offered under the student's current active enrollment's
+  admission cycle, EXCLUDING the course they're currently enrolled in.
+
+  Response is intentionally minimal: only `id` and `name` per course
+  (no fee/quota data — this endpoint exists purely to populate a dropdown,
+  unlike the fuller `GET /application-forms/:id/courses` catalogue used
+  during the original application).
+
+  Errors with a 409 ConflictError if the student has no active enrollment
+  to switch courses from.
+}

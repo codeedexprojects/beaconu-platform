@@ -7,6 +7,10 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("student"));
 
+router.get(
+  "/available-courses",
+  StudentApplicationController.listAvailableSwitchCourses,
+);
 router.post("/", StudentApplicationController.requestCourseSwitch);
 router.get("/", StudentApplicationController.listMyCourseSwitchRequests);
 
