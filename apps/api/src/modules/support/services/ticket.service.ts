@@ -116,14 +116,14 @@ export class TicketService {
       attachments: data.attachments ?? [],
     });
 
-    const nextStatus =
-      ticket.status === "resolved"
-        ? "reopened"
-        : ticket.status === "awaiting_response"
-          ? "in_progress"
-          : ticket.status;
-    if (nextStatus !== ticket.status) {
-      await TicketRepository.updateStatus(ticketId, { status: nextStatus });
+    // Student replied — the ball is back in the admin's court. Only flip
+    // out of "in_progress" (admin already responded); "awaiting_response"
+    // stays as-is (already waiting on admin), and "resolved" is left alone
+    // since reopening it is a deliberate admin-only action, not automatic.
+    if (ticket.status === "in_progress") {
+      await TicketRepository.updateStatus(ticketId, {
+        status: "awaiting_response",
+      });
     }
 
     return TicketDetailQuery.getForStudent(studentId, ticketId);
@@ -180,7 +180,7 @@ export class TicketService {
       attachments: data.attachments ?? [],
     });
     await TicketRepository.updateStatus(ticketId, {
-      status: "awaiting_response",
+      status: "in_progress",
     });
 
     return TicketDetailQuery.getForCollege(collegeId, ticketId);
@@ -200,7 +200,7 @@ export class TicketService {
     const extra: { resolvedAt?: Date | null; closedAt?: Date | null } = {};
     if (data.status === "resolved") extra.resolvedAt = new Date();
     if (data.status === "closed") extra.closedAt = new Date();
-    if (data.status === "in_progress" || data.status === "reopened") {
+    if (data.status === "reopened") {
       extra.resolvedAt = null;
       extra.closedAt = null;
     }

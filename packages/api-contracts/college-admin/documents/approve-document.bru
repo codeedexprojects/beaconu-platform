@@ -20,6 +20,9 @@ body:json {
 }
 
 docs {
-  Moves a document request from "awaiting_approval" to "approved". Only
-  once approved can the document be issued.
+  Accepts a "submitted" document request, moving it straight to "approved".
+  The intermediate "processing"/"awaiting_approval" steps no longer exist —
+  it's a direct submitted -> accept/reject decision. Only once approved can
+  the document be issued (uploading a file via the issue endpoint moves it
+  straight to "issued").
 }

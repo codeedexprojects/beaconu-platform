@@ -60,18 +60,6 @@ export async function getDocumentRequests(
   return api.get(`${BASE}/requests${toQueryString(filters)}`);
 }
 
-export async function startReviewDocumentRequest(
-  requestId: string,
-): Promise<DocumentRequestItem> {
-  return api.patch(`${BASE}/requests/${requestId}/start-review`, {});
-}
-
-export async function sendForApprovalDocumentRequest(
-  requestId: string,
-): Promise<DocumentRequestItem> {
-  return api.patch(`${BASE}/requests/${requestId}/send-for-approval`, {});
-}
-
 export async function approveDocumentRequest(
   requestId: string,
 ): Promise<DocumentRequestItem> {

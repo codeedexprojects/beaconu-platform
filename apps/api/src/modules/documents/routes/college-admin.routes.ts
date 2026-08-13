@@ -22,14 +22,6 @@ router.patch(
 
 router.get("/requests", CollegeAdminDocumentsController.listDocumentRequests);
 router.patch(
-  "/requests/:requestId/start-review",
-  CollegeAdminDocumentsController.startReview,
-);
-router.patch(
-  "/requests/:requestId/send-for-approval",
-  CollegeAdminDocumentsController.sendForApproval,
-);
-router.patch(
   "/requests/:requestId/approve",
   CollegeAdminDocumentsController.approveDocumentRequest,
 );

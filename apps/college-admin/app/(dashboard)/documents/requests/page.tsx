@@ -10,8 +10,6 @@ import {
   Upload,
   XCircle,
   Loader2,
-  PlayCircle,
-  Send,
   CheckCircle2,
   Paperclip,
   Phone,
@@ -46,8 +44,6 @@ import {
 } from "@/components/ui/table";
 import {
   useDocumentRequests,
-  useStartReviewDocumentRequest,
-  useSendForApprovalDocumentRequest,
   useApproveDocumentRequest,
   useIssueDocumentRequest,
   useRejectDocumentRequest,
@@ -101,36 +97,20 @@ export default function DocumentRequestsFromStudentsPage() {
     page,
     limit: 20,
   });
-  const { mutate: startReview, isPending: isStartingReview } =
-    useStartReviewDocumentRequest();
-  const { mutate: sendForApproval, isPending: isSendingForApproval } =
-    useSendForApprovalDocumentRequest();
   const { mutate: approve, isPending: isApproving } =
     useApproveDocumentRequest();
   const { mutate: issue, isPending: isIssuing } = useIssueDocumentRequest();
   const { mutate: reject, isPending: isRejecting } = useRejectDocumentRequest();
 
+  // Only a fresh "submitted" request can still be accepted/rejected —
+  // once accepted it moves straight to "approved" (upload-to-issue next).
   const REJECTABLE_STATUSES: DocumentRequestStatus[] = [
     DocumentRequestStatus.Submitted,
-    DocumentRequestStatus.Processing,
-    DocumentRequestStatus.AwaitingApproval,
   ];
-
-  function handleStartReview(requestId: string) {
-    startReview(requestId, {
-      onSuccess: () => toast.success("Marked as under review"),
-    });
-  }
-
-  function handleSendForApproval(requestId: string) {
-    sendForApproval(requestId, {
-      onSuccess: () => toast.success("Sent for approval"),
-    });
-  }
 
   function handleApprove(requestId: string) {
     approve(requestId, {
-      onSuccess: () => toast.success("Document request approved"),
+      onSuccess: () => toast.success("Document request accepted"),
     });
   }
 
@@ -249,8 +229,6 @@ export default function DocumentRequestsFromStudentsPage() {
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="submitted">Submitted</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="awaiting_approval">Awaiting Approval</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="issued">Issued</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
@@ -350,36 +328,12 @@ export default function DocumentRequestsFromStudentsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 gap-1.5 text-xs"
-                            disabled={isStartingReview}
-                            onClick={() => handleStartReview(r.id)}
-                          >
-                            <PlayCircle className="h-3.5 w-3.5" />
-                            Start Review
-                          </Button>
-                        )}
-                        {r.status === "processing" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1.5 text-xs"
-                            disabled={isSendingForApproval}
-                            onClick={() => handleSendForApproval(r.id)}
-                          >
-                            <Send className="h-3.5 w-3.5" />
-                            Send for Approval
-                          </Button>
-                        )}
-                        {r.status === "awaiting_approval" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
                             className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-600"
                             disabled={isApproving}
                             onClick={() => handleApprove(r.id)}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            Approve
+                            Accept
                           </Button>
                         )}
                         {r.status === "approved" && (

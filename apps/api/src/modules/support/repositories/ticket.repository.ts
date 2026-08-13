@@ -49,6 +49,10 @@ export class TicketRepository {
         // setTicketNumber() with the row's own id — ticket_number is
         // VarChar(30), so a full 36-char UUID doesn't fit here.
         ticketNumber: randomUUID().slice(0, 30),
+        // No admin has responded yet — set explicitly rather than relying
+        // on the column default, since that default is now stale (still
+        // "in_progress" pending a migration the user will run separately).
+        status: "awaiting_response",
       },
     });
   }

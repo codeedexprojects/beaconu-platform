@@ -153,11 +153,10 @@ export class DocumentRequestService {
     );
   }
 
-  private static readonly REJECTABLE_STATUSES = [
-    "submitted",
-    "processing",
-    "awaiting_approval",
-  ];
+  // Only a fresh "submitted" request can be accepted or rejected — the
+  // processing/awaiting_approval intermediate steps are gone, the admin
+  // decides accept-or-reject directly, then uploads to issue.
+  private static readonly REJECTABLE_STATUSES = ["submitted"];
 
   private static async loadForCollege(id: string, collegeId: string) {
     const request = await DocumentRequestRepository.findById(id);
@@ -168,49 +167,9 @@ export class DocumentRequestService {
     return request;
   }
 
-  static async startReview(id: string, collegeId: string, processedBy: string) {
-    const request = await this.loadForCollege(id, collegeId);
-    if (request.status !== "submitted") {
-      throw new ConflictError(
-        `Cannot start review on a request with status '${request.status}'`,
-      );
-    }
-    return DocumentRequestRepository.updateStatus(
-      id,
-      "processing",
-      processedBy,
-      appendHistory(
-        request.statusHistory,
-        historyEntry("processing", processedBy),
-      ),
-    );
-  }
-
-  static async sendForApproval(
-    id: string,
-    collegeId: string,
-    processedBy: string,
-  ) {
-    const request = await this.loadForCollege(id, collegeId);
-    if (request.status !== "processing") {
-      throw new ConflictError(
-        `Cannot send for approval a request with status '${request.status}'`,
-      );
-    }
-    return DocumentRequestRepository.updateStatus(
-      id,
-      "awaiting_approval",
-      processedBy,
-      appendHistory(
-        request.statusHistory,
-        historyEntry("awaiting_approval", processedBy),
-      ),
-    );
-  }
-
   static async approve(id: string, collegeId: string, processedBy: string) {
     const request = await this.loadForCollege(id, collegeId);
-    if (request.status !== "awaiting_approval") {
+    if (request.status !== "submitted") {
       throw new ConflictError(
         `Cannot approve a request with status '${request.status}'`,
       );
