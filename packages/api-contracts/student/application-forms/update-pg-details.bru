@@ -1,0 +1,69 @@
+meta {
+  name: Update PG Details (Student)
+  type: http
+  seq: 17
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/academic-records/pg
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "program_type": "regular",
+    "degree_type": "Master",
+    "program_name": "M.Tech Computer Science",
+    "specialization": "Data Science",
+    "university_name": "Anna University",
+    "university_type": "State",
+    "institution_name": "XYZ Engineering College",
+    "institution_type": "Affiliated",
+    "admission_year": "2025",
+    "passing_year": "2027",
+    "duration_years": 2,
+    "register_number": "REG556677",
+    "academic_cycle": "semester",
+    "semester_records": [
+      {
+        "label": "Semester 1",
+        "duration": "6 months",
+        "gpa": 8.9,
+        "cgpa_or_percentage": 8.9,
+        "backlogs": 0
+      }
+    ],
+    "final_summary": {
+      "total_credits": 80,
+      "cgpa": null,
+      "percentage": null,
+      "rank": null,
+      "total_backlogs": 0,
+      "result_status": "Ongoing",
+      "remarks": null
+    },
+    "documents": {
+      "semester_mark_sheet_urls": [],
+      "degree_certificate_url": null,
+      "provisional_certificate_url": null,
+      "consolidated_mark_sheet_url": null
+    },
+    "has_projects": false,
+    "projects": []
+  }
+}
+
+docs {
+  Full-replace write of the PG Details screen — structurally identical to
+  Update Undergraduate Details (same fields, same validator, same rules).
+  Merges into Student.qualificationDetails under the `pg` key without
+  touching `tenth_grade`/`twelfth_grade`/`undergraduate`/`diploma`. 409 if
+  the application has already been submitted. Advances currentStep to at
+  least 6.
+}

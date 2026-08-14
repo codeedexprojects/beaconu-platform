@@ -21,7 +21,10 @@ import {
   useApplication,
   useEnrollApplicationCourse,
 } from "@/hooks/use-applications";
-import type { ApplicationDetailCourseItem } from "@beaconu/types";
+import type {
+  ApplicationDetailCourseItem,
+  UndergraduateDetailsInput,
+} from "@beaconu/types";
 
 const FORM_STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
@@ -71,6 +74,39 @@ function DetailRow({
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-medium">{value ?? "—"}</p>
+    </div>
+  );
+}
+
+// Undergraduate/PG/Diploma are structurally identical — one shared card.
+function DegreeLevelCard({
+  title,
+  record,
+}: {
+  title: string;
+  record: UndergraduateDetailsInput;
+}) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <DetailRow label="Program" value={record.program_name} />
+      <DetailRow label="University" value={record.university_name} />
+      <DetailRow
+        label="Result"
+        value={
+          record.final_summary?.cgpa != null
+            ? `CGPA ${record.final_summary.cgpa}`
+            : record.final_summary?.percentage != null
+              ? `${record.final_summary.percentage}%`
+              : null
+        }
+      />
+      <DetailRow
+        label="Backlogs"
+        value={record.final_summary?.total_backlogs}
+      />
     </div>
   );
 }
@@ -150,6 +186,8 @@ export default function ApplicationDetailPage() {
     tenth_grade: tenthGrade,
     twelfth_grade: twelfthGrade,
     undergraduate,
+    pg,
+    diploma,
   } = app.qualificationDetails;
 
   return (
@@ -518,7 +556,7 @@ export default function ApplicationDetailPage() {
 
       {/* Academic Records */}
       <Section title="Academic Records">
-        {!tenthGrade && !twelfthGrade && !undergraduate ? (
+        {!tenthGrade && !twelfthGrade && !undergraduate && !pg && !diploma ? (
           <p className="text-sm text-muted-foreground">
             No academic records added yet.
           </p>
@@ -567,31 +605,10 @@ export default function ApplicationDetailPage() {
               </div>
             )}
             {undergraduate && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Undergraduate
-                </p>
-                <DetailRow label="Program" value={undergraduate.program_name} />
-                <DetailRow
-                  label="University"
-                  value={undergraduate.university_name}
-                />
-                <DetailRow
-                  label="Result"
-                  value={
-                    undergraduate.final_summary?.cgpa != null
-                      ? `CGPA ${undergraduate.final_summary.cgpa}`
-                      : undergraduate.final_summary?.percentage != null
-                        ? `${undergraduate.final_summary.percentage}%`
-                        : null
-                  }
-                />
-                <DetailRow
-                  label="Backlogs"
-                  value={undergraduate.final_summary?.total_backlogs}
-                />
-              </div>
+              <DegreeLevelCard title="Undergraduate" record={undergraduate} />
             )}
+            {pg && <DegreeLevelCard title="PG" record={pg} />}
+            {diploma && <DegreeLevelCard title="Diploma" record={diploma} />}
           </div>
         )}
       </Section>

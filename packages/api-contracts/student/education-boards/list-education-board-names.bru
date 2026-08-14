@@ -13,6 +13,8 @@ get {
 params:query {
   ~grade: 10th
   ~search: CBSE
+  ~page: 1
+  ~limit: 20
 }
 
 headers {
@@ -33,9 +35,13 @@ docs {
   grade, slug), no subjects. Only ACTIVE boards are returned. Requires
   student authentication.
 
-  Query (all optional):
-  - grade: "10th" | "12th" — omit to get both grades
-  - search: case-insensitive match on board name
+  Query:
+  - grade: "10th" | "12th" — omit to get both grades (optional)
+  - search: case-insensitive match on board name (optional)
+  - page (default 1), limit (default 20, max 100)
+
+  Response `data` is the array of boards; `meta` has the standard
+  page/limit/total/totalPages pagination block.
 
   Use Get Education Board (by id) to fetch a specific board's subjects and
   mark details once the student picks one.

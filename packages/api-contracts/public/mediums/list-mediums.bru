@@ -1,0 +1,36 @@
+meta {
+  name: List Mediums
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/mediums?page=1&limit=20
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+docs {
+  Returns a paginated list of mediums of instruction (English, Malayalam,
+  Hindi, Tamil, ...). No authentication required.
+
+  Reuses the same static list as /public/languages (medium of instruction
+  is the same underlying data — languages), exposed under its own route
+  for semantic clarity on forms that ask for "medium of instruction"
+  specifically (e.g. the 10th/12th Grade academic-record screens).
+
+  Query params:
+  - search (optional): filter by name (case-insensitive substring match)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response: { code: string, name: string }[]
+  Meta: { total, page, limit, totalPages, hasNextPage, hasPreviousPage }
+
+  Data source: static JSON — no DB query.
+}

@@ -68,20 +68,32 @@ export class EducationBoardsRepository {
     });
   }
 
-  static async listActiveNames(
-    filters: { grade?: string; search?: string } = {},
-  ) {
-    return prisma.educationBoard.findMany({
-      where: {
-        isActive: true,
-        ...(filters.grade ? { grade: filters.grade } : {}),
-        ...(filters.search
-          ? { name: { contains: filters.search, mode: "insensitive" as const } }
-          : {}),
-      },
-      select: { id: true, name: true, grade: true, slug: true },
-      orderBy: [{ name: "asc" }, { grade: "asc" }],
-    });
+  static async listActiveNames(filters: {
+    grade?: string;
+    search?: string;
+    page: number;
+    limit: number;
+  }) {
+    const where = {
+      isActive: true,
+      ...(filters.grade ? { grade: filters.grade } : {}),
+      ...(filters.search
+        ? { name: { contains: filters.search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [rows, total] = await Promise.all([
+      prisma.educationBoard.findMany({
+        where,
+        select: { id: true, name: true, grade: true, slug: true },
+        orderBy: [{ name: "asc" }, { grade: "asc" }],
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.educationBoard.count({ where }),
+    ]);
+
+    return { rows, total };
   }
 
   static async findByNameAndGrade(name: string, grade: string) {

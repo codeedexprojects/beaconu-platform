@@ -1,0 +1,31 @@
+meta {
+  name: List India States
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/india-states?page=1&limit=50
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 50
+  search:
+}
+
+docs {
+  Returns a paginated list of Indian states + union territories.
+  No authentication required.
+
+  Query params:
+  - search (optional): filter by state name (case-insensitive substring match)
+  - page (default: 1)
+  - limit (default: 50, max: 100)
+
+  Response: { code: string, name: string }[]
+  Meta: { total, page, limit, totalPages, hasNextPage, hasPreviousPage }
+
+  Data source: static JSON — no DB query.
+}

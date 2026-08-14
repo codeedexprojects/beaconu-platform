@@ -162,6 +162,12 @@ export const undergraduateDetailsSchema = z.object({
   projects: z.array(projectEntrySchema).optional().default([]),
 });
 
+// PG and Diploma are structurally identical to Undergraduate (same
+// program/university/semester/final-summary/documents/projects shape) —
+// reuse the same schema object rather than duplicating it.
+export const pgDetailsSchema = undergraduateDetailsSchema;
+export const diplomaDetailsSchema = undergraduateDetailsSchema;
+
 export type TenthGradeDetailsInput = z.infer<typeof tenthGradeDetailsSchema>;
 export type TwelfthGradeDetailsInput = z.infer<
   typeof twelfthGradeDetailsSchema
@@ -169,3 +175,5 @@ export type TwelfthGradeDetailsInput = z.infer<
 export type UndergraduateDetailsInput = z.infer<
   typeof undergraduateDetailsSchema
 >;
+export type PgDetailsInput = UndergraduateDetailsInput;
+export type DiplomaDetailsInput = UndergraduateDetailsInput;

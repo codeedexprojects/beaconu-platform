@@ -78,6 +78,29 @@ export interface ApplicationAmountDetails {
   documentUrl: string | null;
 }
 
+export type FormStepKey =
+  | "payment"
+  | "personal_details"
+  | "family_details"
+  | "address_details"
+  | "tenth_grade"
+  | "twelfth_grade"
+  | "undergraduate"
+  | "pg"
+  | "diploma"
+  | "achievements_details"
+  | "entrance_exam_details"
+  | "documents"
+  | "declaration";
+
+export type FormStepStatus = "completed" | "current" | "pending";
+
+export interface FormStepEntry {
+  key: FormStepKey;
+  label: string;
+  status: FormStepStatus;
+}
+
 export interface ApplicationStatusApplication {
   applicationId: string;
   applicationNumber: string;
@@ -88,6 +111,7 @@ export interface ApplicationStatusApplication {
   formStatus: string;
   feePaymentStatus: string;
   pendingAction: PendingApplicationAction;
+  formSteps: FormStepEntry[];
   createdAt: string;
 }
 
@@ -142,6 +166,7 @@ export interface ApplicationStatusSummaryBasic {
   formStatus: string;
   feePaymentStatus: string;
   pendingAction: PendingApplicationAction;
+  formSteps: FormStepEntry[];
   createdAt: string;
 }
 
@@ -397,10 +422,16 @@ export interface UndergraduateDetailsInput {
   projects: ProjectEntry[];
 }
 
+// PG and Diploma are structurally identical to Undergraduate.
+export type PgDetailsInput = UndergraduateDetailsInput;
+export type DiplomaDetailsInput = UndergraduateDetailsInput;
+
 export interface AcademicRecords {
   tenth_grade?: TenthGradeDetailsInput;
   twelfth_grade?: TwelfthGradeDetailsInput;
   undergraduate?: UndergraduateDetailsInput;
+  pg?: PgDetailsInput;
+  diploma?: DiplomaDetailsInput;
 }
 
 export interface InternshipEntry {

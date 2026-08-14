@@ -68,6 +68,15 @@ const idParamSchema = z.object({
 const listEducationBoardNamesQuerySchema = z.object({
   grade: z.enum(GRADES).optional(),
   search: z.string().trim().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+// GET /:id?course= — course only matters for 12th-grade boards (each of
+// which has multiple streams/courses under it); 10th-grade boards have a
+// single flat subject list and ignore this param entirely.
+const boardDetailQuerySchema = z.object({
+  course: z.string().trim().optional(),
 });
 
 export const educationBoardSchemas = {
@@ -76,6 +85,7 @@ export const educationBoardSchemas = {
   listQuery: listEducationBoardsQuerySchema,
   idParam: idParamSchema,
   listNamesQuery: listEducationBoardNamesQuerySchema,
+  detailQuery: boardDetailQuerySchema,
 };
 
 export type CreateEducationBoardInput = z.infer<
