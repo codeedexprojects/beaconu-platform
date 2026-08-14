@@ -293,6 +293,10 @@ export class ApplicationRepository {
         feePaymentStatus: true,
         currentStep: true,
         createdAt: true,
+        declaration: true,
+        qualificationDetails: true,
+        achievementsDetails: true,
+        entranceExamDetails: true,
         college: { select: { id: true, name: true } },
         admissionCycle: {
           select: { id: true, name: true, assessmentRequired: true },
@@ -306,6 +310,9 @@ export class ApplicationRepository {
             course: { select: { id: true, name: true, code: true } },
           },
           orderBy: { preferenceOrder: "asc" },
+        },
+        student: {
+          select: { qualificationDetails: true, achievementsDetails: true },
         },
       },
       orderBy: { createdAt: "desc" },

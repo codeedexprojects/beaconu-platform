@@ -43,7 +43,10 @@ docs {
       formStatus, feePaymentStatus,
       pendingAction: "payment" | "personal_details" | "family_details"
                    | "address_details" | "qualification_details"
-                   | "declaration" | "submit" | "none",
+                   | "entrance_exam_details" | "declaration" | "submit" | "none",
+      // Full per-screen breakdown — see get-application-status-all.bru's
+      // docs for the complete key list/ordering and status semantics.
+      formSteps: [{ key, label, status: "completed"|"current"|"pending" }, ...],
       createdAt
     },
 

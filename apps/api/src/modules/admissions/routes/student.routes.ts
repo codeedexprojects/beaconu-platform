@@ -69,6 +69,14 @@ router.patch(
   StudentApplicationController.updateUndergraduateDetails,
 );
 router.patch(
+  "/my-applications/:applicationId/academic-records/pg",
+  StudentApplicationController.updatePgDetails,
+);
+router.patch(
+  "/my-applications/:applicationId/academic-records/diploma",
+  StudentApplicationController.updateDiplomaDetails,
+);
+router.patch(
   "/my-applications/:applicationId/achievements-details",
   StudentApplicationController.updateAchievementsDetails,
 );

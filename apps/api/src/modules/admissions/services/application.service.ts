@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { ApplicationRepository } from "../repositories/application.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { ApplicationCourseService } from "./application-course.service";
+import { ApplicationDocumentService } from "./application-document.service";
 import { StudentsService } from "@/modules/students/services/students.service";
 import { AttemptService } from "@/modules/assessments/services/attempt.service";
 import type { StartApplicationInput } from "../validators/application.validator";
@@ -17,6 +18,8 @@ import type {
   TenthGradeDetailsInput,
   TwelfthGradeDetailsInput,
   UndergraduateDetailsInput,
+  PgDetailsInput,
+  DiplomaDetailsInput,
 } from "../validators/academic-records.validator";
 import type { AchievementsDetailsInput } from "../validators/achievements-details.validator";
 import type { EntranceExamDetailsInput } from "../validators/entrance-exam.validator";
@@ -82,6 +85,136 @@ type StatusRow = Awaited<
   ReturnType<typeof ApplicationRepository.findStatusRows>
 >[number];
 
+function isEmptyJson(value: unknown): boolean {
+  return (
+    !value || (typeof value === "object" && Object.keys(value).length === 0)
+  );
+}
+
+type FormStepStatus = "completed" | "current" | "pending";
+interface FormStepEntry {
+  key: string;
+  label: string;
+  status: FormStepStatus;
+}
+
+const FORM_STEP_LABELS: Record<string, string> = {
+  payment: "Application Fee Payment",
+  personal_details: "Personal Information",
+  family_details: "Family/Guardian Details",
+  address_details: "Address Details",
+  tenth_grade: "Academic Records — 10th Grade Details",
+  twelfth_grade: "Academic Records — 12th Grade Details",
+  undergraduate: "Academic Records — Undergraduate Details",
+  pg: "Academic Records — PG Details",
+  diploma: "Academic Records — Diploma Details",
+  achievements_details: "Achievements & Extracurricular Profile",
+  entrance_exam_details: "Competitive Exam Records",
+  documents: "Identity & Category Proofs (Documents)",
+  declaration: "Declaration",
+};
+
+function step(key: string, status: FormStepStatus): FormStepEntry {
+  return { key, label: FORM_STEP_LABELS[key]!, status };
+}
+
+/** Every screen in the 10-screen form (+ payment/documents), with a real
+ * per-screen status — unlike pendingAction, which only ever names the
+ * single next mandatory step. Sequential/mandatory screens (payment →
+ * personal → family → address → qualification-gate → entrance exam →
+ * declaration) derive status from currentStep, same thresholds as
+ * resolvePendingAction. The 5 academic-record sub-screens don't share a
+ * currentStep slot (any ONE of them satisfies the "qualification" gate),
+ * so their status is read off actual saved data instead. Achievements is
+ * optional and never blocks, so it's only ever "completed" or "pending",
+ * never "current". */
+async function buildFormSteps(
+  studentId: string,
+  row: StatusRow,
+): Promise<FormStepEntry[]> {
+  const submitted = row.formStatus === "submitted";
+  const pendingAction = resolvePendingAction(
+    row.formStatus,
+    row.feePaymentStatus,
+    row.currentStep,
+  );
+
+  const qualificationDetails = (
+    isEmptyJson(row.qualificationDetails)
+      ? row.student.qualificationDetails
+      : row.qualificationDetails
+  ) as Record<string, unknown>;
+  const achievementsDetails = isEmptyJson(row.achievementsDetails)
+    ? row.student.achievementsDetails
+    : row.achievementsDetails;
+  const declaration = (row.declaration ?? {}) as { accepted?: boolean };
+
+  const documentsRequired = await ApplicationDocumentService.listRequired(
+    row.id,
+    studentId,
+  );
+  const documentsComplete = documentsRequired.every(
+    (d) => !d.isRequired || d.uploaded !== null,
+  );
+
+  function sequentialStatus(
+    gateKey: string,
+    threshold: number,
+  ): FormStepStatus {
+    if (submitted || row.currentStep >= threshold) return "completed";
+    return pendingAction === gateKey ? "current" : "pending";
+  }
+
+  return [
+    row.feePaymentStatus === "paid"
+      ? step("payment", "completed")
+      : step("payment", "current"),
+    step(
+      "personal_details",
+      sequentialStatus("personal_details", STEP_NUMBERS.personal),
+    ),
+    step(
+      "family_details",
+      sequentialStatus("family_details", STEP_NUMBERS.family),
+    ),
+    step(
+      "address_details",
+      sequentialStatus("address_details", STEP_NUMBERS.address),
+    ),
+    step(
+      "tenth_grade",
+      qualificationDetails?.tenth_grade ? "completed" : "pending",
+    ),
+    step(
+      "twelfth_grade",
+      qualificationDetails?.twelfth_grade ? "completed" : "pending",
+    ),
+    step(
+      "undergraduate",
+      qualificationDetails?.undergraduate ? "completed" : "pending",
+    ),
+    step("pg", qualificationDetails?.pg ? "completed" : "pending"),
+    step("diploma", qualificationDetails?.diploma ? "completed" : "pending"),
+    step(
+      "achievements_details",
+      !isEmptyJson(achievementsDetails) ? "completed" : "pending",
+    ),
+    step(
+      "entrance_exam_details",
+      sequentialStatus("entrance_exam_details", STEP_NUMBERS.entranceExam),
+    ),
+    step("documents", documentsComplete ? "completed" : "pending"),
+    step(
+      "declaration",
+      submitted || declaration.accepted
+        ? "completed"
+        : pendingAction === "declaration"
+          ? "current"
+          : "pending",
+    ),
+  ];
+}
+
 const SHORTLISTED_OR_LATER = new Set([
   "shortlisted",
   "offer_issued",
@@ -143,7 +276,7 @@ const NOT_ISSUED_AMOUNT_DETAILS = {
  * single-cycle endpoint (`getStatus` / `GET /:id/application/status`) was
  * asked to move to the richer application/assessment/interview/
  * amountDetails shape (`buildStatusSummary`, below). */
-function toBasicStatusSummary(row: StatusRow) {
+async function toBasicStatusSummary(studentId: string, row: StatusRow) {
   return {
     applicationId: row.id,
     applicationNumber: row.applicationNumber,
@@ -165,6 +298,7 @@ function toBasicStatusSummary(row: StatusRow) {
       row.feePaymentStatus,
       row.currentStep,
     ),
+    formSteps: await buildFormSteps(studentId, row),
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -271,6 +405,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         row.feePaymentStatus,
         row.currentStep,
       ),
+      formSteps: await buildFormSteps(studentId, row),
       createdAt: row.createdAt.toISOString(),
     },
     assessment,
@@ -594,6 +729,36 @@ export class ApplicationService {
     return toDto(row);
   }
 
+  /** PG and Diploma are structurally identical to Undergraduate — same
+   * merge-into-qualificationDetails pattern, same step number. */
+  static async updatePgDetails(
+    applicationId: string,
+    studentId: string,
+    body: PgDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updatePgDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.qualification,
+    );
+    return toDto(row);
+  }
+
+  static async updateDiplomaDetails(
+    applicationId: string,
+    studentId: string,
+    body: DiplomaDetailsInput,
+  ) {
+    await ApplicationService.assertOwnDraft(applicationId, studentId);
+    await StudentsService.updateDiplomaDetails(studentId, body);
+    const row = await ApplicationRepository.advanceStep(
+      applicationId,
+      STEP_NUMBERS.qualification,
+    );
+    return toDto(row);
+  }
+
   /** Internships/work-experience/awards/publications/patents/certs/
    * portfolio-links/recommendations/innovation/volunteering — one big
    * optional "extracurricular profile" screen. Every field is optional,
@@ -760,7 +925,7 @@ export class ApplicationService {
       collegeId,
     });
     if (rows.length === 0) return null;
-    return rows.map(toBasicStatusSummary);
+    return Promise.all(rows.map((row) => toBasicStatusSummary(studentId, row)));
   }
 
   static async listMine(studentId: string, admissionCycleId?: string) {

@@ -1,0 +1,69 @@
+meta {
+  name: Update Diploma Details (Student)
+  type: http
+  seq: 18
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/academic-records/diploma
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "program_type": "regular",
+    "degree_type": "Diploma",
+    "program_name": "Diploma in Mechanical Engineering",
+    "specialization": null,
+    "university_name": "State Board of Technical Education",
+    "university_type": "State",
+    "institution_name": "Government Polytechnic College",
+    "institution_type": "Government",
+    "admission_year": "2020",
+    "passing_year": "2023",
+    "duration_years": 3,
+    "register_number": "REG334455",
+    "academic_cycle": "yearly",
+    "semester_records": [
+      {
+        "label": "Year 1",
+        "duration": "1 year",
+        "gpa": null,
+        "cgpa_or_percentage": 82,
+        "backlogs": 0
+      }
+    ],
+    "final_summary": {
+      "total_credits": null,
+      "cgpa": null,
+      "percentage": 84,
+      "rank": null,
+      "total_backlogs": 0,
+      "result_status": "Passed",
+      "remarks": null
+    },
+    "documents": {
+      "semester_mark_sheet_urls": [],
+      "degree_certificate_url": "https://example.com/uploads/diploma-cert.pdf",
+      "provisional_certificate_url": null,
+      "consolidated_mark_sheet_url": "https://example.com/uploads/diploma-consolidated.pdf"
+    },
+    "has_projects": false,
+    "projects": []
+  }
+}
+
+docs {
+  Full-replace write of the Diploma Details screen — structurally
+  identical to Update Undergraduate Details (same fields, same validator,
+  same rules). Merges into Student.qualificationDetails under the
+  `diploma` key without touching `tenth_grade`/`twelfth_grade`/
+  `undergraduate`/`pg`. 409 if the application has already been
+  submitted. Advances currentStep to at least 6.
+}

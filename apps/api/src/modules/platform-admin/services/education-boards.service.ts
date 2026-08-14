@@ -173,13 +173,55 @@ export class EducationBoardsService {
     return toDto(updated);
   }
 
-  static async listNamesForStudent(grade?: string, search?: string) {
-    return EducationBoardsRepository.listActiveNames({ grade, search });
+  static async listNamesForStudent(
+    grade: string | undefined,
+    search: string | undefined,
+    page: number,
+    limit: number,
+  ) {
+    const { rows, total } = await EducationBoardsRepository.listActiveNames({
+      grade,
+      search,
+      page,
+      limit,
+    });
+    return {
+      boards: rows,
+      meta: PaginationHelper.createMeta(total, page, limit),
+    };
   }
 
-  static async getActiveById(id: string) {
+  /** `course` only applies to 12th-grade boards, which have multiple
+   * streams under one board:
+   *  - 10th grade                → full flat subject list (course ignored)
+   *  - 12th grade, no course     → just the distinct list of courses/streams
+   *  - 12th grade, course given  → subjects for that one course only
+   */
+  static async getActiveById(id: string, course?: string) {
     const board = await EducationBoardsRepository.findActiveById(id);
     if (!board) throw new NotFoundError("Education board not found");
-    return toDto(board);
+    const dto = toDto(board);
+
+    if (dto.grade !== "12th") {
+      return dto;
+    }
+
+    if (!course) {
+      const courses = Array.from(
+        new Set(dto.subjects.map((s) => s.course).filter(Boolean)),
+      );
+      return {
+        id: dto.id,
+        name: dto.name,
+        grade: dto.grade,
+        slug: dto.slug,
+        courses,
+      };
+    }
+
+    return {
+      ...dto,
+      subjects: dto.subjects.filter((s) => s.course === course),
+    };
   }
 }

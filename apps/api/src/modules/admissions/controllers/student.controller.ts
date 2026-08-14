@@ -34,6 +34,8 @@ import {
   tenthGradeDetailsSchema,
   twelfthGradeDetailsSchema,
   undergraduateDetailsSchema,
+  pgDetailsSchema,
+  diplomaDetailsSchema,
 } from "../validators/academic-records.validator";
 import { achievementsDetailsSchema } from "../validators/achievements-details.validator";
 import { entranceExamDetailsSchema } from "../validators/entrance-exam.validator";
@@ -223,6 +225,26 @@ export class StudentApplicationController {
       body,
     );
     return res.json(ApiResponse.success("Undergraduate details saved", result));
+  }
+
+  static async updatePgDetails(req: Request, res: Response) {
+    const body = pgDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updatePgDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("PG details saved", result));
+  }
+
+  static async updateDiplomaDetails(req: Request, res: Response) {
+    const body = diplomaDetailsSchema.parse(req.body);
+    const result = await ApplicationService.updateDiplomaDetails(
+      req.params.applicationId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Diploma details saved", result));
   }
 
   static async updateAchievementsDetails(req: Request, res: Response) {

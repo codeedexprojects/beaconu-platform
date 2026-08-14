@@ -7,6 +7,8 @@ import publicCollegeRoutes from "@/modules/colleges/routes/public-college.routes
 import starterGuideVideosPublicRoutes from "@/modules/platform-admin/routes/starter-guide-videos-public.routes";
 import languagesPublicRoutes from "@/modules/languages/routes/public.routes";
 import countriesPublicRoutes from "@/modules/countries/routes/public.routes";
+import indiaStatesPublicRoutes from "@/modules/india-states/routes/public.routes";
+import mediumsPublicRoutes from "@/modules/mediums/routes/public.routes";
 
 const router: Router = Router();
 
@@ -17,5 +19,7 @@ router.use("/colleges", publicCollegeRoutes);
 router.use("/starter-guide/videos", starterGuideVideosPublicRoutes);
 router.use("/languages", languagesPublicRoutes);
 router.use("/countries", countriesPublicRoutes);
+router.use("/india-states", indiaStatesPublicRoutes);
+router.use("/mediums", mediumsPublicRoutes);
 
 export default router;

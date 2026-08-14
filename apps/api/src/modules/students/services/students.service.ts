@@ -105,13 +105,13 @@ export class StudentsService {
     );
   }
 
-  /** The 10th/12th/undergraduate academic-record screens are three
+  /** The 10th/12th/undergraduate/pg/diploma academic-record screens are
    * independent forms sharing one JSON column — each write merges its own
    * key in rather than replacing the whole column, so submitting the 12th
    * grade screen never clobbers an already-saved 10th grade section. */
   private static async mergeQualificationSection(
     studentId: string,
-    key: "tenth_grade" | "twelfth_grade" | "undergraduate",
+    key: "tenth_grade" | "twelfth_grade" | "undergraduate" | "pg" | "diploma",
     data: Prisma.InputJsonValue,
   ) {
     const existing =
@@ -146,6 +146,17 @@ export class StudentsService {
     data: Prisma.InputJsonValue,
   ) {
     await this.mergeQualificationSection(studentId, "undergraduate", data);
+  }
+
+  static async updatePgDetails(studentId: string, data: Prisma.InputJsonValue) {
+    await this.mergeQualificationSection(studentId, "pg", data);
+  }
+
+  static async updateDiplomaDetails(
+    studentId: string,
+    data: Prisma.InputJsonValue,
+  ) {
+    await this.mergeQualificationSection(studentId, "diploma", data);
   }
 
   static async updateAchievementsDetails(

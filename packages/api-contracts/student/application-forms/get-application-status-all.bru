@@ -48,9 +48,34 @@ docs {
     formStatus, feePaymentStatus,
     pendingAction: "payment" | "personal_details" | "family_details"
                  | "address_details" | "qualification_details"
-                 | "declaration" | "submit" | "none",
+                 | "entrance_exam_details" | "declaration" | "submit" | "none",
+    formSteps: [{ key, label, status: "completed"|"current"|"pending" }, ...],
     createdAt
   }
+
+  `pendingAction` is the single next mandatory thing to do (cheap,
+  currentStep-derived). `formSteps` is the FULL per-screen breakdown of
+  every screen in the 10-screen form (+ payment/documents), in display
+  order:
+
+    payment, personal_details, family_details, address_details,
+    tenth_grade, twelfth_grade, undergraduate, pg, diploma,
+    achievements_details, entrance_exam_details, documents, declaration
+
+  Status per entry:
+  - "completed": done
+  - "current": the one the student should be on right now (only ever set
+    for the sequential mandatory screens: payment, personal, family,
+    address, entrance_exam, declaration)
+  - "pending": not done yet, not currently blocking
+
+  The 5 academic-record screens (tenth_grade/twelfth_grade/undergraduate/
+  pg/diploma) are never "current" — a student only needs to fill in
+  whichever ONE applies to them, so these are just completed/pending based
+  on whether that section has actually been saved. achievements_details is
+  optional and supplementary — also never "current", never blocks
+  progression. documents is a checklist (required-vs-uploaded), computed
+  independently of currentStep, also never "current".
 
   Each entry carries its own collegeId/collegeName and
   admissionCycleId/admissionCycleName (every college runs fully independent
