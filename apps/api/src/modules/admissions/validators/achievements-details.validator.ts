@@ -13,8 +13,11 @@ const internshipEntrySchema = z.object({
     .min(1, "Company/Organization name is required")
     .max(255),
   role: z.string().trim().min(1, "Role/Position is required").max(150),
-  start_date: z.coerce.date().optional().nullable(),
-  end_date: z.coerce.date().optional().nullable(),
+  // Free-text date — not strictly parsed/validated. These are purely
+  // display fields (never used for date math), and strict z.coerce.date()
+  // was rejecting real client input on malformed-but-harmless date strings.
+  start_date: z.string().trim().max(30).optional().nullable(),
+  end_date: z.string().trim().max(30).optional().nullable(),
   key_responsibilities: z.string().trim().max(2000).optional().nullable(),
 });
 
@@ -64,7 +67,7 @@ const patentEntrySchema = z.object({
   title: z.string().trim().min(1, "Patent title is required").max(255),
   patent_number: z.string().trim().max(100).optional().nullable(),
   status: z.enum(["filed", "published", "granted"]),
-  filing_date: z.coerce.date().optional().nullable(),
+  filing_date: z.string().trim().max(30).optional().nullable(),
   patent_office: z.string().trim().max(150).optional().nullable(),
   co_inventors: z.string().trim().max(500).optional().nullable(),
   document_url: z.string().trim().url().optional().nullable(),
@@ -78,8 +81,8 @@ const certificationEntrySchema = z.object({
     .min(1, "Issuing authority is required")
     .max(255),
   certification_id: z.string().trim().max(100).optional().nullable(),
-  issue_date: z.coerce.date().optional().nullable(),
-  expiry_date: z.coerce.date().optional().nullable(),
+  issue_date: z.string().trim().max(30).optional().nullable(),
+  expiry_date: z.string().trim().max(30).optional().nullable(),
   verification_url: z.string().trim().url().optional().nullable(),
   certificate_url: z.string().trim().url().optional().nullable(),
 });
@@ -89,7 +92,10 @@ const portfolioLinksSchema = z.object({
   github_url: z.string().trim().url().optional().nullable(),
   researchgate_url: z.string().trim().url().optional().nullable(),
   google_scholar_url: z.string().trim().url().optional().nullable(),
-  orcid_id: z.string().trim().max(30).optional().nullable(),
+  // Should be a short ORCID id (e.g. 0000-0000-0000-0000), but clients have
+  // been sending a full profile URL here instead — accept generously
+  // rather than reject the whole submission over it.
+  orcid_id: z.string().trim().max(255).optional().nullable(),
   personal_website_url: z.string().trim().url().optional().nullable(),
   behance_url: z.string().trim().url().optional().nullable(),
   dribbble_url: z.string().trim().url().optional().nullable(),
@@ -115,8 +121,11 @@ const volunteeringEntrySchema = z.object({
     .min(1, "Organization name is required")
     .max(255),
   role: z.string().trim().max(150).optional().nullable(),
-  start_date: z.coerce.date().optional().nullable(),
-  end_date: z.coerce.date().optional().nullable(),
+  // Free-text date — not strictly parsed/validated. These are purely
+  // display fields (never used for date math), and strict z.coerce.date()
+  // was rejecting real client input on malformed-but-harmless date strings.
+  start_date: z.string().trim().max(30).optional().nullable(),
+  end_date: z.string().trim().max(30).optional().nullable(),
   description: z.string().trim().max(2000).optional().nullable(),
 });
 
