@@ -33,3 +33,4 @@ export * from "./ticket";
 export * from "./notice";
 export * from "./seat-cancellation";
 export * from "./course-switch-request";
+export * from "./dashboard";

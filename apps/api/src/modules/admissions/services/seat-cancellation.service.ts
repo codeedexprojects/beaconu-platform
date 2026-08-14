@@ -148,6 +148,10 @@ export class SeatCancellationService {
     };
   }
 
+  static async countPending(collegeId: string) {
+    return SeatCancellationRepository.countPendingForCollege(collegeId);
+  }
+
   static async review(
     collegeId: string,
     staffId: string,

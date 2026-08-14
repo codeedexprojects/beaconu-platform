@@ -8,6 +8,10 @@ const router: Router = Router();
 router.use(authenticate, authorizeUserType("staff_member"));
 
 router.get("/", ApplicationsCollegeAdminController.list);
+router.get(
+  "/pending-enrollment",
+  ApplicationsCollegeAdminController.listPendingEnrollment,
+);
 router.get("/:id", ApplicationsCollegeAdminController.getById);
 router.post(
   "/courses/:applicationCourseId/enroll",

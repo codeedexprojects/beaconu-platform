@@ -21,6 +21,7 @@ import collegeAdminNoticeRoutes from "@/modules/notices/routes/college-admin.rou
 import collegeAdminStudentsRoutes from "@/modules/students/routes/college-admin.routes";
 import collegeAdminSeatCancellationRoutes from "@/modules/admissions/routes/seat-cancellations-college-admin.routes";
 import collegeAdminCourseSwitchRoutes from "@/modules/admissions/routes/course-switch-requests-college-admin.routes";
+import collegeAdminDashboardRoutes from "@/modules/dashboard/routes/college-admin.routes";
 
 const router: Router = Router();
 
@@ -35,6 +36,7 @@ router.use("/documents", collegeAdminDocumentsRoutes);
 router.use("/anti-ragging-complaints", collegeAdminAntiRaggingRoutes);
 router.use("/application-forms", collegeAdminAdmissionCycleRoutes);
 router.use("/applications", collegeAdminApplicationsRoutes);
+router.use("/dashboard", collegeAdminDashboardRoutes);
 router.use("/assessments", collegeAdminAssessmentRoutes);
 router.use("/media-kit", collegeAdminMediaKitRoutes);
 router.use("/icons", collegeAdminIconsRoutes);

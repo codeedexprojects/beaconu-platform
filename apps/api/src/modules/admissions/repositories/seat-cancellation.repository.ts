@@ -22,6 +22,15 @@ const SELECT = {
 } as const;
 
 export class SeatCancellationRepository {
+  static async countPendingForCollege(collegeId: string) {
+    return prisma.seatCancellation.count({
+      where: {
+        status: "pending",
+        applicationCourse: { application: { collegeId } },
+      },
+    });
+  }
+
   static async findPendingForApplicationCourse(applicationCourseId: string) {
     return prisma.seatCancellation.findFirst({
       where: { applicationCourseId, status: "pending" },

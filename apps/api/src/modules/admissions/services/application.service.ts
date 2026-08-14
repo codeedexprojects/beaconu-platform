@@ -435,6 +435,10 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
 }
 
 export class ApplicationService {
+  static async countNewSubmissions(collegeId: string) {
+    return ApplicationRepository.countNewlySubmittedForCollege(collegeId);
+  }
+
   static async start(
     studentId: string,
     admissionCycleId: string,

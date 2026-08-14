@@ -4,6 +4,7 @@ import type {
   ApplicationListItem,
   EnrollmentItem,
   PaginationMeta,
+  PendingEnrollmentListResponse,
 } from "@beaconu/types";
 
 export interface ApplicationListFilters {
@@ -45,5 +46,27 @@ export async function enrollApplicationCourse(
   return api.post(
     `/api/v1/college-admin/applications/courses/${applicationCourseId}/enroll`,
     {},
+  );
+}
+
+export interface PendingEnrollmentFilters {
+  admission_cycle_id?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getPendingEnrollments(
+  filters: PendingEnrollmentFilters = {},
+): Promise<PendingEnrollmentListResponse> {
+  const params = new URLSearchParams();
+  if (filters.admission_cycle_id)
+    params.set("admission_cycle_id", filters.admission_cycle_id);
+  if (filters.search) params.set("search", filters.search);
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  return api.get(
+    `/api/v1/college-admin/applications/pending-enrollment${qs ? `?${qs}` : ""}`,
   );
 }

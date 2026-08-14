@@ -61,6 +61,10 @@ async function assertEnrolled(studentId: string, collegeId: string) {
 }
 
 export class TicketService {
+  static async countAwaitingResponse(collegeId: string) {
+    return TicketRepository.countAwaitingResponseForCollege(collegeId);
+  }
+
   static async create(studentId: string, data: CreateTicketInput) {
     await assertEnrolled(studentId, data.college_id);
 

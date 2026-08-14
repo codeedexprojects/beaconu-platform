@@ -35,6 +35,12 @@ const APPLICATION_LIST_SELECT = {
 } as const;
 
 export class ApplicationRepository {
+  static async countNewlySubmittedForCollege(collegeId: string) {
+    return prisma.application.count({
+      where: { collegeId, formStatus: "submitted" },
+    });
+  }
+
   static async findCycleForApply(admissionCycleId: string) {
     return prisma.admissionCycle.findUnique({
       where: { id: admissionCycleId },

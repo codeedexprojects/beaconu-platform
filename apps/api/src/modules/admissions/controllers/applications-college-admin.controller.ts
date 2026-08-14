@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
-import { listApplicationsQuerySchema } from "../validators/application.validator";
+import {
+  listApplicationsQuerySchema,
+  listPendingEnrollmentQuerySchema,
+} from "../validators/application.validator";
 import { ApplicationListQuery } from "../queries/application-list.query";
 import { ApplicationDetailQuery } from "../queries/application-detail.query";
+import { PendingEnrollmentQuery } from "../queries/pending-enrollment.query";
 import { EnrollmentService } from "../services/enrollment.service";
 
 export class ApplicationsCollegeAdminController {
@@ -18,6 +22,20 @@ export class ApplicationsCollegeAdminController {
         meta: result.meta,
       }),
     );
+  }
+
+  static async listPendingEnrollment(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const filters = listPendingEnrollmentQuerySchema.parse(req.query);
+    const result = await PendingEnrollmentQuery.listForCollegeAdmin(
+      req.collegeId!,
+      filters,
+    );
+    res
+      .status(200)
+      .json(ApiResponse.success("Pending enrollments fetched", result));
   }
 
   static async getById(req: Request, res: Response): Promise<void> {

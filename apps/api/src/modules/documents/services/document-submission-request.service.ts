@@ -68,6 +68,12 @@ async function notifyStudentOfReview(
 }
 
 export class DocumentSubmissionRequestService {
+  static async countUnderReview(collegeId: string) {
+    return DocumentSubmissionRequestRepository.countUnderReviewForCollege(
+      collegeId,
+    );
+  }
+
   static async create(
     collegeId: string,
     requestedBy: string,

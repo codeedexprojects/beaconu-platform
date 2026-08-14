@@ -3,6 +3,12 @@ import type { Prisma } from "@beaconu/db";
 import type { CreateSubmissionRequestInput } from "../validators/documents.validator";
 
 export class DocumentSubmissionRequestRepository {
+  static async countUnderReviewForCollege(collegeId: string) {
+    return prisma.documentSubmissionRequest.count({
+      where: { collegeId, status: "under_review" },
+    });
+  }
+
   static async create(
     collegeId: string,
     requestedBy: string,

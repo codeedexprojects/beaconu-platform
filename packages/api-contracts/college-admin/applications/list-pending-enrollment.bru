@@ -1,0 +1,53 @@
+meta {
+  name: List Pending Enrollment
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/applications/pending-enrollment?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~admission_cycle_id: {{admissionCycleId}}
+  ~search:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.requests && data.data.requests.length > 0) {
+      bru.setEnvVar("applicationCourseId", data.data.requests[0].applicationCourseId);
+    }
+  }
+}
+
+docs {
+  Every ApplicationCourse whose token fee is paid (`status: "token_paid"`)
+  but not yet enrolled, across the whole college — the queue for the
+  "Mark Enrolled" action (see Enroll Application Course). One row per
+  course, not per application (an application with two token_paid courses
+  shows up twice).
+
+  Query params:
+  - admission_cycle_id (optional): narrow to one admission cycle
+  - search (optional): matches student name/email or application number
+  - page (default 1), limit (default 20, max 100)
+
+  Response `data.requests[]` fields: applicationCourseId, applicationId,
+  applicationNumber, studentId, studentName, studentEmail, studentPhone,
+  courseId, courseName, courseCode, isPrimary, admissionCycleId,
+  admissionCycleName, applicationFee, offerNumber, tokenAmount,
+  tokenPaymentStatus, statusUpdatedAt (when the course's status last
+  changed to token_paid).
+
+  Use `applicationCourseId` from a row to call Enroll Application Course.
+}

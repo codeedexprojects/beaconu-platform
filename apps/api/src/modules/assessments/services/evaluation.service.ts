@@ -8,6 +8,10 @@ import { ApplicationCourseService } from "@/modules/admissions/services/applicat
 import type { EvaluationQueueItem, ScoreOverrideInput } from "@beaconu/types";
 
 export class EvaluationService {
+  static async countPendingEvaluation(collegeId: string) {
+    return AttemptRepository.countUnderEvaluationForCollege(collegeId);
+  }
+
   static async listQueue(
     collegeId: string,
     filters: { status?: string[] } = {},
