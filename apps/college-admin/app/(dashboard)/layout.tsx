@@ -33,6 +33,7 @@ import {
   GraduationCap,
   XCircle,
   Repeat,
+  ChevronDown,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -56,6 +57,7 @@ function getSidebarHintCount(
     case "/applications":
       return hints.newApplications;
     case "/assessments":
+    case "/assessments/evaluation":
       return hints.assessmentEvaluationQueue;
     case "/pending-enrollment":
       return hints.breakdown.pendingEnrollment;
@@ -66,10 +68,9 @@ function getSidebarHintCount(
     case "/support":
       return hints.breakdown.supportTickets;
     case "/documents":
-      return (
-        hints.breakdown.documentSubmissionRequests +
-        hints.breakdown.documentRequests
-      );
+      return hints.breakdown.documentSubmissionRequests;
+    case "/documents/requests":
+      return hints.breakdown.documentRequests;
     default:
       return 0;
   }
@@ -95,6 +96,7 @@ export default function DashboardLayout({
   const { mutateAsync: logoutCollegeAdmin } = useLogoutCollegeAdmin();
   const { data: sidebarHints } = useSidebarHints();
   const [isMounted, setIsMounted] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const collegeSlug =
     typeof window === "undefined"
       ? getCollegeSlugFromPath(pathname)
@@ -405,6 +407,20 @@ export default function DashboardLayout({
                     path: "/documents",
                     icon: FileText,
                     permission: "staff.view",
+                    children: [
+                      {
+                        name: "Requested From Students",
+                        path: "/documents",
+                      },
+                      {
+                        name: "Requested By Students",
+                        path: "/documents/requests",
+                      },
+                      {
+                        name: "Document Templates",
+                        path: "/documents/templates",
+                      },
+                    ],
                   },
                   {
                     name: "Application Forms",
@@ -435,6 +451,10 @@ export default function DashboardLayout({
                     path: "/assessments",
                     icon: Mic,
                     permission: "staff.view",
+                    children: [
+                      { name: "Templates", path: "/assessments/templates" },
+                      { name: "Evaluation", path: "/assessments/evaluation" },
+                    ],
                   },
                   {
                     name: "Interviews",
@@ -494,10 +514,107 @@ export default function DashboardLayout({
                         ? appPathname === "/"
                         : appPathname === item.path ||
                           appPathname.startsWith(`${item.path}/`);
-                    const hintCount = getSidebarHintCount(
-                      item.path,
-                      sidebarHints,
+                    const children =
+                      "children" in item ? item.children : undefined;
+                    const childIsActive = children?.some(
+                      (c) => appPathname === c.path,
                     );
+                    const isExpanded =
+                      expandedGroups.has(item.path) || childIsActive;
+                    const hintCount = children
+                      ? children.reduce(
+                          (sum, c) =>
+                            sum + getSidebarHintCount(c.path, sidebarHints),
+                          0,
+                        )
+                      : getSidebarHintCount(item.path, sidebarHints);
+
+                    if (children && children.length > 0) {
+                      return (
+                        <div key={item.path}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedGroups((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(item.path)) {
+                                  next.delete(item.path);
+                                } else {
+                                  next.add(item.path);
+                                }
+                                return next;
+                              })
+                            }
+                            className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
+                              childIsActive
+                                ? "text-white"
+                                : "text-gray-sidebar hover:bg-navy-dark hover:text-white"
+                            }`}
+                          >
+                            <Icon className="h-4 w-4 shrink-0 text-gray-sidebar group-hover:text-white" />
+                            <span className="flex-1 text-left">
+                              {item.name}
+                            </span>
+                            {hintCount > 0 && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive/90 px-1.5 text-[11px] font-semibold text-white">
+                                {hintCount > 99 ? "99+" : hintCount}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`h-3.5 w-3.5 shrink-0 text-gray-sidebar transition-transform duration-200 ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                          {isExpanded && (
+                            <div className="ml-4 mt-1 space-y-1 border-l border-navy-dark/50 pl-3">
+                              {children.map((child) => {
+                                const isChildActive =
+                                  appPathname === child.path;
+                                const childHintCount = getSidebarHintCount(
+                                  child.path,
+                                  sidebarHints,
+                                );
+                                return (
+                                  <button
+                                    key={child.path}
+                                    type="button"
+                                    onClick={() =>
+                                      router.push(
+                                        getPortalPath(collegeSlug, child.path),
+                                      )
+                                    }
+                                    className={`flex w-full items-center gap-2 rounded-full px-3 py-2 text-xs font-medium transition-all duration-200 ease-out ${
+                                      isChildActive
+                                        ? "bg-gold text-white"
+                                        : "text-gray-sidebar hover:bg-navy-dark hover:text-white"
+                                    }`}
+                                  >
+                                    <span className="flex-1 text-left">
+                                      {child.name}
+                                    </span>
+                                    {childHintCount > 0 && (
+                                      <span
+                                        className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
+                                          isChildActive
+                                            ? "bg-white/25 text-white"
+                                            : "bg-destructive/90 text-white"
+                                        }`}
+                                      >
+                                        {childHintCount > 99
+                                          ? "99+"
+                                          : childHintCount}
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
                     return (
                       <button
                         key={item.path}
