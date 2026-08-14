@@ -182,6 +182,10 @@ export class CourseSwitchRequestService {
     };
   }
 
+  static async countPending(collegeId: string) {
+    return CourseSwitchRequestRepository.countPendingForCollege(collegeId);
+  }
+
   static async review(
     collegeId: string,
     staffId: string,

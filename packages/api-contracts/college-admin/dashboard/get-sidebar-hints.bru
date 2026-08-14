@@ -1,0 +1,41 @@
+meta {
+  name: Get Sidebar Hints
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/dashboard/sidebar-hints
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Badge counts for the college-admin sidebar nav — how many items need
+  staff attention right now, per section. All counts are college-scoped,
+  computed live (no caching), each via a lightweight `count()` query
+  (no row data fetched).
+
+  Response `data`:
+  {
+    "newApplications": 4,           // Application.formStatus = "submitted"
+    "assessmentEvaluationQueue": 2, // AssessmentAttempt.status = "under_evaluation"
+    "otherRequests": 9,             // sum of everything in `breakdown`
+    "breakdown": {
+      "pendingEnrollment": 3,             // ApplicationCourse.status = "token_paid"
+      "seatCancellations": 1,             // SeatCancellation.status = "pending"
+      "courseSwitchRequests": 1,          // CourseSwitchRequest.status = "pending"
+      "supportTickets": 2,                // SupportTicket.status = "awaiting_response"
+      "documentSubmissionRequests": 1,    // DocumentSubmissionRequest.status = "under_review" (college -> student flow)
+      "documentRequests": 1               // DocumentRequest.status = "submitted" (student -> college flow)
+    }
+  }
+
+  Frontend maps each count to its own sidebar nav item's badge — see
+  `getSidebarHintCount` in apps/college-admin/app/(dashboard)/layout.tsx.
+  Polled every 60s client-side, not push-based.
+}

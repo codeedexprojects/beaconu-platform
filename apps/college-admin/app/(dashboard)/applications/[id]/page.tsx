@@ -24,6 +24,8 @@ import {
 import type {
   ApplicationDetailCourseItem,
   UndergraduateDetailsInput,
+  SubjectMarksEntry,
+  ResultSummary,
 } from "@beaconu/types";
 
 const FORM_STATUS_LABELS: Record<string, string> = {
@@ -63,6 +65,15 @@ function formatDateTime(dateStr: string | null) {
   });
 }
 
+function formatDate(dateStr: string | null | undefined) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function DetailRow({
   label,
   value,
@@ -78,7 +89,212 @@ function DetailRow({
   );
 }
 
-// Undergraduate/PG/Diploma are structurally identical — one shared card.
+function LinkOut({
+  href,
+  label = "View file",
+}: {
+  href?: string | null;
+  label?: string;
+}) {
+  if (!href) return <span className="text-sm text-muted-foreground">—</span>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-primary hover:underline"
+    >
+      {label}
+    </a>
+  );
+}
+
+// Generic "list of entries" renderer — each item gets its own bordered
+// card of DetailRows, via the caller-supplied renderItem.
+function EntryList<T>({
+  items,
+  emptyLabel,
+  renderItem,
+}: {
+  items: T[] | undefined | null;
+  emptyLabel: string;
+  renderItem: (item: T, index: number) => React.ReactNode;
+}) {
+  if (!items || items.length === 0) {
+    return <p className="text-sm text-muted-foreground">{emptyLabel}</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div key={i} className="rounded-md border bg-muted/20 p-3">
+          <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+            {renderItem(item, i)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SubjectsTable({ subjects }: { subjects: SubjectMarksEntry[] }) {
+  if (!subjects || subjects.length === 0) {
+    return <p className="text-sm text-muted-foreground">No subjects added.</p>;
+  }
+  return (
+    <div className="overflow-x-auto rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Subject</TableHead>
+            <TableHead>Pattern</TableHead>
+            <TableHead>Theory</TableHead>
+            <TableHead>Practical</TableHead>
+            <TableHead>Internal</TableHead>
+            <TableHead>Max</TableHead>
+            <TableHead>Obtained</TableHead>
+            <TableHead>Attempts</TableHead>
+            <TableHead>%</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {subjects.map((s, i) => (
+            <TableRow key={i}>
+              <TableCell>{s.subject_name}</TableCell>
+              <TableCell>{s.evaluation_pattern || "—"}</TableCell>
+              <TableCell>{s.theory_marks ?? "—"}</TableCell>
+              <TableCell>{s.practical_marks ?? "—"}</TableCell>
+              <TableCell>{s.internal_marks ?? "—"}</TableCell>
+              <TableCell>{s.max_marks}</TableCell>
+              <TableCell>{s.obtained_marks}</TableCell>
+              <TableCell>{s.attempts ?? "—"}</TableCell>
+              <TableCell>
+                {s.percentage != null ? `${s.percentage}%` : "—"}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function ResultSummaryRow({ summary }: { summary: ResultSummary | undefined }) {
+  if (!summary) return null;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <DetailRow label="Marking Scheme" value={summary.marking_scheme} />
+      <DetailRow label="Marks Obtained" value={summary.marks_obtained} />
+      <DetailRow label="Max Marks" value={summary.max_marks} />
+      <DetailRow
+        label="Percentage"
+        value={summary.percentage != null ? `${summary.percentage}%` : null}
+      />
+      {summary.remarks && (
+        <div className="sm:col-span-2 lg:col-span-4">
+          <DetailRow label="Remarks" value={summary.remarks} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Full field breakdown for a 10th/12th Grade record — shared shape minus
+// the 12th-only Class XI fields (passed in optionally).
+function SchoolGradeCard({
+  title,
+  record,
+  classXi,
+}: {
+  title: string;
+  record: {
+    academic_year: string;
+    admission_year: string;
+    year_of_passing: number;
+    board_name: string;
+    registration_number?: string | null;
+    school_name: string;
+    school_code?: string | null;
+    school_address?: string | null;
+    school_state: string;
+    medium_of_instruction: string;
+    subjects: SubjectMarksEntry[];
+    result_summary: ResultSummary;
+    marksheet_url?: string | null;
+  };
+  classXi?: {
+    has_separate_class_xi_exam: boolean;
+    class_xi_status?: "declared" | "undeclared" | null;
+  };
+  migrationCertificateUrl?: string | null;
+}) {
+  return (
+    <div className="rounded-lg border p-4">
+      <p className="mb-3 text-sm font-semibold">{title}</p>
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <DetailRow label="Academic Year" value={record.academic_year} />
+          <DetailRow label="Admission Year" value={record.admission_year} />
+          <DetailRow label="Year of Passing" value={record.year_of_passing} />
+          <DetailRow label="Board Name" value={record.board_name} />
+          <DetailRow
+            label="Registration Number"
+            value={record.registration_number}
+          />
+          <DetailRow label="School Name" value={record.school_name} />
+          <DetailRow label="School Code" value={record.school_code} />
+          <DetailRow label="School State" value={record.school_state} />
+          <DetailRow
+            label="Medium of Instruction"
+            value={record.medium_of_instruction}
+          />
+          {record.school_address && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <DetailRow label="School Address" value={record.school_address} />
+            </div>
+          )}
+          {classXi && (
+            <>
+              <DetailRow
+                label="Separate Class XI Exam"
+                value={classXi.has_separate_class_xi_exam ? "Yes" : "No"}
+              />
+              {classXi.has_separate_class_xi_exam && (
+                <DetailRow
+                  label="Class XI Status"
+                  value={classXi.class_xi_status}
+                />
+              )}
+            </>
+          )}
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Subjects
+          </p>
+          <SubjectsTable subjects={record.subjects} />
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Overall Result
+          </p>
+          <ResultSummaryRow summary={record.result_summary} />
+        </div>
+
+        <div className="flex flex-wrap gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Marksheet</p>
+            <LinkOut href={record.marksheet_url} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Undergraduate/PG/Diploma are structurally identical — one shared card,
+// full field breakdown (not just a summary).
 function DegreeLevelCard({
   title,
   record,
@@ -87,26 +303,182 @@ function DegreeLevelCard({
   record: UndergraduateDetailsInput;
 }) {
   return (
-    <div className="rounded-lg border p-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      <DetailRow label="Program" value={record.program_name} />
-      <DetailRow label="University" value={record.university_name} />
-      <DetailRow
-        label="Result"
-        value={
-          record.final_summary?.cgpa != null
-            ? `CGPA ${record.final_summary.cgpa}`
-            : record.final_summary?.percentage != null
-              ? `${record.final_summary.percentage}%`
-              : null
-        }
-      />
-      <DetailRow
-        label="Backlogs"
-        value={record.final_summary?.total_backlogs}
-      />
+    <div className="rounded-lg border p-4">
+      <p className="mb-3 text-sm font-semibold">{title}</p>
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <DetailRow label="Program Type" value={record.program_type} />
+          <DetailRow label="Degree Type" value={record.degree_type} />
+          <DetailRow label="Program Name" value={record.program_name} />
+          <DetailRow label="Specialization" value={record.specialization} />
+          <DetailRow label="University" value={record.university_name} />
+          <DetailRow label="University Type" value={record.university_type} />
+          <DetailRow label="Institution" value={record.institution_name} />
+          <DetailRow label="Institution Type" value={record.institution_type} />
+          <DetailRow label="Admission Year" value={record.admission_year} />
+          <DetailRow label="Passing Year" value={record.passing_year} />
+          <DetailRow label="Duration (Years)" value={record.duration_years} />
+          <DetailRow label="Register Number" value={record.register_number} />
+          <DetailRow label="Academic Cycle" value={record.academic_cycle} />
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Semester/Year Records
+          </p>
+          {record.semester_records && record.semester_records.length > 0 ? (
+            <div className="overflow-x-auto rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Label</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>GPA</TableHead>
+                    <TableHead>CGPA/%</TableHead>
+                    <TableHead>Backlogs</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {record.semester_records.map((s, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{s.label}</TableCell>
+                      <TableCell>{s.duration ?? "—"}</TableCell>
+                      <TableCell>{s.gpa ?? "—"}</TableCell>
+                      <TableCell>{s.cgpa_or_percentage ?? "—"}</TableCell>
+                      <TableCell>{s.backlogs ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No semester/year records added.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Final Academic Summary
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <DetailRow
+              label="Total Credits"
+              value={record.final_summary?.total_credits}
+            />
+            <DetailRow label="CGPA" value={record.final_summary?.cgpa} />
+            <DetailRow
+              label="Percentage"
+              value={
+                record.final_summary?.percentage != null
+                  ? `${record.final_summary.percentage}%`
+                  : null
+              }
+            />
+            <DetailRow label="Rank" value={record.final_summary?.rank} />
+            <DetailRow
+              label="Total Backlogs"
+              value={record.final_summary?.total_backlogs}
+            />
+            <DetailRow
+              label="Result Status"
+              value={record.final_summary?.result_status}
+            />
+            {record.final_summary?.remarks && (
+              <div className="sm:col-span-2 lg:col-span-4">
+                <DetailRow
+                  label="Remarks"
+                  value={record.final_summary.remarks}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Documents
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Degree Certificate
+              </p>
+              <LinkOut href={record.documents?.degree_certificate_url} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Provisional Certificate
+              </p>
+              <LinkOut href={record.documents?.provisional_certificate_url} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Consolidated Mark Sheet
+              </p>
+              <LinkOut href={record.documents?.consolidated_mark_sheet_url} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Semester Mark Sheets
+              </p>
+              {record.documents?.semester_mark_sheet_urls?.length ? (
+                <div className="space-y-1">
+                  {record.documents.semester_mark_sheet_urls.map((url, i) => (
+                    <div key={i}>
+                      <LinkOut href={url} label={`Sheet ${i + 1}`} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground">—</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Projects
+          </p>
+          {record.has_projects ? (
+            <EntryList
+              items={record.projects}
+              emptyLabel="No projects added."
+              renderItem={(p) => (
+                <>
+                  <DetailRow label="Title" value={p.title} />
+                  <DetailRow label="Type" value={p.project_type} />
+                  <DetailRow label="Duration" value={p.duration} />
+                  <DetailRow label="Team Size" value={p.team_size} />
+                  <DetailRow label="Role" value={p.role} />
+                  {p.project_url && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Link</p>
+                      <LinkOut href={p.project_url} label="Open project" />
+                    </div>
+                  )}
+                  {p.description && (
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <DetailRow label="Description" value={p.description} />
+                    </div>
+                  )}
+                  {p.key_outcomes && (
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <DetailRow label="Key Outcomes" value={p.key_outcomes} />
+                    </div>
+                  )}
+                </>
+              )}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No projects completed during this program.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -189,6 +561,8 @@ export default function ApplicationDetailPage() {
     pg,
     diploma,
   } = app.qualificationDetails;
+  const achievements = app.achievementsDetails;
+  const entranceExam = app.entranceExamDetails;
 
   return (
     <div className="space-y-6 p-6">
@@ -260,6 +634,18 @@ export default function ApplicationDetailPage() {
                 : null
             }
           />
+          {app.profilePhotoUrl && (
+            <div>
+              <p className="mb-1 text-xs text-muted-foreground">
+                Profile Photo
+              </p>
+              <img
+                src={app.profilePhotoUrl}
+                alt="Profile"
+                className="h-20 w-20 rounded-md border object-cover"
+              />
+            </div>
+          )}
         </Section>
 
         <Section title="Application">
@@ -356,7 +742,7 @@ export default function ApplicationDetailPage() {
           {app.familyDetails.guardian_name && (
             <DetailRow
               label="Guardian"
-              value={`${app.familyDetails.guardian_name} (${app.familyDetails.guardian_relation ?? "—"})`}
+              value={`${app.familyDetails.guardian_name} (${app.familyDetails.guardian_relation ?? "—"}) · ${app.familyDetails.guardian_phone ?? "—"}`}
             />
           )}
           <DetailRow
@@ -379,20 +765,21 @@ export default function ApplicationDetailPage() {
             <p className="mb-1 text-xs text-muted-foreground">
               Correspondence Address
             </p>
-            <p className="text-sm font-medium">
-              {correspondence
-                ? [
-                    correspondence.address_line1,
-                    correspondence.address_line2,
-                    correspondence.city,
-                    correspondence.state,
-                    correspondence.pin_code,
-                    correspondence.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")
-                : "—"}
-            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <DetailRow
+                label="Address Line 1"
+                value={correspondence?.address_line1}
+              />
+              <DetailRow
+                label="Address Line 2"
+                value={correspondence?.address_line2}
+              />
+              <DetailRow label="City" value={correspondence?.city} />
+              <DetailRow label="District" value={correspondence?.district} />
+              <DetailRow label="State" value={correspondence?.state} />
+              <DetailRow label="PIN Code" value={correspondence?.pin_code} />
+              <DetailRow label="Country" value={correspondence?.country} />
+            </div>
           </div>
           <div>
             <p className="mb-1 text-xs text-muted-foreground">
@@ -400,20 +787,21 @@ export default function ApplicationDetailPage() {
               {app.addressDetails.same_as_correspondence &&
                 " (same as correspondence)"}
             </p>
-            <p className="text-sm font-medium">
-              {permanent
-                ? [
-                    permanent.address_line1,
-                    permanent.address_line2,
-                    permanent.city,
-                    permanent.state,
-                    permanent.pin_code,
-                    permanent.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")
-                : "—"}
-            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <DetailRow
+                label="Address Line 1"
+                value={permanent?.address_line1}
+              />
+              <DetailRow
+                label="Address Line 2"
+                value={permanent?.address_line2}
+              />
+              <DetailRow label="City" value={permanent?.city} />
+              <DetailRow label="District" value={permanent?.district} />
+              <DetailRow label="State" value={permanent?.state} />
+              <DetailRow label="PIN Code" value={permanent?.pin_code} />
+              <DetailRow label="Country" value={permanent?.country} />
+            </div>
           </div>
         </Section>
 
@@ -426,130 +814,18 @@ export default function ApplicationDetailPage() {
           <DetailRow
             label="Signature"
             value={
-              app.declaration.signature_url && (
-                <a
-                  href={app.declaration.signature_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  View signature
-                </a>
-              )
+              <LinkOut
+                href={app.declaration.signature_url}
+                label="View signature"
+              />
             }
           />
           <DetailRow label="Place" value={app.declaration.place} />
           <DetailRow
             label="Date"
             value={
-              app.declaration.date ? formatDateTime(app.declaration.date) : null
+              app.declaration.date ? formatDate(app.declaration.date) : null
             }
-          />
-        </Section>
-
-        {/* Competitive Exam Records */}
-        <Section title="Competitive Exam Records">
-          <DetailRow
-            label="Attempted Entrance Exam"
-            value={
-              app.entranceExamDetails.has_attempted_entrance_exam ? "Yes" : "No"
-            }
-          />
-          {(app.entranceExamDetails.exams ?? []).map((exam, i) => (
-            <DetailRow
-              key={i}
-              label={exam.exam_name}
-              value={
-                [exam.year_of_appearance, exam.score_or_percentile]
-                  .filter(Boolean)
-                  .join(" · ") || "—"
-              }
-            />
-          ))}
-          <DetailRow
-            label="Recommendation Letters"
-            value={
-              app.entranceExamDetails.recommendation_letters?.length || null
-            }
-          />
-        </Section>
-
-        {/* Achievements & Extracurricular */}
-        <Section title="Achievements & Extracurricular">
-          <DetailRow
-            label="Internships"
-            value={app.achievementsDetails.internships?.length || null}
-          />
-          <DetailRow
-            label="Work Experience"
-            value={
-              app.achievementsDetails.has_work_experience
-                ? `${app.achievementsDetails.work_experience?.length ?? 0} entr${
-                    app.achievementsDetails.work_experience?.length === 1
-                      ? "y"
-                      : "ies"
-                  }`
-                : "None"
-            }
-          />
-          <DetailRow
-            label="Languages"
-            value={app.achievementsDetails.languages
-              ?.map((l) => l.language)
-              .join(", ")}
-          />
-          <DetailRow
-            label="Awards"
-            value={
-              (app.achievementsDetails.academic_awards?.length ?? 0) +
-                (app.achievementsDetails.sports_achievements?.length ?? 0) +
-                (app.achievementsDetails.arts_cultural_achievements?.length ??
-                  0) || null
-            }
-          />
-          <DetailRow
-            label="Hobbies"
-            value={app.achievementsDetails.hobbies?.join(", ")}
-          />
-          <DetailRow
-            label="Publications"
-            value={app.achievementsDetails.publications?.length || null}
-          />
-          <DetailRow
-            label="Patents"
-            value={app.achievementsDetails.patents?.length || null}
-          />
-          <DetailRow
-            label="Certifications"
-            value={
-              app.achievementsDetails.professional_certifications?.length ||
-              null
-            }
-          />
-          <DetailRow
-            label="LinkedIn"
-            value={app.achievementsDetails.portfolio_links?.linkedin_url}
-          />
-          <DetailRow
-            label="GitHub"
-            value={app.achievementsDetails.portfolio_links?.github_url}
-          />
-          <DetailRow
-            label="Recommendation Letters"
-            value={
-              app.achievementsDetails.recommendation_letters?.length || null
-            }
-          />
-          <DetailRow
-            label="Innovation / Entrepreneurship"
-            value={
-              app.achievementsDetails.innovation_entrepreneurship?.length ||
-              null
-            }
-          />
-          <DetailRow
-            label="Volunteering"
-            value={app.achievementsDetails.volunteering?.length || null}
           />
         </Section>
       </div>
@@ -561,47 +837,27 @@ export default function ApplicationDetailPage() {
             No academic records added yet.
           </p>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-4">
             {tenthGrade && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  10th Grade
-                </p>
-                <DetailRow label="Board" value={tenthGrade.board_name} />
-                <DetailRow label="School" value={tenthGrade.school_name} />
-                <DetailRow
-                  label="Year of Passing"
-                  value={tenthGrade.year_of_passing}
-                />
-                <DetailRow
-                  label="Result"
-                  value={
-                    tenthGrade.result_summary?.percentage != null
-                      ? `${tenthGrade.result_summary.percentage}%`
-                      : (tenthGrade.result_summary?.marks_obtained ?? null)
-                  }
-                />
-              </div>
+              <SchoolGradeCard title="10th Grade" record={tenthGrade} />
             )}
             {twelfthGrade && (
+              <SchoolGradeCard
+                title="12th Grade"
+                record={twelfthGrade}
+                classXi={{
+                  has_separate_class_xi_exam:
+                    twelfthGrade.has_separate_class_xi_exam,
+                  class_xi_status: twelfthGrade.class_xi_status,
+                }}
+              />
+            )}
+            {twelfthGrade?.migration_certificate_url && (
               <div className="rounded-lg border p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  12th Grade
+                <p className="text-xs text-muted-foreground">
+                  Migration Certificate (12th)
                 </p>
-                <DetailRow label="Board" value={twelfthGrade.board_name} />
-                <DetailRow label="School" value={twelfthGrade.school_name} />
-                <DetailRow
-                  label="Year of Passing"
-                  value={twelfthGrade.year_of_passing}
-                />
-                <DetailRow
-                  label="Result"
-                  value={
-                    twelfthGrade.result_summary?.percentage != null
-                      ? `${twelfthGrade.result_summary.percentage}%`
-                      : (twelfthGrade.result_summary?.marks_obtained ?? null)
-                  }
-                />
+                <LinkOut href={twelfthGrade.migration_certificate_url} />
               </div>
             )}
             {undergraduate && (
@@ -611,6 +867,455 @@ export default function ApplicationDetailPage() {
             {diploma && <DegreeLevelCard title="Diploma" record={diploma} />}
           </div>
         )}
+      </Section>
+
+      {/* Achievements & Extracurricular */}
+      <Section title="Achievements & Extracurricular">
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Internships
+            </p>
+            <EntryList
+              items={achievements.internships}
+              emptyLabel="No internships added."
+              renderItem={(i) => (
+                <>
+                  <DetailRow label="Company" value={i.company_name} />
+                  <DetailRow label="Role" value={i.role} />
+                  <DetailRow
+                    label="Duration"
+                    value={
+                      [formatDate(i.start_date), formatDate(i.end_date)]
+                        .filter((v) => v !== "—")
+                        .join(" – ") || null
+                    }
+                  />
+                  {i.key_responsibilities && (
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <DetailRow
+                        label="Key Responsibilities"
+                        value={i.key_responsibilities}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Work Experience
+            </p>
+            <DetailRow
+              label="Has Prior Work Experience"
+              value={achievements.has_work_experience ? "Yes" : "No"}
+            />
+            {achievements.has_work_experience && (
+              <div className="mt-2">
+                <EntryList
+                  items={achievements.work_experience}
+                  emptyLabel="No work experience entries added."
+                  renderItem={(w) => (
+                    <>
+                      <DetailRow label="Company" value={w.company_name} />
+                      <DetailRow label="Job Title" value={w.job_title} />
+                      <DetailRow label="Industry" value={w.industry} />
+                      <DetailRow
+                        label="Employment Type"
+                        value={w.employment_type}
+                      />
+                      <DetailRow
+                        label="Total Experience"
+                        value={w.total_experience}
+                      />
+                    </>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Languages
+            </p>
+            <EntryList
+              items={achievements.languages}
+              emptyLabel="No languages added."
+              renderItem={(l) => (
+                <>
+                  <DetailRow label="Language" value={l.language} />
+                  <DetailRow label="Proficiency" value={l.proficiency} />
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Academic Awards
+            </p>
+            <EntryList
+              items={achievements.academic_awards}
+              emptyLabel="No academic awards added."
+              renderItem={(a) => (
+                <>
+                  <DetailRow label="Title" value={a.title} />
+                  <DetailRow label="Year" value={a.year} />
+                  <DetailRow label="Issuing Body" value={a.issuing_body} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Proof</p>
+                    <LinkOut href={a.proof_url} />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Sports Achievements
+            </p>
+            <EntryList
+              items={achievements.sports_achievements}
+              emptyLabel="No sports achievements added."
+              renderItem={(s) => (
+                <>
+                  <DetailRow label="Sport" value={s.sport_name} />
+                  <DetailRow
+                    label="Competition Level"
+                    value={s.competition_level}
+                  />
+                  <DetailRow
+                    label="Position Secured"
+                    value={s.position_secured}
+                  />
+                  <DetailRow label="Year" value={s.achievement_year} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Certificate</p>
+                    <LinkOut href={s.certificate_url} />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Arts &amp; Cultural Achievements
+            </p>
+            <EntryList
+              items={achievements.arts_cultural_achievements}
+              emptyLabel="No arts & cultural achievements added."
+              renderItem={(a) => (
+                <>
+                  <DetailRow label="Category" value={a.category} />
+                  <DetailRow
+                    label="Competition Name"
+                    value={a.competition_name}
+                  />
+                  <DetailRow
+                    label="Achievement Level"
+                    value={a.achievement_level}
+                  />
+                  <DetailRow
+                    label="Position Secured"
+                    value={a.position_secured}
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Certificate</p>
+                    <LinkOut href={a.certificate_url} />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Hobbies &amp; Interests
+            </p>
+            <DetailRow
+              label="Hobbies"
+              value={achievements.hobbies?.join(", ")}
+            />
+            <DetailRow
+              label="Other Interests"
+              value={achievements.other_interests}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Publications
+            </p>
+            <EntryList
+              items={achievements.publications}
+              emptyLabel="No publications added."
+              renderItem={(p) => (
+                <>
+                  <DetailRow label="Title" value={p.title} />
+                  <DetailRow
+                    label="Journal/Publisher"
+                    value={p.journal_publisher}
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Link</p>
+                    <LinkOut href={p.url} label="Open publication" />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Patent Details
+            </p>
+            <EntryList
+              items={achievements.patents}
+              emptyLabel="No patents added."
+              renderItem={(p) => (
+                <>
+                  <DetailRow label="Title" value={p.title} />
+                  <DetailRow label="Patent Number" value={p.patent_number} />
+                  <DetailRow label="Status" value={p.status} />
+                  <DetailRow
+                    label="Filing Date"
+                    value={formatDate(p.filing_date)}
+                  />
+                  <DetailRow label="Patent Office" value={p.patent_office} />
+                  <DetailRow label="Co-Inventors" value={p.co_inventors} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Document</p>
+                    <LinkOut href={p.document_url} />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Professional Certifications
+            </p>
+            <EntryList
+              items={achievements.professional_certifications}
+              emptyLabel="No certifications added."
+              renderItem={(c) => (
+                <>
+                  <DetailRow label="Name" value={c.name} />
+                  <DetailRow
+                    label="Issuing Authority"
+                    value={c.issuing_authority}
+                  />
+                  <DetailRow
+                    label="Certification ID"
+                    value={c.certification_id}
+                  />
+                  <DetailRow
+                    label="Issue Date"
+                    value={formatDate(c.issue_date)}
+                  />
+                  <DetailRow
+                    label="Expiry Date"
+                    value={formatDate(c.expiry_date)}
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Verification
+                    </p>
+                    <LinkOut href={c.verification_url} label="Verify" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Certificate</p>
+                    <LinkOut href={c.certificate_url} />
+                  </div>
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Portfolio &amp; Profile Links
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">LinkedIn</p>
+                <LinkOut href={achievements.portfolio_links?.linkedin_url} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">GitHub</p>
+                <LinkOut href={achievements.portfolio_links?.github_url} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">ResearchGate</p>
+                <LinkOut
+                  href={achievements.portfolio_links?.researchgate_url}
+                />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Google Scholar</p>
+                <LinkOut
+                  href={achievements.portfolio_links?.google_scholar_url}
+                />
+              </div>
+              <DetailRow
+                label="ORCID ID"
+                value={achievements.portfolio_links?.orcid_id}
+              />
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Personal Website
+                </p>
+                <LinkOut
+                  href={achievements.portfolio_links?.personal_website_url}
+                />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Behance</p>
+                <LinkOut href={achievements.portfolio_links?.behance_url} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Dribbble</p>
+                <LinkOut href={achievements.portfolio_links?.dribbble_url} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Kaggle</p>
+                <LinkOut href={achievements.portfolio_links?.kaggle_url} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Recommendation Letters
+            </p>
+            <EntryList
+              items={achievements.recommendation_letters}
+              emptyLabel="No recommendation letters uploaded."
+              renderItem={(r, i) => (
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Letter {i + 1}
+                  </p>
+                  <LinkOut href={r.document_url} />
+                </div>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Innovation &amp; Entrepreneurship
+            </p>
+            <EntryList
+              items={achievements.innovation_entrepreneurship}
+              emptyLabel="No innovation/entrepreneurship entries added."
+              renderItem={(e) => (
+                <>
+                  <DetailRow label="Startup Name" value={e.startup_name} />
+                  <DetailRow label="Role" value={e.role} />
+                  <DetailRow
+                    label="Incubation Support"
+                    value={e.incubation_support}
+                  />
+                  <DetailRow
+                    label="DPIIT Registration No."
+                    value={e.dpiit_registration_number}
+                  />
+                  {e.contribution && (
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <DetailRow label="Contribution" value={e.contribution} />
+                    </div>
+                  )}
+                </>
+              )}
+            />
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Volunteering &amp; Social Service
+            </p>
+            <EntryList
+              items={achievements.volunteering}
+              emptyLabel="No volunteering entries added."
+              renderItem={(v) => (
+                <>
+                  <DetailRow label="Organization" value={v.organization_name} />
+                  <DetailRow label="Role" value={v.role} />
+                  <DetailRow
+                    label="Duration"
+                    value={
+                      [formatDate(v.start_date), formatDate(v.end_date)]
+                        .filter((val) => val !== "—")
+                        .join(" – ") || null
+                    }
+                  />
+                  {v.description && (
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <DetailRow label="Description" value={v.description} />
+                    </div>
+                  )}
+                </>
+              )}
+            />
+          </div>
+        </div>
+      </Section>
+
+      {/* Competitive Exam Records */}
+      <Section title="Competitive Exam Records">
+        <DetailRow
+          label="Attempted Entrance Exam"
+          value={entranceExam.has_attempted_entrance_exam ? "Yes" : "No"}
+        />
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Exam Records
+          </p>
+          <EntryList
+            items={entranceExam.exams}
+            emptyLabel="No exam records added."
+            renderItem={(exam) => (
+              <>
+                <DetailRow label="Exam Name" value={exam.exam_name} />
+                <DetailRow
+                  label="Year of Appearance"
+                  value={exam.year_of_appearance}
+                />
+                <DetailRow label="Roll Number" value={exam.roll_number} />
+                <DetailRow
+                  label="Score/Percentile"
+                  value={exam.score_or_percentile}
+                />
+                <div>
+                  <p className="text-xs text-muted-foreground">Mark Card</p>
+                  <LinkOut href={exam.mark_card_url} />
+                </div>
+              </>
+            )}
+          />
+        </div>
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Recommendation Letters
+          </p>
+          <EntryList
+            items={entranceExam.recommendation_letters}
+            emptyLabel="No recommendation letters uploaded."
+            renderItem={(r, i) => (
+              <div>
+                <p className="text-xs text-muted-foreground">Letter {i + 1}</p>
+                <LinkOut href={r.document_url} />
+              </div>
+            )}
+          />
+        </div>
       </Section>
 
       {/* Courses */}

@@ -5,6 +5,7 @@ import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
+import { PendingEnrollmentQuery } from "../queries/pending-enrollment.query";
 
 async function notifyStudentOfEnrollment(
   studentId: string,
@@ -66,6 +67,10 @@ function toDto(
 export class EnrollmentService {
   static async hasEnrollmentAtCollege(studentId: string, collegeId: string) {
     return EnrollmentRepository.existsForStudentAtCollege(studentId, collegeId);
+  }
+
+  static async countPendingEnrollment(collegeId: string) {
+    return PendingEnrollmentQuery.countForCollege(collegeId);
   }
 
   static async listStudentIdsForCollege(collegeId: string) {

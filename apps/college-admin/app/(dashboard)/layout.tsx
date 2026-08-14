@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   ClipboardList,
   ListChecks,
+  UserCheck,
   Video,
   Mic,
   Image as ImageIcon,
@@ -40,9 +41,39 @@ import {
   useCollegeProfile,
 } from "@/hooks/use-colleges";
 import { useLogoutCollegeAdmin } from "@/hooks/use-auth";
+import { useSidebarHints } from "@/hooks/use-dashboard";
 import { Button } from "@/components/ui/button";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 import { Bell, HelpCircle } from "lucide-react";
+import type { SidebarHintsDto } from "@beaconu/types";
+
+function getSidebarHintCount(
+  path: string,
+  hints: SidebarHintsDto | undefined,
+): number {
+  if (!hints) return 0;
+  switch (path) {
+    case "/applications":
+      return hints.newApplications;
+    case "/assessments":
+      return hints.assessmentEvaluationQueue;
+    case "/pending-enrollment":
+      return hints.breakdown.pendingEnrollment;
+    case "/seat-cancellations":
+      return hints.breakdown.seatCancellations;
+    case "/course-switch-requests":
+      return hints.breakdown.courseSwitchRequests;
+    case "/support":
+      return hints.breakdown.supportTickets;
+    case "/documents":
+      return (
+        hints.breakdown.documentSubmissionRequests +
+        hints.breakdown.documentRequests
+      );
+    default:
+      return 0;
+  }
+}
 
 const WIZARD_STEPS = [
   { id: "profile", name: "College Profile", path: "/setup/profile" },
@@ -62,6 +93,7 @@ export default function DashboardLayout({
   const isAuthenticated = useAuthStore((state) => state.token !== null);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const { mutateAsync: logoutCollegeAdmin } = useLogoutCollegeAdmin();
+  const { data: sidebarHints } = useSidebarHints();
   const [isMounted, setIsMounted] = useState(false);
   const collegeSlug =
     typeof window === "undefined"
@@ -387,6 +419,12 @@ export default function DashboardLayout({
                     permission: "staff.view",
                   },
                   {
+                    name: "Pending Enrollment",
+                    path: "/pending-enrollment",
+                    icon: UserCheck,
+                    permission: "staff.view",
+                  },
+                  {
                     name: "Anti-Ragging",
                     path: "/anti-ragging",
                     icon: ShieldAlert,
@@ -456,6 +494,10 @@ export default function DashboardLayout({
                         ? appPathname === "/"
                         : appPathname === item.path ||
                           appPathname.startsWith(`${item.path}/`);
+                    const hintCount = getSidebarHintCount(
+                      item.path,
+                      sidebarHints,
+                    );
                     return (
                       <button
                         key={item.path}
@@ -472,7 +514,18 @@ export default function DashboardLayout({
                         <Icon
                           className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-gray-sidebar group-hover:text-white"}`}
                         />
-                        {item.name}
+                        <span className="flex-1 text-left">{item.name}</span>
+                        {hintCount > 0 && (
+                          <span
+                            className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${
+                              isActive
+                                ? "bg-white/25 text-white"
+                                : "bg-destructive/90 text-white"
+                            }`}
+                          >
+                            {hintCount > 99 ? "99+" : hintCount}
+                          </span>
+                        )}
                       </button>
                     );
                   })}

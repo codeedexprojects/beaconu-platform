@@ -67,6 +67,10 @@ async function notifyStudentOfIssue(request: {
 }
 
 export class DocumentRequestService {
+  static async countSubmitted(collegeId: string) {
+    return DocumentRequestRepository.countSubmittedForCollege(collegeId);
+  }
+
   static async create(
     studentId: string,
     collegeId: string,

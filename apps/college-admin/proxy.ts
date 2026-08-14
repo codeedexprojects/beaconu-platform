@@ -33,6 +33,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "support",
   "seat-cancellations",
   "course-switch-requests",
+  "pending-enrollment",
 ]);
 
 export function proxy(request: NextRequest) {

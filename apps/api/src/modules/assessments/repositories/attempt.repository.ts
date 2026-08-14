@@ -1,6 +1,12 @@
 import { prisma, Prisma } from "@beaconu/db";
 
 export class AttemptRepository {
+  static async countUnderEvaluationForCollege(collegeId: string) {
+    return prisma.assessmentAttempt.count({
+      where: { paper: { template: { collegeId } }, status: "under_evaluation" },
+    });
+  }
+
   static async findApplicationForAttempt(applicationId: string) {
     return prisma.application.findUnique({
       where: { id: applicationId },

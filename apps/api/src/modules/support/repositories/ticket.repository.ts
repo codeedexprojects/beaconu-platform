@@ -28,6 +28,12 @@ function buildSearchFilter(search: string) {
 }
 
 export class TicketRepository {
+  static async countAwaitingResponseForCollege(collegeId: string) {
+    return prisma.supportTicket.count({
+      where: { collegeId, status: "awaiting_response" },
+    });
+  }
+
   static async create(
     tx: Tx,
     data: {

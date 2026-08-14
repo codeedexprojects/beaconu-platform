@@ -6,7 +6,9 @@ import {
   getApplications,
   getApplicationById,
   enrollApplicationCourse,
+  getPendingEnrollments,
   type ApplicationListFilters,
+  type PendingEnrollmentFilters,
 } from "@/lib/services/applications.service";
 
 export function useApplications(filters: ApplicationListFilters = {}) {
@@ -33,6 +35,33 @@ export function useEnrollApplicationCourse(applicationId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.application(applicationId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.applications(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.pendingEnrollments(),
+      });
+    },
+  });
+}
+
+export function usePendingEnrollments(filters: PendingEnrollmentFilters = {}) {
+  return useQuery({
+    queryKey: QUERY_KEYS.pendingEnrollments(filters),
+    queryFn: () => getPendingEnrollments(filters),
+  });
+}
+
+export function useEnrollPendingCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (applicationCourseId: string) =>
+      enrollApplicationCourse(applicationCourseId),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.pendingEnrollments(),
       });
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.applications(),

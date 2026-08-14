@@ -687,6 +687,48 @@ export interface ApplicationListQuery {
   limit?: number;
 }
 
+export interface PendingEnrollmentItem {
+  applicationCourseId: string;
+  applicationId: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  admissionCycleId: string;
+  admissionCycleName: string;
+  applicationFee: string;
+  offerNumber: string | null;
+  tokenAmount: string | null;
+  tokenPaymentStatus: string | null;
+  statusUpdatedAt: string | null;
+}
+
+export interface PendingEnrollmentListQuery {
+  admission_cycle_id?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PendingEnrollmentListMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PendingEnrollmentListResponse {
+  requests: PendingEnrollmentItem[];
+  meta: PendingEnrollmentListMeta;
+}
+
 export interface ApplicationDetailCourseItem {
   id: string;
   courseId: string;

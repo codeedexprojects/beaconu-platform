@@ -22,6 +22,12 @@ const SELECT = {
 } as const;
 
 export class CourseSwitchRequestRepository {
+  static async countPendingForCollege(collegeId: string) {
+    return prisma.courseSwitchRequest.count({
+      where: { collegeId, status: "pending" },
+    });
+  }
+
   static async findPendingForEnrollment(enrollmentId: string) {
     return prisma.courseSwitchRequest.findFirst({
       where: { enrollmentId, status: "pending" },

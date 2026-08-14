@@ -4,6 +4,12 @@ import type { Prisma } from "@beaconu/db";
 import type { CreateDocumentRequestInput } from "../validators/documents.validator";
 
 export class DocumentRequestRepository {
+  static async countSubmittedForCollege(collegeId: string) {
+    return prisma.documentRequest.count({
+      where: { collegeId, status: "submitted" },
+    });
+  }
+
   static async create(
     studentId: string,
     collegeId: string,
