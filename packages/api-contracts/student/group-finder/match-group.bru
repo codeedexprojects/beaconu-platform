@@ -1,0 +1,95 @@
+meta {
+  name: Match Group
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/group-finder/match
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "preferred_city": "Bangalore",
+    "friends": [
+      {
+        "name": "Alex",
+        "study_level_id": "{{studyLevelId}}",
+        "discipline_id": "{{disciplineId}}"
+      },
+      {
+        "name": "Sara",
+        "study_level_id": "{{studyLevelId2}}",
+        "discipline_id": "{{disciplineId2}}"
+      }
+    ]
+  }
+}
+
+docs {
+  Finds colleges/institution-groups that can satisfy every friend's
+  chosen course (study level) + program/major (discipline), optionally
+  narrowed to a preferred city/state. 2-6 friends per request.
+
+  The "match unit" is an institution group (e.g. "M.S. Ramaiah Group"),
+  not a single college — two friends can be satisfied by DIFFERENT
+  sub-colleges within the same group (one friend's engineering course at
+  Institute A, another friend's arts course at Institute B, same parent
+  group). A standalone college with no group is treated as its own
+  singleton group.
+
+  Response `data`:
+  {
+    "fullyMatched": [
+      {
+        "groupId": "ING-1" | null,
+        "groupName": "M.S. Ramaiah Group",
+        "city": "Bangalore",
+        "state": "Karnataka",
+        "matchedFriendCount": 2,
+        "totalFriendCount": 2,
+        "isFullyMatched": true,
+        "matches": [
+          {
+            "friendName": "Alex",
+            "collegeId": "CLG-1",
+            "collegeName": "Ramaiah Inst. of Tech",
+            "courseId": "CRS-1",
+            "courseName": "B.E. Computer Science",
+            "courseCode": "BECS",
+            "studyLevelName": "B.Tech",
+            "disciplineName": "Computer Science Engineering",
+            "availability": "high",
+            "availabilityLabel": "High Availability",
+            "availableSpecializations": [
+              { "courseId": "CRS-1", "disciplineId": "DIS-1", "disciplineName": "Computer Science Engineering", "courseName": "B.E. Computer Science" },
+              { "courseId": "CRS-2", "disciplineId": "DIS-2", "disciplineName": "Mechanical Engineering", "courseName": "B.E. Mechanical" }
+            ]
+          }
+        ],
+        "unmatchedFriendNames": []
+      }
+    ],
+    "partiallyMatched": [ /* same shape, isFullyMatched: false, unmatchedFriendNames non-empty */ ]
+  }
+
+  `availability` is derived from live seat data (CourseQuotaSeats under the
+  college's currently-open admission cycle) — "high" (>30% seats open),
+  "limited" (some seats open, ≤30%), "waitlist" (0 open), or "unknown"
+  (no seat/admission-cycle data configured yet, shown as "Seats Available").
+  These thresholds are new — no prior "availability badge" logic existed
+  anywhere else in the platform to match against.
+
+  Requires student authentication (the requester must be logged in; the
+  other friends are free text, not required to have accounts).
+}

@@ -1,0 +1,21 @@
+meta {
+  name: List Study Levels (Group Finder)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/group-finder/study-levels
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Global "Course" dropdown for the Group Finder "Who's coming?" screen
+  (e.g. "B.Tech", "MBA", "Diploma") — not college-scoped, same underlying
+  StudyLevel table used everywhere else in the platform.
+}
