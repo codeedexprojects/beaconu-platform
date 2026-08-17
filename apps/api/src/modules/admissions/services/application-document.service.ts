@@ -84,10 +84,10 @@ export class ApplicationDocumentService {
       });
   }
 
-  static async register(
+  static async registerMany(
     applicationId: string,
     studentId: string,
-    body: RegisterApplicationDocumentInput,
+    documents: RegisterApplicationDocumentInput[],
   ) {
     const application = await assertOwnApplication(applicationId, studentId);
     if (application.formStatus !== "draft") {
@@ -108,31 +108,53 @@ export class ApplicationDocumentService {
     const configs = await ApplicationDocumentRepository.findApplicableConfigs(
       application.admissionCycleId,
     );
-    const config = configs.find((c) => c.documentType === body.document_type);
-    if (
-      !config ||
-      !isApplicable(config, application.nationality, courseIds, collegeQuotaIds)
-    ) {
-      throw new NotFoundError("Document requirement");
-    }
 
-    const acceptedMimeTypes = (config.acceptedMimeTypes as string[] | null) ?? [
-      ...DOCUMENT_MIME_TYPES,
-    ];
-    if (!acceptedMimeTypes.includes(body.mime_type)) {
-      throw new ValidationError(
-        `This document only accepts: ${acceptedMimeTypes.join(", ")}`,
+    // Resolve + validate every document first — nothing is written until
+    // the whole batch passes, so an invalid entry partway through a
+    // multi-document upload never leaves some documents saved and others
+    // silently dropped.
+    const resolved = documents.map((body) => {
+      const config = configs.find((c) => c.documentType === body.document_type);
+      if (
+        !config ||
+        !isApplicable(
+          config,
+          application.nationality,
+          courseIds,
+          collegeQuotaIds,
+        )
+      ) {
+        throw new NotFoundError(
+          `Document requirement not found: ${body.document_type}`,
+        );
+      }
+
+      const acceptedMimeTypes = (config.acceptedMimeTypes as
+        | string[]
+        | null) ?? [...DOCUMENT_MIME_TYPES];
+      if (!acceptedMimeTypes.includes(body.mime_type)) {
+        throw new ValidationError(
+          `${body.document_type} only accepts: ${acceptedMimeTypes.join(", ")}`,
+        );
+      }
+
+      return { body, config };
+    });
+
+    const results = [];
+    for (const { body, config } of resolved) {
+      results.push(
+        await ApplicationDocumentRepository.upsert({
+          applicationId,
+          documentType: body.document_type,
+          documentCategory: config.documentCategory,
+          fileUrl: body.file_url,
+          fileName: body.file_name ?? null,
+          fileSizeBytes: body.file_size_bytes ?? null,
+        }),
       );
     }
-
-    return ApplicationDocumentRepository.upsert({
-      applicationId,
-      documentType: body.document_type,
-      documentCategory: config.documentCategory,
-      fileUrl: body.file_url,
-      fileName: body.file_name ?? null,
-      fileSizeBytes: body.file_size_bytes ?? null,
-    });
+    return results;
   }
 
   static async listUploaded(applicationId: string, studentId: string) {

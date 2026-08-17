@@ -92,7 +92,7 @@ router.get(
   "/my-applications/:applicationId/documents",
   StudentApplicationController.listUploadedDocuments,
 );
-router.post(
+router.patch(
   "/my-applications/:applicationId/documents",
   StudentApplicationController.registerDocument,
 );

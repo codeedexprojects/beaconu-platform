@@ -4,7 +4,7 @@ meta {
   seq: 14
 }
 
-post {
+patch {
   url: {{baseUrl}}/api/v1/student/application-forms/my-applications/{{applicationId}}/documents
   body: json
   auth: none
@@ -17,28 +17,46 @@ headers {
 
 body:json {
   {
-    "document_type": "neet_scorecard",
-    "file_url": "{{permanentUrl}}",
-    "file_name": "scorecard.png",
-    "file_size_bytes": 102400,
-    "mime_type": "image/png"
+    "documents": [
+      {
+        "document_type": "neet_scorecard",
+        "file_url": "{{permanentUrl}}",
+        "file_name": "scorecard.png",
+        "file_size_bytes": 102400,
+        "mime_type": "image/png"
+      },
+      {
+        "document_type": "aadhaar_card",
+        "file_url": "{{permanentUrl}}",
+        "file_name": "aadhaar.pdf",
+        "file_size_bytes": 204800,
+        "mime_type": "application/pdf"
+      }
+    ]
   }
 }
 
 docs {
-  Registers an uploaded file against a specific document requirement on the
-  student's own draft application (409 if already submitted). The file
-  itself must already be uploaded via the existing generic student upload
-  flow first: POST /api/v1/student/uploads/document/presign -> PUT to the
-  returned uploadUrl -> POST /api/v1/student/uploads/document/verify ->
-  use the returned permanentUrl as file_url here.
+  Registers one or more uploaded files against document requirements on
+  the student's own draft application (409 if already submitted) in a
+  single call — `documents` accepts 1..N entries, each shaped like the
+  old single-document body. Each file itself must already be uploaded via
+  the existing generic student upload flow first: POST
+  /api/v1/student/uploads/document/presign -> PUT to the returned
+  uploadUrl -> POST /api/v1/student/uploads/document/verify -> use the
+  returned permanentUrl as that entry's file_url.
 
-  `document_type` must match a document requirement currently applicable to
-  this application (404 otherwise — e.g. inactive, or scoped to a
-  course/quota/nationality the student doesn't have). `mime_type` must be
-  one of that requirement's acceptedMimeTypes (400 otherwise).
+  Every entry's `document_type` must match a document requirement
+  currently applicable to this application (404 if any one isn't — e.g.
+  inactive, or scoped to a course/quota/nationality the student doesn't
+  have), and each entry's `mime_type` must be one of that requirement's
+  acceptedMimeTypes (400 otherwise). The whole batch is validated before
+  anything is written, so if any single entry is invalid, none of the
+  documents in the request are saved.
 
-  Upsert semantics: registering the same document_type again replaces the
-  prior file (not a duplicate row) and resets verificationStatus back to
-  "pending".
+  Upsert semantics (per entry): registering the same document_type again
+  replaces the prior file (not a duplicate row) and resets
+  verificationStatus back to "pending".
+
+  Response `data` is an array, one saved document per entry, in request order.
 }
