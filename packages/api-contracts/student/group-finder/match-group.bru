@@ -24,22 +24,29 @@ body:json {
     "friends": [
       {
         "name": "Alex",
-        "study_level_id": "{{studyLevelId}}",
-        "discipline_id": "{{disciplineId}}"
+        "course_id": "{{courseMasterId}}"
       },
       {
         "name": "Sara",
-        "study_level_id": "{{studyLevelId2}}",
-        "discipline_id": "{{disciplineId2}}"
+        "course_id": "{{courseMasterId2}}"
       }
     ]
   }
 }
 
 docs {
-  Finds colleges/institution-groups that can satisfy every friend's
-  chosen course (study level) + program/major (discipline), optionally
-  narrowed to a preferred city/state. 2-6 friends per request.
+  Finds colleges/institution-groups that can satisfy every friend's chosen
+  course, optionally narrowed to a preferred city/state. 2-6 friends per
+  request.
+
+  Each friend picks one `course_id` (a CourseMaster / platform course
+  catalog entry, e.g. "B.Tech Computer Science Engineering" — from
+  GET /student/group-finder/courses?search=). That course's Discipline is
+  always used as a match criterion; its Study Level is used too only if
+  the catalog entry has one set (Study Level is optional on CourseMaster).
+  Stream is never taken as separate input — it's implied by the
+  Discipline. 404 if any friend's course_id doesn't resolve to a real
+  catalog entry.
 
   The "match unit" is an institution group (e.g. "M.S. Ramaiah Group"),
   not a single college — two friends can be satisfied by DIFFERENT
@@ -87,8 +94,6 @@ docs {
   college's currently-open admission cycle) — "high" (>30% seats open),
   "limited" (some seats open, ≤30%), "waitlist" (0 open), or "unknown"
   (no seat/admission-cycle data configured yet, shown as "Seats Available").
-  These thresholds are new — no prior "availability badge" logic existed
-  anywhere else in the platform to match against.
 
   Requires student authentication (the requester must be logged in; the
   other friends are free text, not required to have accounts).

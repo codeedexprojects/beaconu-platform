@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePublicCourses } from "@/hooks/use-public-courses";
+import type { PublicCourseMaster } from "@/lib/services/public-courses.service";
 
 export const courseSchema = z.object({
   name: z.string().min(2, "Course name is required"),
@@ -70,6 +72,8 @@ export function BasicDetailsTab({
     register,
     handleSubmit,
     setValue,
+    getValues,
+    watch,
     trigger,
     reset,
     formState: { errors },
@@ -77,6 +81,39 @@ export function BasicDetailsTab({
     resolver: zodResolver(courseSchema as any),
     defaultValues: { studyMode: "full_time" },
   });
+
+  const [nameQuery, setNameQuery] = useState("");
+  const [debouncedNameQuery, setDebouncedNameQuery] = useState("");
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  // Set only when a suggestion is actually picked this session — locks the
+  // Discipline field to the selection's discipline. Left null when editing
+  // an existing course whose name/discipline predate this catalog-only
+  // requirement, so those stay editable until re-picked.
+  const [selectedCourse, setSelectedCourse] =
+    useState<PublicCourseMaster | null>(null);
+  const nameFieldRef = useRef<HTMLDivElement>(null);
+  const watchedDisciplineId = watch("disciplineId");
+
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedNameQuery(nameQuery), 300);
+    return () => clearTimeout(handle);
+  }, [nameQuery]);
+
+  const { data: courseSuggestions = [], isFetching: isFetchingSuggestions } =
+    usePublicCourses(debouncedNameQuery);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        nameFieldRef.current &&
+        !nameFieldRef.current.contains(e.target as Node)
+      ) {
+        setIsSuggestionsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (editingCourse) {
@@ -92,11 +129,14 @@ export function BasicDetailsTab({
         intakeCapacity: editingCourse.intakeCapacity || null,
         eligibility: editingCourse.eligibility || "",
       });
+      setNameQuery(editingCourse.name || "");
     } else {
       reset({
         studyMode: "full_time",
       });
+      setNameQuery("");
     }
+    setSelectedCourse(null);
   }, [editingCourse, reset]);
 
   return (
@@ -112,15 +152,77 @@ export function BasicDetailsTab({
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+            <div
+              className="space-y-2 md:col-span-2 relative"
+              ref={nameFieldRef}
+            >
               <Label htmlFor="name" className="font-semibold text-foreground">
                 Course Name *
               </Label>
               <Input
                 id="name"
-                placeholder="e.g. B.Tech Computer Science"
-                {...register("name")}
+                placeholder="Search the course catalog…"
+                autoComplete="off"
+                value={nameQuery}
+                onChange={(e) => {
+                  // Typing only drives search — it never sets the actual
+                  // form value. Only picking a suggestion below does, so an
+                  // unselected search string can't be submitted as a name.
+                  setNameQuery(e.target.value);
+                  setIsSuggestionsOpen(true);
+                }}
+                onFocus={() => setIsSuggestionsOpen(true)}
+                onBlur={() => {
+                  // Snap the visible text back to the last real selection
+                  // if the user typed without picking anything.
+                  setTimeout(() => {
+                    setNameQuery(getValues("name") || "");
+                  }, 150);
+                }}
               />
+              {isSuggestionsOpen && debouncedNameQuery.trim().length >= 2 && (
+                <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-md max-h-64 overflow-y-auto">
+                  {isFetchingSuggestions ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      Searching…
+                    </div>
+                  ) : courseSuggestions.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      No matching course in the catalog. Ask a platform admin to
+                      add it under Academic Masters → Courses.
+                    </div>
+                  ) : (
+                    courseSuggestions.map((course) => (
+                      <button
+                        type="button"
+                        key={course.id}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                        onClick={() => {
+                          setNameQuery(course.name);
+                          setValue("name", course.name);
+                          setValue("disciplineId", course.discipline.id);
+                          trigger("name");
+                          trigger("disciplineId");
+                          setSelectedCourse(course);
+                          setIsSuggestionsOpen(false);
+                        }}
+                      >
+                        <p className="font-medium">{course.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {course.stream.name} &gt; {course.discipline.name}
+                          {course.studyLevel
+                            ? ` · ${course.studyLevel.name}`
+                            : ""}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Must be selected from the platform course catalog — Discipline
+                fills in automatically once you pick one.
+              </p>
               {errors.name && (
                 <p className="text-xs text-destructive">
                   {errors.name.message}
@@ -153,11 +255,12 @@ export function BasicDetailsTab({
                 Discipline *
               </Label>
               <Select
+                value={watchedDisciplineId || undefined}
                 onValueChange={(val) => {
                   setValue("disciplineId", val);
                   trigger("disciplineId");
                 }}
-                defaultValue={editingCourse?.disciplineId}
+                disabled={!!selectedCourse}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select discipline" />
@@ -170,6 +273,12 @@ export function BasicDetailsTab({
                   ))}
                 </SelectContent>
               </Select>
+              {selectedCourse && (
+                <p className="text-xs text-muted-foreground">
+                  Set from the selected course — pick a different course to
+                  change it.
+                </p>
+              )}
               {errors.disciplineId && (
                 <p className="text-xs text-destructive">
                   {errors.disciplineId.message}
