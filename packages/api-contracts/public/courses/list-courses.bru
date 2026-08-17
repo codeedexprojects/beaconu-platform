@@ -1,0 +1,35 @@
+meta {
+  name: List Courses
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/courses?page=1&limit=20
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  search:
+}
+
+docs {
+  Returns a paginated list of all standard/possible courses (e.g. B.Tech
+  Computer Science Engineering, MBBS, BBA, B.Com, MBA, ...) — a static,
+  deduplicated reference taxonomy, not a college's actual offered
+  courses (that's GET /public/colleges/by-slug/:slug/courses). No
+  authentication required.
+
+  Query params:
+  - search (optional): filter by name (case-insensitive substring match)
+  - page (default: 1)
+  - limit (default: 20, max: 100)
+
+  Response: { code: string, name: string }[]
+  Meta: { total, page, limit, totalPages, hasNextPage, hasPreviousPage }
+
+  Data source: static JSON (apps/api/src/shared/data/courses.json) — no
+  DB query, no duplicates.
+}
