@@ -1,0 +1,31 @@
+meta {
+  name: Update Course
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/courses/{{courseMasterId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Bachelor of Computer Applications (BCA)",
+    "sort_order": 2
+  }
+}
+
+docs {
+  Updates a course-master entry. All fields optional, at least one required.
+  Re-checks the (discipline_id, study_level_id, program_type_id, slug)
+  uniqueness if any of those change.
+
+  Requires: platform admin access token.
+}

@@ -1,0 +1,34 @@
+meta {
+  name: List Courses
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/universities/courses?page=1&limit=10
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 10
+  search:
+  discipline_id:
+  stream_id:
+  study_level_id:
+  program_type_id:
+  is_active:
+}
+
+docs {
+  Lists platform-wide course-master entries (e.g. "Bachelor of Computer
+  Applications (BCA)"), each classified by Discipline (which carries its
+  Stream) + Study Level + Program Type. Paginated, filterable.
+
+  Requires: platform admin access token.
+}

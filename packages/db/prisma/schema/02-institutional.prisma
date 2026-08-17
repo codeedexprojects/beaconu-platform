@@ -330,9 +330,10 @@ model Discipline {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  stream    Stream    @relation(fields: [streamId], references: [id])
-  courses   Course[]
-  libraries Library[]
+  stream        Stream         @relation(fields: [streamId], references: [id])
+  courses       Course[]
+  libraries     Library[]
+  courseMasters CourseMaster[]
 
   @@unique([streamId, slug], name: "uq_discipline_slug")
   @@index([streamId], name: "idx_disciplines_stream")
@@ -348,7 +349,8 @@ model StudyLevel {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  courses Course[]
+  courses       Course[]
+  courseMasters CourseMaster[]
 
   @@map("study_levels")
 }
@@ -362,9 +364,45 @@ model ProgramType {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  courses Course[]
+  courses       Course[]
+  courseMasters CourseMaster[]
 
   @@map("program_types")
+}
+
+// Global reference catalog of standard course names — e.g. "Bachelor of
+// Computer Applications (BCA)" — classified primarily by Discipline
+// (which itself carries its Stream). This is distinct from the
+// per-college `Course` model below (an actual course a specific college
+// offers, with fees/quotas/admission cycles); CourseMaster is the
+// platform-wide taxonomy entry that the public course-name API and
+// college-admin course setup can both draw from.
+//
+// Study Level and Program Type are optional here — creating a course
+// only requires picking a Discipline (Stream comes along with it) and a
+// name; they're not asked for again on this form since picking a
+// Discipline already establishes the relevant classification context.
+model CourseMaster {
+  id            String   @id @default(dbgenerated("('CRM-'::text || (nextval('course_master_seq'::regclass))::text)"))
+  name          String   @db.VarChar(150)
+  slug          String   @db.VarChar(180)
+  disciplineId  String   @map("discipline_id")
+  studyLevelId  String?  @map("study_level_id")
+  programTypeId String?  @map("program_type_id")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  discipline  Discipline   @relation(fields: [disciplineId], references: [id])
+  studyLevel  StudyLevel?  @relation(fields: [studyLevelId], references: [id])
+  programType ProgramType? @relation(fields: [programTypeId], references: [id])
+
+  @@unique([disciplineId, slug], name: "uq_course_master_discipline_slug")
+  @@index([disciplineId], name: "idx_course_masters_discipline")
+  @@index([studyLevelId], name: "idx_course_masters_study_level")
+  @@index([programTypeId], name: "idx_course_masters_program_type")
+  @@map("course_masters")
 }
 
 model EducationBoard {

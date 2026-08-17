@@ -9,6 +9,8 @@ import {
   type CreateSimpleTaxonomyInput,
   type UpdateDisciplineInput,
   type UpdateSimpleTaxonomyInput,
+  type CreateCourseMasterInput,
+  type UpdateCourseMasterInput,
 } from "@/lib/services/academic-taxonomy.service";
 
 export function useStreams(params: TaxonomyListParams = {}) {
@@ -288,6 +290,71 @@ export function useDisableProgramType() {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.academicTaxonomy.programTypes,
+      });
+    },
+  });
+}
+
+export function useCourseMasters(params: TaxonomyListParams = {}) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.academicTaxonomy.courseMasters, params],
+    queryFn: () => academicTaxonomyService.getCourseMasters(params),
+  });
+}
+
+export function useCreateCourseMaster() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCourseMasterInput) =>
+      academicTaxonomyService.createCourseMaster(data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.courseMasters,
+      });
+    },
+  });
+}
+
+export function useUpdateCourseMaster() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCourseMasterInput }) =>
+      academicTaxonomyService.updateCourseMaster(id, data),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.courseMasters,
+      });
+    },
+  });
+}
+
+export function useEnableCourseMaster() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.enableCourseMaster(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.courseMasters,
+      });
+    },
+  });
+}
+
+export function useDisableCourseMaster() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => academicTaxonomyService.disableCourseMaster(id),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.academicTaxonomy.courseMasters,
       });
     },
   });

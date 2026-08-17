@@ -7,10 +7,14 @@ import {
   CreateDisciplineInput,
   CreateProgramTypeInput,
   CreateStudyLevelInput,
+  CreateCourseMasterInput,
+  ListCourseMastersQuery,
+  PublicListCourseMastersQuery,
   UpdateStreamInput,
   UpdateDisciplineInput,
   UpdateProgramTypeInput,
   UpdateStudyLevelInput,
+  UpdateCourseMasterInput,
 } from "../validators/academic-taxonomy.validator";
 
 export class AcademicTaxonomyService {
@@ -324,6 +328,135 @@ export class AcademicTaxonomyService {
     if (!existing) throw new NotFoundError("Program type not found");
 
     return AcademicTaxonomyRepository.updateProgramTypeById(id, {
+      isActive: false,
+    });
+  }
+
+  static async listCourseMasters(query: ListCourseMastersQuery) {
+    return AcademicTaxonomyQuery.listCourseMasters(query);
+  }
+
+  static async listCourseMastersForPublic(query: PublicListCourseMastersQuery) {
+    return AcademicTaxonomyQuery.listCourseMastersForPublic(query);
+  }
+
+  static async createCourseMaster(data: CreateCourseMasterInput) {
+    const discipline = await AcademicTaxonomyRepository.findDisciplineById(
+      data.discipline_id,
+    );
+    if (!discipline) throw new NotFoundError("Discipline not found");
+
+    if (data.study_level_id) {
+      const studyLevel = await AcademicTaxonomyRepository.findStudyLevelById(
+        data.study_level_id,
+      );
+      if (!studyLevel) throw new NotFoundError("Study level not found");
+    }
+
+    if (data.program_type_id) {
+      const programType = await AcademicTaxonomyRepository.findProgramTypeById(
+        data.program_type_id,
+      );
+      if (!programType) throw new NotFoundError("Program type not found");
+    }
+
+    const existing =
+      await AcademicTaxonomyRepository.findCourseMasterByDisciplineAndSlug(
+        data.discipline_id,
+        data.slug,
+      );
+    if (existing) {
+      throw new ConflictError(
+        "This course already exists for the selected discipline",
+      );
+    }
+
+    return AcademicTaxonomyRepository.createCourseMaster({
+      name: data.name,
+      slug: data.slug,
+      disciplineId: data.discipline_id,
+      studyLevelId: data.study_level_id,
+      programTypeId: data.program_type_id,
+      sortOrder: data.sort_order,
+      isActive: data.is_active,
+    });
+  }
+
+  static async updateCourseMaster(id: string, data: UpdateCourseMasterInput) {
+    const existing = await AcademicTaxonomyRepository.findCourseMasterById(id);
+    if (!existing) throw new NotFoundError("Course not found");
+
+    if (data.discipline_id) {
+      const discipline = await AcademicTaxonomyRepository.findDisciplineById(
+        data.discipline_id,
+      );
+      if (!discipline) throw new NotFoundError("Discipline not found");
+    }
+    if (data.study_level_id) {
+      const studyLevel = await AcademicTaxonomyRepository.findStudyLevelById(
+        data.study_level_id,
+      );
+      if (!studyLevel) throw new NotFoundError("Study level not found");
+    }
+    if (data.program_type_id) {
+      const programType = await AcademicTaxonomyRepository.findProgramTypeById(
+        data.program_type_id,
+      );
+      if (!programType) throw new NotFoundError("Program type not found");
+    }
+
+    const nextDisciplineId = data.discipline_id ?? existing.disciplineId;
+    const nextSlug = data.slug ?? existing.slug;
+
+    if (
+      nextDisciplineId !== existing.disciplineId ||
+      nextSlug !== existing.slug
+    ) {
+      const duplicate =
+        await AcademicTaxonomyRepository.findCourseMasterByDisciplineAndSlug(
+          nextDisciplineId,
+          nextSlug,
+        );
+      if (duplicate && duplicate.id !== id) {
+        throw new ConflictError(
+          "This course already exists for the selected discipline",
+        );
+      }
+    }
+
+    return AcademicTaxonomyRepository.updateCourseMasterById(id, {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.slug !== undefined ? { slug: data.slug } : {}),
+      ...(data.discipline_id !== undefined
+        ? { disciplineId: data.discipline_id }
+        : {}),
+      ...(data.study_level_id !== undefined
+        ? { studyLevelId: data.study_level_id }
+        : {}),
+      ...(data.program_type_id !== undefined
+        ? { programTypeId: data.program_type_id }
+        : {}),
+      ...(data.sort_order !== undefined ? { sortOrder: data.sort_order } : {}),
+      ...(data.is_active !== undefined ? { isActive: data.is_active } : {}),
+    });
+  }
+
+  static async disableCourseMaster(id: string) {
+    const existing = await AcademicTaxonomyRepository.findCourseMasterById(id);
+    if (!existing) throw new NotFoundError("Course not found");
+
+    if (!existing.isActive) return existing;
+
+    return AcademicTaxonomyRepository.updateCourseMasterById(id, {
+      isActive: false,
+    });
+  }
+
+  static async removeCourseMaster(id: string) {
+    const existing = await AcademicTaxonomyRepository.findCourseMasterById(id);
+    if (!existing) throw new NotFoundError("Course not found");
+
+    return AcademicTaxonomyRepository.updateCourseMasterById(id, {
       isActive: false,
     });
   }

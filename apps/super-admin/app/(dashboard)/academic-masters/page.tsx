@@ -24,6 +24,7 @@ import type {
   Discipline,
   StudyLevel,
   ProgramType,
+  CourseMaster,
 } from "@/lib/services/academic-taxonomy.service";
 import {
   useCreateStream,
@@ -47,6 +48,11 @@ import {
   useStreams,
   useStudyLevels,
   useAllActiveStreams,
+  useCourseMasters,
+  useCreateCourseMaster,
+  useUpdateCourseMaster,
+  useEnableCourseMaster,
+  useDisableCourseMaster,
 } from "@/hooks/use-academic-taxonomy";
 
 const PAGE_SIZE = 10;
@@ -92,13 +98,19 @@ function Pagination({
   );
 }
 
-type Tab = "streams" | "disciplines" | "study-levels" | "program-types";
+type Tab =
+  | "streams"
+  | "disciplines"
+  | "study-levels"
+  | "program-types"
+  | "courses";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "streams", label: "Streams" },
   { id: "disciplines", label: "Disciplines" },
   { id: "study-levels", label: "Study Levels" },
   { id: "program-types", label: "Program Types" },
+  { id: "courses", label: "Courses" },
 ];
 
 function slugify(value: string): string {
@@ -144,6 +156,7 @@ export default function AcademicMastersPage() {
   const [disciplinePage, setDisciplinePage] = useState(1);
   const [studyLevelPage, setStudyLevelPage] = useState(1);
   const [programTypePage, setProgramTypePage] = useState(1);
+  const [coursePage, setCoursePage] = useState(1);
 
   const { data: streamsPage, isLoading: isLoadingStreams } = useStreams({
     page: streamPage,
@@ -155,6 +168,10 @@ export default function AcademicMastersPage() {
     useStudyLevels({ page: studyLevelPage, limit: PAGE_SIZE });
   const { data: programTypesPage, isLoading: isLoadingProgramTypes } =
     useProgramTypes({ page: programTypePage, limit: PAGE_SIZE });
+  const { data: coursesPage, isLoading: isLoadingCourses } = useCourseMasters({
+    page: coursePage,
+    limit: PAGE_SIZE,
+  });
 
   const { data: allActiveStreams = [] } = useAllActiveStreams();
 
@@ -166,6 +183,8 @@ export default function AcademicMastersPage() {
   const studyLevelsMeta = studyLevelsPage?.meta;
   const programTypes = programTypesPage?.data ?? [];
   const programTypesMeta = programTypesPage?.meta;
+  const courses = coursesPage?.data ?? [];
+  const coursesMeta = coursesPage?.meta;
 
   const createStream = useCreateStream();
   const updateStream = useUpdateStream();
@@ -183,6 +202,10 @@ export default function AcademicMastersPage() {
   const updateProgramType = useUpdateProgramType();
   const enableProgramType = useEnableProgramType();
   const disableProgramType = useDisableProgramType();
+  const createCourseMaster = useCreateCourseMaster();
+  const updateCourseMaster = useUpdateCourseMaster();
+  const enableCourseMaster = useEnableCourseMaster();
+  const disableCourseMaster = useDisableCourseMaster();
 
   const [streamForm, setStreamForm] = useState({
     name: "",
@@ -200,6 +223,11 @@ export default function AcademicMastersPage() {
     sort_order: 0,
   });
   const [programTypeForm, setProgramTypeForm] = useState({
+    name: "",
+    sort_order: 0,
+  });
+  const [courseForm, setCourseForm] = useState({
+    discipline_id: "",
     name: "",
     sort_order: 0,
   });
@@ -232,11 +260,26 @@ export default function AcademicMastersPage() {
     name: "",
     sort_order: 0,
   });
+  const [editingCourse, setEditingCourse] = useState<CourseMaster | null>(null);
+  const [editCourseForm, setEditCourseForm] = useState({
+    discipline_id: "",
+    name: "",
+    sort_order: 0,
+  });
 
   const sortedActiveStreams = useMemo(
     () => allActiveStreams.filter((s) => s.isActive),
     [allActiveStreams],
   );
+
+  // Shared by both the create and edit Course forms — a course only needs
+  // a Discipline picked (Stream comes along with it, shown inline in the
+  // option label), no separate Stream select.
+  const { data: allActiveDisciplinesPage } = useDisciplines({
+    is_active: true,
+    limit: 200,
+  });
+  const allActiveDisciplines = allActiveDisciplinesPage?.data ?? [];
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
@@ -426,6 +469,69 @@ export default function AcademicMastersPage() {
         onSuccess: () => {
           toast.success("Program type updated");
           setEditingProgramType(null);
+        },
+      },
+    );
+  };
+
+  const handleCreateCourse = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!courseForm.discipline_id) {
+      toast.error("Please select a discipline");
+      return;
+    }
+    createCourseMaster.mutate(
+      {
+        name: courseForm.name,
+        slug: slugify(courseForm.name),
+        discipline_id: courseForm.discipline_id,
+        sort_order: courseForm.sort_order,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Course added");
+          setCourseForm((prev) => ({
+            ...prev,
+            discipline_id: "",
+            name: "",
+            sort_order: 0,
+          }));
+          setShowForm(false);
+        },
+      },
+    );
+  };
+
+  function openEditCourse(course: CourseMaster) {
+    setEditCourseForm({
+      discipline_id: course.disciplineId,
+      name: course.name,
+      sort_order: course.sortOrder,
+    });
+    setEditingCourse(course);
+  }
+
+  const handleUpdateCourse = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+    if (!editCourseForm.discipline_id) {
+      toast.error("Please select a discipline");
+      return;
+    }
+    updateCourseMaster.mutate(
+      {
+        id: editingCourse.id,
+        data: {
+          name: editCourseForm.name,
+          slug: slugify(editCourseForm.name),
+          discipline_id: editCourseForm.discipline_id,
+          sort_order: editCourseForm.sort_order,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Course updated");
+          setEditingCourse(null);
         },
       },
     );
@@ -1045,6 +1151,166 @@ export default function AcademicMastersPage() {
             </CardContent>
           </Card>
         )}
+
+        {activeTab === "courses" && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Courses</CardTitle>
+              <Button
+                size="sm"
+                variant={showForm ? "ghost" : "default"}
+                onClick={() => setShowForm((v) => !v)}
+              >
+                {showForm ? (
+                  <>
+                    <X className="h-4 w-4 mr-1.5" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add Course
+                  </>
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {showForm && (
+                <form
+                  onSubmit={handleCreateCourse}
+                  className="grid gap-3 md:grid-cols-3 border rounded-lg p-4 bg-muted/30"
+                >
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Discipline</Label>
+                    <Select
+                      value={courseForm.discipline_id}
+                      onValueChange={(value) =>
+                        setCourseForm((prev) => ({
+                          ...prev,
+                          discipline_id: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select discipline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allActiveDisciplines.map((discipline) => (
+                          <SelectItem key={discipline.id} value={discipline.id}>
+                            {discipline.stream.name} &gt; {discipline.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Sort Order</Label>
+                    <Input
+                      type="number"
+                      value={courseForm.sort_order}
+                      onChange={(e) =>
+                        setCourseForm((prev) => ({
+                          ...prev,
+                          sort_order: Number(e.target.value || 0),
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-3">
+                    <Label>Course Name</Label>
+                    <Input
+                      value={courseForm.name}
+                      onChange={(e) =>
+                        setCourseForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="Bachelor of Computer Applications (BCA)"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <Button
+                      type="submit"
+                      disabled={createCourseMaster.isPending}
+                    >
+                      Save Course
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {isLoadingCourses ? (
+                <p className="text-sm text-muted-foreground">
+                  Loading courses…
+                </p>
+              ) : courses.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No courses yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {courses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="flex items-center justify-between rounded-md border p-3"
+                    >
+                      <div>
+                        <p className="font-medium">{course.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {course.discipline.stream.name} &gt;{" "}
+                          {course.discipline.name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEditCourse(course)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Badge
+                          variant={course.isActive ? "success" : "secondary"}
+                        >
+                          {course.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Switch
+                          checked={course.isActive}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              enableCourseMaster.mutate(course.id, {
+                                onSuccess: () =>
+                                  toast.success("Course enabled"),
+                              });
+                            } else {
+                              disableCourseMaster.mutate(course.id, {
+                                onSuccess: () =>
+                                  toast.success("Course disabled"),
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Pagination
+                page={coursePage}
+                totalPages={coursesMeta?.totalPages ?? 1}
+                onPrev={() => setCoursePage((p) => p - 1)}
+                onNext={() => setCoursePage((p) => p + 1)}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {editingStream && (
@@ -1375,6 +1641,104 @@ export default function AcademicMastersPage() {
                   type="submit"
                   size="sm"
                   disabled={updateProgramType.isPending}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editingCourse && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingCourse(null);
+          }}
+        >
+          <Card className="w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Edit Course</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setEditingCourse(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <form
+              onSubmit={handleUpdateCourse}
+              className="space-y-4 max-h-[70vh] overflow-y-auto"
+            >
+              <div className="space-y-2">
+                <Label>Discipline</Label>
+                <Select
+                  value={editCourseForm.discipline_id}
+                  onValueChange={(value) =>
+                    setEditCourseForm((prev) => ({
+                      ...prev,
+                      discipline_id: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select discipline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allActiveDisciplines.map((discipline) => (
+                      <SelectItem key={discipline.id} value={discipline.id}>
+                        {discipline.stream.name} &gt; {discipline.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Course Name</Label>
+                <Input
+                  value={editCourseForm.name}
+                  onChange={(e) =>
+                    setEditCourseForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Sort Order</Label>
+                <Input
+                  type="number"
+                  value={editCourseForm.sort_order}
+                  onChange={(e) =>
+                    setEditCourseForm((prev) => ({
+                      ...prev,
+                      sort_order: Number(e.target.value || 0),
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingCourse(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateCourseMaster.isPending}
                 >
                   Save Changes
                 </Button>
