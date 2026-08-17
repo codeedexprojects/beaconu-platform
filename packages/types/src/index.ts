@@ -35,3 +35,4 @@ export * from "./seat-cancellation";
 export * from "./course-switch-request";
 export * from "./dashboard";
 export * from "./group-finder";
+export * from "./college-comparison";

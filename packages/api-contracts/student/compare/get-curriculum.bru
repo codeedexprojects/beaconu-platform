@@ -1,0 +1,20 @@
+meta {
+  name: Get Curriculum
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/curriculum
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Curriculum section — semester breakdown + specializations, plus the
+  course structure block.
+}

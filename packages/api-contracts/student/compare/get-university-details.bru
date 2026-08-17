@@ -1,0 +1,21 @@
+meta {
+  name: Get University Details
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/university-details
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  University Details + University Accolades sections — label/value stat
+  rows and accolade badges, sourced from the college's "college_overview"
+  profile section.
+}

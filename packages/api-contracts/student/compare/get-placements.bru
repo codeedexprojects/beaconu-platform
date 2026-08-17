@@ -1,0 +1,19 @@
+meta {
+  name: Get Placement Statistics
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/placements
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Placement Statistics section.
+}

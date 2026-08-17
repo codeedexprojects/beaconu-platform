@@ -1,0 +1,20 @@
+meta {
+  name: Get Campus Details
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/campus-details
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Campus Details section — campus size, amenities, inside-campus
+  facilities, location, 360° view URL.
+}

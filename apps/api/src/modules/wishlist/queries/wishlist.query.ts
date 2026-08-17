@@ -3,6 +3,7 @@ import type { PaginationMeta, WishlistCollegeItem } from "@beaconu/types";
 
 function mapWishlistItem(row: {
   createdAt: Date;
+  course: { id: string; name: string } | null;
   college: {
     id: string;
     name: string;
@@ -25,6 +26,8 @@ function mapWishlistItem(row: {
     state: row.college.state,
     avgRating: Number(row.college.avgRating),
     reviewCount: row.college.reviewCount,
+    courseId: row.course?.id ?? null,
+    courseName: row.course?.name ?? null,
     wishlistedAt: row.createdAt.toISOString(),
   };
 }
@@ -46,6 +49,7 @@ export class WishlistQuery {
         orderBy: { createdAt: "desc" },
         select: {
           createdAt: true,
+          course: { select: { id: true, name: true } },
           college: {
             select: {
               id: true,

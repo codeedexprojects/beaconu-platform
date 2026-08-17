@@ -1,0 +1,26 @@
+meta {
+  name: Get Hero
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/hero?course_id={{courseId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  course_id: {{courseId}}
+}
+
+docs {
+  Compare Details hero card — image, rating, established year, ownership
+  type, and (optionally, if `course_id` is passed) the course being
+  compared for this college. Requires student login; not gated on
+  enrollment at this college.
+}
