@@ -16,20 +16,36 @@ params:query {
 }
 
 docs {
-  Returns a paginated list of all standard/possible courses (e.g. B.Tech
-  Computer Science Engineering, MBBS, BBA, B.Com, MBA, ...) — a static,
-  deduplicated reference taxonomy, not a college's actual offered
-  courses (that's GET /public/colleges/by-slug/:slug/courses). No
-  authentication required.
+  Returns a paginated list of all standard/possible courses (e.g. "B.Tech
+  Computer Science Engineering", "MBBS", "BBA", "B.Com", "MBA", ...) — a
+  deduplicated reference taxonomy, not a college's actual offered courses
+  (that's GET /public/colleges/by-slug/:slug/courses). No authentication
+  required.
 
   Query params:
   - search (optional): filter by name (case-insensitive substring match)
   - page (default: 1)
   - limit (default: 20, max: 100)
 
-  Response: { code: string, name: string }[]
-  Meta: { total, page, limit, totalPages, hasNextPage, hasPreviousPage }
+  Response `data[]` item:
+  {
+    "id": "CRM-1",
+    "name": "Bachelor of Computer Applications (BCA)",
+    "slug": "bachelor-of-computer-applications-bca",
+    "studyLevel": { "id": "SVL-1", "name": "Undergraduate", "slug": "undergraduate" } | null,
+    "stream": { "id": "STR-1", "name": "Computer Science", "slug": "computer-science" },
+    "discipline": { "id": "DSC-1", "name": "Computer Applications", "slug": "computer-applications" },
+    "programType": { "id": "PGT-1", "name": "Full-time", "slug": "full-time" } | null
+  }
+  `studyLevel`/`programType` are nullable — a course only requires a
+  Discipline (which carries `stream`) at creation time; Study Level and
+  Program Type are optional classification fields set separately.
+  Meta: { total, page, limit, totalPages }
 
-  Data source: static JSON (apps/api/src/shared/data/courses.json) — no
-  DB query, no duplicates.
+  Data source: the CourseMaster table (managed via Super Admin →
+  Academic Masters → Courses tab, backed by
+  /api/v1/admin/universities/courses). Every row is a distinct
+  (discipline, study level, program type, name) combination, so this
+  list can never contain duplicates. No longer backed by a static JSON
+  file — courses.json has been removed.
 }

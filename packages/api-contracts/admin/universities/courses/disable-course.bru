@@ -1,0 +1,22 @@
+meta {
+  name: Disable Course
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/universities/courses/{{courseMasterId}}/disable
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deactivates a course-master entry (is_active: false). Never hard
+  deleted — re-enable via PATCH .../courses/:id { "is_active": true }.
+
+  Requires: platform admin access token.
+}

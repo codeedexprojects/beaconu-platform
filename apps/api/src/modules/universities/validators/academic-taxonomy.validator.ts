@@ -178,6 +178,47 @@ export const academicTaxonomySchemas = {
     .refine((data) => Object.keys(data).length > 0, {
       message: "At least one field is required",
     }),
+
+  listCourseMastersQuery: z.object({
+    search: z.string().trim().optional(),
+    discipline_id: z.string().trim().optional(),
+    stream_id: z.string().trim().optional(),
+    study_level_id: z.string().trim().optional(),
+    program_type_id: z.string().trim().optional(),
+    is_active: optionalBooleanFromQuery.optional(),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(500).optional().default(10),
+  }),
+
+  publicListCourseMastersQuery: z.object({
+    search: z.string().trim().optional(),
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  }),
+
+  createCourseMaster: z.object({
+    name: z.string().trim().min(1).max(150),
+    slug: slugSchema.max(180),
+    discipline_id: z.string().trim().min(1),
+    study_level_id: z.string().trim().min(1).optional(),
+    program_type_id: z.string().trim().min(1).optional(),
+    sort_order: z.number().int().min(0).optional().default(0),
+    is_active: z.boolean().optional().default(true),
+  }),
+
+  updateCourseMaster: z
+    .object({
+      name: z.string().trim().min(1).max(150).optional(),
+      slug: slugSchema.max(180).optional(),
+      discipline_id: z.string().trim().min(1).optional(),
+      study_level_id: z.string().trim().min(1).optional(),
+      program_type_id: z.string().trim().min(1).optional(),
+      sort_order: z.number().int().min(0).optional(),
+      is_active: z.boolean().optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, {
+      message: "At least one field is required",
+    }),
 };
 
 export type ListDisciplinesQuery = z.output<
@@ -215,4 +256,16 @@ export type CreateProgramTypeInput = z.output<
 >;
 export type UpdateProgramTypeInput = z.output<
   typeof academicTaxonomySchemas.updateProgramType
+>;
+export type ListCourseMastersQuery = z.output<
+  typeof academicTaxonomySchemas.listCourseMastersQuery
+>;
+export type PublicListCourseMastersQuery = z.output<
+  typeof academicTaxonomySchemas.publicListCourseMastersQuery
+>;
+export type CreateCourseMasterInput = z.output<
+  typeof academicTaxonomySchemas.createCourseMaster
+>;
+export type UpdateCourseMasterInput = z.output<
+  typeof academicTaxonomySchemas.updateCourseMaster
 >;

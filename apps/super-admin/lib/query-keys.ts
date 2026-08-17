@@ -8,6 +8,7 @@ export const QUERY_KEYS = {
     disciplines: ["academic-taxonomy", "disciplines"] as const,
     studyLevels: ["academic-taxonomy", "study-levels"] as const,
     programTypes: ["academic-taxonomy", "program-types"] as const,
+    courseMasters: ["academic-taxonomy", "courses"] as const,
   },
   adminProfiles: ["admin-profiles"] as const,
   pendingBlink: ["pending-blink-users"] as const,

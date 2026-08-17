@@ -166,6 +166,46 @@ router.delete(
 );
 
 router.get(
+  "/courses",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("academic-masters.view"),
+  UniversityPlatformAdminController.listCourseMasters,
+);
+
+router.post(
+  "/courses",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("academic-masters.manage"),
+  UniversityPlatformAdminController.createCourseMaster,
+);
+
+router.patch(
+  "/courses/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("academic-masters.manage"),
+  UniversityPlatformAdminController.updateCourseMaster,
+);
+
+router.patch(
+  "/courses/:id/disable",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("academic-masters.manage"),
+  UniversityPlatformAdminController.disableCourseMaster,
+);
+
+router.delete(
+  "/courses/:id",
+  authenticate,
+  authorizeUserType("platform_admin"),
+  authorize("academic-masters.manage"),
+  UniversityPlatformAdminController.deleteCourseMaster,
+);
+
+router.get(
   "/types",
   authenticate,
   authorizeUserType("platform_admin"),

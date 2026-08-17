@@ -1,6 +1,8 @@
 import { prisma } from "@beaconu/db";
 import {
   AdminListQuery,
+  ListCourseMastersQuery,
+  PublicListCourseMastersQuery,
   PublicListQuery,
 } from "../validators/academic-taxonomy.validator";
 
@@ -48,6 +50,28 @@ const PROGRAM_TYPE_SELECT = {
   sortOrder: true,
   isActive: true,
   createdAt: true,
+} as const;
+
+const COURSE_MASTER_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  disciplineId: true,
+  studyLevelId: true,
+  programTypeId: true,
+  sortOrder: true,
+  isActive: true,
+  createdAt: true,
+  discipline: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      stream: { select: { id: true, name: true, slug: true } },
+    },
+  },
+  studyLevel: { select: { id: true, name: true, slug: true } },
+  programType: { select: { id: true, name: true, slug: true } },
 } as const;
 
 function resolveIsActive(filters: ListQuery): boolean | undefined {
@@ -323,6 +347,93 @@ export class AcademicTaxonomyQuery {
 
     return {
       data,
+      meta: {
+        total,
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(total / filters.limit),
+      },
+    };
+  }
+
+  static async listCourseMasters(filters: ListCourseMastersQuery) {
+    const whereClause: any =
+      filters.is_active !== undefined ? { isActive: filters.is_active } : {};
+
+    if (filters.search) {
+      whereClause.name = { contains: filters.search, mode: "insensitive" };
+    }
+    if (filters.discipline_id) {
+      whereClause.disciplineId = filters.discipline_id;
+    }
+    if (filters.study_level_id) {
+      whereClause.studyLevelId = filters.study_level_id;
+    }
+    if (filters.program_type_id) {
+      whereClause.programTypeId = filters.program_type_id;
+    }
+    if (filters.stream_id) {
+      whereClause.discipline = { streamId: filters.stream_id };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.courseMaster.findMany({
+        where: whereClause,
+        select: COURSE_MASTER_SELECT,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.courseMaster.count({ where: whereClause }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(total / filters.limit),
+      },
+    };
+  }
+
+  // Public, deduplicated-by-nature course-name list — every CourseMaster
+  // row IS a distinct (discipline, study level, program type, name) combo,
+  // so a plain paginated read here can never surface duplicates.
+  static async listCourseMastersForPublic(
+    filters: PublicListCourseMastersQuery,
+  ) {
+    const whereClause: any = { isActive: true };
+    if (filters.search) {
+      whereClause.name = { contains: filters.search, mode: "insensitive" };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.courseMaster.findMany({
+        where: whereClause,
+        select: COURSE_MASTER_SELECT,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+        skip: (filters.page - 1) * filters.limit,
+        take: filters.limit,
+      }),
+      prisma.courseMaster.count({ where: whereClause }),
+    ]);
+
+    return {
+      data: data.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        studyLevel: c.studyLevel,
+        stream: c.discipline.stream,
+        discipline: {
+          id: c.discipline.id,
+          name: c.discipline.name,
+          slug: c.discipline.slug,
+        },
+        programType: c.programType,
+      })),
       meta: {
         total,
         page: filters.page,

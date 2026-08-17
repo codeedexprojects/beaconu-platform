@@ -48,6 +48,28 @@ const PROGRAM_TYPE_SELECT = {
   createdAt: true,
 } as const;
 
+const COURSE_MASTER_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  disciplineId: true,
+  studyLevelId: true,
+  programTypeId: true,
+  sortOrder: true,
+  isActive: true,
+  createdAt: true,
+  discipline: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      stream: { select: { id: true, name: true, slug: true } },
+    },
+  },
+  studyLevel: { select: { id: true, name: true, slug: true } },
+  programType: { select: { id: true, name: true, slug: true } },
+} as const;
+
 export class AcademicTaxonomyRepository {
   static async listStreams(filters: { isActive?: boolean } = {}) {
     return prisma.stream.findMany({
@@ -298,6 +320,62 @@ export class AcademicTaxonomyRepository {
       where: { id },
       data,
       select: PROGRAM_TYPE_SELECT,
+    });
+  }
+
+  static async findCourseMasterById(id: string) {
+    return prisma.courseMaster.findUnique({
+      where: { id },
+      select: COURSE_MASTER_SELECT,
+    });
+  }
+
+  static async findCourseMasterByDisciplineAndSlug(
+    disciplineId: string,
+    slug: string,
+  ) {
+    return prisma.courseMaster.findUnique({
+      where: {
+        uq_course_master_discipline_slug: {
+          disciplineId,
+          slug,
+        },
+      },
+      select: COURSE_MASTER_SELECT,
+    });
+  }
+
+  static async createCourseMaster(data: {
+    name: string;
+    slug: string;
+    disciplineId: string;
+    studyLevelId?: string;
+    programTypeId?: string;
+    sortOrder: number;
+    isActive: boolean;
+  }) {
+    return prisma.courseMaster.create({
+      data,
+      select: COURSE_MASTER_SELECT,
+    });
+  }
+
+  static async updateCourseMasterById(
+    id: string,
+    data: {
+      name?: string;
+      slug?: string;
+      disciplineId?: string;
+      studyLevelId?: string;
+      programTypeId?: string;
+      sortOrder?: number;
+      isActive?: boolean;
+    },
+  ) {
+    return prisma.courseMaster.update({
+      where: { id },
+      data,
+      select: COURSE_MASTER_SELECT,
     });
   }
 }

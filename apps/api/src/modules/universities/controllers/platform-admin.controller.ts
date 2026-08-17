@@ -137,6 +137,39 @@ export class UniversityPlatformAdminController {
     res.status(200).json(ApiResponse.success("Program type deleted", null));
   }
 
+  static async listCourseMasters(req: Request, res: Response): Promise<void> {
+    const query = academicTaxonomySchemas.listCourseMastersQuery.parse(
+      req.query,
+    );
+    const courses = await AcademicTaxonomyService.listCourseMasters(query);
+    res.status(200).json(ApiResponse.success("Courses fetched", courses));
+  }
+
+  static async createCourseMaster(req: Request, res: Response): Promise<void> {
+    const data = academicTaxonomySchemas.createCourseMaster.parse(req.body);
+    const course = await AcademicTaxonomyService.createCourseMaster(data);
+    res.status(201).json(ApiResponse.success("Course created", course));
+  }
+
+  static async updateCourseMaster(req: Request, res: Response): Promise<void> {
+    const { id } = academicTaxonomySchemas.idParam.parse(req.params);
+    const data = academicTaxonomySchemas.updateCourseMaster.parse(req.body);
+    const course = await AcademicTaxonomyService.updateCourseMaster(id, data);
+    res.status(200).json(ApiResponse.success("Course updated", course));
+  }
+
+  static async disableCourseMaster(req: Request, res: Response): Promise<void> {
+    const { id } = academicTaxonomySchemas.idParam.parse(req.params);
+    const course = await AcademicTaxonomyService.disableCourseMaster(id);
+    res.status(200).json(ApiResponse.success("Course disabled", course));
+  }
+
+  static async deleteCourseMaster(req: Request, res: Response): Promise<void> {
+    const { id } = academicTaxonomySchemas.idParam.parse(req.params);
+    await AcademicTaxonomyService.removeCourseMaster(id);
+    res.status(200).json(ApiResponse.success("Course deleted", null));
+  }
+
   static async listAllTypes(req: Request, res: Response): Promise<void> {
     const query = universityTypeSchemas.listQuery.parse(req.query);
     const types = await UniversityTypeService.listAll(query);

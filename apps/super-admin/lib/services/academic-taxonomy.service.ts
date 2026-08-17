@@ -56,6 +56,26 @@ export interface ProgramType {
   createdAt: string;
 }
 
+export interface CourseMaster {
+  id: string;
+  name: string;
+  slug: string;
+  disciplineId: string;
+  studyLevelId: string | null;
+  programTypeId: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  discipline: {
+    id: string;
+    name: string;
+    slug: string;
+    stream: { id: string; name: string; slug: string };
+  };
+  studyLevel: { id: string; name: string; slug: string } | null;
+  programType: { id: string; name: string; slug: string } | null;
+}
+
 export interface CreateDisciplineInput {
   stream_id: string;
   name: string;
@@ -87,12 +107,27 @@ export type UpdateSimpleTaxonomyInput = Omit<
   "logo_url"
 > & { logo_url?: string | null };
 
+export interface CreateCourseMasterInput {
+  name: string;
+  slug: string;
+  discipline_id: string;
+  study_level_id?: string;
+  program_type_id?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export type UpdateCourseMasterInput = Partial<CreateCourseMasterInput>;
+
 export interface TaxonomyListParams {
   page?: number;
   limit?: number;
   search?: string;
   is_active?: boolean;
   stream_id?: string;
+  discipline_id?: string;
+  study_level_id?: string;
+  program_type_id?: string;
 }
 
 function buildQuery(params: TaxonomyListParams): string {
@@ -103,6 +138,9 @@ function buildQuery(params: TaxonomyListParams): string {
   if (params.is_active !== undefined)
     p.set("is_active", String(params.is_active));
   if (params.stream_id) p.set("stream_id", params.stream_id);
+  if (params.discipline_id) p.set("discipline_id", params.discipline_id);
+  if (params.study_level_id) p.set("study_level_id", params.study_level_id);
+  if (params.program_type_id) p.set("program_type_id", params.program_type_id);
   const qs = p.toString();
   return qs ? `?${qs}` : "";
 }
@@ -218,4 +256,29 @@ export const academicTaxonomyService = {
 
   removeProgramType: (id: string) =>
     api.delete(`/api/v1/admin/universities/program-types/${id}`),
+
+  getCourseMasters: (params: TaxonomyListParams = {}) =>
+    api.get<Paginated<CourseMaster>>(
+      `/api/v1/admin/universities/courses${buildQuery(params)}`,
+    ),
+
+  createCourseMaster: (data: CreateCourseMasterInput) =>
+    api.post<CourseMaster>("/api/v1/admin/universities/courses", data),
+
+  updateCourseMaster: (id: string, data: UpdateCourseMasterInput) =>
+    api.patch<CourseMaster>(`/api/v1/admin/universities/courses/${id}`, data),
+
+  enableCourseMaster: (id: string) =>
+    api.patch<CourseMaster>(`/api/v1/admin/universities/courses/${id}`, {
+      is_active: true,
+    }),
+
+  disableCourseMaster: (id: string) =>
+    api.patch<CourseMaster>(
+      `/api/v1/admin/universities/courses/${id}/disable`,
+      {},
+    ),
+
+  removeCourseMaster: (id: string) =>
+    api.delete(`/api/v1/admin/universities/courses/${id}`),
 };
