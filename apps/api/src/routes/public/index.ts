@@ -9,6 +9,7 @@ import languagesPublicRoutes from "@/modules/languages/routes/public.routes";
 import countriesPublicRoutes from "@/modules/countries/routes/public.routes";
 import indiaStatesPublicRoutes from "@/modules/india-states/routes/public.routes";
 import mediumsPublicRoutes from "@/modules/mediums/routes/public.routes";
+import coursesPublicRoutes from "@/modules/courses/routes/public.routes";
 
 const router: Router = Router();
 
@@ -21,5 +22,6 @@ router.use("/languages", languagesPublicRoutes);
 router.use("/countries", countriesPublicRoutes);
 router.use("/india-states", indiaStatesPublicRoutes);
 router.use("/mediums", mediumsPublicRoutes);
+router.use("/courses", coursesPublicRoutes);
 
 export default router;
