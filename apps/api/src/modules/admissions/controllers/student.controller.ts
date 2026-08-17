@@ -28,7 +28,7 @@ import {
   addressDetailsSchema,
   qualificationDetailsSchema,
 } from "../validators/application-details.validator";
-import { registerApplicationDocumentSchema } from "../validators/application-document.validator";
+import { registerApplicationDocumentsSchema } from "../validators/application-document.validator";
 import { declarationSchema } from "../validators/application-declaration.validator";
 import {
   tenthGradeDetailsSchema,
@@ -291,13 +291,13 @@ export class StudentApplicationController {
   }
 
   static async registerDocument(req: Request, res: Response) {
-    const body = registerApplicationDocumentSchema.parse(req.body);
-    const result = await ApplicationDocumentService.register(
+    const { documents } = registerApplicationDocumentsSchema.parse(req.body);
+    const result = await ApplicationDocumentService.registerMany(
       req.params.applicationId as string,
       req.userId as string,
-      body,
+      documents,
     );
-    return res.status(201).json(ApiResponse.success("Document saved", result));
+    return res.status(200).json(ApiResponse.success("Documents saved", result));
   }
 
   static async updateDeclaration(req: Request, res: Response) {
