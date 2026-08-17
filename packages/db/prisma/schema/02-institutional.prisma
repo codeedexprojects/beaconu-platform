@@ -195,10 +195,12 @@ model CollegeWishlist {
   id        String   @id @default(dbgenerated("('CWL-'::text || (nextval('college_wishlist_seq'::regclass))::text)"))
   studentId String   @map("student_id")
   collegeId String   @map("college_id")
+  courseId  String?  @map("course_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  course  Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   @@unique([studentId, collegeId], name: "uq_college_wishlist")
   @@index([studentId], name: "idx_cwish_student")
@@ -475,6 +477,7 @@ model Course {
   newsAlerts                  NewsAlert[]
   collegeReviews              CollegeReview[]
   documentUploadConfigCourses DocumentUploadConfigCourse[]
+  collegeWishlists            CollegeWishlist[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
   @@index([collegeId], name: "idx_courses_college")

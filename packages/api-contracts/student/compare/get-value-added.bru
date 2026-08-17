@@ -1,0 +1,19 @@
+meta {
+  name: Get Value Added Programs
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/value-added
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Value Added Programs + Flexible Exit Option + Class Hours section.
+}

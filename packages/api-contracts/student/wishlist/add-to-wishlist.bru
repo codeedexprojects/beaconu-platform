@@ -17,16 +17,21 @@ headers {
 
 body:json {
   {
-    "college_id": "{{collegeId}}"
+    "college_id": "{{collegeId}}",
+    "course_id": "{{courseId}}"
   }
 }
 
 docs {
   Favorite a college. Idempotent — calling this again for a college already
-  in the wishlist has no additional effect.
+  in the wishlist has no additional effect (other than updating course_id
+  if a new one is passed).
 
   Body:
   - college_id (required)
+  - course_id (optional) — which course at this college the student was
+    interested in. Lets course-scoped features (e.g. College Comparison,
+    launched from Wishlist) resolve a course without asking again.
 
   Response:
   - added: true

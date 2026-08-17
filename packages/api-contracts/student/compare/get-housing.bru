@@ -1,0 +1,20 @@
+meta {
+  name: Get Student Housing
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/housing
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Student Housing section — resolved from whichever hostels are linked to
+  this course's "student_housing" tab.
+}

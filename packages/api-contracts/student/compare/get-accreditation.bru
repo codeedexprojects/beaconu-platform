@@ -1,0 +1,21 @@
+meta {
+  name: Get Accreditation & Affiliation
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/accreditation
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Accreditation & Affiliation section — parent university, university
+  type, accreditation, institution group name, and sibling colleges in
+  the same institution group (if any).
+}

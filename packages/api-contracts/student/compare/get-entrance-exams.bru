@@ -1,0 +1,19 @@
+meta {
+  name: Get Entrance Exams & Key Dates
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/entrance-exams
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Entrance Exams Accepted + Key Dates section.
+}

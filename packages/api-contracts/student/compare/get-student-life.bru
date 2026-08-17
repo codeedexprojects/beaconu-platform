@@ -1,0 +1,20 @@
+meta {
+  name: Get Student Life
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/student-life
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Student Life section — campus gallery images, clubs, and a review
+  summary (avg rating + review count).
+}

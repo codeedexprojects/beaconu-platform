@@ -1,0 +1,21 @@
+meta {
+  name: Get Course Fees
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/fees
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Course Fees section — category/gender fee_details rows, tuition fees,
+  one-time payable fees, additional fees, deadlines/installments,
+  fees_summary (booking amount + full course fee), inclusions/exclusions.
+}

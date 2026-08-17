@@ -1,0 +1,27 @@
+meta {
+  name: Get Eligibility
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/eligibility?student_type=indian&quota_category=
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  student_type: indian
+  quota_category:
+}
+
+docs {
+  Eligibility section — Indian/Foreign toggle, quota list, and the
+  resolved criteria cards once a student_type (and, for Indian
+  students, a quota_category) is selected. Mirrors the existing public
+  eligibility-criteria endpoint, just auth-gated to students.
+}

@@ -10,7 +10,14 @@ export interface WishlistCollegeItem {
   state: string | null;
   avgRating: number;
   reviewCount: number;
+  courseId: string | null;
+  courseName: string | null;
   wishlistedAt: string;
+}
+
+export interface AddWishlistInput {
+  college_id: string;
+  course_id?: string;
 }
 
 export interface WishlistListResponse {

@@ -1,11 +1,11 @@
 import { prisma } from "@beaconu/db";
 
 export class WishlistRepository {
-  static async add(studentId: string, collegeId: string) {
+  static async add(studentId: string, collegeId: string, courseId?: string) {
     return prisma.collegeWishlist.upsert({
       where: { uq_college_wishlist: { studentId, collegeId } },
-      create: { studentId, collegeId },
-      update: {},
+      create: { studentId, collegeId, courseId: courseId ?? null },
+      update: courseId ? { courseId } : {},
     });
   }
 
@@ -20,6 +20,13 @@ export class WishlistRepository {
     return prisma.college.findUnique({
       where: { id: collegeId },
       select: { id: true, status: true },
+    });
+  }
+
+  static async findCourseInCollege(courseId: string, collegeId: string) {
+    return prisma.course.findFirst({
+      where: { id: courseId, collegeId },
+      select: { id: true },
     });
   }
 }

@@ -9,8 +9,8 @@ import {
 
 export class StudentWishlistController {
   static async add(req: Request, res: Response) {
-    const { college_id } = addWishlistSchema.parse(req.body);
-    await WishlistService.add(req.userId!, college_id);
+    const { college_id, course_id } = addWishlistSchema.parse(req.body);
+    await WishlistService.add(req.userId!, college_id, course_id);
     return res
       .status(201)
       .json(ApiResponse.success("College added to wishlist", { added: true }));

@@ -1,0 +1,20 @@
+meta {
+  name: Get Course Details
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/compare/colleges/{{collegeId}}/courses/{{courseId}}/details
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Course Details section — duration, study mode, highlights, course
+  structure, career opportunities, industry tools, lab/room facilities.
+}

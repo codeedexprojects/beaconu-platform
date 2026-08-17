@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const addWishlistSchema = z.object({
   college_id: z.string().trim().min(1, "College is required"),
+  course_id: z.string().trim().min(1).optional(),
 });
 
 export const wishlistListQuerySchema = z.object({

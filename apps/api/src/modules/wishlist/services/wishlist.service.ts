@@ -18,16 +18,29 @@ export class WishlistService {
     return WishlistQuery.isWishlisted(studentId, collegeId);
   }
 
-  static async add(studentId: string, collegeId: string): Promise<void> {
+  static async add(
+    studentId: string,
+    collegeId: string,
+    courseId?: string,
+  ): Promise<void> {
     const college = await WishlistRepository.findCollegeById(collegeId);
     if (!college) throw new NotFoundError("College not found");
 
-    await WishlistRepository.add(studentId, collegeId);
+    if (courseId) {
+      const course = await WishlistRepository.findCourseInCollege(
+        courseId,
+        collegeId,
+      );
+      if (!course) throw new NotFoundError("Course not found at this college");
+    }
+
+    await WishlistRepository.add(studentId, collegeId, courseId);
     logger.info({
       action: "WISHLIST_ADDED",
       module: "wishlist",
       studentId,
       collegeId,
+      courseId: courseId ?? null,
     });
   }
 
