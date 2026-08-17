@@ -7,8 +7,7 @@ const router: Router = Router();
 
 router.use(authenticate, authorizeUserType("student"));
 
-router.get("/study-levels", GroupFinderStudentController.getStudyLevels);
-router.get("/streams", GroupFinderStudentController.getStreams);
+router.get("/courses", GroupFinderStudentController.searchCourses);
 router.post("/match", GroupFinderStudentController.match);
 
 export default router;

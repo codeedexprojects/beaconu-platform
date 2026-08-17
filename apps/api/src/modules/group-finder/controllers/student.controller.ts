@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "@/shared/responses/api-response";
-import { CollegeRegistrationService } from "@/modules/colleges/services/college-registration.service";
-import { matchGroupSchema } from "../validators/group-finder.validator";
+import { AcademicTaxonomyService } from "@/modules/universities/services/academic-taxonomy.service";
+import {
+  matchGroupSchema,
+  searchCoursesQuerySchema,
+} from "../validators/group-finder.validator";
 import { GroupFinderQuery } from "../queries/group-finder.query";
 
 export class GroupFinderStudentController {
@@ -11,16 +14,16 @@ export class GroupFinderStudentController {
     res.status(200).json(ApiResponse.success("Group match results", result));
   }
 
-  // "Course" dropdown (e.g. B.Tech) — global taxonomy, not college-scoped.
-  static async getStudyLevels(_req: Request, res: Response): Promise<void> {
-    const result = await CollegeRegistrationService.getStudyLevels();
-    res.status(200).json(ApiResponse.success("Study levels fetched", result));
-  }
-
-  // "Program/Major" dropdown (e.g. Computer Science Engineering) — streams
-  // with their nested disciplines, global taxonomy.
-  static async getStreams(_req: Request, res: Response): Promise<void> {
-    const result = await CollegeRegistrationService.getStreams("");
-    res.status(200).json(ApiResponse.success("Streams fetched", result));
+  // "Course" dropdown (e.g. "B.Tech Computer Science Engineering") — the
+  // platform course catalog, global taxonomy, not college-scoped. Each
+  // friend picks one of these; its Discipline/Study Level is what's
+  // actually matched against real per-college courses.
+  static async searchCourses(req: Request, res: Response): Promise<void> {
+    const query = searchCoursesQuerySchema.parse(req.query);
+    const result =
+      await AcademicTaxonomyService.listCourseMastersForPublic(query);
+    res
+      .status(200)
+      .json(ApiResponse.success("Courses fetched", result.data, result.meta));
   }
 }

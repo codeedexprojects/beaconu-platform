@@ -1,4 +1,5 @@
 import { prisma, Prisma } from "@beaconu/db";
+import { NotFoundError } from "@/shared/errors";
 import type {
   GroupFinderCourseMatch,
   GroupFinderResult,
@@ -69,9 +70,29 @@ export class GroupFinderQuery {
   static async match(input: MatchGroupInput): Promise<MatchGroupResponse> {
     const { friends, preferred_city, preferred_state } = input;
 
-    const orConditions = friends.map((f) => ({
-      studyLevelId: f.study_level_id,
-      disciplineId: f.discipline_id,
+    // Each friend picks a CourseMaster (platform catalog) entry, e.g.
+    // "B.Tech Computer Science Engineering" — resolve it to the Discipline
+    // (always present) and Study Level (optional on CourseMaster) that are
+    // actually matched against real per-college courses below. Stream is
+    // derived transitively through the Discipline, never taken as input.
+    const courseIds = Array.from(new Set(friends.map((f) => f.course_id)));
+    const courseMasters = await prisma.courseMaster.findMany({
+      where: { id: { in: courseIds } },
+      select: { id: true, disciplineId: true, studyLevelId: true },
+    });
+    const courseMasterById = new Map(courseMasters.map((c) => [c.id, c]));
+
+    const resolvedByFriend = friends.map((f) => {
+      const resolved = courseMasterById.get(f.course_id);
+      if (!resolved) {
+        throw new NotFoundError(`Course not found for friend "${f.name}"`);
+      }
+      return resolved;
+    });
+
+    const orConditions = resolvedByFriend.map((r) => ({
+      disciplineId: r.disciplineId,
+      ...(r.studyLevelId ? { studyLevelId: r.studyLevelId } : {}),
     }));
 
     const candidates = await prisma.course.findMany({
@@ -103,10 +124,12 @@ export class GroupFinderQuery {
     const buckets = new Map<string, GroupBucket>();
 
     friends.forEach((friend, friendIndex) => {
+      const resolved = resolvedByFriend[friendIndex];
       for (const course of candidates) {
         if (
-          course.studyLevelId !== friend.study_level_id ||
-          course.disciplineId !== friend.discipline_id
+          course.disciplineId !== resolved.disciplineId ||
+          (resolved.studyLevelId &&
+            course.studyLevelId !== resolved.studyLevelId)
         ) {
           continue;
         }

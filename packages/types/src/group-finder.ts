@@ -1,7 +1,6 @@
 export interface GroupFinderFriendInput {
   name: string;
-  study_level_id: string;
-  discipline_id: string;
+  course_id: string;
 }
 
 export interface MatchGroupInput {

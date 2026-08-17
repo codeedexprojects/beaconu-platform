@@ -11,6 +11,7 @@ export const QUERY_KEYS = {
     ["auth", "setup-token", token] as const,
   publicColleges: ["public-colleges"] as const,
   publicCollegeBySlug: (slug: string) => ["public-colleges", slug] as const,
+  publicCourses: (search: string) => ["public-courses", search] as const,
   permissions: ["college-permissions"] as const,
   roles: ["college-roles"] as const,
   staff: ["college-staff"] as const,

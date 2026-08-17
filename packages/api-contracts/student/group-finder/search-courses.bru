@@ -1,0 +1,31 @@
+meta {
+  name: Search Courses (Group Finder)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/group-finder/courses?search=btech&page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  search: btech
+  page: 1
+  limit: 20
+}
+
+docs {
+  "Course" dropdown for the Group Finder "Who's coming?" screen — searches
+  the platform course catalog (e.g. "B.Tech Computer Science Engineering").
+  Use a result's `id` as `course_id` per friend in Match Group.
+
+  Response `data[]` item: { id, name, slug, studyLevel, stream, discipline, programType }
+  (studyLevel/programType may be null — see Match Group's docs for how
+  that affects matching).
+}
