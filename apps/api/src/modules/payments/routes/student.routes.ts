@@ -69,4 +69,7 @@ router.get(
   StudentPaymentController.listSemesterInstallments,
 );
 
+router.get("/receipts", StudentPaymentController.listReceipts);
+router.get("/receipts/:id", StudentPaymentController.getReceipt);
+
 export default router;

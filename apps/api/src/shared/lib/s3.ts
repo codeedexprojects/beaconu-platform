@@ -67,6 +67,21 @@ export async function generateDownloadUrl(
   return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
+export async function uploadBuffer(
+  key: string,
+  buffer: Buffer,
+  contentType: string,
+): Promise<void> {
+  await getS3Client().send(
+    new PutObjectCommand({
+      Bucket: env.AWS_S3_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }),
+  );
+}
+
 export async function objectExists(key: string): Promise<boolean> {
   try {
     await getS3Client().send(

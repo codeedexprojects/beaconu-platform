@@ -4,6 +4,7 @@ import { HostelPaymentRepository } from "../repositories/hostel-payment.reposito
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { HostelEnrollmentService } from "@/modules/hostel/services/hostel-enrollment.service";
 import { notifyPaymentConfirmed } from "../lib/notify-payment";
+import { enqueueInvoiceGeneration } from "../jobs/invoice-generation.job";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 import type { InitiateHostelTokenFeeInput } from "@beaconu/types";
 
@@ -25,6 +26,7 @@ function toDto(row: {
 }) {
   return {
     id: row.id,
+    transactionId: row.id,
     transactionNumber: row.transactionNumber,
     amount: (row.amount as { toString(): string }).toString(),
     currency: row.currency,
@@ -132,6 +134,7 @@ async function confirm(studentId: string, body: ConfirmPaymentInput) {
     "hostel fee",
     finalized.amount.toNumber(),
   );
+  await enqueueInvoiceGeneration(finalized.id);
 
   return toDto(finalized);
 }
