@@ -1,0 +1,27 @@
+meta {
+  name: Get Receipt By Transaction Id (Student)
+  type: http
+  seq: 22
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/receipts/by-transaction/{{tokenTransactionId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Looks up a receipt by the Transaction id it was generated for, instead
+  of the receipt's own id — useful right after a payment confirm() call,
+  where the client already has the transaction_id but not yet the
+  receipt id.
+
+  404 if no receipt exists yet for that transaction (receipts generate
+  asynchronously — a very recently confirmed payment may not have one
+  yet, same caveat as List My Receipts) or if it belongs to a different
+  student. Same response shape as Get Receipt / List My Receipts.
+}

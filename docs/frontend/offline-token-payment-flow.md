@@ -342,6 +342,18 @@ generated asynchronously (same as the online flow) — no separate action
 needed from the UI, just refresh whatever screen shows the course/offer
 status.
 
+**Fetching the invoice afterward:** the receipt is generated a few seconds
+_after_ this call returns (async job), so don't expect it immediately. Once
+ready, look it up with the `id` from this response (student-side):
+
+```
+GET /api/v1/student/payments/receipts/by-transaction/:transactionId
+```
+
+using this response's `id` as `:transactionId` — returns the same shape as
+one item of `GET /payments/receipts` (`documentUrl`, `receiptNumber`, etc.),
+or `404` if the async job hasn't run yet (poll/refetch after a few seconds).
+
 ---
 
 ## 5. Where the enable/disable flags live

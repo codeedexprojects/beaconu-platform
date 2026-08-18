@@ -84,4 +84,14 @@ export class PaymentReceiptService {
     if (!receipt) throw new NotFoundError("Receipt");
     return receipt;
   }
+
+  static async getByTransactionId(studentId: string, transactionId: string) {
+    const receipt =
+      await PaymentReceiptRepository.findByTransactionIdForStudent(
+        transactionId,
+        studentId,
+      );
+    if (!receipt) throw new NotFoundError("Receipt");
+    return receipt;
+  }
 }

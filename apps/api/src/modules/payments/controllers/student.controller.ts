@@ -314,6 +314,14 @@ export class StudentPaymentController {
     return res.json(ApiResponse.success("Receipt fetched", result));
   }
 
+  static async getReceiptByTransactionId(req: Request, res: Response) {
+    const result = await PaymentReceiptService.getByTransactionId(
+      req.userId as string,
+      req.params.transactionId as string,
+    );
+    return res.json(ApiResponse.success("Receipt fetched", result));
+  }
+
   static async submitOfflineTokenPayment(req: Request, res: Response) {
     const body = submitOfflineTokenPaymentSchema.parse(req.body);
     const result = await TokenPaymentService.submitOffline(
