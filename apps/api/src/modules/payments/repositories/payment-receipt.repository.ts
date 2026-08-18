@@ -27,6 +27,16 @@ export class PaymentReceiptRepository {
     });
   }
 
+  static async findByTransactionIdForStudent(
+    transactionId: string,
+    studentId: string,
+  ) {
+    return prisma.paymentReceipt.findFirst({
+      where: { transactionId, studentId },
+      select: RECEIPT_SELECT,
+    });
+  }
+
   static async countForCollegeInMonth(
     collegeId: string,
     monthStart: Date,

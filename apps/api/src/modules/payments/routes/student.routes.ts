@@ -82,6 +82,10 @@ router.get(
 );
 
 router.get("/receipts", StudentPaymentController.listReceipts);
+router.get(
+  "/receipts/by-transaction/:transactionId",
+  StudentPaymentController.getReceiptByTransactionId,
+);
 router.get("/receipts/:id", StudentPaymentController.getReceipt);
 
 export default router;
