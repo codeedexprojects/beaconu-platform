@@ -215,12 +215,12 @@ export class TokenPaymentRepository {
     amount: number;
     paymentMethod: "demand_draft" | "bank_transfer";
     uploadProofUrl: string;
-    uploadProofFileName?: string;
-    ddNumber?: string;
-    ddBankName?: string;
-    ddDate?: Date;
-    bankRefNumber?: string;
-    studentNote?: string;
+    uploadProofFileName?: string | null;
+    ddNumber?: string | null;
+    ddBankName?: string | null;
+    ddDate?: Date | null;
+    bankRefNumber?: string | null;
+    studentNote?: string | null;
   }) {
     const placeholder = randomUUID().replace(/-/g, "").slice(0, 30);
     return prisma.transaction.create({
@@ -252,12 +252,12 @@ export class TokenPaymentRepository {
       amount: number;
       paymentMethod: "demand_draft" | "bank_transfer";
       uploadProofUrl: string;
-      uploadProofFileName?: string;
-      ddNumber?: string;
-      ddBankName?: string;
-      ddDate?: Date;
-      bankRefNumber?: string;
-      studentNote?: string;
+      uploadProofFileName?: string | null;
+      ddNumber?: string | null;
+      ddBankName?: string | null;
+      ddDate?: Date | null;
+      bankRefNumber?: string | null;
+      studentNote?: string | null;
     },
   ) {
     return prisma.transaction.update({
