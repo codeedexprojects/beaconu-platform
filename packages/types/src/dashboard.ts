@@ -5,6 +5,7 @@ export interface SidebarHintsBreakdown {
   supportTickets: number;
   documentSubmissionRequests: number;
   documentRequests: number;
+  offlinePaymentReviewQueue: number;
 }
 
 export interface SidebarHintsDto {

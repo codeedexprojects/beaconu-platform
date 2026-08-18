@@ -182,6 +182,7 @@ export class CommutePaymentService {
         const txn = r.transactions[0];
         return {
           id: r.id,
+          transactionId: txn?.id ?? null,
           transactionNumber: txn?.transactionNumber ?? "",
           period: r.description?.replace("Commute fee — ", "") ?? "",
           amount: r.netAmount.toString(),
