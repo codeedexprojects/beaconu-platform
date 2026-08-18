@@ -1,0 +1,47 @@
+meta {
+  name: List My Receipts (Student)
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/receipts?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("paymentReceiptId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated list of the authenticated student's payment receipts, across
+  every payment category (application fee, token fee, commute fee,
+  hostel booking fee, course/semester fees), newest first.
+
+  Response `data[]` item:
+  { id, transactionId, receiptNumber, receiptDate, feeCategory, description,
+    amount, documentUrl, createdAt }
+
+  `documentUrl` is a permanent, publicly-accessible PDF link — the
+  frontend can link/download it directly, no separate download endpoint.
+
+  Receipts are generated asynchronously (a background job, shortly after
+  a payment's confirm() call succeeds) — a very recently confirmed
+  payment may not have a receipt yet; poll or refetch after a few
+  seconds if it's missing.
+}

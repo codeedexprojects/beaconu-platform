@@ -1,0 +1,20 @@
+meta {
+  name: Get Receipt (Student)
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/receipts/{{paymentReceiptId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Single receipt detail, ownership-checked (404 if it doesn't belong to
+  the requesting student). Same shape as one item of List My Receipts.
+}

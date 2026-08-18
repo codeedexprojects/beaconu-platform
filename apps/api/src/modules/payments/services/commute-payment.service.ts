@@ -4,6 +4,7 @@ import { CommutePaymentRepository } from "../repositories/commute-payment.reposi
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { CommuteRepository } from "@/modules/commute/repositories/commute.repository";
 import { notifyPaymentConfirmed } from "../lib/notify-payment";
+import { enqueueInvoiceGeneration } from "../jobs/invoice-generation.job";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -30,6 +31,7 @@ function toDto(row: {
 }) {
   return {
     id: row.id,
+    transactionId: row.id,
     transactionNumber: row.transactionNumber,
     amount: (row.amount as { toString(): string }).toString(),
     currency: row.currency,
@@ -162,6 +164,7 @@ export class CommutePaymentService {
       "commute fee",
       finalized.amount.toNumber(),
     );
+    await enqueueInvoiceGeneration(finalized.id);
 
     return toDto(finalized);
   }

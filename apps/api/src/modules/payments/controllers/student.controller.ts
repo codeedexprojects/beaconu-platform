@@ -12,6 +12,7 @@ import { ApplicationService } from "@/modules/admissions/services/application.se
 import { ApplicationCourseService } from "@/modules/admissions/services/application-course.service";
 import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
 import { confirmPaymentSchema } from "../validators/application-payment.validator";
+import { PaymentReceiptService } from "../services/payment-receipt.service";
 
 const initiateCommutePaymentSchema = z.object({
   college_id: z.string().trim().min(1, "college_id is required"),
@@ -288,5 +289,24 @@ export class StudentPaymentController {
       query.year_or_semester,
     );
     return res.json(ApiResponse.success("Installments fetched", result));
+  }
+
+  static async listReceipts(req: Request, res: Response) {
+    const query = commutePaymentsQuerySchema.parse(req.query);
+    const result = await PaymentReceiptService.listMine(
+      req.userId as string,
+      query,
+    );
+    return res.json(
+      ApiResponse.success("Receipts fetched", result.data, result.meta),
+    );
+  }
+
+  static async getReceipt(req: Request, res: Response) {
+    const result = await PaymentReceiptService.getById(
+      req.userId as string,
+      req.params.id as string,
+    );
+    return res.json(ApiResponse.success("Receipt fetched", result));
   }
 }

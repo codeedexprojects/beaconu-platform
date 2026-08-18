@@ -5,6 +5,7 @@ import { CourseFeePaymentRepository } from "../repositories/course-fee-payment.r
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { normalizeAcademicYear } from "../lib/academic-year";
 import { notifyPaymentConfirmed } from "../lib/notify-payment";
+import { enqueueInvoiceGeneration } from "../jobs/invoice-generation.job";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -149,6 +150,7 @@ async function confirm(studentId: string, body: ConfirmPaymentInput) {
     "course fee",
     finalized.amount.toNumber(),
   );
+  await enqueueInvoiceGeneration(finalized.id);
 
   return toDto(finalized);
 }

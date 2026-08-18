@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { TokenPaymentRepository } from "../repositories/token-payment.repository";
 import { getPaymentProvider } from "../lib/get-payment-provider";
 import { notifyPaymentConfirmed } from "../lib/notify-payment";
+import { enqueueInvoiceGeneration } from "../jobs/invoice-generation.job";
 import type { ConfirmPaymentInput } from "../validators/application-payment.validator";
 
 function buildTransactionNumber(id: string) {
@@ -160,6 +161,7 @@ export class TokenPaymentService {
       "token fee",
       finalized.amount.toNumber(),
     );
+    await enqueueInvoiceGeneration(finalized.id);
 
     return toDto(finalized);
   }
