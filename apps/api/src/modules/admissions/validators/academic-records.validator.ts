@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// Shared "per-subject marks" row used identically on the 10th and 12th
-// grade screens (Theory/Practical/Internal breakdown + attempts).
 const subjectMarksSchema = z.object({
   subject_name: z.string().trim().min(1, "Subject name is required").max(100),
   evaluation_pattern: z.string().trim().max(50),
@@ -47,21 +45,25 @@ export const tenthGradeDetailsSchema = z.object({
   marksheet_url: z.string().trim().url().optional().nullable(),
 });
 
+const lenientResultSummarySchema = z.object({
+  marking_scheme: markingSchemeSchema.optional().nullable(),
+  marks_obtained: z.number().min(0).optional().nullable(),
+  max_marks: z.number().min(0).optional().nullable(),
+  percentage: z.number().min(0).max(100).optional().nullable(),
+  remarks: z.string().trim().max(500).optional().nullable(),
+});
+
 export const twelfthGradeDetailsSchema = z.object({
-  academic_year: z.string().trim().min(1, "Academic year is required").max(20),
-  admission_year: z
-    .string()
-    .trim()
-    .min(1, "Admission year is required")
-    .max(20),
-  year_of_passing: z.number().int().min(1950).max(2100),
-  board_name: z.string().trim().min(1, "Board name is required").max(150),
+  academic_year: z.string().trim().max(20).optional().nullable(),
+  admission_year: z.string().trim().max(20).optional().nullable(),
+  year_of_passing: z.number().int().min(1950).max(2100).optional().nullable(),
+  board_name: z.string().trim().max(150).optional().nullable(),
   registration_number: z.string().trim().max(50).optional().nullable(),
-  school_name: z.string().trim().min(1, "School name is required").max(255),
+  school_name: z.string().trim().max(255).optional().nullable(),
   school_code: z.string().trim().max(50).optional().nullable(),
   school_address: z.string().trim().max(500).optional().nullable(),
-  school_state: z.string().trim().min(1, "School state is required").max(100),
-  medium_of_instruction: z.string().trim().min(1).max(50),
+  school_state: z.string().trim().max(100).optional().nullable(),
+  medium_of_instruction: z.string().trim().max(50).optional().nullable(),
   // "Does your Board conduct a separate Class XI / First Year Examination?"
   has_separate_class_xi_exam: z
     .boolean()
@@ -71,8 +73,13 @@ export const twelfthGradeDetailsSchema = z.object({
   class_xi_status: z.enum(["declared", "undeclared"]).optional().nullable(),
   subjects: z
     .array(subjectMarksSchema)
-    .min(1, "At least one subject is required"),
-  result_summary: resultSummarySchema,
+    .nullable()
+    .optional()
+    .transform((v) => v ?? []),
+  result_summary: lenientResultSummarySchema
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
   marksheet_url: z.string().trim().url().optional().nullable(),
   migration_certificate_url: z.string().trim().url().optional().nullable(),
 });
@@ -97,53 +104,37 @@ const projectEntrySchema = z.object({
 });
 
 export const undergraduateDetailsSchema = z.object({
-  program_type: z.enum(["regular", "distance"]),
-  degree_type: z.string().trim().min(1, "Degree type is required").max(100),
-  program_name: z.string().trim().min(1, "Program name is required").max(255),
+  program_type: z.enum(["regular", "distance"]).optional().nullable(),
+  degree_type: z.string().trim().max(100).optional().nullable(),
+  program_name: z.string().trim().max(255).optional().nullable(),
   specialization: z.string().trim().max(255).optional().nullable(),
-  university_name: z.string().trim().min(1, "University is required").max(255),
-  university_type: z
-    .string()
-    .trim()
-    .min(1, "University type is required")
-    .max(50),
-  institution_name: z
-    .string()
-    .trim()
-    .min(1, "Institution name is required")
-    .max(255),
-  institution_type: z
-    .string()
-    .trim()
-    .min(1, "Institution type is required")
-    .max(50),
-  admission_year: z
-    .string()
-    .trim()
-    .min(1, "Admission year is required")
-    .max(20),
-  passing_year: z.string().trim().min(1, "Passing year is required").max(20),
-  duration_years: z.number().int().min(1).max(10),
+  university_name: z.string().trim().max(255).optional().nullable(),
+  university_type: z.string().trim().max(50).optional().nullable(),
+  institution_name: z.string().trim().max(255).optional().nullable(),
+  institution_type: z.string().trim().max(50).optional().nullable(),
+  admission_year: z.string().trim().max(20).optional().nullable(),
+  passing_year: z.string().trim().max(20).optional().nullable(),
+  duration_years: z.number().int().min(1).max(10).optional().nullable(),
   register_number: z.string().trim().max(50).optional().nullable(),
-  academic_cycle: z.enum(["semester", "yearly"]),
+  academic_cycle: z.enum(["semester", "yearly"]).optional().nullable(),
   semester_records: z
     .array(semesterRecordSchema)
     .nullable()
     .optional()
     .transform((v) => v ?? []),
-  final_summary: z.object({
-    total_credits: z.number().min(0).optional().nullable(),
-    cgpa: z.number().min(0).max(10).optional().nullable(),
-    percentage: z.number().min(0).max(100).optional().nullable(),
-    rank: z.string().trim().max(50).optional().nullable(),
-    total_backlogs: z.number().int().min(0).optional().nullable(),
-    result_status: z
-      .string()
-      .trim()
-      .min(1, "Result status is required")
-      .max(50),
-    remarks: z.string().trim().max(500).optional().nullable(),
-  }),
+  final_summary: z
+    .object({
+      total_credits: z.number().min(0).optional().nullable(),
+      cgpa: z.number().min(0).max(10).optional().nullable(),
+      percentage: z.number().min(0).max(100).optional().nullable(),
+      rank: z.string().trim().max(50).optional().nullable(),
+      total_backlogs: z.number().int().min(0).optional().nullable(),
+      result_status: z.string().trim().max(50).optional().nullable(),
+      remarks: z.string().trim().max(500).optional().nullable(),
+    })
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
   documents: z
     .object({
       semester_mark_sheet_urls: z
@@ -180,9 +171,6 @@ export const undergraduateDetailsSchema = z.object({
     .transform((v) => v ?? []),
 });
 
-// PG and Diploma are structurally identical to Undergraduate (same
-// program/university/semester/final-summary/documents/projects shape) —
-// reuse the same schema object rather than duplicating it.
 export const pgDetailsSchema = undergraduateDetailsSchema;
 export const diplomaDetailsSchema = undergraduateDetailsSchema;
 
