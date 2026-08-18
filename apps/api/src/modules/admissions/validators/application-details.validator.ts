@@ -16,9 +16,9 @@ export const personalDetailsSchema = z.object({
   // identity columns) so editing this form never touches the account's
   // authoritative, unique login email.
   email: z.string().trim().email().optional().nullable(),
-  mobile_country_code: z.string().trim().max(5).optional(),
+  mobile_country_code: z.string().trim().max(5).optional().nullable(),
   mobile_number: z.string().trim().max(15).optional().nullable(),
-  whatsapp_country_code: z.string().trim().max(5).optional(),
+  whatsapp_country_code: z.string().trim().max(5).optional().nullable(),
   whatsapp_number: z.string().trim().max(15).optional().nullable(),
 });
 
@@ -45,7 +45,13 @@ const addressSchema = z.object({
   state: z.string().trim().min(1, "State is required").max(100),
   district: z.string().trim().max(100).optional().nullable(),
   pin_code: z.string().trim().min(1, "PIN code is required").max(10),
-  country: z.string().trim().max(100).optional().default("India"),
+  country: z
+    .string()
+    .trim()
+    .max(100)
+    .nullable()
+    .optional()
+    .transform((v) => v ?? "India"),
 });
 
 // Correspondence address is the primary/required one (mailing address the
