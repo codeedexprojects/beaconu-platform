@@ -24,6 +24,18 @@ router.post(
   "/courses/:applicationCourseId/token/confirm",
   StudentPaymentController.confirmTokenPayment,
 );
+router.post(
+  "/courses/:applicationCourseId/token/offline/submit",
+  StudentPaymentController.submitOfflineTokenPayment,
+);
+router.patch(
+  "/courses/token/offline/:transactionId/resubmit",
+  StudentPaymentController.resubmitOfflineTokenPayment,
+);
+router.get(
+  "/courses/:applicationCourseId/token/offline/status",
+  StudentPaymentController.getOfflineTokenPaymentStatus,
+);
 
 router.get("/finance/summary", StudentPaymentController.getFinanceSummary);
 router.get("/finance/course-fees", StudentPaymentController.listCourseFees);

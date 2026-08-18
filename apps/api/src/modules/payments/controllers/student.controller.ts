@@ -13,6 +13,10 @@ import { ApplicationCourseService } from "@/modules/admissions/services/applicat
 import { OfferLetterService } from "@/modules/interviews/services/offer-letter.service";
 import { confirmPaymentSchema } from "../validators/application-payment.validator";
 import { PaymentReceiptService } from "../services/payment-receipt.service";
+import {
+  submitOfflineTokenPaymentSchema,
+  resubmitOfflineTokenPaymentSchema,
+} from "../validators/token-payment.validator";
 
 const initiateCommutePaymentSchema = z.object({
   college_id: z.string().trim().min(1, "college_id is required"),
@@ -308,5 +312,37 @@ export class StudentPaymentController {
       req.params.id as string,
     );
     return res.json(ApiResponse.success("Receipt fetched", result));
+  }
+
+  static async submitOfflineTokenPayment(req: Request, res: Response) {
+    const body = submitOfflineTokenPaymentSchema.parse(req.body);
+    const result = await TokenPaymentService.submitOffline(
+      req.params.applicationCourseId as string,
+      req.userId as string,
+      body,
+    );
+    return res
+      .status(201)
+      .json(ApiResponse.success("Offline payment submitted", result));
+  }
+
+  static async resubmitOfflineTokenPayment(req: Request, res: Response) {
+    const body = resubmitOfflineTokenPaymentSchema.parse(req.body);
+    const result = await TokenPaymentService.resubmitOffline(
+      req.params.transactionId as string,
+      req.userId as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Offline payment resubmitted", result));
+  }
+
+  static async getOfflineTokenPaymentStatus(req: Request, res: Response) {
+    const result = await TokenPaymentService.getOfflineStatus(
+      req.params.applicationCourseId as string,
+      req.userId as string,
+    );
+    return res.json(
+      ApiResponse.success("Offline payment status fetched", result),
+    );
   }
 }

@@ -24,7 +24,9 @@ body:json {
     "starts_on": "2026-06-01",
     "ends_on": "2026-08-31",
     "assessment_required": true,
-    "assessment_template_id": "{{assessmentTemplateId}}"
+    "assessment_template_id": "{{assessmentTemplateId}}",
+    "token_online_payment_enabled": true,
+    "token_offline_payment_enabled": true
   }
 }
 
@@ -56,4 +58,12 @@ docs {
     whole application form; every course under this cycle shares it (an
     attempt covers the whole application, not one course at a time). Must
     belong to your own college (404 otherwise).
+  - token_online_payment_enabled (optional, default true) — whether
+    students can pay the admission token fee online (Razorpay) under this
+    application form.
+  - token_offline_payment_enabled (optional, default true) — whether
+    students can submit an offline (demand draft / bank transfer) token
+    payment for review under this application form. Both methods are
+    enabled by default; disabling one hides it on the student side and
+    409s if attempted anyway.
 }

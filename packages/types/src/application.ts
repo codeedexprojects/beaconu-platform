@@ -68,6 +68,11 @@ export interface ApplicationInterviewStatus {
   remarks: string | null;
 }
 
+export interface TokenPaymentMethodsAvailable {
+  online: boolean;
+  offline: boolean;
+}
+
 export interface ApplicationAmountDetails {
   status: "not_issued" | "issued" | "expired" | "withdrawn";
   applicationCourseId: string | null;
@@ -76,6 +81,7 @@ export interface ApplicationAmountDetails {
   tokenPaymentStatus: string | null;
   validUntil: string | null;
   documentUrl: string | null;
+  paymentMethods: TokenPaymentMethodsAvailable;
 }
 
 export type FormStepKey =

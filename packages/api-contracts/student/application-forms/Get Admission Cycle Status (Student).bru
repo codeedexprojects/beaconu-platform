@@ -100,7 +100,13 @@ docs {
       // documentUrl is only non-null once tokenPaymentStatus === "paid" —
       // before that the student can see the offer's amount/status but not
       // download the letter itself.
-      documentUrl
+      documentUrl,
+      // Which token-fee payment methods are available for this admission
+      // cycle — college-admin config on the Application Form
+      // (token_online_payment_enabled / token_offline_payment_enabled).
+      // Both default to true; use this to show/hide the online (Razorpay)
+      // vs offline (demand draft / bank transfer) payment options.
+      paymentMethods: { online: true, offline: true }
     },
     // "not_enrolled" until a course reaches Enrollment (College Admin >
     // Applications > Mark Enrolled, only possible once token_paid), else

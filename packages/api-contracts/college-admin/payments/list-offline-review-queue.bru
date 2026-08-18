@@ -1,0 +1,37 @@
+meta {
+  name: List Offline Payment Review Queue (College Admin)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/payments/offline-review-queue?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~status: pending_verification
+}
+
+docs {
+  Lists offline (demand draft / bank transfer) token payment submissions
+  for this college, newest first. `status` filter:
+  "pending_verification" | "verified" | "rejected" (omit for all).
+
+  Each row: { id, transactionNumber, amount, currency, status,
+  paymentMethod, proofUrl, proofFileName, ddNumber, ddBankName, ddDate,
+  bankRefNumber, studentNote, verificationStatus, verifiedBy, verifiedAt,
+  rejectionReason, isResubmission, paidAt, createdAt, applicationCourseId,
+  courseName, studentName, studentEmail }.
+
+  `isResubmission: true` means this row was previously rejected and the
+  student has resubmitted it — the same rejection_reason from before is
+  still shown until this review is decided.
+}

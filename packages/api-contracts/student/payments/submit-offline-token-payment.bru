@@ -1,0 +1,59 @@
+meta {
+  name: Submit Offline Token Payment (Student)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/payments/courses/{{applicationCourseId}}/token/offline/submit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "payment_method": "demand_draft",
+    "amount": 25000,
+    "proof_url": "https://cdn.example.com/proof/dd-123.pdf",
+    "proof_file_name": "dd-123.pdf",
+    "dd_number": "DD123456",
+    "dd_bank_name": "State Bank of India",
+    "dd_date": "2026-08-10",
+    "bank_ref_number": null,
+    "note": "Paid via demand draft at the branch"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("offlineTransactionId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Submits an offline (demand draft / bank transfer) payment for a course's
+  admission token — alternative to the Razorpay-based Initiate/Confirm
+  Token Payment flow. Goes into a pending-review state; a college-admin
+  reviews it via the Offline Review Queue.
+
+  `payment_method` must be "demand_draft" or "bank_transfer". `amount`
+  must exactly match the course's configured token_amount (409 otherwise).
+
+  409 if the course isn't "shortlisted" yet, 409 if already "token_paid",
+  409 if offline payment has been disabled for this admission cycle
+  (college-admin config on the Application Form, token_offline_payment_
+  enabled), 409 if a payment submission (online or offline) is already
+  pending review for this course.
+
+  On success: Transaction.status -> "pending",
+  verification_status -> "pending_verification". Nothing is finalized
+  until a college-admin reviews it.
+}

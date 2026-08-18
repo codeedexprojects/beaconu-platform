@@ -1,0 +1,27 @@
+meta {
+  name: Get Offline Token Payment Status (Student)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/payments/courses/{{applicationCourseId}}/token/offline/status
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Returns the latest offline token payment submission for this course, or
+  `null` if none exists — used to render "pending review" / "rejected:
+  reason, please resubmit" / "verified" states on the student side.
+
+  Response `data` (or null):
+  { id, transactionNumber, amount, currency, status, paymentMethod,
+    proofUrl, proofFileName, ddNumber, ddBankName, ddDate, bankRefNumber,
+    studentNote, verificationStatus, verifiedBy, verifiedAt,
+    rejectionReason, isResubmission, paidAt, createdAt }
+}
