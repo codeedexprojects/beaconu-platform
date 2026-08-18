@@ -311,6 +311,16 @@ export class TokenPaymentRepository {
     });
   }
 
+  static async countPendingOfflineReview(collegeId: string) {
+    return prisma.transaction.count({
+      where: {
+        collegeId,
+        paymentMethod: { in: ["demand_draft", "bank_transfer"] },
+        verificationStatus: "pending_verification",
+      },
+    });
+  }
+
   static async listOfflineForCollege(
     collegeId: string,
     filters: { verificationStatus?: string; page: number; limit: number },

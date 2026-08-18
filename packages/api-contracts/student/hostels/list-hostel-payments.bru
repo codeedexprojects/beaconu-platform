@@ -24,4 +24,8 @@ docs {
   attempt), newest first — each with its feeCategory, roomTypeId, amount
   (admission fee + security deposit combined), status, and latest
   transaction's paidAt.
+
+  `id` is the StudentFeeLedger entry's id — use `transactionId` (the
+  latest Transaction row's id, null if no transaction exists yet) to look
+  up the invoice via `GET /payments/receipts/by-transaction/:transactionId`.
 }

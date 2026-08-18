@@ -379,6 +379,10 @@ export class TokenPaymentService {
     return latest ? toOfflineDto(latest) : null;
   }
 
+  static async countPendingOfflineReview(collegeId: string) {
+    return TokenPaymentRepository.countPendingOfflineReview(collegeId);
+  }
+
   static async listOfflineForReview(
     collegeId: string,
     filters: { verificationStatus?: string; page: number; limit: number },

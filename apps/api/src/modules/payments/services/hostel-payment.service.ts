@@ -188,6 +188,7 @@ export class HostelPaymentService {
         const roomTypeId = r.description?.split(" — ")[1] ?? null;
         return {
           id: r.id,
+          transactionId: txn?.id ?? null,
           transactionNumber: txn?.transactionNumber ?? "",
           feeCategory: r.feeCategory,
           roomTypeId,

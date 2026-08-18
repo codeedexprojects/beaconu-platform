@@ -34,6 +34,7 @@ import {
   XCircle,
   Repeat,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -71,6 +72,8 @@ function getSidebarHintCount(
       return hints.breakdown.documentSubmissionRequests;
     case "/documents/requests":
       return hints.breakdown.documentRequests;
+    case "/payments":
+      return hints.breakdown.offlinePaymentReviewQueue;
     default:
       return 0;
   }
@@ -438,6 +441,12 @@ export default function DashboardLayout({
                     name: "Pending Enrollment",
                     path: "/pending-enrollment",
                     icon: UserCheck,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Payments",
+                    path: "/payments",
+                    icon: Wallet,
                     permission: "staff.view",
                   },
                   {

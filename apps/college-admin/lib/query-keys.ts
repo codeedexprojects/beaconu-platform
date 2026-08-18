@@ -136,4 +136,6 @@ export const QUERY_KEYS = {
   mediaKits: (filters?: object) =>
     filters ? ["college-media-kit", filters] : ["college-media-kit"],
   mediaKit: (id: string) => ["college-media-kit", id] as const,
+  offlineReviewQueue: (filters?: object) =>
+    filters ? ["offline-review-queue", filters] : ["offline-review-queue"],
 } as const;
