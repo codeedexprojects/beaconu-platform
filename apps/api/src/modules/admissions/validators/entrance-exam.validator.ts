@@ -20,7 +20,11 @@ const recommendationLetterSchema = z.object({
 
 export const entranceExamDetailsSchema = z
   .object({
-    has_attempted_entrance_exam: z.boolean(),
+    has_attempted_entrance_exam: z
+      .boolean()
+      .nullable()
+      .optional()
+      .transform((v) => v ?? false),
     exams: z
       .array(entranceExamRecordSchema)
       .nullable()

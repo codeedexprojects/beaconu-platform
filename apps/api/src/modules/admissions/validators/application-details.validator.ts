@@ -61,7 +61,11 @@ const addressSchema = z.object({
 export const addressDetailsSchema = z
   .object({
     correspondence: addressSchema,
-    same_as_correspondence: z.boolean(),
+    same_as_correspondence: z
+      .boolean()
+      .nullable()
+      .optional()
+      .transform((v) => v ?? false),
     permanent: addressSchema.optional().nullable(),
   })
   .refine((data) => data.same_as_correspondence || data.permanent, {

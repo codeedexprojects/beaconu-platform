@@ -79,4 +79,11 @@ docs {
   already been submitted. `projects` should be empty when `has_projects`
   is false. `semester_records` may be empty if `academic_cycle` grouping
   isn't finalized yet. Advances currentStep to at least 6.
+
+  Every field is optional/nullable — a `{}` body is accepted (student may
+  not have an undergraduate qualification to report, e.g. applying
+  straight out of school, or the client is just advancing past the
+  screen). `semester_records`/`projects` default to `[]`,
+  `final_summary`/`documents` default to `null`/`{semester_mark_sheet_
+  urls: []}`, `has_projects` defaults to `false` when omitted.
 }

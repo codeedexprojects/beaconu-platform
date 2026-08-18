@@ -59,6 +59,11 @@ docs {
   Student.qualificationDetails under the `twelfth_grade` key without
   touching `tenth_grade`/`undergraduate`. 409 if the application has
   already been submitted. `class_xi_status` only applies when
-  `has_separate_class_xi_exam` is true. At least one subject is required.
-  Advances currentStep to at least 6.
+  `has_separate_class_xi_exam` is true. Advances currentStep to at least 6.
+
+  Unlike Tenth Grade (always mandatory), every field here is optional/
+  nullable — a `{}` body is accepted (student may not have 12th grade
+  details to report yet, or the client is just advancing past the
+  screen). `subjects` defaults to `[]`, `result_summary` defaults to
+  `null`, `has_separate_class_xi_exam` defaults to `false` when omitted.
 }

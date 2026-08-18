@@ -40,6 +40,12 @@ docs {
   already submitted). `exams` must have at least one entry when
   `has_attempted_entrance_exam` is true; can be empty when false.
 
+  `has_attempted_entrance_exam` is optional/nullable, defaulting to
+  `false` if omitted or sent as `null` — same as `exams`/
+  `recommendation_letters`, so an empty `{}` body is accepted and treated
+  as "hasn't attempted, no exams, no letters" rather than a validation
+  error.
+
   Unlike personal/family/address/qualification/achievements, this section
   is stored directly on the Application row (Application.entranceExamDetails)
   rather than the reusable Student profile — same as Declaration — since
