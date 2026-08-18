@@ -129,35 +129,37 @@ const volunteeringEntrySchema = z.object({
   description: z.string().trim().max(2000).optional().nullable(),
 });
 
+const arrayOrNull = <T extends z.ZodTypeAny>(schema: T) =>
+  z
+    .array(schema)
+    .nullable()
+    .optional()
+    .transform((v) => v ?? []);
+
 export const achievementsDetailsSchema = z.object({
-  internships: z.array(internshipEntrySchema).optional().default([]),
-  has_work_experience: z.boolean().optional().default(false),
-  work_experience: z.array(workExperienceEntrySchema).optional().default([]),
-  languages: z.array(languageEntrySchema).optional().default([]),
-  academic_awards: z.array(academicAwardSchema).optional().default([]),
-  sports_achievements: z.array(sportsAchievementSchema).optional().default([]),
-  arts_cultural_achievements: z
-    .array(artsCulturalAchievementSchema)
+  internships: arrayOrNull(internshipEntrySchema),
+  has_work_experience: z
+    .boolean()
+    .nullable()
     .optional()
-    .default([]),
-  hobbies: z.array(z.string().trim().max(50)).optional().default([]),
+    .transform((v) => v ?? false),
+  work_experience: arrayOrNull(workExperienceEntrySchema),
+  languages: arrayOrNull(languageEntrySchema),
+  academic_awards: arrayOrNull(academicAwardSchema),
+  sports_achievements: arrayOrNull(sportsAchievementSchema),
+  arts_cultural_achievements: arrayOrNull(artsCulturalAchievementSchema),
+  hobbies: arrayOrNull(z.string().trim().max(50)),
   other_interests: z.string().trim().max(1000).optional().nullable(),
-  publications: z.array(publicationEntrySchema).optional().default([]),
-  patents: z.array(patentEntrySchema).optional().default([]),
-  professional_certifications: z
-    .array(certificationEntrySchema)
+  publications: arrayOrNull(publicationEntrySchema),
+  patents: arrayOrNull(patentEntrySchema),
+  professional_certifications: arrayOrNull(certificationEntrySchema),
+  portfolio_links: portfolioLinksSchema
+    .nullable()
     .optional()
-    .default([]),
-  portfolio_links: portfolioLinksSchema.optional().default({}),
-  recommendation_letters: z
-    .array(recommendationLetterSchema)
-    .optional()
-    .default([]),
-  innovation_entrepreneurship: z
-    .array(innovationEntrySchema)
-    .optional()
-    .default([]),
-  volunteering: z.array(volunteeringEntrySchema).optional().default([]),
+    .transform((v) => v ?? {}),
+  recommendation_letters: arrayOrNull(recommendationLetterSchema),
+  innovation_entrepreneurship: arrayOrNull(innovationEntrySchema),
+  volunteering: arrayOrNull(volunteeringEntrySchema),
 });
 
 export type AchievementsDetailsInput = z.infer<

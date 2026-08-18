@@ -122,7 +122,11 @@ export const undergraduateDetailsSchema = z.object({
   duration_years: z.number().int().min(1).max(10),
   register_number: z.string().trim().max(50).optional().nullable(),
   academic_cycle: z.enum(["semester", "yearly"]),
-  semester_records: z.array(semesterRecordSchema).optional().default([]),
+  semester_records: z
+    .array(semesterRecordSchema)
+    .nullable()
+    .optional()
+    .transform((v) => v ?? []),
   final_summary: z.object({
     total_credits: z.number().min(0).optional().nullable(),
     cgpa: z.number().min(0).max(10).optional().nullable(),
@@ -140,8 +144,9 @@ export const undergraduateDetailsSchema = z.object({
     .object({
       semester_mark_sheet_urls: z
         .array(z.string().trim().url())
+        .nullable()
         .optional()
-        .default([]),
+        .transform((v) => v ?? []),
       degree_certificate_url: z.string().trim().url().optional().nullable(),
       provisional_certificate_url: z
         .string()
@@ -156,10 +161,15 @@ export const undergraduateDetailsSchema = z.object({
         .optional()
         .nullable(),
     })
+    .nullable()
     .optional()
-    .default({ semester_mark_sheet_urls: [] }),
+    .transform((v) => v ?? { semester_mark_sheet_urls: [] }),
   has_projects: z.boolean(),
-  projects: z.array(projectEntrySchema).optional().default([]),
+  projects: z
+    .array(projectEntrySchema)
+    .nullable()
+    .optional()
+    .transform((v) => v ?? []),
 });
 
 // PG and Diploma are structurally identical to Undergraduate (same

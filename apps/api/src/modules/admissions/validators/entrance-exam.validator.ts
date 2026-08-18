@@ -21,11 +21,16 @@ const recommendationLetterSchema = z.object({
 export const entranceExamDetailsSchema = z
   .object({
     has_attempted_entrance_exam: z.boolean(),
-    exams: z.array(entranceExamRecordSchema).optional().default([]),
+    exams: z
+      .array(entranceExamRecordSchema)
+      .nullable()
+      .optional()
+      .transform((v) => v ?? []),
     recommendation_letters: z
       .array(recommendationLetterSchema)
+      .nullable()
       .optional()
-      .default([]),
+      .transform((v) => v ?? []),
   })
   .refine(
     (data) => !data.has_attempted_entrance_exam || data.exams.length > 0,
