@@ -32,7 +32,10 @@ docs {
   (409 otherwise, "Only a rejected submission can be resubmitted").
 
   Full re-submission, not a partial patch: every proof field is replaced.
-  `amount` is re-validated against the configured token_amount.
+  `amount` is re-validated against the configured token_amount. Same
+  conditional requirement as Submit Offline Token Payment: `dd_number`/
+  `dd_bank_name`/`dd_date` required for "demand_draft",
+  `bank_ref_number` required for "bank_transfer".
 
   On success: same row's status -> "pending",
   verification_status -> "pending_verification" again.

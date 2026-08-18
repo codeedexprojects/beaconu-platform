@@ -47,6 +47,17 @@ docs {
   `payment_method` must be "demand_draft" or "bank_transfer". `amount`
   must exactly match the course's configured token_amount (409 otherwise).
 
+  Conditionally required based on `payment_method`:
+  - "demand_draft" → `dd_number`, `dd_bank_name`, `dd_date` are all
+    required (400 if missing/null).
+  - "bank_transfer" → `bank_ref_number` is required (400 if missing/null).
+
+  `proof_file_name` and `note` are always optional. Every field accepts
+  `null` — send `null` (not just omit) for whichever fields don't apply to
+  the chosen `payment_method` (e.g. `bank_ref_number: null` when paying by
+  demand draft, or `dd_number`/`dd_bank_name`/`dd_date: null` when paying
+  by bank transfer).
+
   409 if the course isn't "shortlisted" yet, 409 if already "token_paid",
   409 if offline payment has been disabled for this admission cycle
   (college-admin config on the Application Form, token_offline_payment_
