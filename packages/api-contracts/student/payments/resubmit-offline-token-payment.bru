@@ -1,0 +1,42 @@
+meta {
+  name: Resubmit Offline Token Payment (Student)
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/payments/courses/token/offline/{{offlineTransactionId}}/resubmit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "payment_method": "bank_transfer",
+    "amount": 25000,
+    "proof_url": "https://cdn.example.com/proof/transfer-456.pdf",
+    "proof_file_name": "transfer-456.pdf",
+    "bank_ref_number": "REF987654",
+    "note": "Resubmitting with the correct bank transfer receipt"
+  }
+}
+
+docs {
+  Resubmits a previously rejected offline token payment with corrected
+  proof/details — only allowed while verification_status is "rejected"
+  (409 otherwise, "Only a rejected submission can be resubmitted").
+
+  Full re-submission, not a partial patch: every proof field is replaced.
+  `amount` is re-validated against the configured token_amount.
+
+  On success: same row's status -> "pending",
+  verification_status -> "pending_verification" again.
+  The prior rejection_reason is deliberately left in place until staff
+  makes their next decision — that's what marks this as a resubmission
+  in the college-admin review queue (`isResubmission: true`).
+}

@@ -96,6 +96,7 @@ model Transaction {
   verifiedBy          String?   @map("verified_by")
   verifiedAt          DateTime? @map("verified_at") @db.Timestamptz
   rejectionReason     String?   @map("rejection_reason") @db.Text
+  studentNote         String?   @map("student_note") @db.Text
   status              String    @default("pending") @db.VarChar(20)
   paidAt              DateTime? @map("paid_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz

@@ -365,6 +365,11 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
       }
     : NOT_SCHEDULED_INTERVIEW;
 
+  const paymentMethods = {
+    online: row.admissionCycle.tokenOnlinePaymentEnabled,
+    offline: row.admissionCycle.tokenOfflinePaymentEnabled,
+  };
+
   const amountDetails = offer
     ? {
         status: offer.status as "issued" | "expired" | "withdrawn",
@@ -378,6 +383,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
         // amount/status but not download the letter itself.
         documentUrl:
           offer.tokenPaymentStatus === "paid" ? offer.documentUrl : null,
+        paymentMethods,
       }
     : {
         ...NOT_ISSUED_AMOUNT_DETAILS,
@@ -388,6 +394,7 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
             ? "paid"
             : "pending"
           : null,
+        paymentMethods,
       };
 
   return {

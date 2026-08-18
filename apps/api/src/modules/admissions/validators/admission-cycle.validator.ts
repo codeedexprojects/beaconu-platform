@@ -22,6 +22,8 @@ export const createAdmissionCycleSchema = z
     ends_on: z.coerce.date().optional(),
     assessment_required: z.boolean().optional(),
     assessment_template_id: z.string().trim().min(1).optional().nullable(),
+    token_online_payment_enabled: z.boolean().optional(),
+    token_offline_payment_enabled: z.boolean().optional(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
     message: "End date must be on or after the start date",
@@ -38,6 +40,8 @@ export const updateAdmissionCycleSchema = z
     ends_on: z.coerce.date().optional(),
     assessment_required: z.boolean().optional(),
     assessment_template_id: z.string().trim().min(1).optional().nullable(),
+    token_online_payment_enabled: z.boolean().optional(),
+    token_offline_payment_enabled: z.boolean().optional(),
   })
   .refine(
     (data) =>

@@ -72,6 +72,8 @@ const applicationFormSchema = z
     ends_on: z.string().trim().optional(),
     assessment_required: z.boolean(),
     assessment_template_id: z.string(),
+    token_online_payment_enabled: z.boolean(),
+    token_offline_payment_enabled: z.boolean(),
   })
   .refine((data) => !data.ends_on || data.ends_on >= data.starts_on, {
     message: "End date must be on or after the start date",
@@ -88,6 +90,8 @@ const EMPTY_VALUES: ApplicationFormValues = {
   ends_on: "",
   assessment_required: false,
   assessment_template_id: "",
+  token_online_payment_enabled: true,
+  token_offline_payment_enabled: true,
 };
 
 const STATUS_VARIANT: Record<
@@ -146,6 +150,8 @@ export default function ApplicationFormsPage() {
       ends_on: item.endsOn ? item.endsOn.slice(0, 10) : "",
       assessment_required: item.assessmentRequired,
       assessment_template_id: item.assessmentTemplateId ?? "",
+      token_online_payment_enabled: item.tokenOnlinePaymentEnabled,
+      token_offline_payment_enabled: item.tokenOfflinePaymentEnabled,
     });
     setOpen(true);
   }
@@ -347,6 +353,51 @@ export default function ApplicationFormsPage() {
                 <p className="text-xs text-muted-foreground">
                   Every course under this application form that requires an
                   assessment shares this one template.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Token Fee Payment Methods</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="token_online_payment_enabled"
+                    type="checkbox"
+                    checked={form.watch("token_online_payment_enabled")}
+                    onChange={(e) =>
+                      form.setValue(
+                        "token_online_payment_enabled",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                  <Label
+                    htmlFor="token_online_payment_enabled"
+                    className="text-sm font-normal"
+                  >
+                    Allow online payment (Razorpay)
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="token_offline_payment_enabled"
+                    type="checkbox"
+                    checked={form.watch("token_offline_payment_enabled")}
+                    onChange={(e) =>
+                      form.setValue(
+                        "token_offline_payment_enabled",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                  <Label
+                    htmlFor="token_offline_payment_enabled"
+                    className="text-sm font-normal"
+                  >
+                    Allow offline payment (demand draft / bank transfer)
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Both are enabled by default. Disabling a method hides it from
+                  students on this application form&apos;s token fee step.
                 </p>
               </div>
               <div className="flex justify-end gap-2 pt-2">

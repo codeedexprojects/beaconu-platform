@@ -20,7 +20,8 @@ body:json {
     "name": "UG Admissions 2026 - Extended",
     "ends_on": "2026-09-15",
     "assessment_required": true,
-    "assessment_template_id": "{{assessmentTemplateId}}"
+    "assessment_template_id": "{{assessmentTemplateId}}",
+    "token_offline_payment_enabled": false
   }
 }
 
@@ -32,4 +33,9 @@ docs {
   assessment — the single source of truth AttemptService.start() gates on.
   assessment_template_id: must belong to your own college (404 otherwise).
   Pass null to clear it back to "no assessment configured".
+
+  token_online_payment_enabled / token_offline_payment_enabled: control
+  which token-fee payment methods students can use under this application
+  form. Both default to true; this example disables offline payment while
+  leaving online enabled.
 }

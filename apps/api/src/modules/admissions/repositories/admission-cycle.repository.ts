@@ -26,6 +26,8 @@ export class AdmissionCycleRepository {
         endsOn: data.ends_on ?? null,
         assessmentRequired: data.assessment_required ?? false,
         assessmentTemplateId: data.assessment_template_id ?? null,
+        tokenOnlinePaymentEnabled: data.token_online_payment_enabled ?? true,
+        tokenOfflinePaymentEnabled: data.token_offline_payment_enabled ?? true,
       },
     });
   }
@@ -58,6 +60,12 @@ export class AdmissionCycleRepository {
         }),
         ...(data.assessment_template_id !== undefined && {
           assessmentTemplateId: data.assessment_template_id,
+        }),
+        ...(data.token_online_payment_enabled !== undefined && {
+          tokenOnlinePaymentEnabled: data.token_online_payment_enabled,
+        }),
+        ...(data.token_offline_payment_enabled !== undefined && {
+          tokenOfflinePaymentEnabled: data.token_offline_payment_enabled,
         }),
       },
     });

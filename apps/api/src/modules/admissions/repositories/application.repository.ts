@@ -305,7 +305,13 @@ export class ApplicationRepository {
         entranceExamDetails: true,
         college: { select: { id: true, name: true } },
         admissionCycle: {
-          select: { id: true, name: true, assessmentRequired: true },
+          select: {
+            id: true,
+            name: true,
+            assessmentRequired: true,
+            tokenOnlinePaymentEnabled: true,
+            tokenOfflinePaymentEnabled: true,
+          },
         },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },

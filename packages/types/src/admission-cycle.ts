@@ -13,6 +13,8 @@ export interface AdmissionCycleItem {
   status: AdmissionCycleStatus;
   assessmentRequired: boolean;
   assessmentTemplateId: string | null;
+  tokenOnlinePaymentEnabled: boolean;
+  tokenOfflinePaymentEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,6 +28,8 @@ export interface CreateAdmissionCycleInput {
   ends_on?: string;
   assessment_required?: boolean;
   assessment_template_id?: string | null;
+  token_online_payment_enabled?: boolean;
+  token_offline_payment_enabled?: boolean;
 }
 
 export interface UpdateAdmissionCycleInput {
@@ -37,6 +41,8 @@ export interface UpdateAdmissionCycleInput {
   ends_on?: string;
   assessment_required?: boolean;
   assessment_template_id?: string | null;
+  token_online_payment_enabled?: boolean;
+  token_offline_payment_enabled?: boolean;
 }
 
 export type TokenPaymentStage = "before_assessment" | "after_shortlisting";

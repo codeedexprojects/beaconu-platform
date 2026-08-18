@@ -17,6 +17,8 @@ function mapAdmissionCycle(row: {
   status: string;
   assessmentRequired: boolean;
   assessmentTemplateId: string | null;
+  tokenOnlinePaymentEnabled: boolean;
+  tokenOfflinePaymentEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -33,6 +35,8 @@ function mapAdmissionCycle(row: {
     status: row.status,
     assessmentRequired: row.assessmentRequired,
     assessmentTemplateId: row.assessmentTemplateId,
+    tokenOnlinePaymentEnabled: row.tokenOnlinePaymentEnabled,
+    tokenOfflinePaymentEnabled: row.tokenOfflinePaymentEnabled,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

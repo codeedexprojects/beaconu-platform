@@ -1,0 +1,50 @@
+meta {
+  name: Review Offline Token Payment (College Admin)
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/payments/offline/{{offlineTransactionId}}/review
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+body:json {
+  {
+    "decision": "verified",
+    "received_amount": 25000
+  }
+}
+
+docs {
+  Marks an offline token payment submission as received ("verified") or
+  rejected. `decision`: "verified" | "rejected".
+
+  Double-entry verification: when marking "verified", staff must manually
+  type the amount actually received (`received_amount`) — it must exactly
+  match the course's configured token_amount, or this 409s
+  ("The received amount must exactly match the configured token amount")
+  without finalizing anything. This is a deliberate re-check step, not a
+  rubber-stamp of whatever the student submitted.
+
+  When marking "rejected", `note` is required — becomes the transaction's
+  rejection_reason, shown to the student so they can resubmit.
+
+  On "verified" success: Transaction.status -> "completed",
+  verification_status -> "verified", amount overwritten with the
+  staff-entered received_amount, paid_at/verified_by/verified_at set,
+  StudentFeeLedger -> "paid", ApplicationCourse.status -> "token_paid",
+  the linked OfferLetter updated, and a payment receipt is generated
+  asynchronously (same invoice job as the online flow).
+
+  On "rejected": only verification_status/rejection_reason change —
+  nothing about the course/offer is touched, the student can resubmit.
+
+  404 if the transaction doesn't exist or isn't currently
+  "pending_verification" (e.g. already reviewed).
+}

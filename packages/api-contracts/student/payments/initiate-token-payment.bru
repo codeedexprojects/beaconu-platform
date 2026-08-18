@@ -31,9 +31,11 @@ docs {
 
   404 if the course doesn't exist or doesn't belong to this student. 409
   if the course isn't currently "shortlisted" (token payment isn't open
-  yet), 409 if it's already "token_paid", 409 if no token_amount has been
-  configured for this course on the application form yet (see Attach
-  Course to Application Form / Update Application Form Course).
+  yet), 409 if it's already "token_paid", 409 if online payment has been
+  disabled for this admission cycle (college-admin config on the
+  Application Form, token_online_payment_enabled), 409 if no token_amount
+  has been configured for this course on the application form yet (see
+  Attach Course to Application Form / Update Application Form Course).
 
   Idempotent while a "pending" transaction already exists: calling again
   just returns that same transaction rather than creating a duplicate
