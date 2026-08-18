@@ -63,7 +63,11 @@ export const twelfthGradeDetailsSchema = z.object({
   school_state: z.string().trim().min(1, "School state is required").max(100),
   medium_of_instruction: z.string().trim().min(1).max(50),
   // "Does your Board conduct a separate Class XI / First Year Examination?"
-  has_separate_class_xi_exam: z.boolean(),
+  has_separate_class_xi_exam: z
+    .boolean()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? false),
   class_xi_status: z.enum(["declared", "undeclared"]).optional().nullable(),
   subjects: z
     .array(subjectMarksSchema)
@@ -164,7 +168,11 @@ export const undergraduateDetailsSchema = z.object({
     .nullable()
     .optional()
     .transform((v) => v ?? { semester_mark_sheet_urls: [] }),
-  has_projects: z.boolean(),
+  has_projects: z
+    .boolean()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? false),
   projects: z
     .array(projectEntrySchema)
     .nullable()
