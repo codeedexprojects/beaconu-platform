@@ -25,7 +25,13 @@ export interface CompareHero {
   reviewCount: number;
   establishedYear: number | null;
   ownershipType: string | null;
+  // Same underlying value as `ownershipType` (College.collegeType) —
+  // added under this clearer name (e.g. "Autonomous College", "Government
+  // College") without removing `ownershipType`, so existing consumers of
+  // that field aren't broken.
+  campusType: string | null;
   city: string | null;
+  district: string | null;
   state: string | null;
   courseId: string | null;
   courseName: string | null;
@@ -52,6 +58,7 @@ export interface CompareAccreditationAffiliation {
   institutionGroupName: string | null;
   affiliatedColleges: CompareAffiliateCollege[];
   courseAccreditations: unknown;
+  accolades: PublicCollegeOverviewBadge[];
 }
 
 export interface CompareUniversityDetails {

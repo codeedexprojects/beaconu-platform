@@ -18,6 +18,7 @@ export interface CollegeProfile {
   city: string | null;
   state: string | null;
   district: string | null;
+  collegeType: string | null;
   pinCode: string | null;
   logoUrl: string | null;
   coverImageUrl: string | null;
@@ -62,6 +63,7 @@ export interface UpdateCollegeProfileInput {
   city?: string;
   state?: string;
   district?: string;
+  collegeType?: string;
   pinCode?: string;
   logoUrl?: string | null;
   coverImageUrl?: string | null;

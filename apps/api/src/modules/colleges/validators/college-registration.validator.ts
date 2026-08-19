@@ -183,6 +183,7 @@ export const updateCollegeProfileSchema = z.object({
   city: z.string().trim().max(100).optional().nullable(),
   district: z.string().trim().max(100).optional().nullable(),
   state: z.string().trim().max(100).optional().nullable(),
+  collegeType: z.string().trim().max(30).optional().nullable(),
   pinCode: z.string().trim().max(10).optional().nullable(),
   requestedGroupCode: z.string().trim().max(30).optional().nullable(),
   registrationTabs: registrationTabsSchema,

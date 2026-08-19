@@ -71,7 +71,9 @@ export class ComparisonService {
       reviewCount: college.reviewCount,
       establishedYear: college.establishedYear,
       ownershipType: college.collegeType,
+      campusType: college.collegeType,
       city: college.city,
+      district: college.district,
       state: college.state,
       courseId: course?.id ?? null,
       courseName: course?.name ?? null,
@@ -104,6 +106,7 @@ export class ComparisonService {
   ): Promise<CompareAccreditationAffiliation> {
     const college = await this.loadCollege(collegeId);
     const group = college.institutionGroupMember?.group ?? null;
+    const overview = await this.loadCollegeOverviewSection(collegeId);
 
     return {
       universityName: college.university?.name ?? null,
@@ -114,6 +117,9 @@ export class ComparisonService {
         .map((m) => m.college)
         .filter((c) => c.id !== collegeId),
       courseAccreditations: null,
+      accolades: Array.isArray(overview.accolades)
+        ? (overview.accolades as CompareAccreditationAffiliation["accolades"])
+        : [],
     };
   }
 
