@@ -50,6 +50,15 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        accentOrange: {
+          DEFAULT: "hsl(var(--accent-orange))",
+          foreground: "hsl(var(--accent-orange-foreground))",
+          soft: "hsl(var(--accent-orange-soft))",
+        },
+        field: {
+          DEFAULT: "hsl(var(--field-bg))",
+          focus: "hsl(var(--field-bg-focus))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

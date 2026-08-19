@@ -566,7 +566,14 @@ export type ApplicationFormDetailsSection =
   | "family_details"
   | "address_details"
   | "qualification_details"
-  | "achievements_details";
+  | "achievements_details"
+  | "tenth_grade"
+  | "twelfth_grade"
+  | "undergraduate"
+  | "pg"
+  | "diploma"
+  | "entrance_exam_details"
+  | "declaration";
 
 export interface ApplicationFormDetailsBySection {
   personal_details: Partial<PersonalDetailsInput>;
@@ -574,6 +581,13 @@ export interface ApplicationFormDetailsBySection {
   address_details: Partial<AddressDetailsInput>;
   qualification_details: Partial<AcademicRecords>;
   achievements_details: Partial<AchievementsDetailsInput>;
+  tenth_grade: Partial<TenthGradeDetailsInput>;
+  twelfth_grade: Partial<TwelfthGradeDetailsInput>;
+  undergraduate: Partial<UndergraduateDetailsInput>;
+  pg: Partial<PgDetailsInput>;
+  diploma: Partial<DiplomaDetailsInput>;
+  entrance_exam_details: Partial<EntranceExamDetailsInput>;
+  declaration: Partial<DeclarationInput>;
 }
 
 export interface RequiredDocumentDto {

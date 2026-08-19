@@ -46,3 +46,22 @@ export interface EducationBoardNameItem {
   grade: EducationBoardGrade;
   slug: string;
 }
+
+// GET /education-boards/:id — shape depends on grade and whether ?course=
+// is passed: 10th grade (or 12th+course) returns the board with its
+// subjects; 12th grade with no course returns the course picker list
+// instead of subjects.
+export interface EducationBoardWithSubjects extends EducationBoardNameItem {
+  isActive: boolean;
+  subjects: EducationBoardSubjectItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EducationBoardWithCourses extends EducationBoardNameItem {
+  courses: string[];
+}
+
+export type EducationBoardDetail =
+  | EducationBoardWithSubjects
+  | EducationBoardWithCourses;

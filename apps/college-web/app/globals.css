@@ -35,6 +35,14 @@
     --ring: 222 47% 11%;
 
     --radius: 0.75rem;
+
+    --accent-orange: 222 47% 11%;
+    --accent-orange-foreground: 0 0% 100%;
+    --accent-orange-soft: 210 40% 94%;
+    --accent-orange-gradient-from: 222 40% 18%;
+    --accent-orange-gradient-to: 222 47% 8%;
+    --field-bg: 220 20% 96%;
+    --field-bg-focus: 220 20% 93%;
   }
 }
 
