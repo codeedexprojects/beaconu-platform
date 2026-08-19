@@ -1,5 +1,5 @@
 meta {
-  name: Resubmit Offline Token Payment (Student)
+  name: Edit/Resubmit Offline Token Payment (Student)
   type: http
   seq: 6
 }
@@ -27,9 +27,13 @@ body:json {
 }
 
 docs {
-  Resubmits a previously rejected offline token payment with corrected
-  proof/details — only allowed while verification_status is "rejected"
-  (409 otherwise, "Only a rejected submission can be resubmitted").
+  Edits an offline token payment submission with corrected proof/details —
+  either while it's still awaiting review ("pending_verification", e.g.
+  the student made a typo and wants to fix it before staff look at it) or
+  after it's been rejected ("rejected", the original resubmit-after-
+  rejection case). 409 once verification_status is "verified"
+  ("This payment has already been verified and can no longer be edited")
+  — a finalized payment can't be edited.
 
   Full re-submission, not a partial patch: every proof field is replaced.
   `amount` is re-validated against the configured token_amount. Same
@@ -37,9 +41,11 @@ docs {
   `dd_bank_name`/`dd_date` required for "demand_draft",
   `bank_ref_number` required for "bank_transfer".
 
-  On success: same row's status -> "pending",
-  verification_status -> "pending_verification" again.
-  The prior rejection_reason is deliberately left in place until staff
-  makes their next decision — that's what marks this as a resubmission
-  in the college-admin review queue (`isResubmission: true`).
+  On success: status -> "pending", verification_status ->
+  "pending_verification" (a no-op if it was already pending_verification).
+  If editing a previously-rejected submission, the prior rejection_reason
+  is deliberately left in place until staff make their next decision —
+  that's what marks this as a resubmission in the college-admin review
+  queue (`isResubmission: true`). Editing a still-pending submission has
+  no such flag change since rejection_reason was already null.
 }

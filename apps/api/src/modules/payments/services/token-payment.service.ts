@@ -321,8 +321,10 @@ export class TokenPaymentService {
     if (!transaction || transaction.studentId !== studentId) {
       throw new NotFoundError("Transaction");
     }
-    if (transaction.verificationStatus !== "rejected") {
-      throw new ConflictError("Only a rejected submission can be resubmitted");
+    if (transaction.verificationStatus === "verified") {
+      throw new ConflictError(
+        "This payment has already been verified and can no longer be edited",
+      );
     }
 
     const applicationCourseId = transaction.ledgerEntry?.applicationCourseId;

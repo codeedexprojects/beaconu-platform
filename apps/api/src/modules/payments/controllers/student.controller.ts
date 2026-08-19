@@ -341,7 +341,9 @@ export class StudentPaymentController {
       req.userId as string,
       body,
     );
-    return res.json(ApiResponse.success("Offline payment resubmitted", result));
+    return res.json(
+      ApiResponse.success("Offline payment request updated", result),
+    );
   }
 
   static async getOfflineTokenPaymentStatus(req: Request, res: Response) {
