@@ -20,6 +20,13 @@ export const getFormDetailsQuerySchema = z.object({
     "address_details",
     "qualification_details",
     "achievements_details",
+    "tenth_grade",
+    "twelfth_grade",
+    "undergraduate",
+    "pg",
+    "diploma",
+    "entrance_exam_details",
+    "declaration",
   ]),
 });
 

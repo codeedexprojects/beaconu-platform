@@ -569,7 +569,14 @@ export class ApplicationService {
       | "family_details"
       | "address_details"
       | "qualification_details"
-      | "achievements_details",
+      | "achievements_details"
+      | "tenth_grade"
+      | "twelfth_grade"
+      | "undergraduate"
+      | "pg"
+      | "diploma"
+      | "entrance_exam_details"
+      | "declaration",
   ) {
     const application = await ApplicationRepository.findByIdForStudent(
       applicationId,
@@ -577,13 +584,39 @@ export class ApplicationService {
     );
     if (!application) throw new NotFoundError("Application not found");
 
+    // declaration/entrance_exam_details live on the Application row itself
+    // (not the reusable Student profile — see the note on
+    // updateEntranceExamDetails/updateDeclaration below), so they're read
+    // straight off it rather than through StudentsService.
+    if (section === "declaration") {
+      return ApplicationRepository.findDeclaration(applicationId, studentId);
+    }
+    if (section === "entrance_exam_details") {
+      return ApplicationRepository.findEntranceExamDetails(
+        applicationId,
+        studentId,
+      );
+    }
+
     const details = await StudentsService.getDetailsForSnapshot(studentId);
-    const bySection = {
+    const qualification = details.qualificationDetails as Record<
+      string,
+      unknown
+    > | null;
+    const bySection: Record<string, unknown> = {
       personal_details: details.personalDetails,
       family_details: details.familyDetails,
       address_details: details.addressDetails,
       qualification_details: details.qualificationDetails,
       achievements_details: details.achievementsDetails,
+      // The five academic-record screens are sub-keys inside
+      // qualification_details (see StudentsService.mergeQualificationSection)
+      // — surfaced here individually too, matching each screen's own PATCH.
+      tenth_grade: qualification?.tenth_grade ?? null,
+      twelfth_grade: qualification?.twelfth_grade ?? null,
+      undergraduate: qualification?.undergraduate ?? null,
+      pg: qualification?.pg ?? null,
+      diploma: qualification?.diploma ?? null,
     };
     return bySection[section];
   }

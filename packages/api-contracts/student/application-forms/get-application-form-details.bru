@@ -19,20 +19,34 @@ headers {
 }
 
 docs {
-  Live read of ONE form-step section straight off the Student profile —
-  for resuming/pre-filling that step's page. `section` is required, one of:
-  personal_details | family_details | address_details | qualification_details.
+  Live read of ONE form-step section — for resuming/pre-filling that
+  step's page. `section` is required, one of:
+
+  personal_details | family_details | address_details |
+  qualification_details | achievements_details | tenth_grade |
+  twelfth_grade | undergraduate | pg | diploma | entrance_exam_details |
+  declaration
+
   Each page on the client calls this with its own `section` value rather
-  than fetching all four at once.
+  than fetching everything at once.
 
   Response `data` is just that section's object directly (e.g. for
   `section=personal_details`, `data` is `{ full_name, date_of_birth, ... }`),
-  or `{}` if that step hasn't been filled in yet. Missing/invalid `section`
-  -> ValidationError.
+  or `{}`/`null` if that step hasn't been filled in yet. Missing/invalid
+  `section` -> ValidationError.
 
-  This is NOT the frozen per-application snapshot — that's only written
-  once, at Submit Application, and isn't exposed by this endpoint. Works
-  regardless of the application's form_status (even after submit, so the
-  student can still see their current profile before starting a second
-  application elsewhere).
+  Source differs by section:
+  - personal_details / family_details / address_details /
+    qualification_details / achievements_details / tenth_grade /
+    twelfth_grade / undergraduate / pg / diploma — read live off the
+    Student profile (the five academic-record sections are sub-keys
+    inside `qualification_details`, also exposed individually here to
+    match each screen's own PATCH endpoint one-to-one). NOT the frozen
+    per-application snapshot — that's only written once, at Submit
+    Application, and isn't exposed by this endpoint. Works regardless of
+    the application's form_status.
+  - entrance_exam_details / declaration — these are NOT on the Student
+    profile, they're stored directly on this specific Application row
+    (per-application, not reusable across applications), so they're read
+    straight off it instead.
 }
