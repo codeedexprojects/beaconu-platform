@@ -169,6 +169,22 @@ export class ApplicationRepository {
     });
   }
 
+  static async findDeclaration(id: string, studentId: string) {
+    const row = await prisma.application.findFirst({
+      where: { id, studentId },
+      select: { declaration: true },
+    });
+    return row?.declaration ?? null;
+  }
+
+  static async findEntranceExamDetails(id: string, studentId: string) {
+    const row = await prisma.application.findFirst({
+      where: { id, studentId },
+      select: { entranceExamDetails: true },
+    });
+    return row?.entranceExamDetails ?? null;
+  }
+
   static async updateDetailStep(
     id: string,
     jsonField: "declaration" | "entranceExamDetails",
