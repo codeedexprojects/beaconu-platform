@@ -36,6 +36,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   useCollegeProfile,
@@ -93,6 +100,15 @@ const PROFILE_TABS = [
 
 type ProfileTabId = (typeof PROFILE_TABS)[number]["id"];
 
+const COLLEGE_TYPE_OPTIONS = [
+  "Autonomous College",
+  "Government College",
+  "Government-Aided College",
+  "Private College",
+  "Deemed University",
+  "Private Self-Financing College",
+] as const;
+
 const profileSchema = z.object({
   name: z.string().min(2, "College name must be at least 2 characters"),
   code: z.string().min(2, "College code must be at least 2 characters"),
@@ -102,6 +118,7 @@ const profileSchema = z.object({
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),
   district: z.string().optional().nullable(),
+  collegeType: z.string().optional().nullable(),
   pinCode: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
   coverImageUrl: z.string().optional().nullable(),
@@ -216,6 +233,7 @@ export default function SetupProfilePage() {
         city: profile.city || "",
         state: profile.state || "",
         district: profile.district || "",
+        collegeType: profile.collegeType || "",
         pinCode: profile.pinCode || "",
         logoUrl: profile.logoUrl || "",
         coverImageUrl: profile.coverImageUrl || "",
@@ -421,6 +439,7 @@ export default function SetupProfilePage() {
         city: data.city || undefined,
         state: data.state || undefined,
         district: data.district || undefined,
+        collegeType: data.collegeType || undefined,
         pinCode: data.pinCode || undefined,
         logoUrl: data.logoUrl || null,
         coverImageUrl: data.coverImageUrl || null,
@@ -677,6 +696,36 @@ export default function SetupProfilePage() {
                         id="district"
                         placeholder="Bangalore Urban"
                         {...register("district")}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="collegeType"
+                        className="font-semibold text-foreground"
+                      >
+                        College Type
+                      </Label>
+                      <Controller
+                        name="collegeType"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value || ""}
+                            onValueChange={(v) => field.onChange(v)}
+                          >
+                            <SelectTrigger id="collegeType">
+                              <SelectValue placeholder="Select college type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COLLEGE_TYPE_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       />
                     </div>
 

@@ -20,7 +20,18 @@ params:query {
 
 docs {
   Compare Details hero card — image, rating, established year, ownership
-  type, and (optionally, if `course_id` is passed) the course being
-  compared for this college. Requires student login; not gated on
-  enrollment at this college.
+  type, city/district/state, and (optionally, if `course_id` is passed)
+  the course being compared for this college. Requires student login; not
+  gated on enrollment at this college.
+
+  Response `data`:
+  { collegeId, name, slug, coverImageUrl, logoUrl, avgRating, reviewCount,
+    establishedYear, ownershipType, campusType, city, district, state,
+    courseId, courseName }
+
+  `campusType` and `ownershipType` carry the same value (College.college_type,
+  e.g. "Autonomous College", "Government College", "Private College") —
+  `campusType` is the clearer name, `ownershipType` kept for existing
+  consumers. Both are `null` until set on the college's profile (college-admin
+  Setup > Profile > College Type).
 }

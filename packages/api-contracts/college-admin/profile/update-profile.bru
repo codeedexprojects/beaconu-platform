@@ -22,6 +22,7 @@ body:json {
     "city": "Noida",
     "state": "UP",
     "district": "Gautam Buddha Nagar",
+    "collegeType": "Private College",
     "pinCode": "201301",
     "logoUrl": "https://example.com/college-logo.png",
     "coverImageUrl": "https://example.com/college-cover.png",
@@ -685,6 +686,12 @@ docs {
   Updates college onboarding/profile data.
 
   Notes:
+  - `collegeType` is free text (max 30 chars) — no fixed enum server-side,
+    but the college-admin UI (Setup > Profile) presents it as a select
+    with values like "Autonomous College", "Government College",
+    "Government-Aided College", "Private College", "Deemed University",
+    "Private Self-Financing College". This value is what the student-facing
+    Compare screen's hero card shows as `campusType`/`ownershipType`.
   - Send tab data under `profileSections`.
   - Include all section keys used by the setup tabs:
     `college_overview`, `course_info`, `admission_policy`, `placements`,

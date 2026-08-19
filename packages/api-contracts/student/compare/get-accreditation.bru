@@ -16,6 +16,21 @@ auth:bearer {
 
 docs {
   Accreditation & Affiliation section — parent university, university
-  type, accreditation, institution group name, and sibling colleges in
-  the same institution group (if any).
+  type, accreditation, institution group name, sibling colleges in the
+  same institution group (if any), and accolade badges.
+
+  Response `data`:
+  {
+    universityName, universityType, accreditation, institutionGroupName,
+    affiliatedColleges, courseAccreditations,
+    "accolades": [
+      { "tag": "NAAC A+", "image": "", "title": "Accredited with A+ grade by NAAC (2023)" },
+      { "tag": "NIRF Rank 3", "image": "", "title": "India's top ranked institutions 2024" }
+    ]
+  }
+
+  `accolades` is sourced from the college's own `college_overview.accolades`
+  profile section (college-admin Setup > Profile > College Overview) —
+  same data already surfaced on the University Details compare screen, now
+  also included here. `[]` if none configured yet.
 }

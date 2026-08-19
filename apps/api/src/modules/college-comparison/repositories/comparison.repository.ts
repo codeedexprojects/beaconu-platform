@@ -11,6 +11,7 @@ export class ComparisonRepository {
         logoUrl: true,
         coverImageUrl: true,
         city: true,
+        district: true,
         state: true,
         establishedYear: true,
         collegeType: true,
