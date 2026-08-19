@@ -67,9 +67,15 @@ const courseCreateTabDataSchema = z
   })
   .partial();
 
-const optionalTextSchema = z.string().trim().optional();
+const optionalTextSchema = z.string().trim().optional().nullable();
 const optionalNullableTextSchema = z.string().trim().optional().nullable();
-const optionalUrlSchema = z.string().trim().url().or(z.literal("")).optional();
+const optionalUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .or(z.literal(""))
+  .optional()
+  .nullable();
 
 const collegeOverviewStatSchema = z.object({
   label: optionalTextSchema,
@@ -132,7 +138,10 @@ const collegeOverviewReelSchema = z.object({
   date: optionalTextSchema,
   video: optionalUrlSchema,
   thumbnail: optionalUrlSchema,
-  type: z.enum(["youtube", "mp4"]).optional(),
+  // Free text, not a fixed enum — real saved data already has values
+  // beyond "youtube"/"mp4" (e.g. "reel"), and this only drives which
+  // video player the client renders, not anything validated elsewhere.
+  type: optionalTextSchema,
 });
 
 const collegeOverviewSectionSchema = z
