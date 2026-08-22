@@ -51,6 +51,11 @@ function GuideCard({ guide }: { guide: StarterGuideListItem }) {
             {guide.isActive ? "Active" : "Inactive"}
           </span>
         </div>
+        {guide.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-1">
+            {guide.description}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
           Order: {guide.displayOrder}
         </p>

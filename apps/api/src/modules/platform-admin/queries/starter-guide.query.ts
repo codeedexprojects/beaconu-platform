@@ -6,6 +6,7 @@ import { ListStarterGuidesQuery } from "../validators/starter-guide.validator";
 const SG_FULL_SELECT = {
   id: true,
   title: true,
+  description: true,
   thumbnailUrl: true,
   videoUrl: true,
   steps: true,
@@ -18,6 +19,7 @@ const SG_FULL_SELECT = {
 const SG_LIST_SELECT = {
   id: true,
   title: true,
+  description: true,
   thumbnailUrl: true,
   displayOrder: true,
   isActive: true,

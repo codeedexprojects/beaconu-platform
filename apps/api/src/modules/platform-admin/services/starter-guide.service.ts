@@ -9,6 +9,7 @@ export class StarterGuideService {
   static async create(data: CreateStarterGuideInput) {
     return StarterGuideRepository.create({
       title: data.title,
+      description: data.description ?? null,
       thumbnailUrl: data.thumbnail_url,
       videoUrl: data.video_url,
       steps: data.steps,
@@ -22,6 +23,9 @@ export class StarterGuideService {
 
     return StarterGuideRepository.updateById(id, {
       ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.description !== undefined
+        ? { description: data.description }
+        : {}),
       ...(data.thumbnail_url !== undefined
         ? { thumbnailUrl: data.thumbnail_url }
         : {}),
