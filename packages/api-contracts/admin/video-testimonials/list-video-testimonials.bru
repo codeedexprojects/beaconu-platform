@@ -1,0 +1,28 @@
+meta {
+  name: List Video Testimonials
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/video-testimonials
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~is_active: true
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists video testimonials for the admin panel, paginated. Requires
+  platform_admin auth + content.view. Response includes `meta` (page,
+  limit, total, totalPages, hasNextPage, hasPreviousPage) alongside
+  `data`.
+}

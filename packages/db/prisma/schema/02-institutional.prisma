@@ -104,6 +104,7 @@ model College {
 
   establishedYear  Int?     @map("established_year")
   collegeType      String?  @map("college_type") @db.VarChar(30)
+  instituteOfNationalImportanceId String? @map("institute_of_national_importance_id")
   genderType       String?  @map("gender_type") @db.VarChar(20)
   avgStudentCount  Int?     @map("avg_student_count")
   campusSizeAcres  Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
@@ -127,6 +128,7 @@ model College {
   demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
   university                 University                  @relation(fields: [universityId], references: [id])
+  instituteOfNationalImportance InstituteOfNationalImportance? @relation(fields: [instituteOfNationalImportanceId], references: [id])
   departments                Department[]
   campuses                   Campus[]
   courses                    Course[]
@@ -188,7 +190,25 @@ model College {
   @@index([domain], name: "idx_colleges_domain")
   @@index([state], name: "idx_colleges_state")
   @@index([status], name: "idx_colleges_status")
+  @@index([instituteOfNationalImportanceId], name: "idx_colleges_ini")
   @@map("colleges")
+}
+
+model InstituteOfNationalImportance {
+  id            String   @id @default(dbgenerated("('INI-'::text || (nextval('institute_of_national_importance_seq'::regclass))::text)"))
+  name          String   @unique @db.VarChar(150)
+  slug          String   @unique @db.VarChar(180)
+  iconUrl       String?  @map("icon_url") @db.Text
+  collegesCount Int      @default(0) @map("colleges_count")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  colleges College[]
+
+  @@index([isActive], name: "idx_ini_active")
+  @@map("institutes_of_national_importance")
 }
 
 model CollegeWishlist {

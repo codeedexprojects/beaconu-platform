@@ -16,10 +16,13 @@ import { adminInstitutionGroupRouter } from "@/modules/colleges/routes/instituti
 import newsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts.routes";
 import entranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams.routes";
 import educationBoardsRoutes from "@/modules/platform-admin/routes/education-boards.routes";
+import institutesOfNationalImportanceRoutes from "@/modules/platform-admin/routes/institutes-of-national-importance.routes";
 import studentsPlatformAdminRoutes from "@/modules/students/routes/platform-admin.routes";
 import iconsRoutes from "@/modules/platform-admin/routes/icons.routes";
 import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans.routes";
-import starterGuideVideosRoutes from "@/modules/platform-admin/routes/starter-guide-videos.routes";
+import starterGuideRoutes from "@/modules/platform-admin/routes/starter-guide.routes";
+import shortsRoutes from "@/modules/platform-admin/routes/shorts.routes";
+import videoTestimonialsRoutes from "@/modules/platform-admin/routes/video-testimonials.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
 import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
 import eventAdminRoutes from "@/modules/events/routes/platform-admin.routes";
@@ -38,10 +41,16 @@ router.use("/platform-admins", platformAdminMgmtRoutes);
 router.use("/news", newsAlertsRoutes);
 router.use("/entrance-exams", entranceExamsRoutes);
 router.use("/education-boards", educationBoardsRoutes);
+router.use(
+  "/institutes-of-national-importance",
+  institutesOfNationalImportanceRoutes,
+);
 router.use("/students", studentsPlatformAdminRoutes);
 router.use("/icons", iconsRoutes);
 router.use("/financial-aid/loans", financialAidLoansRoutes);
-router.use("/starter-guide/videos", starterGuideVideosRoutes);
+router.use("/starter-guide", starterGuideRoutes);
+router.use("/shorts", shortsRoutes);
+router.use("/video-testimonials", videoTestimonialsRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);

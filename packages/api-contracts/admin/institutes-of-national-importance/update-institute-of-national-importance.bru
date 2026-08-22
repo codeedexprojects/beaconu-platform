@@ -1,0 +1,36 @@
+meta {
+  name: Update Institute of National Importance
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/institutes-of-national-importance/{{instituteOfNationalImportanceId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "IIT Delhi",
+    "icon_url": "https://cdn.example.com/icons/iit-v2.svg",
+    "colleges_count": 5
+  }
+}
+
+docs {
+  Partial update — all fields optional (name, icon_url, colleges_count,
+  sort_order, is_active), at least one required. Requires platform_admin
+  auth + institutes-of-national-importance.manage.
+
+  If `name` changes, uniqueness is re-checked (409 if it collides with
+  another institute) and the slug is regenerated.
+}

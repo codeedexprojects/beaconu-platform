@@ -1,0 +1,21 @@
+meta {
+  name: Get Starter Guide
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/{{starterGuideId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Fetches a single starter guide by id, including videoUrl and the full
+  ordered `steps` array. Requires platform_admin auth + content.view.
+  404 if not found.
+}

@@ -1,0 +1,31 @@
+meta {
+  name: List Starter Guides
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/starter-guide
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~is_active: true
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists starter guides for the admin panel, paginated. Requires
+  platform_admin auth + content.view.
+
+  Each item includes title, thumbnailUrl, displayOrder, isActive
+  (compact — no video_url/steps; use Get Starter Guide for the full
+  record). Response includes `meta` (page, limit, total, totalPages,
+  hasNextPage, hasPreviousPage) alongside `data`.
+}

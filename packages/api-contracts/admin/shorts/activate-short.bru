@@ -1,0 +1,20 @@
+meta {
+  name: Activate Short
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/shorts/{{shortId}}/activate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Re-activates a previously deactivated short. Requires platform_admin
+  auth + content.manage. 403 if already active.
+}

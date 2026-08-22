@@ -1,0 +1,39 @@
+meta {
+  name: Update Starter Guide
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/{{starterGuideId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Getting Started with BeaconU (Updated)",
+    "steps": [
+      { "title": "Create your profile", "description": "Sign up and fill in your basic details." },
+      { "title": "Explore colleges", "description": "Browse colleges and shortlist the ones you like." },
+      { "title": "Apply", "description": "Submit your application to a shortlisted college." }
+    ]
+  }
+}
+
+docs {
+  Partial update — all fields optional (title, thumbnail_url, video_url,
+  steps, display_order, is_active), at least one required. Requires
+  platform_admin auth + content.manage.
+
+  When `steps` is provided, the ENTIRE steps array is wholesale-replaced
+  (not merged/patched individually).
+}

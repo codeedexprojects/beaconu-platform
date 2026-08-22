@@ -1,0 +1,18 @@
+meta {
+  name: Get Starter Guide (Public)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/starter-guide/{{starterGuideId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Fetches a single active starter guide's detail view: title,
+  thumbnailUrl, videoUrl (YouTube link), and the ordered `steps` array
+  ({ title, description } each). No auth required. 404 if the guide
+  doesn't exist or is currently inactive.
+}
