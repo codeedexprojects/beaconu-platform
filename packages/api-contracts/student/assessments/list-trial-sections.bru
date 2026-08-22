@@ -1,0 +1,29 @@
+meta {
+  name: List Trial Sections
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/templates/{{assessmentTemplateId}}/trial/sections
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Demo/practice assessment — section list for the "Take Trial of
+  Assessment" screen. Same response shape as List Attempt Sections (one
+  row per template section: name, description, question_count,
+  time_limit_mins, answered_count, status), so the same UI can render
+  both — `answered_count` is always 0 and `status` is always
+  "not_started" here, since a demo is never submitted or tracked.
+
+  404 "No active trial paper for this assessment" if the college hasn't
+  approved a trial-type paper for this template yet.
+
+  There is no submit/result endpoint for the demo — it's browse-only.
+}

@@ -10,7 +10,6 @@ import {
   sectionQuestionQuerySchema,
   startAttemptSchema,
   submitAnswerSchema,
-  submitTrialSchema,
 } from "../validators/assessment.validator";
 
 export class StudentAssessmentController {
@@ -53,20 +52,21 @@ export class StudentAssessmentController {
     return res.json(ApiResponse.success("Overview fetched", result));
   }
 
-  static async getTrialPaper(req: Request, res: Response) {
-    const result = await TrialService.getTrialPaper(
+  static async getTrialSections(req: Request, res: Response) {
+    const result = await TrialService.getSections(
       req.params.templateId as string,
     );
-    return res.json(ApiResponse.success("Trial paper fetched", result));
+    return res.json(ApiResponse.success("Trial sections fetched", result));
   }
 
-  static async submitTrial(req: Request, res: Response) {
-    const data = submitTrialSchema.parse(req.body);
-    const result = await TrialService.submit(
+  static async getTrialSectionQuestions(req: Request, res: Response) {
+    const { question_order } = sectionQuestionQuerySchema.parse(req.query);
+    const result = await TrialService.getSectionQuestions(
       req.params.templateId as string,
-      data,
+      req.params.sectionId as string,
+      question_order,
     );
-    return res.json(ApiResponse.success("Trial submitted", result));
+    return res.json(ApiResponse.success("Trial question fetched", result));
   }
 
   static async startAttempt(req: Request, res: Response) {

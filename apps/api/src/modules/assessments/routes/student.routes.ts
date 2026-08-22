@@ -10,12 +10,12 @@ router.use(authenticate, authorizeUserType("student"));
 router.get("/start", StudentAssessmentController.getStartInfo);
 
 router.get(
-  "/templates/:templateId/trial",
-  StudentAssessmentController.getTrialPaper,
+  "/templates/:templateId/trial/sections",
+  StudentAssessmentController.getTrialSections,
 );
-router.post(
-  "/templates/:templateId/trial/submit",
-  StudentAssessmentController.submitTrial,
+router.get(
+  "/templates/:templateId/trial/sections/:sectionId/questions",
+  StudentAssessmentController.getTrialSectionQuestions,
 );
 
 router.post("/attempts", StudentAssessmentController.startAttempt);

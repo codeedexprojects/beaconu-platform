@@ -242,17 +242,6 @@ export const scoreOverrideSchema = z.object({
 
 export type ScoreOverrideBody = z.infer<typeof scoreOverrideSchema>;
 
-export const submitTrialSchema = z.object({
-  answers: z.array(
-    z.object({
-      question_id: z.string().trim().min(1),
-      response: answerResponseSchema,
-    }),
-  ),
-});
-
-export type SubmitTrialBody = z.infer<typeof submitTrialSchema>;
-
 export const evaluationQueueQuerySchema = z.object({
   status: z.string().optional(),
 });

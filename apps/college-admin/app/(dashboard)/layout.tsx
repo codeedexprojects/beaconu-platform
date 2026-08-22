@@ -398,6 +398,12 @@ export default function DashboardLayout({
                     path: "/campus-visits",
                     icon: CalendarDays,
                     permission: "staff.view",
+                    children: [
+                      {
+                        name: "Availability",
+                        path: "/campus-visits/availability",
+                      },
+                    ],
                   },
                   {
                     name: "Media Kit",
@@ -461,6 +467,7 @@ export default function DashboardLayout({
                     icon: Mic,
                     permission: "staff.view",
                     children: [
+                      { name: "Sections", path: "/assessments" },
                       { name: "Templates", path: "/assessments/templates" },
                       { name: "Evaluation", path: "/assessments/evaluation" },
                     ],

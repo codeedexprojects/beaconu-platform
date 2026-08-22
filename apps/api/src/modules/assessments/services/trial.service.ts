@@ -1,15 +1,11 @@
 import { NotFoundError } from "@/shared/errors";
 import { PaperRepository } from "../repositories/paper.repository";
-import { TemplateRepository } from "../repositories/template.repository";
-import { scoreAutoAnswer } from "../lib/scoring";
+import { AttemptRepository } from "../repositories/attempt.repository";
 import type {
-  AnswerKey,
-  AnswerResponse,
-  NegativeMarkingMode,
+  AttemptSectionQuestionPage,
+  AttemptSectionStatus,
+  AttemptSectionSummary,
   QuestionContent,
-  SubmitTrialInput,
-  TrialPaperItem,
-  TrialResult,
 } from "@beaconu/types";
 
 export class TrialService {
@@ -24,88 +20,62 @@ export class TrialService {
     return paper;
   }
 
-  static async getTrialPaper(templateId: string): Promise<TrialPaperItem> {
-    const paper = await this.loadActiveTrialPaper(templateId);
+  static async getSections(
+    templateId: string,
+  ): Promise<AttemptSectionSummary[]> {
+    await this.loadActiveTrialPaper(templateId);
+    const templateSections =
+      await AttemptRepository.findTemplateSections(templateId);
 
-    return {
-      paperId: paper.id,
-      paperCode: paper.paperCode,
-      templateId: paper.templateId,
-      questions: paper.paperQuestions.map((pq) => ({
-        id: pq.question.id,
-        sectionId: pq.sectionId,
-        sectionName: pq.section.name,
-        questionTypeId: pq.question.questionTypeId,
-        content: pq.question.content as unknown as QuestionContent,
-        marks: Number(pq.question.marks),
-        scorable: pq.question.questionType.autoScorable,
-      })),
-    };
+    return templateSections.map((ts) => ({
+      id: ts.id,
+      sectionId: ts.sectionId,
+      name: ts.section.name,
+      description: ts.section.description,
+      questionCount: ts.questionCount,
+      timeLimitMins: ts.timeLimitMins,
+      // Demo questions are never answered/submitted — these two fields
+      // exist only so the response shape matches the real assessment's
+      // section-list API exactly, letting the same UI render both.
+      answeredCount: 0,
+      status: "not_started" as AttemptSectionStatus,
+    }));
   }
 
-  static async submit(
+  static async getSectionQuestions(
     templateId: string,
-    data: SubmitTrialInput,
-  ): Promise<TrialResult> {
+    sectionId: string,
+    questionOrder: number,
+  ): Promise<AttemptSectionQuestionPage> {
     const paper = await this.loadActiveTrialPaper(templateId);
-    const template = await TemplateRepository.findById(templateId);
-    if (!template) throw new NotFoundError("Assessment template not found");
-
-    const settings = template.settings as {
-      negativeMarkingMode?: NegativeMarkingMode;
-    };
-    const negativeMarkingMode = settings.negativeMarkingMode ?? "none";
-
-    const responseByQuestion = new Map(
-      data.answers.map((a) => [a.question_id, a.response]),
+    const paperQuestions = await AttemptRepository.findQuestionsForSection(
+      paper.id,
+      sectionId,
     );
 
-    let totalScore = 0;
-    let maxScore = 0;
-    const sectionScores: Record<string, { score: number; max: number }> = {};
-    const perQuestion: TrialResult["perQuestion"] = [];
-
-    for (const pq of paper.paperQuestions) {
-      const q = pq.question;
-      const marks = Number(q.marks);
-      const scorable = q.questionType.autoScorable;
-
-      if (!sectionScores[pq.sectionId]) {
-        sectionScores[pq.sectionId] = { score: 0, max: 0 };
-      }
-      if (scorable) {
-        sectionScores[pq.sectionId]!.max += marks;
-        maxScore += marks;
-      }
-
-      if (!scorable) {
-        perQuestion.push({
-          questionId: q.id,
-          scorable: false,
-          autoScore: null,
-        });
-        continue;
-      }
-
-      const response = responseByQuestion.get(q.id) as
-        | AnswerResponse
-        | undefined;
-      const autoScore = scoreAutoAnswer({
-        autoScorable: true,
-        responseFormat: q.questionType.responseFormat,
-        answerKey: q.answerKey as AnswerKey | null,
-        response: response ?? null,
-        marks,
-        negativeMarks: Number(q.negativeMarks),
-        negativeMarkingMode,
-      });
-
-      const score = autoScore ?? 0;
-      totalScore += score;
-      sectionScores[pq.sectionId]!.score += score;
-      perQuestion.push({ questionId: q.id, scorable: true, autoScore: score });
+    const target = paperQuestions[questionOrder - 1];
+    if (!target) {
+      throw new NotFoundError("Question not found");
     }
 
-    return { totalScore, maxScore, sectionScores, perQuestion };
+    return {
+      question: {
+        id: target.id,
+        questionId: target.questionId,
+        questionOrder,
+        questionTypeId: target.question.questionTypeId,
+        questionTypeName: target.question.questionType.name,
+        responseFormat: target.question.questionType.responseFormat,
+        content: target.question.content as unknown as QuestionContent,
+        marks: Number(target.question.marks),
+        timeLimitSecs: target.question.timeLimitSecs,
+        // No submission exists for a demo — nothing to echo back here.
+        myAnswer: null,
+      },
+      questionOrder,
+      totalQuestions: paperQuestions.length,
+      hasNext: questionOrder < paperQuestions.length,
+      hasPrevious: questionOrder > 1,
+    };
   }
 }

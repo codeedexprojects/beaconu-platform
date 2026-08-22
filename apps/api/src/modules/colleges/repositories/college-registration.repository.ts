@@ -219,6 +219,9 @@ export class CollegeRegistrationRepository {
       ...(data.city !== undefined ? { city: data.city } : {}),
       ...(data.district !== undefined ? { district: data.district } : {}),
       ...(data.state !== undefined ? { state: data.state } : {}),
+      ...(data.collegeType !== undefined
+        ? { collegeType: data.collegeType }
+        : {}),
       ...(data.pinCode !== undefined ? { pinCode: data.pinCode } : {}),
       ...(data.requestedGroupCode !== undefined
         ? {

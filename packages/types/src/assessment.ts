@@ -468,36 +468,7 @@ export interface AttemptOverview {
   questions: AttemptOverviewQuestion[];
 }
 
-export interface TrialPaperQuestionItem {
-  id: string;
-  sectionId: string;
-  sectionName: string;
-  questionTypeId: string;
-  content: QuestionContent;
-  marks: number;
-  scorable: boolean;
-}
-
-export interface TrialPaperItem {
-  paperId: string;
-  paperCode: string;
-  templateId: string;
-  questions: TrialPaperQuestionItem[];
-}
-
-export interface SubmitTrialInput {
-  answers: { question_id: string; response: AnswerResponse }[];
-}
-
-export interface TrialResultQuestionScore {
-  questionId: string;
-  scorable: boolean;
-  autoScore: number | null;
-}
-
-export interface TrialResult {
-  totalScore: number;
-  maxScore: number;
-  sectionScores: Record<string, { score: number; max: number }>;
-  perQuestion: TrialResultQuestionScore[];
-}
+// Demo/trial assessment browsing reuses AttemptSectionSummary and
+// AttemptSectionQuestionPage directly (see TrialService) — there's no
+// submission or scoring, so no separate trial-specific types are needed
+// beyond that.
