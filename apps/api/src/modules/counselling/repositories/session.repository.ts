@@ -65,7 +65,25 @@ export class SessionRepository {
   }
 
   static async findSlotById(id: string) {
-    return prisma.counsellorAvailability.findUnique({ where: { id } });
+    return prisma.counsellorAvailability.findUnique({
+      where: { id },
+      include: {
+        counsellor: { select: { id: true, counsellorType: true } },
+      },
+    });
+  }
+
+  static async countCompletedSessionsByType(
+    studentId: string,
+    counsellorType: string,
+  ) {
+    return prisma.counsellingSession.count({
+      where: {
+        studentId,
+        status: "completed",
+        counsellor: { counsellorType },
+      },
+    });
   }
 
   static async updateSlot(

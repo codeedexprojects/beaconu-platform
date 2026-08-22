@@ -3,6 +3,7 @@ import { StudentsService } from "@/modules/students/services/students.service";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { CommuteService } from "@/modules/commute/services/commute.service";
 import { HostelEnrollmentService } from "@/modules/hostel/services/hostel-enrollment.service";
+import { SessionService } from "@/modules/counselling/services/sessions.service";
 import { BeaconuCardRepository } from "../repositories/beaconu-card.repository";
 
 const CARD_VALIDITY_YEARS = 5;
@@ -60,11 +61,12 @@ async function withEnrollmentDetails(
   studentId: string,
   card: ReturnType<typeof toDto>,
 ) {
-  const [enrollmentSummary, commuteEnrolled, housingEnrolled] =
+  const [enrollmentSummary, commuteEnrolled, housingEnrolled, mindcareUsage] =
     await Promise.all([
       EnrollmentService.getActiveSummary(studentId),
       CommuteService.isEnrolled(studentId),
       HostelEnrollmentService.isEnrolled(studentId),
+      SessionService.getMindcareSessionUsage(studentId),
     ]);
 
   return {
@@ -77,6 +79,7 @@ async function withEnrollmentDetails(
     applicationCourseId: enrollmentSummary?.applicationCourseId ?? null,
     commuteEnrolled,
     housingEnrolled,
+    mindcareSessions: mindcareUsage,
   };
 }
 
