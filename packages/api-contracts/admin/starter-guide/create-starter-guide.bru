@@ -21,6 +21,7 @@ headers {
 body:json {
   {
     "title": "Getting Started with BeaconU",
+    "description": "Everything you need to know to set up your profile and start exploring colleges.",
     "thumbnail_url": "https://cdn.example.com/starter-guide/thumb-1.jpg",
     "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     "steps": [
@@ -44,6 +45,7 @@ docs {
   Creates a new starter guide. Requires platform_admin auth +
   content.manage.
 
+  - description: optional, max 2000 chars.
   - thumbnail_url: required, must be a valid URL. Upload via the generic
     /api/v1/admin/uploads/presign + /verify flow first, then pass the
     resulting permanent URL here.

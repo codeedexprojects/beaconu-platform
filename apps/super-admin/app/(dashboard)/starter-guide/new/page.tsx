@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { StarterGuideStepsEditor } from "@/components/starter-guide-steps-editor";
 import { useCreateStarterGuide } from "@/hooks/use-starter-guide";
@@ -19,6 +20,7 @@ export default function NewStarterGuidePage() {
   const { mutate: create, isPending } = useCreateStarterGuide();
 
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [displayOrder, setDisplayOrder] = useState("0");
@@ -43,6 +45,7 @@ export default function NewStarterGuidePage() {
     create(
       {
         title,
+        description: description.trim() || undefined,
         thumbnail_url: thumbnailUrl,
         video_url: videoUrl,
         steps: cleanSteps,
@@ -78,6 +81,17 @@ export default function NewStarterGuidePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="A short summary shown alongside this guide"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
             />
           </div>
 

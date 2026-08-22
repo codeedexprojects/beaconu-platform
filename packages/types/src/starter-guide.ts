@@ -6,6 +6,7 @@ export interface StarterGuideStep {
 export interface StarterGuideListItem {
   id: string;
   title: string;
+  description: string | null;
   thumbnailUrl: string;
   displayOrder: number;
   isActive: boolean;
@@ -16,6 +17,7 @@ export interface StarterGuideListItem {
 export interface StarterGuide {
   id: string;
   title: string;
+  description: string | null;
   thumbnailUrl: string;
   videoUrl: string;
   steps: StarterGuideStep[];
@@ -36,6 +38,7 @@ export interface PublicStarterGuideListItem {
 export interface PublicStarterGuideDetail {
   id: string;
   title: string;
+  description: string | null;
   thumbnailUrl: string;
   videoUrl: string;
   steps: StarterGuideStep[];
@@ -43,6 +46,7 @@ export interface PublicStarterGuideDetail {
 
 export interface CreateStarterGuideInput {
   title: string;
+  description?: string;
   thumbnail_url: string;
   video_url: string;
   steps: StarterGuideStep[];
@@ -51,6 +55,7 @@ export interface CreateStarterGuideInput {
 
 export interface UpdateStarterGuideInput {
   title?: string;
+  description?: string;
   thumbnail_url?: string;
   video_url?: string;
   steps?: StarterGuideStep[];

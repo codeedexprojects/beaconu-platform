@@ -3,6 +3,7 @@ import { prisma, Prisma } from "@beaconu/db";
 const SG_SELECT = {
   id: true,
   title: true,
+  description: true,
   thumbnailUrl: true,
   videoUrl: true,
   steps: true,
@@ -22,6 +23,7 @@ export class StarterGuideRepository {
 
   static async create(data: {
     title: string;
+    description?: string | null;
     thumbnailUrl: string;
     videoUrl: string;
     steps: Prisma.InputJsonValue;
@@ -34,6 +36,7 @@ export class StarterGuideRepository {
     id: string,
     data: {
       title?: string;
+      description?: string | null;
       thumbnailUrl?: string;
       videoUrl?: string;
       steps?: Prisma.InputJsonValue;

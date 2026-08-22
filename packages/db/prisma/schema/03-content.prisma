@@ -236,6 +236,7 @@ model EducationLoan {
 model StarterGuide {
   id           String   @id @default(dbgenerated("('SG-'::text || (nextval('starter_guide_seq'::regclass))::text)"))
   title        String   @db.VarChar(255)
+  description  String?  @db.Text
   thumbnailUrl String   @map("thumbnail_url") @db.Text
   videoUrl     String   @map("video_url") @db.Text
   steps        Json     @default("[]")

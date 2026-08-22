@@ -14,6 +14,7 @@ const stepSchema = z.object({
 
 const createStarterGuideSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(255),
+  description: z.string().trim().max(2000).optional(),
   thumbnail_url: z.string().trim().url("Enter a valid thumbnail URL"),
   video_url: z
     .string()
@@ -27,6 +28,7 @@ const createStarterGuideSchema = z.object({
 const updateStarterGuideSchema = z
   .object({
     title: z.string().trim().min(1).max(255).optional(),
+    description: z.string().trim().max(2000).optional(),
     thumbnail_url: z
       .string()
       .trim()
