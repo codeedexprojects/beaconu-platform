@@ -35,6 +35,7 @@ import {
   Repeat,
   ChevronDown,
   Wallet,
+  TrendingUp,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -453,6 +454,12 @@ export default function DashboardLayout({
                     name: "Payments",
                     path: "/payments",
                     icon: Wallet,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Finance",
+                    path: "/finance",
+                    icon: TrendingUp,
                     permission: "staff.view",
                   },
                   {
