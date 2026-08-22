@@ -1,0 +1,51 @@
+meta {
+  name: Create Institute of National Importance
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/institutes-of-national-importance
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "IIT Delhi",
+    "icon_url": "https://cdn.example.com/icons/iit.svg",
+    "colleges_count": 0,
+    "sort_order": 0
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("instituteOfNationalImportanceId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new institute of national importance. Requires platform_admin
+  auth + institutes-of-national-importance.manage.
+
+  - name: required, unique. 409 if it already exists.
+  - icon_url: optional (plain URL string — no FK to the Icon model,
+    matching how every other consumer of the icon system stores it).
+  - colleges_count: optional, defaults to 0. Manually entered — this is
+    NOT computed from actual college associations (no college-assignment
+    UI exists for this entity yet).
+  - sort_order: optional, defaults to 0.
+  - slug is auto-generated from name, not user-supplied.
+}

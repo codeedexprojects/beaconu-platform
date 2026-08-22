@@ -233,16 +233,49 @@ model EducationLoan {
   @@map("education_loans")
 }
 
-model StarterGuideVideo {
-  id           String   @id @default(dbgenerated("('SGV-'::text || (nextval('starter_guide_video_seq'::regclass))::text)"))
+model StarterGuide {
+  id           String   @id @default(dbgenerated("('SG-'::text || (nextval('starter_guide_seq'::regclass))::text)"))
   title        String   @db.VarChar(255)
-  videoKey     String   @map("video_key") @db.Text
+  thumbnailUrl String   @map("thumbnail_url") @db.Text
+  videoUrl     String   @map("video_url") @db.Text
+  steps        Json     @default("[]")
   displayOrder Int      @default(0) @map("display_order")
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([isActive], name: "idx_sgv_is_active")
-  @@index([displayOrder], name: "idx_sgv_display_order")
-  @@map("starter_guide_videos")
+  @@index([isActive], name: "idx_sg_is_active")
+  @@index([displayOrder], name: "idx_sg_display_order")
+  @@map("starter_guides")
+}
+
+model Short {
+  id           String   @id @default(dbgenerated("('SHT-'::text || (nextval('short_seq'::regclass))::text)"))
+  title        String   @db.VarChar(255)
+  thumbnailUrl String   @map("thumbnail_url") @db.Text
+  videoUrl     String   @map("video_url") @db.Text
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([isActive], name: "idx_shorts_is_active")
+  @@index([displayOrder], name: "idx_shorts_display_order")
+  @@map("shorts")
+}
+
+model VideoTestimonial {
+  id              String   @id @default(dbgenerated("('VTM-'::text || (nextval('video_testimonial_seq'::regclass))::text)"))
+  title           String   @db.VarChar(255)
+  videoUrl        String   @map("video_url") @db.Text
+  thumbnailUrl    String   @map("thumbnail_url") @db.Text
+  studentImageUrl String   @map("student_image_url") @db.Text
+  displayOrder    Int      @default(0) @map("display_order")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([isActive], name: "idx_vtm_is_active")
+  @@index([displayOrder], name: "idx_vtm_display_order")
+  @@map("video_testimonials")
 }

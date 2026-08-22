@@ -29,6 +29,9 @@ import {
   ReceiptIndianRupee,
   Award,
   ImageIcon,
+  Trophy,
+  Clapperboard,
+  MessageSquareQuote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -165,6 +168,12 @@ const navSections: NavSection[] = [
         permission: "education-boards.view",
       },
       {
+        href: "/institutes-of-national-importance",
+        label: "Institutes of National Importance",
+        icon: Trophy,
+        permission: "institutes-of-national-importance.view",
+      },
+      {
         href: "/icons",
         label: "Icons",
         icon: ImageIcon,
@@ -186,6 +195,18 @@ const navSections: NavSection[] = [
         href: "/starter-guide",
         label: "Starter Guide",
         icon: PlayCircle,
+        permission: "content.view",
+      },
+      {
+        href: "/shorts",
+        label: "Shorts",
+        icon: Clapperboard,
+        permission: "content.view",
+      },
+      {
+        href: "/video-testimonials",
+        label: "Video Testimonials",
+        icon: MessageSquareQuote,
         permission: "content.view",
       },
     ],

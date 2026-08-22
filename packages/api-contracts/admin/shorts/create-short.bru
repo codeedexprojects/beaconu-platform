@@ -1,0 +1,49 @@
+meta {
+  name: Create Short
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/shorts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Campus Tour Highlights",
+    "thumbnail_url": "https://cdn.example.com/shorts/thumb-1.jpg",
+    "video_url": "https://cdn.example.com/shorts/video-1.mp4",
+    "display_order": 0
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("shortId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new short. Requires platform_admin auth + content.manage.
+
+  - thumbnail_url / video_url: both required, must be valid URLs.
+    Upload both via the generic /api/v1/admin/uploads/presign + /verify
+    flow first, then pass the resulting permanent URLs here. The video
+    must be 30 seconds or shorter — this is enforced client-side (via
+    the video file's metadata) before upload; the API itself doesn't
+    re-validate duration since it never receives the raw file.
+  - display_order: optional, defaults to 0.
+}

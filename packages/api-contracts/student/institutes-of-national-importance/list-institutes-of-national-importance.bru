@@ -1,0 +1,34 @@
+meta {
+  name: List Institutes of National Importance (Student)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/institutes-of-national-importance
+  body: none
+  auth: none
+}
+
+params:query {
+  ~search: IIT
+  ~page: 1
+  ~limit: 50
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Lists institutes of national importance for students, paginated. Only
+  ACTIVE institutes are returned. Requires student authentication.
+
+  Query:
+  - search: case-insensitive match on name (optional)
+  - page (default 1), limit (default 50, max 100)
+
+  Each item includes icon, name, and collegesCount (the three fields
+  student-side needs). Response `data` is the array; `meta` has the
+  standard page/limit/total/totalPages pagination block.
+}

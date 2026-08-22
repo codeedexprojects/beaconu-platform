@@ -34,6 +34,12 @@ export const QUERY_KEYS = {
   educationBoards: (params?: object) =>
     params ? ["education-boards", params] : (["education-boards"] as const),
   educationBoard: (id: string) => ["education-boards", id] as const,
+  institutesOfNationalImportance: (params?: object) =>
+    params
+      ? ["institutes-of-national-importance", params]
+      : (["institutes-of-national-importance"] as const),
+  instituteOfNationalImportance: (id: string) =>
+    ["institutes-of-national-importance", id] as const,
   icons: (params?: object) =>
     params ? ["icons", params] : (["icons"] as const),
   icon: (id: string) => ["icons", id] as const,
@@ -42,11 +48,15 @@ export const QUERY_KEYS = {
   educationLoans: (params?: object) =>
     params ? ["education-loans", params] : (["education-loans"] as const),
   educationLoan: (id: string) => ["education-loans", id] as const,
-  starterGuideVideos: (params?: object) =>
-    params
-      ? ["starter-guide-videos", params]
-      : (["starter-guide-videos"] as const),
-  starterGuideVideo: (id: string) => ["starter-guide-videos", id] as const,
+  starterGuides: (params?: object) =>
+    params ? ["starter-guides", params] : (["starter-guides"] as const),
+  starterGuide: (id: string) => ["starter-guides", id] as const,
+  shorts: (params?: object) =>
+    params ? ["shorts", params] : (["shorts"] as const),
+  short: (id: string) => ["shorts", id] as const,
+  videoTestimonials: (params?: object) =>
+    params ? ["video-testimonials", params] : (["video-testimonials"] as const),
+  videoTestimonial: (id: string) => ["video-testimonials", id] as const,
   events: (params?: object) =>
     params ? ["events", params] : (["events"] as const),
   event: (id: string) => ["events", id] as const,

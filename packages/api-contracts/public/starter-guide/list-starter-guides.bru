@@ -1,0 +1,28 @@
+meta {
+  name: List Starter Guides (Public)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/starter-guide
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists active starter guides for the student-facing onboarding carousel.
+  No auth required.
+
+  Each item is intentionally minimal: { id, title, thumbnailUrl } — only
+  what's needed to render the card grid. Fetch the full record (video
+  link + steps) via Get Starter Guide (Public) once the student taps a
+  card. Response includes `meta` (page, limit, total, totalPages,
+  hasNextPage, hasPreviousPage) alongside `data`. Inactive guides are
+  never returned.
+}

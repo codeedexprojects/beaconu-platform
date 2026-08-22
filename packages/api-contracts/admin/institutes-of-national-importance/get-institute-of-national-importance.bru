@@ -1,0 +1,21 @@
+meta {
+  name: Get Institute of National Importance
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/institutes-of-national-importance/{{instituteOfNationalImportanceId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Fetches a single institute of national importance by id. Requires
+  platform_admin auth + institutes-of-national-importance.view. 404 if not
+  found.
+}
