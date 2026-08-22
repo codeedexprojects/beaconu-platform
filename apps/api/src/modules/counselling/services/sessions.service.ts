@@ -17,6 +17,7 @@ import {
   updateMeetEventTime,
 } from "@/shared/lib/google-meet";
 import { PushService } from "@/modules/notifications/services/push.service";
+import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { SessionRepository } from "../repositories/session.repository";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import { RefundRepository } from "../repositories/refund.repository";
@@ -348,7 +349,21 @@ function groupSlotsByDate(formattedSlots: any[]) {
   }));
 }
 
+const MINDCARE_SESSION_LIMIT = 3;
+
 export class SessionService {
+  static async getMindcareSessionUsage(studentId: string) {
+    const used = await SessionRepository.countCompletedSessionsByType(
+      studentId,
+      "mindcare",
+    );
+    return {
+      used,
+      limit: MINDCARE_SESSION_LIMIT,
+      remaining: Math.max(0, MINDCARE_SESSION_LIMIT - used),
+    };
+  }
+
   static async addSlot(counsellorId: string, input: AddSlotInput) {
     const counsellor = await CounsellingRepository.findById(counsellorId);
 
@@ -788,6 +803,26 @@ export class SessionService {
       throw new BadRequestError(
         "Sessions can only be booked at least 10 minutes before the scheduled start time",
       );
+    }
+
+    if (slot.counsellor.counsellorType === "mindcare") {
+      const enrollment = await EnrollmentService.getActiveSummary(studentId);
+      if (!enrollment) {
+        throw new ForbiddenError(
+          "Only enrolled students can book MindCare sessions",
+        );
+      }
+
+      const completedMindcareSessions =
+        await SessionRepository.countCompletedSessionsByType(
+          studentId,
+          "mindcare",
+        );
+      if (completedMindcareSessions >= MINDCARE_SESSION_LIMIT) {
+        throw new ConflictError(
+          `You've used all ${MINDCARE_SESSION_LIMIT} of your MindCare sessions`,
+        );
+      }
     }
 
     const finalFee = await this.resolveSlotFee(slot);
