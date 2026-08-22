@@ -10,6 +10,55 @@ import {
   listOfflineReviewQueueQuerySchema,
   reviewOfflineTokenPaymentSchema,
 } from "../validators/token-payment.validator";
+import {
+  financeOverviewQuerySchema,
+  financeTransactionsQuerySchema,
+  financeTransactionsExportQuerySchema,
+} from "../validators/finance.validator";
+import { FinanceSummaryQuery } from "../queries/finance-summary.query";
+
+function toCsv(
+  rows: Array<{
+    time: string;
+    studentId: string;
+    studentName: string;
+    transactionNumber: string;
+    feeCategory: string | null;
+    paymentMethodLabel: string;
+    amount: string;
+    direction: string;
+    status: string;
+  }>,
+): string {
+  const header = [
+    "Time",
+    "Student",
+    "Student ID",
+    "Transaction Ref",
+    "Fee Type",
+    "Method",
+    "Amount",
+    "Direction",
+    "Status",
+  ];
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const lines = rows.map((row) =>
+    [
+      row.time,
+      row.studentName,
+      row.studentId,
+      row.transactionNumber,
+      row.feeCategory ?? "",
+      row.paymentMethodLabel,
+      row.amount,
+      row.direction,
+      row.status,
+    ]
+      .map((cell) => escape(String(cell)))
+      .join(","),
+  );
+  return [header.map(escape).join(","), ...lines].join("\n");
+}
 
 export class CollegeAdminPaymentController {
   static async listOfflineReviewQueue(req: Request, res: Response) {
@@ -57,5 +106,44 @@ export class CollegeAdminPaymentController {
     }
 
     return res.json(ApiResponse.success("Offline payment reviewed", result));
+  }
+
+  static async getFinanceOverview(req: Request, res: Response) {
+    const query = financeOverviewQuerySchema.parse(req.query);
+    const result = await FinanceSummaryQuery.getOverview(
+      req.collegeId as string,
+      query,
+    );
+    return res.json(ApiResponse.success("Finance overview fetched", result));
+  }
+
+  static async listFinanceTransactions(req: Request, res: Response) {
+    const query = financeTransactionsQuerySchema.parse(req.query);
+    const result = await FinanceSummaryQuery.listTransactions(
+      req.collegeId as string,
+      query,
+    );
+    return res.json(
+      ApiResponse.success(
+        "Finance transactions fetched",
+        result.data,
+        result.meta,
+      ),
+    );
+  }
+
+  static async exportFinanceTransactions(req: Request, res: Response) {
+    const query = financeTransactionsExportQuerySchema.parse(req.query);
+    const rows = await FinanceSummaryQuery.listTransactionsForExport(
+      req.collegeId as string,
+      query,
+    );
+    const csv = toCsv(rows);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="transactions-${new Date().toISOString().slice(0, 10)}.csv"`,
+    );
+    return res.status(200).send(csv);
   }
 }

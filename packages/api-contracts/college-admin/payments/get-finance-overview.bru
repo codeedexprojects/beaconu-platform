@@ -1,0 +1,58 @@
+meta {
+  name: Get Finance Overview (College Admin)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/payments/finance/overview
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~from_date: 2026-04-01
+  ~to_date: 2026-08-22
+}
+
+docs {
+  Finance dashboard summary for this college. Requires staff_member auth +
+  finance.view.
+
+  Query (both optional, YYYY-MM-DD, filters on Transaction.createdAt) —
+  the college-admin dashboard calls this WITHOUT any date filter (all-time
+  "Overall Performance" totals), independent of whatever date range the
+  Transactions History table below it has selected. Pass from_date/to_date
+  only if you want a range-scoped summary instead:
+  - from_date, to_date
+
+  Response:
+  {
+    totalRevenue: string,                // sum of all completed transactions in range
+    categories: {
+      tuitionFees: string,               // fee_category in (tuition_fee, semester_fees, "tution fee")
+      commuteBooking: string,            // fee_category = commute_fee
+      studentHousingBooking: string,     // fee_category = hostel_booking_fee
+      applicationFees: string,           // fee_category = application_fee
+    },
+    paymentMethodBreakdown: [
+      { method: string, label: string, amount: string, percentage: number }
+    ],
+    overdueBalance: string,              // SUM(balance_amount) where status != paid AND due_date < now
+    collectionVsTargetPercent: number,   // SUM(paid_amount) / SUM(net_amount) across all ledger rows, college-wide
+  }
+
+  Important caveats (real limitations of current data, not bugs):
+  - paymentMethodBreakdown only ever contains "mock" (all online/Razorpay
+    payments — no real sub-method capture exists yet), "demand_draft", and
+    "bank_transfer" (offline token payments). There is no UPI/Cards/Net
+    Banking breakdown until a real Razorpay webhook is built.
+  - overdueBalance will read 0 until StudentFeeLedger.dueDate actually
+    gets populated somewhere in the payment flows (nothing sets it today).
+  - category amounts only ever reflect the online/mock provider + offline
+    token flows that exist today — no admin dashboard-only fields.
+}

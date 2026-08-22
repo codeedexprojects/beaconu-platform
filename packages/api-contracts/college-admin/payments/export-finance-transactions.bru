@@ -1,0 +1,33 @@
+meta {
+  name: Export Finance Transactions CSV (College Admin)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/payments/finance/transactions/export
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  ~from_date: 2026-08-22
+  ~to_date: 2026-08-22
+  ~course_id: CRM-1
+  ~fee_category: tuition_fee
+  ~payment_method: mock
+}
+
+docs {
+  Same filters as List Finance Transactions, but unpaginated (capped at
+  5000 rows, newest first) and returned as a CSV file
+  (Content-Type: text/csv, Content-Disposition: attachment) instead of a
+  JSON envelope. Requires staff_member auth + finance.view.
+
+  Columns: Time, Student, Student ID, Transaction Ref, Fee Type, Method,
+  Amount, Direction, Status.
+}
