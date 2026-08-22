@@ -1,0 +1,31 @@
+meta {
+  name: Get Trial Section Question
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/assessments/templates/{{assessmentTemplateId}}/trial/sections/{{assessmentSectionIdVerbal}}/questions?question_order=1
+  body: none
+  auth: none
+}
+
+params:query {
+  question_order: 1
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Demo/practice assessment — one question at a time, same shape and
+  pagination style as Get Section Question (real assessment): `question`,
+  `questionOrder`, `totalQuestions`, `hasNext`, `hasPrevious`.
+  `question.myAnswer` is always `null` — there's no submission to reflect,
+  this is browse-only. No `answer_key` ever included.
+
+  404 "Question not found" if `question_order` is out of range. 404
+  "No active trial paper for this assessment" if no trial paper is
+  approved for this template.
+}

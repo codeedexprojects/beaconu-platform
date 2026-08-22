@@ -604,7 +604,15 @@ export class ApplicationService {
       unknown
     > | null;
     const bySection: Record<string, unknown> = {
-      personal_details: details.personalDetails,
+      personal_details: {
+        ...(typeof details.personalDetails === "object" &&
+        details.personalDetails !== null
+          ? details.personalDetails
+          : {}),
+        profile_photo_url: application.profilePhotoUrl,
+        whatsapp_country_code: application.whatsappCountryCode,
+        whatsapp_number: application.whatsappNumber,
+      },
       family_details: details.familyDetails,
       address_details: details.addressDetails,
       qualification_details: details.qualificationDetails,
