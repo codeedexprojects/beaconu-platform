@@ -83,6 +83,19 @@ export class AttemptRepository {
     });
   }
 
+  static async findAllPaperQuestions(paperId: string) {
+    return prisma.paperQuestion.findMany({
+      where: { paperId },
+      select: {
+        questionId: true,
+        sectionId: true,
+        question: {
+          select: { questionType: { select: { autoScorable: true } } },
+        },
+      },
+    });
+  }
+
   static async update(
     id: string,
     data: Prisma.AssessmentAttemptUpdateInput,
