@@ -105,6 +105,8 @@ CREATE SEQUENCE IF NOT EXISTS "platform_admin_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_permission_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_role_seq";
 CREATE SEQUENCE IF NOT EXISTS "platform_role_permission_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_ticket_seq";
+CREATE SEQUENCE IF NOT EXISTS "platform_ticket_message_seq";
 CREATE SEQUENCE IF NOT EXISTS "program_type_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_seq";
 CREATE SEQUENCE IF NOT EXISTS "question_course_mapping_seq";

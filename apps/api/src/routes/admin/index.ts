@@ -23,6 +23,7 @@ import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-a
 import starterGuideRoutes from "@/modules/platform-admin/routes/starter-guide.routes";
 import shortsRoutes from "@/modules/platform-admin/routes/shorts.routes";
 import videoTestimonialsRoutes from "@/modules/platform-admin/routes/video-testimonials.routes";
+import collegeTicketsRoutes from "@/modules/support/routes/platform-ticket-super-admin.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
 import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
 import eventAdminRoutes from "@/modules/events/routes/platform-admin.routes";
@@ -51,6 +52,7 @@ router.use("/financial-aid/loans", financialAidLoansRoutes);
 router.use("/starter-guide", starterGuideRoutes);
 router.use("/shorts", shortsRoutes);
 router.use("/video-testimonials", videoTestimonialsRoutes);
+router.use("/college-tickets", collegeTicketsRoutes);
 
 router.use("/college-leads", collegeLeadsAdminRoutes);
 router.use("/colleges", collegeDashboardRoutes);

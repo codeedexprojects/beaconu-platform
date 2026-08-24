@@ -1,0 +1,33 @@
+meta {
+  name: Reply to College Query
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/college-tickets/{{platformTicketId}}/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Looking into this now, will update you shortly."
+  }
+}
+
+docs {
+  Adds a reply from the platform admin side. Requires platform_admin auth
+  + college-tickets.manage. 409 if the ticket is "closed" (use the status
+  endpoint to reopen it first). On success, status flips to "in_progress"
+  and the responding admin is set as `assignedTo`; the raising staff
+  member gets a push notification if they have an FCM token registered.
+}

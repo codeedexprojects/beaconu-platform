@@ -1,0 +1,33 @@
+meta {
+  name: Reply to Query (College)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/support/platform-tickets/{{platformTicketId}}/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "message": "Any update on this?"
+  }
+}
+
+docs {
+  Adds a follow-up message from the college side. 409 if the ticket is
+  "closed" (submit a new query instead). If the ticket was "in_progress"
+  (platform admin already replied), it flips back to
+  "awaiting_response" — "resolved" is left alone until the admin
+  deliberately reopens it.
+}

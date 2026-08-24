@@ -90,6 +90,7 @@ model PlatformAdmin {
   platformConfigUpdates          PlatformConfig[]
   counsellorWithdrawalReviews    CounsellorWalletTransaction[]
   counsellingRefundReviews       CounsellingRefundRequest[]
+  platformTicketsAssigned        PlatformTicket[]
 
   @@index([platformRoleId], name: "idx_platform_admin_role")
   @@map("platform_admins")
@@ -209,6 +210,7 @@ model StaffMember {
   refundsProcessed              Refund[]
   antiRaggingAssigned           AntiRaggingComplaint[]
   supportTicketsAssigned        SupportTicket[]
+  platformTicketsRaised         PlatformTicket[]
   announcements                 Announcement[]
   blinkUsersCreated             BlinkUser[]                 @relation("CreatedByStaff")
   institutionGroups             InstitutionGroup[]

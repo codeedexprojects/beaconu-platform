@@ -110,6 +110,16 @@ async function main() {
       code: "students.manage",
       description: "Manage student accounts (e.g. suspend/activate)",
     },
+
+    {
+      code: "college-tickets.view",
+      description: "View queries and call requests raised by colleges",
+    },
+    {
+      code: "college-tickets.manage",
+      description:
+        "Reply to and manage queries/call requests raised by colleges",
+    },
   ];
 
   console.log("Seeding Platform Permissions...");

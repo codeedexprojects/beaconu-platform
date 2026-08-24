@@ -36,6 +36,7 @@ import {
   ChevronDown,
   Wallet,
   TrendingUp,
+  Headset,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -495,6 +496,12 @@ export default function DashboardLayout({
                     name: "Student Queries",
                     path: "/support",
                     icon: LifeBuoy,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Contact BeaconU",
+                    path: "/platform-support",
+                    icon: Headset,
                     permission: "staff.view",
                   },
                   {

@@ -1,0 +1,48 @@
+meta {
+  name: List College Queries
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/college-tickets?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~status: awaiting_response
+  ~type: query
+  ~college_id: CLG-10
+  ~search: fee report
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.tickets && data.data.tickets[0]) {
+      bru.setEnvVar("platformTicketId", data.data.tickets[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated queue of every query/call-request raised by any college,
+  newest-updated first. Requires platform_admin auth +
+  college-tickets.view.
+
+  Query (all optional):
+  - status: "in_progress" | "awaiting_response" | "resolved" | "closed" | "reopened"
+  - type: "query" | "call_request"
+  - college_id: filter to one college
+  - search: subject / ticketNumber / college name
+
+  Each row includes collegeId, collegeName, raisedByName (the staff
+  member who submitted it).
+}

@@ -58,6 +58,11 @@ export const QUERY_KEYS = {
       ? (["support-tickets", filters] as const)
       : (["support-tickets"] as const),
   supportTicket: (id: string) => ["support-ticket", id] as const,
+  platformTickets: (filters?: unknown) =>
+    filters
+      ? (["platform-tickets", filters] as const)
+      : (["platform-tickets"] as const),
+  platformTicket: (id: string) => ["platform-ticket", id] as const,
   notices: (filters?: unknown) =>
     filters ? (["notices", filters] as const) : (["notices"] as const),
   notice: (id: string) => ["notice", id] as const,
