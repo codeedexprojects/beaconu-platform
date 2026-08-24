@@ -64,6 +64,16 @@ docs {
   4:00 PM slot at 4:30 PM), it returns 400 "This slot's scheduled time
   has already passed" instead.
 
+  ## MindCare-only restrictions
+  These apply only when the slot's counsellor has counsellor_type
+  "mindcare" — Academic counselling has neither restriction.
+  - The student must be an enrolled BeaconU student (has an active
+    Enrollment at any college). Otherwise 403 "Only enrolled students can
+    book MindCare sessions".
+  - Lifetime cap of 3 completed MindCare sessions per student. Cancelled
+    sessions don't count against the cap. Once reached, 409 "You've used
+    all 3 of your MindCare sessions".
+
   ## Fee logic (no need to pass session_fee)
   Fee is taken automatically from the slot's session_fee.
   Falls back to counsellor's default fee if slot has no fee set.

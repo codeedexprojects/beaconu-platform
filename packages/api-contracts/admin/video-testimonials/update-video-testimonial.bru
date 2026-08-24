@@ -1,0 +1,32 @@
+meta {
+  name: Update Video Testimonial
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/video-testimonials/{{videoTestimonialId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Got offers from Christ University (Updated)",
+    "display_order": 1
+  }
+}
+
+docs {
+  Partial update — all fields optional (title, video_url, thumbnail_url,
+  student_image_url, display_order, is_active), at least one required.
+  Requires platform_admin auth + content.manage.
+}

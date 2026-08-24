@@ -1,0 +1,52 @@
+meta {
+  name: List Finance Transactions (College Admin)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/payments/finance/transactions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~from_date: 2026-08-22
+  ~to_date: 2026-08-22
+  ~course_id: CRM-1
+  ~fee_category: tuition_fee
+  ~payment_method: mock
+}
+
+docs {
+  Paginated transaction history for this college's Finance dashboard.
+  Requires staff_member auth + finance.view.
+
+  Query (all optional):
+  - from_date, to_date (YYYY-MM-DD, filters Transaction.createdAt)
+  - course_id — matches transactions whose ledger entry is linked to an
+    ApplicationCourse or Enrollment for this course. Transactions with no
+    course link (e.g. commute/hostel booking fees) are excluded when this
+    filter is set.
+  - fee_category — StudentFeeLedger.feeCategory exact match
+  - payment_method — "mock" | "demand_draft" | "bank_transfer"
+  - page (default 1), limit (default 20, max 100)
+
+  Each row: { id, transactionNumber, time, studentId, studentName,
+  feeCategory, paymentMethod, paymentMethodLabel, amount, direction
+  ("credit" — refunds aren't merged into this list yet, see below),
+  status ("success" | "failed" | "pending") }.
+
+  Response includes `meta` (page, limit, total, totalPages, hasNextPage,
+  hasPreviousPage) alongside `data`.
+
+  Scope note: this reads only the `transactions` table (collections).
+  Refunds live in a separate `Refund` table and are not unioned into this
+  history yet — every row here is a credit.
+}

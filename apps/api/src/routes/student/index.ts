@@ -8,6 +8,9 @@ import studentCommunityRoutes from "@/modules/community/routes/student.routes";
 import studentNewsAlertsRoutes from "@/modules/platform-admin/routes/news-alerts-student.routes";
 import studentEntranceExamsRoutes from "@/modules/platform-admin/routes/entrance-exams-student.routes";
 import studentEducationBoardsRoutes from "@/modules/platform-admin/routes/education-boards-student.routes";
+import studentInstitutesOfNationalImportanceRoutes from "@/modules/platform-admin/routes/institutes-of-national-importance-student.routes";
+import studentShortsRoutes from "@/modules/platform-admin/routes/shorts-student.routes";
+import studentVideoTestimonialsRoutes from "@/modules/platform-admin/routes/video-testimonials-student.routes";
 import studentFinancialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans-public.routes";
 import studentProfileRoutes from "@/modules/students/routes/student.routes";
 import studentUploadRoutes from "@/modules/upload/routes/student.routes";
@@ -40,7 +43,13 @@ router.use("/communities", studentCommunityRoutes);
 router.use("/news", studentNewsAlertsRoutes);
 router.use("/entrance-exams", studentEntranceExamsRoutes);
 router.use("/education-boards", studentEducationBoardsRoutes);
+router.use(
+  "/institutes-of-national-importance",
+  studentInstitutesOfNationalImportanceRoutes,
+);
 router.use("/financial-aid/loans", studentFinancialAidLoansRoutes);
+router.use("/shorts", studentShortsRoutes);
+router.use("/video-testimonials", studentVideoTestimonialsRoutes);
 router.use("/counselling", studentCounsellingRoutes);
 router.use(
   "/events",

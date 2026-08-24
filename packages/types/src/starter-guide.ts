@@ -1,44 +1,64 @@
-export interface StarterGuideVideo {
+export interface StarterGuideStep {
+  title: string;
+  description: string;
+}
+
+export interface StarterGuideListItem {
   id: string;
   title: string;
-  videoKey: string;
-  videoUrl: string;
+  description: string | null;
+  thumbnailUrl: string;
   displayOrder: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface StarterGuideVideoListItem {
+export interface StarterGuide {
   id: string;
   title: string;
+  description: string | null;
+  thumbnailUrl: string;
   videoUrl: string;
+  steps: StarterGuideStep[];
   displayOrder: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateStarterGuideVideoInput {
+/** Public/student-facing list item — title + thumbnail only. */
+export interface PublicStarterGuideListItem {
+  id: string;
   title: string;
-  video_key: string;
+  thumbnailUrl: string;
+}
+
+/** Public/student-facing detail — includes the video link and steps. */
+export interface PublicStarterGuideDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  thumbnailUrl: string;
+  videoUrl: string;
+  steps: StarterGuideStep[];
+}
+
+export interface CreateStarterGuideInput {
+  title: string;
+  description?: string;
+  thumbnail_url: string;
+  video_url: string;
+  steps: StarterGuideStep[];
   display_order?: number;
 }
 
-export interface UpdateStarterGuideVideoInput {
+export interface UpdateStarterGuideInput {
   title?: string;
-  video_key?: string;
+  description?: string;
+  thumbnail_url?: string;
+  video_url?: string;
+  steps?: StarterGuideStep[];
   display_order?: number;
   is_active?: boolean;
-}
-
-export interface PresignStarterGuideVideoUploadInput {
-  mime_type: "video/mp4" | "video/webm";
-  file_size_bytes: number;
-}
-
-export interface StarterGuideVideoPresignResult {
-  uploadUrl: string;
-  key: string;
-  expiresIn: number;
 }

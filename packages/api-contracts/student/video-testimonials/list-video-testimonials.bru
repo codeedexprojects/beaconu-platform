@@ -1,0 +1,30 @@
+meta {
+  name: List Video Testimonials (Student)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/video-testimonials
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists active video testimonials for the student-facing feed, paginated.
+  Requires student authentication.
+
+  Each item includes id, title, videoUrl, thumbnailUrl, studentImageUrl,
+  displayOrder. Response includes `meta` (page, limit, total, totalPages,
+  hasNextPage, hasPreviousPage) alongside `data`. Inactive testimonials
+  are never returned.
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Deactivate Starter Guide
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/starter-guide/{{starterGuideId}}/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Soft-deactivates a starter guide (isActive: false) — never hard-deleted.
+  Requires platform_admin auth + content.manage. 403 if already inactive.
+}

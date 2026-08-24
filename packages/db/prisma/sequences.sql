@@ -118,9 +118,10 @@ CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_pool_seq";
 CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "short_seq";
 CREATE SEQUENCE IF NOT EXISTS "squad_search_seq";
 CREATE SEQUENCE IF NOT EXISTS "staff_member_seq";
-CREATE SEQUENCE IF NOT EXISTS "starter_guide_video_seq";
+CREATE SEQUENCE IF NOT EXISTS "starter_guide_seq";
 CREATE SEQUENCE IF NOT EXISTS "stream_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_answer_seq";
@@ -136,6 +137,7 @@ CREATE SEQUENCE IF NOT EXISTS "transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_type_seq";
 CREATE SEQUENCE IF NOT EXISTS "user_session_seq";
+CREATE SEQUENCE IF NOT EXISTS "video_testimonial_seq";
 
 -- Used by BlinkRepository.getNextAmbassadorCode (CA-<n> campus codes)
 CREATE SEQUENCE IF NOT EXISTS "ambassador_code_seq" START 1001;

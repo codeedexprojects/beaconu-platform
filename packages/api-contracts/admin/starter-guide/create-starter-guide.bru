@@ -1,0 +1,56 @@
+meta {
+  name: Create Starter Guide
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/starter-guide
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Getting Started with BeaconU",
+    "description": "Everything you need to know to set up your profile and start exploring colleges.",
+    "thumbnail_url": "https://cdn.example.com/starter-guide/thumb-1.jpg",
+    "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "steps": [
+      { "title": "Create your profile", "description": "Sign up and fill in your basic details." },
+      { "title": "Explore colleges", "description": "Browse colleges and shortlist the ones you like." }
+    ],
+    "display_order": 0
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("starterGuideId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new starter guide. Requires platform_admin auth +
+  content.manage.
+
+  - description: optional, max 2000 chars.
+  - thumbnail_url: required, must be a valid URL. Upload via the generic
+    /api/v1/admin/uploads/presign + /verify flow first, then pass the
+    resulting permanent URL here.
+  - video_url: required, must be a youtube.com or youtu.be link.
+  - steps: at least 1 required — each { title, description }. Order is
+    the array order (no separate sort field per step).
+  - display_order: optional, defaults to 0.
+}

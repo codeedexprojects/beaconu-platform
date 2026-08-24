@@ -66,6 +66,10 @@ const COLLEGE_PERMISSIONS = [
     description:
       "Manage staff member profiles, custom roles, and security permissions",
   },
+  {
+    code: "finance.view",
+    description: "View revenue, collections, and transaction history",
+  },
 ];
 
 export class CollegeRolesController {

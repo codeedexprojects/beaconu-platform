@@ -1,0 +1,50 @@
+meta {
+  name: Create Video Testimonial
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/video-testimonials
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Got offers from Christ University",
+    "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnail_url": "https://cdn.example.com/video-testimonials/thumb-1.jpg",
+    "student_image_url": "https://cdn.example.com/video-testimonials/student-1.jpg",
+    "display_order": 0
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("videoTestimonialId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new video testimonial. Requires platform_admin auth +
+  content.manage.
+
+  - video_url: required, must be a youtube.com or youtu.be link.
+  - thumbnail_url / student_image_url: both required, must be valid
+    URLs. Upload both via the generic
+    /api/v1/admin/uploads/presign + /verify flow first, then pass the
+    resulting permanent URLs here.
+  - display_order: optional, defaults to 0.
+}

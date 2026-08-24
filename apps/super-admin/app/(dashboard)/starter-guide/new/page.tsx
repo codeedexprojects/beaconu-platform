@@ -1,88 +1,68 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload, Loader2, Video } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@/lib/zod-resolver";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  usePresignStarterGuideVideoUpload,
-  useCreateStarterGuideVideo,
-} from "@/hooks/use-starter-guide-videos";
+import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { StarterGuideStepsEditor } from "@/components/starter-guide-steps-editor";
+import { useCreateStarterGuide } from "@/hooks/use-starter-guide";
+import type { StarterGuideStep } from "@beaconu/types";
 
-const schema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(255),
-  display_order: z.coerce.number().int().min(0).default(0),
-});
-type FormValues = z.infer<typeof schema>;
-
-type UploadPhase = "idle" | "uploading" | "creating";
-
-export default function NewStarterGuideVideoPage() {
+export default function NewStarterGuidePage() {
   const router = useRouter();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [phase, setPhase] = useState<UploadPhase>("idle");
+  const { mutate: create, isPending } = useCreateStarterGuide();
 
-  const { mutateAsync: presign } = usePresignStarterGuideVideoUpload();
-  const { mutateAsync: create } = useCreateStarterGuideVideo();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [displayOrder, setDisplayOrder] = useState("0");
+  const [steps, setSteps] = useState<StarterGuideStep[]>([
+    { title: "", description: "" },
+  ]);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { title: "", display_order: 0 },
-  });
-
-  async function onSubmit(values: FormValues) {
-    if (!file) {
-      toast.error("Please select a video file");
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!thumbnailUrl) {
+      toast.error("Please upload a thumbnail image");
+      return;
+    }
+    const cleanSteps = steps.filter(
+      (s) => s.title.trim() && s.description.trim(),
+    );
+    if (cleanSteps.length === 0) {
+      toast.error("Add at least one step");
       return;
     }
 
-    try {
-      setPhase("uploading");
-      const mime = file.type as "video/mp4" | "video/webm";
-      const { uploadUrl, key } = await presign({
-        mime_type: mime,
-        file_size_bytes: file.size,
-      });
-
-      await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": mime },
-      });
-
-      setPhase("creating");
-      await create(
-        {
-          title: values.title,
-          video_key: key,
-          display_order: values.display_order,
+    create(
+      {
+        title,
+        description: description.trim() || undefined,
+        thumbnail_url: thumbnailUrl,
+        video_url: videoUrl,
+        steps: cleanSteps,
+        display_order: Number(displayOrder) || 0,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Starter guide created");
+          router.push("/starter-guide");
         },
-        {
-          onSuccess: () => {
-            toast.success("Starter guide video created");
-            router.push("/starter-guide");
-          },
-        },
-      );
-    } catch {
-      setPhase("idle");
-    }
+      },
+    );
   }
-
-  const isPending = phase !== "idle";
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title="Add Video" description="Upload a new starter guide video">
+      <Header title="Add Guide" description="Create a new starter guide">
         <Link href="/starter-guide">
           <Button variant="outline" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -92,19 +72,46 @@ export default function NewStarterGuideVideoPage() {
       </Header>
 
       <div className="flex-1 p-6 max-w-xl">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               placeholder="e.g. Getting Started with BeaconU"
-              {...form.register("title")}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
             />
-            {form.formState.errors.title && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.title.message}
-              </p>
-            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="A short summary shown alongside this guide"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <ImageUpload
+            value={thumbnailUrl}
+            onChange={setThumbnailUrl}
+            context="starter-guide"
+            label="Thumbnail Image"
+            aspect={16 / 9}
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="video_url">Video (YouTube link)</Label>
+            <Input
+              id="video_url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              required
+            />
           </div>
 
           <div className="space-y-2">
@@ -113,55 +120,16 @@ export default function NewStarterGuideVideoPage() {
               id="display_order"
               type="number"
               min={0}
-              {...form.register("display_order")}
+              value={displayOrder}
+              onChange={(e) => setDisplayOrder(e.target.value)}
             />
-            {form.formState.errors.display_order && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.display_order.message}
-              </p>
-            )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Video File</Label>
-            <div
-              className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => fileRef.current?.click()}
-            >
-              {file ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-foreground">
-                  <Video className="h-4 w-4 text-primary" />
-                  <span className="font-medium truncate max-w-xs">
-                    {file.name}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                  </span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="h-8 w-8" />
-                  <p className="text-sm">Click to select a video file</p>
-                  <p className="text-xs">MP4 or WebM, max 500 MB</p>
-                </div>
-              )}
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="video/mp4,video/webm"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </div>
+          <StarterGuideStepsEditor steps={steps} onChange={setSteps} />
 
           <Button type="submit" disabled={isPending} className="w-full gap-2">
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {phase === "uploading"
-              ? "Uploading video…"
-              : phase === "creating"
-                ? "Saving…"
-                : "Upload & Save"}
+            {isPending ? "Saving…" : "Create Guide"}
           </Button>
         </form>
       </div>

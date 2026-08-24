@@ -4,8 +4,12 @@ import { getErrorMessage } from "@/lib/api";
 import {
   getOfflineReviewQueue,
   reviewOfflineTokenPayment,
+  getFinanceOverview,
+  getFinanceTransactions,
   type OfflineReviewQueueFilters,
   type ReviewOfflineTokenPaymentInput,
+  type FinanceFilters,
+  type FinanceTransactionsFilters,
 } from "@/lib/services/payments.service";
 import { QUERY_KEYS } from "@/lib/query-keys";
 
@@ -34,5 +38,21 @@ export function useReviewOfflineTokenPayment() {
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
+  });
+}
+
+export function useFinanceOverview(filters: FinanceFilters = {}) {
+  return useQuery({
+    queryKey: QUERY_KEYS.financeOverview(filters),
+    queryFn: () => getFinanceOverview(filters),
+  });
+}
+
+export function useFinanceTransactions(
+  filters: FinanceTransactionsFilters = {},
+) {
+  return useQuery({
+    queryKey: QUERY_KEYS.financeTransactions(filters),
+    queryFn: () => getFinanceTransactions(filters),
   });
 }

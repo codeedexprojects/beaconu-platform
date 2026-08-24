@@ -138,4 +138,8 @@ export const QUERY_KEYS = {
   mediaKit: (id: string) => ["college-media-kit", id] as const,
   offlineReviewQueue: (filters?: object) =>
     filters ? ["offline-review-queue", filters] : ["offline-review-queue"],
+  financeOverview: (filters?: object) =>
+    filters ? ["finance-overview", filters] : ["finance-overview"],
+  financeTransactions: (filters?: object) =>
+    filters ? ["finance-transactions", filters] : ["finance-transactions"],
 } as const;

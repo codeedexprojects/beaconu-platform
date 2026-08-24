@@ -216,6 +216,31 @@ export class AttemptService {
     return this.finalize(attempt.id, attempt.startedAt, "completed");
   }
 
+  /** Unanswered autoScorable questions are scored 0 ("wrong"), no negative marking. */
+  private static async markUnansweredAsWrong(
+    attemptId: string,
+    paperId: string,
+  ) {
+    const [paperQuestions, answeredQuestionIds] = await Promise.all([
+      AttemptRepository.findAllPaperQuestions(paperId),
+      AnswerRepository.listAnsweredQuestionIds(attemptId),
+    ]);
+
+    const unanswered = paperQuestions.filter(
+      (pq) =>
+        pq.question.questionType.autoScorable &&
+        !answeredQuestionIds.has(pq.questionId),
+    );
+
+    await AnswerRepository.createManyUnansweredAsWrong(
+      unanswered.map((pq) => ({
+        attemptId,
+        questionId: pq.questionId,
+        sectionId: pq.sectionId,
+      })),
+    );
+  }
+
   private static async finalize(
     attemptId: string,
     startedAt: Date | null,
@@ -229,11 +254,13 @@ export class AttemptService {
       ? Math.floor((now.getTime() - startedAt.getTime()) / 1000)
       : 0;
 
-    await AttemptRepository.update(attemptId, {
+    const attempt = await AttemptRepository.update(attemptId, {
       status: terminalStatus,
       completedAt: now,
       timeSpentSecs,
     });
+
+    await this.markUnansweredAsWrong(attemptId, attempt.paperId);
 
     return AttemptRepository.update(attemptId, {
       status: "under_evaluation",

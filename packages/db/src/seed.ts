@@ -3855,34 +3855,71 @@ async function seedContent(superAdminId: string, collegeIds: string[]) {
     }
   }
 
-  // Starter guide videos (student app onboarding)
-  const videos = [
+  // Starter guides (student app onboarding)
+  const starterGuides = [
     {
       title: "Getting Started with BeaconU",
-      videoKey: "starter-guides/getting-started.mp4",
+      thumbnailUrl: "https://placehold.co/400x225?text=Getting+Started",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      steps: [
+        {
+          title: "Create your profile",
+          description: "Sign up and fill in your basic details.",
+        },
+        {
+          title: "Explore colleges",
+          description: "Browse colleges and shortlist the ones you like.",
+        },
+      ],
       displayOrder: 1,
     },
     {
       title: "How to Apply to a College",
-      videoKey: "starter-guides/how-to-apply.mp4",
+      thumbnailUrl: "https://placehold.co/400x225?text=How+to+Apply",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      steps: [
+        {
+          title: "Pick a course",
+          description: "Choose the course you want to apply for.",
+        },
+        {
+          title: "Fill the application",
+          description: "Complete the application form with your details.",
+        },
+        {
+          title: "Submit and pay",
+          description: "Pay the application fee and submit.",
+        },
+      ],
       displayOrder: 2,
     },
     {
       title: "Booking a Campus Visit",
-      videoKey: "starter-guides/campus-visit.mp4",
+      thumbnailUrl: "https://placehold.co/400x225?text=Campus+Visit",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      steps: [
+        {
+          title: "Open a college profile",
+          description: "Go to the college you're interested in.",
+        },
+        {
+          title: "Choose a slot",
+          description: "Pick an available campus visit slot.",
+        },
+      ],
       displayOrder: 3,
     },
   ];
-  for (const v of videos) {
-    const existing = await prisma.starterGuideVideo.findFirst({
-      where: { title: v.title },
+  for (const g of starterGuides) {
+    const existing = await prisma.starterGuide.findFirst({
+      where: { title: g.title },
     });
     if (!existing) {
-      await prisma.starterGuideVideo.create({ data: { ...v, isActive: true } });
+      await prisma.starterGuide.create({ data: { ...g, isActive: true } });
     }
   }
 
-  console.log("✓ Content (blogs, news, entrance exams, loans, videos)");
+  console.log("✓ Content (blogs, news, entrance exams, loans, starter guides)");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

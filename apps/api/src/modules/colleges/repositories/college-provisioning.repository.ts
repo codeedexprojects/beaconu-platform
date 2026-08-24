@@ -20,6 +20,7 @@ const SYSTEM_COLLEGE_ROLES = [
       "commute.manage",
       "staff.view",
       "staff.manage",
+      "finance.view",
     ],
   },
   {

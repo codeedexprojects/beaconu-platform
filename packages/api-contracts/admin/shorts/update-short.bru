@@ -1,0 +1,32 @@
+meta {
+  name: Update Short
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/shorts/{{shortId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Campus Tour Highlights (Updated)",
+    "display_order": 1
+  }
+}
+
+docs {
+  Partial update — all fields optional (title, thumbnail_url, video_url,
+  display_order, is_active), at least one required. Requires
+  platform_admin auth + content.manage.
+}

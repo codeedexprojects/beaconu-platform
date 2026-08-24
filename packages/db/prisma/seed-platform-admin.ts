@@ -78,6 +78,14 @@ async function main() {
       code: "education-boards.manage",
       description: "Create and manage education boards",
     },
+    {
+      code: "institutes-of-national-importance.view",
+      description: "View Institutes of National Importance",
+    },
+    {
+      code: "institutes-of-national-importance.manage",
+      description: "Create and manage Institutes of National Importance",
+    },
     { code: "icons.view", description: "View icons" },
     { code: "icons.manage", description: "Create and manage icons" },
     { code: "events.view", description: "View events" },
