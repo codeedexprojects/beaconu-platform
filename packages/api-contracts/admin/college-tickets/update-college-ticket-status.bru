@@ -1,0 +1,36 @@
+meta {
+  name: Update College Query Status
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/college-tickets/{{platformTicketId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "resolved"
+  }
+}
+
+docs {
+  Manually transitions a college query's status. Requires platform_admin
+  auth + college-tickets.manage.
+
+  - status: "resolved" | "closed" | "reopened" only — "in_progress" and
+    "awaiting_response" are set automatically by message activity
+    (replying as admin/college), never set manually here.
+  - "resolved" sets resolvedAt; "closed" sets closedAt; "reopened" clears
+    both.
+}

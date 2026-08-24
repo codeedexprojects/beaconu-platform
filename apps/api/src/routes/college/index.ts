@@ -17,6 +17,7 @@ import collegeAdminIconsRoutes from "@/modules/platform-admin/routes/icons-colle
 import collegeAdminInterviewRoutes from "@/modules/interviews/routes/college-admin.routes";
 import collegeAdminScholarshipRoutes from "@/modules/scholarships/routes/college-admin.routes";
 import collegeAdminSupportRoutes from "@/modules/support/routes/college-admin.routes";
+import collegeAdminPlatformTicketRoutes from "@/modules/support/routes/platform-ticket-college-admin.routes";
 import collegeAdminNoticeRoutes from "@/modules/notices/routes/college-admin.routes";
 import collegeAdminStudentsRoutes from "@/modules/students/routes/college-admin.routes";
 import collegeAdminSeatCancellationRoutes from "@/modules/admissions/routes/seat-cancellations-college-admin.routes";
@@ -44,6 +45,7 @@ router.use("/icons", collegeAdminIconsRoutes);
 router.use("/interviews", collegeAdminInterviewRoutes);
 router.use("/scholarships", collegeAdminScholarshipRoutes);
 router.use("/support", collegeAdminSupportRoutes);
+router.use("/support/platform-tickets", collegeAdminPlatformTicketRoutes);
 router.use("/notices", collegeAdminNoticeRoutes);
 router.use("/students", collegeAdminStudentsRoutes);
 router.use("/seat-cancellations", collegeAdminSeatCancellationRoutes);

@@ -16,6 +16,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   "/universities": "universities.view",
   "/university-types": "university-types.view",
   "/colleges": "colleges.view",
+  "/college-tickets": "college-tickets.view",
   "/students": "students.view",
   "/student-leads": "leads.view",
   "/leads": "leads.view",

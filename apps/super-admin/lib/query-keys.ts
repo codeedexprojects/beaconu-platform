@@ -98,4 +98,7 @@ export const QUERY_KEYS = {
   students: (params?: object) =>
     params ? ["students", params] : (["students"] as const),
   student: (id: string) => ["students", id] as const,
+  collegeTickets: (params?: object) =>
+    params ? ["college-tickets", params] : (["college-tickets"] as const),
+  collegeTicket: (id: string) => ["college-tickets", id] as const,
 } as const;
