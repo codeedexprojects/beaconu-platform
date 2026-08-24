@@ -332,7 +332,7 @@ export function EntranceExamForm({
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
           Recommendation Letters
         </p>
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {recommendationLetters.fields.map((field, index) => (
             <DocumentRow
               key={field.id}

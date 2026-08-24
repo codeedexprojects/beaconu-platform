@@ -1,14 +1,12 @@
 import { notFound } from "next/navigation";
 import { getCollegeBySlug } from "@/lib/services/public-college.service";
-import { ApplicationDetailsPageClient } from "@/components/applications/application-details-page-client";
+import { InterviewPageClient } from "@/components/interview/interview-page-client";
 
-interface ApplicationDetailsPageProps {
+interface InterviewPageProps {
   params: Promise<{ subdomain: string; applicationId: string }>;
 }
 
-export default async function ApplicationDetailsPage({
-  params,
-}: ApplicationDetailsPageProps) {
+export default async function InterviewPage({ params }: InterviewPageProps) {
   const { subdomain, applicationId } = await params;
 
   try {
@@ -20,13 +18,13 @@ export default async function ApplicationDetailsPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-        Application Details
+        Interview
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Fill in your personal, family, address, and qualification details.
+        Book a slot for your admission interview, or view your existing booking.
       </p>
       <div className="mt-8">
-        <ApplicationDetailsPageClient
+        <InterviewPageClient
           applicationId={applicationId}
           subdomain={subdomain}
         />

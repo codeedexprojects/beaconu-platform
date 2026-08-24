@@ -42,4 +42,28 @@ export const QUERY_KEYS = {
     course
       ? (["education-board-detail", id, course] as const)
       : (["education-board-detail", id] as const),
+  assessmentStart: (applicationId: string) =>
+    ["assessment-start", applicationId] as const,
+  trialPaper: (templateId: string) => ["trial-paper", templateId] as const,
+  myAttempt: (attemptId: string) => ["my-attempt", attemptId] as const,
+  attemptSections: (attemptId: string) =>
+    ["attempt-sections", attemptId] as const,
+  attemptSectionQuestion: (
+    attemptId: string,
+    sectionId: string,
+    questionOrder: number,
+  ) =>
+    ["attempt-section-question", attemptId, sectionId, questionOrder] as const,
+  attemptOverview: (attemptId: string, sectionId: string) =>
+    ["attempt-overview", attemptId, sectionId] as const,
+  interviewSlots: (collegeId: string, filters?: unknown) =>
+    filters
+      ? (["interview-slots", collegeId, filters] as const)
+      : (["interview-slots", collegeId] as const),
+  myInterviewBooking: (applicationId: string) =>
+    ["my-interview-booking", applicationId] as const,
+  offlineTokenPaymentStatus: (applicationCourseId: string) =>
+    ["offline-token-payment-status", applicationCourseId] as const,
+  scholarshipConfigs: (collegeId: string) =>
+    ["scholarship-configs", collegeId] as const,
 } as const;

@@ -117,7 +117,7 @@ export function DocumentsSection({
           No documents are required for this application.
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {(documents ?? []).map((document) => (
             <RequiredDocumentRow
               key={document.documentType}

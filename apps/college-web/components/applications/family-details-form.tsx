@@ -142,7 +142,7 @@ export function FamilyDetailsForm({
     >
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={User} title="Father's Details" />
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="Full Name"
             error={form.formState.errors.father_name?.message}
@@ -176,7 +176,7 @@ export function FamilyDetailsForm({
 
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={User} title="Mother's Details" />
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="Full Name"
             error={form.formState.errors.mother_name?.message}
@@ -210,7 +210,7 @@ export function FamilyDetailsForm({
 
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={Shield} title="Guardian Details" />
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Guardian Name" optional>
             <Input
               placeholder="Full name of guardian"
@@ -226,13 +226,15 @@ export function FamilyDetailsForm({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-border/60 p-5">
-        <Field label="Annual Family Income" optional>
-          <Input type="number" {...form.register("annual_family_income")} />
-        </Field>
-        <Field label="Number of Siblings" optional>
-          <Input type="number" {...form.register("number_of_siblings")} />
-        </Field>
+      <div className="rounded-2xl border border-border/60 p-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Annual Family Income" optional>
+            <Input type="number" {...form.register("annual_family_income")} />
+          </Field>
+          <Field label="Number of Siblings" optional>
+            <Input type="number" {...form.register("number_of_siblings")} />
+          </Field>
+        </div>
       </div>
 
       <Button

@@ -111,6 +111,13 @@ export function ApplicationDetail({
               Fill in Application Details
             </Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link
+              href={`/college/${subdomain}/applications/${applicationId}/assessment`}
+            >
+              Assessment
+            </Link>
+          </Button>
           {application.formStatus === "draft" ? (
             <Button
               disabled={isSubmitting}

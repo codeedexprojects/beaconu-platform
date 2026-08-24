@@ -36,10 +36,13 @@ export function ApplicationProgressCard({
   const progressPct = isDraft
     ? Math.min(100, Math.round((application.currentStep / TOTAL_STEPS) * 100))
     : 100;
+  const href = isDraft
+    ? `/college/${subdomain}/applications/${application.id}`
+    : `/college/${subdomain}/applications/${application.id}/status`;
 
   return (
     <Link
-      href={`/college/${subdomain}/applications/${application.id}`}
+      href={href}
       className="flex items-center gap-4 rounded-2xl border border-border/60 p-4 transition-colors hover:border-foreground/30"
     >
       <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">

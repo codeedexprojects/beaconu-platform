@@ -2,6 +2,12 @@ import { notFound } from "next/navigation";
 import { getCollegeBySlug } from "@/lib/services/public-college.service";
 import { SiteNav } from "@/components/college-landing/site-nav";
 
+// Without this, a single transient failure to reach the API (e.g. a slow
+// Render cold start) gets baked into Next's route cache as a permanent
+// notFound() for that path, since api.get()'s plain fetch() defaults to
+// force-cache and this segment has no other opt-out.
+export const dynamic = "force-dynamic";
+
 const TAB_ROUTES: Record<string, { label: string; path: string }> = {
   institutions_across_world: { label: "Institutions", path: "institutions" },
   commute: { label: "Commute", path: "commute" },
@@ -42,7 +48,8 @@ export default async function CollegeLayout({
   let tabs;
   try {
     ({ collegeDetails, tabs } = await getCollegeBySlug(subdomain));
-  } catch {
+  } catch (error) {
+    console.error("[CollegeLayout] getCollegeBySlug failed:", error);
     notFound();
   }
 

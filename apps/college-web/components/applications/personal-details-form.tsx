@@ -184,163 +184,175 @@ export function PersonalDetailsForm({
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={User} title="Personal Details" />
 
-        <Field
-          label="Full Name"
-          error={form.formState.errors.full_name?.message}
-        >
-          <Input
-            placeholder="e.g. Alex Johnson"
-            {...form.register("full_name")}
-          />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Full Name"
+            error={form.formState.errors.full_name?.message}
+          >
+            <Input
+              placeholder="e.g. Alex Johnson"
+              {...form.register("full_name")}
+            />
+          </Field>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-foreground">Gender</label>
-          <SegmentedToggle
-            options={genderOptions}
-            value={gender}
-            onChange={(v) =>
-              form.setValue("gender", v, { shouldValidate: true })
-            }
-            name="gender"
-          />
+          <Field
+            label="Date of Birth"
+            error={form.formState.errors.date_of_birth?.message}
+          >
+            <Input type="date" {...form.register("date_of_birth")} />
+          </Field>
+
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="text-sm font-medium text-foreground">
+              Gender
+            </label>
+            <SegmentedToggle
+              options={genderOptions}
+              value={gender}
+              onChange={(v) =>
+                form.setValue("gender", v, { shouldValidate: true })
+              }
+              name="gender"
+              className="max-w-md"
+            />
+          </div>
         </div>
-
-        <Field
-          label="Date of Birth"
-          error={form.formState.errors.date_of_birth?.message}
-        >
-          <Input type="date" {...form.register("date_of_birth")} />
-        </Field>
       </div>
 
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={CreditCard} title="Identity Information" />
 
-        <Field label="Aadhar Number" optional>
-          <Input
-            placeholder="XXXX-XXXX-XXXX"
-            {...form.register("aadhar_number")}
-          />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Aadhar Number" optional>
+            <Input
+              placeholder="XXXX-XXXX-XXXX"
+              {...form.register("aadhar_number")}
+            />
+          </Field>
 
-        <Field label="Religion" optional>
-          <Select
-            value={religion || undefined}
-            onValueChange={(v) =>
-              form.setValue("religion", v, { shouldValidate: true })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Religion" />
-            </SelectTrigger>
-            <SelectContent>
-              {religionOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+          <Field label="Religion" optional>
+            <Select
+              value={religion || undefined}
+              onValueChange={(v) =>
+                form.setValue("religion", v, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Religion" />
+              </SelectTrigger>
+              <SelectContent>
+                {religionOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
-        <Field label="Community / Caste" optional>
-          <Input placeholder="Enter community" {...form.register("category")} />
-        </Field>
+          <Field label="Community / Caste" optional>
+            <Input
+              placeholder="Enter community"
+              {...form.register("category")}
+            />
+          </Field>
 
-        <Field label="Blood Group" optional>
-          <Select
-            value={bloodGroup || undefined}
-            onValueChange={(v) =>
-              form.setValue("blood_group", v, { shouldValidate: true })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Group" />
-            </SelectTrigger>
-            <SelectContent>
-              {bloodGroupOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+          <Field label="Blood Group" optional>
+            <Select
+              value={bloodGroup || undefined}
+              onValueChange={(v) =>
+                form.setValue("blood_group", v, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Group" />
+              </SelectTrigger>
+              <SelectContent>
+                {bloodGroupOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
-        <Field label="Mother Tongue" optional>
-          <Input {...form.register("mother_tongue")} />
-        </Field>
+          <Field label="Mother Tongue" optional>
+            <Input {...form.register("mother_tongue")} />
+          </Field>
+        </div>
       </div>
 
       <div className="space-y-4 rounded-2xl border border-border/60 p-5">
         <IconSectionHeader icon={Phone} title="Contact Information" />
 
-        <Field label="Marital Status" optional>
-          <Select
-            value={maritalStatus || undefined}
-            onValueChange={(v) =>
-              form.setValue("marital_status", v, { shouldValidate: true })
-            }
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Marital Status" optional>
+            <Select
+              value={maritalStatus || undefined}
+              onValueChange={(v) =>
+                form.setValue("marital_status", v, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                {maritalStatusOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field
+            label="Email Address"
+            optional
+            error={form.formState.errors.email?.message}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              {maritalStatusOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field
-          label="Email Address"
-          optional
-          error={form.formState.errors.email?.message}
-        >
-          <Input
-            type="email"
-            placeholder="alex@university.edu"
-            {...form.register("email")}
-          />
-        </Field>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Mobile Number
-          </label>
-          <div className="flex gap-2">
             <Input
-              placeholder="+1"
-              className="w-16 shrink-0 px-3 text-center"
-              {...form.register("mobile_country_code")}
+              type="email"
+              placeholder="alex@university.edu"
+              {...form.register("email")}
             />
-            <Input
-              placeholder="000-000-0000"
-              className="flex-1"
-              {...form.register("mobile_number")}
-            />
+          </Field>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-foreground">
+              Mobile Number
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="+1"
+                className="w-16 shrink-0 px-3 text-center"
+                {...form.register("mobile_country_code")}
+              />
+              <Input
+                placeholder="000-000-0000"
+                className="flex-1"
+                {...form.register("mobile_number")}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-foreground">
-            WhatsApp Number (optional)
-          </label>
-          <div className="flex gap-2">
-            <Input
-              placeholder="+1"
-              className="w-16 shrink-0 px-3 text-center"
-              {...form.register("whatsapp_country_code")}
-            />
-            <Input
-              placeholder="000-000-0000"
-              className="flex-1"
-              {...form.register("whatsapp_number")}
-            />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-foreground">
+              WhatsApp Number (optional)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="+1"
+                className="w-16 shrink-0 px-3 text-center"
+                {...form.register("whatsapp_country_code")}
+              />
+              <Input
+                placeholder="000-000-0000"
+                className="flex-1"
+                {...form.register("whatsapp_number")}
+              />
+            </div>
           </div>
         </div>
       </div>
