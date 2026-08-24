@@ -20,4 +20,14 @@ docs {
   review/publish step, even if fully auto-scored). Same terminal
   transition the auto-submit job uses for its graceful (duration/window
   expiry) path.
+
+  At finalization, any autoScorable question the student never submitted
+  a response for gets an explicit StudentAnswer row auto-created with
+  autoScore/finalScore: 0 and evaluation_status: "auto_scored" (i.e.
+  scored wrong) — same as an incorrect answer, just without negative
+  marking (nothing was actually chosen to penalize). Unanswered
+  non-autoscorable (subjective) questions are left alone and still wait
+  for manual evaluation. This applies to every path through finalize():
+  student submit, the auto-submit job's duration/window-expiry path, and
+  the tab-hidden termination path.
 }

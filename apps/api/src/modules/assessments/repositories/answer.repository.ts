@@ -40,6 +40,34 @@ export class AnswerRepository {
     });
   }
 
+  static async listAnsweredQuestionIds(attemptId: string) {
+    const rows = await prisma.studentAnswer.findMany({
+      where: { attemptId },
+      select: { questionId: true },
+    });
+    return new Set(rows.map((r) => r.questionId));
+  }
+
+  /** `answeredAt` stays null to distinguish from a real empty submission. */
+  static async createManyUnansweredAsWrong(
+    rows: { attemptId: string; questionId: string; sectionId: string }[],
+  ) {
+    if (rows.length === 0) return { count: 0 };
+    return prisma.studentAnswer.createMany({
+      data: rows.map((row) => ({
+        attemptId: row.attemptId,
+        questionId: row.questionId,
+        sectionId: row.sectionId,
+        isFlagged: false,
+        timeSpentSecs: 0,
+        autoScore: 0,
+        finalScore: 0,
+        evaluationStatus: "auto_scored",
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   static async listByAttempt(attemptId: string) {
     return prisma.studentAnswer.findMany({
       where: { attemptId },
