@@ -1,0 +1,35 @@
+meta {
+  name: Mark Call Request Handled
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/call-requests/{{callRequestId}}/status
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "status": "contacted",
+    "staff_note": "Called the student, answered their hostel-fee questions."
+  }
+}
+
+docs {
+  Mark a call request as handled: status must be "contacted" or "cancelled".
+  staff_note is optional free text. Sets respondedBy/respondedAt to the
+  acting staff member.
+
+  409 ConflictError if the request isn't currently "pending" (already
+  handled once).
+}

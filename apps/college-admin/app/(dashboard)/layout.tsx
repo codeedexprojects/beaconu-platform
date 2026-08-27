@@ -37,6 +37,7 @@ import {
   Wallet,
   TrendingUp,
   Headset,
+  Phone,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -496,6 +497,12 @@ export default function DashboardLayout({
                     name: "Student Queries",
                     path: "/support",
                     icon: LifeBuoy,
+                    permission: "staff.view",
+                  },
+                  {
+                    name: "Call Requests",
+                    path: "/call-requests",
+                    icon: Phone,
                     permission: "staff.view",
                   },
                   {

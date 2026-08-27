@@ -37,6 +37,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "payments",
   "finance",
   "platform-support",
+  "call-requests",
 ]);
 
 export function proxy(request: NextRequest) {

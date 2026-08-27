@@ -1,0 +1,55 @@
+meta {
+  name: Submit Call Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/call-requests
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "college_id": "{{collegeId}}",
+    "phone_number": "+919876543210",
+    "preferred_time": "Weekdays after 4 PM",
+    "message": "I'd like to know more about the hostel facilities before applying."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("callRequestId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Request a call back from a college. Unlike the /support (query) system,
+  this requires NO prior enrollment at the college — any authenticated
+  student can request a call from any college, e.g. while still deciding
+  whether to apply.
+
+  Body:
+  - college_id (required)
+  - phone_number (optional) — falls back to the student's own profile phone
+    number if omitted; 400 ValidationError if neither is available.
+  - preferred_time (optional, free text, max 100 chars)
+  - message (optional, max 1000 chars) — what the student wants to discuss.
+
+  409 ConflictError if the student already has a "pending" call request for
+  this same college (submit only one at a time; wait for it to be handled,
+  or cancel it first).
+}
