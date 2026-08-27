@@ -1,0 +1,20 @@
+meta {
+  name: Get Call Request (College)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/call-requests/{{callRequestId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Full detail for one call request at this college (404 if it belongs to a
+  different college) — phoneNumber, preferredTime, message, status.
+}

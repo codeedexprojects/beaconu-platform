@@ -25,6 +25,7 @@ CREATE SEQUENCE IF NOT EXISTS "blink_wallet_transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "blog_seq";
 CREATE SEQUENCE IF NOT EXISTS "blog_author_seq";
 CREATE SEQUENCE IF NOT EXISTS "broadcast_notification_seq";
+CREATE SEQUENCE IF NOT EXISTS "call_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_availability_seq";

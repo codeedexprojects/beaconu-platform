@@ -34,6 +34,7 @@ export * from "./hostel";
 export * from "./beaconu-card";
 export * from "./ticket";
 export * from "./platform-ticket";
+export * from "./call-request";
 export * from "./notice";
 export * from "./seat-cancellation";
 export * from "./course-switch-request";

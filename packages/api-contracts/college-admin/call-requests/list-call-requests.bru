@@ -1,0 +1,38 @@
+meta {
+  name: List Call Requests (College)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/call-requests?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+  search:
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.callRequests && data.data.callRequests[0]) {
+      bru.setEnvVar("callRequestId", data.data.callRequests[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated list of every call request raised for this college — by any
+  BeaconU student, enrolled or not — newest first. Each row includes
+  studentName/studentEmail. Optional filters: status (pending|contacted|
+  cancelled), search (matches phone number or student name).
+}
