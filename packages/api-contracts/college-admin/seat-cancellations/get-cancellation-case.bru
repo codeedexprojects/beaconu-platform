@@ -1,0 +1,28 @@
+meta {
+  name: Get Cancellation Case
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Full case detail for the 5-phase cancellation/withdrawal flow — includes
+  currentPhase (1-5), counseling schedule/outcome, settlement (caseType A/B/C
+  + computed amounts), final-clearance/refund-transaction fields, and the
+  phaseLogs audit trail.
+
+  A row created before this flow existed (old approve/reject-only requests)
+  has currentPhase: 1 and every phase field null — the frontend renders
+  those as a simple legacy decision summary instead of the stepper.
+
+  404 if the case doesn't belong to this college.
+}

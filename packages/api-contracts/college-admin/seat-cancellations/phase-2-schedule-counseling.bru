@@ -1,0 +1,36 @@
+meta {
+  name: Phase 2 - Schedule Counseling
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/schedule-counseling
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "counselor_id": "{{staffMemberId}}",
+    "scheduled_at": "2026-10-14T10:30:00"
+  }
+}
+
+docs {
+  Assigns a college-admin staff member (the "counselor" — no separate
+  identity table, any active StaffMember can be assigned) and the scheduled
+  date/time for the mandatory exit counseling session. Advances the case
+  from Phase 2 to Phase 3 immediately (this records the schedule
+  confirmation, not that the session itself has already happened).
+
+  409 ConflictError if the case isn't currently at Phase 2.
+}

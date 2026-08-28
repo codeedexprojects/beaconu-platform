@@ -220,14 +220,61 @@ model SeatCancellation {
   requestedAt         DateTime  @default(now()) @map("requested_at") @db.Timestamptz
   processedAt         DateTime? @map("processed_at") @db.Timestamptz
 
-  applicationCourse ApplicationCourse @relation(fields: [applicationCourseId], references: [id])
-  student           Student           @relation(fields: [studentId], references: [id])
-  processor         StaffMember?      @relation(fields: [processedBy], references: [id])
+  // Phase-based case flow (Initiation -> Counseling -> Outcome -> Settlement ->
+  // Final Clearance). All nullable/default so pre-existing rows (created before
+  // this flow existed) stay exactly as they were — this only applies to new
+  // requests, which start at currentPhase 1 and advance through these fields.
+  effectiveDate       DateTime? @map("effective_date") @db.Date
+  lastSemester        String?   @map("last_semester") @db.VarChar(50)
+  currentPhase        Int       @default(1) @map("current_phase")
+
+  counselorId             String?   @map("counselor_id")
+  scheduledAt             DateTime? @map("scheduled_at") @db.Timestamptz
+  counselingCompletedAt   DateTime? @map("counseling_completed_at") @db.Timestamptz
+  counselingNotes         String?   @map("counseling_notes") @db.Text
+  counselingOutcome       String?   @map("counseling_outcome") @db.VarChar(20)
+  suggestedCaseType       String?   @map("suggested_case_type") @db.VarChar(1)
+
+  caseType                  String?   @map("case_type") @db.VarChar(1)
+  refundCalculationMethod   String?   @map("refund_calculation_method") @db.VarChar(20)
+  refundCalculationValue    Decimal?  @map("refund_calculation_value") @db.Decimal(10, 2)
+  penaltyAmount              Decimal?  @map("penalty_amount") @db.Decimal(10, 2)
+  penaltyPaidAt               DateTime? @map("penalty_paid_at") @db.Timestamptz
+  settledAt                   DateTime? @map("settled_at") @db.Timestamptz
+
+  // Manual refund bookkeeping (no payment-gateway call) — staff types in
+  // whatever reference/method they used when they transferred the refund.
+  refundTransactionRef  String?   @map("refund_transaction_ref") @db.VarChar(100)
+  refundPaymentMethod   String?   @map("refund_payment_method") @db.VarChar(100)
+  refundProcessedAt     DateTime? @map("refund_processed_at") @db.Timestamptz
+
+  documentsHandedOverAt DateTime? @map("documents_handed_over_at") @db.Timestamptz
+
+  applicationCourse ApplicationCourse         @relation(fields: [applicationCourseId], references: [id])
+  student           Student                   @relation(fields: [studentId], references: [id])
+  processor         StaffMember?              @relation(fields: [processedBy], references: [id])
+  counselor         StaffMember?              @relation("SeatCancellationCounselor", fields: [counselorId], references: [id])
+  phaseLogs         SeatCancellationPhaseLog[]
 
   @@index([applicationCourseId], name: "idx_cancellations_app_course")
   @@index([studentId], name: "idx_cancellations_student")
   @@index([status], name: "idx_cancellations_status")
   @@map("seat_cancellations")
+}
+
+model SeatCancellationPhaseLog {
+  id                 String   @id @default(dbgenerated("('SCL-'::text || (nextval('seat_cancellation_phase_log_seq'::regclass))::text)"))
+  seatCancellationId String   @map("seat_cancellation_id")
+  phase              Int
+  action             String   @db.VarChar(50)
+  performedBy        String   @map("performed_by")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  seatCancellation SeatCancellation @relation(fields: [seatCancellationId], references: [id], onDelete: Cascade)
+  performer        StaffMember      @relation(fields: [performedBy], references: [id])
+
+  @@index([seatCancellationId, createdAt], name: "idx_cancel_phase_logs_case")
+  @@map("seat_cancellation_phase_logs")
 }
 
 model Enrollment {

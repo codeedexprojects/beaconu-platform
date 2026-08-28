@@ -84,6 +84,7 @@ export const QUERY_KEYS = {
     filters
       ? (["seat-cancellations", filters] as const)
       : (["seat-cancellations"] as const),
+  seatCancellationCase: (id: string) => ["seat-cancellation-case", id] as const,
   courseSwitchRequests: (filters?: unknown) =>
     filters
       ? (["course-switch-requests", filters] as const)

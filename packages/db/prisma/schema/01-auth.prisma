@@ -200,6 +200,8 @@ model StaffMember {
   studentAnswersEval            StudentAnswer[]
   scholarshipAppReviews         ScholarshipApplication[]
   seatCancellationProcs         SeatCancellation[]
+  seatCancellationCounseling    SeatCancellation[]          @relation("SeatCancellationCounselor")
+  seatCancellationPhaseLogs     SeatCancellationPhaseLog[]
   courseSwitchProcs             CourseSwitchRequest[]       @relation("ProcessedBySwitchStaff")
   documentVerifications         ApplicationDocument[]       @relation("VerifiedByStaff")
   docRequestsAssigned           DocumentRequest[]           @relation("AssignedStaff")
