@@ -13,5 +13,10 @@ export default async function LibraryTabPage({ params }: LibraryTabPageProps) {
 
   if (!tab) notFound();
 
-  return <CourseLibrarySection libraries={tab.data.libraries ?? []} />;
+  return (
+    <CourseLibrarySection
+      libraries={tab.data.libraries ?? []}
+      subdomain={subdomain}
+    />
+  );
 }
