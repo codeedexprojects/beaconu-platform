@@ -16,6 +16,7 @@ export const QUERY_KEYS = {
   roles: ["college-roles"] as const,
   staff: ["college-staff"] as const,
   hostels: ["college-hostels"] as const,
+  gallery: ["college-gallery"] as const,
   libraries: ["college-libraries"] as const,
   quotas: ["college-quotas"] as const,
   quotaUsage: (id: string) => ["college-quota-usage", id] as const,
