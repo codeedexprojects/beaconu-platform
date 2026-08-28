@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { PaginationHelper } from "@/shared/responses/pagination";
 import { logger } from "@/shared/lib/logger";
@@ -10,6 +10,11 @@ import { EnrollmentRepository } from "../repositories/enrollment.repository";
 import type {
   RequestSeatCancellationInput,
   ReviewSeatCancellationInput,
+  SubmitInitiationInput,
+  ScheduleCounselingInput,
+  SubmitCounselingOutcomeInput,
+  SubmitSettlementInput,
+  FinalClearanceInput,
 } from "../validators/seat-cancellation.validator";
 
 async function notifyStudentOfReview(
@@ -60,6 +65,8 @@ function mapRequest(row: {
     application: { collegeId: string };
   };
   student?: { fullName: string; email: string | null };
+  currentPhase?: number;
+  caseType?: string | null;
 }) {
   return {
     id: row.id,
@@ -79,7 +86,109 @@ function mapRequest(row: {
     remarks: row.remarks,
     requestedAt: row.requestedAt.toISOString(),
     processedAt: row.processedAt ? row.processedAt.toISOString() : null,
+    currentPhase: row.currentPhase ?? 1,
+    caseType: (row.caseType ?? null) as "A" | "B" | "C" | null,
   };
+}
+
+function mapDetail(row: {
+  id: string;
+  applicationCourseId: string;
+  studentId: string;
+  reason: string;
+  supportingDocUrls: unknown;
+  status: string;
+  refundAmount: { toString(): string } | null;
+  refundStatus: string | null;
+  processedBy: string | null;
+  remarks: string | null;
+  requestedAt: Date;
+  processedAt: Date | null;
+  applicationCourse: {
+    course: { name: string; code: string };
+    application: { collegeId: string };
+  };
+  student?: { fullName: string; email: string | null };
+  effectiveDate: Date | null;
+  lastSemester: string | null;
+  currentPhase: number;
+  counselorId: string | null;
+  counselor: { fullName: string } | null;
+  scheduledAt: Date | null;
+  counselingCompletedAt: Date | null;
+  counselingNotes: string | null;
+  counselingOutcome: string | null;
+  suggestedCaseType: string | null;
+  caseType: string | null;
+  refundCalculationMethod: string | null;
+  refundCalculationValue: { toString(): string } | null;
+  penaltyAmount: { toString(): string } | null;
+  penaltyPaidAt: Date | null;
+  settledAt: Date | null;
+  refundTransactionRef: string | null;
+  refundPaymentMethod: string | null;
+  refundProcessedAt: Date | null;
+  documentsHandedOverAt: Date | null;
+  phaseLogs: {
+    id: string;
+    phase: number;
+    action: string;
+    createdAt: Date;
+    performer: { fullName: string };
+  }[];
+}) {
+  return {
+    ...mapRequest(row),
+    effectiveDate: row.effectiveDate ? row.effectiveDate.toISOString() : null,
+    lastSemester: row.lastSemester,
+    currentPhase: row.currentPhase,
+    counselorId: row.counselorId,
+    counselorName: row.counselor?.fullName ?? null,
+    scheduledAt: row.scheduledAt ? row.scheduledAt.toISOString() : null,
+    counselingCompletedAt: row.counselingCompletedAt
+      ? row.counselingCompletedAt.toISOString()
+      : null,
+    counselingNotes: row.counselingNotes,
+    counselingOutcome: row.counselingOutcome as
+      | "transfer"
+      | "termination"
+      | null,
+    suggestedCaseType: row.suggestedCaseType as "A" | "B" | "C" | null,
+    caseType: row.caseType as "A" | "B" | "C" | null,
+    refundCalculationMethod: row.refundCalculationMethod as
+      | "percentage"
+      | "fixed"
+      | null,
+    refundCalculationValue: row.refundCalculationValue
+      ? row.refundCalculationValue.toString()
+      : null,
+    penaltyAmount: row.penaltyAmount ? row.penaltyAmount.toString() : null,
+    penaltyPaidAt: row.penaltyPaidAt ? row.penaltyPaidAt.toISOString() : null,
+    settledAt: row.settledAt ? row.settledAt.toISOString() : null,
+    refundTransactionRef: row.refundTransactionRef,
+    refundPaymentMethod: row.refundPaymentMethod,
+    refundProcessedAt: row.refundProcessedAt
+      ? row.refundProcessedAt.toISOString()
+      : null,
+    documentsHandedOverAt: row.documentsHandedOverAt
+      ? row.documentsHandedOverAt.toISOString()
+      : null,
+    phaseLogs: row.phaseLogs.map((log) => ({
+      id: log.id,
+      phase: log.phase,
+      action: log.action,
+      performedByName: log.performer.fullName,
+      createdAt: log.createdAt.toISOString(),
+    })),
+  };
+}
+
+async function loadOwnedDetail(collegeId: string, id: string) {
+  const row = await SeatCancellationRepository.findDetailById(id);
+  if (!row || row.applicationCourse.application.collegeId !== collegeId) {
+    throw new NotFoundError("Cancellation request not found");
+  }
+  return row;
 }
 
 export class SeatCancellationService {
@@ -152,6 +261,11 @@ export class SeatCancellationService {
     return SeatCancellationRepository.countPendingForCollege(collegeId);
   }
 
+  static async getForCollege(collegeId: string, id: string) {
+    const row = await loadOwnedDetail(collegeId, id);
+    return mapDetail(row);
+  }
+
   static async review(
     collegeId: string,
     staffId: string,
@@ -185,57 +299,13 @@ export class SeatCancellationService {
       return mapRequest(rejected);
     }
 
-    const enrollment = await EnrollmentRepository.findByApplicationCourseId(
-      request.applicationCourseId,
-    );
-    if (!enrollment) {
-      throw new ConflictError("No active enrollment linked to this seat");
-    }
-
-    const applicationCourse =
-      await ApplicationCourseRepository.findByIdForEnrollment(
-        request.applicationCourseId,
-      );
-    if (!applicationCourse) {
-      throw new NotFoundError("Application course not found");
-    }
-    const previousStatus = applicationCourse.status;
-
     const approved = await prisma.$transaction(async (tx) => {
-      await EnrollmentRepository.updateStatus(tx, enrollment.id, "withdrawn");
-      await ApplicationCourseRepository.updateStatus(
+      await SeatCancellationService.finalizeSeatWithdrawal(
         tx,
         request.applicationCourseId,
-        "dropped_out",
+        request.studentId,
+        staffId,
       );
-      await ApplicationCourseRepository.createStatusLog(tx, {
-        applicationCourseId: request.applicationCourseId,
-        fromStatus: previousStatus,
-        toStatus: "dropped_out",
-        changedByType: "staff_member",
-        changedById: staffId,
-      });
-
-      if (applicationCourse.courseQuotaSeatId) {
-        const seatLink = await ApplicationCourseRepository.findSeatPoolLink(
-          tx,
-          applicationCourse.courseQuotaSeatId,
-        );
-        if (seatLink?.seatPoolId) {
-          await ApplicationCourseRepository.incrementPoolSeat(
-            tx,
-            seatLink.seatPoolId,
-          );
-        } else {
-          await ApplicationCourseRepository.incrementExclusiveSeat(
-            tx,
-            applicationCourse.courseQuotaSeatId,
-          );
-        }
-      }
-
-      await BeaconuCardService.deactivateForStudent(tx, request.studentId);
-
       return SeatCancellationRepository.approve(tx, requestId, {
         processedBy: staffId,
         remarks: data.remarks ?? null,
@@ -251,5 +321,257 @@ export class SeatCancellationService {
     );
 
     return mapRequest(approved);
+  }
+
+  // Shared by both the legacy one-shot review(approve) and the new
+  // 5-phase flow's final-clearance step — withdraws the enrollment,
+  // flips the course status, releases the seat, deactivates the card.
+  private static async finalizeSeatWithdrawal(
+    tx: Prisma.TransactionClient,
+    applicationCourseId: string,
+    studentId: string,
+    staffId: string,
+  ) {
+    const enrollment =
+      await EnrollmentRepository.findByApplicationCourseId(applicationCourseId);
+    if (!enrollment) {
+      throw new ConflictError("No active enrollment linked to this seat");
+    }
+
+    const applicationCourse =
+      await ApplicationCourseRepository.findByIdForEnrollment(
+        applicationCourseId,
+      );
+    if (!applicationCourse) {
+      throw new NotFoundError("Application course not found");
+    }
+    const previousStatus = applicationCourse.status;
+
+    await EnrollmentRepository.updateStatus(tx, enrollment.id, "withdrawn");
+    await ApplicationCourseRepository.updateStatus(
+      tx,
+      applicationCourseId,
+      "dropped_out",
+    );
+    await ApplicationCourseRepository.createStatusLog(tx, {
+      applicationCourseId,
+      fromStatus: previousStatus,
+      toStatus: "dropped_out",
+      changedByType: "staff_member",
+      changedById: staffId,
+    });
+
+    if (applicationCourse.courseQuotaSeatId) {
+      const seatLink = await ApplicationCourseRepository.findSeatPoolLink(
+        tx,
+        applicationCourse.courseQuotaSeatId,
+      );
+      if (seatLink?.seatPoolId) {
+        await ApplicationCourseRepository.incrementPoolSeat(
+          tx,
+          seatLink.seatPoolId,
+        );
+      } else {
+        await ApplicationCourseRepository.incrementExclusiveSeat(
+          tx,
+          applicationCourse.courseQuotaSeatId,
+        );
+      }
+    }
+
+    await BeaconuCardService.deactivateForStudent(tx, studentId);
+  }
+
+  // --- Phase-based case flow (college-admin only) ---
+
+  static async submitInitiation(
+    collegeId: string,
+    staffId: string,
+    id: string,
+    data: SubmitInitiationInput,
+  ) {
+    const row = await loadOwnedDetail(collegeId, id);
+    if (row.currentPhase !== 1) {
+      throw new ConflictError("This case is not at the Initiation phase");
+    }
+
+    const updated = await SeatCancellationRepository.submitInitiation(id, {
+      effectiveDate: data.effective_date,
+      lastSemester: data.last_semester,
+    });
+    await SeatCancellationRepository.addPhaseLog(prisma, {
+      seatCancellationId: id,
+      phase: 1,
+      action: "initiation_recorded",
+      performedBy: staffId,
+    });
+    return mapDetail(updated);
+  }
+
+  static async scheduleCounseling(
+    collegeId: string,
+    staffId: string,
+    id: string,
+    data: ScheduleCounselingInput,
+  ) {
+    const row = await loadOwnedDetail(collegeId, id);
+    if (row.currentPhase !== 2) {
+      throw new ConflictError(
+        "This case is not at the Schedule Counseling phase",
+      );
+    }
+
+    const updated = await SeatCancellationRepository.scheduleCounseling(id, {
+      counselorId: data.counselor_id,
+      scheduledAt: data.scheduled_at,
+    });
+    await SeatCancellationRepository.addPhaseLog(prisma, {
+      seatCancellationId: id,
+      phase: 2,
+      action: "counseling_scheduled",
+      performedBy: staffId,
+    });
+    return mapDetail(updated);
+  }
+
+  static async submitCounselingOutcome(
+    collegeId: string,
+    staffId: string,
+    id: string,
+    data: SubmitCounselingOutcomeInput,
+  ) {
+    const row = await loadOwnedDetail(collegeId, id);
+    if (row.currentPhase !== 3) {
+      throw new ConflictError(
+        "This case is not at the Counseling Outcome phase",
+      );
+    }
+
+    // Automatic default per the confirmed rule: Transfer -> suggest Case B.
+    // Termination has no fixed rule (staff freely picks Case A or C in the
+    // next phase) — so no suggestion is set for that outcome.
+    const suggestedCaseType = data.outcome === "transfer" ? "B" : null;
+
+    const updated = await SeatCancellationRepository.submitCounselingOutcome(
+      id,
+      {
+        notes: data.notes ?? null,
+        outcome: data.outcome,
+        suggestedCaseType,
+      },
+    );
+    await SeatCancellationRepository.addPhaseLog(prisma, {
+      seatCancellationId: id,
+      phase: 3,
+      action: "outcome_submitted",
+      performedBy: staffId,
+    });
+    return mapDetail(updated);
+  }
+
+  static async submitSettlement(
+    collegeId: string,
+    staffId: string,
+    id: string,
+    data: SubmitSettlementInput,
+  ) {
+    const row = await loadOwnedDetail(collegeId, id);
+    if (row.currentPhase !== 4) {
+      throw new ConflictError("This case is not at the Settlement phase");
+    }
+
+    let refundAmount: number | null = null;
+    let penaltyAmount: number | null = null;
+    let penaltyPaidAt: Date | null = null;
+
+    if (data.case_type === "A") {
+      penaltyAmount = data.penalty_amount ?? 0;
+      // "Record Penalty Payment" is the same submit action — recorded paid
+      // immediately, matching the mockup's single-step button.
+      penaltyPaidAt = new Date();
+    } else if (data.case_type === "B") {
+      if (data.refund_calculation_method === "fixed") {
+        refundAmount = data.refund_calculation_value ?? 0;
+      } else {
+        // Percentage is computed against the course's application fee — the
+        // only fee figure already known on this row. Flagged as an
+        // assumption: confirm the intended base if this should instead be
+        // the token/tuition fee actually paid.
+        const applicationCourse =
+          await SeatCancellationRepository.findApplicationFee(
+            row.applicationCourseId,
+          );
+        const base = applicationCourse
+          ? Number(applicationCourse.applicationFee)
+          : 0;
+        refundAmount = (base * (data.refund_calculation_value ?? 0)) / 100;
+      }
+    }
+    // case_type "C" — no penalty, no refund.
+
+    const updated = await SeatCancellationRepository.submitSettlement(id, {
+      caseType: data.case_type,
+      penaltyAmount,
+      penaltyPaidAt,
+      refundCalculationMethod: data.refund_calculation_method ?? null,
+      refundCalculationValue: data.refund_calculation_value ?? null,
+      refundAmount,
+    });
+    await SeatCancellationRepository.addPhaseLog(prisma, {
+      seatCancellationId: id,
+      phase: 4,
+      action: "settlement_recorded",
+      performedBy: staffId,
+    });
+    return mapDetail(updated);
+  }
+
+  static async finalClearance(
+    collegeId: string,
+    staffId: string,
+    id: string,
+    data: FinalClearanceInput,
+  ) {
+    const row = await loadOwnedDetail(collegeId, id);
+    if (row.currentPhase !== 5) {
+      throw new ConflictError("This case is not at the Final Clearance phase");
+    }
+    if (row.caseType === "B" && !data.refund_transaction_ref) {
+      throw new ConflictError(
+        "A refund transaction reference is required to clear a Case B settlement",
+      );
+    }
+
+    const finalized = await prisma.$transaction(async (tx) => {
+      await SeatCancellationService.finalizeSeatWithdrawal(
+        tx,
+        row.applicationCourseId,
+        row.studentId,
+        staffId,
+      );
+      return SeatCancellationRepository.finalizeClearance(tx, id, {
+        processedBy: staffId,
+        refundTransactionRef:
+          row.caseType === "B" ? (data.refund_transaction_ref ?? null) : null,
+        refundPaymentMethod:
+          row.caseType === "B" ? (data.refund_payment_method ?? null) : null,
+        refundProcessedAt: row.caseType === "B" ? new Date() : null,
+        refundStatus: row.caseType === "B" ? "processed" : "not_applicable",
+      });
+    });
+
+    await SeatCancellationRepository.addPhaseLog(prisma, {
+      seatCancellationId: id,
+      phase: 5,
+      action: "final_clearance_recorded",
+      performedBy: staffId,
+    });
+    await notifyStudentOfReview(
+      row.studentId,
+      row.applicationCourse.course.name,
+      "approve",
+    );
+
+    return mapDetail(finalized);
   }
 }

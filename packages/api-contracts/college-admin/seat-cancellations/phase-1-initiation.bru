@@ -1,0 +1,32 @@
+meta {
+  name: Phase 1 - Submit Initiation
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/initiation
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "effective_date": "2026-10-12",
+    "last_semester": "Sem 3"
+  }
+}
+
+docs {
+  Records the cancellation's effective date + last completed semester and
+  advances the case from Phase 1 (Initiation) to Phase 2 (Schedule
+  Counseling). 409 ConflictError if the case isn't currently at Phase 1.
+}

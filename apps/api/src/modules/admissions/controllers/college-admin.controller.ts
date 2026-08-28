@@ -11,6 +11,11 @@ import { SeatCancellationService } from "../services/seat-cancellation.service";
 import {
   reviewSeatCancellationSchema,
   listSeatCancellationsQuerySchema,
+  submitInitiationSchema,
+  scheduleCounselingSchema,
+  submitCounselingOutcomeSchema,
+  submitSettlementSchema,
+  finalClearanceSchema,
 } from "../validators/seat-cancellation.validator";
 import { CourseSwitchRequestService } from "../services/course-switch-request.service";
 import {
@@ -285,6 +290,72 @@ export class CollegeAdminAdmissionCycleController {
     return res.json(
       ApiResponse.success("Cancellation request reviewed", result),
     );
+  }
+
+  static async getSeatCancellation(req: Request, res: Response) {
+    const result = await SeatCancellationService.getForCollege(
+      req.collegeId!,
+      req.params.id as string,
+    );
+    return res.json(ApiResponse.success("Cancellation case fetched", result));
+  }
+
+  static async submitSeatCancellationInitiation(req: Request, res: Response) {
+    const body = submitInitiationSchema.parse(req.body);
+    const result = await SeatCancellationService.submitInitiation(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Initiation recorded", result));
+  }
+
+  static async scheduleSeatCancellationCounseling(req: Request, res: Response) {
+    const body = scheduleCounselingSchema.parse(req.body);
+    const result = await SeatCancellationService.scheduleCounseling(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Counseling scheduled", result));
+  }
+
+  static async submitSeatCancellationCounselingOutcome(
+    req: Request,
+    res: Response,
+  ) {
+    const body = submitCounselingOutcomeSchema.parse(req.body);
+    const result = await SeatCancellationService.submitCounselingOutcome(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Counseling outcome recorded", result));
+  }
+
+  static async submitSeatCancellationSettlement(req: Request, res: Response) {
+    const body = submitSettlementSchema.parse(req.body);
+    const result = await SeatCancellationService.submitSettlement(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Settlement recorded", result));
+  }
+
+  static async finalizeSeatCancellationClearance(req: Request, res: Response) {
+    const body = finalClearanceSchema.parse(req.body);
+    const result = await SeatCancellationService.finalClearance(
+      req.collegeId!,
+      req.userId as string,
+      req.params.id as string,
+      body,
+    );
+    return res.json(ApiResponse.success("Case cleared", result));
   }
 
   static async listCourseSwitchRequests(req: Request, res: Response) {

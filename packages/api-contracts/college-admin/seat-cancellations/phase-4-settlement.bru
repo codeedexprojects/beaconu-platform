@@ -1,0 +1,46 @@
+meta {
+  name: Phase 4 - Submit Settlement
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/settlement
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "case_type": "B",
+    "refund_calculation_method": "percentage",
+    "refund_calculation_value": 10
+  }
+}
+
+docs {
+  Records the settlement decision for one of three cases and advances the
+  case from Phase 4 to Phase 5 (Final Clearance). Fully manual — no payment
+  gateway call.
+
+  - case_type "A" (Penalty Applied): also send `penalty_amount` (number).
+    Recorded as paid immediately (same submit action as "Record Penalty
+    Payment" in the UI).
+  - case_type "B" (Refund Eligible): also send `refund_calculation_method`
+    ("percentage" | "fixed") and `refund_calculation_value`. For
+    "percentage", the refund amount is computed against the course's
+    application fee (the only fee figure already known on this row). For
+    "fixed", refund_calculation_value IS the refund amount.
+  - case_type "C" (Standard Withdrawal, no refund): no extra fields needed.
+
+  409 ConflictError if the case isn't currently at Phase 4, or if the
+  case-specific required fields are missing (400 ValidationError).
+}

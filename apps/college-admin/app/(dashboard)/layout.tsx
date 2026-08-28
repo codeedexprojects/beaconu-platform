@@ -524,7 +524,7 @@ export default function DashboardLayout({
                     permission: "staff.view",
                   },
                   {
-                    name: "Seat Cancellations",
+                    name: "Cancellation & Withdrawals",
                     path: "/seat-cancellations",
                     icon: XCircle,
                     permission: "staff.view",
