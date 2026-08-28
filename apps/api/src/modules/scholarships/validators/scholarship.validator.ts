@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const optionalUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .or(z.literal(""))
+  .optional()
+  .nullable();
+
 export const createScholarshipConfigSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(255),
   scholarship_type: z.string().trim().min(1, "Type is required").max(30),
@@ -8,6 +16,7 @@ export const createScholarshipConfigSchema = z.object({
   required_documents: z
     .array(z.string().trim().min(1))
     .min(1, "Add at least one required supporting document"),
+  cover_image_url: optionalUrlSchema,
 });
 
 export const updateScholarshipConfigSchema = z.object({
@@ -20,6 +29,7 @@ export const updateScholarshipConfigSchema = z.object({
     .min(1, "Add at least one required supporting document")
     .optional(),
   is_active: z.boolean().optional(),
+  cover_image_url: optionalUrlSchema,
 });
 
 export const listScholarshipConfigsQuerySchema = z.object({

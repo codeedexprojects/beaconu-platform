@@ -18,6 +18,7 @@ export class ScholarshipCollegeAdminController {
       discountType: body.discount_type,
       discountValue: body.discount_value,
       requiredDocuments: body.required_documents,
+      coverImageUrl: body.cover_image_url || null,
     });
     return res
       .status(201)
@@ -47,6 +48,9 @@ export class ScholarshipCollegeAdminController {
         }),
         ...(body.required_documents !== undefined && {
           requiredDocuments: body.required_documents,
+        }),
+        ...(body.cover_image_url !== undefined && {
+          coverImageUrl: body.cover_image_url || null,
         }),
         ...(body.is_active !== undefined && { isActive: body.is_active }),
       },

@@ -9,6 +9,7 @@ export interface ScholarshipConfigItem {
   discountType: ScholarshipDiscountType;
   discountValue: string;
   requiredDocuments: string[];
+  coverImageUrl: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ export interface CreateScholarshipConfigInput {
   discount_type: ScholarshipDiscountType;
   discount_value: number;
   required_documents: string[];
+  cover_image_url?: string | null;
 }
 
 export type UpdateScholarshipConfigInput =
