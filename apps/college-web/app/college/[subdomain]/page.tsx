@@ -73,6 +73,7 @@ export default async function CollegeLandingPage({
       <AboutSection
         about={overviewData?.about ?? null}
         accolades={overviewData?.accolades ?? []}
+        imageUrl={overviewData?.about_image ?? null}
       />
 
       <AdmissionsCtaSection admissionCycleLabel={admissionCycleLabel} />

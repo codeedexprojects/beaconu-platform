@@ -43,6 +43,7 @@ export const courseSchema = z.object({
   duration: z.string().optional().nullable(),
   intakeCapacity: z.coerce.number().optional().nullable(),
   eligibility: z.string().optional().nullable(),
+  coverImageUrl: z.string().optional().nullable(),
 });
 
 export type CourseFormData = z.infer<typeof courseSchema>;
@@ -55,6 +56,8 @@ export function BasicDetailsTab({
   campuses,
   isCreating,
   isUpdating,
+  uploadingField,
+  onFieldUpload,
   onSubmit,
   onCancel,
 }: {
@@ -65,6 +68,13 @@ export function BasicDetailsTab({
   campuses: any[];
   isCreating: boolean;
   isUpdating: boolean;
+  uploadingField: string | null;
+  onFieldUpload: (
+    file: File | null,
+    fieldKey: string,
+    s3PathSuffix: string,
+    onSuccess: (url: string) => void,
+  ) => void;
   onSubmit: (data: CourseFormData) => void;
   onCancel: () => void;
 }) {
@@ -93,6 +103,7 @@ export function BasicDetailsTab({
     useState<PublicCourseMaster | null>(null);
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const watchedDisciplineId = watch("disciplineId");
+  const watchedCoverImageUrl = watch("coverImageUrl");
 
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedNameQuery(nameQuery), 300);
@@ -128,6 +139,7 @@ export function BasicDetailsTab({
         duration: editingCourse.duration || "",
         intakeCapacity: editingCourse.intakeCapacity || null,
         eligibility: editingCourse.eligibility || "",
+        coverImageUrl: editingCourse.coverImageUrl || "",
       });
       setNameQuery(editingCourse.name || "");
     } else {
@@ -416,6 +428,37 @@ export function BasicDetailsTab({
                 placeholder="e.g. 60"
                 {...register("intakeCapacity")}
               />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label className="font-semibold text-foreground">
+                Course Photo
+              </Label>
+              {watchedCoverImageUrl ? (
+                <div className="relative h-40 w-full max-w-sm overflow-hidden rounded-lg border bg-muted">
+                  <img
+                    src={watchedCoverImageUrl}
+                    alt="Course cover preview"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : null}
+              <Input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploadingField === "coverImageUrl"}
+                onChange={(e) =>
+                  onFieldUpload(
+                    e.target.files?.[0] ?? null,
+                    "coverImageUrl",
+                    "cover",
+                    (url) => setValue("coverImageUrl", url),
+                  )
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Shown on course cards on your public landing page.
+              </p>
             </div>
 
             <div className="space-y-2 md:col-span-2">

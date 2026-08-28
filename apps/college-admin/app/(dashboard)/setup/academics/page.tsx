@@ -153,6 +153,7 @@ export default function SetupAcademicsPage() {
             duration: data.duration || null,
             intakeCapacity: data.intakeCapacity || null,
             eligibility: data.eligibility || null,
+            coverImageUrl: data.coverImageUrl || null,
           },
         },
         {
@@ -175,6 +176,7 @@ export default function SetupAcademicsPage() {
           duration: data.duration || null,
           intakeCapacity: data.intakeCapacity || null,
           eligibility: data.eligibility || null,
+          coverImageUrl: data.coverImageUrl || null,
           tabData: {},
         },
         {
@@ -478,6 +480,8 @@ export default function SetupAcademicsPage() {
                 campuses={campuses}
                 isCreating={isCreating}
                 isUpdating={isUpdating}
+                uploadingField={uploadingField}
+                onFieldUpload={handleCourseFieldUpload}
                 onSubmit={handleBasicSubmit}
                 onCancel={() => {
                   setEditingCourse(null);

@@ -50,6 +50,7 @@ export interface Course {
   name: string;
   code: string;
   studyMode: string;
+  coverImageUrl?: string | null;
   campus?: { id: string; name: string } | null;
   studyLevel?: { id: string; name: string } | null;
   discipline?: { id: string; name: string } | null;
@@ -96,6 +97,7 @@ export interface CreateCourseInput {
   duration?: string | null;
   eligibility?: string | null;
   campusId?: string | null;
+  coverImageUrl?: string | null;
   tabs?: string[];
   tabData?: Record<string, unknown>;
 }

@@ -155,6 +155,7 @@ const collegeOverviewSectionSchema = z
     established: z.number().int().positive().optional().nullable(),
     navigation_tabs: z.array(z.string().trim().min(1)).optional(),
     about: optionalTextSchema,
+    about_image: optionalUrlSchema,
     accolades: z.array(collegeOverviewBadgeSchema).optional(),
     university_details: z.array(collegeOverviewStatSchema).optional(),
     amenities: z.array(collegeOverviewAmenitySchema).optional(),
@@ -238,6 +239,7 @@ export const createCourseSchema = z.object({
   eligibility: z.string().trim().optional().nullable(),
   intakeCapacity: z.number().int().positive().optional().nullable(),
   studyMode: z.enum(["full_time", "part_time", "online"]).default("full_time"),
+  coverImageUrl: optionalUrlSchema,
   tabs: courseCreateTabsSchema.optional(),
   tabData: courseCreateTabDataSchema.optional(),
 });

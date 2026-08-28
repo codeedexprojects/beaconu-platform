@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, GraduationCap } from "lucide-react";
 import type { PublicCourseListItem } from "@beaconu/types";
 
@@ -41,9 +42,19 @@ export function CoursesSection({ courses, subdomain }: CoursesSectionProps) {
             className="flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 transition-colors hover:border-foreground/30"
           >
             <div className="relative h-36 w-full bg-muted">
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
-                <GraduationCap className="h-10 w-10 text-muted-foreground/40" />
-              </div>
+              {course.coverImageUrl ? (
+                <Image
+                  src={course.coverImageUrl}
+                  alt={course.name}
+                  fill
+                  sizes="256px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+                  <GraduationCap className="h-10 w-10 text-muted-foreground/40" />
+                </div>
+              )}
             </div>
             <div className="p-4">
               <h3 className="min-h-[2.5rem] text-sm font-semibold leading-snug">
