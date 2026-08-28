@@ -17,7 +17,9 @@ export default function ScholarshipsPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Scholarships</h1>
+        <h1 className="font-serif text-2xl font-bold tracking-tight text-navy">
+          Scholarships
+        </h1>
         <p className="text-sm text-muted-foreground">
           Define scholarship categories and review student requests.
         </p>
@@ -29,9 +31,9 @@ export default function ScholarshipsPage() {
             key={tab.id}
             type="button"
             onClick={() => setSubTab(tab.id)}
-            className={`shrink-0 rounded-lg border px-4 py-2 text-xs font-semibold transition-all ${
+            className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition-all ${
               subTab === tab.id
-                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                ? "border-gold bg-gold text-white shadow-sm"
                 : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
