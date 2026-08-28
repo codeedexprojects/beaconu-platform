@@ -1,0 +1,30 @@
+meta {
+  name: List My Call Requests
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/call-requests?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Paginated list of the authenticated student's own call requests (across
+  every college), newest first. Optional filter: status (pending|contacted|
+  cancelled).
+
+  Response `data` = { callRequests: [...], meta: {page,limit,total,
+  totalPages,hasNextPage,hasPreviousPage} }.
+}

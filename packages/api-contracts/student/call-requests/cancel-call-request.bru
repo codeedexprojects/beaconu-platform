@@ -1,0 +1,21 @@
+meta {
+  name: Cancel Call Request
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/call-requests/{{callRequestId}}/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Cancel a call request the student no longer needs. Only allowed while
+  status is "pending" — 409 ConflictError once a college has already
+  marked it contacted or cancelled it themselves.
+}

@@ -1,0 +1,38 @@
+meta {
+  name: List My Queries (College)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/support/platform-tickets?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status:
+  type:
+  search:
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.tickets && data.data.tickets[0]) {
+      bru.setEnvVar("platformTicketId", data.data.tickets[0].id);
+    }
+  }
+}
+
+docs {
+  Paginated list of every query/call-request raised by this college
+  (across all staff), newest-updated first. Optional filters: status,
+  type ("query" | "call_request"), search (subject/ticketNumber).
+}

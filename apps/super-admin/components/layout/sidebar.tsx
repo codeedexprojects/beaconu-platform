@@ -32,6 +32,7 @@ import {
   Trophy,
   Clapperboard,
   MessageSquareQuote,
+  Headset,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,6 +62,12 @@ const navSections: NavSection[] = [
         label: "Colleges",
         icon: Building2,
         permission: "colleges.view",
+      },
+      {
+        href: "/college-tickets",
+        label: "College Queries",
+        icon: Headset,
+        permission: "college-tickets.view",
       },
       {
         href: "/university-types",

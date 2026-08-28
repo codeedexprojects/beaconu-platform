@@ -1,0 +1,31 @@
+meta {
+  name: Get College Query
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/college-tickets/{{platformTicketId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~page:
+  ~limit: 20
+}
+
+docs {
+  Fetches one college query/call-request. Requires platform_admin auth +
+  college-tickets.view.
+
+  Messages are paginated (`page` omitted returns the LAST/most recent
+  page, `limit` default 20 max 100) — the response includes `messages`
+  (that page, oldest-first) and `messagesMeta` (page, limit, total,
+  totalPages, hasNextPage, hasPreviousPage). To load older messages,
+  call again with `page` one less than `messagesMeta.page`.
+}

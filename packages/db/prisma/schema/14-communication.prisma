@@ -116,6 +116,83 @@ model TicketMessage {
   @@map("ticket_messages")
 }
 
+model PlatformTicket {
+  id            String    @id @default(dbgenerated("('PTK-'::text || (nextval('platform_ticket_seq'::regclass))::text)"))
+  ticketNumber  String    @unique @map("ticket_number") @db.VarChar(30)
+  collegeId     String    @map("college_id")
+  raisedBy      String    @map("raised_by")
+  type          String    @default("query") @db.VarChar(20)
+  subject       String    @db.VarChar(255)
+  description   String    @db.Text
+  phoneNumber   String?   @map("phone_number") @db.VarChar(20)
+  preferredTime String?   @map("preferred_time") @db.VarChar(100)
+  attachments   Json      @default("[]")
+  assignedTo    String?   @map("assigned_to")
+  status        String    @default("awaiting_response") @db.VarChar(20)
+  resolvedAt    DateTime? @map("resolved_at") @db.Timestamptz
+  closedAt      DateTime? @map("closed_at") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  college  College                 @relation(fields: [collegeId], references: [id])
+  raiser   StaffMember             @relation(fields: [raisedBy], references: [id])
+  assignee PlatformAdmin?          @relation(fields: [assignedTo], references: [id])
+  messages PlatformTicketMessage[]
+
+  @@index([collegeId], name: "idx_ptickets_college")
+  @@index([raisedBy], name: "idx_ptickets_raised_by")
+  @@index([collegeId, status], name: "idx_ptickets_status")
+  @@index([assignedTo], name: "idx_ptickets_assigned")
+  @@index([ticketNumber], name: "idx_ptickets_number")
+  @@index([type], name: "idx_ptickets_type")
+  @@map("platform_tickets")
+}
+
+model PlatformTicketMessage {
+  id          String   @id @default(dbgenerated("('PTM-'::text || (nextval('platform_ticket_message_seq'::regclass))::text)"))
+  ticketId    String   @map("ticket_id")
+  senderType  String   @map("sender_type") @db.VarChar(20)
+  senderId    String?  @map("sender_id")
+  message     String   @db.Text
+  attachments Json     @default("[]")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  ticket PlatformTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt], name: "idx_ptmsg_ticket")
+  @@index([senderType, senderId], name: "idx_ptmsg_sender")
+  @@map("platform_ticket_messages")
+}
+
+// Pre-enrollment "request a call back from this college" — any authenticated
+// student, not just those already enrolled. Deliberately separate from
+// SupportTicket (which is a post-enrollment, threaded query system): this is
+// a single request + a staff decision, no message thread.
+model CallRequest {
+  id            String    @id @default(dbgenerated("('CRQ-'::text || (nextval('call_request_seq'::regclass))::text)"))
+  studentId     String    @map("student_id")
+  collegeId     String    @map("college_id")
+  phoneNumber   String    @map("phone_number") @db.VarChar(20)
+  preferredTime String?   @map("preferred_time") @db.VarChar(100)
+  message       String?   @db.Text
+  status        String    @default("pending") @db.VarChar(20)
+  staffNote     String?   @map("staff_note") @db.Text
+  respondedBy   String?   @map("responded_by")
+  respondedAt   DateTime? @map("responded_at") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  student  Student      @relation(fields: [studentId], references: [id])
+  college  College      @relation(fields: [collegeId], references: [id])
+  responder StaffMember? @relation(fields: [respondedBy], references: [id])
+
+  @@index([studentId], name: "idx_call_requests_student")
+  @@index([collegeId], name: "idx_call_requests_college")
+  @@index([collegeId, status], name: "idx_call_requests_status")
+  @@map("call_requests")
+}
+
 model ChatConversation {
   id                 String    @id @default(dbgenerated("('CCV-'::text || (nextval('chat_conversation_seq'::regclass))::text)"))
   participant1Type   String    @map("participant_1_type") @db.VarChar(20)

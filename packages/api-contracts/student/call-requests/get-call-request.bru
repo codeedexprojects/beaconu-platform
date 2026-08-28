@@ -1,0 +1,20 @@
+meta {
+  name: Get Call Request
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/call-requests/{{callRequestId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Full detail of one call request (student-owned only, 404 otherwise) —
+  includes status, staffNote (once handled), respondedByName, respondedAt.
+}

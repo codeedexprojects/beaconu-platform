@@ -1,0 +1,32 @@
+meta {
+  name: Get Query (College)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/support/platform-tickets/{{platformTicketId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+params:query {
+  ~page:
+  ~limit: 20
+}
+
+docs {
+  Fetches one query/call-request raised by this college. Requires
+  staff_member auth, scoped to the caller's own college — 404 if the
+  ticket belongs to a different college.
+
+  Messages are paginated (`page` omitted returns the LAST/most recent
+  page, `limit` default 20 max 100) — the response includes `messages`
+  (that page, oldest-first) and `messagesMeta` (page, limit, total,
+  totalPages, hasNextPage, hasPreviousPage). To load older messages,
+  call again with `page` one less than `messagesMeta.page`.
+}

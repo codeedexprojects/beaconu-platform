@@ -1,0 +1,57 @@
+meta {
+  name: Create Query / Call Request (College)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/support/platform-tickets
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "query",
+    "subject": "Issue with fee collection report",
+    "description": "The finance dashboard's CSV export is missing yesterday's transactions.",
+    "attachments": []
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("platformTicketId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Raises a query or call-back request from a college staff member,
+  addressed to the BeaconU platform support team. Requires staff_member
+  auth (any role).
+
+  - type: "query" | "call_request", defaults to "query".
+  - subject, description: required.
+  - phone_number: optional for "call_request" — falls back to the raising
+    staff member's own profile phone number if omitted; 400 if neither is
+    available.
+  - preferred_time: optional free-text hint (e.g. "Weekdays after 3pm"),
+    not a real calendar slot.
+  - attachments: up to 5, same {url, fileName, fileType, fileSize?} shape
+    used by the student support-ticket system — upload via the generic
+    college-admin uploads presign/verify flow first.
+
+  Response is the full ticket detail (same shape as Get Query below),
+  status "awaiting_response".
+}
