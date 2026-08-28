@@ -98,7 +98,9 @@ export class ApplicationRepository {
         collegeId: true,
         applicationNumber: true,
         formStatus: true,
-        admissionCycle: { select: { assessmentRequired: true } },
+        admissionCycle: {
+          select: { assessmentRequired: true, interviewRequired: true },
+        },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },
           select: {
@@ -119,7 +121,9 @@ export class ApplicationRepository {
         collegeId: true,
         applicationNumber: true,
         formStatus: true,
-        admissionCycle: { select: { assessmentRequired: true } },
+        admissionCycle: {
+          select: { assessmentRequired: true, interviewRequired: true },
+        },
         applicationCourses: {
           where: { status: { not: "withdrawn" } },
           select: {

@@ -72,6 +72,7 @@ const applicationFormSchema = z
     ends_on: z.string().trim().optional(),
     assessment_required: z.boolean(),
     assessment_template_id: z.string(),
+    interview_required: z.boolean(),
     token_online_payment_enabled: z.boolean(),
     token_offline_payment_enabled: z.boolean(),
   })
@@ -90,6 +91,7 @@ const EMPTY_VALUES: ApplicationFormValues = {
   ends_on: "",
   assessment_required: false,
   assessment_template_id: "",
+  interview_required: true,
   token_online_payment_enabled: true,
   token_offline_payment_enabled: true,
 };
@@ -150,6 +152,7 @@ export default function ApplicationFormsPage() {
       ends_on: item.endsOn ? item.endsOn.slice(0, 10) : "",
       assessment_required: item.assessmentRequired,
       assessment_template_id: item.assessmentTemplateId ?? "",
+      interview_required: item.interviewRequired,
       token_online_payment_enabled: item.tokenOnlinePaymentEnabled,
       token_offline_payment_enabled: item.tokenOfflinePaymentEnabled,
     });
@@ -354,6 +357,22 @@ export default function ApplicationFormsPage() {
                   Every course under this application form that requires an
                   assessment shares this one template.
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="interview_required"
+                  type="checkbox"
+                  checked={form.watch("interview_required")}
+                  onChange={(e) =>
+                    form.setValue("interview_required", e.target.checked)
+                  }
+                />
+                <Label
+                  htmlFor="interview_required"
+                  className="text-sm font-normal"
+                >
+                  Interview required for this application form
+                </Label>
               </div>
               <div className="space-y-2">
                 <Label>Token Fee Payment Methods</Label>

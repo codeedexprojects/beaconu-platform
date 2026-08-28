@@ -245,6 +245,23 @@ export class ApplicationCourseRepository {
     });
   }
 
+  static async findByIdWithStatusAndCycleFlags(id: string) {
+    return prisma.applicationCourse.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        application: {
+          select: {
+            admissionCycle: {
+              select: { assessmentRequired: true, interviewRequired: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
   static async findByIdWithOwnership(id: string) {
     return prisma.applicationCourse.findUnique({
       where: { id },
