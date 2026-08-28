@@ -9,10 +9,12 @@ router.use(authenticate, authorizeUserType("staff_member"));
 
 router.get(
   "/offline-review-queue",
+  authorize("payments.manage"),
   CollegeAdminPaymentController.listOfflineReviewQueue,
 );
 router.patch(
   "/offline/:transactionId/review",
+  authorize("payments.manage"),
   CollegeAdminPaymentController.reviewOfflineTokenPayment,
 );
 

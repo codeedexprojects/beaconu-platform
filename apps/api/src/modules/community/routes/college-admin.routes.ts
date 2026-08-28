@@ -1,9 +1,14 @@
 import { authenticate } from "@/shared/middleware/authenticate";
+import { authorize } from "@/shared/middleware/authorize";
 import { Router } from "express";
 import { CommunityCollegeAdminController } from "../controllers/college-admin.controller";
 
 const router: Router = Router();
+const moderate = authorize("community.manage");
 
+// Participation (join/post/like/comment) is open to any authenticated staff
+// member — this is self-service use of the community, not an admin feature.
+// Only moderation actions (edit/delete someone else's content) are gated.
 router.get("/", authenticate, CommunityCollegeAdminController.list);
 router.get("/joined", authenticate, CommunityCollegeAdminController.listJoined);
 router.get("/my", authenticate, CommunityCollegeAdminController.listMyCreated);
@@ -49,15 +54,22 @@ router.post(
   authenticate,
   CommunityCollegeAdminController.likeComment,
 );
-router.patch("/:id", authenticate, CommunityCollegeAdminController.update);
+router.patch(
+  "/:id",
+  authenticate,
+  moderate,
+  CommunityCollegeAdminController.update,
+);
 router.delete(
   "/:id/posts/:postId",
   authenticate,
+  moderate,
   CommunityCollegeAdminController.deletePost,
 );
 router.delete(
   "/:id/posts/:postId/comments/:commentId",
   authenticate,
+  moderate,
   CommunityCollegeAdminController.deleteComment,
 );
 
