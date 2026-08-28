@@ -272,6 +272,7 @@ export interface PublicCollegeOverviewSection {
   established?: number | null;
   navigation_tabs?: string[];
   about?: string;
+  about_image?: string | null;
   accolades?: PublicCollegeOverviewBadge[];
   university_details?: PublicCollegeOverviewStat[];
   amenities?: PublicCollegeOverviewAmenity[];
@@ -301,6 +302,7 @@ export interface PublicCourseListItem {
   intakeCapacity: number | null;
   studyMode: string;
   status: string;
+  coverImageUrl: string | null;
   discipline: {
     id: string;
     name: string;

@@ -21,6 +21,8 @@ import {
   Check,
   ExternalLink,
   Sparkles,
+  Image as ImageIcon,
+  ImagePlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,6 +51,11 @@ import {
   useUpdateCollegeProfile,
 } from "@/hooks/use-colleges";
 import {
+  useCollegeGallery,
+  useCreateCollegeGalleryItem,
+  useDeleteCollegeGalleryItem,
+} from "@/hooks/use-facilities";
+import {
   getDefaultCollegeOverviewAmenities,
   isFixedCollegeAmenity,
   mergeCollegeOverviewAmenities,
@@ -56,7 +63,9 @@ import {
 } from "@beaconu/utils";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { IconPickerField } from "@/components/icon-picker";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
+import type { PublicGalleryItem } from "@beaconu/types";
 
 // Tab metadata
 const PROFILE_TABS = [
@@ -95,6 +104,12 @@ const PROFILE_TABS = [
     label: "Commute & Access",
     icon: MapPin,
     desc: "Nearby transit hubs and regional accessibility mappings",
+  },
+  {
+    id: "gallery",
+    label: "Gallery",
+    icon: ImageIcon,
+    desc: "Campus photos shown on your public landing page",
   },
 ] as const;
 
@@ -306,6 +321,9 @@ export default function SetupProfilePage() {
   );
 
   // Overview arrays
+  const overviewAboutImage = watch(
+    "profileSections.college_overview.about_image",
+  );
   const overviewAccolades =
     watch("profileSections.college_overview.accolades") || [];
   const overviewUnivDetails =
@@ -868,6 +886,40 @@ export default function SetupProfilePage() {
                         {...register("profileSections.college_overview.about")}
                       />
                     </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label className="font-semibold">
+                        About Section Image
+                      </Label>
+                      {overviewAboutImage ? (
+                        <div className="relative h-40 w-full max-w-sm overflow-hidden rounded-lg border bg-muted">
+                          <img
+                            src={overviewAboutImage}
+                            alt="About section preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : null}
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={
+                          uploadingField ===
+                          "profileSections.college_overview.about_image"
+                        }
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "profileSections.college_overview.about_image",
+                            "college-overview/about",
+                          )
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Shown alongside the About text on your public landing
+                        page. Upload a photo, then click Save Settings to
+                        publish it.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Accolades Section */}
@@ -904,6 +956,13 @@ export default function SetupProfilePage() {
                             key={idx}
                             className="flex gap-3 items-center border p-3 rounded-lg bg-muted/20"
                           >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.title || "Accolade"}
+                                className="h-10 w-10 shrink-0 rounded-md border object-cover"
+                              />
+                            ) : null}
                             <Input
                               placeholder="Tag (e.g. Rank)"
                               className="max-w-[150px]"
@@ -2560,6 +2619,8 @@ export default function SetupProfilePage() {
               </Card>
             )}
 
+            {activeTab === "gallery" && <GalleryTab />}
+
             {/* TAB FOOTER NAVIGATION */}
             <div className="flex justify-between items-center pt-8 border-t border-border/60">
               <Button
@@ -2614,5 +2675,123 @@ export default function SetupProfilePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+function GalleryTab() {
+  const { data: galleryItems, isLoading } = useCollegeGallery();
+  const { mutate: createItem, isPending: isUploading } =
+    useCreateCollegeGalleryItem();
+  const { mutate: deleteItem, isPending: isDeleting } =
+    useDeleteCollegeGalleryItem();
+  const [deleteTarget, setDeleteTarget] = useState<PublicGalleryItem | null>(
+    null,
+  );
+
+  async function handleUpload(file: File | null) {
+    if (!file) return;
+    try {
+      const url = await uploadCollegeAdminFile(
+        file,
+        "college-overview/gallery",
+      );
+      createItem(
+        { mediaType: "image", url },
+        {
+          onSuccess: () => toast.success("Gallery image added"),
+        },
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    }
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    deleteItem(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success("Gallery image removed");
+        setDeleteTarget(null);
+      },
+    });
+  }
+
+  return (
+    <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
+      <CardHeader>
+        <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-primary" /> Campus Gallery
+        </CardTitle>
+        <CardDescription>
+          Photos shown in the Campus Gallery section on your public landing
+          page.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : galleryItems && galleryItems.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {galleryItems.map((item) => (
+              <div
+                key={item.id}
+                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+              >
+                <img
+                  src={item.url}
+                  alt={item.caption ?? "Gallery photo"}
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(item)}
+                  className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label="Remove gallery photo"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border/60 bg-muted/20 py-10">
+            <ImagePlus className="h-8 w-8 text-muted-foreground/40" />
+            <span className="text-xs text-muted-foreground">
+              No gallery images yet
+            </span>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label className="font-semibold">Add Photo</Label>
+          <Input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={isUploading}
+            onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
+          />
+          {isUploading ? (
+            <p className="text-xs text-muted-foreground">Uploading…</p>
+          ) : null}
+        </div>
+      </CardContent>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Gallery Photo"
+        description={
+          deleteTarget
+            ? "Remove this photo from your college gallery? This cannot be undone."
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="destructive"
+        loading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
+    </Card>
   );
 }

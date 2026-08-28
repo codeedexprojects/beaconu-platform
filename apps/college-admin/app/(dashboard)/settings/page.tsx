@@ -16,8 +16,6 @@ import {
   Globe,
   EyeOff,
   Link2,
-  Trash2,
-  ImagePlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,7 +40,6 @@ import {
 } from "@/components/ui/dialog";
 import { IndiaStateSelect } from "@/components/ui/india-state-select";
 import { IndiaDistrictSelect } from "@/components/ui/india-district-select";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthStore } from "@/store";
 
 import {
@@ -51,15 +48,9 @@ import {
   useMyInstitutionGroup,
   useJoinInstitutionGroup,
 } from "@/hooks/use-colleges";
-import {
-  useCollegeGallery,
-  useCreateCollegeGalleryItem,
-  useDeleteCollegeGalleryItem,
-} from "@/hooks/use-facilities";
 import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { joinGroupSchema } from "@beaconu/validation";
 import type { JoinGroupInput } from "@beaconu/validation";
-import type { PublicGalleryItem } from "@beaconu/types";
 
 const settingsFormSchema = z.object({
   name: z.string().trim().min(2, "College name is required"),
@@ -322,8 +313,6 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
-
-            <GalleryImagesCard />
           </div>
 
           <div className="space-y-6 md:col-span-2">
@@ -656,124 +645,6 @@ export default function SettingsPage() {
         );
       })()}
     </div>
-  );
-}
-
-function GalleryImagesCard() {
-  const { data: galleryItems, isLoading } = useCollegeGallery();
-  const { mutate: createItem, isPending: isUploading } =
-    useCreateCollegeGalleryItem();
-  const { mutate: deleteItem, isPending: isDeleting } =
-    useDeleteCollegeGalleryItem();
-  const [deleteTarget, setDeleteTarget] = useState<PublicGalleryItem | null>(
-    null,
-  );
-
-  async function handleUpload(file: File | null) {
-    if (!file) return;
-    try {
-      const url = await uploadCollegeAdminFile(file, "settings/gallery");
-      createItem(
-        { mediaType: "image", url },
-        {
-          onSuccess: () => toast.success("Gallery image added"),
-        },
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
-    }
-  }
-
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    deleteItem(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success("Gallery image removed");
-        setDeleteTarget(null);
-      },
-    });
-  }
-
-  return (
-    <Card className="border border-border/50 bg-card/60 backdrop-blur-md">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold">Gallery Images</CardTitle>
-        <CardDescription>
-          Campus photos shown on your public landing page.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : galleryItems && galleryItems.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2">
-            {galleryItems.map((item) => (
-              <div
-                key={item.id}
-                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
-              >
-                <img
-                  src={item.url}
-                  alt={item.caption ?? "Gallery photo"}
-                  className="h-full w-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(item)}
-                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                  aria-label="Remove gallery photo"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border/60 bg-muted/20 py-8">
-            <ImagePlus className="h-8 w-8 text-muted-foreground/40" />
-            <span className="text-xs text-muted-foreground">
-              No gallery images yet
-            </span>
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <Label>Add Photo</Label>
-          <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              disabled={isUploading}
-              onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
-            />
-            {isUploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ImageIcon className="h-4 w-4" />
-            )}
-            {isUploading ? "Uploading…" : "Upload gallery photo"}
-          </label>
-        </div>
-      </CardContent>
-
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        title="Remove Gallery Photo"
-        description={
-          deleteTarget
-            ? "Remove this photo from your college gallery? This cannot be undone."
-            : ""
-        }
-        confirmLabel="Remove"
-        variant="destructive"
-        loading={isDeleting}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-      />
-    </Card>
   );
 }
 

@@ -491,6 +491,7 @@ model Course {
   intakeCapacity         Int?     @map("intake_capacity")
   studyMode              String   @default("full_time") @map("study_mode") @db.VarChar(20)
   status                 String   @default("active") @db.VarChar(20)
+  coverImageUrl          String?  @map("cover_image_url") @db.Text
   metadata               Json     @default("{}")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz

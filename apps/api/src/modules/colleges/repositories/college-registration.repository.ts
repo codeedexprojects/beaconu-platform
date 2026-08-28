@@ -373,6 +373,7 @@ export class CollegeRegistrationRepository {
         eligibility: data.eligibility,
         intakeCapacity: data.intakeCapacity,
         studyMode: data.studyMode,
+        coverImageUrl: data.coverImageUrl || null,
         metadata: {
           tabs,
           tabData: payloadTabData as Prisma.InputJsonValue,
@@ -434,6 +435,9 @@ export class CollegeRegistrationRepository {
         eligibility: data.eligibility,
         intakeCapacity: data.intakeCapacity,
         studyMode: data.studyMode,
+        ...(data.coverImageUrl !== undefined && {
+          coverImageUrl: data.coverImageUrl || null,
+        }),
       },
     });
   }
