@@ -1,13 +1,14 @@
-import { Bus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { ArrowLeft, Bus } from "lucide-react";
 import { CommuteRoutes } from "@/components/college-landing/commute-routes";
 import type { PublicCommuteSection } from "@beaconu/types";
 
 interface CommuteSectionProps {
   commute: PublicCommuteSection;
+  subdomain: string;
 }
 
-export function CommuteSection({ commute }: CommuteSectionProps) {
+export function CommuteSection({ commute, subdomain }: CommuteSectionProps) {
   const routes = commute.routes ?? [];
   const pickupPoints = commute.pickup_points ?? [];
   const rules = commute.rules_and_code_of_conduct;
@@ -16,29 +17,40 @@ export function CommuteSection({ commute }: CommuteSectionProps) {
     return null;
 
   return (
-    <section id="commute" className="bg-muted/40 py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            <Bus className="h-6 w-6" />
-            {commute.title || "Commute & Transport"}
-          </h2>
+    <section id="commute" className="pb-16">
+      <div className="bg-headerTeal-dark py-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/college/${subdomain}`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+              aria-label="Back to college page"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
+              <Bus className="h-6 w-6" />
+              {commute.title || "Commute & Transport"}
+            </h1>
+          </div>
           {typeof commute.route_count === "number" ? (
-            <Badge variant="outline">
+            <span className="rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-medium text-white">
               {commute.route_count} route{commute.route_count === 1 ? "" : "s"}
-            </Badge>
+            </span>
           ) : null}
         </div>
+      </div>
 
+      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
         {pickupPoints.length > 0 ? (
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {pickupPoints.map((point, i) => (
               <span
                 key={`${point}-${i}`}
                 className={
                   point === commute.selected_pickup_point
-                    ? "inline-flex items-center rounded-full bg-foreground px-3.5 py-1.5 text-sm text-background"
-                    : "inline-flex items-center rounded-full border border-border/60 bg-background px-3.5 py-1.5 text-sm"
+                    ? "inline-flex items-center rounded-full bg-headerTeal-dark px-3.5 py-1.5 text-sm text-white"
+                    : "inline-flex items-center rounded-full bg-field px-3.5 py-1.5 text-sm text-foreground"
                 }
               >
                 {point}
@@ -50,7 +62,7 @@ export function CommuteSection({ commute }: CommuteSectionProps) {
         {routes.length > 0 ? <CommuteRoutes routes={routes} /> : null}
 
         {rules?.rules && rules.rules.length > 0 ? (
-          <div className="mt-10 rounded-2xl border border-border/60 bg-background p-6">
+          <div className="mt-10 rounded-2xl bg-field p-6">
             <h3 className="text-lg font-semibold">
               {rules.title || "Code of Conduct"}
             </h3>

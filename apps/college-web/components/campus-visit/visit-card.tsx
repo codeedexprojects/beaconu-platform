@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Loader2, User2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AvailabilityStrip } from "@/components/campus-visit/availability-strip";
@@ -19,13 +19,13 @@ import type { CampusVisitListItem } from "@beaconu/types";
 const RESCHEDULABLE_STATUSES = new Set(["pending", "confirmed"]);
 const CANCELLABLE_STATUSES = new Set(["pending", "confirmed", "arrived"]);
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  pending: "outline",
-  arrived: "secondary",
-  confirmed: "default",
-  completed: "secondary",
-  cancelled: "outline",
-  reassigned: "secondary",
+const STATUS_STYLE: Record<string, string> = {
+  pending: "bg-field text-foreground",
+  arrived: "bg-headerTeal/10 text-headerTeal-dark",
+  confirmed: "bg-headerTeal-dark text-white",
+  completed: "bg-headerTeal/10 text-headerTeal-dark",
+  cancelled: "bg-field text-muted-foreground",
+  reassigned: "bg-headerTeal/10 text-headerTeal-dark",
 };
 
 const inputCls =
@@ -112,7 +112,7 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 p-5">
+    <div className="rounded-2xl bg-field p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold">
@@ -124,12 +124,14 @@ export function VisitCard({ visit, collegeId }: VisitCardProps) {
             </p>
           ) : null}
         </div>
-        <Badge
-          variant={STATUS_VARIANT[visit.status] ?? "outline"}
-          className="capitalize"
+        <span
+          className={cn(
+            "rounded-full px-3 py-1 text-xs font-medium capitalize",
+            STATUS_STYLE[visit.status] ?? "bg-field text-foreground",
+          )}
         >
           {visit.status}
-        </Badge>
+        </span>
       </div>
 
       {visit.ambassador ? (

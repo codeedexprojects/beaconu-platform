@@ -1,43 +1,67 @@
-import { GraduationCap } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, GraduationCap } from "lucide-react";
 import type { PublicScholarship } from "@beaconu/types";
 
 interface ScholarshipsSectionProps {
   scholarships: PublicScholarship[];
+  subdomain: string;
 }
 
 export function ScholarshipsSection({
   scholarships,
+  subdomain,
 }: ScholarshipsSectionProps) {
   if (scholarships.length === 0) return null;
 
   return (
     <section id="scholarships" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-        Scholarships & Financial Support
-      </h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
+            <span className="h-px w-6 bg-headerTeal" />
+            Supports
+          </p>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+            Scholarships & Financial Support
+          </h2>
+        </div>
+        <Link
+          href={`/college/${subdomain}#scholarships`}
+          className="flex items-center gap-1 text-sm font-medium text-headerTeal hover:text-headerTeal-dark"
+        >
+          View All Programmes
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
+      </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 flex gap-5 overflow-x-auto pb-2">
         {scholarships.map((scholarship) => (
           <div
             key={scholarship.id}
-            className="rounded-2xl border border-border/60 p-5"
+            className="flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground/5">
-              <GraduationCap className="h-5 w-5" />
+            <div className="relative h-36 w-full bg-muted">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+                <GraduationCap className="h-10 w-10 text-muted-foreground/40" />
+              </div>
             </div>
-            <p className="mt-4 text-sm font-semibold">
-              {scholarship.displayLabel ?? scholarship.name}
-            </p>
-            {scholarship.discountDisplay ? (
-              <p className="mt-1 text-lg font-bold tracking-tight">
-                {scholarship.discountDisplay}
-              </p>
-            ) : null}
-            {scholarship.termsAndConditions ? (
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {scholarship.termsAndConditions}
-              </p>
-            ) : null}
+            <div className="p-4">
+              <h3 className="min-h-[2.5rem] text-sm font-semibold leading-snug">
+                {scholarship.displayLabel ?? scholarship.name}
+              </h3>
+              {scholarship.discountDisplay ? (
+                <p className="mt-1 text-sm font-bold tracking-tight">
+                  {scholarship.discountDisplay}
+                </p>
+              ) : null}
+              <Link
+                href={`/college/${subdomain}#scholarships`}
+                className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-3 text-xs font-medium text-headerTeal"
+              >
+                View Details
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         ))}
       </div>

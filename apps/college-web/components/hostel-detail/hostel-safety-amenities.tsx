@@ -26,8 +26,8 @@ export function HostelSafetyAmenities({
   return (
     <section className="grid gap-6 sm:grid-cols-2">
       {hasSafety ? (
-        <div className="rounded-2xl border border-border/60 p-5">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+        <div className="rounded-2xl bg-field p-5">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-headerTeal-dark">
             <ShieldCheck className="h-4 w-4" />
             {safety?.title || "Safety & Warden"}
           </h3>
@@ -59,7 +59,7 @@ export function HostelSafetyAmenities({
               {safety?.features?.map((f, i) => (
                 <span
                   key={i}
-                  className="rounded-full border border-border/60 px-2.5 py-1 text-xs"
+                  className="rounded-full bg-background px-2.5 py-1 text-xs"
                 >
                   {f.label}
                 </span>
@@ -70,8 +70,8 @@ export function HostelSafetyAmenities({
       ) : null}
 
       {hasAmenities ? (
-        <div className="rounded-2xl border border-border/60 p-5">
-          <h3 className="text-sm font-semibold">
+        <div className="rounded-2xl bg-field p-5">
+          <h3 className="text-sm font-semibold text-headerTeal-dark">
             {amenities?.title || "Amenities"}
           </h3>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -80,9 +80,9 @@ export function HostelSafetyAmenities({
               .map((item, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-2.5 py-1 text-xs"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-xs"
                 >
-                  <CheckCircle2 className="h-3 w-3 text-foreground/70" />
+                  <CheckCircle2 className="h-3 w-3 text-headerTeal" />
                   {item.label}
                 </span>
               ))}
@@ -91,12 +91,14 @@ export function HostelSafetyAmenities({
       ) : null}
 
       {hasRules ? (
-        <div className="rounded-2xl border border-border/60 p-5 sm:col-span-2">
-          <h3 className="text-sm font-semibold">{rules?.title || "Rules"}</h3>
+        <div className="rounded-2xl bg-field p-5 sm:col-span-2">
+          <h3 className="text-sm font-semibold text-headerTeal-dark">
+            {rules?.title || "Rules"}
+          </h3>
           <ol className="mt-3 space-y-2.5">
             {rules?.items?.map((rule, i) => (
               <li key={i} className="flex gap-3 text-sm">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-headerTeal-dark text-xs font-semibold text-white">
                   {rule.number ?? i + 1}
                 </span>
                 <span>

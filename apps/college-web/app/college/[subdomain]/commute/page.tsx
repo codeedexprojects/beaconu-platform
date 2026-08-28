@@ -4,7 +4,6 @@ import {
   getCommuteSection,
 } from "@/lib/services/public-college.service";
 import { CommuteSection } from "@/components/college-landing/commute-section";
-import { BackToCollegeLink } from "@/components/college-landing/back-to-college-link";
 
 interface CommutePageProps {
   params: Promise<{ subdomain: string }>;
@@ -36,10 +35,5 @@ export default async function CommutePage({ params }: CommutePageProps) {
 
   if (!hasContent) notFound();
 
-  return (
-    <>
-      <BackToCollegeLink subdomain={subdomain} />
-      <CommuteSection commute={section.data} />
-    </>
-  );
+  return <CommuteSection commute={section.data} subdomain={subdomain} />;
 }

@@ -9,8 +9,8 @@ export function AvailabilityStrip({ availability }: AvailabilityStripProps) {
   if (availability.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-border/60 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-2xl bg-field p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
         Visiting Hours
       </p>
       <div className="mt-3 grid grid-cols-7 gap-1.5">
@@ -19,7 +19,7 @@ export function AvailabilityStrip({ availability }: AvailabilityStripProps) {
             key={day.weekday}
             className={cn(
               "rounded-lg p-2 text-center",
-              day.isOff ? "bg-muted/60" : "bg-muted",
+              day.isOff ? "bg-background/60" : "bg-background",
             )}
           >
             <p className="text-[10px] font-medium text-muted-foreground">

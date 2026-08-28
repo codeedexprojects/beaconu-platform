@@ -4,7 +4,6 @@ import {
   getInstitutionsAcrossWorldSection,
 } from "@/lib/services/public-college.service";
 import { InstitutionsSection } from "@/components/college-landing/institutions-section";
-import { BackToCollegeLink } from "@/components/college-landing/back-to-college-link";
 
 interface InstitutionsPageProps {
   params: Promise<{ subdomain: string }>;
@@ -33,10 +32,5 @@ export default async function InstitutionsPage({
 
   if (!section || section.data.institutions.length === 0) notFound();
 
-  return (
-    <>
-      <BackToCollegeLink subdomain={subdomain} />
-      <InstitutionsSection section={section.data} />
-    </>
-  );
+  return <InstitutionsSection section={section.data} subdomain={subdomain} />;
 }

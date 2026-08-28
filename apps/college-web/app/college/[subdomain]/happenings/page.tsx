@@ -4,7 +4,6 @@ import {
   getHappeningsSection,
 } from "@/lib/services/public-college.service";
 import { HappeningsSection } from "@/components/college-landing/happenings-section";
-import { BackToCollegeLink } from "@/components/college-landing/back-to-college-link";
 
 interface HappeningsPageProps {
   params: Promise<{ subdomain: string }>;
@@ -31,10 +30,5 @@ export default async function HappeningsPage({ params }: HappeningsPageProps) {
 
   if (!section || (section.data.happenings?.length ?? 0) === 0) notFound();
 
-  return (
-    <>
-      <BackToCollegeLink subdomain={subdomain} />
-      <HappeningsSection section={section.data} />
-    </>
-  );
+  return <HappeningsSection section={section.data} subdomain={subdomain} />;
 }

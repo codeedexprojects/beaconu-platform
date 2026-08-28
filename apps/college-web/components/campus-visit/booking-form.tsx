@@ -45,7 +45,7 @@ interface BookingFormProps {
 }
 
 const inputCls =
-  "h-11 w-full rounded-xl border border-border/60 bg-background px-3.5 text-sm outline-none focus:border-foreground/30";
+  "h-11 w-full rounded-xl border-0 bg-field px-3.5 text-sm outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40";
 
 export function BookingForm({
   collegeId,
@@ -112,7 +112,7 @@ export function BookingForm({
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
-        className="space-y-4 rounded-2xl border border-border/60 p-5"
+        className="space-y-4 rounded-2xl border border-border/60 bg-background p-5"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -244,7 +244,7 @@ export function BookingForm({
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 text-muted-foreground hover:text-destructive"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -264,7 +264,11 @@ export function BookingForm({
           ) : null}
         </div>
 
-        <Button type="submit" disabled={isPending} className="h-11 w-full">
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-11 w-full rounded-full border-0 bg-headerTeal-dark text-white hover:bg-headerTeal-dark/90"
+        >
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           <User2 className="mr-1.5 h-4 w-4" />
           Request Campus Visit
