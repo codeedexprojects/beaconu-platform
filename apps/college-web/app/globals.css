@@ -43,6 +43,10 @@
     --accent-orange-gradient-to: 222 47% 8%;
     --field-bg: 220 20% 96%;
     --field-bg-focus: 220 20% 93%;
+
+    --header-teal: 195 45% 37%;
+    --header-teal-dark: 195 50% 28%;
+    --header-teal-foreground: 0 0% 100%;
   }
 }
 

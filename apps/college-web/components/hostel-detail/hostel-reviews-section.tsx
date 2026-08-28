@@ -12,7 +12,8 @@ export function HostelReviewsSection({ reviews }: HostelReviewsSectionProps) {
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold tracking-tight">
+        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <span className="h-px w-6 bg-headerTeal" />
           {reviews.title || "Reviews & Ratings"}
         </h2>
         {reviews.summary ? (
@@ -27,12 +28,9 @@ export function HostelReviewsSection({ reviews }: HostelReviewsSectionProps) {
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((review) => (
-          <div
-            key={review.id}
-            className="rounded-2xl border border-border/60 p-4"
-          >
+          <div key={review.id} className="rounded-2xl bg-field p-4">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-headerTeal-dark text-xs font-semibold text-white">
                 {review.reviewer_initials}
               </span>
               <div>

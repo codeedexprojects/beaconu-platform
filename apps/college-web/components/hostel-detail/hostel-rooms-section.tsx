@@ -16,7 +16,8 @@ export function HostelRoomsSection({
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl font-bold tracking-tight">
+        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <span className="h-px w-6 bg-headerTeal" />
           {title || "Rooms & Types"}
         </h2>
         {totalIntakeLabel ? (
@@ -27,10 +28,7 @@ export function HostelRoomsSection({
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((room) => (
-          <div
-            key={room.id}
-            className="min-w-0 rounded-2xl border border-border/60 p-4"
-          >
+          <div key={room.id} className="min-w-0 rounded-2xl bg-field p-4">
             <p className="break-words text-sm font-semibold">{room.name}</p>
             {room.description ? (
               <p className="mt-1 break-words text-sm text-muted-foreground">

@@ -207,7 +207,7 @@ export function ScholarshipApplyDialog({
                   key={config.id}
                   type="button"
                   onClick={() => setSelected(config)}
-                  className="flex w-full flex-col gap-1 rounded-2xl border border-border/60 p-3 text-left hover:bg-field"
+                  className="flex w-full flex-col gap-1 rounded-2xl bg-field p-3 text-left hover:bg-field-focus"
                 >
                   <span className="text-sm font-medium text-foreground">
                     {config.name}
@@ -232,7 +232,7 @@ export function ScholarshipApplyDialog({
                 rows={4}
                 {...form.register("reason")}
                 placeholder="Why are you applying for this scholarship?"
-                className="w-full rounded-2xl border-0 bg-field px-4 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-accentOrange/40"
+                className="w-full rounded-2xl border-0 bg-field px-4 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40"
               />
             </Field>
 
@@ -274,7 +274,7 @@ export function ScholarshipApplyDialog({
               <Button
                 type="submit"
                 disabled={isPending}
-                className="h-11 flex-1 rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-sm font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+                className="h-11 flex-1 rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
               >
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

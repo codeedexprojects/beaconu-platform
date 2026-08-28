@@ -238,7 +238,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      className="space-y-5 rounded-2xl border border-border/60 p-5"
+      className="space-y-5 rounded-2xl border border-border/60 bg-background p-5"
     >
       <IconSectionHeader
         icon={GraduationCap}
@@ -372,7 +372,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Marks
         </p>
         {form.formState.errors.subjects?.root ? (
@@ -382,13 +382,10 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
         ) : null}
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="space-y-3 rounded-2xl border border-border/40 p-4"
-            >
+            <div key={field.id} className="space-y-3 rounded-2xl bg-field p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <BookOpen className="h-4 w-4 text-accentOrange" />
+                  <BookOpen className="h-4 w-4 text-headerTeal" />
                   Subject {index + 1}
                 </div>
                 {fields.length > 1 ? (
@@ -450,8 +447,8 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-border/40 p-4">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+      <div className="rounded-2xl bg-field p-4">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Overall Result Summary
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -503,7 +500,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Documents
         </p>
         <input
@@ -540,7 +537,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save 10th Grade Details

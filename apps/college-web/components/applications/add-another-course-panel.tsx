@@ -16,7 +16,7 @@ interface AddAnotherCoursePanelProps {
 }
 
 const inputCls =
-  "h-11 w-full rounded-xl border border-border/60 bg-background px-3.5 text-sm outline-none focus:border-foreground/30";
+  "h-11 w-full rounded-xl border-0 bg-field px-3.5 text-sm outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40";
 
 export function AddAnotherCoursePanel({
   applicationId,
@@ -42,7 +42,7 @@ export function AddAnotherCoursePanel({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex h-14 w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-primary/40 text-sm font-medium text-primary hover:bg-primary/5"
+        className="flex h-14 w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-headerTeal/40 text-sm font-medium text-headerTeal-dark hover:bg-headerTeal/5"
       >
         <Plus className="h-4 w-4" />
         Add Another Course
@@ -51,7 +51,7 @@ export function AddAnotherCoursePanel({
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 p-4">
+    <div className="rounded-2xl bg-field p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold">Add Another Course</p>
         <button
@@ -81,7 +81,7 @@ export function AddAnotherCoursePanel({
           availableCourses.map((course) => (
             <div
               key={course.courseId}
-              className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm"
+              className="flex items-center justify-between rounded-xl bg-background p-3 text-sm"
             >
               <span>
                 <span className="font-medium">{course.courseName}</span>
@@ -104,7 +104,7 @@ export function AddAnotherCoursePanel({
                     },
                   )
                 }
-                className="flex h-8 items-center gap-1 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                className="flex h-8 items-center gap-1 rounded-full bg-headerTeal-dark px-3 text-xs font-medium text-white disabled:opacity-50"
               >
                 {isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />

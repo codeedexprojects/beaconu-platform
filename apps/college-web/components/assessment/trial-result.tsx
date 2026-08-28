@@ -37,7 +37,7 @@ export function TrialResult({ result, onRetake, onExit }: TrialResultProps) {
 
       {Object.keys(result.sectionScores).length > 0 ? (
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
             Section Breakdown
           </p>
           <div className="space-y-2">
@@ -81,7 +81,7 @@ export function TrialResult({ result, onRetake, onExit }: TrialResultProps) {
         <Button
           type="button"
           onClick={onRetake}
-          className="flex-1 rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-accentOrange-foreground shadow-md hover:opacity-95"
+          className="flex-1 rounded-full border-0 bg-headerTeal-dark text-white shadow-md hover:opacity-95"
         >
           Retake Trial
         </Button>

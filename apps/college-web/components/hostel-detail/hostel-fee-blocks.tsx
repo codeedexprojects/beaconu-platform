@@ -9,14 +9,14 @@ function PlanCard({ plan }: { plan: PublicHostelPlan }) {
   const tags = [...(plan.feature_tags ?? []), ...(plan.meal_tags ?? [])];
 
   return (
-    <div className="rounded-xl border border-border/60 p-4">
+    <div className="rounded-xl bg-field p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold">{plan.name}</p>
         {plan.subtitle ? (
           <span className="text-xs text-muted-foreground">{plan.subtitle}</span>
         ) : null}
       </div>
-      <p className="mt-2 text-lg font-bold tracking-tight">
+      <p className="mt-2 text-lg font-bold tracking-tight text-headerTeal-dark">
         {plan.currency}
         {plan.price}
         <span className="text-sm font-normal text-muted-foreground">
@@ -27,7 +27,10 @@ function PlanCard({ plan }: { plan: PublicHostelPlan }) {
       {tags.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {tags.map((tag, i) => (
-            <span key={i} className="rounded-full bg-muted px-2 py-0.5 text-xs">
+            <span
+              key={i}
+              className="rounded-full bg-background px-2 py-0.5 text-xs"
+            >
               {tag}
             </span>
           ))}
@@ -52,7 +55,7 @@ export function HostelFeesBlock({ fees }: { fees: PublicHostelFeeBlock }) {
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
         {fees.title}
       </p>
       <div className="mt-3 space-y-5">
@@ -85,11 +88,11 @@ export function SimplePlanBlock({
   return (
     <div>
       <div className="flex items-center gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
           {block.title}
         </p>
         {block.status_badge ? (
-          <span className="rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold text-background">
+          <span className="rounded-full bg-headerTeal-dark px-2 py-0.5 text-[10px] font-semibold text-white">
             {block.status_badge}
           </span>
         ) : null}
@@ -112,7 +115,7 @@ export function ParkingBlock({ block }: { block: PublicHostelParkingBlock }) {
 
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
         {block.title}
       </p>
       <div className="mt-3 space-y-2">

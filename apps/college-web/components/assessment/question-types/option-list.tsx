@@ -42,16 +42,16 @@ export function OptionList({
             className={cn(
               "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
               isSelected
-                ? "border-accentOrange bg-accentOrange-soft text-foreground"
+                ? "border-headerTeal-dark bg-headerTeal/10 text-foreground"
                 : "border-border/60 bg-field text-foreground hover:bg-field-focus",
             )}
           >
             <span
               className={cn(
-                "flex h-6 w-6 shrink-0 items-center justify-center border-2 text-xs font-semibold text-accentOrange-foreground",
+                "flex h-6 w-6 shrink-0 items-center justify-center border-2 text-xs font-semibold text-white",
                 multi ? "rounded-md" : "rounded-full",
                 isSelected
-                  ? "border-accentOrange bg-accentOrange"
+                  ? "border-headerTeal-dark bg-headerTeal-dark"
                   : "border-border bg-background text-muted-foreground",
               )}
             >

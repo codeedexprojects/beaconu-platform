@@ -52,7 +52,7 @@ export function AttemptNavBar({
             className={cn(
               "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
               isFlagged
-                ? "bg-accentOrange-soft text-accentOrange"
+                ? "bg-headerTeal/10 text-headerTeal"
                 : "text-muted-foreground hover:bg-field",
             )}
           >
@@ -77,7 +77,7 @@ export function AttemptNavBar({
           type="button"
           onClick={onNext}
           disabled={isSubmitting || nextDisabled}
-          className="flex h-11 items-center gap-2 rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] px-6 text-sm font-semibold text-accentOrange-foreground shadow-md transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-11 items-center gap-2 rounded-full border-0 bg-headerTeal-dark px-6 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -91,7 +91,7 @@ export function AttemptNavBar({
           type="button"
           onClick={onNext}
           disabled={nextDisabled}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-accentOrange bg-accentOrange-soft text-accentOrange transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-headerTeal-dark bg-headerTeal/10 text-headerTeal transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ArrowRight className="h-4 w-4" />
         </button>

@@ -68,7 +68,7 @@ export function AttemptReview({
               <p className="text-xs text-muted-foreground">Attempted</p>
             </div>
             <div className="rounded-xl bg-field p-3 text-center">
-              <p className="text-lg font-bold text-accentOrange">
+              <p className="text-lg font-bold text-headerTeal">
                 {flaggedCount}
               </p>
               <p className="text-xs text-muted-foreground">Flagged</p>
@@ -109,7 +109,7 @@ export function AttemptReview({
                         question.isAnswered
                           ? "border-transparent bg-foreground text-background"
                           : question.isFlagged
-                            ? "border-accentOrange bg-accentOrange-soft text-accentOrange"
+                            ? "border-headerTeal-dark bg-headerTeal/10 text-headerTeal"
                             : "border-dashed border-border text-muted-foreground hover:bg-field",
                       )}
                     >
@@ -131,7 +131,7 @@ export function AttemptReview({
         type="button"
         onClick={onSubmit}
         disabled={isSubmitting || isLoading}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isSubmitting ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

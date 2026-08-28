@@ -239,7 +239,7 @@ export function AddressDetailsForm({
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      className="space-y-6 rounded-2xl border border-border/60 p-5"
+      className="space-y-6 rounded-2xl border border-border/60 bg-background p-5"
     >
       <IconSectionHeader
         icon={MapPin}
@@ -268,7 +268,7 @@ export function AddressDetailsForm({
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save & Continue

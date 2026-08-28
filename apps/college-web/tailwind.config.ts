@@ -59,6 +59,11 @@ const config: Config = {
           DEFAULT: "hsl(var(--field-bg))",
           focus: "hsl(var(--field-bg-focus))",
         },
+        headerTeal: {
+          DEFAULT: "hsl(var(--header-teal))",
+          dark: "hsl(var(--header-teal-dark))",
+          foreground: "hsl(var(--header-teal-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -30,12 +30,12 @@ export function AdmissionCycleCard({
   subdomain,
 }: AdmissionCycleCardProps) {
   return (
-    <div className="rounded-2xl border border-border/60 p-4">
+    <div className="rounded-2xl bg-field p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+        <span className="rounded-full bg-background px-2.5 py-1 text-xs font-medium text-foreground">
           {formatLabel(cycle.programLevel)}
         </span>
-        <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">
+        <span className="rounded-full bg-headerTeal-dark px-2.5 py-1 text-xs font-medium text-white">
           Open
         </span>
       </div>
@@ -54,7 +54,7 @@ export function AdmissionCycleCard({
 
       <Link
         href={`/college/${subdomain}/applications/new?cycle=${cycle.id}`}
-        className="mt-4 flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        className="mt-4 flex h-10 items-center justify-center gap-1.5 rounded-full bg-headerTeal-dark text-sm font-medium text-white transition-opacity hover:opacity-90"
       >
         Start Application
         <ArrowRight className="h-4 w-4" />

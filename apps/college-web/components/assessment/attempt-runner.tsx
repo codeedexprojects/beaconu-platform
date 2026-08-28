@@ -241,7 +241,7 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
               className={cn(
                 "shrink-0 rounded-full px-4 py-2 text-xs font-medium transition-colors",
                 i === sectionIndex
-                  ? "bg-accentOrange text-accentOrange-foreground shadow-sm"
+                  ? "bg-headerTeal-dark text-white shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

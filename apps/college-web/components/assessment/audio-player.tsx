@@ -80,7 +80,7 @@ export function AssessmentAudioPlayer({
         type="button"
         onClick={togglePlay}
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-full border-2 border-accentOrange bg-accentOrange-soft text-accentOrange transition-transform active:scale-95",
+          "flex shrink-0 items-center justify-center rounded-full border-2 border-headerTeal-dark bg-headerTeal/10 text-headerTeal transition-transform active:scale-95",
           isLarge ? "h-20 w-20" : "h-10 w-10",
         )}
       >

@@ -43,7 +43,7 @@ export function ApplicationProgressCard({
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 rounded-2xl border border-border/60 p-4 transition-colors hover:border-foreground/30"
+      className="flex items-center gap-4 rounded-2xl bg-field p-4 transition-colors hover:bg-field-focus"
     >
       <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
         <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90">
@@ -53,7 +53,7 @@ export function ApplicationProgressCard({
             r="24"
             fill="none"
             strokeWidth="4"
-            className="stroke-muted"
+            className="stroke-background"
           />
           <circle
             cx="28"
@@ -64,10 +64,10 @@ export function ApplicationProgressCard({
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 24}
             strokeDashoffset={2 * Math.PI * 24 * (1 - progressPct / 100)}
-            className="stroke-primary"
+            className="stroke-headerTeal-dark"
           />
         </svg>
-        <GraduationCap className="h-5 w-5 text-primary" />
+        <GraduationCap className="h-5 w-5 text-headerTeal-dark" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -77,8 +77,8 @@ export function ApplicationProgressCard({
             className={cn(
               "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
               isDraft
-                ? "bg-secondary text-secondary-foreground"
-                : "bg-primary text-primary-foreground",
+                ? "bg-background text-muted-foreground"
+                : "bg-headerTeal-dark text-white",
             )}
           >
             {formatStatus(application.formStatus)}

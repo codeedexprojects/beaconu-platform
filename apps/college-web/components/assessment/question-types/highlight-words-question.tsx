@@ -33,7 +33,7 @@ export function HighlightWordsQuestion({
               className={cn(
                 "inline rounded-md px-1 py-0.5 transition-colors",
                 isSelected
-                  ? "bg-accentOrange text-accentOrange-foreground"
+                  ? "bg-headerTeal-dark text-white"
                   : "hover:bg-field-focus",
               )}
             >

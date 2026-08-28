@@ -94,12 +94,12 @@ export function ApplicationDetail({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border/60 p-5">
+      <div className="rounded-2xl bg-field p-5">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Application #{application.applicationNumber}
           </p>
-          <span className="rounded-full border border-border/60 px-3 py-1 text-xs font-medium">
+          <span className="rounded-full bg-background px-3 py-1 text-xs font-medium">
             {formatStatus(application.formStatus)}
           </span>
         </div>
@@ -173,13 +173,13 @@ export function ApplicationDetail({
       </div>
 
       {status && status.scholarships.length > 0 ? (
-        <div className="rounded-2xl border border-border/60 p-5">
+        <div className="rounded-2xl bg-field p-5">
           <h2 className="font-semibold">Scholarships</h2>
           <div className="mt-3 space-y-2">
             {status.scholarships.map((scholarship) => (
               <div
                 key={scholarship.scholarshipApplicationId}
-                className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm"
+                className="flex items-center justify-between rounded-xl bg-background p-3 text-sm"
               >
                 <span>{scholarship.scholarshipName}</span>
                 <span className="text-muted-foreground">
@@ -203,7 +203,7 @@ export function ApplicationDetail({
           </div>
 
           {paymentSummary.courses.length === 0 ? (
-            <p className="rounded-2xl border border-border/60 p-4 text-sm text-muted-foreground">
+            <p className="rounded-2xl bg-field p-4 text-sm text-muted-foreground">
               No courses added yet.
             </p>
           ) : (

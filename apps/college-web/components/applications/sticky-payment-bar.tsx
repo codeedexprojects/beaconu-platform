@@ -25,7 +25,7 @@ export function StickyPaymentBar({
           <p className="text-lg font-bold">₹{totalApplicationFee}</p>
         </div>
         {isPaid ? (
-          <span className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+          <span className="rounded-full bg-field px-3 py-1.5 text-sm font-medium text-foreground">
             Paid
           </span>
         ) : (
@@ -33,7 +33,7 @@ export function StickyPaymentBar({
             type="button"
             disabled={isPaying}
             onClick={onPay}
-            className="flex h-11 items-center gap-1.5 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            className="flex h-11 items-center gap-1.5 rounded-full bg-headerTeal-dark px-5 text-sm font-medium text-white disabled:opacity-50"
           >
             {isPaying ? (
               <Loader2 className="h-4 w-4 animate-spin" />

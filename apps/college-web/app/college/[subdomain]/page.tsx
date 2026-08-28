@@ -8,13 +8,16 @@ import {
   getCollegeScholarships,
 } from "@/lib/services/public-college.service";
 import { HeroSection } from "@/components/college-landing/hero-section";
-import { StatsStrip } from "@/components/college-landing/stats-strip";
 import { AboutSection } from "@/components/college-landing/about-section";
+import { AdmissionsCtaSection } from "@/components/college-landing/admissions-cta-section";
 import { AmenitiesSection } from "@/components/college-landing/amenities-section";
+import { CampusHighlightsSection } from "@/components/college-landing/campus-highlights-section";
 import { CoursesSection } from "@/components/college-landing/courses-section";
 import { CampusSection } from "@/components/college-landing/campus-section";
 import { ScholarshipsSection } from "@/components/college-landing/scholarships-section";
 import { GallerySection } from "@/components/college-landing/gallery-section";
+import { AchievementsSection } from "@/components/college-landing/achievements-section";
+import { SharingExperienceSection } from "@/components/college-landing/sharing-experience-section";
 import { ReviewsSection } from "@/components/college-landing/reviews-section";
 import { AmbassadorsSection } from "@/components/college-landing/ambassadors-section";
 import { CtaFooter } from "@/components/college-landing/cta-footer";
@@ -52,25 +55,8 @@ export default async function CollegeLandingPage({
     .join(", ");
   const universityTypeName =
     collegeDetails.university?.universityType?.name ?? null;
-
-  const stats = [
-    collegeDetails.establishedYear && {
-      label: "Established",
-      value: String(collegeDetails.establishedYear),
-    },
-    collegeDetails.avgStudentCount && {
-      label: "Students",
-      value: `${collegeDetails.avgStudentCount}+`,
-    },
-    collegeDetails.campusSizeAcres && {
-      label: "Campus Size",
-      value: `${collegeDetails.campusSizeAcres} acres`,
-    },
-    courses.length > 0 && {
-      label: "Programs Offered",
-      value: String(courses.length),
-    },
-  ].filter((s): s is { label: string; value: string } => Boolean(s));
+  const currentYear = new Date().getFullYear();
+  const admissionCycleLabel = `${currentYear}-${String(currentYear + 1).slice(2)}`;
 
   return (
     <>
@@ -84,35 +70,41 @@ export default async function CollegeLandingPage({
         campusVisitHref={campusVisitHref}
       />
 
-      <StatsStrip
-        stats={stats}
-        avgRating={collegeDetails.avgRating}
-        reviewCount={collegeDetails.reviewCount}
-      />
-
       <AboutSection
         about={overviewData?.about ?? null}
         accolades={overviewData?.accolades ?? []}
       />
 
+      <AdmissionsCtaSection admissionCycleLabel={admissionCycleLabel} />
+
+      <CoursesSection courses={courses} subdomain={subdomain} />
+
+      <ScholarshipsSection scholarships={scholarships} subdomain={subdomain} />
+
       <AmenitiesSection
         amenities={overviewData?.amenities ?? []}
         facilities={overviewData?.inside_campus_facilities ?? []}
+        locationText={locationText}
+        view360Url={collegeDetails.view360Url}
       />
 
-      <CoursesSection courses={courses} subdomain={subdomain} />
+      <CampusHighlightsSection subdomain={subdomain} />
+
+      <GallerySection
+        gallery={gallery}
+        reels={overviewData?.campus_reels ?? []}
+        collegeName={collegeDetails.name}
+        subdomain={subdomain}
+      />
+
+      <AchievementsSection subdomain={subdomain} />
+
+      <SharingExperienceSection subdomain={subdomain} />
 
       <CampusSection
         campuses={collegeDetails.campuses}
         location={overviewData?.location}
         nearbyAccess={overviewData?.nearby_access ?? []}
-      />
-
-      <ScholarshipsSection scholarships={scholarships} />
-
-      <GallerySection
-        gallery={gallery}
-        reels={overviewData?.campus_reels ?? []}
       />
 
       <ReviewsSection reviews={reviews} />

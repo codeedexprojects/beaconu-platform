@@ -9,6 +9,15 @@ import { Loader2 } from "lucide-react";
 import { zodResolver } from "@/lib/zod-resolver";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useCourseCatalogue,
   useStartApplication,
@@ -58,9 +67,6 @@ interface StartApplicationFormProps {
   cycleId: string;
   subdomain: string;
 }
-
-const inputCls =
-  "h-11 w-full rounded-xl border border-border/60 bg-background px-3.5 text-sm outline-none focus:border-foreground/30";
 
 export function StartApplicationForm({
   cycleId,
@@ -129,93 +135,87 @@ export function StartApplicationForm({
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      className="space-y-4 rounded-2xl border border-border/60 p-5"
+      className="space-y-4 rounded-2xl border border-border/60 bg-background p-5"
     >
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">Course</label>
-        <input
-          className={inputCls}
+      <Field label="Course" error={form.formState.errors.course_id?.message}>
+        <Input
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <div className="mt-2 max-h-72 space-y-2 overflow-y-auto">
-          {coursesLoading ? (
-            <p className="text-sm text-muted-foreground">Loading courses…</p>
-          ) : (courses ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">No courses found.</p>
-          ) : (
-            (courses ?? []).map((course) => {
-              const isSelected = selectedCourseId === course.courseId;
-              return (
-                <div
-                  key={course.courseId}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() =>
+      </Field>
+
+      <div className="max-h-72 space-y-2 overflow-y-auto">
+        {coursesLoading ? (
+          <p className="text-sm text-muted-foreground">Loading courses…</p>
+        ) : (courses ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">No courses found.</p>
+        ) : (
+          (courses ?? []).map((course) => {
+            const isSelected = selectedCourseId === course.courseId;
+            return (
+              <div
+                key={course.courseId}
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  form.setValue("course_id", course.courseId, {
+                    shouldValidate: true,
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
                     form.setValue("course_id", course.courseId, {
                       shouldValidate: true,
-                    })
+                    });
                   }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      form.setValue("course_id", course.courseId, {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                  className={cn(
-                    "cursor-pointer rounded-xl border p-3 text-sm",
-                    isSelected
-                      ? "border-primary ring-1 ring-primary"
-                      : "border-border/60",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>
-                      <span className="font-medium">{course.courseName}</span>
-                      <span className="ml-1.5 text-muted-foreground">
-                        ({course.courseCode})
-                      </span>
+                }}
+                className={cn(
+                  "cursor-pointer rounded-xl p-3 text-sm transition-colors",
+                  isSelected
+                    ? "bg-headerTeal/10 ring-1 ring-headerTeal-dark"
+                    : "bg-field hover:bg-field-focus",
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span>
+                    <span className="font-medium">{course.courseName}</span>
+                    <span className="ml-1.5 text-muted-foreground">
+                      ({course.courseCode})
                     </span>
-                    <span className="shrink-0 text-sm font-medium">
-                      ₹{course.applicationFee}
-                    </span>
-                  </div>
-
-                  {isSelected && course.quotaOptions.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {course.quotaOptions.map((quota) => (
-                        <span
-                          key={quota.courseQuotaSeatId}
-                          className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
-                        >
-                          {quota.quotaName}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
+                  </span>
+                  <span className="shrink-0 text-sm font-medium">
+                    ₹{course.applicationFee}
+                  </span>
                 </div>
-              );
-            })
-          )}
-        </div>
-        {form.formState.errors.course_id ? (
-          <p className="text-xs text-destructive">
-            {form.formState.errors.course_id.message}
-          </p>
-        ) : null}
+
+                {isSelected && course.quotaOptions.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {course.quotaOptions.map((quota) => (
+                      <span
+                        key={quota.courseQuotaSeatId}
+                        className="rounded-full bg-field px-2.5 py-1 text-xs font-medium text-foreground"
+                      >
+                        {quota.quotaName}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 p-4">
+      <div className="space-y-4 rounded-xl border border-border/60 bg-background p-4">
         <h3 className="text-sm font-semibold">Nationality Details</h3>
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">
             Are you an Indian citizen?
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1 rounded-full bg-field p-1">
             <button
               type="button"
               onClick={() =>
@@ -224,10 +224,10 @@ export function StartApplicationForm({
                 })
               }
               className={cn(
-                "h-11 rounded-xl text-sm font-medium transition-colors",
+                "h-9 rounded-full text-sm font-medium transition-colors",
                 isIndianCitizen
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border/60 text-muted-foreground",
+                  ? "bg-headerTeal-dark text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Yes
@@ -240,10 +240,10 @@ export function StartApplicationForm({
                 })
               }
               className={cn(
-                "h-11 rounded-xl text-sm font-medium transition-colors",
+                "h-9 rounded-full text-sm font-medium transition-colors",
                 !isIndianCitizen
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border/60 text-muted-foreground",
+                  ? "bg-headerTeal-dark text-white shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               No
@@ -252,71 +252,83 @@ export function StartApplicationForm({
         </div>
 
         {isIndianCitizen ? (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">State of Domicile</label>
-            <select
-              className={inputCls}
+          <Field
+            label="State of Domicile"
+            error={form.formState.errors.state_of_domicile?.message}
+          >
+            <Select
+              value={form.watch("state_of_domicile")}
+              onValueChange={(v) =>
+                form.setValue("state_of_domicile", v, { shouldValidate: true })
+              }
               disabled={statesLoading}
-              {...form.register("state_of_domicile")}
             >
-              <option value="">
-                {statesLoading ? "Loading states…" : "Select state"}
-              </option>
-              {(indianStates ?? []).map((state) => (
-                <option key={state.code} value={state.name}>
-                  {state.name}
-                </option>
-              ))}
-            </select>
-            {form.formState.errors.state_of_domicile ? (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.state_of_domicile.message}
-              </p>
-            ) : null}
-          </div>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    statesLoading ? "Loading states…" : "Select state"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {(indianStates ?? []).map((state) => (
+                  <SelectItem key={state.code} value={state.name}>
+                    {state.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         ) : (
           <>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Country of Origin</label>
-              <select
-                className={inputCls}
+            <Field
+              label="Country of Origin"
+              error={form.formState.errors.passport_country?.message}
+            >
+              <Select
+                value={form.watch("passport_country")}
+                onValueChange={(v) =>
+                  form.setValue("passport_country", v, {
+                    shouldValidate: true,
+                  })
+                }
                 disabled={countriesLoading}
-                {...form.register("passport_country")}
               >
-                <option value="">
-                  {countriesLoading ? "Loading countries…" : "Select country"}
-                </option>
-                {(countries ?? []).map((country) => (
-                  <option key={country.code} value={country.name}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              {form.formState.errors.passport_country ? (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.passport_country.message}
-                </p>
-              ) : null}
-            </div>
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      countriesLoading ? "Loading countries…" : "Select country"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {(countries ?? []).map((country) => (
+                    <SelectItem key={country.code} value={country.name}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Passport Number</label>
-              <input
-                className={inputCls}
+            <Field
+              label="Passport Number"
+              error={form.formState.errors.passport_number?.message}
+            >
+              <Input
                 placeholder="Enter passport number"
                 {...form.register("passport_number")}
               />
-              {form.formState.errors.passport_number ? (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.passport_number.message}
-                </p>
-              ) : null}
-            </div>
+            </Field>
           </>
         )}
       </div>
 
-      <Button type="submit" disabled={isStarting} className="h-11 w-full">
+      <Button
+        type="submit"
+        disabled={isStarting}
+        className="h-11 w-full rounded-full border-0 bg-headerTeal-dark text-white hover:bg-headerTeal-dark/90"
+      >
         {isStarting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Start Application
       </Button>

@@ -44,7 +44,7 @@ export function DialogueQuestion({
                   !isLeft && "flex-row-reverse",
                 )}
               >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accentOrange-soft text-[11px] font-semibold text-accentOrange">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-headerTeal/10 text-[11px] font-semibold text-headerTeal">
                   {turn.speaker}
                 </span>
                 {isBlank ? (
@@ -52,7 +52,7 @@ export function DialogueQuestion({
                     value={response.text ?? ""}
                     onChange={(e) => onChange({ text: e.target.value })}
                     placeholder="Type your response..."
-                    className="max-w-[75%] rounded-2xl border-0 bg-background px-4 py-2 text-sm text-foreground outline-none ring-1 ring-border/60 focus-visible:ring-2 focus-visible:ring-accentOrange/40"
+                    className="max-w-[75%] rounded-2xl border-0 bg-background px-4 py-2 text-sm text-foreground outline-none ring-1 ring-border/60 focus-visible:ring-2 focus-visible:ring-headerTeal/40"
                   />
                 ) : (
                   <p className="max-w-[75%] rounded-2xl bg-background px-4 py-2 text-sm text-foreground">
@@ -69,7 +69,7 @@ export function DialogueQuestion({
           value={response.text ?? ""}
           onChange={(e) => onChange({ text: e.target.value })}
           placeholder="Type your response..."
-          className="w-full rounded-2xl border-0 bg-field px-5 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-accentOrange/40"
+          className="w-full rounded-2xl border-0 bg-field px-5 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40"
         />
       )}
     </div>

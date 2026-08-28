@@ -50,7 +50,7 @@ export function SegmentedToggle<T extends string>({
             className={cn(
               "rounded-full py-2.5 text-sm font-medium transition-colors",
               selected
-                ? "bg-accentOrange text-accentOrange-foreground shadow-sm"
+                ? "bg-headerTeal-dark text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

@@ -405,7 +405,7 @@ function AcademicLevelForm({
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      className="space-y-5 rounded-2xl border border-border/60 p-5"
+      className="space-y-5 rounded-2xl border border-border/60 bg-background p-5"
     >
       <IconSectionHeader
         icon={GraduationCap}
@@ -513,15 +513,12 @@ function AcademicLevelForm({
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Breakdown Cycle Information
         </p>
         <div className="space-y-3">
           {semesterFieldArray.fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="space-y-3 rounded-2xl border border-border/40 p-4"
-            >
+            <div key={field.id} className="space-y-3 rounded-2xl bg-field p-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">Record {index + 1}</h4>
                 <button
@@ -582,8 +579,8 @@ function AcademicLevelForm({
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-border/40 p-4">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+      <div className="rounded-2xl bg-field p-4">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Final Academic Summary
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -632,8 +629,8 @@ function AcademicLevelForm({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/40 p-4">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+      <div className="rounded-2xl bg-field p-4">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Documents
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -707,8 +704,8 @@ function AcademicLevelForm({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/40 p-4">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+      <div className="rounded-2xl bg-field p-4">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Academic Projects
         </p>
         <p className="mb-2 text-sm text-foreground">
@@ -731,11 +728,11 @@ function AcademicLevelForm({
             {projectFieldArray.fields.map((field, index) => (
               <div
                 key={field.id}
-                className="space-y-3 rounded-2xl border border-border/40 p-4"
+                className="space-y-3 rounded-2xl bg-field p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <Rocket className="h-4 w-4 text-accentOrange" />
+                    <Rocket className="h-4 w-4 text-headerTeal" />
                     Project {index + 1}
                   </div>
                   <button
@@ -806,7 +803,7 @@ function AcademicLevelForm({
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save {title}

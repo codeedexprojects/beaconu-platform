@@ -32,7 +32,8 @@ export function HostelLocationSection({
 
   return (
     <section>
-      <h2 className="text-xl font-bold tracking-tight">
+      <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <span className="h-px w-6 bg-headerTeal" />
         {location.title || "Location & Access"}
       </h2>
 
@@ -46,10 +47,10 @@ export function HostelLocationSection({
                   type="button"
                   onClick={() => setActive(option)}
                   className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                    "rounded-full px-3.5 py-1.5 text-sm transition-colors",
                     active === option
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border/60 hover:border-foreground/30",
+                      ? "bg-headerTeal-dark text-white"
+                      : "bg-field text-foreground hover:bg-field-focus",
                   )}
                 >
                   {option}
@@ -62,7 +63,7 @@ export function HostelLocationSection({
             {categories.length > 0 ? (
               categories.map((category, i) => (
                 <div key={i}>
-                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-headerTeal">
                     <Navigation className="h-3.5 w-3.5" />
                     {category.title}
                   </p>
@@ -103,8 +104,8 @@ export function HostelLocationSection({
           ) : null}
 
           {location.map?.address ? (
-            <div className="flex items-start gap-2 rounded-2xl border border-border/60 p-4">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="flex items-start gap-2 rounded-2xl bg-field p-4">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-headerTeal" />
               <p className="text-sm text-muted-foreground">
                 {location.map.address.line1}
                 {location.map.address.line2
@@ -115,8 +116,8 @@ export function HostelLocationSection({
           ) : null}
 
           {location.map?.college_transport ? (
-            <div className="flex items-start gap-2 rounded-2xl border border-border/60 p-4">
-              <Bus className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="flex items-start gap-2 rounded-2xl bg-field p-4">
+              <Bus className="mt-0.5 h-4 w-4 shrink-0 text-headerTeal" />
               <div>
                 <p className="text-sm font-medium">
                   {location.map.college_transport.title}

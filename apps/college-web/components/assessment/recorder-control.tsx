@@ -25,10 +25,10 @@ export function RecorderControl({
         disabled={isUploading}
         onClick={isRecording ? onStop : onStart}
         className={cn(
-          "flex h-20 w-20 items-center justify-center rounded-full border-2 text-accentOrange-foreground transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60",
+          "flex h-20 w-20 items-center justify-center rounded-full border-2 text-white transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60",
           isRecording
             ? "border-destructive bg-destructive text-destructive-foreground animate-pulse"
-            : "border-accentOrange bg-accentOrange-soft text-accentOrange",
+            : "border-headerTeal-dark bg-headerTeal/10 text-headerTeal",
         )}
       >
         {isUploading ? (

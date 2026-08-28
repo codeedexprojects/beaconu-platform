@@ -169,7 +169,7 @@ export function TokenPaymentPanel({
     !showOfflineForm
   ) {
     return (
-      <div className="mt-3 rounded-xl border border-border/60 p-3">
+      <div className="mt-3 rounded-xl bg-field p-3">
         <p className="text-sm font-medium text-foreground">
           Offline payment{" "}
           {offlineStatus.verificationStatus === "verified"
@@ -192,7 +192,7 @@ export function TokenPaymentPanel({
   return (
     <div className="mt-3 space-y-3">
       {amountDetails.tokenAmount ? (
-        <div className="rounded-xl border border-border/60 p-3">
+        <div className="rounded-xl bg-field p-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Token Fee</span>
             <span className="font-semibold text-foreground">
@@ -228,7 +228,7 @@ export function TokenPaymentPanel({
           type="button"
           onClick={() => payOnline()}
           disabled={isPayingOnline}
-          className="h-11 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-sm font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+          className="h-11 w-full rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
         >
           {isPayingOnline ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -251,7 +251,7 @@ export function TokenPaymentPanel({
           <form
             onSubmit={form.handleSubmit(onSubmitOffline)}
             noValidate
-            className="space-y-3 rounded-xl border border-border/60 p-3"
+            className="space-y-3 rounded-xl bg-field p-3"
           >
             <Field label="Payment Method">
               <Select

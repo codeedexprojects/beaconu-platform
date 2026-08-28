@@ -49,9 +49,9 @@ export function ApplicationCourseCard({
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 p-4">
+    <div className="rounded-2xl bg-field p-4">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-headerTeal-dark">
           <CheckCircle2 className="h-3.5 w-3.5" />
           Already Selected
         </div>
@@ -97,8 +97,8 @@ export function ApplicationCourseCard({
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed",
                 isSelected
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                  ? "bg-headerTeal-dark text-white"
+                  : "bg-background text-foreground hover:bg-field-focus",
                 isPending && "opacity-60",
               )}
             >

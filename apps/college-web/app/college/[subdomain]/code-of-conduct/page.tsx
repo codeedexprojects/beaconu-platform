@@ -4,7 +4,6 @@ import {
   getCodeOfConductSection,
 } from "@/lib/services/public-college.service";
 import { CodeOfConductSection } from "@/components/college-landing/code-of-conduct-section";
-import { BackToCollegeLink } from "@/components/college-landing/back-to-college-link";
 
 interface CodeOfConductPageProps {
   params: Promise<{ subdomain: string }>;
@@ -33,10 +32,5 @@ export default async function CodeOfConductPage({
 
   if (!section || (section.data.rules?.length ?? 0) === 0) notFound();
 
-  return (
-    <>
-      <BackToCollegeLink subdomain={subdomain} />
-      <CodeOfConductSection section={section.data} />
-    </>
-  );
+  return <CodeOfConductSection section={section.data} subdomain={subdomain} />;
 }

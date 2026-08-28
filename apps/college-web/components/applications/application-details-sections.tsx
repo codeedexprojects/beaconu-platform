@@ -68,7 +68,7 @@ function AcademicRecordsStep({
             className={cn(
               "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors",
               activeSubTab === tab.key
-                ? "bg-accentOrange text-accentOrange-foreground shadow-sm"
+                ? "bg-headerTeal-dark text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -97,7 +97,7 @@ function AcademicRecordsStep({
       <Button
         type="button"
         onClick={onContinue}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         Continue
       </Button>

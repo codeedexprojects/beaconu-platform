@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Bus, ChevronDown, MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type {
   PublicCommutePickupPoint,
@@ -77,13 +76,16 @@ export function CommuteRoutes({ routes }: CommuteRoutesProps) {
                     {route.route_name || "Route"}
                   </p>
                   {route.status ? (
-                    <Badge
-                      variant={
-                        route.status === "VERIFIED" ? "default" : "outline"
-                      }
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        route.status === "VERIFIED"
+                          ? "bg-headerTeal-dark text-white"
+                          : "bg-field text-muted-foreground",
+                      )}
                     >
                       {route.status === "VERIFIED" ? "Verified" : "Unverified"}
-                    </Badge>
+                    </span>
                   ) : null}
                 </div>
                 {route.via ? (

@@ -149,7 +149,7 @@ export function AssessmentRoom({ applicationId }: AssessmentRoomProps) {
 
         {start.template.sections.length > 0 ? (
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
               Sections
             </p>
             <div className="space-y-2">
@@ -197,7 +197,7 @@ export function AssessmentRoom({ applicationId }: AssessmentRoomProps) {
             <Button
               type="button"
               onClick={() => setView("attempt")}
-              className="h-12 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+              className="h-12 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
             >
               Continue Assessment
             </Button>

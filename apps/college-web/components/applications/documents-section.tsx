@@ -106,7 +106,7 @@ export function DocumentsSection({
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-border/60 p-5">
+    <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-5">
       <IconSectionHeader
         icon={FileText}
         title="Documents"
@@ -131,7 +131,7 @@ export function DocumentsSection({
       <Button
         type="button"
         onClick={() => onSaved?.()}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         Continue
       </Button>

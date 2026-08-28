@@ -140,7 +140,7 @@ export function FamilyDetailsForm({
       noValidate
       className="space-y-4"
     >
-      <div className="space-y-4 rounded-2xl border border-border/60 p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-5">
         <IconSectionHeader icon={User} title="Father's Details" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
@@ -174,7 +174,7 @@ export function FamilyDetailsForm({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-border/60 p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-5">
         <IconSectionHeader icon={User} title="Mother's Details" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
@@ -208,7 +208,7 @@ export function FamilyDetailsForm({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-border/60 p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-background p-5">
         <IconSectionHeader icon={Shield} title="Guardian Details" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Guardian Name" optional>
@@ -226,7 +226,7 @@ export function FamilyDetailsForm({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/60 p-5">
+      <div className="rounded-2xl border border-border/60 bg-background p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Annual Family Income" optional>
             <Input type="number" {...form.register("annual_family_income")} />
@@ -240,7 +240,7 @@ export function FamilyDetailsForm({
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save & Continue

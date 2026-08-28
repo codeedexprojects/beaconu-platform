@@ -106,9 +106,9 @@ export function InlineBlankText({
                     className={cn(
                       "mx-1 inline-flex min-w-20 items-center justify-center rounded-full border px-3 py-0.5 text-xs font-medium transition-colors",
                       currentOption
-                        ? "border-accentOrange bg-accentOrange-soft text-accentOrange"
+                        ? "border-headerTeal-dark bg-headerTeal/10 text-headerTeal"
                         : activeBlankId === blank.id
-                          ? "border-accentOrange border-dashed text-accentOrange"
+                          ? "border-headerTeal-dark border-dashed text-headerTeal"
                           : "border-dashed border-border text-muted-foreground",
                     )}
                   >

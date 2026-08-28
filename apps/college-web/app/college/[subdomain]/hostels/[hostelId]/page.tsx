@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getHostelDetail } from "@/lib/services/public-hostel.service";
-import { BackToCollegeLink } from "@/components/college-landing/back-to-college-link";
 import { HostelHeader } from "@/components/hostel-detail/hostel-header";
 import { HostelRoomsSection } from "@/components/hostel-detail/hostel-rooms-section";
 import {
@@ -30,13 +29,9 @@ export default async function HostelDetailPage({
 
   return (
     <>
-      {hostel.header ? <HostelHeader header={hostel.header} /> : null}
-
-      <BackToCollegeLink
-        subdomain={subdomain}
-        href={`/college/${subdomain}/hostels`}
-        label="Back to hostels"
-      />
+      {hostel.header ? (
+        <HostelHeader header={hostel.header} subdomain={subdomain} />
+      ) : null}
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6">
         <HostelRoomsSection
@@ -52,7 +47,10 @@ export default async function HostelDetailPage({
         hostel.parking_charges ||
         hostel.other_charges ? (
           <section>
-            <h2 className="text-xl font-bold tracking-tight">Fees & Charges</h2>
+            <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+              <span className="h-px w-6 bg-headerTeal" />
+              Fees &amp; Charges
+            </h2>
             <div className="mt-5 space-y-8">
               {hostel.hostel_fees ? (
                 <HostelFeesBlock fees={hostel.hostel_fees} />

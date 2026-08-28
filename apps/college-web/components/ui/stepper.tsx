@@ -22,7 +22,7 @@ export function Stepper({
       </p>
       <div className="h-1.5 w-full rounded-full bg-field">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] transition-all"
+          className="h-full rounded-full bg-headerTeal-dark transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>

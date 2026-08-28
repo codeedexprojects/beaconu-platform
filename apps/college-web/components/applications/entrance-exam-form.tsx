@@ -238,7 +238,7 @@ export function EntranceExamForm({
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      className="space-y-5 rounded-2xl border border-border/60 p-5"
+      className="space-y-5 rounded-2xl border border-border/60 bg-background p-5"
     >
       <IconSectionHeader
         icon={ClipboardList}
@@ -273,7 +273,7 @@ export function EntranceExamForm({
             {exams.fields.map((field, index) => (
               <div
                 key={field.id}
-                className="space-y-3 rounded-2xl border border-border/40 p-4"
+                className="space-y-3 rounded-2xl bg-field p-4"
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold">Exam {index + 1}</h4>
@@ -328,8 +328,8 @@ export function EntranceExamForm({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-border/40 p-4">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+      <div className="rounded-2xl bg-field p-4">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Recommendation Letters
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -365,7 +365,7 @@ export function EntranceExamForm({
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save & Continue

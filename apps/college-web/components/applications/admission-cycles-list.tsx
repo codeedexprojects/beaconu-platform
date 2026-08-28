@@ -67,11 +67,11 @@ export function AdmissionCyclesList({
       {openCycles.length > 0 ? (
         <Link
           href={`/college/${subdomain}/applications/new?cycle=${openCycles[0].id}`}
-          className="flex items-center justify-between rounded-2xl bg-primary p-5 text-primary-foreground transition-opacity hover:opacity-90"
+          className="flex items-center justify-between rounded-2xl bg-headerTeal-dark p-5 text-white transition-opacity hover:opacity-90"
         >
           <div>
             <p className="font-semibold">Start New Application</p>
-            <p className="mt-0.5 text-sm text-primary-foreground/80">
+            <p className="mt-0.5 text-sm text-white/80">
               Apply for courses and track your admission progress
             </p>
           </div>
@@ -81,7 +81,7 @@ export function AdmissionCyclesList({
 
       {collegeApplications.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
             Your Applications
           </h2>
           {collegeApplications.map((application) => (
@@ -95,7 +95,7 @@ export function AdmissionCyclesList({
       ) : null}
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
           Open Admission Cycles
         </h2>
         {openCycles.length === 0 ? (

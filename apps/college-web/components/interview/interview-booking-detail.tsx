@@ -73,12 +73,12 @@ export function InterviewBookingDetail({
           <p className="mt-2 flex items-center gap-1.5 text-sm text-foreground">
             {slot.mode === "gmeet" ? (
               <>
-                <Video className="h-4 w-4 text-accentOrange" />
+                <Video className="h-4 w-4 text-headerTeal" />
                 Video Call
               </>
             ) : (
               <>
-                <MapPin className="h-4 w-4 text-accentOrange" />
+                <MapPin className="h-4 w-4 text-headerTeal" />
                 {slot.campus?.name ?? "On Campus"}
                 {slot.venue ? ` · ${slot.venue}` : ""}
               </>
@@ -98,7 +98,7 @@ export function InterviewBookingDetail({
 
         {booking.instructions.instructions.length > 0 ? (
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
               {booking.instructions.heading ?? "Instructions"}
             </p>
             {booking.instructions.description ? (
@@ -117,7 +117,7 @@ export function InterviewBookingDetail({
         {isCompleted ? (
           <div className="rounded-2xl border border-border/40 p-4">
             <div className="mb-1 flex items-center gap-2">
-              <Award className="h-4 w-4 text-accentOrange" />
+              <Award className="h-4 w-4 text-headerTeal" />
               <p className="text-sm font-semibold text-foreground">
                 Interview Outcome
               </p>
@@ -168,7 +168,7 @@ export function InterviewBookingDetail({
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Let us know your reason..."
-              className="w-full rounded-2xl border-0 bg-field px-4 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-accentOrange/40"
+              className="w-full rounded-2xl border-0 bg-field px-4 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40"
             />
             <p className="text-xs text-muted-foreground">
               You can only request a reschedule once, and at least 30 minutes
@@ -178,7 +178,7 @@ export function InterviewBookingDetail({
               type="button"
               onClick={handleRequestReschedule}
               disabled={isRequestingReschedule}
-              className="h-11 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-sm font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+              className="h-11 w-full rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
             >
               {isRequestingReschedule ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

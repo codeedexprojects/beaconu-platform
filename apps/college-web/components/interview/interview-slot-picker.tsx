@@ -95,7 +95,7 @@ export function InterviewSlotPicker({
         <div className="space-y-4">
           {groups.map(({ date, slots: daySlots }) => (
             <div key={date}>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-accentOrange">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
                 {formatDate(date)}
               </p>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -109,7 +109,7 @@ export function InterviewSlotPicker({
                       className={cn(
                         "flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
                         isSelected
-                          ? "border-accentOrange bg-accentOrange-soft"
+                          ? "border-headerTeal-dark bg-headerTeal/10"
                           : "border-border/60 bg-field hover:bg-field-focus",
                       )}
                     >
@@ -144,7 +144,7 @@ export function InterviewSlotPicker({
         type="button"
         onClick={handleBook}
         disabled={!selectedSlotId || isPending}
-        className="h-12 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-12 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Confirm Booking

@@ -75,7 +75,7 @@ function TimelineStep({
           "z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
           state === "completed" && "bg-foreground text-background",
           state === "current" &&
-            "bg-accentOrange-soft text-accentOrange ring-2 ring-accentOrange",
+            "bg-headerTeal/10 text-headerTeal ring-2 ring-headerTeal-dark",
           state === "pending" &&
             "border border-border bg-background text-muted-foreground",
           state === "locked" &&
@@ -104,7 +104,7 @@ function TimelineStep({
             className={cn(
               "mt-0.5 text-xs font-medium",
               subtitleTone === "success" && "text-emerald-600",
-              subtitleTone === "warning" && "text-accentOrange",
+              subtitleTone === "warning" && "text-headerTeal",
               subtitleTone === "info" && "text-muted-foreground",
               (!subtitleTone || subtitleTone === "muted") &&
                 "text-muted-foreground",
@@ -256,7 +256,7 @@ export function ApplicationStatusTimeline({
             {!assessmentDone && isSubmitted ? (
               <Button
                 asChild
-                className="mt-3 h-11 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-sm font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+                className="mt-3 h-11 w-full rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
               >
                 <Link
                   href={`/college/${subdomain}/applications/${applicationId}/assessment`}
@@ -420,7 +420,7 @@ export function ApplicationStatusTimeline({
           {enrolled ? (
             <Button
               asChild
-              className="mt-3 h-11 w-full rounded-full border-0 bg-gradient-to-r from-fuchsia-500 to-accentOrange text-sm font-semibold text-white shadow-md hover:opacity-95"
+              className="mt-3 h-11 w-full rounded-full border-0 bg-gradient-to-r from-fuchsia-500 to-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
             >
               <Link href={`/college/${subdomain}`}>
                 Get Set Go

@@ -240,14 +240,14 @@ function AccordionSection({
 }) {
   const [open, setOpen] = useState(!!defaultOpen);
   return (
-    <div className="rounded-2xl border border-border/40">
+    <div className="rounded-2xl bg-field">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-3 p-4 text-left"
       >
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-accentOrange" />
+          <Icon className="h-4 w-4 text-headerTeal" />
           <span className="text-sm font-semibold text-foreground">{title}</span>
         </div>
         <ChevronDown
@@ -272,7 +272,7 @@ function RemovableCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-border/40 p-4">
+    <div className="space-y-3 rounded-2xl bg-field p-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-foreground">{title}</h4>
         <button
@@ -482,7 +482,7 @@ export function AchievementsDetailsForm({
     <form
       onSubmit={form.handleSubmit(onSubmit, onInvalid)}
       noValidate
-      className="space-y-3 rounded-2xl border border-border/60 p-5"
+      className="space-y-3 rounded-2xl border border-border/60 bg-background p-5"
     >
       <IconSectionHeader
         icon={Award}
@@ -836,7 +836,7 @@ export function AchievementsDetailsForm({
         </Button>
         <textarea
           rows={2}
-          className="w-full rounded-2xl border-0 bg-field px-5 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-accentOrange/40"
+          className="w-full rounded-2xl border-0 bg-field px-5 py-3 text-sm text-foreground outline-none transition-colors focus:bg-field-focus focus-visible:ring-2 focus-visible:ring-headerTeal/40"
           placeholder="Other interests"
           {...form.register("other_interests")}
         />
@@ -1177,7 +1177,7 @@ export function AchievementsDetailsForm({
       <Button
         type="submit"
         disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-gradient-to-r from-[hsl(var(--accent-orange-gradient-from))] to-[hsl(var(--accent-orange-gradient-to))] text-base font-semibold text-accentOrange-foreground shadow-md hover:opacity-95"
+        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save Achievements
