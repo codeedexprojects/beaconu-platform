@@ -32,6 +32,65 @@ import {
   type CommuteEnrollmentFilters,
   type HostelEnrollmentFilters,
 } from "@/lib/services/colleges.service";
+import {
+  getCollegeGalleryItems,
+  createCollegeGalleryItem,
+  deleteCollegeGalleryItem,
+  reorderCollegeGalleryItems,
+  type CreateGalleryItemInput,
+} from "@/lib/services/gallery.service";
+
+export function useCollegeGallery(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.gallery,
+    queryFn: getCollegeGalleryItems,
+    enabled,
+  });
+}
+
+export function useCreateCollegeGalleryItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateGalleryItemInput) =>
+      createCollegeGalleryItem(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gallery });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useDeleteCollegeGalleryItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCollegeGalleryItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gallery });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useReorderCollegeGalleryItems() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      reorderCollegeGalleryItems(orderedIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.gallery });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
 
 export function useCollegeHostels(enabled = true) {
   return useQuery({
