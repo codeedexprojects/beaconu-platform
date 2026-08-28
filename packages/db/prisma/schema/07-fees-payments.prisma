@@ -193,6 +193,7 @@ model ScholarshipConfig {
   displayLabel      String? @map("display_label") @db.VarChar(100)
   discountDisplay   String? @map("discount_display") @db.VarChar(20)
   requiredDocuments Json    @default("[]") @map("required_documents")
+  coverImageUrl     String? @map("cover_image_url") @db.Text
 
   college      College                  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   applications ScholarshipApplication[]

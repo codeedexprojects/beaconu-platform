@@ -8,6 +8,7 @@ const CONFIG_SELECT = {
   discountType: true,
   discountValue: true,
   requiredDocuments: true,
+  coverImageUrl: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
@@ -19,6 +20,7 @@ export interface ScholarshipConfigCreateData {
   discountType: string;
   discountValue: number;
   requiredDocuments: string[];
+  coverImageUrl?: string | null;
 }
 
 export class ScholarshipConfigRepository {
@@ -31,6 +33,7 @@ export class ScholarshipConfigRepository {
         discountType: data.discountType,
         discountValue: data.discountValue,
         requiredDocuments: data.requiredDocuments,
+        coverImageUrl: data.coverImageUrl || null,
         eligibility: {},
       },
       select: CONFIG_SELECT,
@@ -71,6 +74,9 @@ export class ScholarshipConfigRepository {
         }),
         ...(data.requiredDocuments !== undefined && {
           requiredDocuments: data.requiredDocuments,
+        }),
+        ...(data.coverImageUrl !== undefined && {
+          coverImageUrl: data.coverImageUrl || null,
         }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
       },

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Pencil, X } from "lucide-react";
+import { Loader2, Plus, Pencil, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ import {
   useCreateScholarshipConfig,
   useUpdateScholarshipConfig,
 } from "@/hooks/use-scholarships";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import type { ScholarshipConfigItem } from "@beaconu/types";
 
 const configSchema = z.object({
@@ -46,6 +47,7 @@ const configSchema = z.object({
   scholarship_type: z.string().trim().min(1, "Type is required"),
   discount_type: z.enum(["flat", "percentage"]),
   discount_value: z.coerce.number().positive("Must be greater than 0"),
+  cover_image_url: z.string().optional().nullable(),
 });
 type ConfigFormValues = z.infer<typeof configSchema>;
 
@@ -54,6 +56,7 @@ const EMPTY_VALUES: ConfigFormValues = {
   scholarship_type: "",
   discount_type: "percentage",
   discount_value: 0,
+  cover_image_url: "",
 };
 
 export function ScholarshipCategoriesTab() {
@@ -61,6 +64,7 @@ export function ScholarshipCategoriesTab() {
   const [editing, setEditing] = useState<ScholarshipConfigItem | null>(null);
   const [requiredDocuments, setRequiredDocuments] = useState<string[]>([]);
   const [newDocName, setNewDocName] = useState("");
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const { data: configs, isLoading } = useScholarshipConfigs();
   const { mutate: create, isPending: isCreating } =
@@ -87,9 +91,24 @@ export function ScholarshipCategoriesTab() {
       scholarship_type: item.scholarshipType,
       discount_type: item.discountType,
       discount_value: Number(item.discountValue),
+      cover_image_url: item.coverImageUrl ?? "",
     });
     setRequiredDocuments(item.requiredDocuments);
     setOpen(true);
+  }
+
+  async function handleCoverUpload(file: File | null) {
+    if (!file) return;
+    try {
+      setIsUploadingCover(true);
+      const url = await uploadCollegeAdminFile(file, "scholarships/cover");
+      form.setValue("cover_image_url", url, { shouldDirty: true });
+      toast.success("Image uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setIsUploadingCover(false);
+    }
   }
 
   function addDocument() {
@@ -115,6 +134,7 @@ export function ScholarshipCategoriesTab() {
       discount_type: values.discount_type,
       discount_value: values.discount_value,
       required_documents: requiredDocuments,
+      cover_image_url: values.cover_image_url || null,
     };
 
     if (editing) {
@@ -240,6 +260,35 @@ export function ScholarshipCategoriesTab() {
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Scholarship Image</Label>
+                {form.watch("cover_image_url") ? (
+                  <div className="relative h-32 w-full overflow-hidden rounded-lg border bg-muted">
+                    <img
+                      src={form.watch("cover_image_url") ?? ""}
+                      alt="Scholarship cover preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : null}
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={isUploadingCover}
+                  onChange={(e) =>
+                    handleCoverUpload(e.target.files?.[0] ?? null)
+                  }
+                />
+                {isUploadingCover ? (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Uploading…
+                  </p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">
+                  Shown on scholarship cards on your public landing page.
+                </p>
               </div>
 
               <div className="space-y-1.5">

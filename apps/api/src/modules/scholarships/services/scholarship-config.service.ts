@@ -18,6 +18,7 @@ function mapConfig(row: ConfigRow): ScholarshipConfigItem {
     discountType: row.discountType as ScholarshipConfigItem["discountType"],
     discountValue: row.discountValue.toString(),
     requiredDocuments: (row.requiredDocuments as string[] | null) ?? [],
+    coverImageUrl: row.coverImageUrl,
     isActive: row.isActive,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

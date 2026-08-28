@@ -19,6 +19,7 @@ export class PublicCollegeExtrasQuery {
             displayLabel: true,
             applicableYears: true,
             termsAndConditions: true,
+            coverImageUrl: true,
           },
         },
       },

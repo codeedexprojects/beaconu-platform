@@ -323,6 +323,7 @@ export interface PublicScholarship {
   displayLabel: string | null;
   applicableYears: unknown;
   termsAndConditions: string | null;
+  coverImageUrl: string | null;
 }
 
 export interface PublicGalleryItem {
