@@ -1265,6 +1265,34 @@ export default function SetupProfilePage() {
                                 }
                               />
                             </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Photo</Label>
+                              {item?.image ? (
+                                <div className="relative h-24 w-full overflow-hidden rounded-lg border bg-muted">
+                                  <img
+                                    src={item.image}
+                                    alt={item.label || "Facility"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : null}
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="h-9"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.inside_campus_facilities.${idx}.image`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.inside_campus_facilities.${idx}.image`,
+                                    `college-overview/facilities-${idx}`,
+                                  )
+                                }
+                              />
+                            </div>
                           </div>
                         </div>
                       ))}
