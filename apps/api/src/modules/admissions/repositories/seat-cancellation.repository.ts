@@ -21,6 +21,40 @@ const SELECT = {
   },
 } as const;
 
+const DETAIL_SELECT = {
+  ...SELECT,
+  effectiveDate: true,
+  lastSemester: true,
+  currentPhase: true,
+  counselorId: true,
+  scheduledAt: true,
+  counselingCompletedAt: true,
+  counselingNotes: true,
+  counselingOutcome: true,
+  suggestedCaseType: true,
+  caseType: true,
+  refundCalculationMethod: true,
+  refundCalculationValue: true,
+  penaltyAmount: true,
+  penaltyPaidAt: true,
+  settledAt: true,
+  refundTransactionRef: true,
+  refundPaymentMethod: true,
+  refundProcessedAt: true,
+  documentsHandedOverAt: true,
+  counselor: { select: { fullName: true } },
+  phaseLogs: {
+    select: {
+      id: true,
+      phase: true,
+      action: true,
+      createdAt: true,
+      performer: { select: { fullName: true } },
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
+} as const;
+
 export class SeatCancellationRepository {
   static async countPendingForCollege(collegeId: string) {
     return prisma.seatCancellation.count({
@@ -62,6 +96,20 @@ export class SeatCancellationRepository {
     });
   }
 
+  static async findDetailById(id: string) {
+    return prisma.seatCancellation.findUnique({
+      where: { id },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async findApplicationFee(applicationCourseId: string) {
+    return prisma.applicationCourse.findUnique({
+      where: { id: applicationCourseId },
+      select: { applicationFee: true },
+    });
+  }
+
   static async listForStudent(studentId: string) {
     return prisma.seatCancellation.findMany({
       where: { studentId },
@@ -84,6 +132,9 @@ export class SeatCancellationRepository {
         where,
         select: {
           ...SELECT,
+          currentPhase: true,
+          caseType: true,
+          refundStatus: true,
           student: { select: { fullName: true, email: true } },
         },
         orderBy: { requestedAt: "desc" },
@@ -130,5 +181,124 @@ export class SeatCancellationRepository {
       },
       select: SELECT,
     });
+  }
+
+  // --- Phase-based case flow ---
+
+  static async submitInitiation(
+    id: string,
+    data: { effectiveDate: Date; lastSemester: string },
+  ) {
+    return prisma.seatCancellation.update({
+      where: { id },
+      data: {
+        effectiveDate: data.effectiveDate,
+        lastSemester: data.lastSemester,
+        currentPhase: 2,
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async scheduleCounseling(
+    id: string,
+    data: { counselorId: string; scheduledAt: Date },
+  ) {
+    return prisma.seatCancellation.update({
+      where: { id },
+      data: {
+        counselorId: data.counselorId,
+        scheduledAt: data.scheduledAt,
+        counselingCompletedAt: new Date(),
+        currentPhase: 3,
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async submitCounselingOutcome(
+    id: string,
+    data: {
+      notes: string | null;
+      outcome: string;
+      suggestedCaseType: string | null;
+    },
+  ) {
+    return prisma.seatCancellation.update({
+      where: { id },
+      data: {
+        counselingNotes: data.notes,
+        counselingOutcome: data.outcome,
+        suggestedCaseType: data.suggestedCaseType,
+        currentPhase: 4,
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async submitSettlement(
+    id: string,
+    data: {
+      caseType: string;
+      penaltyAmount: number | null;
+      penaltyPaidAt: Date | null;
+      refundCalculationMethod: string | null;
+      refundCalculationValue: number | null;
+      refundAmount: number | null;
+    },
+  ) {
+    return prisma.seatCancellation.update({
+      where: { id },
+      data: {
+        caseType: data.caseType,
+        penaltyAmount: data.penaltyAmount,
+        penaltyPaidAt: data.penaltyPaidAt,
+        refundCalculationMethod: data.refundCalculationMethod,
+        refundCalculationValue: data.refundCalculationValue,
+        refundAmount: data.refundAmount,
+        settledAt: new Date(),
+        currentPhase: 5,
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async finalizeClearance(
+    tx: Prisma.TransactionClient,
+    id: string,
+    data: {
+      processedBy: string;
+      refundTransactionRef: string | null;
+      refundPaymentMethod: string | null;
+      refundProcessedAt: Date | null;
+      refundStatus: string | null;
+    },
+  ) {
+    return tx.seatCancellation.update({
+      where: { id },
+      data: {
+        documentsHandedOverAt: new Date(),
+        refundTransactionRef: data.refundTransactionRef,
+        refundPaymentMethod: data.refundPaymentMethod,
+        refundProcessedAt: data.refundProcessedAt,
+        refundStatus: data.refundStatus,
+        status: "approved",
+        processedBy: data.processedBy,
+        processedAt: new Date(),
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  static async addPhaseLog(
+    client: Prisma.TransactionClient | typeof prisma,
+    data: {
+      seatCancellationId: string;
+      phase: number;
+      action: string;
+      performedBy: string;
+    },
+  ) {
+    return client.seatCancellationPhaseLog.create({ data });
   }
 }

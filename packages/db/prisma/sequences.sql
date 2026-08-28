@@ -118,6 +118,7 @@ CREATE SEQUENCE IF NOT EXISTS "refund_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_application_seq";
 CREATE SEQUENCE IF NOT EXISTS "scholarship_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_seq";
+CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_phase_log_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_pool_seq";
 CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";

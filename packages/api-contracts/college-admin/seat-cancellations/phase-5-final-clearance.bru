@@ -1,0 +1,45 @@
+meta {
+  name: Phase 5 - Final Clearance
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/final-clearance
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "refund_transaction_ref": "REF-2023-892-01",
+    "refund_payment_method": "Bank Transfer (Bank of India)"
+  }
+}
+
+docs {
+  Marks documents handed over and finalizes the case. This is where the
+  real side effects fire (same ones the old one-shot "approve" review used
+  to trigger), inside one transaction:
+  - Enrollment.status -> "withdrawn"
+  - ApplicationCourse.status -> "dropped_out" (+ status log entry)
+  - Seat released back to the course quota / seat pool
+  - Student's BeaconU Card deactivated
+  - SeatCancellation.status -> "approved"
+
+  refund_transaction_ref / refund_payment_method: REQUIRED only when the
+  case's settlement was Case B (Refund Eligible) — manual bookkeeping
+  fields, staff types in whatever reference/method they used for the actual
+  bank transfer. Not sent/used for Case A or C.
+
+  409 ConflictError if the case isn't currently at Phase 5, or (Case B) if
+  refund_transaction_ref is missing.
+}

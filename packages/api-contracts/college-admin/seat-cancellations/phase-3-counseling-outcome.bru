@@ -1,0 +1,37 @@
+meta {
+  name: Phase 3 - Submit Counseling Outcome
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/seat-cancellations/{{seatCancellationId}}/counseling-outcome
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "notes": "Student expressed desire to pursue a different academic focus not offered here. Counseling was supportive, and student is firm on transferring.",
+    "outcome": "transfer"
+  }
+}
+
+docs {
+  outcome: "transfer" | "termination".
+
+  Sets suggestedCaseType automatically: "transfer" -> "B" (Refund Eligible).
+  "termination" has no automatic suggestion — staff freely picks Case A or C
+  in the next phase based on judgment, no fixed rule.
+
+  Advances the case from Phase 3 to Phase 4 (Settlement Action).
+  409 ConflictError if the case isn't currently at Phase 3.
+}
