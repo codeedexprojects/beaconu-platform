@@ -13,6 +13,7 @@ export interface AdmissionCycleItem {
   status: AdmissionCycleStatus;
   assessmentRequired: boolean;
   assessmentTemplateId: string | null;
+  interviewRequired: boolean;
   tokenOnlinePaymentEnabled: boolean;
   tokenOfflinePaymentEnabled: boolean;
   createdAt: string;
@@ -28,6 +29,7 @@ export interface CreateAdmissionCycleInput {
   ends_on?: string;
   assessment_required?: boolean;
   assessment_template_id?: string | null;
+  interview_required?: boolean;
   token_online_payment_enabled?: boolean;
   token_offline_payment_enabled?: boolean;
 }
@@ -41,6 +43,7 @@ export interface UpdateAdmissionCycleInput {
   ends_on?: string;
   assessment_required?: boolean;
   assessment_template_id?: string | null;
+  interview_required?: boolean;
   token_online_payment_enabled?: boolean;
   token_offline_payment_enabled?: boolean;
 }

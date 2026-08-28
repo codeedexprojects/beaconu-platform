@@ -1046,6 +1046,7 @@ export class ApplicationService {
       applicationNumber: row.applicationNumber,
       formStatus: row.formStatus,
       assessmentRequired: row.admissionCycle.assessmentRequired,
+      interviewRequired: row.admissionCycle.interviewRequired,
       courses: row.applicationCourses.map((ac) => ({
         applicationCourseId: ac.id,
         status: ac.status,
@@ -1073,6 +1074,7 @@ export class ApplicationService {
       applicationNumber: row.applicationNumber,
       formStatus: row.formStatus,
       assessmentRequired: row.admissionCycle.assessmentRequired,
+      interviewRequired: row.admissionCycle.interviewRequired,
       courses: row.applicationCourses.map((ac) => ({
         applicationCourseId: ac.id,
         status: ac.status,

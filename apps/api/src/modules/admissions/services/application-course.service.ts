@@ -397,14 +397,30 @@ export class ApplicationCourseService {
 
   static async markShortlisted(applicationCourseId: string, staffId: string) {
     const course =
-      await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
+      await ApplicationCourseRepository.findByIdWithStatusAndCycleFlags(
+        applicationCourseId,
+      );
     if (!course) throw new NotFoundError("Application course not found");
     if (course.status === "shortlisted") return;
-    if (course.status !== "interview_completed") {
+
+    // Mirrors the assessment-required gate: when interview isn't required
+    // for this admission cycle, shortlisting is allowed straight from
+    // whichever stage precedes interview (assessment_completed if the
+    // assessment itself is required, else submitted).
+    const cycle = course.application.admissionCycle;
+    const requiredStatus = cycle.interviewRequired
+      ? "interview_completed"
+      : cycle.assessmentRequired
+        ? "assessment_completed"
+        : "submitted";
+    if (course.status !== requiredStatus) {
       throw new ConflictError(
-        "This course's interview hasn't been completed yet",
+        cycle.interviewRequired
+          ? "This course's interview hasn't been completed yet"
+          : `This course isn't ready to be shortlisted yet (currently: ${course.status})`,
       );
     }
+
     await this.transitionStatus(
       applicationCourseId,
       "shortlisted",

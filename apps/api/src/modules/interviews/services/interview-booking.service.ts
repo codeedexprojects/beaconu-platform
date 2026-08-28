@@ -86,6 +86,11 @@ export class InterviewBookingService {
       (c) => c.status === "interview_pending",
     );
     if (!alreadyAtInterviewStage) {
+      if (!application.interviewRequired) {
+        throw new ConflictError(
+          "Interview is not required for this application",
+        );
+      }
       if (application.formStatus !== "submitted") {
         throw new ConflictError(
           "This application is not currently at the interview stage",

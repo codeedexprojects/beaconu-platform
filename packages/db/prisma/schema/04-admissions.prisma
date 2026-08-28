@@ -12,6 +12,7 @@ model AdmissionCycle {
   settings             Json      @default("{}")
   assessmentRequired   Boolean   @default(false) @map("assessment_required")
   assessmentTemplateId String?   @map("assessment_template_id")
+  interviewRequired    Boolean   @default(true) @map("interview_required")
   tokenOnlinePaymentEnabled  Boolean @default(true) @map("token_online_payment_enabled")
   tokenOfflinePaymentEnabled Boolean @default(true) @map("token_offline_payment_enabled")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
