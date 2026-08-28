@@ -70,6 +70,91 @@ const COLLEGE_PERMISSIONS = [
     code: "finance.view",
     description: "View revenue, collections, and transaction history",
   },
+  {
+    code: "payments.manage",
+    description:
+      "Review offline payment submissions and process finance actions",
+  },
+  {
+    code: "admissions.view",
+    description:
+      "View application forms, applications, quotas, course-switch and seat-cancellation requests",
+  },
+  {
+    code: "admissions.manage",
+    description:
+      "Manage application forms, review applications, quotas, course-switch and seat-cancellation requests",
+  },
+  {
+    code: "assessments.view",
+    description: "View the question bank, templates, papers, and slots",
+  },
+  {
+    code: "assessments.manage",
+    description: "Manage the question bank, templates, papers, and slots",
+  },
+  {
+    code: "evaluation.manage",
+    description: "Score answers and publish assessment results",
+  },
+  {
+    code: "interviews.view",
+    description: "View interview slots, bookings, and reschedule requests",
+  },
+  {
+    code: "interviews.manage",
+    description:
+      "Manage interview slots, review bookings/reschedules, and shortlist candidates",
+  },
+  {
+    code: "documents.view",
+    description: "View document requirements, submissions, and complaints",
+  },
+  {
+    code: "documents.manage",
+    description:
+      "Manage document requirements, review submissions, and anti-ragging complaints",
+  },
+  {
+    code: "scholarships.view",
+    description: "View scholarship applications",
+  },
+  {
+    code: "scholarships.manage",
+    description: "Review and manage scholarship applications",
+  },
+  {
+    code: "students.view",
+    description: "View the enrolled students directory",
+  },
+  {
+    code: "students.manage",
+    description: "Manage enrolled student records",
+  },
+  {
+    code: "support.manage",
+    description: "Respond to student queries and call-back requests",
+  },
+  {
+    code: "notices.manage",
+    description: "Create and manage the notice board",
+  },
+  {
+    code: "campus-visits.manage",
+    description: "Manage campus visit scheduling and availability",
+  },
+  {
+    code: "media-kit.manage",
+    description: "Manage media kit content",
+  },
+  {
+    code: "community.manage",
+    description: "Moderate community posts and comments",
+  },
+  {
+    code: "ambassadors.manage",
+    description: "Manage campus ambassador registrations",
+  },
 ];
 
 export class CollegeRolesController {
