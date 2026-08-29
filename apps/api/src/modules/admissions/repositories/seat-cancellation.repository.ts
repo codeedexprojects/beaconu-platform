@@ -13,6 +13,10 @@ const SELECT = {
   remarks: true,
   requestedAt: true,
   processedAt: true,
+  currentPhase: true,
+  caseType: true,
+  scheduledAt: true,
+  meetingUrl: true,
   applicationCourse: {
     select: {
       course: { select: { name: true, code: true } },
@@ -25,14 +29,13 @@ const DETAIL_SELECT = {
   ...SELECT,
   effectiveDate: true,
   lastSemester: true,
-  currentPhase: true,
   counselorId: true,
-  scheduledAt: true,
+  meetingId: true,
+  googleEventId: true,
   counselingCompletedAt: true,
   counselingNotes: true,
   counselingOutcome: true,
   suggestedCaseType: true,
-  caseType: true,
   refundCalculationMethod: true,
   refundCalculationValue: true,
   penaltyAmount: true,
@@ -42,7 +45,8 @@ const DETAIL_SELECT = {
   refundPaymentMethod: true,
   refundProcessedAt: true,
   documentsHandedOverAt: true,
-  counselor: { select: { fullName: true } },
+  counselor: { select: { fullName: true, email: true } },
+  student: { select: { fullName: true, email: true } },
   phaseLogs: {
     select: {
       id: true,
@@ -103,6 +107,13 @@ export class SeatCancellationRepository {
     });
   }
 
+  static async findStaffInCollege(staffId: string, collegeId: string) {
+    return prisma.staffMember.findFirst({
+      where: { id: staffId, collegeId },
+      select: { id: true, fullName: true, email: true },
+    });
+  }
+
   static async findApplicationFee(applicationCourseId: string) {
     return prisma.applicationCourse.findUnique({
       where: { id: applicationCourseId },
@@ -132,9 +143,6 @@ export class SeatCancellationRepository {
         where,
         select: {
           ...SELECT,
-          currentPhase: true,
-          caseType: true,
-          refundStatus: true,
           student: { select: { fullName: true, email: true } },
         },
         orderBy: { requestedAt: "desc" },
@@ -202,13 +210,22 @@ export class SeatCancellationRepository {
 
   static async scheduleCounseling(
     id: string,
-    data: { counselorId: string; scheduledAt: Date },
+    data: {
+      counselorId: string;
+      scheduledAt: Date;
+      meetingUrl: string | null;
+      meetingId: string | null;
+      googleEventId: string | null;
+    },
   ) {
     return prisma.seatCancellation.update({
       where: { id },
       data: {
         counselorId: data.counselorId,
         scheduledAt: data.scheduledAt,
+        meetingUrl: data.meetingUrl,
+        meetingId: data.meetingId,
+        googleEventId: data.googleEventId,
         counselingCompletedAt: new Date(),
         currentPhase: 3,
       },

@@ -53,6 +53,7 @@ export interface ApplicationAssessmentStatus {
 }
 
 export type InterviewStatusValue =
+  | "not_required"
   | "not_scheduled"
   | "booked"
   | "completed"

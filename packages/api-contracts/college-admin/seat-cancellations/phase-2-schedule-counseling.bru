@@ -27,10 +27,22 @@ body:json {
 
 docs {
   Assigns a college-admin staff member (the "counselor" — no separate
-  identity table, any active StaffMember can be assigned) and the scheduled
+  identity table, any active StaffMember at this college can be assigned;
+  404 if the id isn't a staff member at this college) and the scheduled
   date/time for the mandatory exit counseling session. Advances the case
   from Phase 2 to Phase 3 immediately (this records the schedule
   confirmation, not that the session itself has already happened).
+
+  Also creates a real Google Meet event (via the same Calendar/Meet
+  integration the Interview module uses — GOOGLE_CLIENT_ID/SECRET,
+  GOOGLE_MEET_REFRESH_TOKEN, GOOGLE_MEET_CALENDAR_ID) — a 30-minute session
+  starting at scheduled_at, with the counselor's and student's email as
+  attendees (whichever are available). This is best-effort: if Meet isn't
+  configured or the API call fails, scheduling still succeeds and
+  meetingUrl stays null on the response — never blocks the phase advance.
+
+  Response includes meetingUrl (the generated Meet link) — also surfaced on
+  the student-facing GET /student/seat-cancellations list.
 
   409 ConflictError if the case isn't currently at Phase 2.
 }

@@ -30,6 +30,8 @@ export interface SeatCancellationRequest {
   processedAt: string | null;
   currentPhase: number;
   caseType: SeatCancellationCaseType | null;
+  scheduledAt: string | null;
+  meetingUrl: string | null;
 }
 
 export interface SeatCancellationPhaseLogItem {

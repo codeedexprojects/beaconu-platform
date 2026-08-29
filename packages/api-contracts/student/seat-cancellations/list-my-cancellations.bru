@@ -18,4 +18,11 @@ docs {
   All of the authenticated student's own seat cancellation requests,
   newest first (no pagination — a student realistically has very few of
   these ever).
+
+  Each row includes currentPhase (1-5, the college's review progress) and,
+  once the college schedules the mandatory exit counseling (Phase 2):
+  scheduledAt (ISO datetime) and meetingUrl (the Google Meet link) — null
+  until scheduled, and meetingUrl can stay null even after scheduling if
+  Meet generation failed/wasn't configured (best-effort on the college-admin
+  side, never blocks scheduling).
 }

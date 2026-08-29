@@ -329,6 +329,7 @@ export class ApplicationRepository {
             id: true,
             name: true,
             assessmentRequired: true,
+            interviewRequired: true,
             tokenOnlinePaymentEnabled: true,
             tokenOfflinePaymentEnabled: true,
           },

@@ -261,6 +261,15 @@ const NOT_SCHEDULED_INTERVIEW = {
   remarks: null,
 };
 
+const NOT_REQUIRED_INTERVIEW = {
+  status: "not_required" as const,
+  scheduledAt: null,
+  completedAt: null,
+  outcome: null,
+  score: null,
+  remarks: null,
+};
+
 const NOT_ISSUED_AMOUNT_DETAILS = {
   status: "not_issued" as const,
   applicationCourseId: null,
@@ -363,7 +372,9 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
           : null,
         remarks: booking.interviewRemarks,
       }
-    : NOT_SCHEDULED_INTERVIEW;
+    : row.admissionCycle.interviewRequired
+      ? NOT_SCHEDULED_INTERVIEW
+      : NOT_REQUIRED_INTERVIEW;
 
   const paymentMethods = {
     online: row.admissionCycle.tokenOnlinePaymentEnabled,
