@@ -104,16 +104,36 @@ export function SiteNav({
   moreSections = [],
 }: SiteNavProps) {
   const [open, setOpen] = useState(false);
+  const [hideUtilityBar, setHideUtilityBar] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+      setHideUtilityBar(
+        currentScrollY > lastScrollYRef.current && currentScrollY > 80,
+      );
+      lastScrollYRef.current = currentScrollY;
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const utilityRight = sections.find((s) => s.id === "gallery");
   const utilityLeft = utilityRight
-    ? moreSections.filter((s) => s.id !== utilityRight.id)
-    : moreSections;
+    ? sections.filter((s) => s.id !== utilityRight.id)
+    : sections;
 
   return (
     <header className="sticky top-0 z-50">
       {/* Tier 1 — utility bar */}
-      {moreSections.length > 0 ? (
-        <div className="hidden bg-headerTeal text-headerTeal-foreground lg:block">
+      {sections.length > 0 ? (
+        <div
+          className={cn(
+            "hidden overflow-hidden bg-headerTeal text-headerTeal-foreground transition-[max-height] duration-300 lg:block",
+            hideUtilityBar ? "max-h-0" : "max-h-8",
+          )}
+        >
           <div className="mx-auto flex h-8 max-w-6xl items-center justify-between px-4 text-xs sm:px-6">
             <nav className="flex items-center gap-5">
               {utilityLeft.map((item) => (
@@ -174,10 +194,10 @@ export function SiteNav({
       </div>
 
       {/* Tier 3 — main nav */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-b from-headerTeal to-headerTeal-dark lg:block">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/10" />
+      <div className="relative hidden overflow-hidden bg-gradient-to-b from-headerTeal-dark to-headerTeal-light lg:block">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-black/0 to-black/0" />
         <nav className="relative mx-auto flex h-11 max-w-6xl items-center gap-6 px-4 sm:px-6">
-          {sections.map((section) => (
+          {moreSections.map((section) => (
             <Link
               key={section.id}
               href={section.href}

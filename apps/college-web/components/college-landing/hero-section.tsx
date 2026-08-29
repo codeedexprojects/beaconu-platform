@@ -41,15 +41,15 @@ export function HeroSection({
         <div className="absolute inset-0 bg-black/55" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[520px] max-w-4xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6">
+      <div className="relative mx-auto flex min-h-[560px] max-w-5xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6">
         {altName ? (
           <p className="text-sm font-medium text-white/70">{altName}</p>
         ) : null}
-        <h1 className="mt-2 max-w-3xl text-4xl font-extrabold uppercase tracking-tight text-white sm:text-5xl">
+        <h1 className="mt-2 max-w-5xl text-5xl font-bold uppercase leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-[72px]">
           {collegeName}
         </h1>
 
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/80">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/80">
           {locationText ? (
             <span className="flex items-center gap-1.5">
               <MapPin className="h-4 w-4" />
@@ -61,17 +61,13 @@ export function HeroSection({
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ApplyNowButton
-            size="lg"
-            className="rounded-full bg-white text-headerTeal-dark hover:bg-white/90"
-          >
+          <ApplyNowButton className="rounded-lg bg-white px-6 text-sm font-medium text-headerTeal-dark hover:bg-white/90">
             Start Application
           </ApplyNowButton>
           <Button
-            size="lg"
             variant="outline"
             asChild
-            className="rounded-full border-white/70 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            className="rounded-lg border-2 border-white bg-transparent px-6 text-sm font-semibold uppercase tracking-wide text-white hover:bg-white/10 hover:text-white"
           >
             <Link href={campusVisitHref}>Book Campus Visit</Link>
           </Button>

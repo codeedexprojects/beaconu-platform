@@ -221,6 +221,19 @@ export interface PublicCollegeOverviewFacility {
   image?: string;
 }
 
+export interface PublicCollegeOverviewAchievement {
+  title?: string;
+  subtitle?: string;
+  image?: string;
+}
+
+export interface PublicCollegeOverviewTestimonial {
+  quote?: string;
+  name?: string;
+  role_lines?: string[];
+  image?: string;
+}
+
 export interface PublicCollegeOverviewLocation {
   address?: string | null;
   latitude?: number | null;
@@ -273,8 +286,12 @@ export interface PublicCollegeOverviewSection {
   navigation_tabs?: string[];
   about?: string;
   about_image?: string | null;
+  admissions_cta_image?: string | null;
   accolades?: PublicCollegeOverviewBadge[];
+  achievements?: PublicCollegeOverviewAchievement[];
+  testimonials?: PublicCollegeOverviewTestimonial[];
   university_details?: PublicCollegeOverviewStat[];
+  campus_stats?: PublicCollegeOverviewStat[];
   amenities?: PublicCollegeOverviewAmenity[];
   inside_campus_facilities?: PublicCollegeOverviewFacility[];
   location?: PublicCollegeOverviewLocation;

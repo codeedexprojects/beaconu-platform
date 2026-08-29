@@ -6,21 +6,24 @@ import {
   getCollegeOverviewSection,
   getCollegeReviews,
   getCollegeScholarships,
+  getHappeningsSection,
 } from "@/lib/services/public-college.service";
 import { HeroSection } from "@/components/college-landing/hero-section";
 import { AboutSection } from "@/components/college-landing/about-section";
+import { CampusStatsBand } from "@/components/college-landing/campus-stats-band";
 import { AdmissionsCtaSection } from "@/components/college-landing/admissions-cta-section";
 import { AmenitiesSection } from "@/components/college-landing/amenities-section";
 import { CampusHighlightsSection } from "@/components/college-landing/campus-highlights-section";
 import { CoursesSection } from "@/components/college-landing/courses-section";
-import { CampusSection } from "@/components/college-landing/campus-section";
 import { ScholarshipsSection } from "@/components/college-landing/scholarships-section";
+import { OurStoriesSection } from "@/components/college-landing/our-stories-section";
 import { GallerySection } from "@/components/college-landing/gallery-section";
 import { AchievementsSection } from "@/components/college-landing/achievements-section";
 import { SharingExperienceSection } from "@/components/college-landing/sharing-experience-section";
 import { ReviewsSection } from "@/components/college-landing/reviews-section";
 import { AmbassadorsSection } from "@/components/college-landing/ambassadors-section";
 import { CtaFooter } from "@/components/college-landing/cta-footer";
+import { SiteFooter } from "@/components/college-landing/site-footer";
 
 interface CollegeLandingPageProps {
   params: Promise<{ subdomain: string }>;
@@ -38,17 +41,27 @@ export default async function CollegeLandingPage({
     notFound();
   }
 
-  const [overview, courses, scholarships, gallery, reviews] = await Promise.all(
-    [
+  const [overview, courses, scholarships, gallery, reviews, happenings] =
+    await Promise.all([
       getCollegeOverviewSection(collegeDetails.id).catch(() => null),
       getCollegeCourses(subdomain).catch(() => []),
       getCollegeScholarships(subdomain).catch(() => []),
       getCollegeGallery(subdomain).catch(() => []),
       getCollegeReviews(subdomain, 6).catch(() => []),
-    ],
-  );
+      getHappeningsSection(collegeDetails.id).catch(() => null),
+    ]);
 
   const overviewData = overview?.data;
+  const campusHighlights = (happenings?.data?.happenings ?? [])
+    .slice(0, 6)
+    .map((item, i) => ({
+      id: `happening-${i}`,
+      tag: item.category || "Campus News",
+      title: item.title || "Untitled",
+      excerpt: item.description || "",
+      imageUrl: item.image ?? null,
+      href: item.link,
+    }));
   const campusVisitHref = `/college/${subdomain}/campus-visit`;
   const locationText = [collegeDetails.city, collegeDetails.state]
     .filter(Boolean)
@@ -76,7 +89,18 @@ export default async function CollegeLandingPage({
         imageUrl={overviewData?.about_image ?? null}
       />
 
-      <AdmissionsCtaSection admissionCycleLabel={admissionCycleLabel} />
+      <CampusStatsBand
+        stats={(overviewData?.campus_stats ?? []).map((item) => ({
+          label: item.label ?? "",
+          value: item.value ?? "",
+        }))}
+        backgroundImageUrl={collegeDetails.coverImageUrl}
+      />
+
+      <AdmissionsCtaSection
+        admissionCycleLabel={admissionCycleLabel}
+        imageUrl={overviewData?.admissions_cta_image ?? null}
+      />
 
       <CoursesSection courses={courses} subdomain={subdomain} />
 
@@ -89,24 +113,38 @@ export default async function CollegeLandingPage({
         view360Url={collegeDetails.view360Url}
       />
 
-      <CampusHighlightsSection subdomain={subdomain} />
+      <CampusHighlightsSection
+        subdomain={subdomain}
+        highlights={campusHighlights}
+      />
 
-      <GallerySection
-        gallery={gallery}
+      <OurStoriesSection
         reels={overviewData?.campus_reels ?? []}
         collegeName={collegeDetails.name}
+      />
+
+      <AchievementsSection
         subdomain={subdomain}
+        achievements={(overviewData?.achievements ?? []).map((item, i) => ({
+          id: `achievement-${i}`,
+          title: item.title || "Untitled",
+          subtitle: item.subtitle,
+          imageUrl: item.image ?? null,
+        }))}
       />
 
-      <AchievementsSection subdomain={subdomain} />
-
-      <SharingExperienceSection subdomain={subdomain} />
-
-      <CampusSection
-        campuses={collegeDetails.campuses}
-        location={overviewData?.location}
-        nearbyAccess={overviewData?.nearby_access ?? []}
+      <SharingExperienceSection
+        subdomain={subdomain}
+        testimonials={(overviewData?.testimonials ?? []).map((item, i) => ({
+          id: `testimonial-${i}`,
+          quote: item.quote || "",
+          name: item.name || "Anonymous",
+          roleLines: item.role_lines ?? [],
+          avatarUrl: item.image ?? null,
+        }))}
       />
+
+      <GallerySection gallery={gallery} subdomain={subdomain} />
 
       <ReviewsSection reviews={reviews} />
 
@@ -117,6 +155,19 @@ export default async function CollegeLandingPage({
       <CtaFooter
         collegeName={collegeDetails.name}
         campusVisitHref={campusVisitHref}
+      />
+
+      <SiteFooter
+        collegeName={collegeDetails.name}
+        logoUrl={collegeDetails.logoUrl}
+        subdomain={subdomain}
+        address={
+          overviewData?.location?.address ||
+          [collegeDetails.address, collegeDetails.city, collegeDetails.state]
+            .filter(Boolean)
+            .join(", ")
+        }
+        mapLink={overviewData?.location?.map_link}
         social={overviewData?.social ?? []}
       />
     </>

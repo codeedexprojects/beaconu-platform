@@ -45,6 +45,7 @@
     --field-bg-focus: 220 20% 93%;
 
     --header-teal: 195 45% 37%;
+    --header-teal-light: 195 55% 55%;
     --header-teal-dark: 195 50% 28%;
     --header-teal-foreground: 0 0% 100%;
   }
@@ -60,5 +61,16 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
