@@ -69,6 +69,29 @@ model Announcement {
   @@map("announcements")
 }
 
+// Short dated headline shown in the auto-scrolling "Updates" ticker on the
+// college's public landing page (college-web) — distinct from Announcement
+// above, which is the longer-form Notice Board content shown to enrolled
+// students, not anonymous site visitors.
+model SiteAnnouncement {
+  id          String   @id @default(dbgenerated("('SAN-'::text || (nextval('site_announcement_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
+  title       String   @db.VarChar(255)
+  date        DateTime @db.Date
+  link        String?  @db.Text
+  highlighted Boolean  @default(false)
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId, isActive], name: "idx_site_announce_college")
+  @@index([date(sort: Desc)], name: "idx_site_announce_date")
+  @@map("site_announcements")
+}
+
 model SupportTicket {
   id           String    @id @default(dbgenerated("('TKT-'::text || (nextval('support_ticket_seq'::regclass))::text)"))
   ticketNumber String    @unique @map("ticket_number") @db.VarChar(30)

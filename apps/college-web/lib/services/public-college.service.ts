@@ -13,6 +13,7 @@ import type {
   PublicHappeningsSection,
   PublicCodeOfConductSection,
   AmbassadorOption,
+  PublicSiteAnnouncement,
 } from "@beaconu/types";
 
 export const getCollegeBySlug = cache(
@@ -54,6 +55,12 @@ export async function getCollegeReviews(
   return api.get(
     `/api/v1/public/colleges/by-slug/${slug}/reviews?limit=${limit}`,
   );
+}
+
+export async function getCollegeAnnouncements(
+  slug: string,
+): Promise<PublicSiteAnnouncement[]> {
+  return api.get(`/api/v1/public/colleges/by-slug/${slug}/announcements`);
 }
 
 export async function getInstitutionsAcrossWorldSection(

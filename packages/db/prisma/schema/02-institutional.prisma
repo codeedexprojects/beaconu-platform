@@ -170,6 +170,7 @@ model College {
   campusVisits               CampusVisit[]
   campusVisitAvailabilities  CampusVisitAvailability[]
   announcements              Announcement[]
+  siteAnnouncements          SiteAnnouncement[]
   supportTickets             SupportTicket[]
   callRequests               CallRequest[]
   platformTickets            PlatformTicket[]

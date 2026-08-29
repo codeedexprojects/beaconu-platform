@@ -8,6 +8,7 @@ import staffRoutes from "./staff.routes";
 import facilitiesRoutes from "./facilities.routes";
 import lookupsRoutes from "./lookups.routes";
 import galleryRoutes from "./gallery.routes";
+import siteAnnouncementsRoutes from "./site-announcements.routes";
 
 const router: Router = Router();
 
@@ -19,5 +20,6 @@ router.use("/lookups", lookupsRoutes);
 router.use("/", staffRoutes);
 router.use("/", facilitiesRoutes);
 router.use("/", galleryRoutes);
+router.use("/", siteAnnouncementsRoutes);
 
 export default router;

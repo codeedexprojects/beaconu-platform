@@ -234,6 +234,13 @@ export interface PublicCollegeOverviewTestimonial {
   image?: string;
 }
 
+export interface PublicCollegeOverviewAnnouncement {
+  date?: string;
+  title?: string;
+  link?: string;
+  highlighted?: boolean;
+}
+
 export interface PublicCollegeOverviewLocation {
   address?: string | null;
   latitude?: number | null;
@@ -292,6 +299,7 @@ export interface PublicCollegeOverviewSection {
   testimonials?: PublicCollegeOverviewTestimonial[];
   university_details?: PublicCollegeOverviewStat[];
   campus_stats?: PublicCollegeOverviewStat[];
+  announcements?: PublicCollegeOverviewAnnouncement[];
   amenities?: PublicCollegeOverviewAmenity[];
   inside_campus_facilities?: PublicCollegeOverviewFacility[];
   location?: PublicCollegeOverviewLocation;

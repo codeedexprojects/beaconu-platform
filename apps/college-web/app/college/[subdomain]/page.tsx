@@ -7,8 +7,10 @@ import {
   getCollegeReviews,
   getCollegeScholarships,
   getHappeningsSection,
+  getCollegeAnnouncements,
 } from "@/lib/services/public-college.service";
 import { HeroSection } from "@/components/college-landing/hero-section";
+import { AnnouncementsTicker } from "@/components/college-landing/announcements-ticker";
 import { AboutSection } from "@/components/college-landing/about-section";
 import { CampusStatsBand } from "@/components/college-landing/campus-stats-band";
 import { AdmissionsCtaSection } from "@/components/college-landing/admissions-cta-section";
@@ -41,15 +43,23 @@ export default async function CollegeLandingPage({
     notFound();
   }
 
-  const [overview, courses, scholarships, gallery, reviews, happenings] =
-    await Promise.all([
-      getCollegeOverviewSection(collegeDetails.id).catch(() => null),
-      getCollegeCourses(subdomain).catch(() => []),
-      getCollegeScholarships(subdomain).catch(() => []),
-      getCollegeGallery(subdomain).catch(() => []),
-      getCollegeReviews(subdomain, 6).catch(() => []),
-      getHappeningsSection(collegeDetails.id).catch(() => null),
-    ]);
+  const [
+    overview,
+    courses,
+    scholarships,
+    gallery,
+    reviews,
+    happenings,
+    announcements,
+  ] = await Promise.all([
+    getCollegeOverviewSection(collegeDetails.id).catch(() => null),
+    getCollegeCourses(subdomain).catch(() => []),
+    getCollegeScholarships(subdomain).catch(() => []),
+    getCollegeGallery(subdomain).catch(() => []),
+    getCollegeReviews(subdomain, 6).catch(() => []),
+    getHappeningsSection(collegeDetails.id).catch(() => null),
+    getCollegeAnnouncements(subdomain).catch(() => []),
+  ]);
 
   const overviewData = overview?.data;
   const campusHighlights = (happenings?.data?.happenings ?? [])
@@ -83,6 +93,8 @@ export default async function CollegeLandingPage({
         campusVisitHref={campusVisitHref}
       />
 
+      <AnnouncementsTicker announcements={announcements} />
+
       <AboutSection
         about={overviewData?.about ?? null}
         accolades={overviewData?.accolades ?? []}
@@ -107,7 +119,6 @@ export default async function CollegeLandingPage({
       <ScholarshipsSection scholarships={scholarships} subdomain={subdomain} />
 
       <AmenitiesSection
-        amenities={overviewData?.amenities ?? []}
         facilities={overviewData?.inside_campus_facilities ?? []}
         locationText={locationText}
         view360Url={collegeDetails.view360Url}

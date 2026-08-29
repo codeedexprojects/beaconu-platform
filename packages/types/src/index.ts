@@ -29,6 +29,7 @@ export * from "./institute-of-national-importance";
 export * from "./icon";
 export * from "./interview";
 export * from "./scholarships";
+export * from "./site-announcements";
 export * from "./commute";
 export * from "./hostel";
 export * from "./beaconu-card";
