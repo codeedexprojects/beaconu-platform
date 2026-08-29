@@ -4,6 +4,7 @@ import {
   getInstitutionsAcrossWorldSection,
 } from "@/lib/services/public-college.service";
 import { InstitutionsSection } from "@/components/college-landing/institutions-section";
+import { SiteFooter } from "@/components/college-landing/site-footer";
 
 interface InstitutionsPageProps {
   params: Promise<{ subdomain: string }>;
@@ -32,5 +33,22 @@ export default async function InstitutionsPage({
 
   if (!section || section.data.institutions.length === 0) notFound();
 
-  return <InstitutionsSection section={section.data} subdomain={subdomain} />;
+  return (
+    <>
+      <InstitutionsSection section={section.data} subdomain={subdomain} />
+      <SiteFooter
+        collegeName={collegeDetails.name}
+        logoUrl={collegeDetails.logoUrl}
+        subdomain={subdomain}
+        address={[
+          collegeDetails.address,
+          collegeDetails.city,
+          collegeDetails.state,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        social={[]}
+      />
+    </>
+  );
 }

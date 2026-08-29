@@ -28,7 +28,7 @@ export function AmbassadorsSection({ ambassadors }: AmbassadorsSectionProps) {
           {items.map((ambassador, i) => (
             <div
               key={i}
-              className="rounded-2xl bg-background p-5 text-center shadow-sm"
+              className="rounded-2xl bg-white p-5 text-center shadow-sm"
             >
               {ambassador.image ? (
                 <Image

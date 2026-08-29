@@ -4,6 +4,7 @@ import {
   getCodeOfConductSection,
 } from "@/lib/services/public-college.service";
 import { CodeOfConductSection } from "@/components/college-landing/code-of-conduct-section";
+import { SiteFooter } from "@/components/college-landing/site-footer";
 
 interface CodeOfConductPageProps {
   params: Promise<{ subdomain: string }>;
@@ -32,5 +33,22 @@ export default async function CodeOfConductPage({
 
   if (!section || (section.data.rules?.length ?? 0) === 0) notFound();
 
-  return <CodeOfConductSection section={section.data} subdomain={subdomain} />;
+  return (
+    <>
+      <CodeOfConductSection section={section.data} subdomain={subdomain} />
+      <SiteFooter
+        collegeName={collegeDetails.name}
+        logoUrl={collegeDetails.logoUrl}
+        subdomain={subdomain}
+        address={[
+          collegeDetails.address,
+          collegeDetails.city,
+          collegeDetails.state,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        social={[]}
+      />
+    </>
+  );
 }

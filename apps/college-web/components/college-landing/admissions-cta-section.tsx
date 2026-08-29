@@ -15,7 +15,7 @@ export function AdmissionsCtaSection({
 }: AdmissionsCtaSectionProps) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <div className="grid gap-6 rounded-3xl bg-field p-6 sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-10">
+      <div className="grid gap-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-10">
         <div className="flex flex-col justify-center">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
             <span className="h-px w-6 bg-headerTeal" />
