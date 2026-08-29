@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, MapPin, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getHostels } from "@/lib/services/public-hostel.service";
+import { getCollegeBySlug } from "@/lib/services/public-college.service";
+import { SiteFooter } from "@/components/college-landing/site-footer";
 
 interface HostelsPageProps {
   params: Promise<{ subdomain: string }>;
@@ -11,21 +14,28 @@ interface HostelsPageProps {
 export default async function HostelsPage({ params }: HostelsPageProps) {
   const { subdomain } = await params;
 
+  let collegeDetails;
+  try {
+    ({ collegeDetails } = await getCollegeBySlug(subdomain));
+  } catch {
+    notFound();
+  }
+
   const hostels = await getHostels(subdomain).catch(() => []);
 
   return (
     <div className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <Link
-            href={`/college/${subdomain}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-            aria-label="Back to college page"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-            <Building2 className="h-6 w-6" />
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="flex items-center justify-center gap-2.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <Building2 className="h-7 w-7" />
             Hostels &amp; Accommodation
           </h1>
         </div>
@@ -95,6 +105,20 @@ export default async function HostelsPage({ params }: HostelsPageProps) {
           </div>
         )}
       </div>
+
+      <SiteFooter
+        collegeName={collegeDetails.name}
+        logoUrl={collegeDetails.logoUrl}
+        subdomain={subdomain}
+        address={[
+          collegeDetails.address,
+          collegeDetails.city,
+          collegeDetails.state,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        social={[]}
+      />
     </div>
   );
 }

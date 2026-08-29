@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Bus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { CommuteRoutes } from "@/components/college-landing/commute-routes";
 import type { PublicCommuteSection } from "@beaconu/types";
 
@@ -18,26 +18,21 @@ export function CommuteSection({ commute, subdomain }: CommuteSectionProps) {
 
   return (
     <section id="commute" className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/college/${subdomain}`}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-              aria-label="Back to college page"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-              <Bus className="h-6 w-6" />
-              {commute.title || "Commute & Transport"}
-            </h1>
-          </div>
-          {typeof commute.route_count === "number" ? (
-            <span className="rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-medium text-white">
-              {commute.route_count} route{commute.route_count === 1 ? "" : "s"}
-            </span>
-          ) : null}
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {commute.title || "Commute"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Safe, reliable and comfortable transportation to campus.
+          </p>
         </div>
       </div>
 
@@ -50,7 +45,7 @@ export function CommuteSection({ commute, subdomain }: CommuteSectionProps) {
                 className={
                   point === commute.selected_pickup_point
                     ? "inline-flex items-center rounded-full bg-headerTeal-dark px-3.5 py-1.5 text-sm text-white"
-                    : "inline-flex items-center rounded-full bg-field px-3.5 py-1.5 text-sm text-foreground"
+                    : "inline-flex items-center rounded-full border border-border/60 bg-white px-3.5 py-1.5 text-sm text-foreground"
                 }
               >
                 {point}

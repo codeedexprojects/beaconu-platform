@@ -3,13 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowLeft,
-  Calendar,
-  ExternalLink,
-  PartyPopper,
-  Search,
-} from "lucide-react";
+import { ArrowLeft, Calendar, ExternalLink, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicHappeningsSection } from "@beaconu/types";
 
@@ -63,71 +57,72 @@ export function HappeningsSection({
 
   return (
     <section id="happenings" className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/college/${subdomain}`}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-              aria-label="Back to college page"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-              <PartyPopper className="h-6 w-6" />
-              {section.title || "Happenings"}
-            </h1>
-          </div>
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {section.title || "Happenings"}
+          </h1>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {categories.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveCategory(null)}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                  activeCategory === null
+                    ? "bg-headerTeal-dark text-white"
+                    : "border border-border/60 bg-white text-foreground hover:bg-field",
+                )}
+              >
+                All
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() =>
+                    setActiveCategory(
+                      activeCategory === category ? null : category,
+                    )
+                  }
+                  className={cn(
+                    "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                    activeCategory === category
+                      ? "bg-headerTeal-dark text-white"
+                      : "border border-border/60 bg-white text-foreground hover:bg-field",
+                  )}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span />
+          )}
 
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search happenings"
-              className="w-56 rounded-full bg-white/15 py-2 pl-9 pr-4 text-sm text-white placeholder:text-white/60 outline-none focus:bg-white/20"
+              className="w-56 rounded-full border border-border/60 bg-white py-2 pl-9 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-headerTeal"
             />
           </div>
         </div>
-      </div>
-
-      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
-        {categories.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveCategory(null)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                activeCategory === null
-                  ? "bg-headerTeal-dark text-white"
-                  : "bg-field text-foreground hover:bg-field-focus",
-              )}
-            >
-              All
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() =>
-                  setActiveCategory(
-                    activeCategory === category ? null : category,
-                  )
-                }
-                className={cn(
-                  "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                  activeCategory === category
-                    ? "bg-headerTeal-dark text-white"
-                    : "bg-field text-foreground hover:bg-field-focus",
-                )}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        ) : null}
 
         {filtered.length > 0 ? (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,7 +131,7 @@ export function HappeningsSection({
               return (
                 <article
                   key={`${item.title}-${i}`}
-                  className="overflow-hidden rounded-2xl border border-border/60"
+                  className="overflow-hidden rounded-2xl bg-white shadow-sm"
                 >
                   {item.image ? (
                     <div className="relative h-40 w-full">

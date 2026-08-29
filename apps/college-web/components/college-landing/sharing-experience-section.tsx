@@ -68,7 +68,7 @@ export function SharingExperienceSection({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <div className="rounded-3xl bg-background px-6 py-10 text-center shadow-sm sm:px-14 sm:py-12">
+          <div className="rounded-3xl bg-white px-6 py-10 text-center shadow-sm sm:px-14 sm:py-12">
             <p className="text-base italic leading-8 text-foreground sm:text-lg">
               &quot;{current.quote}&quot;
             </p>

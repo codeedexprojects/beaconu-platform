@@ -16,7 +16,7 @@ export function OurStoriesSection({
   return (
     <section className="bg-muted/40 py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-3xl bg-background p-6 sm:p-8">
+        <div className="overflow-hidden rounded-3xl bg-white p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
             <div className="shrink-0 lg:w-64">
               <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">

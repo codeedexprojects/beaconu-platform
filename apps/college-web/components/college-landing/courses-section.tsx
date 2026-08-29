@@ -39,7 +39,7 @@ export function CoursesSection({ courses, subdomain }: CoursesSectionProps) {
           <Link
             key={course.id}
             href={`/college/${subdomain}/courses/${course.id}`}
-            className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 transition-colors hover:border-foreground/30"
+            className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-white transition-colors hover:border-foreground/30"
           >
             <div className="relative h-48 w-full border-b-4 border-headerTeal-dark bg-muted">
               {course.coverImageUrl ? (

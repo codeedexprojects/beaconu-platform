@@ -20,26 +20,24 @@ export function InstitutionsSection({
 
   return (
     <section id="institutions" className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <Link
-            href={`/college/${subdomain}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-            aria-label="Back to college page"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-              <Globe2 className="h-6 w-6" />
-              {section.title}
-            </h1>
-            {section.group ? (
-              <p className="mt-1 text-sm text-white/70">
-                Part of {section.group.name}.
-              </p>
-            ) : null}
-          </div>
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="flex items-center justify-center gap-2.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <Globe2 className="h-7 w-7" />
+            {section.title}
+          </h1>
+          {section.group ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Part of {section.group.name}.
+            </p>
+          ) : null}
         </div>
       </div>
 

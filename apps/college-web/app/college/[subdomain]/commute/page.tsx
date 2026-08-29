@@ -4,6 +4,7 @@ import {
   getCommuteSection,
 } from "@/lib/services/public-college.service";
 import { CommuteSection } from "@/components/college-landing/commute-section";
+import { SiteFooter } from "@/components/college-landing/site-footer";
 
 interface CommutePageProps {
   params: Promise<{ subdomain: string }>;
@@ -35,5 +36,22 @@ export default async function CommutePage({ params }: CommutePageProps) {
 
   if (!hasContent) notFound();
 
-  return <CommuteSection commute={section.data} subdomain={subdomain} />;
+  return (
+    <>
+      <CommuteSection commute={section.data} subdomain={subdomain} />
+      <SiteFooter
+        collegeName={collegeDetails.name}
+        logoUrl={collegeDetails.logoUrl}
+        subdomain={subdomain}
+        address={[
+          collegeDetails.address,
+          collegeDetails.city,
+          collegeDetails.state,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+        social={[]}
+      />
+    </>
+  );
 }

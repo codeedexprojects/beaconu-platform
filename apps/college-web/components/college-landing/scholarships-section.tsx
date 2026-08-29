@@ -39,7 +39,7 @@ export function ScholarshipsSection({
         {scholarships.map((scholarship) => (
           <div
             key={scholarship.id}
-            className="flex w-96 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60"
+            className="flex w-96 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-white"
           >
             <div className="relative h-48 w-full border-b-4 border-headerTeal-dark bg-muted">
               {scholarship.coverImageUrl ? (
