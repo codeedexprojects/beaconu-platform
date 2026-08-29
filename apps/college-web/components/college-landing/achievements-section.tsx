@@ -11,35 +11,12 @@ interface AchievementItem {
 
 interface AchievementsSectionProps {
   subdomain: string;
-  achievements?: AchievementItem[];
+  achievements: AchievementItem[];
 }
-
-const PLACEHOLDER_ACHIEVEMENTS: AchievementItem[] = [
-  {
-    id: "placeholder-1",
-    title: "Calicut University",
-    subtitle: "A-Zone",
-  },
-  {
-    id: "placeholder-2",
-    title: "Calicut University",
-    subtitle: "A-Zone",
-  },
-  {
-    id: "placeholder-3",
-    title: "Calicut University",
-    subtitle: "A-Zone",
-  },
-  {
-    id: "placeholder-4",
-    title: "Calicut University",
-    subtitle: "A-Zone",
-  },
-];
 
 export function AchievementsSection({
   subdomain,
-  achievements = PLACEHOLDER_ACHIEVEMENTS,
+  achievements,
 }: AchievementsSectionProps) {
   if (achievements.length === 0) return null;
 
@@ -65,7 +42,7 @@ export function AchievementsSection({
           </Link>
         </div>
 
-        <div className="mt-8 flex gap-5 overflow-x-auto pb-2">
+        <div className="no-scrollbar mt-8 flex gap-5 overflow-x-auto pb-2">
           {achievements.map((item) => (
             <div
               key={item.id}

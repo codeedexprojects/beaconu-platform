@@ -34,35 +34,35 @@ export function CoursesSection({ courses, subdomain }: CoursesSectionProps) {
         </Link>
       </div>
 
-      <div className="mt-8 flex gap-5 overflow-x-auto pb-2">
+      <div className="no-scrollbar mt-8 flex gap-5 overflow-x-auto pb-2">
         {featured.map((course) => (
           <Link
             key={course.id}
             href={`/college/${subdomain}/courses/${course.id}`}
-            className="flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 transition-colors hover:border-foreground/30"
+            className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 transition-colors hover:border-foreground/30"
           >
-            <div className="relative h-36 w-full bg-muted">
+            <div className="relative h-48 w-full border-b-4 border-headerTeal-dark bg-muted">
               {course.coverImageUrl ? (
                 <Image
                   src={course.coverImageUrl}
                   alt={course.name}
                   fill
-                  sizes="256px"
+                  sizes="320px"
                   className="object-cover"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60">
-                  <GraduationCap className="h-10 w-10 text-muted-foreground/40" />
+                  <GraduationCap className="h-12 w-12 text-muted-foreground/40" />
                 </div>
               )}
             </div>
-            <div className="p-4">
-              <h3 className="min-h-[2.5rem] text-sm font-semibold leading-snug">
+            <div className="p-5">
+              <h3 className="min-h-[2.75rem] text-base font-semibold leading-snug">
                 {course.name}
               </h3>
-              <div className="mt-3 flex items-center gap-1.5 border-t border-border/60 pt-3 text-xs font-medium text-headerTeal">
+              <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-sm font-medium text-headerTeal">
                 View Course Details
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-4 w-4" />
               </div>
             </div>
           </Link>

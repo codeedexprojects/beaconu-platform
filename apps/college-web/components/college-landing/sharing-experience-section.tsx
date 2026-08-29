@@ -15,36 +15,12 @@ interface TestimonialItem {
 
 interface SharingExperienceSectionProps {
   subdomain: string;
-  testimonials?: TestimonialItem[];
+  testimonials: TestimonialItem[];
 }
-
-const PLACEHOLDER_TESTIMONIALS: TestimonialItem[] = [
-  {
-    id: "placeholder-1",
-    quote:
-      "M.E.S Kalladi College is unique in academic and co-curricular aspects and the Happiness Centre of the college is a novel initiative. I could attend the world record event organized by M.E.S Kalladi College and understand that the institution has a visionary management, dedicated faculty and a promising generation of students.",
-    name: "Prof. E. Balagurusamy",
-    roleLines: ["Former VC, Anna University", "Former Member, UPSC"],
-  },
-  {
-    id: "placeholder-2",
-    quote:
-      "The campus culture here strikes a rare balance between academic rigor and genuine student wellbeing. It's the kind of environment that produces confident, well-rounded graduates.",
-    name: "Dr. A. R. Nair",
-    roleLines: ["Former Vice Chancellor", "Kerala University"],
-  },
-  {
-    id: "placeholder-3",
-    quote:
-      "What stood out to me was how invested the faculty are in every student's journey — not just academically, but personally. That kind of mentorship is rare.",
-    name: "Ms. Priya Menon",
-    roleLines: ["Education Consultant", "Alumni Board Member"],
-  },
-];
 
 export function SharingExperienceSection({
   subdomain,
-  testimonials = PLACEHOLDER_TESTIMONIALS,
+  testimonials,
 }: SharingExperienceSectionProps) {
   const [index, setIndex] = useState(0);
 

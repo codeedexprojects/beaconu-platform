@@ -100,6 +100,19 @@ const collegeOverviewFacilitySchema = z.object({
   image: optionalUrlSchema,
 });
 
+const collegeOverviewAchievementSchema = z.object({
+  title: optionalTextSchema,
+  subtitle: optionalTextSchema,
+  image: optionalUrlSchema,
+});
+
+const collegeOverviewTestimonialSchema = z.object({
+  quote: optionalTextSchema,
+  name: optionalTextSchema,
+  role_lines: z.array(z.string().trim()).optional(),
+  image: optionalUrlSchema,
+});
+
 const collegeOverviewLocationSchema = z.object({
   address: optionalNullableTextSchema,
   latitude: z.number().min(-90).max(90).optional().nullable(),
@@ -156,8 +169,12 @@ const collegeOverviewSectionSchema = z
     navigation_tabs: z.array(z.string().trim().min(1)).optional(),
     about: optionalTextSchema,
     about_image: optionalUrlSchema,
+    admissions_cta_image: optionalUrlSchema,
     accolades: z.array(collegeOverviewBadgeSchema).optional(),
+    achievements: z.array(collegeOverviewAchievementSchema).optional(),
+    testimonials: z.array(collegeOverviewTestimonialSchema).optional(),
     university_details: z.array(collegeOverviewStatSchema).optional(),
+    campus_stats: z.array(collegeOverviewStatSchema).optional(),
     amenities: z.array(collegeOverviewAmenitySchema).optional(),
     inside_campus_facilities: z.array(collegeOverviewFacilitySchema).optional(),
     location: collegeOverviewLocationSchema.optional(),

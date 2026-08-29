@@ -324,14 +324,23 @@ export default function SetupProfilePage() {
   const overviewAboutImage = watch(
     "profileSections.college_overview.about_image",
   );
+  const overviewAdmissionsCtaImage = watch(
+    "profileSections.college_overview.admissions_cta_image",
+  );
   const overviewAccolades =
     watch("profileSections.college_overview.accolades") || [];
   const overviewUnivDetails =
     watch("profileSections.college_overview.university_details") || [];
+  const overviewCampusStats =
+    watch("profileSections.college_overview.campus_stats") || [];
   const overviewAmenities =
     watch("profileSections.college_overview.amenities") || [];
   const overviewFacilities =
     watch("profileSections.college_overview.inside_campus_facilities") || [];
+  const overviewAchievements =
+    watch("profileSections.college_overview.achievements") || [];
+  const overviewTestimonials =
+    watch("profileSections.college_overview.testimonials") || [];
   const overviewSocialLinks =
     watch("profileSections.college_overview.social") || [];
   const overviewReels =
@@ -920,6 +929,39 @@ export default function SetupProfilePage() {
                         publish it.
                       </p>
                     </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label className="font-semibold">
+                        Admissions CTA Image
+                      </Label>
+                      {overviewAdmissionsCtaImage ? (
+                        <div className="relative h-40 w-full max-w-sm overflow-hidden rounded-lg border bg-muted">
+                          <img
+                            src={overviewAdmissionsCtaImage}
+                            alt="Admissions CTA preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : null}
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={
+                          uploadingField ===
+                          "profileSections.college_overview.admissions_cta_image"
+                        }
+                        onChange={(e) =>
+                          handleImageUpload(
+                            e.target.files?.[0] ?? null,
+                            "profileSections.college_overview.admissions_cta_image",
+                            "college-overview/admissions-cta",
+                          )
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Shown on the right side of the &quot;Shape Your Future
+                        With Excellence&quot; admissions banner.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Accolades Section */}
@@ -1063,6 +1105,71 @@ export default function SetupProfilePage() {
                               setValue(
                                 "profileSections.college_overview.university_details",
                                 overviewUnivDetails.filter(
+                                  (_: any, i: number) => i !== idx,
+                                ),
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Campus Stats Band */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Campus Stats Band
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.campus_stats",
+                            [...overviewCampusStats, { label: "", value: "" }],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Stat
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Shown as the dark stats band below the About section on
+                      your public landing page (e.g. &quot;130+ Staff
+                      Members&quot;). Up to 4 are shown.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewCampusStats.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex gap-2 items-center border p-2 rounded-lg bg-muted/10"
+                        >
+                          <Input
+                            placeholder="Value (e.g. 130+)"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_stats.${idx}.value`,
+                            )}
+                          />
+                          <Input
+                            placeholder="Label (e.g. Staff Members)"
+                            className="h-9"
+                            {...register(
+                              `profileSections.college_overview.campus_stats.${idx}.label`,
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setValue(
+                                "profileSections.college_overview.campus_stats",
+                                overviewCampusStats.filter(
                                   (_: any, i: number) => i !== idx,
                                 ),
                               );
@@ -1289,6 +1396,243 @@ export default function SetupProfilePage() {
                                     e.target.files?.[0] ?? null,
                                     `profileSections.college_overview.inside_campus_facilities.${idx}.image`,
                                     `college-overview/facilities-${idx}`,
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Achievements */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Achievements
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.achievements",
+                            [
+                              ...overviewAchievements,
+                              { title: "", subtitle: "", image: "" },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Achievement
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewAchievements.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="border p-4 rounded-xl bg-muted/10 space-y-3 relative group"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Achievement #{idx + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive h-8 px-2 hover:bg-destructive/10"
+                              onClick={() => {
+                                setValue(
+                                  "profileSections.college_overview.achievements",
+                                  overviewAchievements.filter(
+                                    (_: any, i: number) => i !== idx,
+                                  ),
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Title</Label>
+                              <Input
+                                placeholder="Calicut University"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.achievements.${idx}.title`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Subtitle</Label>
+                              <Input
+                                placeholder="A-Zone"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.achievements.${idx}.subtitle`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Photo</Label>
+                              {item?.image ? (
+                                <div className="relative h-24 w-full overflow-hidden rounded-lg border bg-muted">
+                                  <img
+                                    src={item.image}
+                                    alt={item.title || "Achievement"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : null}
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="h-9"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.achievements.${idx}.image`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.achievements.${idx}.image`,
+                                    `college-overview/achievements-${idx}`,
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Testimonials */}
+                  <div className="space-y-4 pt-4 border-t border-border/60">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Sharing Experience (Testimonials)
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setValue(
+                            "profileSections.college_overview.testimonials",
+                            [
+                              ...overviewTestimonials,
+                              {
+                                quote: "",
+                                name: "",
+                                role_lines: [],
+                                image: "",
+                              },
+                            ],
+                          );
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Testimonial
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {overviewTestimonials.map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="border p-4 rounded-xl bg-muted/10 space-y-3 relative group"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Testimonial #{idx + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive h-8 px-2 hover:bg-destructive/10"
+                              onClick={() => {
+                                setValue(
+                                  "profileSections.college_overview.testimonials",
+                                  overviewTestimonials.filter(
+                                    (_: any, i: number) => i !== idx,
+                                  ),
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Quote</Label>
+                              <Textarea
+                                placeholder="What they said about the college..."
+                                rows={4}
+                                {...register(
+                                  `profileSections.college_overview.testimonials.${idx}.quote`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Name</Label>
+                              <Input
+                                placeholder="Prof. E. Balagurusamy"
+                                className="h-9"
+                                {...register(
+                                  `profileSections.college_overview.testimonials.${idx}.name`,
+                                )}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">
+                                Role / Title (one per line)
+                              </Label>
+                              <Textarea
+                                placeholder={
+                                  "Former VC, Anna University\nFormer Member, UPSC"
+                                }
+                                rows={2}
+                                value={(item?.role_lines || []).join("\n")}
+                                onChange={(e) =>
+                                  setValue(
+                                    `profileSections.college_overview.testimonials.${idx}.role_lines`,
+                                    e.target.value
+                                      .split("\n")
+                                      .map((line) => line.trim())
+                                      .filter(Boolean),
+                                    { shouldDirty: true },
+                                  )
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Photo</Label>
+                              {item?.image ? (
+                                <div className="relative h-24 w-24 overflow-hidden rounded-full border bg-muted">
+                                  <img
+                                    src={item.image}
+                                    alt={item.name || "Testimonial"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : null}
+                              <Input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="h-9"
+                                disabled={
+                                  uploadingField ===
+                                  `profileSections.college_overview.testimonials.${idx}.image`
+                                }
+                                onChange={(e) =>
+                                  handleImageUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `profileSections.college_overview.testimonials.${idx}.image`,
+                                    `college-overview/testimonials-${idx}`,
                                   )
                                 }
                               />

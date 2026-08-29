@@ -15,8 +15,8 @@ export function AdmissionsCtaSection({
 }: AdmissionsCtaSectionProps) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <div className="grid gap-0 overflow-hidden rounded-3xl bg-field lg:grid-cols-2">
-        <div className="flex flex-col justify-center p-8 sm:p-10">
+      <div className="grid gap-6 rounded-3xl bg-field p-6 sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-10">
+        <div className="flex flex-col justify-center">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
             <span className="h-px w-6 bg-headerTeal" />
             Admissions {admissionCycleLabel}
@@ -31,30 +31,31 @@ export function AdmissionsCtaSection({
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-5">
-            <ApplyNowButton className="rounded-full bg-headerTeal-dark text-white hover:bg-headerTeal-dark/90">
+            <ApplyNowButton
+              size="lg"
+              className="rounded-full bg-headerTeal-dark px-8 text-white hover:bg-headerTeal-dark/90"
+            >
               Apply Now
             </ApplyNowButton>
-            {prospectusUrl ? (
-              <a
-                href={prospectusUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm font-medium text-headerTeal hover:text-headerTeal-dark"
-              >
-                Download Prospectus
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            ) : null}
+            <a
+              href={prospectusUrl ?? "#"}
+              target={prospectusUrl ? "_blank" : undefined}
+              rel={prospectusUrl ? "noopener noreferrer" : undefined}
+              className="flex items-center gap-1.5 text-sm font-medium text-headerTeal hover:text-headerTeal-dark"
+            >
+              Download Prospectus
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
           </div>
         </div>
 
-        <div className="relative h-64 w-full lg:h-full lg:min-h-[320px]">
+        <div className="relative h-64 w-full overflow-hidden rounded-2xl lg:h-80">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt="Students at campus"
               fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 45vw, 100vw"
               className="object-cover"
             />
           ) : (

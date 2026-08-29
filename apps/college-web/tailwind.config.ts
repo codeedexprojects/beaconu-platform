@@ -61,6 +61,7 @@ const config: Config = {
         },
         headerTeal: {
           DEFAULT: "hsl(var(--header-teal))",
+          light: "hsl(var(--header-teal-light))",
           dark: "hsl(var(--header-teal-dark))",
           foreground: "hsl(var(--header-teal-foreground))",
         },
