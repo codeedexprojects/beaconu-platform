@@ -18,6 +18,7 @@ import {
   Pencil,
   Phone,
   Receipt,
+  Video,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -587,18 +588,40 @@ export default function SeatCancellationCasePage() {
                 </Button>
               </div>
             ) : phaseState(2) === "completed" ? (
-              <div className="flex items-center gap-3 rounded-lg bg-gold-pale/60 p-3 text-sm">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-gold shrink-0">
-                  <Calendar className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-medium">
-                    Scheduled for {formatDateTime(request.scheduledAt)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    with {request.counselorName ?? "—"}
-                  </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gold-pale/60 p-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-gold shrink-0">
+                    <Calendar className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-medium">
+                      Scheduled for {formatDateTime(request.scheduledAt)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      with {request.counselorName ?? "—"}
+                    </p>
+                  </div>
                 </div>
+                {request.meetingUrl ? (
+                  <Button
+                    asChild
+                    size="sm"
+                    className="gap-1.5 rounded-full bg-navy text-white hover:bg-navy/90"
+                  >
+                    <a
+                      href={request.meetingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Video className="h-3.5 w-3.5" />
+                      Join Meeting
+                    </a>
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    No meeting link generated
+                  </span>
+                )}
               </div>
             ) : null}
           </PhaseShell>

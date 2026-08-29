@@ -4,6 +4,7 @@ import { PaginationHelper } from "@/shared/responses/pagination";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
+import { createMeetEvent, isGoogleMeetReady } from "@/shared/lib/google-meet";
 import { SeatCancellationRepository } from "../repositories/seat-cancellation.repository";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
@@ -16,6 +17,15 @@ import type {
   SubmitSettlementInput,
   FinalClearanceInput,
 } from "../validators/seat-cancellation.validator";
+
+const COUNSELING_SESSION_DURATION_MINS = 30;
+
+// Naive local-time ISO string (no offset) — paired with timeZone: "Asia/Kolkata"
+// on the Calendar API call, same convention as the interview module's own
+// gmeet integration (apps/api/src/modules/interviews/services/interview-slot.service.ts).
+function toNaiveISODateTime(date: Date): string {
+  return date.toISOString().slice(0, 19);
+}
 
 async function notifyStudentOfReview(
   studentId: string,
@@ -67,6 +77,8 @@ function mapRequest(row: {
   student?: { fullName: string; email: string | null };
   currentPhase?: number;
   caseType?: string | null;
+  scheduledAt?: Date | null;
+  meetingUrl?: string | null;
 }) {
   return {
     id: row.id,
@@ -88,6 +100,8 @@ function mapRequest(row: {
     processedAt: row.processedAt ? row.processedAt.toISOString() : null,
     currentPhase: row.currentPhase ?? 1,
     caseType: (row.caseType ?? null) as "A" | "B" | "C" | null,
+    scheduledAt: row.scheduledAt ? row.scheduledAt.toISOString() : null,
+    meetingUrl: row.meetingUrl ?? null,
   };
 }
 
@@ -408,6 +422,47 @@ export class SeatCancellationService {
     return mapDetail(updated);
   }
 
+  // Best-effort: never throws — scheduling must succeed even if Calendar/
+  // Meet is unavailable or not configured for this environment. Mirrors
+  // InterviewSlotService.ensureMeetEvent's exact error-handling shape.
+  private static async tryCreateCounselingMeetEvent(params: {
+    studentName: string;
+    counselorName: string;
+    counselorEmail: string;
+    studentEmail: string | null;
+    scheduledAt: Date;
+  }) {
+    if (!isGoogleMeetReady()) return null;
+
+    try {
+      const endAt = new Date(
+        params.scheduledAt.getTime() +
+          COUNSELING_SESSION_DURATION_MINS * 60_000,
+      );
+      const attendeeEmails = Array.from(
+        new Set(
+          [params.counselorEmail, params.studentEmail].filter(
+            (email): email is string => !!email,
+          ),
+        ),
+      );
+
+      return await createMeetEvent({
+        summary: `Exit Counseling — ${params.studentName}`,
+        description: `Mandatory exit counseling session with ${params.counselorName} regarding a seat cancellation request.`,
+        startDateTime: toNaiveISODateTime(params.scheduledAt),
+        endDateTime: toNaiveISODateTime(endAt),
+        attendeeEmails,
+      });
+    } catch (error) {
+      logger.error(
+        { err: error },
+        "Failed to create Google Meet event for counseling session",
+      );
+      return null;
+    }
+  }
+
   static async scheduleCounseling(
     collegeId: string,
     staffId: string,
@@ -421,9 +476,28 @@ export class SeatCancellationService {
       );
     }
 
+    const counselor = await SeatCancellationRepository.findStaffInCollege(
+      data.counselor_id,
+      collegeId,
+    );
+    if (!counselor) {
+      throw new NotFoundError("Counselor not found at this college");
+    }
+
+    const meetEvent = await this.tryCreateCounselingMeetEvent({
+      studentName: row.student?.fullName ?? "Student",
+      counselorName: counselor.fullName,
+      counselorEmail: counselor.email,
+      studentEmail: row.student?.email ?? null,
+      scheduledAt: data.scheduled_at,
+    });
+
     const updated = await SeatCancellationRepository.scheduleCounseling(id, {
       counselorId: data.counselor_id,
       scheduledAt: data.scheduled_at,
+      meetingUrl: meetEvent?.meetingUrl ?? null,
+      meetingId: meetEvent?.meetingId ?? null,
+      googleEventId: meetEvent?.eventId ?? null,
     });
     await SeatCancellationRepository.addPhaseLog(prisma, {
       seatCancellationId: id,

@@ -231,6 +231,9 @@ model SeatCancellation {
 
   counselorId             String?   @map("counselor_id")
   scheduledAt             DateTime? @map("scheduled_at") @db.Timestamptz
+  meetingUrl              String?   @map("meeting_url") @db.Text
+  meetingId               String?   @map("meeting_id") @db.VarChar(100)
+  googleEventId           String?   @map("google_event_id") @db.VarChar(255)
   counselingCompletedAt   DateTime? @map("counseling_completed_at") @db.Timestamptz
   counselingNotes         String?   @map("counseling_notes") @db.Text
   counselingOutcome       String?   @map("counseling_outcome") @db.VarChar(20)
