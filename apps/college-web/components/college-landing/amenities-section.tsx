@@ -1,12 +1,8 @@
 import Image from "next/image";
-import { Building2, CheckCircle2 } from "lucide-react";
-import type {
-  PublicCollegeOverviewAmenity,
-  PublicCollegeOverviewFacility,
-} from "@beaconu/types";
+import { Building2 } from "lucide-react";
+import type { PublicCollegeOverviewFacility } from "@beaconu/types";
 
 interface AmenitiesSectionProps {
-  amenities: PublicCollegeOverviewAmenity[];
   facilities: PublicCollegeOverviewFacility[];
   locationText?: string;
   view360Url?: string | null;
@@ -56,12 +52,11 @@ function FacilityCard({
 }
 
 export function AmenitiesSection({
-  amenities,
   facilities,
   locationText,
   view360Url,
 }: AmenitiesSectionProps) {
-  if (amenities.length === 0 && facilities.length === 0) return null;
+  if (facilities.length === 0) return null;
 
   const [featured, ...rest] = facilities;
   const smallFacilities = rest.slice(0, 3);
@@ -76,20 +71,6 @@ export function AmenitiesSection({
         <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
           Facilities at a Glance
         </h2>
-
-        {amenities.length > 0 ? (
-          <div className="mt-6 flex flex-wrap gap-2.5">
-            {amenities.map((amenity, i) => (
-              <span
-                key={`${amenity.label}-${i}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-3.5 py-1.5 text-sm"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 text-foreground/70" />
-                {amenity.label}
-              </span>
-            ))}
-          </div>
-        ) : null}
 
         {facilities.length > 0 ? (
           <div className="mt-8 grid gap-4 lg:grid-cols-2">

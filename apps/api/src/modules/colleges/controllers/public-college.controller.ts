@@ -8,6 +8,7 @@ import { BlinkService } from "@/modules/blink/services/blink.service";
 import { WishlistService } from "@/modules/wishlist/services/wishlist.service";
 import { AdmissionCycleService } from "@/modules/admissions/services/admission-cycle.service";
 import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
+import { SiteAnnouncementService } from "../services/site-announcement.service";
 
 function requestingStudentId(req: Request): string | null {
   return req.userType === "student" && req.userId ? req.userId : null;
@@ -651,5 +652,20 @@ export class PublicCollegeController {
     return res
       .status(200)
       .json(ApiResponse.success("Reviews fetched successfully", reviews));
+  }
+
+  static async getSiteAnnouncements(req: Request, res: Response) {
+    const slug = normalizeStringParam(req.params.slug);
+
+    const announcements = await SiteAnnouncementService.listPublicBySlug(slug);
+
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Announcements fetched successfully",
+          announcements,
+        ),
+      );
   }
 }

@@ -71,6 +71,7 @@ export const QUERY_KEYS = {
   platformTicket: (id: string) => ["platform-ticket", id] as const,
   notices: (filters?: unknown) =>
     filters ? (["notices", filters] as const) : (["notices"] as const),
+  siteAnnouncements: ["site-announcements"] as const,
   notice: (id: string) => ["notice", id] as const,
   collegeStudents: (filters?: unknown) =>
     filters

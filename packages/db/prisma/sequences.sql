@@ -122,6 +122,7 @@ CREATE SEQUENCE IF NOT EXISTS "seat_cancellation_phase_log_seq";
 CREATE SEQUENCE IF NOT EXISTS "seat_pool_seq";
 CREATE SEQUENCE IF NOT EXISTS "service_charge_config_seq";
 CREATE SEQUENCE IF NOT EXISTS "session_reschedule_seq";
+CREATE SEQUENCE IF NOT EXISTS "site_announcement_seq";
 CREATE SEQUENCE IF NOT EXISTS "short_seq";
 CREATE SEQUENCE IF NOT EXISTS "squad_search_seq";
 CREATE SEQUENCE IF NOT EXISTS "staff_member_seq";

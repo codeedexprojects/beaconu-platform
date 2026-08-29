@@ -73,6 +73,10 @@ router.get(
 );
 router.get("/by-slug/:slug/gallery", PublicCollegeController.getCollegeGallery);
 router.get("/by-slug/:slug/reviews", PublicCollegeController.getCollegeReviews);
+router.get(
+  "/by-slug/:slug/announcements",
+  PublicCollegeController.getSiteAnnouncements,
+);
 
 router.get(
   "/:id",

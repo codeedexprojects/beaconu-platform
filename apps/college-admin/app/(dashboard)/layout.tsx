@@ -30,6 +30,7 @@ import {
   Award,
   LifeBuoy,
   Megaphone,
+  Radio,
   GraduationCap,
   XCircle,
   Repeat,
@@ -516,6 +517,12 @@ export default function DashboardLayout({
                     path: "/notices",
                     icon: Megaphone,
                     permission: "staff.view",
+                  },
+                  {
+                    name: "Site Announcements",
+                    path: "/announcements",
+                    icon: Radio,
+                    permission: "profile.view",
                   },
                   {
                     name: "Enrolled Students",
