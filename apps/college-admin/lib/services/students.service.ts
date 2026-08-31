@@ -7,6 +7,7 @@ import type {
 
 export interface CollegeStudentListFilters {
   search?: string;
+  status?: string;
   page?: number;
   limit?: number;
 }
@@ -14,6 +15,7 @@ export interface CollegeStudentListFilters {
 function toQueryString(filters: CollegeStudentListFilters): string {
   const params = new URLSearchParams();
   if (filters.search) params.set("search", filters.search);
+  if (filters.status) params.set("status", filters.status);
   if (filters.page) params.set("page", String(filters.page));
   if (filters.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();

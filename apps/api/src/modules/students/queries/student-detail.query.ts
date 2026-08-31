@@ -58,6 +58,7 @@ export class StudentDetailQuery {
         course: {
           select: { id: true, name: true, code: true, duration: true },
         },
+        applicationCourse: { select: { applicationId: true } },
       },
       orderBy: { enrolledAt: "desc" },
     });
@@ -260,6 +261,7 @@ export class StudentDetailQuery {
         courseName: enrollment.course.name,
         courseCode: enrollment.course.code,
         courseDuration: enrollment.course.duration,
+        applicationId: enrollment.applicationCourse.applicationId,
       },
       hostel: hostelEnrollment
         ? {

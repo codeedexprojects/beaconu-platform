@@ -75,6 +75,16 @@ const updateStudentStatusSchema = z.object({
 
 const collegeStudentListQuerySchema = z.object({
   search: z.string().trim().min(1).optional(),
+  status: z
+    .enum([
+      "active",
+      "on_leave",
+      "suspended",
+      "completed",
+      "withdrawn",
+      "course_switched",
+    ])
+    .optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });

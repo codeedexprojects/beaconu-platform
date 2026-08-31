@@ -21,6 +21,7 @@ export class CollegeAdminStudentsController {
     const query = studentSchemas.collegeStudentListQuery.parse(req.query);
     const result = await StudentsQuery.listEnrolledForCollege(req.collegeId!, {
       search: query.search,
+      status: query.status,
       page: query.page,
       limit: query.limit,
     });

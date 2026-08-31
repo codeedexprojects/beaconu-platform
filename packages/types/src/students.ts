@@ -153,6 +153,7 @@ export interface StudentDetailEnrollment {
   courseName: string;
   courseCode: string;
   courseDuration: string | null;
+  applicationId: string;
 }
 
 export interface StudentDetailHostel {
