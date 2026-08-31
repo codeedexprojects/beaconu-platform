@@ -20,10 +20,6 @@ import {
   stopAssessmentAutoSubmitJob,
 } from "@/modules/assessments/jobs/assessment-auto-submit.job";
 import {
-  startInterviewSlotExpiryJob,
-  stopInterviewSlotExpiryJob,
-} from "@/modules/interviews/jobs/slot-expiry.job";
-import {
   startInvoiceGenerationWorker,
   stopInvoiceGenerationWorker,
 } from "@/modules/payments/jobs/invoice-generation.job";
@@ -53,11 +49,6 @@ const JOBS = [
     name: "Assessment auto-submit",
     start: startAssessmentAutoSubmitJob,
     stop: stopAssessmentAutoSubmitJob,
-  },
-  {
-    name: "Interview slot expiry",
-    start: startInterviewSlotExpiryJob,
-    stop: stopInterviewSlotExpiryJob,
   },
   {
     name: "Invoice generation",

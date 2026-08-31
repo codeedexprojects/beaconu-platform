@@ -29,7 +29,6 @@ model Student {
   assessmentAttempts         AssessmentAttempt[]
   assessmentReschedules      AssessmentReschedule[]
   interviewBookings          InterviewBooking[]
-  interviewReschedules       InterviewReschedule[]
   offerLetters               OfferLetter[]
   transactions               Transaction[]
   scholarshipApplications    ScholarshipApplication[]
@@ -192,9 +191,9 @@ model StaffMember {
   inviter     StaffMember?  @relation("StaffInviter", fields: [invitedBy], references: [id])
   invitees    StaffMember[] @relation("StaffInviter")
 
-  interviewSlots                InterviewSlot[]             @relation("InterviewerStaff")
   interviewBookingsEval         InterviewBooking[]          @relation("EvaluatedByStaff")
-  interviewRescheduleReviews    InterviewReschedule[]       @relation("IRescheduleReviewer")
+  interviewPanelAssignments     InterviewBooking[]          @relation("PanelMemberStaff")
+  interviewBookingsScheduled    InterviewBooking[]          @relation("ScheduledByStaff")
   offerLettersIssued            OfferLetter[]               @relation("IssuedByStaff")
   assessmentRescheduleReviews   AssessmentReschedule[]      @relation("ARescheduleReviewer")
   studentAnswersEval            StudentAnswer[]

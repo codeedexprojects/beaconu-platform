@@ -1,0 +1,54 @@
+meta {
+  name: Schedule Interview
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/applications/{{interviewApplicationId}}/schedule
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "scheduled_date": "2026-09-10",
+    "start_time": "09:00",
+    "end_time": "10:00",
+    "panel_member_id": "{{interviewPanelMemberId}}",
+    "mode": "gmeet",
+    "venue": ""
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("interviewBookingId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Keyed by applicationId, not bookingId — creates the InterviewBooking the
+  first time a candidate is scheduled, or overwrites an existing one's
+  fields on re-schedule (this endpoint IS the reschedule action too).
+
+  `mode`: "gmeet" | "telephonic" | "on_campus". `venue` is required only
+  for "on_campus". For "gmeet", a Google Calendar/Meet event is created
+  (or its time updated on re-schedule) best-effort — never blocks the
+  response if Calendar/Meet is unavailable.
+
+  409 ConflictError if the chosen panel member already has another
+  "scheduled" interview overlapping the requested window, or if this
+  application's interview is already "completed".
+}

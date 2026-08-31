@@ -119,8 +119,11 @@ export class ApplicationRepository {
       select: {
         id: true,
         collegeId: true,
+        studentId: true,
         applicationNumber: true,
         formStatus: true,
+        profilePhotoUrl: true,
+        student: { select: { fullName: true, email: true, phoneNumber: true } },
         admissionCycle: {
           select: { assessmentRequired: true, interviewRequired: true },
         },
@@ -133,6 +136,71 @@ export class ApplicationRepository {
           },
         },
       },
+    });
+  }
+
+  /** Bulk read for InterviewBookingService.listPending — every application
+   * at this college that is formally submitted and requires an interview,
+   * with just enough joined data (student, primary/active courses, latest
+   * assessment attempt status, existing InterviewBooking's status if any)
+   * for the caller to derive final eligibility + shape the Pending list.
+   * The remaining eligibility checks (assessment result published,
+   * booking not already active) are done in application code rather than
+   * the `where` clause — same "fine at this table's realistic per-college
+   * scale" reasoning already used elsewhere in this codebase (e.g. commute
+   * bus-seat filtering). */
+  static async findInterviewEligibleForCollege(
+    collegeId: string,
+    filters: { search?: string } = {},
+  ) {
+    return prisma.application.findMany({
+      where: {
+        collegeId,
+        formStatus: "submitted",
+        admissionCycle: { interviewRequired: true },
+        ...(filters.search && {
+          OR: [
+            {
+              applicationNumber: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              student: {
+                fullName: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          ],
+        }),
+      },
+      select: {
+        id: true,
+        applicationNumber: true,
+        studentId: true,
+        profilePhotoUrl: true,
+        createdAt: true,
+        student: { select: { fullName: true, email: true, phoneNumber: true } },
+        admissionCycle: { select: { assessmentRequired: true } },
+        applicationCourses: {
+          where: { status: { not: "withdrawn" } },
+          select: {
+            id: true,
+            status: true,
+            course: { select: { name: true } },
+          },
+        },
+        assessmentAttempts: {
+          select: { status: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+        interviewBooking: { select: { status: true } },
+      },
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -355,7 +423,6 @@ export class ApplicationRepository {
   static async findInterviewBookingForApplication(applicationId: string) {
     return prisma.interviewBooking.findFirst({
       where: { applicationId },
-      include: { slot: { select: { scheduledDate: true } } },
     });
   }
 

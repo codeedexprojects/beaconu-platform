@@ -31,13 +31,13 @@ export const QUERY_KEYS = {
   sidebarHints: ["sidebar-hints"] as const,
   pendingEnrollments: (filters?: object) =>
     filters ? ["pending-enrollments", filters] : ["pending-enrollments"],
-  interviewSlots: (filters?: object) =>
-    filters ? ["interview-slots", filters] : ["interview-slots"],
-  interviewSettings: ["interview-settings"] as const,
-  interviewBookings: (status?: string) =>
-    status ? ["interview-bookings", status] : ["interview-bookings"],
-  interviewReschedules: (status?: string) =>
-    status ? ["interview-reschedules", status] : ["interview-reschedules"],
+  interviewBookings: (filters?: object) =>
+    filters ? ["interview-bookings", filters] : ["interview-bookings"],
+  interviewBooking: (id: string) => ["interview-booking", id] as const,
+  interviewCandidate: (applicationId: string) =>
+    ["interview-candidate", applicationId] as const,
+  interviewPanelAvailability: (query: object) =>
+    ["interview-panel-availability", query] as const,
   scholarshipConfigs: ["scholarship-configs"] as const,
   scholarshipApplications: (status?: string) =>
     status

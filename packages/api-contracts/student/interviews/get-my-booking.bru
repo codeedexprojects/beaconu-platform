@@ -1,7 +1,7 @@
 meta {
   name: Get My Interview Booking
   type: http
-  seq: 3
+  seq: 1
 }
 
 get {
@@ -15,17 +15,13 @@ auth:bearer {
 }
 
 docs {
-  Fetches the student's own interview booking for one whole Application
-  (404 if none exists yet — not an error state to build UI around, just
-  means "not booked yet"). This is the "get my slot" call to make right
-  after Book Interview Slot — the response is fully self-contained:
+  Read-only. Fetches the student's own interview booking for one whole
+  Application — 404 until the college schedules it (there is no
+  self-service booking action anymore; the college schedules the date,
+  time, panel member, and mode after the candidate reaches the interview
+  stage).
 
-  - `slot`: full slot details, including `campus` (address/city/state/
-    pinCode/latitude/longitude — "on_campus" mode only, latitude/longitude
-    null if that campus was never geo-tagged) and `venue` (room/floor
-    detail, if the admin added one).
-  - `instructions`: the college's heading/description/instructions for
-    whichever mode this booking's slot is — the "gmeet" block if
-    `slot.mode === "gmeet"`, the "on_campus" block otherwise. No separate
-    settings call needed.
+  Response includes `mode`, `scheduledDate`/`startTime`/`endTime`,
+  `panelMemberName`, `meetingUrl` (for "gmeet"), and `venue` (for
+  "on_campus") once scheduled.
 }

@@ -1,7 +1,7 @@
 meta {
   name: Complete Interview
   type: http
-  seq: 6
+  seq: 5
 }
 
 patch {
@@ -32,6 +32,7 @@ docs {
   — a separate, later "Shortlist" action is needed to move it further (see
   Shortlist Application Course).
 
-  409 ConflictError "This booking is not currently active" if the booking
-  isn't currently "booked" (e.g. already completed or cancelled).
+  409 ConflictError "This interview is not currently scheduled" if the
+  booking isn't currently "scheduled" (e.g. already completed or
+  cancelled).
 }
