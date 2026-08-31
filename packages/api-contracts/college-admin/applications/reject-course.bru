@@ -1,0 +1,39 @@
+meta {
+  name: Reject Application Course
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/applications/courses/{{applicationCourseId}}/reject
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "reason": "Did not meet the minimum eligibility criteria for this course."
+  }
+}
+
+docs {
+  Declines this course's application — sets ApplicationCourse.status to
+  "rejected" and (if `reason` is given) stores it on both `rejectionReason`
+  and the ApplicationStatusLog entry. `reason` is optional.
+
+  Only allowed from an active, still-in-progress stage — 409 ConflictError
+  ("This course can't be rejected — it's already \"<status>\"") once the
+  course is already "shortlisted", "token_paid", "enrolled", "dropped_out",
+  "withdrawn", or "deferred". Idempotent — re-calling on an already-
+  "rejected" course is a silent no-op.
+
+  404 if the course doesn't exist or belongs to a different college.
+}

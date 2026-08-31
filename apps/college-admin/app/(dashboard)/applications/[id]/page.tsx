@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Loader2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -18,9 +21,20 @@ import {
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { getErrorMessage } from "@/lib/api";
+import { QUERY_KEYS } from "@/lib/query-keys";
+import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
+import {
   useApplication,
   useEnrollApplicationCourse,
 } from "@/hooks/use-applications";
+import { useShortlistCourse } from "@/hooks/use-interviews";
 import type {
   ApplicationDetailCourseItem,
   UndergraduateDetailsInput,
@@ -504,6 +518,7 @@ export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
+  const queryClient = useQueryClient();
   const { data: app, isLoading, error } = useApplication(id);
   const enrollMutation = useEnrollApplicationCourse(id);
   const [enrollTarget, setEnrollTarget] =
@@ -517,6 +532,52 @@ export default function ApplicationDetailPage() {
         setEnrollTarget(null);
       },
     });
+  }
+
+  const shortlistMutation = useShortlistCourse();
+  const [shortlistTarget, setShortlistTarget] =
+    useState<ApplicationDetailCourseItem | null>(null);
+  const [shortlistFile, setShortlistFile] = useState<File | null>(null);
+  const [shortlistValidUntil, setShortlistValidUntil] = useState("");
+  const [isUploadingOffer, setIsUploadingOffer] = useState(false);
+
+  function closeShortlistDialog() {
+    setShortlistTarget(null);
+    setShortlistFile(null);
+    setShortlistValidUntil("");
+  }
+
+  async function confirmShortlist() {
+    if (!shortlistTarget || !shortlistFile || !shortlistValidUntil) {
+      toast.error("Select the offer letter document and its valid-until date");
+      return;
+    }
+    setIsUploadingOffer(true);
+    try {
+      const documentUrl = await uploadCollegeAdminFile(
+        shortlistFile,
+        "applications/offer-letters",
+      );
+      shortlistMutation.mutate(
+        {
+          applicationCourseId: shortlistTarget.id,
+          data: { document_url: documentUrl, valid_until: shortlistValidUntil },
+        },
+        {
+          onSuccess: () => {
+            toast.success(`"${shortlistTarget.courseName}" shortlisted`);
+            void queryClient.invalidateQueries({
+              queryKey: QUERY_KEYS.application(id),
+            });
+            closeShortlistDialog();
+          },
+        },
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsUploadingOffer(false);
+    }
   }
 
   if (isLoading) {
@@ -1357,6 +1418,15 @@ export default function ApplicationDetailPage() {
                   <TableCell>{c.quotaName ?? "—"}</TableCell>
                   <TableCell>₹{c.applicationFee}</TableCell>
                   <TableCell className="text-right">
+                    {c.status === "submitted" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShortlistTarget(c)}
+                      >
+                        Shortlist
+                      </Button>
+                    )}
                     {c.status === "token_paid" && (
                       <Button
                         size="sm"
@@ -1550,6 +1620,58 @@ export default function ApplicationDetailPage() {
         onCancel={() => setEnrollTarget(null)}
         onConfirm={confirmEnroll}
       />
+
+      <Dialog
+        open={shortlistTarget !== null}
+        onOpenChange={(open) => !open && closeShortlistDialog()}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Shortlist &quot;{shortlistTarget?.courseName}&quot;
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Skips straight to shortlisted from the current status (
+              {shortlistTarget?.status.replace(/_/g, " ")}) and issues the offer
+              letter. Only allowed if this course&apos;s admission cycle
+              doesn&apos;t require an assessment or interview at this stage —
+              otherwise the server will reject it.
+            </p>
+            <div>
+              <Label>Offer Letter Document</Label>
+              <Input
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={(e) => setShortlistFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+            <div>
+              <Label>Offer Valid Until</Label>
+              <Input
+                type="date"
+                value={shortlistValidUntil}
+                onChange={(e) => setShortlistValidUntil(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeShortlistDialog}>
+              Cancel
+            </Button>
+            <Button
+              disabled={isUploadingOffer || shortlistMutation.isPending}
+              onClick={confirmShortlist}
+            >
+              {(isUploadingOffer || shortlistMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirm Shortlist
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
