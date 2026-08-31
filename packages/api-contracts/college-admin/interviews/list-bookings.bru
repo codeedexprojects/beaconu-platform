@@ -1,7 +1,7 @@
 meta {
   name: List Interview Bookings
   type: http
-  seq: 5
+  seq: 1
 }
 
 get {
@@ -15,22 +15,27 @@ auth:bearer {
 }
 
 params:query {
-  ~status: booked
+  ~status: pending
+  ~search:
 }
 
 script:post-response {
   if (res.status === 200) {
     const data = res.getBody();
-    if (data.data && data.data[0] && data.data[0].id) {
-      bru.setEnvVar("interviewBookingId", data.data[0].id);
+    if (data.data && data.data[0]) {
+      if (data.data[0].id) bru.setEnvVar("interviewBookingId", data.data[0].id);
+      if (data.data[0].applicationId) bru.setEnvVar("interviewApplicationId", data.data[0].applicationId);
     }
   }
 }
 
 docs {
-  Lists every interview booking at this college, newest first — the
-  evaluator queue. `status`: "booked" | "completed" | "cancelled".
+  Lists interview candidates at this college. `status`:
+  - "pending" — candidates eligible for interview with no active booking
+    yet (a computed, live list — nothing is stored for these rows; see
+    plan doc Design Decision #6). Response items have no `id` (no
+    InterviewBooking exists yet) — use `applicationId` for the next step.
+  - "scheduled" | "completed" | "cancelled" — real InterviewBooking rows.
 
-  Each row includes `studentPhone` — the student's own phone number, for
-  the interviewer's reference.
+  `search` matches applicant name or application number.
 }

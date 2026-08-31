@@ -9,38 +9,34 @@ router.use(authenticate, authorizeUserType("staff_member"));
 const view = authorize("interviews.view");
 const manage = authorize("interviews.manage");
 
-router.get("/settings", view, InterviewCollegeAdminController.getSettings);
-router.patch(
-  "/settings",
-  manage,
-  InterviewCollegeAdminController.updateSettings,
-);
-
-router.post("/slots", manage, InterviewCollegeAdminController.createSlot);
-router.get("/slots", view, InterviewCollegeAdminController.listSlots);
-router.patch("/slots/:id", manage, InterviewCollegeAdminController.updateSlot);
-router.patch(
-  "/slots/:id/cancel",
-  manage,
-  InterviewCollegeAdminController.cancelSlot,
-);
-
 router.get("/bookings", view, InterviewCollegeAdminController.listBookings);
+router.get("/bookings/:id", view, InterviewCollegeAdminController.getBooking);
 router.patch(
   "/bookings/:id/complete",
   manage,
   InterviewCollegeAdminController.completeInterview,
 );
+router.patch(
+  "/bookings/:id/cancel",
+  manage,
+  InterviewCollegeAdminController.cancel,
+);
 
 router.get(
-  "/reschedules",
+  "/panel-availability",
   view,
-  InterviewCollegeAdminController.listReschedules,
+  InterviewCollegeAdminController.getPanelAvailability,
+);
+
+router.get(
+  "/applications/:applicationId",
+  view,
+  InterviewCollegeAdminController.getApplicationDetail,
 );
 router.patch(
-  "/reschedules/:id/review",
+  "/applications/:applicationId/schedule",
   manage,
-  InterviewCollegeAdminController.reviewReschedule,
+  InterviewCollegeAdminController.schedule,
 );
 
 router.patch(

@@ -1,0 +1,41 @@
+meta {
+  name: Get Panel Availability
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/panel-availability?scheduled_date=2026-09-10&start_time=09:00&end_time=10:00
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  scheduled_date: 2026-09-10
+  start_time: 09:00
+  end_time: 10:00
+  ~search:
+  ~exclude_booking_id:
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("interviewPanelMemberId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Every active staff member at the college with a live `isAvailable` flag
+  — false if they already have another "scheduled" interview whose
+  [start_time, end_time] overlaps the requested window on that date.
+
+  `exclude_booking_id`: pass the booking currently being re-scheduled so
+  its own prior panel assignment doesn't count against itself.
+}

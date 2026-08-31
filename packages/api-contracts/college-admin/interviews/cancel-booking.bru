@@ -1,0 +1,24 @@
+meta {
+  name: Cancel Interview
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/bookings/{{interviewBookingId}}/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Cancels a "pending"-or-later real booking. Best-effort deletes its
+  Google Meet event if one exists. The candidate drops back into the
+  computed Pending list (List Interview Bookings, status=pending) since a
+  cancelled row no longer counts as an active booking.
+
+  409 ConflictError if already "completed" or already "cancelled".
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Get Interview Booking
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/interviews/bookings/{{interviewBookingId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Fetches one real InterviewBooking by its own id (scheduled/completed/
+  cancelled only — a pending candidate has no booking id yet, use Get
+  Interview Candidate by applicationId instead).
+}

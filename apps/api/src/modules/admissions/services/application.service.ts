@@ -357,12 +357,10 @@ async function buildStatusSummary(studentId: string, row: StatusRow) {
 
   const interview = booking
     ? {
-        status: booking.status as
-          | "booked"
-          | "completed"
-          | "cancelled"
-          | "rescheduled",
-        scheduledAt: booking.slot.scheduledDate.toISOString(),
+        status: booking.status as "scheduled" | "completed" | "cancelled",
+        scheduledAt: booking.scheduledDate
+          ? booking.scheduledDate.toISOString()
+          : null,
         completedAt: booking.completedAt
           ? booking.completedAt.toISOString()
           : null,
@@ -1082,6 +1080,11 @@ export class ApplicationService {
     return {
       id: row.id,
       collegeId: row.collegeId,
+      studentId: row.studentId,
+      studentName: row.student.fullName,
+      studentEmail: row.student.email,
+      studentPhone: row.student.phoneNumber,
+      studentPhotoUrl: row.profilePhotoUrl,
       applicationNumber: row.applicationNumber,
       formStatus: row.formStatus,
       assessmentRequired: row.admissionCycle.assessmentRequired,
@@ -1092,5 +1095,51 @@ export class ApplicationService {
         courseName: ac.course.name,
       })),
     };
+  }
+
+  /** Cross-module read for InterviewBookingService.listPending — every
+   * application at this college that has reached the interview-eligible
+   * stage (submitted, interview required, and — if assessment required —
+   * the attempt is result_published) and has no active (non-cancelled)
+   * InterviewBooking yet. Mirrors the exact gate the old self-service
+   * bookSlot() used to check defensively; here it's the source of the
+   * live-computed Pending list instead (see Plan AD Design Decision #6). */
+  static async listInterviewEligible(
+    collegeId: string,
+    filters: { search?: string } = {},
+  ) {
+    const rows = await ApplicationRepository.findInterviewEligibleForCollege(
+      collegeId,
+      filters,
+    );
+    return rows
+      .filter((row) => {
+        if (
+          row.interviewBooking &&
+          row.interviewBooking.status !== "cancelled"
+        ) {
+          return false;
+        }
+        if (row.admissionCycle.assessmentRequired) {
+          const latest = row.assessmentAttempts[0];
+          if (!latest || latest.status !== "result_published") return false;
+        }
+        return true;
+      })
+      .map((row) => ({
+        applicationId: row.id,
+        applicationNumber: row.applicationNumber,
+        studentId: row.studentId,
+        studentName: row.student.fullName,
+        studentEmail: row.student.email,
+        studentPhone: row.student.phoneNumber,
+        studentPhotoUrl: row.profilePhotoUrl,
+        eligibleSince: row.createdAt.toISOString(),
+        courses: row.applicationCourses.map((ac) => ({
+          applicationCourseId: ac.id,
+          status: ac.status,
+          courseName: ac.course.name,
+        })),
+      }));
   }
 }

@@ -55,10 +55,9 @@ export interface ApplicationAssessmentStatus {
 export type InterviewStatusValue =
   | "not_required"
   | "not_scheduled"
-  | "booked"
+  | "scheduled"
   | "completed"
-  | "cancelled"
-  | "rescheduled";
+  | "cancelled";
 
 export interface ApplicationInterviewStatus {
   status: InterviewStatusValue;

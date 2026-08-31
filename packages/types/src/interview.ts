@@ -1,121 +1,104 @@
-export type InterviewMode = "gmeet" | "on_campus";
-export type InterviewSlotStatus = "active" | "cancelled";
+export type InterviewMode = "gmeet" | "telephonic" | "on_campus";
 
-export interface InterviewCampusLocation {
-  id: string;
-  name: string;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  pinCode: string | null;
-  latitude: number | null;
-  longitude: number | null;
-}
-
-export interface InterviewSlotItem {
-  id: string;
-  collegeId: string;
-  mode: InterviewMode;
-  scheduledDate: string;
-  startTime: string;
-  endTime: string;
-  durationMins: number;
-  meetingUrl: string | null;
-  meetingId: string | null;
-  meetingPasscode: string | null;
-  campus: InterviewCampusLocation | null;
-  venue: string | null;
-  interviewerId: string | null;
-  interviewerName: string | null;
-  interviewerEmail: string | null;
-  status: InterviewSlotStatus;
-  createdAt: string;
-}
-
-export interface CreateInterviewSlotInput {
-  mode: InterviewMode;
-  scheduled_date: string;
-  start_time: string;
-  end_time: string;
-  duration_mins?: number;
-  campus_id?: string;
-  venue?: string;
-  interviewer_id?: string;
-  interviewer_email?: string;
-}
-
-export type UpdateInterviewSlotInput = Partial<CreateInterviewSlotInput>;
-
-export interface ListAvailableInterviewSlotsQuery {
-  college_id: string;
-  mode?: InterviewMode;
-  scheduled_date?: string;
-}
-
-export interface InterviewModeInstructions {
-  heading: string | null;
-  description: string | null;
-  instructions: string[];
-}
-
-export interface InterviewSettingsItem {
-  collegeId: string;
-  allowGmeet: boolean;
-  allowOnCampus: boolean;
-  gmeet: InterviewModeInstructions;
-  onCampus: InterviewModeInstructions;
-  updatedAt: string;
-}
-
-export interface UpdateInterviewModeInstructionsInput {
-  heading?: string;
-  description?: string;
-  instructions?: string[];
-}
-
-export interface UpdateInterviewSettingsInput {
-  allow_gmeet?: boolean;
-  allow_on_campus?: boolean;
-  gmeet?: UpdateInterviewModeInstructionsInput;
-  on_campus?: UpdateInterviewModeInstructionsInput;
-}
-
-export type InterviewBookingStatus = "booked" | "completed" | "cancelled";
+export type InterviewBookingStatus = "scheduled" | "completed" | "cancelled";
 export type InterviewOutcome = "recommended" | "not_recommended";
+
+export interface InterviewBookingCourseItem {
+  applicationCourseId: string;
+  courseName: string;
+  status: string;
+}
 
 export interface InterviewBookingItem {
   id: string;
   applicationId: string;
   applicationNumber: string;
-  courses: {
-    applicationCourseId: string;
-    courseName: string;
-    status: string;
-  }[];
+  courses: InterviewBookingCourseItem[];
   studentId: string;
   studentName: string;
+  studentEmail: string | null;
   studentPhone: string | null;
-  slot: InterviewSlotItem;
-  instructions: InterviewModeInstructions;
+  studentPhotoUrl: string | null;
   status: InterviewBookingStatus;
+  mode: InterviewMode | null;
+  scheduledDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  panelMemberId: string | null;
+  panelMemberName: string | null;
+  panelMemberRole: string | null;
+  meetingUrl: string | null;
+  meetingId: string | null;
+  venue: string | null;
   interviewScore: string | null;
   interviewRemarks: string | null;
   interviewOutcome: InterviewOutcome | null;
   evaluatedBy: string | null;
   evaluatedAt: string | null;
-  bookedAt: string;
+  scheduledAt: string | null;
   completedAt: string | null;
+  createdAt: string;
 }
 
-export interface BookInterviewSlotInput {
-  application_id: string;
-  slot_id: string;
+/** A candidate that has reached the interview-eligible stage but has no
+ * `InterviewBooking` row yet (or only a `cancelled` one) — a computed
+ * view, not a stored entity. See Plan AD Design Decision #6. */
+export interface PendingInterviewItem {
+  applicationId: string;
+  applicationNumber: string;
+  courses: InterviewBookingCourseItem[];
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  studentPhotoUrl: string | null;
+  eligibleSince: string;
+}
+
+/** Applicant context for the college-admin scheduling screen — always
+ * available regardless of whether an `InterviewBooking` row exists yet.
+ * `booking` is null for a still-pending candidate. */
+export interface InterviewApplicationDetail {
+  applicationId: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  studentPhotoUrl: string | null;
+  courses: InterviewBookingCourseItem[];
+  booking: InterviewBookingItem | null;
+}
+
+export interface ScheduleInterviewInput {
+  scheduled_date: string;
+  start_time: string;
+  end_time: string;
+  panel_member_id: string;
+  mode: InterviewMode;
+  venue?: string;
 }
 
 export interface CompleteInterviewInput {
   interview_score?: number;
   interview_outcome?: InterviewOutcome;
   interview_remarks?: string;
+}
+
+export interface PanelMemberAvailabilityItem {
+  id: string;
+  name: string;
+  roleName: string | null;
+  avatarUrl: string | null;
+  isAvailable: boolean;
+}
+
+export interface PanelAvailabilityQuery {
+  scheduled_date: string;
+  start_time: string;
+  end_time: string;
+  search?: string;
+  exclude_booking_id?: string;
 }
 
 export interface ShortlistCourseInput {
@@ -137,31 +120,4 @@ export interface OfferLetterItem {
   status: string;
   issuedBy: string | null;
   createdAt: string;
-}
-
-export type InterviewRescheduleStatus = "pending" | "approved" | "rejected";
-
-export interface InterviewRescheduleItem {
-  id: string;
-  bookingId: string;
-  studentId: string;
-  fromSlotId: string;
-  toSlotId: string | null;
-  reason: string;
-  status: InterviewRescheduleStatus;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  reviewRemarks: string | null;
-  createdAt: string;
-}
-
-export interface RequestInterviewRescheduleInput {
-  to_slot_id?: string;
-  reason: string;
-}
-
-export interface ReviewInterviewRescheduleInput {
-  action: "approve" | "reject";
-  to_slot_id?: string;
-  review_remarks?: string;
 }

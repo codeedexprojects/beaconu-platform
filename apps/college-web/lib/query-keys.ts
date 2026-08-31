@@ -56,12 +56,6 @@ export const QUERY_KEYS = {
     ["attempt-section-question", attemptId, sectionId, questionOrder] as const,
   attemptOverview: (attemptId: string, sectionId: string) =>
     ["attempt-overview", attemptId, sectionId] as const,
-  interviewSlots: (collegeId: string, filters?: unknown) =>
-    filters
-      ? (["interview-slots", collegeId, filters] as const)
-      : (["interview-slots", collegeId] as const),
-  myInterviewBooking: (applicationId: string) =>
-    ["my-interview-booking", applicationId] as const,
   offlineTokenPaymentStatus: (applicationCourseId: string) =>
     ["offline-token-payment-status", applicationCourseId] as const,
   scholarshipConfigs: (collegeId: string) =>

@@ -183,7 +183,7 @@ export function ApplicationStatusTimeline({
   const assessmentRequired = assessment.status !== "not_required";
 
   const interviewDone = interview.status === "completed";
-  const interviewBooked = interview.status === "booked";
+  const interviewBooked = interview.status === "scheduled";
 
   const scholarshipDecided = scholarships.some((s) => s.status !== "pending");
   const hasScholarshipApplication = scholarships.length > 0;
@@ -292,24 +292,10 @@ export function ApplicationStatusTimeline({
                   ? "warning"
                   : "info"
           }
-        >
-          {!interviewDone && assessmentDone ? (
-            <Button
-              asChild
-              variant="outline"
-              className="mt-3 h-11 w-full rounded-full"
-            >
-              <Link
-                href={`/college/${subdomain}/applications/${applicationId}/interview`}
-              >
-                {interviewBooked
-                  ? "View Interview Details"
-                  : "Book Interview Slot"}
-                <Video className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          ) : null}
-        </TimelineStep>
+        />
+        {/* No self-service action here anymore — the college schedules the
+            interview (date/time/panel/mode) once the candidate is eligible;
+            the student sees status/date via the subtitle above only. */}
 
         <TimelineStep
           icon={Star}

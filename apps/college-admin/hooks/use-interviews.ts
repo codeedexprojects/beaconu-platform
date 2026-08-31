@@ -3,86 +3,70 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
-  getInterviewSlots,
-  createInterviewSlot,
-  updateInterviewSlot,
-  cancelInterviewSlot,
   getInterviewBookings,
+  getInterviewBooking,
+  getInterviewCandidate,
+  getPanelAvailability,
+  scheduleInterview,
   completeInterview,
-  getInterviewReschedules,
-  reviewInterviewReschedule,
+  cancelInterview,
   shortlistCourse,
-  getInterviewSettings,
-  updateInterviewSettings,
+  type InterviewBookingFilters,
 } from "@/lib/services/interviews.service";
 import type {
-  CreateInterviewSlotInput,
-  UpdateInterviewSlotInput,
   CompleteInterviewInput,
-  ReviewInterviewRescheduleInput,
-  UpdateInterviewSettingsInput,
+  PanelAvailabilityQuery,
+  ScheduleInterviewInput,
   ShortlistCourseInput,
 } from "@beaconu/types";
 
-export function useInterviewSlots(filters?: {
-  mode?: string;
-  status?: string;
-}) {
+export function useInterviewBookings(filters: InterviewBookingFilters) {
   return useQuery({
-    queryKey: QUERY_KEYS.interviewSlots(filters),
-    queryFn: () => getInterviewSlots(filters),
+    queryKey: QUERY_KEYS.interviewBookings(filters),
+    queryFn: () => getInterviewBookings(filters),
   });
 }
 
-export function useCreateInterviewSlot() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateInterviewSlotInput) => createInterviewSlot(data),
-    onError: (error) => toast.error(getErrorMessage(error)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewSlots(),
-      });
-    },
+export function useInterviewBooking(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.interviewBooking(id),
+    queryFn: () => getInterviewBooking(id),
+    enabled: !!id,
   });
 }
 
-export function useUpdateInterviewSlot() {
+export function useInterviewCandidate(applicationId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.interviewCandidate(applicationId),
+    queryFn: () => getInterviewCandidate(applicationId),
+    enabled: !!applicationId,
+  });
+}
+
+export function usePanelAvailability(query: PanelAvailabilityQuery | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.interviewPanelAvailability(query ?? {}),
+    queryFn: () => getPanelAvailability(query!),
+    enabled: !!query,
+  });
+}
+
+export function useScheduleInterview() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      id,
+      applicationId,
       data,
     }: {
-      id: string;
-      data: UpdateInterviewSlotInput;
-    }) => updateInterviewSlot(id, data),
+      applicationId: string;
+      data: ScheduleInterviewInput;
+    }) => scheduleInterview(applicationId, data),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewSlots(),
+        queryKey: QUERY_KEYS.interviewBookings(),
       });
     },
-  });
-}
-
-export function useCancelInterviewSlot() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => cancelInterviewSlot(id),
-    onError: (error) => toast.error(getErrorMessage(error)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewSlots(),
-      });
-    },
-  });
-}
-
-export function useInterviewBookings(status?: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.interviewBookings(status),
-    queryFn: () => getInterviewBookings(status),
   });
 }
 
@@ -100,54 +84,14 @@ export function useCompleteInterview() {
   });
 }
 
-export function useInterviewReschedules(status?: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.interviewReschedules(status),
-    queryFn: () => getInterviewReschedules(status),
-  });
-}
-
-export function useReviewInterviewReschedule() {
+export function useCancelInterview() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ReviewInterviewRescheduleInput;
-    }) => reviewInterviewReschedule(id, data),
+    mutationFn: (id: string) => cancelInterview(id),
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewReschedules(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewSlots(),
-      });
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.interviewBookings(),
-      });
-    },
-  });
-}
-
-export function useInterviewSettings() {
-  return useQuery({
-    queryKey: QUERY_KEYS.interviewSettings,
-    queryFn: () => getInterviewSettings(),
-  });
-}
-
-export function useUpdateInterviewSettings() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: UpdateInterviewSettingsInput) =>
-      updateInterviewSettings(data),
-    onError: (error) => toast.error(getErrorMessage(error)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.interviewSettings,
       });
     },
   });

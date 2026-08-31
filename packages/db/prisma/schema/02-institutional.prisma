@@ -145,8 +145,6 @@ model College {
   assessmentSlots            AssessmentSlot[]
   questionTypes              QuestionType[]
   questions                  Question[]
-  interviewSlots             InterviewSlot[]
-  interviewSettings          InterviewSettings?
   offerLetters               OfferLetter[]
   feeStructures              FeeStructure[]
   studentFeeLedger           StudentFeeLedger[]
@@ -277,7 +275,6 @@ model Campus {
   courses        Course[]
   applications   Application[]
   enrollments    Enrollment[]
-  interviewSlots InterviewSlot[]
 
   @@index([collegeId], name: "idx_campuses_college")
   @@index([collegeId, status], name: "idx_campuses_status")

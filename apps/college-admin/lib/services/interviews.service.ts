@@ -1,53 +1,62 @@
 import { api } from "@/lib/api";
 import type {
-  InterviewSlotItem,
-  CreateInterviewSlotInput,
-  UpdateInterviewSlotInput,
   InterviewBookingItem,
+  InterviewApplicationDetail,
+  PendingInterviewItem,
+  PanelMemberAvailabilityItem,
+  PanelAvailabilityQuery,
+  ScheduleInterviewInput,
   CompleteInterviewInput,
-  InterviewRescheduleItem,
-  ReviewInterviewRescheduleInput,
-  InterviewSettingsItem,
-  UpdateInterviewSettingsInput,
   ShortlistCourseInput,
   OfferLetterItem,
 } from "@beaconu/types";
 
 const BASE = "/api/v1/college-admin/interviews";
 
-export function getInterviewSlots(filters?: {
-  mode?: string;
-  status?: string;
-}): Promise<InterviewSlotItem[]> {
-  const query = new URLSearchParams();
-  if (filters?.mode) query.set("mode", filters.mode);
-  if (filters?.status) query.set("status", filters.status);
-  const qs = query.toString();
-  return api.get(`${BASE}/slots${qs ? `?${qs}` : ""}`);
-}
-
-export function createInterviewSlot(
-  data: CreateInterviewSlotInput,
-): Promise<InterviewSlotItem> {
-  return api.post(`${BASE}/slots`, data);
-}
-
-export function updateInterviewSlot(
-  id: string,
-  data: UpdateInterviewSlotInput,
-): Promise<InterviewSlotItem> {
-  return api.patch(`${BASE}/slots/${id}`, data);
-}
-
-export function cancelInterviewSlot(id: string): Promise<InterviewSlotItem> {
-  return api.patch(`${BASE}/slots/${id}/cancel`, {});
+export interface InterviewBookingFilters {
+  status?: "pending" | "scheduled" | "completed" | "cancelled";
+  search?: string;
 }
 
 export function getInterviewBookings(
-  status?: string,
-): Promise<InterviewBookingItem[]> {
-  const qs = status ? `?status=${status}` : "";
-  return api.get(`${BASE}/bookings${qs}`);
+  filters: InterviewBookingFilters,
+): Promise<InterviewBookingItem[] | PendingInterviewItem[]> {
+  const query = new URLSearchParams();
+  if (filters.status) query.set("status", filters.status);
+  if (filters.search) query.set("search", filters.search);
+  const qs = query.toString();
+  return api.get(`${BASE}/bookings${qs ? `?${qs}` : ""}`);
+}
+
+export function getInterviewBooking(id: string): Promise<InterviewBookingItem> {
+  return api.get(`${BASE}/bookings/${id}`);
+}
+
+export function getInterviewCandidate(
+  applicationId: string,
+): Promise<InterviewApplicationDetail> {
+  return api.get(`${BASE}/applications/${applicationId}`);
+}
+
+export function getPanelAvailability(
+  query: PanelAvailabilityQuery,
+): Promise<PanelMemberAvailabilityItem[]> {
+  const params = new URLSearchParams({
+    scheduled_date: query.scheduled_date,
+    start_time: query.start_time,
+    end_time: query.end_time,
+  });
+  if (query.search) params.set("search", query.search);
+  if (query.exclude_booking_id)
+    params.set("exclude_booking_id", query.exclude_booking_id);
+  return api.get(`${BASE}/panel-availability?${params.toString()}`);
+}
+
+export function scheduleInterview(
+  applicationId: string,
+  data: ScheduleInterviewInput,
+): Promise<InterviewBookingItem> {
+  return api.patch(`${BASE}/applications/${applicationId}/schedule`, data);
 }
 
 export function completeInterview(
@@ -57,18 +66,8 @@ export function completeInterview(
   return api.patch(`${BASE}/bookings/${id}/complete`, data);
 }
 
-export function getInterviewReschedules(
-  status?: string,
-): Promise<InterviewRescheduleItem[]> {
-  const qs = status ? `?status=${status}` : "";
-  return api.get(`${BASE}/reschedules${qs}`);
-}
-
-export function reviewInterviewReschedule(
-  id: string,
-  data: ReviewInterviewRescheduleInput,
-): Promise<InterviewRescheduleItem> {
-  return api.patch(`${BASE}/reschedules/${id}/review`, data);
+export function cancelInterview(id: string): Promise<InterviewBookingItem> {
+  return api.patch(`${BASE}/bookings/${id}/cancel`, {});
 }
 
 export function shortlistCourse(
@@ -76,14 +75,4 @@ export function shortlistCourse(
   data: ShortlistCourseInput,
 ): Promise<OfferLetterItem> {
   return api.patch(`${BASE}/courses/${applicationCourseId}/shortlist`, data);
-}
-
-export function getInterviewSettings(): Promise<InterviewSettingsItem> {
-  return api.get(`${BASE}/settings`);
-}
-
-export function updateInterviewSettings(
-  data: UpdateInterviewSettingsInput,
-): Promise<InterviewSettingsItem> {
-  return api.patch(`${BASE}/settings`, data);
 }
