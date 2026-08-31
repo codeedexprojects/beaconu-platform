@@ -313,6 +313,7 @@ model Library {
   departmentId       String?  @map("department_id")
   type               String   @db.VarChar(20)
   name               String   @db.VarChar(255)
+  coverImageUrl      String?  @map("cover_image_url") @db.Text
   stats              Json     @default("[]")
   availableResources Json     @default("{\"items\":[]}") @map("available_resources")
   libraryHours       Json     @default("{\"days\":[]}") @map("library_hours")

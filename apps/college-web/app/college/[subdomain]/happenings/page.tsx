@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   getCollegeBySlug,
+  getCollegeOverviewSection,
   getHappeningsSection,
 } from "@/lib/services/public-college.service";
 import { HappeningsSection } from "@/components/college-landing/happenings-section";
@@ -25,9 +26,11 @@ export default async function HappeningsPage({ params }: HappeningsPageProps) {
     notFound();
   }
 
-  const section = await getHappeningsSection(collegeDetails.id).catch(
-    () => null,
-  );
+  const [section, overview] = await Promise.all([
+    getHappeningsSection(collegeDetails.id).catch(() => null),
+    getCollegeOverviewSection(collegeDetails.id).catch(() => null),
+  ]);
+  const overviewData = overview?.data;
 
   if (!section || (section.data.happenings?.length ?? 0) === 0) notFound();
 
@@ -38,14 +41,14 @@ export default async function HappeningsPage({ params }: HappeningsPageProps) {
         collegeName={collegeDetails.name}
         logoUrl={collegeDetails.logoUrl}
         subdomain={subdomain}
-        address={[
-          collegeDetails.address,
-          collegeDetails.city,
-          collegeDetails.state,
-        ]
-          .filter(Boolean)
-          .join(", ")}
-        social={[]}
+        address={
+          overviewData?.location?.address ||
+          [collegeDetails.address, collegeDetails.city, collegeDetails.state]
+            .filter(Boolean)
+            .join(", ")
+        }
+        mapLink={overviewData?.location?.map_link}
+        social={overviewData?.social ?? []}
       />
     </>
   );

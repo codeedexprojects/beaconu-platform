@@ -51,6 +51,7 @@ export const createLibrarySchema = z.object({
   type: z.enum(LIBRARY_TYPES),
   departmentId: z.string().trim().optional().nullable(),
   name: z.string().trim().min(1, "Name is required"),
+  coverImageUrl: z.string().trim().optional().nullable(),
   stats: z.array(statItemSchema).optional().default([]),
   availableResources: z
     .object({ items: z.array(resourceItemSchema).optional().default([]) })

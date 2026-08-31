@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   getCollegeBySlug,
+  getCollegeOverviewSection,
   getCommuteSection,
 } from "@/lib/services/public-college.service";
 import { CommuteSection } from "@/components/college-landing/commute-section";
@@ -25,7 +26,11 @@ export default async function CommutePage({ params }: CommutePageProps) {
     notFound();
   }
 
-  const section = await getCommuteSection(collegeDetails.id).catch(() => null);
+  const [section, overview] = await Promise.all([
+    getCommuteSection(collegeDetails.id).catch(() => null),
+    getCollegeOverviewSection(collegeDetails.id).catch(() => null),
+  ]);
+  const overviewData = overview?.data;
 
   if (!section) notFound();
 
@@ -43,14 +48,14 @@ export default async function CommutePage({ params }: CommutePageProps) {
         collegeName={collegeDetails.name}
         logoUrl={collegeDetails.logoUrl}
         subdomain={subdomain}
-        address={[
-          collegeDetails.address,
-          collegeDetails.city,
-          collegeDetails.state,
-        ]
-          .filter(Boolean)
-          .join(", ")}
-        social={[]}
+        address={
+          overviewData?.location?.address ||
+          [collegeDetails.address, collegeDetails.city, collegeDetails.state]
+            .filter(Boolean)
+            .join(", ")
+        }
+        mapLink={overviewData?.location?.map_link}
+        social={overviewData?.social ?? []}
       />
     </>
   );

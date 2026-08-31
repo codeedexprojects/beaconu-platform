@@ -520,6 +520,7 @@ export interface LibraryDto {
   departmentId: string | null;
   type: "central" | "department";
   name: string;
+  coverImageUrl: string | null;
   stats: LibraryStatDto[];
   availableResources: { items: LibraryResourceItemDto[] };
   libraryHours: { days: LibraryHoursDayDto[] };

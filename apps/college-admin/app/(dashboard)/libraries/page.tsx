@@ -97,6 +97,7 @@ const libraryFormSchema = z
     type: z.enum(["central", "department"]),
     departmentId: z.string().optional().default(""),
     name: z.string().trim().min(1, "Library name is required"),
+    coverImageUrl: z.string().optional().default(""),
     stats: z.array(statFormSchema),
     resources: z.array(resourceFormSchema),
     hours: z.array(hoursDayFormSchema),
@@ -113,6 +114,7 @@ const DEFAULT_VALUES: LibraryFormData = {
   type: "central",
   departmentId: "",
   name: "",
+  coverImageUrl: "",
   stats: [],
   resources: [],
   hours: [],
@@ -124,6 +126,7 @@ function toFormData(library: LibraryDto): LibraryFormData {
     type: library.type,
     departmentId: library.departmentId || "",
     name: library.name,
+    coverImageUrl: library.coverImageUrl || "",
     stats: (library.stats || []).map((s) => ({
       value: s.value || "",
       label: s.label || "",
@@ -151,6 +154,7 @@ function toPayload(data: LibraryFormData) {
     type: data.type,
     departmentId: data.type === "department" ? data.departmentId : null,
     name: data.name,
+    coverImageUrl: data.coverImageUrl || null,
     stats: data.stats,
     availableResources: { items: data.resources },
     libraryHours: { days: data.hours },
@@ -221,7 +225,7 @@ export default function LibrariesPage() {
 
   const handleImageUpload = async (
     file: File | null,
-    fieldPath: `facilities.${number}.image`,
+    fieldPath: `facilities.${number}.image` | "coverImageUrl",
     context: string,
   ) => {
     if (!file) return;
@@ -410,6 +414,32 @@ export default function LibrariesPage() {
                   <p className="text-xs text-destructive">
                     {errors.name.message}
                   </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">Cover Image</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="h-8 text-xs"
+                  disabled={uploadingField === "coverImageUrl"}
+                  onChange={(e) =>
+                    handleImageUpload(
+                      e.target.files?.[0] ?? null,
+                      "coverImageUrl",
+                      "libraries/cover",
+                    )
+                  }
+                />
+                {watch("coverImageUrl") && (
+                  <img
+                    src={watch("coverImageUrl")}
+                    alt="Cover preview"
+                    className="h-10 w-16 rounded-md border object-cover"
+                  />
                 )}
               </div>
             </div>
