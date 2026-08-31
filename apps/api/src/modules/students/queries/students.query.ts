@@ -58,10 +58,11 @@ function mapAdminListItem(row: {
 export class StudentsQuery {
   static async listEnrolledForCollege(
     collegeId: string,
-    filters: { search?: string; page: number; limit: number },
+    filters: { search?: string; status?: string; page: number; limit: number },
   ) {
     const where = {
       collegeId,
+      ...(filters.status && { status: filters.status }),
       ...(filters.search && {
         student: {
           OR: [

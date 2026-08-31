@@ -2,47 +2,60 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEnrolledStudents } from "@/hooks/use-college-students";
 
-const STATUS_BADGE_CLASS: Record<string, string> = {
-  active: "bg-green-50 text-green-700 border-green-200",
-  on_leave: "bg-amber-50 text-amber-700 border-amber-200",
-  suspended: "bg-red-50 text-red-700 border-red-200",
-  completed: "bg-blue-50 text-blue-700 border-blue-200",
-  withdrawn: "bg-muted text-muted-foreground",
-  course_switched: "bg-purple-50 text-purple-700 border-purple-200",
-};
+const AVATAR_PALETTE = [
+  "bg-neutral-100 text-neutral-700",
+  "bg-amber-100 text-amber-800",
+  "bg-blue-100 text-blue-800",
+  "bg-emerald-100 text-emerald-800",
+  "bg-violet-100 text-violet-800",
+  "bg-rose-100 text-rose-800",
+];
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
 }
+
+function avatarColor(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++)
+    hash = (hash + seed.charCodeAt(i)) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[hash];
+}
+
+const STATUS_OPTIONS = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "On Leave", value: "on_leave" },
+  { label: "Suspended", value: "suspended" },
+  { label: "Completed", value: "completed" },
+  { label: "Withdrawn", value: "withdrawn" },
+];
 
 export default function EnrolledStudentsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const limit = 24;
 
   const { data, isLoading } = useEnrolledStudents({
     search: search || undefined,
+    status: status === "all" ? undefined : status,
     page,
     limit,
   });
@@ -52,102 +65,96 @@ export default function EnrolledStudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Enrolled Students
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Every student enrolled at this college — click a row for their full
-            profile, hostel, commute, and payment history.
-          </p>
-        </div>
+      <div>
+        <h1 className="font-serif text-2xl font-bold tracking-tight text-navy">
+          Matriculated Learners
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Every student enrolled at this college — click a profile for their
+          full academic, document, and payment history.
+        </p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, email, or phone"
-          className="pl-9 max-w-md"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search students, categories..."
+            className="h-11 w-full rounded-full border border-border bg-white pl-10 pr-4 text-sm outline-none focus:border-gold"
+          />
+        </div>
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v);
             setPage(1);
           }}
-        />
+        >
+          <SelectTrigger className="h-11 w-full gap-2 rounded-full border-border bg-navy text-white sm:w-44 [&_svg]:text-white">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Academic Year</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Enrolled On</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 5 }).map((__, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : students.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="py-10 text-center text-sm text-muted-foreground"
-                >
-                  No enrolled students yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              students.map((student) => (
-                <TableRow
-                  key={student.enrollmentId}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => router.push(`/students/${student.id}`)}
-                >
-                  <TableCell>
-                    <div className="font-medium">{student.fullName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {student.email ?? student.phoneNumber ?? student.id}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>{student.courseName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {student.courseCode}
-                    </div>
-                  </TableCell>
-                  <TableCell>{student.academicYear}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        STATUS_BADGE_CLASS[student.enrollmentStatus] ??
-                        "bg-muted text-muted-foreground"
-                      }
-                    >
-                      {student.enrollmentStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(student.enrolledAt)}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-border bg-white p-6"
+            >
+              <Skeleton className="mx-auto h-16 w-16 rounded-xl" />
+              <Skeleton className="mx-auto mt-3 h-4 w-24" />
+              <Skeleton className="mx-auto mt-2 h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      ) : students.length === 0 ? (
+        <div className="rounded-2xl border border-dashed py-16 text-center text-sm text-muted-foreground">
+          No enrolled students yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {students.map((student) => (
+            <div
+              key={student.enrollmentId}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-white p-6 text-center shadow-sm"
+            >
+              <span
+                className={`flex h-16 w-16 items-center justify-center rounded-xl text-xl font-serif font-bold ${avatarColor(student.id)}`}
+              >
+                {initials(student.fullName)}
+              </span>
+              <p className="mt-1 font-serif text-lg font-bold text-navy">
+                {student.fullName}
+              </p>
+              <p className="font-mono text-xs tracking-wide text-muted-foreground">
+                {student.enrollmentNumber ?? student.id}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-2 w-full rounded-lg border-border bg-muted/40 text-sm font-medium hover:bg-muted"
+                onClick={() => router.push(`/students/${student.id}`)}
+              >
+                View Profile
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
