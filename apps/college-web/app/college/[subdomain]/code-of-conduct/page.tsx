@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import {
   getCollegeBySlug,
   getCodeOfConductSection,
+  getCollegeOverviewSection,
 } from "@/lib/services/public-college.service";
 import { CodeOfConductSection } from "@/components/college-landing/code-of-conduct-section";
 import { SiteFooter } from "@/components/college-landing/site-footer";
@@ -27,9 +28,11 @@ export default async function CodeOfConductPage({
     notFound();
   }
 
-  const section = await getCodeOfConductSection(collegeDetails.id).catch(
-    () => null,
-  );
+  const [section, overview] = await Promise.all([
+    getCodeOfConductSection(collegeDetails.id).catch(() => null),
+    getCollegeOverviewSection(collegeDetails.id).catch(() => null),
+  ]);
+  const overviewData = overview?.data;
 
   if (!section || (section.data.rules?.length ?? 0) === 0) notFound();
 
@@ -40,14 +43,14 @@ export default async function CodeOfConductPage({
         collegeName={collegeDetails.name}
         logoUrl={collegeDetails.logoUrl}
         subdomain={subdomain}
-        address={[
-          collegeDetails.address,
-          collegeDetails.city,
-          collegeDetails.state,
-        ]
-          .filter(Boolean)
-          .join(", ")}
-        social={[]}
+        address={
+          overviewData?.location?.address ||
+          [collegeDetails.address, collegeDetails.city, collegeDetails.state]
+            .filter(Boolean)
+            .join(", ")
+        }
+        mapLink={overviewData?.location?.map_link}
+        social={overviewData?.social ?? []}
       />
     </>
   );

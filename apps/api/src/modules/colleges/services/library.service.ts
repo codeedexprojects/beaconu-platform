@@ -32,6 +32,7 @@ export class LibraryService {
       departmentId: body.type === "department" ? body.departmentId : null,
       type: body.type,
       name: body.name,
+      coverImageUrl: body.coverImageUrl ?? null,
       stats: body.stats,
       availableResources: body.availableResources,
       libraryHours: body.libraryHours,
@@ -61,6 +62,9 @@ export class LibraryService {
         departmentId: body.type === "department" ? body.departmentId : null,
       }),
       ...(body.name !== undefined && { name: body.name }),
+      ...(body.coverImageUrl !== undefined && {
+        coverImageUrl: body.coverImageUrl,
+      }),
       ...(body.stats !== undefined && { stats: body.stats }),
       ...(body.availableResources !== undefined && {
         availableResources: body.availableResources,

@@ -26,6 +26,7 @@ export interface PublicLibrary {
   type?: "central" | "department" | string;
   departmentId?: string | null;
   name: string;
+  coverImageUrl?: string | null;
   stats?: PublicLibraryStat[];
   availableResources?: { items?: PublicLibraryResourceItem[] };
   libraryHours?: { days?: PublicLibraryDayHours[] };
