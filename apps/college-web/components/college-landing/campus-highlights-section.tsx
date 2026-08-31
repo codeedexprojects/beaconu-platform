@@ -46,7 +46,7 @@ export function CampusHighlightsSection({
         {highlights.map((item) => (
           <div
             key={item.id}
-            className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60"
+            className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm"
           >
             <div className="relative h-48 w-full bg-muted">
               {item.imageUrl ? (

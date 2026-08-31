@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/api";
 import {
@@ -17,6 +18,7 @@ import { AssessmentAudioPlayer } from "@/components/assessment/audio-player";
 import { AttemptStatusBar } from "@/components/assessment/attempt-header";
 import { AttemptNavBar } from "@/components/assessment/attempt-nav-bar";
 import { AttemptReview } from "@/components/assessment/attempt-review";
+import { CalculatorPanel } from "@/components/assessment/calculator-panel";
 import { useQuestionTimer } from "@/components/assessment/use-question-timer";
 import type { AnswerResponse, AssessmentAttemptItem } from "@beaconu/types";
 
@@ -45,6 +47,7 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [questionOrder, setQuestionOrder] = useState(1);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const currentSection = sections?.[sectionIndex];
 
   const {
@@ -197,6 +200,23 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
 
   const isLastSection = sectionIndex === sections.length - 1;
 
+  const calculatorFab = (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsCalculatorOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full border-0 bg-headerTeal-dark text-white shadow-lg transition-transform hover:opacity-95 active:scale-95"
+        aria-label="Open calculator"
+      >
+        <Calculator className="h-5 w-5" />
+      </button>
+      <CalculatorPanel
+        open={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+      />
+    </>
+  );
+
   if (isReviewing) {
     return (
       <div className="space-y-4">
@@ -214,6 +234,7 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
+        {calculatorFab}
       </div>
     );
   }
@@ -322,6 +343,7 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
           />
         </>
       )}
+      {calculatorFab}
     </div>
   );
 }

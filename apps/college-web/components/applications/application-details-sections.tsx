@@ -50,9 +50,13 @@ type AcademicSubTabKey = (typeof academicSubTabs)[number]["key"];
 function AcademicRecordsStep({
   applicationId,
   onContinue,
+  onPrevious,
+  showPrevious,
 }: {
   applicationId: string;
   onContinue: () => void;
+  onPrevious: () => void;
+  showPrevious: boolean;
 }) {
   const [activeSubTab, setActiveSubTab] =
     useState<AcademicSubTabKey>("tenth_grade");
@@ -94,13 +98,31 @@ function AcademicRecordsStep({
       {/* This step contains multiple independent sub-forms, each with its
           own Save button that already persists on click — so "Continue"
           here only advances the wizard, it does not itself save anything. */}
-      <Button
-        type="button"
-        onClick={onContinue}
-        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+      <div
+        className={cn(
+          "grid gap-3",
+          showPrevious ? "grid-cols-2" : "grid-cols-1",
+        )}
       >
-        Continue
-      </Button>
+        {showPrevious ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            className="h-14 w-full rounded-full"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Previous
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          onClick={onContinue}
+          className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+        >
+          Continue
+        </Button>
+      </div>
     </div>
   );
 }
@@ -148,36 +170,48 @@ export function ApplicationDetailsSections({
         <FamilyDetailsForm
           applicationId={applicationId}
           onSaved={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "address" ? (
         <AddressDetailsForm
           applicationId={applicationId}
           onSaved={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "academic" ? (
         <AcademicRecordsStep
           applicationId={applicationId}
           onContinue={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "achievements" ? (
         <AchievementsDetailsForm
           applicationId={applicationId}
           onSaved={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "entrance_exam" ? (
         <EntranceExamForm
           applicationId={applicationId}
           onSaved={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "documents" ? (
         <DocumentsSection
           applicationId={applicationId}
           onSaved={goToNextStep}
+          onPrevious={goToPreviousStep}
+          showPrevious={currentStep > 1}
         />
       ) : null}
       {activeKey === "declaration" ? (

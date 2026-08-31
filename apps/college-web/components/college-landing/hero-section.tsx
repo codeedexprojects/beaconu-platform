@@ -45,7 +45,7 @@ export function HeroSection({
         {altName ? (
           <p className="text-sm font-medium text-white/70">{altName}</p>
         ) : null}
-        <h1 className="mt-2 max-w-5xl text-5xl font-bold uppercase leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-[72px]">
+        <h1 className="mt-2 max-w-5xl text-4xl font-bold uppercase leading-[1.1] tracking-wide text-white sm:text-5xl lg:text-[64px]">
           {collegeName}
         </h1>
 

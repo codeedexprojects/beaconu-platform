@@ -21,24 +21,22 @@ export default async function ApplicationDetailsPage({
 
   return (
     <div className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-          <Link
-            href={`/college/${subdomain}/applications/${applicationId}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-            aria-label="Back to application"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-              <FileText className="h-6 w-6" />
-              Application Details
-            </h1>
-            <p className="mt-1 text-sm text-white/70">
-              Fill in your personal, family, address, and qualification details.
-            </p>
-          </div>
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}/applications/${applicationId}`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="flex items-center justify-center gap-2.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <FileText className="h-7 w-7" />
+            Application Details
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Fill in your personal, family, address, and qualification details.
+          </p>
         </div>
       </div>
 
