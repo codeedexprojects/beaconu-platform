@@ -49,6 +49,16 @@ export async function enrollApplicationCourse(
   );
 }
 
+export async function rejectApplicationCourse(
+  applicationCourseId: string,
+  reason?: string,
+): Promise<void> {
+  return api.patch(
+    `/api/v1/college-admin/applications/courses/${applicationCourseId}/reject`,
+    { reason },
+  );
+}
+
 export interface PendingEnrollmentFilters {
   admission_cycle_id?: string;
   search?: string;

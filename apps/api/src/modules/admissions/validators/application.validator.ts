@@ -55,6 +55,10 @@ export const listPendingEnrollmentQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
+export const rejectApplicationCourseSchema = z.object({
+  reason: z.string().trim().max(1000).optional(),
+});
+
 export type StartApplicationInput = z.infer<typeof startApplicationSchema>;
 export type GetFormDetailsQuery = z.infer<typeof getFormDetailsQuerySchema>;
 export type GetStatusAllCyclesQuery = z.infer<

@@ -42,6 +42,9 @@ docs {
     status: "active")
   - The OLD Enrollment.status -> "course_switched" (a documented terminal
     status)
+  - The OLD ApplicationCourse.status -> "deferred" (the student's seat on
+    that course is deferred, not withdrawn/dropped — they're still
+    enrolled overall, just on the new course now)
   - CourseSwitchRequest.status -> "approved", newEnrollmentId set
 
   Every Student Hub read (BeaconU Card, commute/hostel eligibility,

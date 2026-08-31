@@ -75,7 +75,7 @@ export class ApplicationDetailQuery {
       throw new NotFoundError("Application not found");
     }
 
-    const [courses, documents, payments] = await Promise.all([
+    const [courses, documents, payments, statusLogs] = await Promise.all([
       prisma.applicationCourse.findMany({
         where: { applicationId, status: { not: "withdrawn" } },
         select: {
@@ -126,6 +126,18 @@ export class ApplicationDetailQuery {
           },
         },
         orderBy: { createdAt: "asc" },
+      }),
+      prisma.applicationStatusLog.findMany({
+        where: { applicationCourse: { applicationId } },
+        select: {
+          fromStatus: true,
+          toStatus: true,
+          changedByType: true,
+          createdAt: true,
+          applicationCourseId: true,
+          applicationCourse: { select: { course: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
       }),
     ]);
 
@@ -222,6 +234,14 @@ export class ApplicationDetailQuery {
           createdAt: t.createdAt.toISOString(),
         })),
         createdAt: p.createdAt.toISOString(),
+      })),
+      statusLogs: statusLogs.map((s) => ({
+        courseId: s.applicationCourseId,
+        courseName: s.applicationCourse.course.name,
+        fromStatus: s.fromStatus,
+        toStatus: s.toStatus,
+        changedByType: s.changedByType,
+        changedAt: s.createdAt.toISOString(),
       })),
       submittedAt: application.submittedAt
         ? application.submittedAt.toISOString()

@@ -178,6 +178,43 @@ export class AttemptRepository {
     });
   }
 
+  /** College-admin, per-application read (Plan AE Assessments tab) — one
+   * attempt covers the whole Application (Plan R), so this is a findFirst
+   * not a list. Includes each template section's name so the caller can
+   * label the attempt's own `sectionScores` JSON (keyed by sectionId). */
+  static async findByApplicationForCollege(
+    collegeId: string,
+    applicationId: string,
+  ) {
+    return prisma.assessmentAttempt.findFirst({
+      where: { applicationId, paper: { template: { collegeId } } },
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        totalScore: true,
+        maxScore: true,
+        sectionScores: true,
+        paper: {
+          select: {
+            template: {
+              select: {
+                templateSections: {
+                  select: {
+                    sectionId: true,
+                    section: { select: { name: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   static async findByIdForEvaluation(id: string) {
     return prisma.assessmentAttempt.findUnique({
       where: { id },

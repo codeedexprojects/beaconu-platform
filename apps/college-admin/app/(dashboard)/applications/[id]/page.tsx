@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Mail, Phone } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Mail,
+  Phone,
+  FileCheck,
+  CreditCard,
+  Send,
+  Video,
+  MapPin,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -33,10 +44,16 @@ import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import {
   useApplication,
   useEnrollApplicationCourse,
+  useRejectApplicationCourse,
 } from "@/hooks/use-applications";
-import { useShortlistCourse } from "@/hooks/use-interviews";
+import {
+  useShortlistCourse,
+  useInterviewCandidate,
+} from "@/hooks/use-interviews";
+import { useApplicationAssessmentStatus } from "@/hooks/use-assessments";
 import type {
   ApplicationDetailCourseItem,
+  ApplicationDetailDto,
   UndergraduateDetailsInput,
   SubjectMarksEntry,
   ResultSummary,
@@ -67,6 +84,16 @@ const PAYMENT_STATUS_VARIANTS: Record<
   pending: "secondary",
   paid: "default",
 };
+
+const TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "qualifications", label: "Qualifications" },
+  { id: "documents", label: "Documents" },
+  { id: "assessments", label: "Assessments" },
+  { id: "interviews", label: "Interviews" },
+  { id: "payments", label: "Payments" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
 
 function formatDateTime(dateStr: string | null) {
   if (!dateStr) return "—";
@@ -514,6 +541,218 @@ function Section({
   );
 }
 
+function RecentActivityTimeline({ app }: { app: ApplicationDetailDto }) {
+  type Event = {
+    icon: typeof FileCheck;
+    label: string;
+    sub: string;
+    at: string;
+  };
+  const events: Event[] = [
+    ...app.statusLogs.map((s) => ({
+      icon: Send,
+      label: `Status: ${s.toStatus.replace(/_/g, " ")}`,
+      sub: s.courseName,
+      at: s.changedAt,
+    })),
+    ...app.documents.map((d) => ({
+      icon: FileCheck,
+      label: "Document Uploaded",
+      sub: d.documentType.replace(/_/g, " "),
+      at: d.createdAt,
+    })),
+    ...app.payments.flatMap((p) =>
+      p.transactions
+        .filter((t) => t.paidAt)
+        .map((t) => ({
+          icon: CreditCard,
+          label: "Fee Payment Processed",
+          sub: `${p.feeCategory.replace(/_/g, " ")} · ₹${t.amount}`,
+          at: t.paidAt as string,
+        })),
+    ),
+  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+  return (
+    <div className="rounded-lg border p-4">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Recent Activity
+      </h2>
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No activity yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {events.slice(0, 8).map((e, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <e.icon className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+              <div>
+                <p className="text-sm font-medium capitalize">{e.label}</p>
+                <p className="text-xs capitalize text-muted-foreground">
+                  {e.sub}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(e.at).toLocaleString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AssessmentsTab({ applicationId }: { applicationId: string }) {
+  const { data, isLoading } = useApplicationAssessmentStatus(applicationId);
+
+  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (!data || data.status === "not_required") {
+    return (
+      <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+        No assessment is required for this application&apos;s admission cycle.
+      </div>
+    );
+  }
+  if (data.status === "not_started") {
+    return (
+      <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+        The candidate hasn&apos;t started their assessment attempt yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Section title="Assessment Status">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <DetailRow label="Status" value={data.status.replace(/_/g, " ")} />
+          <DetailRow label="Started" value={formatDate(data.startedAt)} />
+          <DetailRow label="Completed" value={formatDate(data.completedAt)} />
+          <DetailRow
+            label="Score"
+            value={
+              data.totalScore != null
+                ? `${data.totalScore} / ${data.maxScore}`
+                : null
+            }
+          />
+        </div>
+      </Section>
+      {data.sectionScores.length > 0 && (
+        <Section title="Section-wise Score">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Section</TableHead>
+                <TableHead>Score</TableHead>
+                <TableHead>Max</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.sectionScores.map((s, i) => (
+                <TableRow key={i}>
+                  <TableCell>{s.sectionName}</TableCell>
+                  <TableCell>{s.score}</TableCell>
+                  <TableCell>{s.max}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+const INTERVIEW_MODE_ICON = {
+  gmeet: Video,
+  telephonic: Phone,
+  on_campus: MapPin,
+} as const;
+const INTERVIEW_MODE_LABEL = {
+  gmeet: "Zoom Video",
+  telephonic: "Telephone",
+  on_campus: "In-person",
+} as const;
+
+function InterviewsTab({ applicationId }: { applicationId: string }) {
+  const { data, isLoading } = useInterviewCandidate(applicationId);
+
+  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (!data) return null;
+
+  if (!data.booking) {
+    return (
+      <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+        No interview has been scheduled for this candidate yet.
+      </div>
+    );
+  }
+
+  const booking = data.booking;
+  const ModeIcon = booking.mode ? INTERVIEW_MODE_ICON[booking.mode] : null;
+
+  return (
+    <Section title="Interview">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <DetailRow
+          label="Status"
+          value={<span className="capitalize">{booking.status}</span>}
+        />
+        <DetailRow
+          label="Date & Time"
+          value={
+            booking.scheduledDate
+              ? `${booking.scheduledDate} · ${booking.startTime}–${booking.endTime}`
+              : null
+          }
+        />
+        <DetailRow
+          label="Mode"
+          value={
+            booking.mode ? (
+              <span className="inline-flex items-center gap-1.5">
+                {ModeIcon && <ModeIcon className="h-3.5 w-3.5" />}
+                {INTERVIEW_MODE_LABEL[booking.mode]}
+              </span>
+            ) : null
+          }
+        />
+        <DetailRow label="Panel Member" value={booking.panelMemberName} />
+        <DetailRow
+          label="Meeting Link"
+          value={
+            booking.meetingUrl ? (
+              <LinkOut href={booking.meetingUrl} label="Join Meeting" />
+            ) : null
+          }
+        />
+        <DetailRow label="Venue" value={booking.venue} />
+        <DetailRow
+          label="Outcome"
+          value={
+            booking.interviewOutcome
+              ? booking.interviewOutcome.replace(/_/g, " ")
+              : null
+          }
+        />
+        <DetailRow label="Score" value={booking.interviewScore} />
+      </div>
+      {booking.interviewRemarks && (
+        <div>
+          <p className="mb-1 text-xs text-muted-foreground">Remarks</p>
+          <p className="text-sm">{booking.interviewRemarks}</p>
+        </div>
+      )}
+    </Section>
+  );
+}
+
 export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -578,6 +817,33 @@ export default function ApplicationDetailPage() {
     } finally {
       setIsUploadingOffer(false);
     }
+  }
+
+  const rejectMutation = useRejectApplicationCourse(id);
+  const [rejectTarget, setRejectTarget] =
+    useState<ApplicationDetailCourseItem | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [tab, setTab] = useState<TabId>("overview");
+
+  function closeRejectDialog() {
+    setRejectTarget(null);
+    setRejectReason("");
+  }
+
+  function confirmReject() {
+    if (!rejectTarget) return;
+    rejectMutation.mutate(
+      {
+        applicationCourseId: rejectTarget.id,
+        reason: rejectReason || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`"${rejectTarget.courseName}" rejected`);
+          closeRejectDialog();
+        },
+      },
+    );
   }
 
   if (isLoading) {
@@ -655,957 +921,1105 @@ export default function ApplicationDetailPage() {
         </Badge>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Student & application meta */}
-        <Section title="Student">
-          <DetailRow label="Full Name" value={app.studentName} />
-          <DetailRow
-            label="Email"
-            value={
-              app.studentEmail && (
-                <a
-                  href={`mailto:${app.studentEmail}`}
-                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  {app.studentEmail}
-                </a>
-              )
-            }
-          />
-          <DetailRow
-            label="Phone"
-            value={
-              app.studentPhone && (
-                <a
-                  href={`tel:${app.studentPhone}`}
-                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  {app.studentPhone}
-                </a>
-              )
-            }
-          />
-          <DetailRow
-            label="WhatsApp"
-            value={
-              app.whatsappNumber
-                ? `${app.whatsappCountryCode ?? ""} ${app.whatsappNumber}`
-                : null
-            }
-          />
-          {app.profilePhotoUrl && (
-            <div>
-              <p className="mb-1 text-xs text-muted-foreground">
-                Profile Photo
-              </p>
-              <img
-                src={app.profilePhotoUrl}
-                alt="Profile"
-                className="h-20 w-20 rounded-md border object-cover"
-              />
-            </div>
-          )}
-        </Section>
-
-        <Section title="Application">
-          <DetailRow label="Nationality" value={app.nationality} />
-          <DetailRow label="State of Domicile" value={app.stateOfDomicile} />
-          {app.passportNumber && (
-            <DetailRow
-              label="Passport"
-              value={`${app.passportCountry ?? ""} · ${app.passportNumber}`}
-            />
-          )}
-          <DetailRow
-            label="Total Application Fee"
-            value={`₹${app.totalApplicationFee}`}
-          />
-          <DetailRow
-            label="Submitted"
-            value={formatDateTime(app.submittedAt)}
-          />
-          <DetailRow label="Created" value={formatDateTime(app.createdAt)} />
-        </Section>
-
-        {/* Personal details */}
-        <Section title="Personal Details">
-          <DetailRow label="Full Name" value={app.personalDetails.full_name} />
-          <DetailRow
-            label="Date of Birth"
-            value={app.personalDetails.date_of_birth}
-          />
-          <DetailRow label="Gender" value={app.personalDetails.gender} />
-          <DetailRow label="Category" value={app.personalDetails.category} />
-          <DetailRow
-            label="Blood Group"
-            value={app.personalDetails.blood_group}
-          />
-          <DetailRow label="Religion" value={app.personalDetails.religion} />
-          <DetailRow
-            label="Mother Tongue"
-            value={app.personalDetails.mother_tongue}
-          />
-          <DetailRow
-            label="Marital Status"
-            value={app.personalDetails.marital_status}
-          />
-          <DetailRow
-            label="Aadhar Number"
-            value={app.personalDetails.aadhar_number}
-          />
-          <DetailRow label="Email" value={app.personalDetails.email} />
-          <DetailRow
-            label="Mobile"
-            value={
-              app.personalDetails.mobile_number
-                ? `${app.personalDetails.mobile_country_code ?? ""} ${app.personalDetails.mobile_number}`
-                : null
-            }
-          />
-        </Section>
-
-        {/* Family details */}
-        <Section title="Family Details">
-          <DetailRow
-            label="Father's Name"
-            value={app.familyDetails.father_name}
-          />
-          <DetailRow
-            label="Father's Occupation"
-            value={app.familyDetails.father_occupation}
-          />
-          <DetailRow
-            label="Father's Contact"
-            value={
-              [app.familyDetails.father_phone, app.familyDetails.father_email]
-                .filter(Boolean)
-                .join(" · ") || null
-            }
-          />
-          <DetailRow
-            label="Mother's Name"
-            value={app.familyDetails.mother_name}
-          />
-          <DetailRow
-            label="Mother's Occupation"
-            value={app.familyDetails.mother_occupation}
-          />
-          <DetailRow
-            label="Mother's Contact"
-            value={
-              [app.familyDetails.mother_phone, app.familyDetails.mother_email]
-                .filter(Boolean)
-                .join(" · ") || null
-            }
-          />
-          {app.familyDetails.guardian_name && (
-            <DetailRow
-              label="Guardian"
-              value={`${app.familyDetails.guardian_name} (${app.familyDetails.guardian_relation ?? "—"}) · ${app.familyDetails.guardian_phone ?? "—"}`}
-            />
-          )}
-          <DetailRow
-            label="Annual Family Income"
-            value={
-              app.familyDetails.annual_family_income != null
-                ? `₹${app.familyDetails.annual_family_income}`
-                : null
-            }
-          />
-          <DetailRow
-            label="Number of Siblings"
-            value={app.familyDetails.number_of_siblings}
-          />
-        </Section>
-
-        {/* Address details */}
-        <Section title="Address">
-          <div>
-            <p className="mb-1 text-xs text-muted-foreground">
-              Correspondence Address
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <DetailRow
-                label="Address Line 1"
-                value={correspondence?.address_line1}
-              />
-              <DetailRow
-                label="Address Line 2"
-                value={correspondence?.address_line2}
-              />
-              <DetailRow label="City" value={correspondence?.city} />
-              <DetailRow label="District" value={correspondence?.district} />
-              <DetailRow label="State" value={correspondence?.state} />
-              <DetailRow label="PIN Code" value={correspondence?.pin_code} />
-              <DetailRow label="Country" value={correspondence?.country} />
-            </div>
-          </div>
-          <div>
-            <p className="mb-1 text-xs text-muted-foreground">
-              Permanent Address
-              {app.addressDetails.same_as_correspondence &&
-                " (same as correspondence)"}
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <DetailRow
-                label="Address Line 1"
-                value={permanent?.address_line1}
-              />
-              <DetailRow
-                label="Address Line 2"
-                value={permanent?.address_line2}
-              />
-              <DetailRow label="City" value={permanent?.city} />
-              <DetailRow label="District" value={permanent?.district} />
-              <DetailRow label="State" value={permanent?.state} />
-              <DetailRow label="PIN Code" value={permanent?.pin_code} />
-              <DetailRow label="Country" value={permanent?.country} />
-            </div>
-          </div>
-        </Section>
-
-        {/* Declaration */}
-        <Section title="Declaration">
-          <DetailRow
-            label="Accepted"
-            value={app.declaration.accepted ? "Yes" : "No"}
-          />
-          <DetailRow
-            label="Signature"
-            value={
-              <LinkOut
-                href={app.declaration.signature_url}
-                label="View signature"
-              />
-            }
-          />
-          <DetailRow label="Place" value={app.declaration.place} />
-          <DetailRow
-            label="Date"
-            value={
-              app.declaration.date ? formatDate(app.declaration.date) : null
-            }
-          />
-        </Section>
+      <div className="flex gap-2 border-b border-border">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`rounded-t-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === t.id
+                ? "border-b-2 border-gold text-navy"
+                : "text-muted-foreground hover:text-navy"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Academic Records */}
-      <Section title="Academic Records">
-        {!tenthGrade && !twelfthGrade && !undergraduate && !pg && !diploma ? (
-          <p className="text-sm text-muted-foreground">
-            No academic records added yet.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {tenthGrade && (
-              <SchoolGradeCard title="10th Grade" record={tenthGrade} />
-            )}
-            {twelfthGrade && (
-              <SchoolGradeCard
-                title="12th Grade"
-                record={twelfthGrade}
-                classXi={{
-                  has_separate_class_xi_exam:
-                    twelfthGrade.has_separate_class_xi_exam,
-                  class_xi_status: twelfthGrade.class_xi_status,
-                }}
+      {tab === "overview" && (
+        <>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Student & application meta */}
+            <Section title="Student">
+              <DetailRow label="Full Name" value={app.studentName} />
+              <DetailRow
+                label="Email"
+                value={
+                  app.studentEmail && (
+                    <a
+                      href={`mailto:${app.studentEmail}`}
+                      className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                    >
+                      <Mail className="h-3.5 w-3.5" />
+                      {app.studentEmail}
+                    </a>
+                  )
+                }
               />
-            )}
-            {twelfthGrade?.migration_certificate_url && (
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">
-                  Migration Certificate (12th)
+              <DetailRow
+                label="Phone"
+                value={
+                  app.studentPhone && (
+                    <a
+                      href={`tel:${app.studentPhone}`}
+                      className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      {app.studentPhone}
+                    </a>
+                  )
+                }
+              />
+              <DetailRow
+                label="WhatsApp"
+                value={
+                  app.whatsappNumber
+                    ? `${app.whatsappCountryCode ?? ""} ${app.whatsappNumber}`
+                    : null
+                }
+              />
+              {app.profilePhotoUrl && (
+                <div>
+                  <p className="mb-1 text-xs text-muted-foreground">
+                    Profile Photo
+                  </p>
+                  <img
+                    src={app.profilePhotoUrl}
+                    alt="Profile"
+                    className="h-20 w-20 rounded-md border object-cover"
+                  />
+                </div>
+              )}
+            </Section>
+
+            <Section title="Application">
+              <DetailRow label="Nationality" value={app.nationality} />
+              <DetailRow
+                label="State of Domicile"
+                value={app.stateOfDomicile}
+              />
+              {app.passportNumber && (
+                <DetailRow
+                  label="Passport"
+                  value={`${app.passportCountry ?? ""} · ${app.passportNumber}`}
+                />
+              )}
+              <DetailRow
+                label="Total Application Fee"
+                value={`₹${app.totalApplicationFee}`}
+              />
+              <DetailRow
+                label="Submitted"
+                value={formatDateTime(app.submittedAt)}
+              />
+              <DetailRow
+                label="Created"
+                value={formatDateTime(app.createdAt)}
+              />
+            </Section>
+
+            {/* Personal details */}
+            <Section title="Personal Details">
+              <DetailRow
+                label="Full Name"
+                value={app.personalDetails.full_name}
+              />
+              <DetailRow
+                label="Date of Birth"
+                value={app.personalDetails.date_of_birth}
+              />
+              <DetailRow label="Gender" value={app.personalDetails.gender} />
+              <DetailRow
+                label="Category"
+                value={app.personalDetails.category}
+              />
+              <DetailRow
+                label="Blood Group"
+                value={app.personalDetails.blood_group}
+              />
+              <DetailRow
+                label="Religion"
+                value={app.personalDetails.religion}
+              />
+              <DetailRow
+                label="Mother Tongue"
+                value={app.personalDetails.mother_tongue}
+              />
+              <DetailRow
+                label="Marital Status"
+                value={app.personalDetails.marital_status}
+              />
+              <DetailRow
+                label="Aadhar Number"
+                value={app.personalDetails.aadhar_number}
+              />
+              <DetailRow label="Email" value={app.personalDetails.email} />
+              <DetailRow
+                label="Mobile"
+                value={
+                  app.personalDetails.mobile_number
+                    ? `${app.personalDetails.mobile_country_code ?? ""} ${app.personalDetails.mobile_number}`
+                    : null
+                }
+              />
+            </Section>
+
+            {/* Family details */}
+            <Section title="Family Details">
+              <DetailRow
+                label="Father's Name"
+                value={app.familyDetails.father_name}
+              />
+              <DetailRow
+                label="Father's Occupation"
+                value={app.familyDetails.father_occupation}
+              />
+              <DetailRow
+                label="Father's Contact"
+                value={
+                  [
+                    app.familyDetails.father_phone,
+                    app.familyDetails.father_email,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || null
+                }
+              />
+              <DetailRow
+                label="Mother's Name"
+                value={app.familyDetails.mother_name}
+              />
+              <DetailRow
+                label="Mother's Occupation"
+                value={app.familyDetails.mother_occupation}
+              />
+              <DetailRow
+                label="Mother's Contact"
+                value={
+                  [
+                    app.familyDetails.mother_phone,
+                    app.familyDetails.mother_email,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || null
+                }
+              />
+              {app.familyDetails.guardian_name && (
+                <DetailRow
+                  label="Guardian"
+                  value={`${app.familyDetails.guardian_name} (${app.familyDetails.guardian_relation ?? "—"}) · ${app.familyDetails.guardian_phone ?? "—"}`}
+                />
+              )}
+              <DetailRow
+                label="Annual Family Income"
+                value={
+                  app.familyDetails.annual_family_income != null
+                    ? `₹${app.familyDetails.annual_family_income}`
+                    : null
+                }
+              />
+              <DetailRow
+                label="Number of Siblings"
+                value={app.familyDetails.number_of_siblings}
+              />
+            </Section>
+
+            {/* Address details */}
+            <Section title="Address">
+              <div>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Correspondence Address
                 </p>
-                <LinkOut href={twelfthGrade.migration_certificate_url} />
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <DetailRow
+                    label="Address Line 1"
+                    value={correspondence?.address_line1}
+                  />
+                  <DetailRow
+                    label="Address Line 2"
+                    value={correspondence?.address_line2}
+                  />
+                  <DetailRow label="City" value={correspondence?.city} />
+                  <DetailRow
+                    label="District"
+                    value={correspondence?.district}
+                  />
+                  <DetailRow label="State" value={correspondence?.state} />
+                  <DetailRow
+                    label="PIN Code"
+                    value={correspondence?.pin_code}
+                  />
+                  <DetailRow label="Country" value={correspondence?.country} />
+                </div>
+              </div>
+              <div>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Permanent Address
+                  {app.addressDetails.same_as_correspondence &&
+                    " (same as correspondence)"}
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <DetailRow
+                    label="Address Line 1"
+                    value={permanent?.address_line1}
+                  />
+                  <DetailRow
+                    label="Address Line 2"
+                    value={permanent?.address_line2}
+                  />
+                  <DetailRow label="City" value={permanent?.city} />
+                  <DetailRow label="District" value={permanent?.district} />
+                  <DetailRow label="State" value={permanent?.state} />
+                  <DetailRow label="PIN Code" value={permanent?.pin_code} />
+                  <DetailRow label="Country" value={permanent?.country} />
+                </div>
+              </div>
+            </Section>
+
+            {/* Declaration */}
+            <Section title="Declaration">
+              <DetailRow
+                label="Accepted"
+                value={app.declaration.accepted ? "Yes" : "No"}
+              />
+              <DetailRow
+                label="Signature"
+                value={
+                  <LinkOut
+                    href={app.declaration.signature_url}
+                    label="View signature"
+                  />
+                }
+              />
+              <DetailRow label="Place" value={app.declaration.place} />
+              <DetailRow
+                label="Date"
+                value={
+                  app.declaration.date ? formatDate(app.declaration.date) : null
+                }
+              />
+            </Section>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border p-4">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Lead Information
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <DetailRow label="Source" value={null} />
+                <DetailRow label="Campaign" value={null} />
+                <DetailRow label="Counsellor" value={null} />
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Not tracked yet — this college doesn&apos;t record lead source
+                data for applications.
+              </p>
+            </div>
+            <RecentActivityTimeline app={app} />
+          </div>
+        </>
+      )}
+
+      {tab === "qualifications" && (
+        <>
+          {/* Academic Records */}
+          <Section title="Academic Records">
+            {!tenthGrade &&
+            !twelfthGrade &&
+            !undergraduate &&
+            !pg &&
+            !diploma ? (
+              <p className="text-sm text-muted-foreground">
+                No academic records added yet.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {tenthGrade && (
+                  <SchoolGradeCard title="10th Grade" record={tenthGrade} />
+                )}
+                {twelfthGrade && (
+                  <SchoolGradeCard
+                    title="12th Grade"
+                    record={twelfthGrade}
+                    classXi={{
+                      has_separate_class_xi_exam:
+                        twelfthGrade.has_separate_class_xi_exam,
+                      class_xi_status: twelfthGrade.class_xi_status,
+                    }}
+                  />
+                )}
+                {twelfthGrade?.migration_certificate_url && (
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Migration Certificate (12th)
+                    </p>
+                    <LinkOut href={twelfthGrade.migration_certificate_url} />
+                  </div>
+                )}
+                {undergraduate && (
+                  <DegreeLevelCard
+                    title="Undergraduate"
+                    record={undergraduate}
+                  />
+                )}
+                {pg && <DegreeLevelCard title="PG" record={pg} />}
+                {diploma && (
+                  <DegreeLevelCard title="Diploma" record={diploma} />
+                )}
               </div>
             )}
-            {undergraduate && (
-              <DegreeLevelCard title="Undergraduate" record={undergraduate} />
-            )}
-            {pg && <DegreeLevelCard title="PG" record={pg} />}
-            {diploma && <DegreeLevelCard title="Diploma" record={diploma} />}
-          </div>
-        )}
-      </Section>
+          </Section>
 
-      {/* Achievements & Extracurricular */}
-      <Section title="Achievements & Extracurricular">
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Internships
-            </p>
-            <EntryList
-              items={achievements.internships}
-              emptyLabel="No internships added."
-              renderItem={(i) => (
-                <>
-                  <DetailRow label="Company" value={i.company_name} />
-                  <DetailRow label="Role" value={i.role} />
-                  <DetailRow
-                    label="Duration"
-                    value={
-                      [formatDate(i.start_date), formatDate(i.end_date)]
-                        .filter((v) => v !== "—")
-                        .join(" – ") || null
-                    }
-                  />
-                  {i.key_responsibilities && (
-                    <div className="sm:col-span-2 lg:col-span-3">
-                      <DetailRow
-                        label="Key Responsibilities"
-                        value={i.key_responsibilities}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Work Experience
-            </p>
-            <DetailRow
-              label="Has Prior Work Experience"
-              value={achievements.has_work_experience ? "Yes" : "No"}
-            />
-            {achievements.has_work_experience && (
-              <div className="mt-2">
+          {/* Achievements & Extracurricular */}
+          <Section title="Achievements & Extracurricular">
+            <div className="space-y-5">
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Internships
+                </p>
                 <EntryList
-                  items={achievements.work_experience}
-                  emptyLabel="No work experience entries added."
-                  renderItem={(w) => (
+                  items={achievements.internships}
+                  emptyLabel="No internships added."
+                  renderItem={(i) => (
                     <>
-                      <DetailRow label="Company" value={w.company_name} />
-                      <DetailRow label="Job Title" value={w.job_title} />
-                      <DetailRow label="Industry" value={w.industry} />
+                      <DetailRow label="Company" value={i.company_name} />
+                      <DetailRow label="Role" value={i.role} />
                       <DetailRow
-                        label="Employment Type"
-                        value={w.employment_type}
+                        label="Duration"
+                        value={
+                          [formatDate(i.start_date), formatDate(i.end_date)]
+                            .filter((v) => v !== "—")
+                            .join(" – ") || null
+                        }
                       />
-                      <DetailRow
-                        label="Total Experience"
-                        value={w.total_experience}
-                      />
+                      {i.key_responsibilities && (
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <DetailRow
+                            label="Key Responsibilities"
+                            value={i.key_responsibilities}
+                          />
+                        </div>
+                      )}
                     </>
                   )}
                 />
               </div>
-            )}
-          </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Languages
-            </p>
-            <EntryList
-              items={achievements.languages}
-              emptyLabel="No languages added."
-              renderItem={(l) => (
-                <>
-                  <DetailRow label="Language" value={l.language} />
-                  <DetailRow label="Proficiency" value={l.proficiency} />
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Academic Awards
-            </p>
-            <EntryList
-              items={achievements.academic_awards}
-              emptyLabel="No academic awards added."
-              renderItem={(a) => (
-                <>
-                  <DetailRow label="Title" value={a.title} />
-                  <DetailRow label="Year" value={a.year} />
-                  <DetailRow label="Issuing Body" value={a.issuing_body} />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Proof</p>
-                    <LinkOut href={a.proof_url} />
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Work Experience
+                </p>
+                <DetailRow
+                  label="Has Prior Work Experience"
+                  value={achievements.has_work_experience ? "Yes" : "No"}
+                />
+                {achievements.has_work_experience && (
+                  <div className="mt-2">
+                    <EntryList
+                      items={achievements.work_experience}
+                      emptyLabel="No work experience entries added."
+                      renderItem={(w) => (
+                        <>
+                          <DetailRow label="Company" value={w.company_name} />
+                          <DetailRow label="Job Title" value={w.job_title} />
+                          <DetailRow label="Industry" value={w.industry} />
+                          <DetailRow
+                            label="Employment Type"
+                            value={w.employment_type}
+                          />
+                          <DetailRow
+                            label="Total Experience"
+                            value={w.total_experience}
+                          />
+                        </>
+                      )}
+                    />
                   </div>
-                </>
-              )}
-            />
-          </div>
+                )}
+              </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Sports Achievements
-            </p>
-            <EntryList
-              items={achievements.sports_achievements}
-              emptyLabel="No sports achievements added."
-              renderItem={(s) => (
-                <>
-                  <DetailRow label="Sport" value={s.sport_name} />
-                  <DetailRow
-                    label="Competition Level"
-                    value={s.competition_level}
-                  />
-                  <DetailRow
-                    label="Position Secured"
-                    value={s.position_secured}
-                  />
-                  <DetailRow label="Year" value={s.achievement_year} />
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Languages
+                </p>
+                <EntryList
+                  items={achievements.languages}
+                  emptyLabel="No languages added."
+                  renderItem={(l) => (
+                    <>
+                      <DetailRow label="Language" value={l.language} />
+                      <DetailRow label="Proficiency" value={l.proficiency} />
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Academic Awards
+                </p>
+                <EntryList
+                  items={achievements.academic_awards}
+                  emptyLabel="No academic awards added."
+                  renderItem={(a) => (
+                    <>
+                      <DetailRow label="Title" value={a.title} />
+                      <DetailRow label="Year" value={a.year} />
+                      <DetailRow label="Issuing Body" value={a.issuing_body} />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Proof</p>
+                        <LinkOut href={a.proof_url} />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Sports Achievements
+                </p>
+                <EntryList
+                  items={achievements.sports_achievements}
+                  emptyLabel="No sports achievements added."
+                  renderItem={(s) => (
+                    <>
+                      <DetailRow label="Sport" value={s.sport_name} />
+                      <DetailRow
+                        label="Competition Level"
+                        value={s.competition_level}
+                      />
+                      <DetailRow
+                        label="Position Secured"
+                        value={s.position_secured}
+                      />
+                      <DetailRow label="Year" value={s.achievement_year} />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Certificate
+                        </p>
+                        <LinkOut href={s.certificate_url} />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Arts &amp; Cultural Achievements
+                </p>
+                <EntryList
+                  items={achievements.arts_cultural_achievements}
+                  emptyLabel="No arts & cultural achievements added."
+                  renderItem={(a) => (
+                    <>
+                      <DetailRow label="Category" value={a.category} />
+                      <DetailRow
+                        label="Competition Name"
+                        value={a.competition_name}
+                      />
+                      <DetailRow
+                        label="Achievement Level"
+                        value={a.achievement_level}
+                      />
+                      <DetailRow
+                        label="Position Secured"
+                        value={a.position_secured}
+                      />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Certificate
+                        </p>
+                        <LinkOut href={a.certificate_url} />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Hobbies &amp; Interests
+                </p>
+                <DetailRow
+                  label="Hobbies"
+                  value={achievements.hobbies?.join(", ")}
+                />
+                <DetailRow
+                  label="Other Interests"
+                  value={achievements.other_interests}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Publications
+                </p>
+                <EntryList
+                  items={achievements.publications}
+                  emptyLabel="No publications added."
+                  renderItem={(p) => (
+                    <>
+                      <DetailRow label="Title" value={p.title} />
+                      <DetailRow
+                        label="Journal/Publisher"
+                        value={p.journal_publisher}
+                      />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Link</p>
+                        <LinkOut href={p.url} label="Open publication" />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Patent Details
+                </p>
+                <EntryList
+                  items={achievements.patents}
+                  emptyLabel="No patents added."
+                  renderItem={(p) => (
+                    <>
+                      <DetailRow label="Title" value={p.title} />
+                      <DetailRow
+                        label="Patent Number"
+                        value={p.patent_number}
+                      />
+                      <DetailRow label="Status" value={p.status} />
+                      <DetailRow
+                        label="Filing Date"
+                        value={formatDate(p.filing_date)}
+                      />
+                      <DetailRow
+                        label="Patent Office"
+                        value={p.patent_office}
+                      />
+                      <DetailRow label="Co-Inventors" value={p.co_inventors} />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Document
+                        </p>
+                        <LinkOut href={p.document_url} />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Professional Certifications
+                </p>
+                <EntryList
+                  items={achievements.professional_certifications}
+                  emptyLabel="No certifications added."
+                  renderItem={(c) => (
+                    <>
+                      <DetailRow label="Name" value={c.name} />
+                      <DetailRow
+                        label="Issuing Authority"
+                        value={c.issuing_authority}
+                      />
+                      <DetailRow
+                        label="Certification ID"
+                        value={c.certification_id}
+                      />
+                      <DetailRow
+                        label="Issue Date"
+                        value={formatDate(c.issue_date)}
+                      />
+                      <DetailRow
+                        label="Expiry Date"
+                        value={formatDate(c.expiry_date)}
+                      />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Verification
+                        </p>
+                        <LinkOut href={c.verification_url} label="Verify" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Certificate
+                        </p>
+                        <LinkOut href={c.certificate_url} />
+                      </div>
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Portfolio &amp; Profile Links
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Certificate</p>
-                    <LinkOut href={s.certificate_url} />
+                    <p className="text-xs text-muted-foreground">LinkedIn</p>
+                    <LinkOut
+                      href={achievements.portfolio_links?.linkedin_url}
+                    />
                   </div>
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Arts &amp; Cultural Achievements
-            </p>
-            <EntryList
-              items={achievements.arts_cultural_achievements}
-              emptyLabel="No arts & cultural achievements added."
-              renderItem={(a) => (
-                <>
-                  <DetailRow label="Category" value={a.category} />
-                  <DetailRow
-                    label="Competition Name"
-                    value={a.competition_name}
-                  />
-                  <DetailRow
-                    label="Achievement Level"
-                    value={a.achievement_level}
-                  />
-                  <DetailRow
-                    label="Position Secured"
-                    value={a.position_secured}
-                  />
                   <div>
-                    <p className="text-xs text-muted-foreground">Certificate</p>
-                    <LinkOut href={a.certificate_url} />
+                    <p className="text-xs text-muted-foreground">GitHub</p>
+                    <LinkOut href={achievements.portfolio_links?.github_url} />
                   </div>
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Hobbies &amp; Interests
-            </p>
-            <DetailRow
-              label="Hobbies"
-              value={achievements.hobbies?.join(", ")}
-            />
-            <DetailRow
-              label="Other Interests"
-              value={achievements.other_interests}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Publications
-            </p>
-            <EntryList
-              items={achievements.publications}
-              emptyLabel="No publications added."
-              renderItem={(p) => (
-                <>
-                  <DetailRow label="Title" value={p.title} />
-                  <DetailRow
-                    label="Journal/Publisher"
-                    value={p.journal_publisher}
-                  />
                   <div>
-                    <p className="text-xs text-muted-foreground">Link</p>
-                    <LinkOut href={p.url} label="Open publication" />
+                    <p className="text-xs text-muted-foreground">
+                      ResearchGate
+                    </p>
+                    <LinkOut
+                      href={achievements.portfolio_links?.researchgate_url}
+                    />
                   </div>
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Patent Details
-            </p>
-            <EntryList
-              items={achievements.patents}
-              emptyLabel="No patents added."
-              renderItem={(p) => (
-                <>
-                  <DetailRow label="Title" value={p.title} />
-                  <DetailRow label="Patent Number" value={p.patent_number} />
-                  <DetailRow label="Status" value={p.status} />
-                  <DetailRow
-                    label="Filing Date"
-                    value={formatDate(p.filing_date)}
-                  />
-                  <DetailRow label="Patent Office" value={p.patent_office} />
-                  <DetailRow label="Co-Inventors" value={p.co_inventors} />
                   <div>
-                    <p className="text-xs text-muted-foreground">Document</p>
-                    <LinkOut href={p.document_url} />
+                    <p className="text-xs text-muted-foreground">
+                      Google Scholar
+                    </p>
+                    <LinkOut
+                      href={achievements.portfolio_links?.google_scholar_url}
+                    />
                   </div>
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Professional Certifications
-            </p>
-            <EntryList
-              items={achievements.professional_certifications}
-              emptyLabel="No certifications added."
-              renderItem={(c) => (
-                <>
-                  <DetailRow label="Name" value={c.name} />
                   <DetailRow
-                    label="Issuing Authority"
-                    value={c.issuing_authority}
-                  />
-                  <DetailRow
-                    label="Certification ID"
-                    value={c.certification_id}
-                  />
-                  <DetailRow
-                    label="Issue Date"
-                    value={formatDate(c.issue_date)}
-                  />
-                  <DetailRow
-                    label="Expiry Date"
-                    value={formatDate(c.expiry_date)}
+                    label="ORCID ID"
+                    value={achievements.portfolio_links?.orcid_id}
                   />
                   <div>
                     <p className="text-xs text-muted-foreground">
-                      Verification
+                      Personal Website
                     </p>
-                    <LinkOut href={c.verification_url} label="Verify" />
+                    <LinkOut
+                      href={achievements.portfolio_links?.personal_website_url}
+                    />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Certificate</p>
-                    <LinkOut href={c.certificate_url} />
+                    <p className="text-xs text-muted-foreground">Behance</p>
+                    <LinkOut href={achievements.portfolio_links?.behance_url} />
                   </div>
-                </>
-              )}
-            />
-          </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Dribbble</p>
+                    <LinkOut
+                      href={achievements.portfolio_links?.dribbble_url}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Kaggle</p>
+                    <LinkOut href={achievements.portfolio_links?.kaggle_url} />
+                  </div>
+                </div>
+              </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Portfolio &amp; Profile Links
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <p className="text-xs text-muted-foreground">LinkedIn</p>
-                <LinkOut href={achievements.portfolio_links?.linkedin_url} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">GitHub</p>
-                <LinkOut href={achievements.portfolio_links?.github_url} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">ResearchGate</p>
-                <LinkOut
-                  href={achievements.portfolio_links?.researchgate_url}
-                />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Google Scholar</p>
-                <LinkOut
-                  href={achievements.portfolio_links?.google_scholar_url}
-                />
-              </div>
-              <DetailRow
-                label="ORCID ID"
-                value={achievements.portfolio_links?.orcid_id}
-              />
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Personal Website
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Recommendation Letters
                 </p>
-                <LinkOut
-                  href={achievements.portfolio_links?.personal_website_url}
+                <EntryList
+                  items={achievements.recommendation_letters}
+                  emptyLabel="No recommendation letters uploaded."
+                  renderItem={(r, i) => (
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Letter {i + 1}
+                      </p>
+                      <LinkOut href={r.document_url} />
+                    </div>
+                  )}
                 />
               </div>
+
               <div>
-                <p className="text-xs text-muted-foreground">Behance</p>
-                <LinkOut href={achievements.portfolio_links?.behance_url} />
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Innovation &amp; Entrepreneurship
+                </p>
+                <EntryList
+                  items={achievements.innovation_entrepreneurship}
+                  emptyLabel="No innovation/entrepreneurship entries added."
+                  renderItem={(e) => (
+                    <>
+                      <DetailRow label="Startup Name" value={e.startup_name} />
+                      <DetailRow label="Role" value={e.role} />
+                      <DetailRow
+                        label="Incubation Support"
+                        value={e.incubation_support}
+                      />
+                      <DetailRow
+                        label="DPIIT Registration No."
+                        value={e.dpiit_registration_number}
+                      />
+                      {e.contribution && (
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <DetailRow
+                            label="Contribution"
+                            value={e.contribution}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                />
               </div>
+
               <div>
-                <p className="text-xs text-muted-foreground">Dribbble</p>
-                <LinkOut href={achievements.portfolio_links?.dribbble_url} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Kaggle</p>
-                <LinkOut href={achievements.portfolio_links?.kaggle_url} />
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Volunteering &amp; Social Service
+                </p>
+                <EntryList
+                  items={achievements.volunteering}
+                  emptyLabel="No volunteering entries added."
+                  renderItem={(v) => (
+                    <>
+                      <DetailRow
+                        label="Organization"
+                        value={v.organization_name}
+                      />
+                      <DetailRow label="Role" value={v.role} />
+                      <DetailRow
+                        label="Duration"
+                        value={
+                          [formatDate(v.start_date), formatDate(v.end_date)]
+                            .filter((val) => val !== "—")
+                            .join(" – ") || null
+                        }
+                      />
+                      {v.description && (
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <DetailRow
+                            label="Description"
+                            value={v.description}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                />
               </div>
             </div>
-          </div>
+          </Section>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Recommendation Letters
-            </p>
-            <EntryList
-              items={achievements.recommendation_letters}
-              emptyLabel="No recommendation letters uploaded."
-              renderItem={(r, i) => (
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Letter {i + 1}
-                  </p>
-                  <LinkOut href={r.document_url} />
-                </div>
-              )}
+          {/* Competitive Exam Records */}
+          <Section title="Competitive Exam Records">
+            <DetailRow
+              label="Attempted Entrance Exam"
+              value={entranceExam.has_attempted_entrance_exam ? "Yes" : "No"}
             />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Innovation &amp; Entrepreneurship
-            </p>
-            <EntryList
-              items={achievements.innovation_entrepreneurship}
-              emptyLabel="No innovation/entrepreneurship entries added."
-              renderItem={(e) => (
-                <>
-                  <DetailRow label="Startup Name" value={e.startup_name} />
-                  <DetailRow label="Role" value={e.role} />
-                  <DetailRow
-                    label="Incubation Support"
-                    value={e.incubation_support}
-                  />
-                  <DetailRow
-                    label="DPIIT Registration No."
-                    value={e.dpiit_registration_number}
-                  />
-                  {e.contribution && (
-                    <div className="sm:col-span-2 lg:col-span-3">
-                      <DetailRow label="Contribution" value={e.contribution} />
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Exam Records
+              </p>
+              <EntryList
+                items={entranceExam.exams}
+                emptyLabel="No exam records added."
+                renderItem={(exam) => (
+                  <>
+                    <DetailRow label="Exam Name" value={exam.exam_name} />
+                    <DetailRow
+                      label="Year of Appearance"
+                      value={exam.year_of_appearance}
+                    />
+                    <DetailRow label="Roll Number" value={exam.roll_number} />
+                    <DetailRow
+                      label="Score/Percentile"
+                      value={exam.score_or_percentile}
+                    />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Mark Card</p>
+                      <LinkOut href={exam.mark_card_url} />
                     </div>
-                  )}
-                </>
-              )}
-            />
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Volunteering &amp; Social Service
-            </p>
-            <EntryList
-              items={achievements.volunteering}
-              emptyLabel="No volunteering entries added."
-              renderItem={(v) => (
-                <>
-                  <DetailRow label="Organization" value={v.organization_name} />
-                  <DetailRow label="Role" value={v.role} />
-                  <DetailRow
-                    label="Duration"
-                    value={
-                      [formatDate(v.start_date), formatDate(v.end_date)]
-                        .filter((val) => val !== "—")
-                        .join(" – ") || null
-                    }
-                  />
-                  {v.description && (
-                    <div className="sm:col-span-2 lg:col-span-3">
-                      <DetailRow label="Description" value={v.description} />
-                    </div>
-                  )}
-                </>
-              )}
-            />
-          </div>
-        </div>
-      </Section>
-
-      {/* Competitive Exam Records */}
-      <Section title="Competitive Exam Records">
-        <DetailRow
-          label="Attempted Entrance Exam"
-          value={entranceExam.has_attempted_entrance_exam ? "Yes" : "No"}
-        />
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Exam Records
-          </p>
-          <EntryList
-            items={entranceExam.exams}
-            emptyLabel="No exam records added."
-            renderItem={(exam) => (
-              <>
-                <DetailRow label="Exam Name" value={exam.exam_name} />
-                <DetailRow
-                  label="Year of Appearance"
-                  value={exam.year_of_appearance}
-                />
-                <DetailRow label="Roll Number" value={exam.roll_number} />
-                <DetailRow
-                  label="Score/Percentile"
-                  value={exam.score_or_percentile}
-                />
-                <div>
-                  <p className="text-xs text-muted-foreground">Mark Card</p>
-                  <LinkOut href={exam.mark_card_url} />
-                </div>
-              </>
-            )}
-          />
-        </div>
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recommendation Letters
-          </p>
-          <EntryList
-            items={entranceExam.recommendation_letters}
-            emptyLabel="No recommendation letters uploaded."
-            renderItem={(r, i) => (
-              <div>
-                <p className="text-xs text-muted-foreground">Letter {i + 1}</p>
-                <LinkOut href={r.document_url} />
-              </div>
-            )}
-          />
-        </div>
-      </Section>
-
-      {/* Courses */}
-      <Section title="Courses & Fees">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Course</TableHead>
-              <TableHead>Primary</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Quota</TableHead>
-              <TableHead>Fee</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {app.courses.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-center text-muted-foreground"
-                >
-                  No courses selected.
-                </TableCell>
-              </TableRow>
-            ) : (
-              app.courses.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <p className="font-medium">{c.courseName}</p>
+                  </>
+                )}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Recommendation Letters
+              </p>
+              <EntryList
+                items={entranceExam.recommendation_letters}
+                emptyLabel="No recommendation letters uploaded."
+                renderItem={(r, i) => (
+                  <div>
                     <p className="text-xs text-muted-foreground">
-                      {c.courseCode}
+                      Letter {i + 1}
                     </p>
-                  </TableCell>
-                  <TableCell>{c.isPrimary ? "Yes" : "—"}</TableCell>
-                  <TableCell className="capitalize">
-                    {c.status.replace(/_/g, " ")}
-                  </TableCell>
-                  <TableCell>{c.quotaName ?? "—"}</TableCell>
-                  <TableCell>₹{c.applicationFee}</TableCell>
-                  <TableCell className="text-right">
-                    {c.status === "submitted" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShortlistTarget(c)}
-                      >
-                        Shortlist
-                      </Button>
-                    )}
-                    {c.status === "token_paid" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEnrollTarget(c)}
-                      >
-                        Mark Enrolled
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Section>
+                    <LinkOut href={r.document_url} />
+                  </div>
+                )}
+              />
+            </div>
+          </Section>
+        </>
+      )}
 
-      {/* Documents */}
-      <Section title="Documents">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>File</TableHead>
-              <TableHead>Verification</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {app.documents.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground"
-                >
-                  No documents uploaded yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              app.documents.map((d) => (
-                <TableRow key={d.id}>
-                  <TableCell className="capitalize">
-                    {d.documentType.replace(/_/g, " ")}
-                  </TableCell>
-                  <TableCell className="capitalize">
-                    {d.documentCategory.replace(/_/g, " ")}
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={d.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {d.fileName ?? "View file"}
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        d.verificationStatus === "approved"
-                          ? "default"
-                          : d.verificationStatus === "rejected"
-                            ? "destructive"
-                            : "secondary"
-                      }
-                    >
-                      {d.verificationStatus}
-                    </Badge>
-                    {d.rejectionReason && (
-                      <p className="mt-1 text-xs text-destructive">
-                        {d.rejectionReason}
-                      </p>
-                    )}
-                  </TableCell>
+      {tab === "overview" && (
+        <>
+          {/* Courses */}
+          <Section title="Courses & Fees">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Primary</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Quota</TableHead>
+                  <TableHead>Fee</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Section>
-
-      {/* Payments */}
-      <Section title="Payments">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Fee</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Net Amount</TableHead>
-              <TableHead>Paid</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Transactions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {app.payments.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground"
-                >
-                  No payments yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              app.payments.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <p className="font-medium capitalize">
-                      {p.feeCategory.replace(/_/g, " ")}
-                    </p>
-                    {p.description && (
-                      <p className="text-xs text-muted-foreground">
-                        {p.description}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>{p.courseName ?? "—"}</TableCell>
-                  <TableCell>₹{p.netAmount}</TableCell>
-                  <TableCell>₹{p.paidAmount}</TableCell>
-                  <TableCell>₹{p.balanceAmount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        p.status === "paid"
-                          ? "default"
-                          : p.status === "overdue"
-                            ? "destructive"
-                            : "secondary"
-                      }
+              </TableHeader>
+              <TableBody>
+                {app.courses.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground"
                     >
-                      {p.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {p.transactions.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {p.transactions.map((t) => (
-                          <div key={t.id} className="text-xs">
-                            <span className="font-medium">
-                              {t.transactionNumber}
-                            </span>{" "}
-                            · {t.paymentMethod} ·{" "}
-                            <Badge
-                              variant={
-                                t.status === "completed"
-                                  ? "default"
-                                  : t.status === "failed" ||
-                                      t.status === "rejected"
-                                    ? "destructive"
-                                    : "secondary"
-                              }
-                              className="text-[10px]"
-                            >
-                              {t.status}
-                            </Badge>
-                            {t.providerPaymentId && (
-                              <p className="text-muted-foreground">
-                                {t.providerPaymentId}
-                              </p>
-                            )}
-                            <p className="text-muted-foreground">
-                              {formatDateTime(t.paidAt ?? t.createdAt)}
-                            </p>
+                      No courses selected.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  app.courses.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        <p className="font-medium">{c.courseName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {c.courseCode}
+                        </p>
+                      </TableCell>
+                      <TableCell>{c.isPrimary ? "Yes" : "—"}</TableCell>
+                      <TableCell className="capitalize">
+                        {c.status.replace(/_/g, " ")}
+                      </TableCell>
+                      <TableCell>{c.quotaName ?? "—"}</TableCell>
+                      <TableCell>₹{c.applicationFee}</TableCell>
+                      <TableCell className="space-x-2 text-right">
+                        {c.status === "submitted" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShortlistTarget(c)}
+                          >
+                            Shortlist
+                          </Button>
+                        )}
+                        {![
+                          "enrolled",
+                          "token_paid",
+                          "shortlisted",
+                          "dropped_out",
+                          "rejected",
+                          "withdrawn",
+                          "deferred",
+                        ].includes(c.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => setRejectTarget(c)}
+                          >
+                            Reject
+                          </Button>
+                        )}
+                        {c.status === "token_paid" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEnrollTarget(c)}
+                          >
+                            Mark Enrolled
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Section>
+        </>
+      )}
+
+      {tab === "documents" && (
+        <>
+          {/* Documents */}
+          <Section title="Documents">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>File</TableHead>
+                  <TableHead>Verification</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {app.documents.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground"
+                    >
+                      No documents uploaded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  app.documents.map((d) => (
+                    <TableRow key={d.id}>
+                      <TableCell className="capitalize">
+                        {d.documentType.replace(/_/g, " ")}
+                      </TableCell>
+                      <TableCell className="capitalize">
+                        {d.documentCategory.replace(/_/g, " ")}
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={d.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {d.fileName ?? "View file"}
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            d.verificationStatus === "approved"
+                              ? "default"
+                              : d.verificationStatus === "rejected"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {d.verificationStatus}
+                        </Badge>
+                        {d.rejectionReason && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {d.rejectionReason}
+                          </p>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Section>
+        </>
+      )}
+
+      {tab === "assessments" && <AssessmentsTab applicationId={id} />}
+
+      {tab === "interviews" && <InterviewsTab applicationId={id} />}
+
+      {tab === "payments" && (
+        <>
+          {/* Payments */}
+          <Section title="Payments">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fee</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Net Amount</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Balance</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Transactions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {app.payments.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-muted-foreground"
+                    >
+                      No payments yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  app.payments.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell>
+                        <p className="font-medium capitalize">
+                          {p.feeCategory.replace(/_/g, " ")}
+                        </p>
+                        {p.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {p.description}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>{p.courseName ?? "—"}</TableCell>
+                      <TableCell>₹{p.netAmount}</TableCell>
+                      <TableCell>₹{p.paidAmount}</TableCell>
+                      <TableCell>₹{p.balanceAmount}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            p.status === "paid"
+                              ? "default"
+                              : p.status === "overdue"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {p.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {p.transactions.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {p.transactions.map((t) => (
+                              <div key={t.id} className="text-xs">
+                                <span className="font-medium">
+                                  {t.transactionNumber}
+                                </span>{" "}
+                                · {t.paymentMethod} ·{" "}
+                                <Badge
+                                  variant={
+                                    t.status === "completed"
+                                      ? "default"
+                                      : t.status === "failed" ||
+                                          t.status === "rejected"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                  className="text-[10px]"
+                                >
+                                  {t.status}
+                                </Badge>
+                                {t.providerPaymentId && (
+                                  <p className="text-muted-foreground">
+                                    {t.providerPaymentId}
+                                  </p>
+                                )}
+                                <p className="text-muted-foreground">
+                                  {formatDateTime(t.paidAt ?? t.createdAt)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Section>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Section>
+        </>
+      )}
 
       <ConfirmDialog
         open={enrollTarget !== null}
@@ -1668,6 +2082,49 @@ export default function ApplicationDetailPage() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Confirm Shortlist
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={rejectTarget !== null}
+        onOpenChange={(open) => !open && closeRejectDialog()}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Reject &quot;{rejectTarget?.courseName}&quot;
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This declines the application for this course. Only allowed before
+              it&apos;s been shortlisted, paid, or enrolled.
+            </p>
+            <div>
+              <Label>Reason (optional)</Label>
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+                placeholder="Shown to the student, if provided"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeRejectDialog}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={rejectMutation.isPending}
+              onClick={confirmReject}
+            >
+              {rejectMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirm Rejection
             </Button>
           </DialogFooter>
         </DialogContent>

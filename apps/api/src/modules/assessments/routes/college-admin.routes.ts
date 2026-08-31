@@ -114,6 +114,12 @@ router.patch(
 );
 
 router.get(
+  "/applications/:applicationId",
+  view,
+  CollegeAdminAssessmentController.getApplicationAssessmentStatus,
+);
+
+router.get(
   "/evaluation-queue",
   evaluate,
   CollegeAdminAssessmentController.listEvaluationQueue,

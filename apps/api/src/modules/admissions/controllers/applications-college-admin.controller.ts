@@ -3,11 +3,13 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import {
   listApplicationsQuerySchema,
   listPendingEnrollmentQuerySchema,
+  rejectApplicationCourseSchema,
 } from "../validators/application.validator";
 import { ApplicationListQuery } from "../queries/application-list.query";
 import { ApplicationDetailQuery } from "../queries/application-detail.query";
 import { PendingEnrollmentQuery } from "../queries/pending-enrollment.query";
 import { EnrollmentService } from "../services/enrollment.service";
+import { ApplicationCourseService } from "../services/application-course.service";
 
 export class ApplicationsCollegeAdminController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -53,5 +55,18 @@ export class ApplicationsCollegeAdminController {
       req.params.applicationCourseId as string,
     );
     res.status(200).json(ApiResponse.success("Student enrolled", result));
+  }
+
+  static async rejectCourse(req: Request, res: Response): Promise<void> {
+    const body = rejectApplicationCourseSchema.parse(req.body);
+    await ApplicationCourseService.rejectCourse(
+      req.collegeId!,
+      req.userId!,
+      req.params.applicationCourseId as string,
+      body.reason,
+    );
+    res
+      .status(200)
+      .json(ApiResponse.success("Application course rejected", {}));
   }
 }

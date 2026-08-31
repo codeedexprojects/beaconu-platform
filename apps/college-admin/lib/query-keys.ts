@@ -142,6 +142,8 @@ export const QUERY_KEYS = {
       : (["college-evaluation-queue"] as const),
   evaluationDetail: (attemptId: string) =>
     ["college-evaluation-detail", attemptId] as const,
+  applicationAssessmentStatus: (applicationId: string) =>
+    ["application-assessment-status", applicationId] as const,
   antiRaggingComplaints: (filters?: object) =>
     filters
       ? ["college-anti-ragging-complaints", filters]

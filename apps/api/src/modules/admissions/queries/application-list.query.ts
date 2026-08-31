@@ -9,6 +9,7 @@ const APPLICATION_LIST_SELECT = {
   formStatus: true,
   feePaymentStatus: true,
   totalApplicationFee: true,
+  profilePhotoUrl: true,
   submittedAt: true,
   createdAt: true,
   student: {
@@ -42,6 +43,7 @@ function mapRow(row: ApplicationListRow): ApplicationListItem {
     studentName: row.student.fullName,
     studentEmail: row.student.email,
     studentPhone: row.student.phoneNumber,
+    profilePhotoUrl: row.profilePhotoUrl,
     admissionCycleId: row.admissionCycle.id,
     admissionCycleName: row.admissionCycle.name,
     formStatus: row.formStatus,

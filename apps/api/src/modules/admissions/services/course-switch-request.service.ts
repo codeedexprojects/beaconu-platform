@@ -240,6 +240,10 @@ export class CourseSwitchRequestService {
       );
     }
 
+    const oldCourse = await ApplicationCourseRepository.findByIdWithStatus(
+      oldEnrollment.applicationCourseId,
+    );
+
     const applicationId = oldEnrollment.applicationCourse.applicationId;
     const enrollmentNumber = await EnrollmentService.generateEnrollmentNumber(
       oldEnrollment.college.code,
@@ -312,6 +316,22 @@ export class CourseSwitchRequestService {
         oldEnrollment.id,
         "course_switched",
       );
+
+      // The old ApplicationCourse's own seat is deferred, not withdrawn or
+      // dropped — the student is still enrolled, just on the new course now.
+      await ApplicationCourseRepository.updateStatus(
+        tx,
+        oldEnrollment.applicationCourseId,
+        "deferred",
+      );
+      await ApplicationCourseRepository.createStatusLog(tx, {
+        applicationCourseId: oldEnrollment.applicationCourseId,
+        fromStatus: oldCourse?.status ?? "enrolled",
+        toStatus: "deferred",
+        changedByType: "staff_member",
+        changedById: staffId,
+        remarks: "Seat transferred via course switch request",
+      });
 
       return CourseSwitchRequestRepository.approve(tx, requestId, {
         processedBy: staffId,

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
+  getApplicationAssessmentStatus,
   getAssessmentSections,
   toggleAssessmentSection,
   getQuestionTypes,
@@ -384,6 +385,14 @@ export function usePublishAssessmentResult() {
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
+  });
+}
+
+export function useApplicationAssessmentStatus(applicationId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.applicationAssessmentStatus(applicationId),
+    queryFn: () => getApplicationAssessmentStatus(applicationId),
+    enabled: !!applicationId,
   });
 }
 
