@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Shield, User } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, User } from "lucide-react";
 import { zodResolver } from "@/lib/zod-resolver";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
@@ -54,11 +55,15 @@ type FamilyDetailsFormInput = z.infer<typeof familyDetailsSchema>;
 interface FamilyDetailsFormProps {
   applicationId: string;
   onSaved?: () => void;
+  onPrevious?: () => void;
+  showPrevious?: boolean;
 }
 
 export function FamilyDetailsForm({
   applicationId,
   onSaved,
+  onPrevious,
+  showPrevious,
 }: FamilyDetailsFormProps) {
   const { data: existing, isLoading } = useFormDetails(
     applicationId,
@@ -237,14 +242,32 @@ export function FamilyDetailsForm({
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+      <div
+        className={cn(
+          "grid gap-3",
+          showPrevious ? "grid-cols-2" : "grid-cols-1",
+        )}
       >
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save & Continue
-      </Button>
+        {showPrevious ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            className="h-14 w-full rounded-full"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Previous
+          </Button>
+        ) : null}
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+        >
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save & Continue
+        </Button>
+      </div>
     </form>
   );
 }

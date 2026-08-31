@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileText } from "lucide-react";
 import { useAuthStore } from "@/store";
 import { SignInCta } from "@/components/campus-visit/sign-in-cta";
 import { ApplicationProgressCard } from "@/components/applications/application-progress-card";
-import { AdmissionCycleCard } from "@/components/applications/admission-cycle-card";
 import { useAdmissionCycles, useMyApplications } from "@/hooks/use-application";
 import { getErrorMessage } from "@/lib/api";
 
@@ -66,18 +65,27 @@ export function AdmissionCyclesList({
     <div className="space-y-8">
       {openCycles.length > 0 ? (
         <Link
-          href={`/college/${subdomain}/applications/new?cycle=${openCycles[0].id}`}
+          href={`/college/${subdomain}/applications/new`}
           className="flex items-center justify-between rounded-2xl bg-headerTeal-dark p-5 text-white transition-opacity hover:opacity-90"
         >
-          <div>
-            <p className="font-semibold">Start New Application</p>
-            <p className="mt-0.5 text-sm text-white/80">
-              Apply for courses and track your admission progress
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <FileText className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold">Start New Application</p>
+              <p className="mt-0.5 text-sm text-white/80">
+                Apply for courses and track your admission progress
+              </p>
+            </div>
           </div>
           <ArrowRight className="h-5 w-5 shrink-0" />
         </Link>
-      ) : null}
+      ) : (
+        <p className="rounded-2xl bg-field p-5 text-sm text-muted-foreground">
+          There are no admission cycles open right now. Check back soon.
+        </p>
+      )}
 
       {collegeApplications.length > 0 ? (
         <div className="space-y-3">
@@ -93,27 +101,6 @@ export function AdmissionCyclesList({
           ))}
         </div>
       ) : null}
-
-      <div className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-headerTeal">
-          Open Admission Cycles
-        </h2>
-        {openCycles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            There are no admission cycles open right now. Check back soon.
-          </p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {openCycles.map((cycle) => (
-              <AdmissionCycleCard
-                key={cycle.id}
-                cycle={cycle}
-                subdomain={subdomain}
-              />
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

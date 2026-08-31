@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { getCollegeBySlug } from "@/lib/services/public-college.service";
@@ -16,10 +16,6 @@ export default async function NewApplicationPage({
   const { subdomain } = await params;
   const { cycle } = await searchParams;
 
-  if (!cycle) {
-    redirect(`/college/${subdomain}/applications`);
-  }
-
   let collegeDetails;
   try {
     ({ collegeDetails } = await getCollegeBySlug(subdomain));
@@ -29,30 +25,32 @@ export default async function NewApplicationPage({
 
   return (
     <div className="pb-16">
-      <div className="bg-headerTeal-dark py-6">
-        <div className="mx-auto flex max-w-2xl items-center gap-4 px-4 sm:px-6">
-          <Link
-            href={`/college/${subdomain}/applications`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
-            aria-label="Back to applications"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="flex items-center gap-2.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
-              <FileText className="h-6 w-6" />
-              Start Your Application
-            </h1>
-            <p className="mt-1 text-sm text-white/70">
-              Applying to {collegeDetails.name}. Choose a course and provide
-              your basic details to begin.
-            </p>
-          </div>
+      <div className="relative bg-[#E6F7FF] py-10">
+        <Link
+          href={`/college/${subdomain}/applications`}
+          className="absolute left-4 top-6 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted sm:left-6"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </Link>
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+          <h1 className="flex items-center justify-center gap-2.5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <FileText className="h-7 w-7" />
+            Start Your Application
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Applying to {collegeDetails.name}. Tell us your nationality, pick an
+            admission cycle, then choose a course.
+          </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
-        <NewApplicationPageClient cycleId={cycle} subdomain={subdomain} />
+        <NewApplicationPageClient
+          cycleId={cycle}
+          collegeId={collegeDetails.id}
+          subdomain={subdomain}
+        />
       </div>
     </div>
   );

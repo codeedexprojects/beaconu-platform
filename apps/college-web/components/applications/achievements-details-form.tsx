@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Award, ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Award,
+  ChevronDown,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { zodResolver } from "@/lib/zod-resolver";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -169,6 +176,8 @@ type AchievementsFormInput = z.infer<typeof achievementsSchema>;
 interface AchievementsDetailsFormProps {
   applicationId: string;
   onSaved?: () => void;
+  onPrevious?: () => void;
+  showPrevious?: boolean;
 }
 
 const defaultValues: AchievementsFormInput = {
@@ -240,7 +249,7 @@ function AccordionSection({
 }) {
   const [open, setOpen] = useState(!!defaultOpen);
   return (
-    <div className="rounded-2xl bg-field">
+    <div className="rounded-2xl border border-border/60 bg-background">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -272,7 +281,7 @@ function RemovableCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl bg-field p-4">
+    <div className="space-y-3 rounded-2xl bg-groupBg p-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-foreground">{title}</h4>
         <button
@@ -297,6 +306,8 @@ function RemovableCard({
 export function AchievementsDetailsForm({
   applicationId,
   onSaved,
+  onPrevious,
+  showPrevious,
 }: AchievementsDetailsFormProps) {
   const { data: existing, isLoading } = useFormDetails(
     applicationId,
@@ -1174,14 +1185,32 @@ export function AchievementsDetailsForm({
         </Button>
       </AccordionSection>
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+      <div
+        className={cn(
+          "grid gap-3",
+          showPrevious ? "grid-cols-2" : "grid-cols-1",
+        )}
       >
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save Achievements
-      </Button>
+        {showPrevious ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            className="h-14 w-full rounded-full"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Previous
+          </Button>
+        ) : null}
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+        >
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Achievements
+        </Button>
+      </div>
     </form>
   );
 }
