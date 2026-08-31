@@ -9,6 +9,7 @@ import {
   FileText,
   Gift,
   Lock,
+  MinusCircle,
   PartyPopper,
   Star,
   Video,
@@ -30,7 +31,7 @@ interface ApplicationStatusTimelineProps {
   collegeId: string;
 }
 
-type StepState = "completed" | "current" | "pending" | "locked";
+type StepState = "completed" | "current" | "pending" | "locked" | "skipped";
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -80,12 +81,16 @@ function TimelineStep({
             "border border-border bg-background text-muted-foreground",
           state === "locked" &&
             "border border-border/60 bg-muted text-muted-foreground/60",
+          state === "skipped" &&
+            "border border-dashed border-border bg-muted/50 text-muted-foreground/60",
         )}
       >
         {state === "completed" ? (
           <Check className="h-4 w-4" />
         ) : state === "locked" ? (
           <Lock className="h-4 w-4" />
+        ) : state === "skipped" ? (
+          <MinusCircle className="h-4 w-4" />
         ) : (
           <Icon className="h-4 w-4" />
         )}
@@ -94,7 +99,9 @@ function TimelineStep({
         <p
           className={cn(
             "text-sm font-semibold",
-            state === "locked" ? "text-muted-foreground" : "text-foreground",
+            state === "locked" || state === "skipped"
+              ? "text-muted-foreground"
+              : "text-foreground",
           )}
         >
           {title}
@@ -181,9 +188,12 @@ export function ApplicationStatusTimeline({
     assessment.status === "result_published" ||
     assessment.status === "under_evaluation";
   const assessmentRequired = assessment.status !== "not_required";
+  const assessmentGateDone = !assessmentRequired || assessmentDone;
 
+  const interviewRequired = interview.status !== "not_required";
   const interviewDone = interview.status === "completed";
   const interviewBooked = interview.status === "scheduled";
+  const interviewGateDone = !interviewRequired || interviewDone;
 
   const scholarshipDecided = scholarships.some((s) => s.status !== "pending");
   const hasScholarshipApplication = scholarships.length > 0;
@@ -237,60 +247,82 @@ export function ApplicationStatusTimeline({
           subtitleTone={isReviewDone ? "success" : "info"}
         />
 
-        {assessmentRequired ? (
-          <TimelineStep
-            icon={Award}
-            title="Take Assessment"
-            state={
-              !isSubmitted ? "locked" : assessmentDone ? "completed" : "current"
-            }
-            subtitle={
-              assessmentDone
+        <TimelineStep
+          icon={Award}
+          title="Take Assessment"
+          state={
+            !assessmentRequired
+              ? "skipped"
+              : !isSubmitted
+                ? "locked"
+                : assessmentDone
+                  ? "completed"
+                  : "current"
+          }
+          subtitle={
+            !assessmentRequired
+              ? "Skipped for this admission cycle"
+              : assessmentDone
                 ? "Completed"
                 : assessment.status === "in_progress"
                   ? "In progress"
                   : "Action Required"
-            }
-            subtitleTone={assessmentDone ? "success" : "warning"}
-          >
-            {!assessmentDone && isSubmitted ? (
-              <Button
-                asChild
-                className="mt-3 h-11 w-full rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
+          }
+          subtitleTone={
+            !assessmentRequired
+              ? "muted"
+              : assessmentDone
+                ? "success"
+                : "warning"
+          }
+        >
+          {assessmentRequired && !assessmentDone && isSubmitted ? (
+            <Button
+              asChild
+              className="mt-3 h-11 w-full rounded-full border-0 bg-headerTeal-dark text-sm font-semibold text-white shadow-md hover:opacity-95"
+            >
+              <Link
+                href={`/college/${subdomain}/applications/${applicationId}/assessment`}
               >
-                <Link
-                  href={`/college/${subdomain}/applications/${applicationId}/assessment`}
-                >
-                  Start Assessment
-                </Link>
-              </Button>
-            ) : null}
-          </TimelineStep>
-        ) : null}
+                Start Assessment
+              </Link>
+            </Button>
+          ) : null}
+        </TimelineStep>
 
         <TimelineStep
           icon={Video}
           title="Attend Interview"
           state={
-            !assessmentDone ? "locked" : interviewDone ? "completed" : "current"
+            !interviewRequired
+              ? "skipped"
+              : !assessmentGateDone
+                ? "locked"
+                : interviewDone
+                  ? "completed"
+                  : "current"
           }
           subtitle={
-            interviewDone
-              ? "Completed"
-              : interviewBooked
-                ? (formatDate(interview.scheduledAt) ?? "Scheduled")
-                : assessmentDone
-                  ? "Action Required"
-                  : "Pending Assessment Completion"
+            !interviewRequired
+              ? "Skipped for this admission cycle"
+              : interviewDone
+                ? "Completed"
+                : interviewBooked
+                  ? (formatDate(interview.scheduledAt) ?? "Scheduled")
+                  : assessmentGateDone
+                    ? "Action Required"
+                    : "Pending Assessment Completion"
           }
           subtitleTone={
-            interviewDone
-              ? "success"
-              : interviewBooked
-                ? "info"
-                : assessmentDone
-                  ? "warning"
-                  : "info"
+            !interviewRequired
+              ? "muted"
+              : interviewDone
+                ? "success"
+                : interviewBooked
+                  ? "info"
+                  : assessmentGateDone
+                    ? "warning"
+                    : "info"
           }
         />
         {/* No self-service action here anymore — the college schedules the
@@ -301,7 +333,7 @@ export function ApplicationStatusTimeline({
           icon={Star}
           title="Application Shortlisted"
           state={
-            !interviewDone
+            !assessmentGateDone || !interviewGateDone
               ? "locked"
               : shortlist.isShortlisted
                 ? "completed"
@@ -310,7 +342,7 @@ export function ApplicationStatusTimeline({
           subtitle={
             shortlist.isShortlisted
               ? "Congrats! Proceed to next step."
-              : interviewDone
+              : assessmentGateDone && interviewGateDone
                 ? "Under evaluation"
                 : undefined
           }

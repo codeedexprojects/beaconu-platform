@@ -51,7 +51,7 @@ export function AddAnotherCoursePanel({
   }
 
   return (
-    <div className="rounded-2xl bg-field p-4">
+    <div className="rounded-2xl bg-groupBg p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold">Add Another Course</p>
         <button

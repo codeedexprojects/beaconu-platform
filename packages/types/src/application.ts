@@ -361,6 +361,7 @@ export interface TwelfthGradeDetailsInput {
   admission_year: string;
   year_of_passing: number;
   board_name: string;
+  course?: string | null;
   registration_number?: string | null;
   school_name: string;
   school_code?: string | null;

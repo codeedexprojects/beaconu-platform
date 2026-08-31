@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { toast } from "sonner";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Lock } from "lucide-react";
 import { useAuthStore } from "@/store";
 import { SignInCta } from "@/components/campus-visit/sign-in-cta";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,14 @@ export function ApplicationDetail({
     );
   }
 
+  const isFeePaid =
+    (paymentSummary?.feePaymentStatus ??
+      status?.application.feePaymentStatus) === "paid";
+  const isFormSubmitted = application.formStatus !== "draft";
+  const assessmentRequired = status
+    ? status.assessment.status !== "not_required"
+    : true;
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-field p-5">
@@ -104,23 +112,61 @@ export function ApplicationDetail({
           </span>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link
-              href={`/college/${subdomain}/applications/${applicationId}/details`}
+          {isFeePaid ? (
+            <Button asChild variant="outline">
+              <Link
+                href={`/college/${subdomain}/applications/${applicationId}/details`}
+              >
+                Fill in Application Details
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              disabled
+              variant="outline"
+              title="Pay the application fee to unlock this"
             >
+              <Lock className="mr-1.5 h-3.5 w-3.5" />
               Fill in Application Details
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link
-              href={`/college/${subdomain}/applications/${applicationId}/assessment`}
+            </Button>
+          )}
+
+          {assessmentRequired ? (
+            isFormSubmitted ? (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/college/${subdomain}/applications/${applicationId}/assessment`}
+                >
+                  Assessment
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                disabled
+                variant="outline"
+                title="Submit your application to unlock this"
+              >
+                <Lock className="mr-1.5 h-3.5 w-3.5" />
+                Assessment
+              </Button>
+            )
+          ) : null}
+
+          {application.formStatus === "draft" && !isFeePaid ? (
+            <Button
+              disabled
+              variant="outline"
+              title="Pay the application fee to unlock this"
             >
-              Assessment
-            </Link>
-          </Button>
-          {application.formStatus === "draft" ? (
+              <Lock className="mr-1.5 h-3.5 w-3.5" />
+              Submit Application
+            </Button>
+          ) : null}
+
+          {application.formStatus === "draft" && isFeePaid ? (
             <Button
               disabled={isSubmitting}
+              className="bg-headerTeal-dark text-white hover:bg-headerTeal-dark/90"
               onClick={() =>
                 submit(undefined, {
                   onSuccess: () => {

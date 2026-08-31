@@ -518,7 +518,10 @@ function AcademicLevelForm({
         </p>
         <div className="space-y-3">
           {semesterFieldArray.fields.map((field, index) => (
-            <div key={field.id} className="space-y-3 rounded-2xl bg-field p-4">
+            <div
+              key={field.id}
+              className="space-y-3 rounded-2xl bg-groupBg p-4"
+            >
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">Record {index + 1}</h4>
                 <button
@@ -579,7 +582,7 @@ function AcademicLevelForm({
         </Button>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Final Academic Summary
         </p>
@@ -629,7 +632,7 @@ function AcademicLevelForm({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Documents
         </p>
@@ -704,7 +707,7 @@ function AcademicLevelForm({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Academic Projects
         </p>
@@ -728,7 +731,7 @@ function AcademicLevelForm({
             {projectFieldArray.fields.map((field, index) => (
               <div
                 key={field.id}
-                className="space-y-3 rounded-2xl bg-field p-4"
+                className="space-y-3 rounded-2xl bg-background p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

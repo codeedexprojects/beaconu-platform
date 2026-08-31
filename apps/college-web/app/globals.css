@@ -41,8 +41,9 @@
     --accent-orange-soft: 210 40% 94%;
     --accent-orange-gradient-from: 222 40% 18%;
     --accent-orange-gradient-to: 222 47% 8%;
-    --field-bg: 220 20% 96%;
-    --field-bg-focus: 220 20% 93%;
+    --field-bg: 214 25% 92%;
+    --field-bg-focus: 214 25% 88%;
+    --group-bg: 210 30% 97%;
 
     --header-teal: 195 45% 37%;
     --header-teal-light: 195 55% 55%;

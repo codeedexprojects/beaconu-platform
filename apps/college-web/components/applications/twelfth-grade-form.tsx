@@ -261,19 +261,29 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
   useEffect(() => {
     if (!existing) return;
     const matchedBoard = boards?.find((b) => b.name === existing.board_name);
+    const matchedState = states?.find(
+      (s) =>
+        s.name.toLowerCase() === (existing.school_state ?? "").toLowerCase(),
+    );
+    const matchedMedium = mediums?.find(
+      (m) =>
+        m.name.toLowerCase() ===
+        (existing.medium_of_instruction ?? "").toLowerCase(),
+    );
     form.reset({
       academic_year: existing.academic_year ?? "",
       admission_year: existing.admission_year ?? "",
       year_of_passing: existing.year_of_passing ?? new Date().getFullYear(),
       board_id: matchedBoard?.id ?? "",
       board_name: existing.board_name ?? "",
-      course: "",
+      course: existing.course ?? "",
       registration_number: existing.registration_number ?? "",
       school_name: existing.school_name ?? "",
       school_code: existing.school_code ?? "",
       school_address: existing.school_address ?? "",
-      school_state: existing.school_state ?? "",
-      medium_of_instruction: existing.medium_of_instruction ?? "",
+      school_state: matchedState?.name ?? existing.school_state ?? "",
+      medium_of_instruction:
+        matchedMedium?.name ?? existing.medium_of_instruction ?? "",
       has_separate_class_xi_exam: existing.has_separate_class_xi_exam ?? false,
       class_xi_status: existing.class_xi_status ?? undefined,
       subjects: existing.subjects?.length
@@ -286,7 +296,7 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
       migration_certificate_url: existing.migration_certificate_url ?? "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existing, boards]);
+  }, [existing, boards, states, mediums]);
 
   function onSubmit(data: TwelfthGradeFormInput) {
     save(
@@ -295,6 +305,7 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
         admission_year: data.admission_year,
         year_of_passing: data.year_of_passing,
         board_name: data.board_name,
+        course: data.course || undefined,
         registration_number: data.registration_number || undefined,
         school_name: data.school_name,
         school_code: data.school_code || undefined,
@@ -383,8 +394,8 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
             </SelectContent>
           </Select>
         </Field>
-        {boardId && availableCourses.length > 0 ? (
-          <Field label="Course">
+        <Field label="Course" optional>
+          {boardId && availableCourses.length > 0 ? (
             <Select
               value={course || undefined}
               onValueChange={(v) =>
@@ -402,8 +413,13 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </Field>
-        ) : null}
+          ) : (
+            <Input
+              placeholder="e.g. Science, Commerce, Humanities"
+              {...form.register("course")}
+            />
+          )}
+        </Field>
         <Field label="Registration Number" optional>
           <Input {...form.register("registration_number")} />
         </Field>
@@ -481,7 +497,7 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
         </Field>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Result Information
         </p>
@@ -534,7 +550,10 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
         ) : null}
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div key={field.id} className="space-y-3 rounded-2xl bg-field p-4">
+            <div
+              key={field.id}
+              className="space-y-3 rounded-2xl bg-groupBg p-4"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <BookOpen className="h-4 w-4 text-headerTeal" />
@@ -599,7 +618,7 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
         </Button>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Overall Result Summary
         </p>

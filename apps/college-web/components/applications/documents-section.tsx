@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { FileText } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/api";
 import { uploadApplicationDocumentFile } from "@/lib/services/application.service";
@@ -17,6 +18,8 @@ import type { RequiredDocumentDto } from "@beaconu/types";
 interface DocumentsSectionProps {
   applicationId: string;
   onSaved?: () => void;
+  onPrevious?: () => void;
+  showPrevious?: boolean;
 }
 
 function RequiredDocumentRow({
@@ -90,6 +93,8 @@ function RequiredDocumentRow({
 export function DocumentsSection({
   applicationId,
   onSaved,
+  onPrevious,
+  showPrevious,
 }: DocumentsSectionProps) {
   const {
     data: documents,
@@ -128,13 +133,31 @@ export function DocumentsSection({
         </div>
       )}
 
-      <Button
-        type="button"
-        onClick={() => onSaved?.()}
-        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+      <div
+        className={cn(
+          "grid gap-3",
+          showPrevious ? "grid-cols-2" : "grid-cols-1",
+        )}
       >
-        Continue
-      </Button>
+        {showPrevious ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            className="h-14 w-full rounded-full"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Previous
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          onClick={() => onSaved?.()}
+          className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+        >
+          Continue
+        </Button>
+      </div>
     </div>
   );
 }

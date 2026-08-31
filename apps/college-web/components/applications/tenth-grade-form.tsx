@@ -182,6 +182,15 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
   useEffect(() => {
     if (!existing) return;
     const matchedBoard = boards?.find((b) => b.name === existing.board_name);
+    const matchedState = states?.find(
+      (s) =>
+        s.name.toLowerCase() === (existing.school_state ?? "").toLowerCase(),
+    );
+    const matchedMedium = mediums?.find(
+      (m) =>
+        m.name.toLowerCase() ===
+        (existing.medium_of_instruction ?? "").toLowerCase(),
+    );
     form.reset({
       academic_year: existing.academic_year ?? "",
       admission_year: existing.admission_year ?? "",
@@ -192,8 +201,9 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
       school_name: existing.school_name ?? "",
       school_code: existing.school_code ?? "",
       school_address: existing.school_address ?? "",
-      school_state: existing.school_state ?? "",
-      medium_of_instruction: existing.medium_of_instruction ?? "",
+      school_state: matchedState?.name ?? existing.school_state ?? "",
+      medium_of_instruction:
+        matchedMedium?.name ?? existing.medium_of_instruction ?? "",
       subjects: existing.subjects?.length
         ? existing.subjects.map(nullsToUndefined)
         : [emptySubject],
@@ -203,7 +213,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
       marksheet_url: existing.marksheet_url ?? "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existing, boards]);
+  }, [existing, boards, states, mediums]);
 
   function onSubmit(data: TenthGradeFormInput) {
     save(
@@ -382,7 +392,10 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
         ) : null}
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div key={field.id} className="space-y-3 rounded-2xl bg-field p-4">
+            <div
+              key={field.id}
+              className="space-y-3 rounded-2xl bg-groupBg p-4"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <BookOpen className="h-4 w-4 text-headerTeal" />
@@ -447,7 +460,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
         </Button>
       </div>
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Overall Result Summary
         </p>

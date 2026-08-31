@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
 import { zodResolver } from "@/lib/zod-resolver";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
@@ -70,6 +71,8 @@ function nullsToUndefined<T extends object>(obj: T): NullsToUndefined<T> {
 interface EntranceExamFormProps {
   applicationId: string;
   onSaved?: () => void;
+  onPrevious?: () => void;
+  showPrevious?: boolean;
 }
 
 const emptyExam = {
@@ -145,6 +148,8 @@ function MarkCardUpload({
 export function EntranceExamForm({
   applicationId,
   onSaved,
+  onPrevious,
+  showPrevious,
 }: EntranceExamFormProps) {
   const { data: existing, isLoading } = useFormDetails(
     applicationId,
@@ -273,7 +278,7 @@ export function EntranceExamForm({
             {exams.fields.map((field, index) => (
               <div
                 key={field.id}
-                className="space-y-3 rounded-2xl bg-field p-4"
+                className="space-y-3 rounded-2xl bg-groupBg p-4"
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold">Exam {index + 1}</h4>
@@ -328,7 +333,7 @@ export function EntranceExamForm({
         </div>
       ) : null}
 
-      <div className="rounded-2xl bg-field p-4">
+      <div className="rounded-2xl bg-groupBg p-4">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-headerTeal">
           Recommendation Letters
         </p>
@@ -362,14 +367,32 @@ export function EntranceExamForm({
         </Button>
       </div>
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+      <div
+        className={cn(
+          "grid gap-3",
+          showPrevious ? "grid-cols-2" : "grid-cols-1",
+        )}
       >
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save & Continue
-      </Button>
+        {showPrevious ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            className="h-14 w-full rounded-full"
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Previous
+          </Button>
+        ) : null}
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-14 w-full rounded-full border-0 bg-headerTeal-dark text-base font-semibold text-white shadow-md hover:opacity-95"
+        >
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save & Continue
+        </Button>
+      </div>
     </form>
   );
 }

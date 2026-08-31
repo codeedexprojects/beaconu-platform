@@ -5,12 +5,14 @@ import { SignInCta } from "@/components/campus-visit/sign-in-cta";
 import { StartApplicationForm } from "@/components/applications/start-application-form";
 
 interface NewApplicationPageClientProps {
-  cycleId: string;
+  cycleId?: string;
+  collegeId: string;
   subdomain: string;
 }
 
 export function NewApplicationPageClient({
   cycleId,
+  collegeId,
   subdomain,
 }: NewApplicationPageClientProps) {
   const student = useAuthStore((s) => s.student);
@@ -27,5 +29,11 @@ export function NewApplicationPageClient({
     );
   }
 
-  return <StartApplicationForm cycleId={cycleId} subdomain={subdomain} />;
+  return (
+    <StartApplicationForm
+      cycleId={cycleId}
+      collegeId={collegeId}
+      subdomain={subdomain}
+    />
+  );
 }

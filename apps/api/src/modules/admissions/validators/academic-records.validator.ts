@@ -58,6 +58,7 @@ export const twelfthGradeDetailsSchema = z.object({
   admission_year: z.string().trim().max(20).optional().nullable(),
   year_of_passing: z.number().int().min(1950).max(2100).optional().nullable(),
   board_name: z.string().trim().max(150).optional().nullable(),
+  course: z.string().trim().max(150).optional().nullable(),
   registration_number: z.string().trim().max(50).optional().nullable(),
   school_name: z.string().trim().max(255).optional().nullable(),
   school_code: z.string().trim().max(50).optional().nullable(),

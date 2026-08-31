@@ -59,6 +59,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--field-bg))",
           focus: "hsl(var(--field-bg-focus))",
         },
+        groupBg: "hsl(var(--group-bg))",
         headerTeal: {
           DEFAULT: "hsl(var(--header-teal))",
           light: "hsl(var(--header-teal-light))",
