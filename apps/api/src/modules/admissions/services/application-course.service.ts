@@ -349,6 +349,7 @@ export class ApplicationCourseService {
     toStatus: string,
     changedByType: "staff_member" | "student",
     changedById: string,
+    extra?: { rejectionReason?: string; remarks?: string },
   ) {
     const course =
       await ApplicationCourseRepository.findByIdWithStatus(applicationCourseId);
@@ -360,6 +361,7 @@ export class ApplicationCourseService {
         tx,
         applicationCourseId,
         toStatus,
+        { rejectionReason: extra?.rejectionReason },
       );
       await ApplicationCourseRepository.createStatusLog(tx, {
         applicationCourseId,
@@ -367,8 +369,51 @@ export class ApplicationCourseService {
         toStatus,
         changedByType,
         changedById,
+        remarks: extra?.remarks,
       });
     });
+  }
+
+  private static readonly TERMINAL_OR_LATE_STATUSES = new Set([
+    "enrolled",
+    "token_paid",
+    "shortlisted",
+    "dropped_out",
+    "rejected",
+    "withdrawn",
+    "deferred",
+  ]);
+
+  /** College-admin rejects this course's application — allowed from any
+   * still-active pipeline stage (submitted through interview_completed),
+   * not once it's already shortlisted/paid/enrolled or otherwise settled. */
+  static async rejectCourse(
+    collegeId: string,
+    staffId: string,
+    applicationCourseId: string,
+    reason?: string,
+  ) {
+    const course =
+      await ApplicationCourseRepository.findByIdWithOwnership(
+        applicationCourseId,
+      );
+    if (!course || course.application.collegeId !== collegeId) {
+      throw new NotFoundError("Application course not found");
+    }
+    if (course.status === "rejected") return;
+    if (this.TERMINAL_OR_LATE_STATUSES.has(course.status)) {
+      throw new ConflictError(
+        `This course can't be rejected — it's already "${course.status}"`,
+      );
+    }
+
+    await this.transitionStatus(
+      applicationCourseId,
+      "rejected",
+      "staff_member",
+      staffId,
+      { rejectionReason: reason, remarks: reason },
+    );
   }
 
   static async markInterviewPending(

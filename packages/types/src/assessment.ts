@@ -287,6 +287,19 @@ export type AttemptStatus =
   | "evaluated"
   | "result_published";
 
+/** College-admin, per-application read (Plan AE) — a status/score summary
+ * for the Applications detail page's Assessments tab, distinct from the
+ * evaluator-facing full question-by-question detail. */
+export interface ApplicationAssessmentDetail {
+  status: "not_required" | "not_started" | AttemptStatus;
+  attemptId: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalScore: number | null;
+  maxScore: number | null;
+  sectionScores: { sectionName: string; score: number; max: number }[];
+}
+
 export type AnswerEvaluationStatus = "pending" | "auto_scored" | "evaluated";
 export type AntiCheatEventType = "tab_hidden" | "tab_visible";
 

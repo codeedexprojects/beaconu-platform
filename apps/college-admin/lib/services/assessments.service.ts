@@ -21,9 +21,16 @@ import type {
   EvaluationAttemptDetail,
   EvaluationAnswerDetail,
   ScoreOverrideInput,
+  ApplicationAssessmentDetail,
 } from "@beaconu/types";
 
 const BASE = "/api/v1/college-admin/assessments";
+
+export async function getApplicationAssessmentStatus(
+  applicationId: string,
+): Promise<ApplicationAssessmentDetail> {
+  return api.get(`${BASE}/applications/${applicationId}`);
+}
 
 export interface CoreSectionMeta {
   slug: string;

@@ -326,10 +326,17 @@ export class ApplicationCourseRepository {
     tx: Prisma.TransactionClient,
     id: string,
     status: string,
+    data?: { rejectionReason?: string },
   ) {
     return tx.applicationCourse.update({
       where: { id },
-      data: { status, statusUpdatedAt: new Date() },
+      data: {
+        status,
+        statusUpdatedAt: new Date(),
+        ...(data?.rejectionReason !== undefined && {
+          rejectionReason: data.rejectionReason,
+        }),
+      },
       select: { id: true },
     });
   }
@@ -342,6 +349,7 @@ export class ApplicationCourseRepository {
       toStatus: string;
       changedByType: string;
       changedById: string;
+      remarks?: string;
     },
   ) {
     return tx.applicationStatusLog.create({ data });

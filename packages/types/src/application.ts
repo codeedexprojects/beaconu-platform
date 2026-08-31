@@ -688,6 +688,7 @@ export interface ApplicationListItem {
   studentName: string;
   studentEmail: string | null;
   studentPhone: string | null;
+  profilePhotoUrl: string | null;
   admissionCycleId: string;
   admissionCycleName: string;
   formStatus: string;
@@ -803,6 +804,15 @@ export interface ApplicationDetailPaymentItem {
   createdAt: string;
 }
 
+export interface ApplicationStatusLogItem {
+  courseId: string;
+  courseName: string;
+  fromStatus: string | null;
+  toStatus: string;
+  changedByType: string;
+  changedAt: string;
+}
+
 export interface ApplicationDetailDto {
   id: string;
   applicationNumber: string;
@@ -834,6 +844,7 @@ export interface ApplicationDetailDto {
   courses: ApplicationDetailCourseItem[];
   documents: ApplicationDetailDocumentItem[];
   payments: ApplicationDetailPaymentItem[];
+  statusLogs: ApplicationStatusLogItem[];
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;

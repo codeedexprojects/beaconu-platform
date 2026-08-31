@@ -11,6 +11,7 @@ import { QuestionListQuery } from "../queries/question-list.query";
 import { TemplateListQuery } from "../queries/template-list.query";
 import { PaperPreviewQuery } from "../queries/paper-preview.query";
 import { EvaluationDetailQuery } from "../queries/evaluation-detail.query";
+import { ApplicationAssessmentStatusQuery } from "../queries/application-assessment-status.query";
 import {
   toggleSectionSchema,
   createQuestionSchema,
@@ -282,5 +283,13 @@ export class CollegeAdminAssessmentController {
       req.params.id as string,
     );
     return res.json(ApiResponse.success("Attempt restarted", result));
+  }
+
+  static async getApplicationAssessmentStatus(req: Request, res: Response) {
+    const result = await ApplicationAssessmentStatusQuery.getForApplication(
+      req.collegeId!,
+      req.params.applicationId as string,
+    );
+    return res.json(ApiResponse.success("Assessment status fetched", result));
   }
 }

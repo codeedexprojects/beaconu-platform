@@ -21,5 +21,10 @@ router.post(
   manage,
   ApplicationsCollegeAdminController.enrollCourse,
 );
+router.patch(
+  "/courses/:applicationCourseId/reject",
+  manage,
+  ApplicationsCollegeAdminController.rejectCourse,
+);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   getApplications,
   getApplicationById,
   enrollApplicationCourse,
+  rejectApplicationCourse,
   getPendingEnrollments,
   type ApplicationListFilters,
   type PendingEnrollmentFilters,
@@ -41,6 +42,28 @@ export function useEnrollApplicationCourse(applicationId: string) {
       });
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pendingEnrollments(),
+      });
+    },
+  });
+}
+
+export function useRejectApplicationCourse(applicationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      applicationCourseId,
+      reason,
+    }: {
+      applicationCourseId: string;
+      reason?: string;
+    }) => rejectApplicationCourse(applicationCourseId, reason),
+    onError: (error) => toast.error(getErrorMessage(error)),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.application(applicationId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.applications(),
       });
     },
   });
