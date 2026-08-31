@@ -106,14 +106,28 @@ export function SiteNav({
   const [open, setOpen] = useState(false);
   const [hideUtilityBar, setHideUtilityBar] = useState(false);
   const lastScrollYRef = useRef(0);
+  const tickingRef = useRef(false);
 
   useEffect(() => {
+    const SCROLL_DELTA_THRESHOLD = 10;
+
     function handleScroll() {
-      const currentScrollY = window.scrollY;
-      setHideUtilityBar(
-        currentScrollY > lastScrollYRef.current && currentScrollY > 80,
-      );
-      lastScrollYRef.current = currentScrollY;
+      if (tickingRef.current) return;
+      tickingRef.current = true;
+
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const delta = currentScrollY - lastScrollYRef.current;
+
+        if (currentScrollY <= 80) {
+          setHideUtilityBar(false);
+        } else if (Math.abs(delta) > SCROLL_DELTA_THRESHOLD) {
+          setHideUtilityBar(delta > 0);
+        }
+
+        lastScrollYRef.current = currentScrollY;
+        tickingRef.current = false;
+      });
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
