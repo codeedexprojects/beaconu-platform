@@ -1,6 +1,10 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Trash2, Home } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,6 +15,25 @@ import {
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const studentHousingTabSchema = z.object({
+  summary: z.string().optional(),
+  hostelIds: z.array(z.string()).optional(),
+});
+
+type StudentHousingTabData = z.infer<typeof studentHousingTabSchema>;
+
+function LinkedHostelsEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Home className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No hostels linked yet — select one above to add it here.
+      </span>
+    </div>
+  );
+}
 
 export function StudentHousingTab({
   payload,
@@ -21,8 +44,20 @@ export function StudentHousingTab({
   onChange: (updates: any) => void;
   hostels: any[];
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
+  const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+
+  const { register, watch, setValue } = useForm<StudentHousingTabData>({
+    resolver: zodResolver(studentHousingTabSchema as any),
+    values: payload,
+  });
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
+
+  const linkedIds: string[] = watch("hostelIds") || [];
 
   return (
     <div className="space-y-6">
@@ -30,12 +65,7 @@ export function StudentHousingTab({
         <Label>Hostel & Housing Summary</Label>
         <Textarea
           placeholder="Describe AC/Non-AC hostel rooms, food facilities..."
-          value={getActiveTabPayload().summary || ""}
-          onChange={(e) =>
-            updateActiveTabPayload({
-              summary: e.target.value,
-            })
-          }
+          {...register("summary")}
         />
       </div>
 
@@ -56,8 +86,6 @@ export function StudentHousingTab({
           ) : (
             <div className="space-y-2">
               {hostels.map((hostel) => {
-                const linkedIds: string[] =
-                  getActiveTabPayload().hostelIds || [];
                 const isLinked = linkedIds.includes(hostel.id);
                 return (
                   <label
@@ -72,9 +100,7 @@ export function StudentHousingTab({
                         const next = isLinked
                           ? linkedIds.filter((id) => id !== hostel.id)
                           : [...linkedIds, hostel.id];
-                        updateActiveTabPayload({
-                          hostelIds: next,
-                        });
+                        setValue("hostelIds", next, { shouldDirty: true });
                       }}
                     />
                     <div className="flex-1">
@@ -99,51 +125,57 @@ export function StudentHousingTab({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {(getActiveTabPayload().hostelIds || []).length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No hostels linked yet.
-            </p>
+          {linkedIds.length === 0 ? (
+            <LinkedHostelsEmptyState />
           ) : (
             <div className="space-y-2">
-              {(getActiveTabPayload().hostelIds || []).map(
-                (hostelId: string) => {
-                  const hostel = hostels.find((h) => h.id === hostelId);
-                  if (!hostel) return null;
-                  return (
-                    <div
-                      key={hostelId}
-                      className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold">{hostel.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {hostel.hostelType} &middot; {hostel.totalBeds} beds
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const linkedIds: string[] =
-                            getActiveTabPayload().hostelIds || [];
-                          updateActiveTabPayload({
-                            hostelIds: linkedIds.filter(
-                              (id) => id !== hostelId,
-                            ),
-                          });
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+              {linkedIds.map((hostelId: string) => {
+                const hostel = hostels.find((h) => h.id === hostelId);
+                if (!hostel) return null;
+                return (
+                  <div
+                    key={hostelId}
+                    className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{hostel.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {hostel.hostelType} &middot; {hostel.totalBeds} beds
+                      </p>
                     </div>
-                  );
-                },
-              )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setUnlinkTarget(hostelId)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={unlinkTarget !== null}
+        title="Unlink Hostel"
+        description="Remove this hostel from the course? This cannot be undone."
+        confirmLabel="Unlink"
+        variant="destructive"
+        onCancel={() => setUnlinkTarget(null)}
+        onConfirm={() => {
+          if (!unlinkTarget) return;
+          setValue(
+            "hostelIds",
+            linkedIds.filter((id) => id !== unlinkTarget),
+            { shouldDirty: true },
+          );
+          setUnlinkTarget(null);
+        }}
+      />
     </div>
   );
 }

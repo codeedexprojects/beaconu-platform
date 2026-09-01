@@ -1,6 +1,10 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Trash2, Library } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,6 +13,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const libraryAssetsTabSchema = z.object({
+  libraryIds: z.array(z.string()).optional(),
+});
+
+type LibraryAssetsTabData = z.infer<typeof libraryAssetsTabSchema>;
+
+function LinkedLibrariesEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Library className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No libraries linked yet — select one above to add it here.
+      </span>
+    </div>
+  );
+}
 
 export function LibraryAssetsTab({
   payload,
@@ -19,8 +41,20 @@ export function LibraryAssetsTab({
   onChange: (updates: any) => void;
   libraries: any[];
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
+  const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+
+  const { watch, setValue } = useForm<LibraryAssetsTabData>({
+    resolver: zodResolver(libraryAssetsTabSchema as any),
+    values: payload,
+  });
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
+
+  const linkedIds: string[] = watch("libraryIds") || [];
 
   return (
     <div className="space-y-6">
@@ -41,8 +75,6 @@ export function LibraryAssetsTab({
           ) : (
             <div className="space-y-2">
               {libraries.map((library) => {
-                const linkedIds: string[] =
-                  getActiveTabPayload().libraryIds || [];
                 const isLinked = linkedIds.includes(library.id);
                 return (
                   <label
@@ -57,9 +89,7 @@ export function LibraryAssetsTab({
                         const next = isLinked
                           ? linkedIds.filter((id) => id !== library.id)
                           : [...linkedIds, library.id];
-                        updateActiveTabPayload({
-                          libraryIds: next,
-                        });
+                        setValue("libraryIds", next, { shouldDirty: true });
                       }}
                     />
                     <div className="flex-1">
@@ -86,54 +116,59 @@ export function LibraryAssetsTab({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {(getActiveTabPayload().libraryIds || []).length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No libraries linked yet.
-            </p>
+          {linkedIds.length === 0 ? (
+            <LinkedLibrariesEmptyState />
           ) : (
             <div className="space-y-2">
-              {(getActiveTabPayload().libraryIds || []).map(
-                (libraryId: string) => {
-                  const library = libraries.find((l) => l.id === libraryId);
-                  if (!library) return null;
-                  return (
-                    <div
-                      key={libraryId}
-                      className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold">{library.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {library.type === "central"
-                            ? "Central Library"
-                            : (library.department?.name ??
-                              "Department Library")}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const linkedIds: string[] =
-                            getActiveTabPayload().libraryIds || [];
-                          updateActiveTabPayload({
-                            libraryIds: linkedIds.filter(
-                              (id) => id !== libraryId,
-                            ),
-                          });
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+              {linkedIds.map((libraryId: string) => {
+                const library = libraries.find((l) => l.id === libraryId);
+                if (!library) return null;
+                return (
+                  <div
+                    key={libraryId}
+                    className="flex items-center justify-between border p-3 rounded-lg bg-muted/5"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{library.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {library.type === "central"
+                          ? "Central Library"
+                          : (library.department?.name ?? "Department Library")}
+                      </p>
                     </div>
-                  );
-                },
-              )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setUnlinkTarget(libraryId)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={unlinkTarget !== null}
+        title="Unlink Library"
+        description="Remove this library from the course? This cannot be undone."
+        confirmLabel="Unlink"
+        variant="destructive"
+        onCancel={() => setUnlinkTarget(null)}
+        onConfirm={() => {
+          if (!unlinkTarget) return;
+          setValue(
+            "libraryIds",
+            linkedIds.filter((id) => id !== unlinkTarget),
+            { shouldDirty: true },
+          );
+          setUnlinkTarget(null);
+        }}
+      />
     </div>
   );
 }

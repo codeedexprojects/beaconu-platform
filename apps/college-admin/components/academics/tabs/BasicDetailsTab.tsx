@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { usePublicCourses } from "@/hooks/use-public-courses";
 import type { PublicCourseMaster } from "@/lib/services/public-courses.service";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export const courseSchema = z.object({
   name: z.string().min(2, "Course name is required"),
@@ -434,27 +435,13 @@ export function BasicDetailsTab({
               <Label className="font-semibold text-foreground">
                 Course Photo
               </Label>
-              {watchedCoverImageUrl ? (
-                <div className="relative h-40 w-full max-w-sm overflow-hidden rounded-lg border bg-muted">
-                  <img
-                    src={watchedCoverImageUrl}
-                    alt="Course cover preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ) : null}
-              <Input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={uploadingField === "coverImageUrl"}
-                onChange={(e) =>
-                  onFieldUpload(
-                    e.target.files?.[0] ?? null,
-                    "coverImageUrl",
-                    "cover",
-                    (url) => setValue("coverImageUrl", url),
-                  )
+              <ImageUpload
+                value={watchedCoverImageUrl || ""}
+                onChange={(url) =>
+                  setValue("coverImageUrl", url, { shouldDirty: true })
                 }
+                context="courses/cover"
+                className="max-w-sm"
               />
               <p className="text-xs text-muted-foreground">
                 Shown on course cards on your public landing page.

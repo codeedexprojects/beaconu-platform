@@ -1,6 +1,10 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Plus, Trash2, Award } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,7 +15,38 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { createTabListHelpers } from "@/components/academics/shared/tabListHelpers";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const accreditationItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  year: z.string().optional(),
+  description: z.string().optional(),
+});
+
+const accreditationsTabSchema = z.object({
+  items: z.array(accreditationItemSchema).optional(),
+});
+
+type AccreditationsTabData = z.infer<typeof accreditationsTabSchema>;
+
+// Blocks the "Add" button while the last item's required field is empty.
+function isLastItemIncomplete(items: any[], ...fields: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  const last = items[items.length - 1];
+  return fields.some((f) => !String(last?.[f] ?? "").trim());
+}
+
+function AccreditationsEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Award className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No accreditations yet — click below to add your first one.
+      </span>
+    </div>
+  );
+}
 
 export function AccreditationsTab({
   payload,
@@ -20,10 +55,30 @@ export function AccreditationsTab({
   payload: any;
   onChange: (updates: any) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const { getTabList, addTabListItem, removeTabListItem, updateTabListItem } =
-    createTabListHelpers(getActiveTabPayload, updateActiveTabPayload);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<AccreditationsTabData>({
+    resolver: zodResolver(accreditationsTabSchema as any),
+    values: payload,
+  });
+
+  const itemsArray = useFieldArray({
+    control: control as any,
+    name: "items",
+  });
+
+  const watchedItems = watch("items") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
@@ -42,68 +97,55 @@ export function AccreditationsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedItems, "name")}
             onClick={() =>
-              addTabListItem("items", {
-                name: "",
-                year: "",
-                description: "",
-              })
+              itemsArray.append({ name: "", year: "", description: "" })
             }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Accreditation
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {getTabList("items").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No accreditations added yet.
-            </p>
+          {itemsArray.fields.length === 0 ? (
+            <AccreditationsEmptyState />
           ) : (
             <div className="space-y-3">
-              {getTabList("items").map((item, idx) => (
+              {itemsArray.fields.map((field, idx) => (
                 <div
-                  key={idx}
+                  key={field.id}
                   className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
                 >
                   <div className="flex-1 space-y-2">
                     <div className="flex gap-2">
-                      <Input
-                        className="flex-1"
-                        placeholder="Name (e.g. NAAC A++)"
-                        value={item.name || ""}
-                        onChange={(e) =>
-                          updateTabListItem("items", idx, {
-                            name: e.target.value,
-                          })
-                        }
-                      />
+                      <div className="flex-1 space-y-1">
+                        <Input
+                          className="flex-1"
+                          placeholder="Name (e.g. NAAC A++)"
+                          {...register(`items.${idx}.name`)}
+                        />
+                        {errors.items?.[idx]?.name && (
+                          <p className="text-xs text-destructive">
+                            {errors.items[idx]?.name?.message}
+                          </p>
+                        )}
+                      </div>
                       <Input
                         className="w-32"
                         placeholder="Year (e.g. 2023)"
-                        value={item.year || ""}
-                        onChange={(e) =>
-                          updateTabListItem("items", idx, {
-                            year: e.target.value,
-                          })
-                        }
+                        {...register(`items.${idx}.year`)}
                       />
                     </div>
                     <Textarea
                       rows={2}
                       placeholder="Description (optional)"
-                      value={item.description || ""}
-                      onChange={(e) =>
-                        updateTabListItem("items", idx, {
-                          description: e.target.value,
-                        })
-                      }
+                      {...register(`items.${idx}.description`)}
                     />
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeTabListItem("items", idx)}
+                    onClick={() => setDeleteIndex(idx)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -113,6 +155,20 @@ export function AccreditationsTab({
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteIndex !== null}
+        title="Remove Accreditation"
+        description="Remove this accreditation? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex === null) return;
+          itemsArray.remove(deleteIndex);
+          setDeleteIndex(null);
+        }}
+      />
     </div>
   );
 }

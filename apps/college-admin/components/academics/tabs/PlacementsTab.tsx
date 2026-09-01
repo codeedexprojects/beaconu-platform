@@ -1,6 +1,10 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Plus, Trash2, ListChecks } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,7 +23,139 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createTabListHelpers } from "@/components/academics/shared/tabListHelpers";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const summaryStatSchema = z.object({
+  label: z.string().min(1, "Label is required"),
+  value: z.string().optional(),
+  unit: z.string().optional(),
+});
+
+const notableOfferSchema = z.object({
+  id: z.string().optional(),
+  company_name: z.string().min(1, "Company name is required"),
+  company_logo: z.string().optional(),
+  company_initial: z.string().optional(),
+  role: z.string().optional(),
+  package: z.string().optional(),
+  unit: z.string().optional(),
+  package_label: z.string().optional(),
+  badge: z.string().optional(),
+  category: z.string().optional(),
+});
+
+const notableOffersSchema = z.object({
+  title: z.string().optional(),
+  items: z.array(notableOfferSchema).optional(),
+});
+
+const trendDataPointSchema = z.object({
+  year: z.string().min(1, "Year is required"),
+  avg_package: z.string().optional(),
+  highlighted: z.boolean().optional(),
+});
+
+const placementTrendsSchema = z.object({
+  title: z.string().optional(),
+  duration_filter: z.string().optional(),
+  footer: z
+    .object({
+      label: z.string().optional(),
+      value: z.string().optional(),
+    })
+    .optional(),
+  data_points: z.array(trendDataPointSchema).optional(),
+});
+
+const companyStatRowSchema = z.object({
+  company_name: z.string().min(1, "Company name is required"),
+  company_initial: z.string().optional(),
+  company_logo: z.string().optional(),
+  avg_package: z.string().optional(),
+  max_package: z.string().optional(),
+  students_placed: z.string().optional(),
+  progress_percentage: z.string().optional(),
+});
+
+const allCompanyStatisticsSchema = z.object({
+  title: z.string().optional(),
+  rows: z.array(companyStatRowSchema).optional(),
+});
+
+const industryRowSchema = z.object({
+  industry: z.string().min(1, "Industry is required"),
+  subtitle: z.string().optional(),
+  avg_package: z.string().optional(),
+  max_package: z.string().optional(),
+  students_placed: z.string().optional(),
+  progress_percentage: z.string().optional(),
+});
+
+const industrySalaryReportSchema = z.object({
+  title: z.string().optional(),
+  rows: z.array(industryRowSchema).optional(),
+});
+
+const successStorySchema = z.object({
+  student_name: z.string().min(1, "Student name is required"),
+  student_avatar: z.string().optional(),
+  placed_at: z.string().optional(),
+  quote: z.string().optional(),
+  type: z.enum(["youtube", "mp4"]).optional(),
+  thumbnail: z.string().optional(),
+  video_url: z.string().optional(),
+});
+
+const studentSuccessSchema = z.object({
+  title: z.string().optional(),
+  items: z.array(successStorySchema).optional(),
+});
+
+const downloadReportSchema = z.object({
+  url: z.string().optional(),
+  label: z.string().optional(),
+});
+
+const placementsTabSchema = z.object({
+  title: z.string().optional(),
+  enabled: z.boolean().optional(),
+  summary_stats: z.array(summaryStatSchema).optional(),
+  notable_offers: notableOffersSchema.optional(),
+  placement_trends: placementTrendsSchema.optional(),
+  all_company_statistics: allCompanyStatisticsSchema.optional(),
+  industry_salary_report: industrySalaryReportSchema.optional(),
+  student_success: studentSuccessSchema.optional(),
+  download_report: downloadReportSchema.optional(),
+});
+
+type PlacementsTabData = z.infer<typeof placementsTabSchema>;
+
+// Blocks the "Add" button while the last item's required field is empty.
+function isLastItemIncomplete(items: any[], ...fields: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  const last = items[items.length - 1];
+  return fields.some((f) => !String(last?.[f] ?? "").trim());
+}
+
+function PlacementsEmptyState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <ListChecks className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No {label} yet — click above to add your first one.
+      </span>
+    </div>
+  );
+}
+
+type DeleteArray =
+  | "summary_stats"
+  | "notable_offers"
+  | "trend_points"
+  | "company_stats"
+  | "industry_rows"
+  | "success_stories";
 
 export function PlacementsTab({
   payload,
@@ -37,38 +173,74 @@ export function PlacementsTab({
     onSuccess: (url: string) => void,
   ) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const handleCourseFieldUpload = onFieldUpload;
-  const { getTabList, addTabListItem, removeTabListItem, updateTabListItem } =
-    createTabListHelpers(getActiveTabPayload, updateActiveTabPayload);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    array: DeleteArray;
+    index: number;
+  } | null>(null);
+
+  const {
+    register,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<PlacementsTabData>({
+    resolver: zodResolver(placementsTabSchema as any),
+    values: payload,
+  });
+
+  const summaryStatsArray = useFieldArray({
+    control: control as any,
+    name: "summary_stats",
+  });
+  const notableOffersArray = useFieldArray({
+    control: control as any,
+    name: "notable_offers.items",
+  });
+  const trendPointsArray = useFieldArray({
+    control: control as any,
+    name: "placement_trends.data_points",
+  });
+  const companyStatsArray = useFieldArray({
+    control: control as any,
+    name: "all_company_statistics.rows",
+  });
+  const industryRowsArray = useFieldArray({
+    control: control as any,
+    name: "industry_salary_report.rows",
+  });
+  const successStoriesArray = useFieldArray({
+    control: control as any,
+    name: "student_success.items",
+  });
+
+  const watchedSummaryStats = watch("summary_stats") || [];
+  const watchedNotableOffers = watch("notable_offers.items") || [];
+  const watchedTrendPoints = watch("placement_trends.data_points") || [];
+  const watchedCompanyStats = watch("all_company_statistics.rows") || [];
+  const watchedIndustryRows = watch("industry_salary_report.rows") || [];
+  const watchedSuccessStories = watch("student_success.items") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1">
           <Label>Section Title</Label>
-          <Input
-            placeholder="e.g. Placements"
-            value={getActiveTabPayload().title || ""}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                title: e.target.value,
-              })
-            }
-          />
+          <Input placeholder="e.g. Placements" {...register("title")} />
         </div>
         <div className="flex items-center gap-3 pt-5">
           <Label className="text-xs">Enabled</Label>
           <input
             type="checkbox"
             className="h-4 w-4 accent-primary"
-            checked={getActiveTabPayload().enabled ?? true}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                enabled: e.target.checked,
-              })
-            }
+            checked={watch("enabled") ?? true}
+            onChange={(e) => setValue("enabled", e.target.checked)}
           />
         </div>
       </div>
@@ -86,27 +258,22 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedSummaryStats, "label")}
             onClick={() =>
-              addTabListItem("summary_stats", {
-                label: "",
-                value: "",
-                unit: "",
-              })
+              summaryStatsArray.append({ label: "", value: "", unit: "" })
             }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Stat
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {getTabList("summary_stats").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No stats added yet.
-            </p>
+          {summaryStatsArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="stats" />
           ) : (
             <div className="space-y-3">
-              {getTabList("summary_stats").map((item, idx) => (
+              {summaryStatsArray.fields.map((field, idx) => (
                 <div
-                  key={idx}
+                  key={field.id}
                   className="border rounded-lg p-3 space-y-2 bg-muted/5"
                 >
                   <div className="grid gap-2 md:grid-cols-3">
@@ -114,36 +281,26 @@ export function PlacementsTab({
                       <Label className="text-xs">Label</Label>
                       <Input
                         placeholder="e.g. Average Package"
-                        value={item.label || ""}
-                        onChange={(e) =>
-                          updateTabListItem("summary_stats", idx, {
-                            label: e.target.value,
-                          })
-                        }
+                        {...register(`summary_stats.${idx}.label`)}
                       />
+                      {errors.summary_stats?.[idx]?.label && (
+                        <p className="text-xs text-destructive">
+                          {errors.summary_stats[idx]?.label?.message}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Value</Label>
                       <Input
                         placeholder="e.g. 4.2"
-                        value={item.value || ""}
-                        onChange={(e) =>
-                          updateTabListItem("summary_stats", idx, {
-                            value: e.target.value,
-                          })
-                        }
+                        {...register(`summary_stats.${idx}.value`)}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Unit</Label>
                       <Input
                         placeholder="e.g. LPA"
-                        value={item.unit || ""}
-                        onChange={(e) =>
-                          updateTabListItem("summary_stats", idx, {
-                            unit: e.target.value,
-                          })
-                        }
+                        {...register(`summary_stats.${idx}.unit`)}
                       />
                     </div>
                     <div className="flex items-end">
@@ -151,7 +308,12 @@ export function PlacementsTab({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeTabListItem("summary_stats", idx)}
+                        onClick={() =>
+                          setDeleteTarget({
+                            array: "summary_stats",
+                            index: idx,
+                          })
+                        }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -176,8 +338,12 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(
+              watchedNotableOffers,
+              "company_name",
+            )}
             onClick={() =>
-              addTabListItem("notable_offers.items", {
+              notableOffersArray.append({
                 id: `offer_${Date.now()}`,
                 company_name: "",
                 company_logo: "",
@@ -199,26 +365,16 @@ export function PlacementsTab({
             <Label className="text-xs">Section Title</Label>
             <Input
               placeholder="e.g. Notable Offers"
-              value={(getActiveTabPayload().notable_offers as any)?.title || ""}
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  notable_offers: {
-                    ...((getActiveTabPayload().notable_offers as any) || {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("notable_offers.title")}
             />
           </div>
-          {getTabList("notable_offers.items").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No offers added yet.
-            </p>
+          {notableOffersArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="offers" />
           ) : (
             <div className="space-y-3">
-              {getTabList("notable_offers.items").map((item, idx) => (
+              {notableOffersArray.fields.map((field, idx) => (
                 <div
-                  key={idx}
+                  key={field.id}
                   className="border rounded-lg p-3 space-y-2 bg-muted/5"
                 >
                   <div className="grid gap-2 md:grid-cols-3">
@@ -226,117 +382,86 @@ export function PlacementsTab({
                       <Label className="text-xs">Company Name</Label>
                       <Input
                         placeholder="e.g. Deloitte"
-                        value={item.company_name || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            company_name: e.target.value,
-                          })
-                        }
+                        {...register(
+                          `notable_offers.items.${idx}.company_name`,
+                        )}
                       />
+                      {errors.notable_offers?.items?.[idx]?.company_name && (
+                        <p className="text-xs text-destructive">
+                          {
+                            errors.notable_offers.items[idx]?.company_name
+                              ?.message
+                          }
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Company Initial</Label>
                       <Input
                         placeholder="e.g. D"
-                        value={item.company_initial || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            company_initial: e.target.value,
-                          })
-                        }
+                        {...register(
+                          `notable_offers.items.${idx}.company_initial`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1 md:col-span-2">
                       <Label className="text-xs">Company Logo</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                          disabled={uploadingField === `notable_offers_${idx}`}
-                          onChange={(e) =>
-                            handleCourseFieldUpload(
-                              e.target.files?.[0] ?? null,
-                              `notable_offers_${idx}`,
-                              `placements/notable_offers_${idx}`,
-                              (url) =>
-                                updateTabListItem("notable_offers.items", idx, {
-                                  company_logo: url,
-                                }),
-                            )
-                          }
-                        />
-                      </div>
+                      <ImageUpload
+                        value={
+                          watch(`notable_offers.items.${idx}.company_logo`) ||
+                          ""
+                        }
+                        onChange={(url) =>
+                          setValue(
+                            `notable_offers.items.${idx}.company_logo`,
+                            url,
+                          )
+                        }
+                        context={`placements/notable_offers_${idx}`}
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Role</Label>
                       <Input
                         placeholder="e.g. Senior Analyst Role"
-                        value={item.role || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            role: e.target.value,
-                          })
-                        }
+                        {...register(`notable_offers.items.${idx}.role`)}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Category</Label>
                       <Input
                         placeholder="e.g. Consulting"
-                        value={item.category || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            category: e.target.value,
-                          })
-                        }
+                        {...register(`notable_offers.items.${idx}.category`)}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Package</Label>
                       <Input
                         placeholder="e.g. 14.5"
-                        value={item.package || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            package: e.target.value,
-                          })
-                        }
+                        {...register(`notable_offers.items.${idx}.package`)}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Unit</Label>
                       <Input
                         placeholder="e.g. LPA"
-                        value={item.unit || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            unit: e.target.value,
-                          })
-                        }
+                        {...register(`notable_offers.items.${idx}.unit`)}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Package Label</Label>
                       <Input
                         placeholder="e.g. Package Offered"
-                        value={item.package_label || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            package_label: e.target.value,
-                          })
-                        }
+                        {...register(
+                          `notable_offers.items.${idx}.package_label`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Badge</Label>
                       <Input
                         placeholder="e.g. HIGHEST"
-                        value={item.badge || ""}
-                        onChange={(e) =>
-                          updateTabListItem("notable_offers.items", idx, {
-                            badge: e.target.value,
-                          })
-                        }
+                        {...register(`notable_offers.items.${idx}.badge`)}
                       />
                     </div>
 
@@ -346,7 +471,10 @@ export function PlacementsTab({
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          removeTabListItem("notable_offers.items", idx)
+                          setDeleteTarget({
+                            array: "notable_offers",
+                            index: idx,
+                          })
                         }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -375,8 +503,9 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedTrendPoints, "year")}
             onClick={() =>
-              addTabListItem("placement_trends.data_points", {
+              trendPointsArray.append({
                 year: "",
                 avg_package: "",
                 highlighted: false,
@@ -392,37 +521,14 @@ export function PlacementsTab({
               <Label className="text-xs">Section Title</Label>
               <Input
                 placeholder="e.g. Placement Trends"
-                value={
-                  (getActiveTabPayload().placement_trends as any)?.title || ""
-                }
-                onChange={(e) =>
-                  updateActiveTabPayload({
-                    placement_trends: {
-                      ...((getActiveTabPayload().placement_trends as any) ||
-                        {}),
-                      title: e.target.value,
-                    },
-                  })
-                }
+                {...register("placement_trends.title")}
               />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Duration</Label>
               <Input
                 placeholder="e.g. Last 5 Years"
-                value={
-                  (getActiveTabPayload().placement_trends as any)
-                    ?.duration_filter || ""
-                }
-                onChange={(e) =>
-                  updateActiveTabPayload({
-                    placement_trends: {
-                      ...((getActiveTabPayload().placement_trends as any) ||
-                        {}),
-                      duration_filter: e.target.value,
-                    },
-                  })
-                }
+                {...register("placement_trends.duration_filter")}
               />
             </div>
           </div>
@@ -433,103 +539,73 @@ export function PlacementsTab({
                 <Label className="text-xs">Footer Label</Label>
                 <Input
                   placeholder="e.g. Avg Package Growth"
-                  value={
-                    (getActiveTabPayload().placement_trends as any)?.footer
-                      ?.label || ""
-                  }
-                  onChange={(e) =>
-                    updateActiveTabPayload({
-                      placement_trends: {
-                        ...((getActiveTabPayload().placement_trends as any) ||
-                          {}),
-                        footer: {
-                          ...((getActiveTabPayload().placement_trends as any)
-                            ?.footer || {}),
-                          label: e.target.value,
-                        },
-                      },
-                    })
-                  }
+                  {...register("placement_trends.footer.label")}
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Footer Value</Label>
                 <Input
                   placeholder="e.g. +12.5% YoY"
-                  value={
-                    (getActiveTabPayload().placement_trends as any)?.footer
-                      ?.value || ""
-                  }
-                  onChange={(e) =>
-                    updateActiveTabPayload({
-                      placement_trends: {
-                        ...((getActiveTabPayload().placement_trends as any) ||
-                          {}),
-                        footer: {
-                          ...((getActiveTabPayload().placement_trends as any)
-                            ?.footer || {}),
-                          value: e.target.value,
-                        },
-                      },
-                    })
-                  }
+                  {...register("placement_trends.footer.value")}
                 />
               </div>
             </div>
           </div>
-          {getTabList("placement_trends.data_points").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No trend points added yet.
-            </p>
+          {trendPointsArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="trend points" />
           ) : (
             <div className="space-y-2">
-              {getTabList("placement_trends.data_points").map((item, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <Input
-                    className="w-28"
-                    placeholder="Year (e.g. 2023)"
-                    value={item.year || ""}
-                    onChange={(e) =>
-                      updateTabListItem("placement_trends.data_points", idx, {
-                        year: e.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    className="flex-1"
-                    placeholder="Avg Package (e.g. 4.2)"
-                    value={item.avg_package ?? ""}
-                    onChange={(e) =>
-                      updateTabListItem("placement_trends.data_points", idx, {
-                        avg_package: e.target.value,
-                      })
-                    }
-                  />
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs whitespace-nowrap">
-                      Highlighted
-                    </Label>
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-primary"
-                      checked={item.highlighted ?? false}
-                      onChange={(e) =>
-                        updateTabListItem("placement_trends.data_points", idx, {
-                          highlighted: e.target.checked,
-                        })
-                      }
+              {trendPointsArray.fields.map((field, idx) => (
+                <div key={field.id} className="space-y-1">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      className="w-28"
+                      placeholder="Year (e.g. 2023)"
+                      {...register(`placement_trends.data_points.${idx}.year`)}
                     />
+                    <Input
+                      className="flex-1"
+                      placeholder="Avg Package (e.g. 4.2)"
+                      {...register(
+                        `placement_trends.data_points.${idx}.avg_package`,
+                      )}
+                    />
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs whitespace-nowrap">
+                        Highlighted
+                      </Label>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-primary"
+                        checked={
+                          watch(
+                            `placement_trends.data_points.${idx}.highlighted`,
+                          ) ?? false
+                        }
+                        onChange={(e) =>
+                          setValue(
+                            `placement_trends.data_points.${idx}.highlighted`,
+                            e.target.checked,
+                          )
+                        }
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setDeleteTarget({ array: "trend_points", index: idx })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      removeTabListItem("placement_trends.data_points", idx)
-                    }
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {errors.placement_trends?.data_points?.[idx]?.year && (
+                    <p className="text-xs text-destructive">
+                      {errors.placement_trends.data_points[idx]?.year?.message}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -552,8 +628,9 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedCompanyStats, "company_name")}
             onClick={() =>
-              addTabListItem("all_company_statistics.rows", {
+              companyStatsArray.append({
                 company_name: "",
                 company_initial: "",
                 company_logo: "",
@@ -572,30 +649,16 @@ export function PlacementsTab({
             <Label className="text-xs">Section Title</Label>
             <Input
               placeholder="e.g. All Company Statistics"
-              value={
-                (getActiveTabPayload().all_company_statistics as any)?.title ||
-                ""
-              }
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  all_company_statistics: {
-                    ...((getActiveTabPayload().all_company_statistics as any) ||
-                      {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("all_company_statistics.title")}
             />
           </div>
-          {getTabList("all_company_statistics.rows").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No company statistics added yet.
-            </p>
+          {companyStatsArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="company statistics" />
           ) : (
             <div className="space-y-3">
-              {getTabList("all_company_statistics.rows").map((item, idx) => (
+              {companyStatsArray.fields.map((field, idx) => (
                 <div
-                  key={idx}
+                  key={field.id}
                   className="border rounded-lg p-3 space-y-2 bg-muted/5"
                 >
                   <div className="grid gap-2 md:grid-cols-3">
@@ -603,85 +666,62 @@ export function PlacementsTab({
                       <Label className="text-xs">Company Name</Label>
                       <Input
                         placeholder="e.g. Deloitte"
-                        value={item.company_name || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            {
-                              company_name: e.target.value,
-                            },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.company_name`,
+                        )}
                       />
+                      {errors.all_company_statistics?.rows?.[idx]
+                        ?.company_name && (
+                        <p className="text-xs text-destructive">
+                          {
+                            errors.all_company_statistics.rows[idx]
+                              ?.company_name?.message
+                          }
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Company Initial</Label>
                       <Input
                         placeholder="e.g. D"
-                        value={item.company_initial || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            {
-                              company_initial: e.target.value,
-                            },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.company_initial`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1 md:col-span-2">
                       <Label className="text-xs">Company Logo</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                          disabled={
-                            uploadingField === `all_company_stats_${idx}`
-                          }
-                          onChange={(e) =>
-                            handleCourseFieldUpload(
-                              e.target.files?.[0] ?? null,
-                              `all_company_stats_${idx}`,
-                              `placements/all_company_stats_${idx}`,
-                              (url) =>
-                                updateTabListItem(
-                                  "all_company_statistics.rows",
-                                  idx,
-                                  { company_logo: url },
-                                ),
-                            )
-                          }
-                        />
-                      </div>
+                      <ImageUpload
+                        value={
+                          watch(
+                            `all_company_statistics.rows.${idx}.company_logo`,
+                          ) || ""
+                        }
+                        onChange={(url) =>
+                          setValue(
+                            `all_company_statistics.rows.${idx}.company_logo`,
+                            url,
+                          )
+                        }
+                        context={`placements/all_company_stats_${idx}`}
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Avg Package</Label>
                       <Input
                         placeholder="e.g. 9.2 L"
-                        value={item.avg_package || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            { avg_package: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.avg_package`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Max Package</Label>
                       <Input
                         placeholder="e.g. 14.5 L"
-                        value={item.max_package || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            { max_package: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.max_package`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
@@ -689,18 +729,9 @@ export function PlacementsTab({
                       <Input
                         type="number"
                         placeholder="e.g. 145"
-                        value={item.students_placed ?? ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            {
-                              students_placed: e.target.value
-                                ? e.target.value
-                                : "",
-                            },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.students_placed`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
@@ -708,18 +739,9 @@ export function PlacementsTab({
                       <Input
                         type="number"
                         placeholder="e.g. 70"
-                        value={item.progress_percentage ?? ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "all_company_statistics.rows",
-                            idx,
-                            {
-                              progress_percentage: e.target.value
-                                ? e.target.value
-                                : "",
-                            },
-                          )
-                        }
+                        {...register(
+                          `all_company_statistics.rows.${idx}.progress_percentage`,
+                        )}
                       />
                     </div>
                     <div className="flex items-end">
@@ -728,7 +750,10 @@ export function PlacementsTab({
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          removeTabListItem("all_company_statistics.rows", idx)
+                          setDeleteTarget({
+                            array: "company_stats",
+                            index: idx,
+                          })
                         }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -757,8 +782,9 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedIndustryRows, "industry")}
             onClick={() =>
-              addTabListItem("industry_salary_report.rows", {
+              industryRowsArray.append({
                 industry: "",
                 subtitle: "",
                 avg_package: "",
@@ -776,30 +802,16 @@ export function PlacementsTab({
             <Label className="text-xs">Section Title</Label>
             <Input
               placeholder="e.g. Industry & Salary Report"
-              value={
-                (getActiveTabPayload().industry_salary_report as any)?.title ||
-                ""
-              }
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  industry_salary_report: {
-                    ...((getActiveTabPayload().industry_salary_report as any) ||
-                      {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("industry_salary_report.title")}
             />
           </div>
-          {getTabList("industry_salary_report.rows").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No sectors added yet.
-            </p>
+          {industryRowsArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="sectors" />
           ) : (
             <div className="space-y-3">
-              {getTabList("industry_salary_report.rows").map((item, idx) => (
+              {industryRowsArray.fields.map((field, idx) => (
                 <div
-                  key={idx}
+                  key={field.id}
                   className="border rounded-lg p-3 space-y-2 bg-muted/5"
                 >
                   <div className="grid gap-2 md:grid-cols-3">
@@ -807,56 +819,44 @@ export function PlacementsTab({
                       <Label className="text-xs">Industry</Label>
                       <Input
                         placeholder="e.g. BFSI"
-                        value={item.industry || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            { industry: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.industry`,
+                        )}
                       />
+                      {errors.industry_salary_report?.rows?.[idx]?.industry && (
+                        <p className="text-xs text-destructive">
+                          {
+                            errors.industry_salary_report.rows[idx]?.industry
+                              ?.message
+                          }
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Subtitle</Label>
                       <Input
                         placeholder="e.g. Banking & Finance"
-                        value={item.subtitle || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            { subtitle: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.subtitle`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Avg Package</Label>
                       <Input
                         placeholder="e.g. 8.2 L"
-                        value={item.avg_package || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            { avg_package: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.avg_package`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Max Package</Label>
                       <Input
                         placeholder="e.g. 12 LPA"
-                        value={item.max_package || ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            { max_package: e.target.value },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.max_package`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
@@ -864,18 +864,9 @@ export function PlacementsTab({
                       <Input
                         type="number"
                         placeholder="e.g. 155"
-                        value={item.students_placed ?? ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            {
-                              students_placed: e.target.value
-                                ? e.target.value
-                                : "",
-                            },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.students_placed`,
+                        )}
                       />
                     </div>
                     <div className="space-y-1">
@@ -883,18 +874,9 @@ export function PlacementsTab({
                       <Input
                         type="number"
                         placeholder="e.g. 65"
-                        value={item.progress_percentage ?? ""}
-                        onChange={(e) =>
-                          updateTabListItem(
-                            "industry_salary_report.rows",
-                            idx,
-                            {
-                              progress_percentage: e.target.value
-                                ? e.target.value
-                                : "",
-                            },
-                          )
-                        }
+                        {...register(
+                          `industry_salary_report.rows.${idx}.progress_percentage`,
+                        )}
                       />
                     </div>
                     <div className="flex items-end">
@@ -903,7 +885,10 @@ export function PlacementsTab({
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          removeTabListItem("industry_salary_report.rows", idx)
+                          setDeleteTarget({
+                            array: "industry_rows",
+                            index: idx,
+                          })
                         }
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -932,8 +917,12 @@ export function PlacementsTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(
+              watchedSuccessStories,
+              "student_name",
+            )}
             onClick={() =>
-              addTabListItem("student_success.items", {
+              successStoriesArray.append({
                 student_name: "",
                 student_avatar: "",
                 placed_at: "",
@@ -952,192 +941,172 @@ export function PlacementsTab({
             <Label className="text-xs">Section Title</Label>
             <Input
               placeholder="e.g. Student Success"
-              value={
-                (getActiveTabPayload().student_success as any)?.title || ""
-              }
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  student_success: {
-                    ...((getActiveTabPayload().student_success as any) || {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("student_success.title")}
             />
           </div>
-          {getTabList("student_success.items").length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">
-              No success stories added yet.
-            </p>
+          {successStoriesArray.fields.length === 0 ? (
+            <PlacementsEmptyState label="success stories" />
           ) : (
             <div className="space-y-3">
-              {getTabList("student_success.items").map((item, idx) => (
-                <div
-                  key={idx}
-                  className="border rounded-lg p-3 space-y-2 bg-muted/5"
-                >
-                  <div className="grid gap-2 md:grid-cols-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Student Name</Label>
-                      <Input
-                        placeholder="e.g. Rohan Mehta"
-                        value={item.student_name || ""}
-                        onChange={(e) =>
-                          updateTabListItem("student_success.items", idx, {
-                            student_name: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Placed At</Label>
-                      <Input
-                        placeholder="e.g. Deloitte"
-                        value={item.placed_at || ""}
-                        onChange={(e) =>
-                          updateTabListItem("student_success.items", idx, {
-                            placed_at: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Type</Label>
-                      <Select
-                        value={item.type || "youtube"}
-                        onValueChange={(val) =>
-                          updateTabListItem("student_success.items", idx, {
-                            type: val,
-                            video_url: "",
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-10 text-xs">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="youtube">YouTube</SelectItem>
-                          <SelectItem value="mp4">MP4 Video</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1 md:col-span-3">
-                      <Label className="text-xs">Quote</Label>
-                      <Textarea
-                        placeholder="e.g. The placement support helped me secure a role at a top firm."
-                        value={item.quote || ""}
-                        onChange={(e) =>
-                          updateTabListItem("student_success.items", idx, {
-                            quote: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">Student Avatar</Label>
-                      <div className="flex gap-2">
+              {successStoriesArray.fields.map((field, idx) => {
+                const storyType =
+                  watch(`student_success.items.${idx}.type`) || "youtube";
+                return (
+                  <div
+                    key={field.id}
+                    className="border rounded-lg p-3 space-y-2 bg-muted/5"
+                  >
+                    <div className="grid gap-2 md:grid-cols-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Student Name</Label>
                         <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          disabled={uploadingField === `student_avatar_${idx}`}
-                          onChange={(e) =>
-                            handleCourseFieldUpload(
-                              e.target.files?.[0] ?? null,
-                              `student_avatar_${idx}`,
-                              `placements/student_avatar_${idx}`,
-                              (url) =>
-                                updateTabListItem(
-                                  "student_success.items",
-                                  idx,
-                                  { student_avatar: url },
-                                ),
-                            )
-                          }
+                          placeholder="e.g. Rohan Mehta"
+                          {...register(
+                            `student_success.items.${idx}.student_name`,
+                          )}
                         />
-                      </div>
-                    </div>
-                    <div className="space-y-1 md:col-span-2">
-                      <Label className="text-xs">Thumbnail</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          disabled={
-                            uploadingField === `student_thumbnail_${idx}`
-                          }
-                          onChange={(e) =>
-                            handleCourseFieldUpload(
-                              e.target.files?.[0] ?? null,
-                              `student_thumbnail_${idx}`,
-                              `placements/student_thumbnail_${idx}`,
-                              (url) =>
-                                updateTabListItem(
-                                  "student_success.items",
-                                  idx,
-                                  { thumbnail: url },
-                                ),
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1 md:col-span-2">
-                      {!item.type || item.type === "youtube" ? (
-                        <>
-                          <Label className="text-xs">YouTube Video URL</Label>
-                          <Input
-                            placeholder="https://www.youtube.com/watch?v=..."
-                            value={item.video_url || ""}
-                            onChange={(e) =>
-                              updateTabListItem("student_success.items", idx, {
-                                video_url: e.target.value,
-                              })
+                        {errors.student_success?.items?.[idx]?.student_name && (
+                          <p className="text-xs text-destructive">
+                            {
+                              errors.student_success.items[idx]?.student_name
+                                ?.message
                             }
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <Label className="text-xs">MP4 Video</Label>
-                          <div className="flex gap-2">
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Placed At</Label>
+                        <Input
+                          placeholder="e.g. Deloitte"
+                          {...register(
+                            `student_success.items.${idx}.placed_at`,
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Type</Label>
+                        <Controller
+                          name={`student_success.items.${idx}.type`}
+                          control={control}
+                          render={({ field: typeField }) => (
+                            <Select
+                              value={typeField.value || "youtube"}
+                              onValueChange={(val) => {
+                                typeField.onChange(val);
+                                setValue(
+                                  `student_success.items.${idx}.video_url`,
+                                  "",
+                                );
+                              }}
+                            >
+                              <SelectTrigger className="h-10 text-xs">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="youtube">YouTube</SelectItem>
+                                <SelectItem value="mp4">MP4 Video</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-3">
+                        <Label className="text-xs">Quote</Label>
+                        <Textarea
+                          placeholder="e.g. The placement support helped me secure a role at a top firm."
+                          {...register(`student_success.items.${idx}.quote`)}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Student Avatar</Label>
+                        <ImageUpload
+                          value={
+                            watch(
+                              `student_success.items.${idx}.student_avatar`,
+                            ) || ""
+                          }
+                          onChange={(url) =>
+                            setValue(
+                              `student_success.items.${idx}.student_avatar`,
+                              url,
+                            )
+                          }
+                          context={`placements/student_avatar_${idx}`}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <Label className="text-xs">Thumbnail</Label>
+                        <ImageUpload
+                          value={
+                            watch(`student_success.items.${idx}.thumbnail`) ||
+                            ""
+                          }
+                          onChange={(url) =>
+                            setValue(
+                              `student_success.items.${idx}.thumbnail`,
+                              url,
+                            )
+                          }
+                          context={`placements/student_thumbnail_${idx}`}
+                        />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        {storyType === "youtube" ? (
+                          <>
+                            <Label className="text-xs">YouTube Video URL</Label>
                             <Input
-                              type="file"
-                              accept="video/mp4"
-                              disabled={
-                                uploadingField === `student_video_${idx}`
-                              }
-                              onChange={(e) =>
-                                handleCourseFieldUpload(
-                                  e.target.files?.[0] ?? null,
-                                  `student_video_${idx}`,
-                                  `placements/student_video_${idx}`,
-                                  (url) =>
-                                    updateTabListItem(
-                                      "student_success.items",
-                                      idx,
-                                      { video_url: url },
-                                    ),
-                                )
-                              }
+                              placeholder="https://www.youtube.com/watch?v=..."
+                              {...register(
+                                `student_success.items.${idx}.video_url`,
+                              )}
                             />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          removeTabListItem("student_success.items", idx)
-                        }
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Label className="text-xs">MP4 Video</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="file"
+                                accept="video/mp4"
+                                disabled={
+                                  uploadingField === `student_video_${idx}`
+                                }
+                                onChange={(e) =>
+                                  onFieldUpload(
+                                    e.target.files?.[0] ?? null,
+                                    `student_video_${idx}`,
+                                    `placements/student_video_${idx}`,
+                                    (url) =>
+                                      setValue(
+                                        `student_success.items.${idx}.video_url`,
+                                        url,
+                                      ),
+                                  )
+                                }
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            setDeleteTarget({
+                              array: "success_stories",
+                              index: idx,
+                            })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -1160,18 +1129,11 @@ export function PlacementsTab({
                 accept="application/pdf,image/jpeg,image/png,image/webp"
                 disabled={uploadingField === "download_report_url"}
                 onChange={(e) =>
-                  handleCourseFieldUpload(
+                  onFieldUpload(
                     e.target.files?.[0] ?? null,
                     "download_report_url",
                     "placements/download_report",
-                    (url) =>
-                      updateActiveTabPayload({
-                        download_report: {
-                          ...((getActiveTabPayload().download_report as any) ||
-                            {}),
-                          url,
-                        },
-                      }),
+                    (url) => setValue("download_report.url", url),
                   )
                 }
               />
@@ -1181,21 +1143,32 @@ export function PlacementsTab({
             <Label className="text-xs">Button Label</Label>
             <Input
               placeholder="e.g. Download Full Placement Report 2024"
-              value={
-                (getActiveTabPayload().download_report as any)?.label || ""
-              }
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  download_report: {
-                    ...((getActiveTabPayload().download_report as any) || {}),
-                    label: e.target.value,
-                  },
-                })
-              }
+              {...register("download_report.label")}
             />
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Remove Item"
+        description="Remove this item? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          const { array, index } = deleteTarget;
+          if (array === "summary_stats") summaryStatsArray.remove(index);
+          else if (array === "notable_offers") notableOffersArray.remove(index);
+          else if (array === "trend_points") trendPointsArray.remove(index);
+          else if (array === "company_stats") companyStatsArray.remove(index);
+          else if (array === "industry_rows") industryRowsArray.remove(index);
+          else if (array === "success_stories")
+            successStoriesArray.remove(index);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }
