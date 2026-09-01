@@ -8,6 +8,7 @@ const router: Router = Router();
 router.use(authenticate, authorizeUserType("staff_member"));
 const manage = authorize("support.manage");
 
+router.get("/stats", manage, CollegeAdminTicketController.getStats);
 router.get("/", manage, CollegeAdminTicketController.list);
 router.get("/:id", manage, CollegeAdminTicketController.getById);
 router.post("/:id/messages", manage, CollegeAdminTicketController.addMessage);

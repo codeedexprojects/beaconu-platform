@@ -15,6 +15,16 @@ router.get(
   view,
   ApplicationsCollegeAdminController.listPendingEnrollment,
 );
+router.get(
+  "/pending-shortlist",
+  view,
+  ApplicationsCollegeAdminController.listPendingShortlist,
+);
+router.get(
+  "/pending-shortlist/:applicationCourseId",
+  view,
+  ApplicationsCollegeAdminController.getPendingShortlistDetail,
+);
 router.get("/:id", view, ApplicationsCollegeAdminController.getById);
 router.post(
   "/courses/:applicationCourseId/enroll",

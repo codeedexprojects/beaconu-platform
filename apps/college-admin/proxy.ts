@@ -34,6 +34,7 @@ const ACTIVE_CONSOLE_ROUTES = new Set([
   "seat-cancellations",
   "course-switch-requests",
   "pending-enrollment",
+  "pending-shortlist",
   "payments",
   "finance",
   "platform-support",

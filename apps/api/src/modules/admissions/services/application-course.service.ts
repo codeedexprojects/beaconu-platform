@@ -491,4 +491,75 @@ export class ApplicationCourseService {
       studentId,
     );
   }
+
+  static async getPendingShortlistDetail(
+    collegeId: string,
+    applicationCourseId: string,
+  ) {
+    const row =
+      await ApplicationCourseRepository.findPendingShortlistDetailForCollege(
+        applicationCourseId,
+        collegeId,
+      );
+    if (!row) throw new NotFoundError("Application course not found");
+    return {
+      applicationCourseId: row.id,
+      applicationId: row.application.id,
+      applicationNumber: row.application.applicationNumber,
+      studentId: row.application.studentId,
+      studentName: row.application.student.fullName,
+      studentEmail: row.application.student.email,
+      studentPhone: row.application.student.phoneNumber,
+      courseName: row.course.name,
+      courseCode: row.course.code,
+      isPrimary: row.isPrimary,
+      applicationFee: row.applicationFee.toString(),
+      admissionCycleName: row.application.admissionCycle.name,
+      currentStage: row.status,
+      statusUpdatedAt: row.statusUpdatedAt
+        ? row.statusUpdatedAt.toISOString()
+        : null,
+    };
+  }
+
+  /** College-admin "pending shortlisting" queue — every course that has
+   * actually reached its own cycle's requiredStatus (the exact same gate
+   * markShortlisted enforces) and hasn't been shortlisted/rejected yet. */
+  static async listPendingShortlist(
+    collegeId: string,
+    filters: { search?: string } = {},
+  ) {
+    const rows =
+      await ApplicationCourseRepository.findPendingShortlistCandidatesForCollege(
+        collegeId,
+        filters,
+      );
+    return rows
+      .filter((row) => {
+        const cycle = row.application.admissionCycle;
+        const requiredStatus = cycle.interviewRequired
+          ? "interview_completed"
+          : cycle.assessmentRequired
+            ? "assessment_completed"
+            : "submitted";
+        return row.status === requiredStatus;
+      })
+      .map((row) => ({
+        applicationCourseId: row.id,
+        applicationId: row.application.id,
+        applicationNumber: row.application.applicationNumber,
+        studentId: row.application.studentId,
+        studentName: row.application.student.fullName,
+        studentEmail: row.application.student.email,
+        studentPhone: row.application.student.phoneNumber,
+        courseName: row.course.name,
+        courseCode: row.course.code,
+        isPrimary: row.isPrimary,
+        admissionCycleName: row.application.admissionCycle.name,
+        currentStage: row.status,
+        statusUpdatedAt: row.statusUpdatedAt
+          ? row.statusUpdatedAt.toISOString()
+          : null,
+      }));
+  }
 }

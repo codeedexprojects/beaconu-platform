@@ -1142,4 +1142,28 @@ export class ApplicationService {
         })),
       }));
   }
+
+  /** Cross-module read for support/ticket.service.ts's "Applicant Status"
+   * panel — the student's most recent application at this college, with
+   * just enough shape for that summary (id, number, formStatus, primary
+   * course name). Null if the student has no application here at all. */
+  static async getMostRecentForStudentAtCollege(
+    studentId: string,
+    collegeId: string,
+  ) {
+    const row = await ApplicationRepository.findMostRecentForStudentAtCollege(
+      studentId,
+      collegeId,
+    );
+    if (!row) return null;
+    const primary =
+      row.applicationCourses.find((c) => c.isPrimary) ??
+      row.applicationCourses[0];
+    return {
+      applicationId: row.id,
+      applicationNumber: row.applicationNumber,
+      formStatus: row.formStatus,
+      programName: primary?.course.name ?? null,
+    };
+  }
 }

@@ -8,6 +8,8 @@ import {
   enrollApplicationCourse,
   rejectApplicationCourse,
   getPendingEnrollments,
+  getPendingShortlist,
+  getPendingShortlistDetail,
   type ApplicationListFilters,
   type PendingEnrollmentFilters,
 } from "@/lib/services/applications.service";
@@ -73,6 +75,21 @@ export function usePendingEnrollments(filters: PendingEnrollmentFilters = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.pendingEnrollments(filters),
     queryFn: () => getPendingEnrollments(filters),
+  });
+}
+
+export function usePendingShortlist(search?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.pendingShortlist(search),
+    queryFn: () => getPendingShortlist(search),
+  });
+}
+
+export function usePendingShortlistDetail(applicationCourseId: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.pendingShortlistDetail(applicationCourseId),
+    queryFn: () => getPendingShortlistDetail(applicationCourseId),
+    enabled: !!applicationCourseId,
   });
 }
 

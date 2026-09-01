@@ -5,6 +5,8 @@ import type {
   EnrollmentItem,
   PaginationMeta,
   PendingEnrollmentListResponse,
+  PendingShortlistItem,
+  PendingShortlistDetail,
 } from "@beaconu/types";
 
 export interface ApplicationListFilters {
@@ -78,5 +80,20 @@ export async function getPendingEnrollments(
   const qs = params.toString();
   return api.get(
     `/api/v1/college-admin/applications/pending-enrollment${qs ? `?${qs}` : ""}`,
+  );
+}
+
+export async function getPendingShortlist(
+  search?: string,
+): Promise<PendingShortlistItem[]> {
+  const qs = search ? `?search=${encodeURIComponent(search)}` : "";
+  return api.get(`/api/v1/college-admin/applications/pending-shortlist${qs}`);
+}
+
+export async function getPendingShortlistDetail(
+  applicationCourseId: string,
+): Promise<PendingShortlistDetail> {
+  return api.get(
+    `/api/v1/college-admin/applications/pending-shortlist/${applicationCourseId}`,
   );
 }

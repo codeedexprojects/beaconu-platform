@@ -8,6 +8,13 @@ import {
 } from "../validators/ticket.validator";
 
 export class CollegeAdminTicketController {
+  static async getStats(req: Request, res: Response) {
+    const result = await TicketService.getStats(req.collegeId!);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Query stats fetched", result));
+  }
+
   static async list(req: Request, res: Response) {
     const query = listTicketsQuerySchema.parse(req.query);
     const result = await TicketService.listForCollege(

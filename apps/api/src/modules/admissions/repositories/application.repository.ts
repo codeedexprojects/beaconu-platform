@@ -204,6 +204,30 @@ export class ApplicationRepository {
     });
   }
 
+  /** Cross-module read for support/ticket.service.ts's "Applicant Status"
+   * panel — a student can have several applications at a college, so this
+   * picks the most recently created one (confirmed with the user as the
+   * right default for that panel, which only ever shows one program). */
+  static async findMostRecentForStudentAtCollege(
+    studentId: string,
+    collegeId: string,
+  ) {
+    return prisma.application.findFirst({
+      where: { studentId, collegeId },
+      select: {
+        id: true,
+        applicationNumber: true,
+        formStatus: true,
+        applicationCourses: {
+          where: { status: { not: "withdrawn" } },
+          select: { isPrimary: true, course: { select: { name: true } } },
+          orderBy: { preferenceOrder: "asc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   static async create(data: {
     studentId: string;
     collegeId: string;
