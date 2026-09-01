@@ -16,7 +16,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   if (reviews.length === 0) return null;
 
   return (
-    <section id="reviews" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section id="reviews" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
         What Students Say
       </h2>

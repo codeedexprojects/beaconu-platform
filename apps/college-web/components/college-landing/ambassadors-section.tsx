@@ -11,7 +11,7 @@ export function AmbassadorsSection({ ambassadors }: AmbassadorsSectionProps) {
   if (items.length === 0) return null;
 
   return (
-    <section id="ambassadors" className="bg-muted/40 py-16">
+    <section id="ambassadors" className="bg-muted/40 py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
           <span className="h-px w-6 bg-headerTeal" />
