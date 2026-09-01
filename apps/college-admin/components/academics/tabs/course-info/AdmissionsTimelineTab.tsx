@@ -1,6 +1,10 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Plus, Trash2, CalendarClock, CalendarDays } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +15,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const bannerSchema = z.object({
+  enabled: z.boolean().optional(),
+  tag: z.string().optional(),
+  message: z.string().optional(),
+  progress_percentage: z.coerce.number().optional(),
+});
+
+const admissionBatchSchema = z.object({
+  label: z.string().min(1, "Label is required"),
+  status: z.string().optional(),
+  banner: bannerSchema,
+});
+
+const keyDateSchema = z.object({
+  date: z.string().optional(),
+  label: z.string().min(1, "Label is required"),
+  status: z.string().optional(),
+});
+
+const admissionsTimelineTabSchema = z.object({
+  admission_batches: z.array(admissionBatchSchema).optional(),
+  keyDates: z
+    .object({
+      title: z.string().optional(),
+      items: z.array(keyDateSchema).optional(),
+    })
+    .optional(),
+});
+
+type AdmissionsTimelineTabData = z.infer<typeof admissionsTimelineTabSchema>;
+
+// Blocks the "Add" button while the last item's required field is empty.
+function isLastItemIncomplete(items: any[], ...fields: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  const last = items[items.length - 1];
+  return fields.some((f) => !String(last?.[f] ?? "").trim());
+}
+
+function AdmissionsEmptyState({
+  label,
+  icon: Icon,
+}: {
+  label: string;
+  icon: typeof CalendarClock;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Icon className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No {label} yet — click above to add your first one.
+      </span>
+    </div>
+  );
+}
 
 export function AdmissionsTimelineTab({
   payload,
@@ -19,8 +79,37 @@ export function AdmissionsTimelineTab({
   payload: any;
   onChange: (updates: any) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
+  const [deleteBatchIdx, setDeleteBatchIdx] = useState<number | null>(null);
+  const [deleteKeyDateIdx, setDeleteKeyDateIdx] = useState<number | null>(null);
+
+  const {
+    register,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<AdmissionsTimelineTabData>({
+    resolver: zodResolver(admissionsTimelineTabSchema as any),
+    values: payload,
+  });
+
+  const admissionBatchesArray = useFieldArray({
+    control: control as any,
+    name: "admission_batches",
+  });
+  const keyDateItemsArray = useFieldArray({
+    control: control as any,
+    name: "keyDates.items",
+  });
+
+  const watchedBatches = watch("admission_batches") || [];
+  const watchedKeyDateItems = watch("keyDates.items") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
@@ -31,94 +120,75 @@ export function AdmissionsTimelineTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().admission_batches || []),
-                {
-                  label: "",
-                  status: "upcoming",
-                  banner: {
-                    enabled: true,
-                    tag: "",
-                    message: "",
-                    progress_percentage: 0,
-                  },
+            disabled={isLastItemIncomplete(watchedBatches, "label")}
+            onClick={() =>
+              admissionBatchesArray.append({
+                label: "",
+                status: "upcoming",
+                banner: {
+                  enabled: true,
+                  tag: "",
+                  message: "",
+                  progress_percentage: 0,
                 },
-              ];
-              updateActiveTabPayload({
-                admission_batches: next,
-              });
-            }}
+              })
+            }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Batch
           </Button>
         </div>
-        {(getActiveTabPayload().admission_batches || []).map(
-          (batch: any, idx: number) => (
+        {admissionBatchesArray.fields.length === 0 ? (
+          <AdmissionsEmptyState
+            label="admission batches"
+            icon={CalendarClock}
+          />
+        ) : (
+          admissionBatchesArray.fields.map((field, idx) => (
             <div
-              key={idx}
+              key={field.id}
               className="border p-4 rounded-lg space-y-3 bg-muted/5"
             >
               <div className="grid gap-3 grid-cols-3">
-                <div>
+                <div className="space-y-1">
                   <Label className="text-xs">Label</Label>
                   <Input
                     placeholder="e.g. Admissions 2025"
-                    value={batch.label || ""}
-                    onChange={(e) => {
-                      const next = [
-                        ...(getActiveTabPayload().admission_batches || []),
-                      ];
-                      next[idx] = {
-                        ...next[idx],
-                        label: e.target.value,
-                      };
-                      updateActiveTabPayload({
-                        admission_batches: next,
-                      });
-                    }}
+                    {...register(`admission_batches.${idx}.label`)}
                   />
+                  {errors?.admission_batches?.[idx]?.label && (
+                    <p className="text-xs text-destructive">
+                      {errors.admission_batches[idx]?.label?.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Status</Label>
-                  <Select
-                    value={batch.status || "upcoming"}
-                    onValueChange={(val) => {
-                      const next = [
-                        ...(getActiveTabPayload().admission_batches || []),
-                      ];
-                      next[idx] = {
-                        ...next[idx],
-                        status: val,
-                      };
-                      updateActiveTabPayload({
-                        admission_batches: next,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name={`admission_batches.${idx}.status`}
+                    control={control}
+                    render={({ field: statusField }) => (
+                      <Select
+                        value={statusField.value || "upcoming"}
+                        onValueChange={(val) => statusField.onChange(val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="upcoming">Upcoming</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div className="flex items-end">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      const next = (
-                        getActiveTabPayload().admission_batches || []
-                      ).filter((_: any, i: number) => i !== idx);
-                      updateActiveTabPayload({
-                        admission_batches: next,
-                      });
-                    }}
+                    onClick={() => setDeleteBatchIdx(idx)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -131,44 +201,14 @@ export function AdmissionsTimelineTab({
                     <Label className="text-xs">Tag</Label>
                     <Input
                       placeholder="e.g. ADMISSIONS OPEN"
-                      value={batch.banner?.tag || ""}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().admission_batches || []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          banner: {
-                            ...(next[idx].banner || {}),
-                            tag: e.target.value,
-                          },
-                        };
-                        updateActiveTabPayload({
-                          admission_batches: next,
-                        });
-                      }}
+                      {...register(`admission_batches.${idx}.banner.tag`)}
                     />
                   </div>
                   <div>
                     <Label className="text-xs">Message</Label>
                     <Input
                       placeholder="e.g. Limited seats..."
-                      value={batch.banner?.message || ""}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().admission_batches || []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          banner: {
-                            ...(next[idx].banner || {}),
-                            message: e.target.value,
-                          },
-                        };
-                        updateActiveTabPayload({
-                          admission_batches: next,
-                        });
-                      }}
+                      {...register(`admission_batches.${idx}.banner.message`)}
                     />
                   </div>
                   <div>
@@ -176,45 +216,21 @@ export function AdmissionsTimelineTab({
                     <Input
                       type="number"
                       placeholder="e.g. 90"
-                      value={batch.banner?.progress_percentage ?? ""}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().admission_batches || []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          banner: {
-                            ...(next[idx].banner || {}),
-                            progress_percentage: e.target.value
-                              ? e.target.value
-                              : 0,
-                          },
-                        };
-                        updateActiveTabPayload({
-                          admission_batches: next,
-                        });
-                      }}
+                      {...register(
+                        `admission_batches.${idx}.banner.progress_percentage`,
+                      )}
                     />
                   </div>
                   <div className="flex items-end gap-2">
                     <input
                       type="checkbox"
-                      checked={batch.banner?.enabled || false}
-                      onChange={(e) => {
-                        const next = [
-                          ...(getActiveTabPayload().admission_batches || []),
-                        ];
-                        next[idx] = {
-                          ...next[idx],
-                          banner: {
-                            ...(next[idx].banner || {}),
-                            enabled: e.target.checked,
-                          },
-                        };
-                        updateActiveTabPayload({
-                          admission_batches: next,
-                        });
-                      }}
+                      checked={watchedBatches[idx]?.banner?.enabled || false}
+                      onChange={(e) =>
+                        setValue(
+                          `admission_batches.${idx}.banner.enabled`,
+                          e.target.checked,
+                        )
+                      }
                       className="w-4 h-4"
                     />
                     <Label className="text-xs cursor-pointer">Enabled</Label>
@@ -222,7 +238,7 @@ export function AdmissionsTimelineTab({
                 </div>
               </div>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -236,139 +252,111 @@ export function AdmissionsTimelineTab({
             <Input
               placeholder="Title"
               className="w-60"
-              value={getActiveTabPayload().keyDates?.title || ""}
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  keyDates: {
-                    ...(getActiveTabPayload().keyDates || {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("keyDates.title")}
             />
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                const next = [
-                  ...(getActiveTabPayload().keyDates?.items || []),
-                  {
-                    date: "",
-                    label: "",
-                    status: "",
-                  },
-                ];
-                updateActiveTabPayload({
-                  keyDates: {
-                    ...(getActiveTabPayload().keyDates || {}),
-                    items: next,
-                  },
-                });
-              }}
+              disabled={isLastItemIncomplete(watchedKeyDateItems, "label")}
+              onClick={() =>
+                keyDateItemsArray.append({
+                  date: "",
+                  label: "",
+                  status: "",
+                })
+              }
             >
               <Plus className="h-4 w-4 mr-1" /> Add Date
             </Button>
           </div>
         </div>
-        {(getActiveTabPayload().keyDates?.items || []).map(
-          (kd: any, idx: number) => (
+        {keyDateItemsArray.fields.length === 0 ? (
+          <AdmissionsEmptyState label="key dates" icon={CalendarDays} />
+        ) : (
+          keyDateItemsArray.fields.map((field, idx) => (
             <div
-              key={idx}
+              key={field.id}
               className="border p-3 rounded-lg space-y-2 bg-muted/5"
             >
               <div className="grid gap-2 grid-cols-4">
                 <Input
                   type="date"
-                  value={kd.date || ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().keyDates?.items || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      date: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      keyDates: {
-                        ...(getActiveTabPayload().keyDates || {}),
-                        items: next,
-                      },
-                    });
-                  }}
                   className="col-span-1"
+                  {...register(`keyDates.items.${idx}.date`)}
                 />
-                <Input
-                  placeholder="Label"
-                  value={kd.label || ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().keyDates?.items || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      label: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      keyDates: {
-                        ...(getActiveTabPayload().keyDates || {}),
-                        items: next,
-                      },
-                    });
-                  }}
-                  className="col-span-1"
+                <div className="col-span-1 space-y-1">
+                  <Input
+                    placeholder="Label"
+                    {...register(`keyDates.items.${idx}.label`)}
+                  />
+                  {errors?.keyDates?.items?.[idx]?.label && (
+                    <p className="text-xs text-destructive">
+                      {errors.keyDates.items[idx]?.label?.message}
+                    </p>
+                  )}
+                </div>
+                <Controller
+                  name={`keyDates.items.${idx}.status`}
+                  control={control}
+                  render={({ field: statusField }) => (
+                    <Select
+                      value={statusField.value || ""}
+                      onValueChange={(value) => statusField.onChange(value)}
+                    >
+                      <SelectTrigger className="col-span-1">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-                <Select
-                  value={kd.status || ""}
-                  onValueChange={(value) => {
-                    const next = [
-                      ...(getActiveTabPayload().keyDates?.items || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      status: value,
-                    };
-                    updateActiveTabPayload({
-                      keyDates: {
-                        ...(getActiveTabPayload().keyDates || {}),
-                        items: next,
-                      },
-                    });
-                  }}
-                >
-                  <SelectTrigger className="col-span-1">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="col-span-1"
-                  onClick={() => {
-                    const next = (
-                      getActiveTabPayload().keyDates?.items || []
-                    ).filter((_: any, i: number) => i !== idx);
-                    updateActiveTabPayload({
-                      keyDates: {
-                        ...(getActiveTabPayload().keyDates || {}),
-                        items: next,
-                      },
-                    });
-                  }}
+                  onClick={() => setDeleteKeyDateIdx(idx)}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
-          ),
+          ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteBatchIdx !== null}
+        title="Remove Admission Batch"
+        description="Remove this admission batch? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteBatchIdx(null)}
+        onConfirm={() => {
+          if (deleteBatchIdx === null) return;
+          admissionBatchesArray.remove(deleteBatchIdx);
+          setDeleteBatchIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteKeyDateIdx !== null}
+        title="Remove Key Date"
+        description="Remove this key date? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteKeyDateIdx(null)}
+        onConfirm={() => {
+          if (deleteKeyDateIdx === null) return;
+          keyDateItemsArray.remove(deleteKeyDateIdx);
+          setDeleteKeyDateIdx(null);
+        }}
+      />
     </div>
   );
 }

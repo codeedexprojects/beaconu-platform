@@ -282,8 +282,15 @@ export default function SetupAcademicsPage() {
     if (!editingCourse?.id) return;
     // Quotas and Fee Structure are relational tabs (courses/:id/quotas,
     // courses/:id/fee-structures) — each row saves immediately via its own
-    // mutation, there is no draft JSON to persist here.
-    if (activeTab === "course_quotas" || activeTab === "fees") return;
+    // mutation, there is no draft JSON to persist here. "basic" isn't a JSON
+    // tab either — it's the course-details form, saved separately via
+    // updateCourse — so it must never be sent to the tab-save endpoint.
+    if (
+      activeTab === "course_quotas" ||
+      activeTab === "fees" ||
+      activeTab === "basic"
+    )
+      return;
 
     const validationError = validateActiveTabPayload();
     if (validationError) {
@@ -346,8 +353,14 @@ export default function SetupAcademicsPage() {
 
   const saveAndGoToTab = (nextTabId: CourseTabId) => {
     // Quotas and Fee Structure have no draft JSON — each add/update/delete
-    // action saves immediately, so Back/Next just navigates.
-    if (activeTab === "course_quotas" || activeTab === "fees") {
+    // action saves immediately, so Back/Next just navigates. "basic" isn't a
+    // JSON tab either — it's the course-details form, saved separately via
+    // updateCourse — so it must never be sent to the tab-save endpoint.
+    if (
+      activeTab === "course_quotas" ||
+      activeTab === "fees" ||
+      activeTab === "basic"
+    ) {
       setActiveTab(nextTabId);
       return;
     }
@@ -376,7 +389,11 @@ export default function SetupAcademicsPage() {
   };
 
   const saveAndExit = () => {
-    if (activeTab === "course_quotas" || activeTab === "fees") {
+    if (
+      activeTab === "course_quotas" ||
+      activeTab === "fees" ||
+      activeTab === "basic"
+    ) {
       setEditingCourse(null);
       setIsAdding(false);
       return;
@@ -465,7 +482,7 @@ export default function SetupAcademicsPage() {
           <CourseTabSidebar
             activeTab={activeTab}
             hasEditingCourse={!!editingCourse}
-            onSelectTab={(tab) => setActiveTab(tab)}
+            onSelectTab={saveAndGoToTab}
           />
 
           {/* EDIT WORKSPACE */}

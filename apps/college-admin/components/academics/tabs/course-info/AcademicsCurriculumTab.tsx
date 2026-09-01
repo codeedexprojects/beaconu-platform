@@ -1,11 +1,287 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import {
+  Plus,
+  Trash2,
+  Layers,
+  BookOpen,
+  GraduationCap,
+  DoorOpen,
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SubjectTagInput } from "@/components/academics/shared/SubjectTagInput";
+
+const specializationSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  selected: z.string().optional(),
+  subjects: z.array(z.string()).optional(),
+});
+
+const semesterSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  expanded: z.boolean().optional(),
+  footnote: z.string().optional(),
+  core_subjects: z.array(z.string()).optional(),
+  specializations: z.array(specializationSchema).optional(),
+});
+
+const courseStructureItemSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  credits: z.union([z.string(), z.coerce.number()]).optional(),
+});
+
+const flexibleExitOptionSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+});
+
+const higherEducationSchema = z.object({
+  global_certifications: z.array(z.string()).optional(),
+  postgraduation: z.array(z.string()).optional(),
+});
+
+const academicsCurriculumTabSchema = z.object({
+  curriculum: z
+    .object({ semesters: z.array(semesterSchema).optional() })
+    .optional(),
+  course_structure: z.array(courseStructureItemSchema).optional(),
+  value_added_courses: z.array(z.string()).optional(),
+  higher_education: higherEducationSchema.optional(),
+  flexible_exit_options: z.array(flexibleExitOptionSchema).optional(),
+});
+
+type AcademicsCurriculumTabData = z.infer<typeof academicsCurriculumTabSchema>;
+
+// Blocks the "Add" button while the last item's required field is empty.
+function isLastItemIncomplete(items: any[], ...fields: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  const last = items[items.length - 1];
+  return fields.some((f) => !String(last?.[f] ?? "").trim());
+}
+
+// Blocks the "Add" button for flat string arrays while the last string is empty.
+function isLastStringIncomplete(items: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  return !String(items[items.length - 1] ?? "").trim();
+}
+
+function CurriculumEmptyState({
+  label,
+  icon: Icon = Layers,
+}: {
+  label: string;
+  icon?: typeof Layers;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Icon className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No {label} yet — click above to add your first one.
+      </span>
+    </div>
+  );
+}
+
+// One semester — has its own nested specializations[] array, so it needs its
+// own scoped useFieldArray. Mirrors EligibilityCriteriaTab's `QuotaFields`
+// pattern. `core_subjects` stays a newline-split Textarea via setValue (not a
+// useFieldArray) and each specialization's `subjects` is wired through
+// SubjectTagInput via watch/setValue (SubjectTagInput owns its own tag UI).
+function SemesterFields({
+  semesterIdx,
+  control,
+  register,
+  watch,
+  setValue,
+  errors,
+  onRemoveSemester,
+}: {
+  semesterIdx: number;
+  control: any;
+  register: any;
+  watch: any;
+  setValue: any;
+  errors: any;
+  onRemoveSemester: () => void;
+}) {
+  const [deleteSpecIdx, setDeleteSpecIdx] = useState<number | null>(null);
+
+  const specializationsArray = useFieldArray({
+    control,
+    name: `curriculum.semesters.${semesterIdx}.specializations`,
+  });
+
+  const watchedSpecializations: any[] =
+    watch(`curriculum.semesters.${semesterIdx}.specializations`) || [];
+  const watchedCoreSubjects: string[] =
+    watch(`curriculum.semesters.${semesterIdx}.core_subjects`) || [];
+  const semesterErrors = errors?.curriculum?.semesters?.[semesterIdx];
+
+  return (
+    <div className="border p-3 rounded-lg bg-muted/5 space-y-3">
+      <div className="flex gap-2 items-start">
+        <div className="flex-1 space-y-1">
+          <Input
+            className="flex-1"
+            placeholder="Semester Name (e.g. Semester 1)"
+            {...register(`curriculum.semesters.${semesterIdx}.name`)}
+          />
+          {semesterErrors?.name && (
+            <p className="text-xs text-destructive">
+              {semesterErrors.name.message}
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemoveSemester}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Footnote
+        </Label>
+        <Textarea
+          placeholder="Footnote / semester note"
+          rows={2}
+          {...register(`curriculum.semesters.${semesterIdx}.footnote`)}
+        />
+      </div>
+
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Core Subjects (one per line)
+        </Label>
+        <Textarea
+          placeholder="Subject 1&#10;Subject 2"
+          rows={3}
+          value={watchedCoreSubjects.join("\n")}
+          onChange={(e) =>
+            setValue(
+              `curriculum.semesters.${semesterIdx}.core_subjects`,
+              e.target.value
+                .split("\n")
+                .map((s: string) => s.trim())
+                .filter(Boolean),
+              { shouldDirty: true },
+            )
+          }
+        />
+      </div>
+
+      {/* Specializations */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs text-muted-foreground">
+            Specializations
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLastItemIncomplete(watchedSpecializations, "title")}
+            onClick={() =>
+              specializationsArray.append({
+                title: "",
+                selected: "",
+                subjects: [],
+              })
+            }
+          >
+            <Plus className="h-3 w-3 mr-1" /> Add
+          </Button>
+        </div>
+        {specializationsArray.fields.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">
+            No specializations added yet.
+          </p>
+        ) : (
+          specializationsArray.fields.map((field, spIdx) => (
+            <div
+              key={field.id}
+              className="border p-2 rounded space-y-2 bg-background"
+            >
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 space-y-1">
+                  <Input
+                    className="flex-1"
+                    placeholder='Title (e.g. "Specialization 1:")'
+                    {...register(
+                      `curriculum.semesters.${semesterIdx}.specializations.${spIdx}.title`,
+                    )}
+                  />
+                  {semesterErrors?.specializations?.[spIdx]?.title && (
+                    <p className="text-xs text-destructive">
+                      {semesterErrors.specializations[spIdx]?.title?.message}
+                    </p>
+                  )}
+                </div>
+                <Input
+                  className="flex-1"
+                  placeholder="Selected (e.g. Marketing)"
+                  {...register(
+                    `curriculum.semesters.${semesterIdx}.specializations.${spIdx}.selected`,
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteSpecIdx(spIdx)}
+                >
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </Button>
+              </div>
+              <SubjectTagInput
+                placeholder="Type a subject and press Enter"
+                value={
+                  watch(
+                    `curriculum.semesters.${semesterIdx}.specializations.${spIdx}.subjects`,
+                  ) || []
+                }
+                onChange={(subjects) =>
+                  setValue(
+                    `curriculum.semesters.${semesterIdx}.specializations.${spIdx}.subjects`,
+                    subjects,
+                    { shouldDirty: true },
+                  )
+                }
+              />
+            </div>
+          ))
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={deleteSpecIdx !== null}
+        title="Remove Specialization"
+        description="Remove this specialization? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteSpecIdx(null)}
+        onConfirm={() => {
+          if (deleteSpecIdx === null) return;
+          specializationsArray.remove(deleteSpecIdx);
+          setDeleteSpecIdx(null);
+        }}
+      />
+    </div>
+  );
+}
 
 export function AcademicsCurriculumTab({
   payload,
@@ -18,9 +294,67 @@ export function AcademicsCurriculumTab({
   uploadingBrochure: boolean;
   onBrochureUpload: (file: File | null) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const handleBrochureUpload = onBrochureUpload;
+  const [deleteSemesterIdx, setDeleteSemesterIdx] = useState<number | null>(
+    null,
+  );
+  const [deleteStructureIdx, setDeleteStructureIdx] = useState<number | null>(
+    null,
+  );
+  const [deleteVacIdx, setDeleteVacIdx] = useState<number | null>(null);
+  const [deleteCertIdx, setDeleteCertIdx] = useState<number | null>(null);
+  const [deletePgIdx, setDeletePgIdx] = useState<number | null>(null);
+  const [deleteExitIdx, setDeleteExitIdx] = useState<number | null>(null);
+
+  const {
+    register,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<AcademicsCurriculumTabData>({
+    resolver: zodResolver(academicsCurriculumTabSchema as any),
+    values: payload,
+  });
+
+  const semestersArray = useFieldArray({
+    control: control as any,
+    name: "curriculum.semesters",
+  });
+  const courseStructureArray = useFieldArray({
+    control: control as any,
+    name: "course_structure",
+  });
+  const valueAddedCoursesArray = useFieldArray({
+    control: control as any,
+    name: "value_added_courses",
+  });
+  const globalCertificationsArray = useFieldArray({
+    control: control as any,
+    name: "higher_education.global_certifications",
+  });
+  const postgraduationArray = useFieldArray({
+    control: control as any,
+    name: "higher_education.postgraduation",
+  });
+  const flexibleExitOptionsArray = useFieldArray({
+    control: control as any,
+    name: "flexible_exit_options",
+  });
+
+  const watchedSemesters = watch("curriculum.semesters") || [];
+  const watchedCourseStructure = watch("course_structure") || [];
+  const watchedValueAddedCourses: string[] = watch("value_added_courses") || [];
+  const watchedGlobalCertifications: string[] =
+    watch("higher_education.global_certifications") || [];
+  const watchedPostgraduation: string[] =
+    watch("higher_education.postgraduation") || [];
+  const watchedFlexibleExitOptions = watch("flexible_exit_options") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
@@ -31,7 +365,7 @@ export function AcademicsCurriculumTab({
             type="file"
             accept="application/pdf,image/jpeg,image/png,image/webp"
             disabled={uploadingBrochure}
-            onChange={(e) => handleBrochureUpload(e.target.files?.[0] ?? null)}
+            onChange={(e) => onBrochureUpload(e.target.files?.[0] ?? null)}
           />
         </div>
       </div>
@@ -43,203 +377,37 @@ export function AcademicsCurriculumTab({
             type="button"
             variant="outline"
             size="sm"
+            disabled={isLastItemIncomplete(watchedSemesters, "name")}
             onClick={() => {
-              const currentSemesters =
-                getActiveTabPayload().curriculum?.semesters || [];
-              const n = currentSemesters.length + 1;
-              updateActiveTabPayload({
-                curriculum: {
-                  ...(getActiveTabPayload().curriculum || {}),
-                  semesters: [
-                    ...currentSemesters,
-                    {
-                      id: `sem_${n}`,
-                      name: `Semester ${n}`,
-                      expanded: false,
-                      footnote: "",
-                      core_subjects: [],
-                      specializations: [],
-                    },
-                  ],
-                },
+              const n = semestersArray.fields.length + 1;
+              semestersArray.append({
+                id: `sem_${n}`,
+                name: `Semester ${n}`,
+                expanded: false,
+                footnote: "",
+                core_subjects: [],
+                specializations: [],
               });
             }}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Semester
           </Button>
         </div>
-        {(getActiveTabPayload().curriculum?.semesters || []).map(
-          (sem: any, idx: number) => {
-            const updateSem = (patch: Record<string, unknown>) => {
-              const next = [
-                ...(getActiveTabPayload().curriculum?.semesters || []),
-              ];
-              next[idx] = { ...next[idx], ...patch };
-              updateActiveTabPayload({
-                curriculum: {
-                  ...(getActiveTabPayload().curriculum || {}),
-                  semesters: next,
-                },
-              });
-            };
-            return (
-              <div
-                key={idx}
-                className="border p-3 rounded-lg bg-muted/5 space-y-3"
-              >
-                <div className="flex gap-2 items-center">
-                  <Input
-                    className="flex-1"
-                    placeholder="Semester Name (e.g. Semester 1)"
-                    value={sem.name || ""}
-                    onChange={(e) => updateSem({ name: e.target.value })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const next = (
-                        getActiveTabPayload().curriculum?.semesters || []
-                      ).filter((_: any, i: number) => i !== idx);
-                      updateActiveTabPayload({
-                        curriculum: {
-                          ...(getActiveTabPayload().curriculum || {}),
-                          semesters: next,
-                        },
-                      });
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">
-                    Footnote
-                  </Label>
-                  <Textarea
-                    placeholder="Footnote / semester note"
-                    rows={2}
-                    value={sem.footnote || ""}
-                    onChange={(e) =>
-                      updateSem({
-                        footnote: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">
-                    Core Subjects (one per line)
-                  </Label>
-                  <Textarea
-                    placeholder="Subject 1&#10;Subject 2"
-                    rows={3}
-                    value={(sem.core_subjects || []).join("\n")}
-                    onChange={(e) =>
-                      updateSem({
-                        core_subjects: e.target.value
-                          .split("\n")
-                          .map((s: string) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                  />
-                </div>
-
-                {/* Specializations */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs text-muted-foreground">
-                      Specializations
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        updateSem({
-                          specializations: [
-                            ...(sem.specializations || []),
-                            {
-                              title: "",
-                              selected: "",
-                              subjects: [],
-                            },
-                          ],
-                        })
-                      }
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Add
-                    </Button>
-                  </div>
-                  {(sem.specializations || []).map((sp: any, spIdx: number) => {
-                    const updateSp = (spPatch: Record<string, unknown>) => {
-                      const nextSp = [...(sem.specializations || [])];
-                      nextSp[spIdx] = {
-                        ...nextSp[spIdx],
-                        ...spPatch,
-                      };
-                      updateSem({
-                        specializations: nextSp,
-                      });
-                    };
-                    return (
-                      <div
-                        key={spIdx}
-                        className="border p-2 rounded space-y-2 bg-background"
-                      >
-                        <div className="flex gap-2 items-center">
-                          <Input
-                            className="flex-1"
-                            placeholder='Title (e.g. "Specialization 1:")'
-                            value={sp.title || ""}
-                            onChange={(e) =>
-                              updateSp({
-                                title: e.target.value,
-                              })
-                            }
-                          />
-                          <Input
-                            className="flex-1"
-                            placeholder="Selected (e.g. Marketing)"
-                            value={sp.selected || ""}
-                            onChange={(e) =>
-                              updateSp({
-                                selected: e.target.value,
-                              })
-                            }
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              const nextSp = (sem.specializations || []).filter(
-                                (_: any, i: number) => i !== spIdx,
-                              );
-                              updateSem({
-                                specializations: nextSp,
-                              });
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </div>
-                        <SubjectTagInput
-                          placeholder="Type a subject and press Enter"
-                          value={sp.subjects || []}
-                          onChange={(subjects) => updateSp({ subjects })}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          },
+        {semestersArray.fields.length === 0 ? (
+          <CurriculumEmptyState label="semesters" icon={Layers} />
+        ) : (
+          semestersArray.fields.map((field, idx) => (
+            <SemesterFields
+              key={field.id}
+              semesterIdx={idx}
+              control={control}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+              onRemoveSemester={() => setDeleteSemesterIdx(idx)}
+            />
+          ))
         )}
       </div>
 
@@ -251,77 +419,53 @@ export function AcademicsCurriculumTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().course_structure || []),
-                { title: "", credits: "" },
-              ];
-              updateActiveTabPayload({
-                course_structure: next,
-              });
-            }}
+            disabled={isLastItemIncomplete(watchedCourseStructure, "title")}
+            onClick={() =>
+              courseStructureArray.append({ title: "", credits: "" })
+            }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Structure Group
           </Button>
         </div>
-        {(getActiveTabPayload().course_structure || []).map(
-          (cs: any, idx: number) => (
+        {courseStructureArray.fields.length === 0 ? (
+          <CurriculumEmptyState
+            label="course structure groups"
+            icon={BookOpen}
+          />
+        ) : (
+          courseStructureArray.fields.map((field, idx) => (
             <div
-              key={idx}
+              key={field.id}
               className="flex gap-2 items-start border p-3 rounded-lg bg-muted/5"
             >
               <div className="flex-1 space-y-2">
-                <Input
-                  placeholder="Group Title (e.g. Core Electives)"
-                  value={cs.title || ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().course_structure || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      title: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      course_structure: next,
-                    });
-                  }}
-                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Group Title (e.g. Core Electives)"
+                    {...register(`course_structure.${idx}.title`)}
+                  />
+                  {errors?.course_structure?.[idx]?.title && (
+                    <p className="text-xs text-destructive">
+                      {errors.course_structure[idx]?.title?.message}
+                    </p>
+                  )}
+                </div>
                 <Input
                   type="number"
                   placeholder="Score / Credits (e.g. 12)"
-                  value={cs.credits ?? ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().course_structure || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      credits: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      course_structure: next,
-                    });
-                  }}
+                  {...register(`course_structure.${idx}.credits`)}
                 />
               </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().course_structure || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    course_structure: next,
-                  });
-                }}
+                onClick={() => setDeleteStructureIdx(idx)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -333,52 +477,31 @@ export function AcademicsCurriculumTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().value_added_courses || []),
-                "",
-              ];
-              updateActiveTabPayload({
-                value_added_courses: next,
-              });
-            }}
+            disabled={isLastStringIncomplete(watchedValueAddedCourses)}
+            onClick={() => valueAddedCoursesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Value Course
           </Button>
         </div>
-        {(getActiveTabPayload().value_added_courses || []).map(
-          (vac: string, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
+        {valueAddedCoursesArray.fields.length === 0 ? (
+          <CurriculumEmptyState label="value added courses" icon={BookOpen} />
+        ) : (
+          valueAddedCoursesArray.fields.map((field, idx) => (
+            <div key={field.id} className="flex gap-2 items-center">
               <Input
                 placeholder="e.g. AI Ethics & Compliance"
-                value={vac || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().value_added_courses || []),
-                  ];
-                  next[idx] = e.target.value;
-                  updateActiveTabPayload({
-                    value_added_courses: next,
-                  });
-                }}
+                {...register(`value_added_courses.${idx}`)}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().value_added_courses || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    value_added_courses: next,
-                  });
-                }}
+                onClick={() => setDeleteVacIdx(idx)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -395,63 +518,35 @@ export function AcademicsCurriculumTab({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                const current =
-                  getActiveTabPayload().higher_education
-                    ?.global_certifications || [];
-                updateActiveTabPayload({
-                  higher_education: {
-                    ...(getActiveTabPayload().higher_education || {}),
-                    global_certifications: [...current, ""],
-                  },
-                });
-              }}
+              disabled={isLastStringIncomplete(watchedGlobalCertifications)}
+              onClick={() => globalCertificationsArray.append("")}
             >
               <Plus className="h-3 w-3 mr-1" /> Add Certification
             </Button>
           </div>
-          {(
-            getActiveTabPayload().higher_education?.global_certifications || []
-          ).map((gc: string, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
-              <Input
-                placeholder="e.g. AWS Solutions Architect"
-                value={gc || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().higher_education
-                      ?.global_certifications || []),
-                  ];
-                  next[idx] = e.target.value;
-                  updateActiveTabPayload({
-                    higher_education: {
-                      ...(getActiveTabPayload().higher_education || {}),
-                      global_certifications: next,
-                    },
-                  });
-                }}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().higher_education
-                      ?.global_certifications || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    higher_education: {
-                      ...(getActiveTabPayload().higher_education || {}),
-                      global_certifications: next,
-                    },
-                  });
-                }}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
+          {globalCertificationsArray.fields.length === 0 ? (
+            <CurriculumEmptyState
+              label="global certifications"
+              icon={GraduationCap}
+            />
+          ) : (
+            globalCertificationsArray.fields.map((field, idx) => (
+              <div key={field.id} className="flex gap-2 items-center">
+                <Input
+                  placeholder="e.g. AWS Solutions Architect"
+                  {...register(`higher_education.global_certifications.${idx}`)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteCertIdx(idx)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="space-y-3 pt-3 border-t">
@@ -461,61 +556,34 @@ export function AcademicsCurriculumTab({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                const current =
-                  getActiveTabPayload().higher_education?.postgraduation || [];
-                updateActiveTabPayload({
-                  higher_education: {
-                    ...(getActiveTabPayload().higher_education || {}),
-                    postgraduation: [...current, ""],
-                  },
-                });
-              }}
+              disabled={isLastStringIncomplete(watchedPostgraduation)}
+              onClick={() => postgraduationArray.append("")}
             >
               <Plus className="h-3 w-3 mr-1" /> Add Postgrad Path
             </Button>
           </div>
-          {(getActiveTabPayload().higher_education?.postgraduation || []).map(
-            (pg: string, idx: number) => (
-              <div key={idx} className="flex gap-2 items-center">
+          {postgraduationArray.fields.length === 0 ? (
+            <CurriculumEmptyState
+              label="postgraduation options"
+              icon={GraduationCap}
+            />
+          ) : (
+            postgraduationArray.fields.map((field, idx) => (
+              <div key={field.id} className="flex gap-2 items-center">
                 <Input
                   placeholder="e.g. M.Tech Research, PhD"
-                  value={pg || ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().higher_education
-                        ?.postgraduation || []),
-                    ];
-                    next[idx] = e.target.value;
-                    updateActiveTabPayload({
-                      higher_education: {
-                        ...(getActiveTabPayload().higher_education || {}),
-                        postgraduation: next,
-                      },
-                    });
-                  }}
+                  {...register(`higher_education.postgraduation.${idx}`)}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => {
-                    const next = (
-                      getActiveTabPayload().higher_education?.postgraduation ||
-                      []
-                    ).filter((_: any, i: number) => i !== idx);
-                    updateActiveTabPayload({
-                      higher_education: {
-                        ...(getActiveTabPayload().higher_education || {}),
-                        postgraduation: next,
-                      },
-                    });
-                  }}
+                  onClick={() => setDeletePgIdx(idx)}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
-            ),
+            ))
           )}
         </div>
       </div>
@@ -528,55 +596,40 @@ export function AcademicsCurriculumTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().flexible_exit_options || []),
-                { title: "", description: "" },
-              ];
-              updateActiveTabPayload({
-                flexible_exit_options: next,
-              });
-            }}
+            disabled={isLastItemIncomplete(watchedFlexibleExitOptions, "title")}
+            onClick={() =>
+              flexibleExitOptionsArray.append({ title: "", description: "" })
+            }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Exit Option
           </Button>
         </div>
-        {(getActiveTabPayload().flexible_exit_options || []).map(
-          (feo: any, idx: number) => (
+        {flexibleExitOptionsArray.fields.length === 0 ? (
+          <CurriculumEmptyState label="flexible exit options" icon={DoorOpen} />
+        ) : (
+          flexibleExitOptionsArray.fields.map((field, idx) => (
             <div
-              key={idx}
+              key={field.id}
               className="space-y-2 border p-3 rounded-lg bg-muted/5"
             >
-              <div className="flex gap-2 items-center">
-                <Input
-                  className="flex-1"
-                  placeholder="Title (e.g. Diploma after 1 year)"
-                  value={feo?.title || ""}
-                  onChange={(e) => {
-                    const next = [
-                      ...(getActiveTabPayload().flexible_exit_options || []),
-                    ];
-                    next[idx] = {
-                      ...next[idx],
-                      title: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      flexible_exit_options: next,
-                    });
-                  }}
-                />
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 space-y-1">
+                  <Input
+                    className="flex-1"
+                    placeholder="Title (e.g. Diploma after 1 year)"
+                    {...register(`flexible_exit_options.${idx}.title`)}
+                  />
+                  {errors?.flexible_exit_options?.[idx]?.title && (
+                    <p className="text-xs text-destructive">
+                      {errors.flexible_exit_options[idx]?.title?.message}
+                    </p>
+                  )}
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => {
-                    const next = (
-                      getActiveTabPayload().flexible_exit_options || []
-                    ).filter((_: any, i: number) => i !== idx);
-                    updateActiveTabPayload({
-                      flexible_exit_options: next,
-                    });
-                  }}
+                  onClick={() => setDeleteExitIdx(idx)}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -584,24 +637,96 @@ export function AcademicsCurriculumTab({
               <Textarea
                 rows={2}
                 placeholder="Description"
-                value={feo?.description || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().flexible_exit_options || []),
-                  ];
-                  next[idx] = {
-                    ...next[idx],
-                    description: e.target.value,
-                  };
-                  updateActiveTabPayload({
-                    flexible_exit_options: next,
-                  });
-                }}
+                {...register(`flexible_exit_options.${idx}.description`)}
               />
             </div>
-          ),
+          ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteSemesterIdx !== null}
+        title="Remove Semester"
+        description="Remove this semester and all its specializations? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteSemesterIdx(null)}
+        onConfirm={() => {
+          if (deleteSemesterIdx === null) return;
+          semestersArray.remove(deleteSemesterIdx);
+          setDeleteSemesterIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteStructureIdx !== null}
+        title="Remove Structure Group"
+        description="Remove this course structure group? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteStructureIdx(null)}
+        onConfirm={() => {
+          if (deleteStructureIdx === null) return;
+          courseStructureArray.remove(deleteStructureIdx);
+          setDeleteStructureIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteVacIdx !== null}
+        title="Remove Value Added Course"
+        description="Remove this value added course? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteVacIdx(null)}
+        onConfirm={() => {
+          if (deleteVacIdx === null) return;
+          valueAddedCoursesArray.remove(deleteVacIdx);
+          setDeleteVacIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteCertIdx !== null}
+        title="Remove Certification"
+        description="Remove this global certification? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteCertIdx(null)}
+        onConfirm={() => {
+          if (deleteCertIdx === null) return;
+          globalCertificationsArray.remove(deleteCertIdx);
+          setDeleteCertIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deletePgIdx !== null}
+        title="Remove Postgraduation Option"
+        description="Remove this postgraduation option? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeletePgIdx(null)}
+        onConfirm={() => {
+          if (deletePgIdx === null) return;
+          postgraduationArray.remove(deletePgIdx);
+          setDeletePgIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteExitIdx !== null}
+        title="Remove Exit Option"
+        description="Remove this flexible exit option? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteExitIdx(null)}
+        onConfirm={() => {
+          if (deleteExitIdx === null) return;
+          flexibleExitOptionsArray.remove(deleteExitIdx);
+          setDeleteExitIdx(null);
+        }}
+      />
     </div>
   );
 }

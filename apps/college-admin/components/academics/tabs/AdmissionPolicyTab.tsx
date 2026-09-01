@@ -1,9 +1,236 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Plus, Trash2, ListChecks } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const seatMatrixRowSchema = z.object({
+  quota_category: z.string().min(1, "Quota category is required"),
+  total: z.coerce.number().optional(),
+  open: z.coerce.number().optional(),
+});
+
+const examSchema = z.object({
+  name: z.string().min(1, "Exam name is required"),
+  exam_code: z.string().optional(),
+  code_badge: z.string().optional(),
+  min_criteria_label: z.string().optional(),
+  min_criteria_value: z.string().optional(),
+});
+
+const levelSchema = z.object({
+  level_label: z.string().min(1, "Level label is required"),
+  exams: z.array(examSchema).optional(),
+});
+
+const admissionPolicyTabSchema = z.object({
+  title: z.string().optional(),
+  enabled: z.boolean().optional(),
+  seat_matrix: z
+    .object({
+      title: z.string().optional(),
+      columns: z.array(z.string()).optional(),
+      rows: z.array(seatMatrixRowSchema).optional(),
+    })
+    .optional(),
+  entrance_exams_accepted: z
+    .object({
+      title: z.string().optional(),
+      levels: z.array(levelSchema).optional(),
+    })
+    .optional(),
+});
+
+type AdmissionPolicyTabData = z.infer<typeof admissionPolicyTabSchema>;
+
+// Blocks the "Add" button while the last item's required field is empty.
+function isLastItemIncomplete(items: any[], ...fields: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  const last = items[items.length - 1];
+  return fields.some((f) => !String(last?.[f] ?? "").trim());
+}
+
+function AdmissionPolicyEmptyState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <ListChecks className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No {label} yet — click above to add your first one.
+      </span>
+    </div>
+  );
+}
+
+// One level inside "Entrance Exams Accepted" — has its own nested exams[]
+// array, so it needs its own useFieldArray scoped to this level's index.
+// Mirrors EligibilityCriteriaTab's `QuotaFields` pattern.
+function LevelFields({
+  levelIdx,
+  control,
+  register,
+  watch,
+  errors,
+  onRemoveLevel,
+}: {
+  levelIdx: number;
+  control: any;
+  register: any;
+  watch: any;
+  errors: any;
+  onRemoveLevel: () => void;
+}) {
+  const [deleteExamIdx, setDeleteExamIdx] = useState<number | null>(null);
+
+  const examsArray = useFieldArray({
+    control,
+    name: `entrance_exams_accepted.levels.${levelIdx}.exams`,
+  });
+
+  const watchedExams: any[] =
+    watch(`entrance_exams_accepted.levels.${levelIdx}.exams`) || [];
+  const levelErrors = errors?.entrance_exams_accepted?.levels?.[levelIdx];
+
+  return (
+    <div className="border rounded-lg p-3 space-y-3 bg-background">
+      <div className="flex gap-2 items-start">
+        <div className="flex-1 space-y-1">
+          <Input
+            className="flex-1"
+            placeholder="Level Label (e.g. NATIONAL LEVEL)"
+            {...register(
+              `entrance_exams_accepted.levels.${levelIdx}.level_label`,
+            )}
+          />
+          {levelErrors?.level_label && (
+            <p className="text-xs text-destructive">
+              {levelErrors.level_label.message}
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isLastItemIncomplete(watchedExams, "name")}
+          onClick={() =>
+            examsArray.append({
+              name: "",
+              exam_code: "",
+              code_badge: "",
+              min_criteria_label: "",
+              min_criteria_value: "",
+            })
+          }
+        >
+          <Plus className="h-3 w-3 mr-1" /> Add Exam
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemoveLevel}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+      <div className="space-y-2 pl-2">
+        {examsArray.fields.length === 0 ? (
+          <AdmissionPolicyEmptyState label="exams for this level" />
+        ) : (
+          examsArray.fields.map((field, ei) => (
+            <div
+              key={field.id}
+              className="border rounded-lg p-3 space-y-2 bg-muted/5"
+            >
+              <div className="grid gap-2 md:grid-cols-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Exam Name</Label>
+                  <Input
+                    placeholder="e.g. Common Admission Test"
+                    {...register(
+                      `entrance_exams_accepted.levels.${levelIdx}.exams.${ei}.name`,
+                    )}
+                  />
+                  {levelErrors?.exams?.[ei]?.name && (
+                    <p className="text-xs text-destructive">
+                      {levelErrors.exams[ei]?.name?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Exam Code</Label>
+                  <Input
+                    placeholder="e.g. CAT-105"
+                    {...register(
+                      `entrance_exams_accepted.levels.${levelIdx}.exams.${ei}.exam_code`,
+                    )}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Code Badge</Label>
+                  <Input
+                    placeholder="e.g. CAT"
+                    {...register(
+                      `entrance_exams_accepted.levels.${levelIdx}.exams.${ei}.code_badge`,
+                    )}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Min Criteria Label</Label>
+                  <Input
+                    placeholder="e.g. Min. Percentile"
+                    {...register(
+                      `entrance_exams_accepted.levels.${levelIdx}.exams.${ei}.min_criteria_label`,
+                    )}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Min Criteria Value</Label>
+                  <Input
+                    placeholder="e.g. 85%ile"
+                    {...register(
+                      `entrance_exams_accepted.levels.${levelIdx}.exams.${ei}.min_criteria_value`,
+                    )}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteExamIdx(ei)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={deleteExamIdx !== null}
+        title="Remove Exam"
+        description="Remove this exam? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteExamIdx(null)}
+        onConfirm={() => {
+          if (deleteExamIdx === null) return;
+          examsArray.remove(deleteExamIdx);
+          setDeleteExamIdx(null);
+        }}
+      />
+    </div>
+  );
+}
 
 export function AdmissionPolicyTab({
   payload,
@@ -12,35 +239,53 @@ export function AdmissionPolicyTab({
   payload: any;
   onChange: (updates: any) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
+  const [deleteRowIdx, setDeleteRowIdx] = useState<number | null>(null);
+  const [deleteLevelIdx, setDeleteLevelIdx] = useState<number | null>(null);
+
+  const {
+    register,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<AdmissionPolicyTabData>({
+    resolver: zodResolver(admissionPolicyTabSchema as any),
+    values: payload,
+  });
+
+  const rowsArray = useFieldArray({
+    control: control as any,
+    name: "seat_matrix.rows",
+  });
+
+  const levelsArray = useFieldArray({
+    control: control as any,
+    name: "entrance_exams_accepted.levels",
+  });
+
+  const watchedRows = watch("seat_matrix.rows") || [];
+  const watchedColumns = watch("seat_matrix.columns") || [];
+  const watchedLevels = watch("entrance_exams_accepted.levels") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1">
           <Label>Section Title</Label>
-          <Input
-            placeholder="e.g. Admission Policy"
-            value={getActiveTabPayload().title || ""}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                title: e.target.value,
-              })
-            }
-          />
+          <Input placeholder="e.g. Admission Policy" {...register("title")} />
         </div>
         <div className="flex items-center gap-3 pt-5">
           <Label className="text-xs">Enabled</Label>
           <input
             type="checkbox"
             className="h-4 w-4 accent-primary"
-            checked={getActiveTabPayload().enabled ?? true}
-            onChange={(e) =>
-              updateActiveTabPayload({
-                enabled: e.target.checked,
-              })
-            }
+            {...register("enabled")}
           />
         </div>
       </div>
@@ -57,25 +302,14 @@ export function AdmissionPolicyTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const sm = getActiveTabPayload().seat_matrix || {};
-              const rows = Array.isArray((sm as any).rows)
-                ? (sm as any).rows
-                : [];
-              updateActiveTabPayload({
-                seat_matrix: {
-                  ...(sm as any),
-                  rows: [
-                    ...rows,
-                    {
-                      quota_category: "",
-                      total: "",
-                      open: "",
-                    },
-                  ],
-                },
-              });
-            }}
+            disabled={isLastItemIncomplete(watchedRows, "quota_category")}
+            onClick={() =>
+              rowsArray.append({
+                quota_category: "",
+                total: undefined,
+                open: undefined,
+              })
+            }
           >
             <Plus className="h-4 w-4 mr-1" /> Add Row
           </Button>
@@ -86,148 +320,73 @@ export function AdmissionPolicyTab({
             <Label className="text-xs">Table Title</Label>
             <Input
               placeholder="e.g. Seat Matrix"
-              value={(getActiveTabPayload().seat_matrix as any)?.title || ""}
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  seat_matrix: {
-                    ...((getActiveTabPayload().seat_matrix as any) || {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("seat_matrix.title")}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Columns (comma-separated)</Label>
             <Input
               placeholder="Quota Category, Total, Open"
-              value={
-                Array.isArray(
-                  (getActiveTabPayload().seat_matrix as any)?.columns,
-                )
-                  ? (getActiveTabPayload().seat_matrix as any).columns.join(
-                      ", ",
-                    )
-                  : ""
-              }
+              value={watchedColumns.join(", ")}
               onChange={(e) =>
-                updateActiveTabPayload({
-                  seat_matrix: {
-                    ...((getActiveTabPayload().seat_matrix as any) || {}),
-                    columns: e.target.value.split(","),
-                  },
-                })
+                setValue(
+                  "seat_matrix.columns",
+                  e.target.value.split(",") as any,
+                )
               }
               onBlur={(e) =>
-                updateActiveTabPayload({
-                  seat_matrix: {
-                    ...((getActiveTabPayload().seat_matrix as any) || {}),
-                    columns: e.target.value
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  },
-                })
+                setValue(
+                  "seat_matrix.columns",
+                  e.target.value
+                    .split(",")
+                    .map((s: string) => s.trim())
+                    .filter(Boolean) as any,
+                )
               }
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          {(Array.isArray((getActiveTabPayload().seat_matrix as any)?.rows)
-            ? (getActiveTabPayload().seat_matrix as any).rows
-            : []
-          ).map((row: any, idx: number) => (
-            <div
-              key={idx}
-              className="flex gap-2 items-center border p-2 rounded-lg bg-muted/5"
-            >
-              <Input
-                className="flex-1"
-                placeholder="Quota Category (e.g. Government)"
-                value={row.quota_category || ""}
-                onChange={(e) => {
-                  const rows = [
-                    ...((getActiveTabPayload().seat_matrix as any)?.rows || []),
-                  ];
-                  rows[idx] = {
-                    ...rows[idx],
-                    quota_category: e.target.value,
-                  };
-                  updateActiveTabPayload({
-                    seat_matrix: {
-                      ...((getActiveTabPayload().seat_matrix as any) || {}),
-                      rows,
-                    },
-                  });
-                }}
-              />
-              <Input
-                className="w-28"
-                type="number"
-                placeholder="Total"
-                value={row.total ?? ""}
-                onChange={(e) => {
-                  const rows = [
-                    ...((getActiveTabPayload().seat_matrix as any)?.rows || []),
-                  ];
-                  rows[idx] = {
-                    ...rows[idx],
-                    total: e.target.value,
-                  };
-                  updateActiveTabPayload({
-                    seat_matrix: {
-                      ...((getActiveTabPayload().seat_matrix as any) || {}),
-                      rows,
-                    },
-                  });
-                }}
-              />
-              <Input
-                className="w-28"
-                type="number"
-                placeholder="Open"
-                value={row.open ?? ""}
-                onChange={(e) => {
-                  const rows = [
-                    ...((getActiveTabPayload().seat_matrix as any)?.rows || []),
-                  ];
-                  rows[idx] = {
-                    ...rows[idx],
-                    open: e.target.value,
-                  };
-                  updateActiveTabPayload({
-                    seat_matrix: {
-                      ...((getActiveTabPayload().seat_matrix as any) || {}),
-                      rows,
-                    },
-                  });
-                }}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const rows = (
-                    (getActiveTabPayload().seat_matrix as any)?.rows || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    seat_matrix: {
-                      ...((getActiveTabPayload().seat_matrix as any) || {}),
-                      rows,
-                    },
-                  });
-                }}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-          {!(getActiveTabPayload().seat_matrix as any)?.rows?.length && (
-            <p className="text-xs text-muted-foreground italic">
-              No seat rows added yet.
-            </p>
+          {rowsArray.fields.length === 0 ? (
+            <AdmissionPolicyEmptyState label="seat rows" />
+          ) : (
+            rowsArray.fields.map((field, idx) => (
+              <div key={field.id} className="space-y-1">
+                <div className="flex gap-2 items-center border p-2 rounded-lg bg-muted/5">
+                  <Input
+                    className="flex-1"
+                    placeholder="Quota Category (e.g. Government)"
+                    {...register(`seat_matrix.rows.${idx}.quota_category`)}
+                  />
+                  <Input
+                    className="w-28"
+                    type="number"
+                    placeholder="Total"
+                    {...register(`seat_matrix.rows.${idx}.total`)}
+                  />
+                  <Input
+                    className="w-28"
+                    type="number"
+                    placeholder="Open"
+                    {...register(`seat_matrix.rows.${idx}.open`)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteRowIdx(idx)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                {errors.seat_matrix?.rows?.[idx]?.quota_category && (
+                  <p className="text-xs text-destructive">
+                    {errors.seat_matrix.rows[idx]?.quota_category?.message}
+                  </p>
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -246,18 +405,8 @@ export function AdmissionPolicyTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const ee = getActiveTabPayload().entrance_exams_accepted || {};
-              const levels = Array.isArray((ee as any).levels)
-                ? (ee as any).levels
-                : [];
-              updateActiveTabPayload({
-                entrance_exams_accepted: {
-                  ...(ee as any),
-                  levels: [...levels, { level_label: "", exams: [] }],
-                },
-              });
-            }}
+            disabled={isLastItemIncomplete(watchedLevels, "level_label")}
+            onClick={() => levelsArray.append({ level_label: "", exams: [] })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Level
           </Button>
@@ -266,326 +415,55 @@ export function AdmissionPolicyTab({
           <Label className="text-xs">Section Title</Label>
           <Input
             placeholder="e.g. Entrance Exams Accepted"
-            value={
-              (getActiveTabPayload().entrance_exams_accepted as any)?.title ||
-              ""
-            }
-            onChange={(e) =>
-              updateActiveTabPayload({
-                entrance_exams_accepted: {
-                  ...((getActiveTabPayload().entrance_exams_accepted as any) ||
-                    {}),
-                  title: e.target.value,
-                },
-              })
-            }
+            {...register("entrance_exams_accepted.title")}
           />
         </div>
         <div className="space-y-4">
-          {(Array.isArray(
-            (getActiveTabPayload().entrance_exams_accepted as any)?.levels,
-          )
-            ? (getActiveTabPayload().entrance_exams_accepted as any).levels
-            : []
-          ).map((level: any, li: number) => (
-            <div
-              key={li}
-              className="border rounded-lg p-3 space-y-3 bg-background"
-            >
-              <div className="flex gap-2 items-center">
-                <Input
-                  className="flex-1"
-                  placeholder="Level Label (e.g. NATIONAL LEVEL)"
-                  value={level.level_label || ""}
-                  onChange={(e) => {
-                    const levels = [
-                      ...((getActiveTabPayload().entrance_exams_accepted as any)
-                        ?.levels || []),
-                    ];
-                    levels[li] = {
-                      ...levels[li],
-                      level_label: e.target.value,
-                    };
-                    updateActiveTabPayload({
-                      entrance_exams_accepted: {
-                        ...((getActiveTabPayload()
-                          .entrance_exams_accepted as any) || {}),
-                        levels,
-                      },
-                    });
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const levels = [
-                      ...((getActiveTabPayload().entrance_exams_accepted as any)
-                        ?.levels || []),
-                    ];
-                    const exams = Array.isArray(levels[li].exams)
-                      ? levels[li].exams
-                      : [];
-                    levels[li] = {
-                      ...levels[li],
-                      exams: [
-                        ...exams,
-                        {
-                          name: "",
-                          exam_code: "",
-                          code_badge: "",
-                          min_criteria_label: "",
-                          min_criteria_value: "",
-                        },
-                      ],
-                    };
-                    updateActiveTabPayload({
-                      entrance_exams_accepted: {
-                        ...((getActiveTabPayload()
-                          .entrance_exams_accepted as any) || {}),
-                        levels,
-                      },
-                    });
-                  }}
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Add Exam
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const levels = (
-                      (getActiveTabPayload().entrance_exams_accepted as any)
-                        ?.levels || []
-                    ).filter((_: any, i: number) => i !== li);
-                    updateActiveTabPayload({
-                      entrance_exams_accepted: {
-                        ...((getActiveTabPayload()
-                          .entrance_exams_accepted as any) || {}),
-                        levels,
-                      },
-                    });
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-              <div className="space-y-2 pl-2">
-                {(Array.isArray(level.exams) ? level.exams : []).map(
-                  (exam: any, ei: number) => (
-                    <div
-                      key={ei}
-                      className="border rounded-lg p-3 space-y-2 bg-muted/5"
-                    >
-                      <div className="grid gap-2 md:grid-cols-3">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Exam Name</Label>
-                          <Input
-                            placeholder="e.g. Common Admission Test"
-                            value={exam.name || ""}
-                            onChange={(e) => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = [...(levels[li].exams || [])];
-                              exams[ei] = {
-                                ...exams[ei],
-                                name: e.target.value,
-                              };
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Exam Code</Label>
-                          <Input
-                            placeholder="e.g. CAT-105"
-                            value={exam.exam_code || ""}
-                            onChange={(e) => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = [...(levels[li].exams || [])];
-                              exams[ei] = {
-                                ...exams[ei],
-                                exam_code: e.target.value,
-                              };
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Code Badge</Label>
-                          <Input
-                            placeholder="e.g. CAT"
-                            value={exam.code_badge || ""}
-                            onChange={(e) => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = [...(levels[li].exams || [])];
-                              exams[ei] = {
-                                ...exams[ei],
-                                code_badge: e.target.value,
-                              };
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Min Criteria Label</Label>
-                          <Input
-                            placeholder="e.g. Min. Percentile"
-                            value={exam.min_criteria_label || ""}
-                            onChange={(e) => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = [...(levels[li].exams || [])];
-                              exams[ei] = {
-                                ...exams[ei],
-                                min_criteria_label: e.target.value,
-                              };
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Min Criteria Value</Label>
-                          <Input
-                            placeholder="e.g. 85%ile"
-                            value={exam.min_criteria_value || ""}
-                            onChange={(e) => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = [...(levels[li].exams || [])];
-                              exams[ei] = {
-                                ...exams[ei],
-                                min_criteria_value: e.target.value,
-                              };
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              const levels = [
-                                ...((
-                                  getActiveTabPayload()
-                                    .entrance_exams_accepted as any
-                                )?.levels || []),
-                              ];
-                              const exams = (levels[li].exams || []).filter(
-                                (_: any, i: number) => i !== ei,
-                              );
-                              levels[li] = {
-                                ...levels[li],
-                                exams,
-                              };
-                              updateActiveTabPayload({
-                                entrance_exams_accepted: {
-                                  ...((getActiveTabPayload()
-                                    .entrance_exams_accepted as any) || {}),
-                                  levels,
-                                },
-                              });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ),
-                )}
-                {!level.exams?.length && (
-                  <p className="text-xs text-muted-foreground italic pl-1">
-                    No exams added for this level yet.
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-          {!(getActiveTabPayload().entrance_exams_accepted as any)?.levels
-            ?.length && (
-            <p className="text-xs text-muted-foreground italic">
-              No exam levels added yet.
-            </p>
+          {levelsArray.fields.length === 0 ? (
+            <AdmissionPolicyEmptyState label="exam levels" />
+          ) : (
+            levelsArray.fields.map((field, li) => (
+              <LevelFields
+                key={field.id}
+                levelIdx={li}
+                control={control}
+                register={register}
+                watch={watch}
+                errors={errors}
+                onRemoveLevel={() => setDeleteLevelIdx(li)}
+              />
+            ))
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteRowIdx !== null}
+        title="Remove Seat Row"
+        description="Remove this seat matrix row? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteRowIdx(null)}
+        onConfirm={() => {
+          if (deleteRowIdx === null) return;
+          rowsArray.remove(deleteRowIdx);
+          setDeleteRowIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteLevelIdx !== null}
+        title="Remove Level"
+        description="Remove this level and all its exams? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteLevelIdx(null)}
+        onConfirm={() => {
+          if (deleteLevelIdx === null) return;
+          levelsArray.remove(deleteLevelIdx);
+          setDeleteLevelIdx(null);
+        }}
+      />
     </div>
   );
 }

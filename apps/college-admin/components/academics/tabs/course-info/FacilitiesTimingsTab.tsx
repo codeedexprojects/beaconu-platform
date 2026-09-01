@@ -1,10 +1,77 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@/lib/zod-resolver";
+import * as z from "zod";
+import { Plus, Trash2, Wrench, FlaskConical, Building2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CLASS_TIMING_DAYS } from "@/components/academics/constants";
+
+const dayTimingSchema = z.object({
+  day: z.string().min(1),
+  closed: z.boolean().optional(),
+  start: z.string().optional(),
+  end: z.string().optional(),
+});
+
+const bonusCertificationSchema = z.object({
+  title: z.string().optional(),
+  tag: z.string().optional(),
+  link: z.string().optional(),
+  description: z.string().optional(),
+});
+
+const facilitiesTimingsTabSchema = z.object({
+  class_timings: z.array(dayTimingSchema).optional(),
+  industry_tools: z.array(z.string()).optional(),
+  lab_facilities: z.array(z.string()).optional(),
+  classroom_facilities: z.array(z.string()).optional(),
+  bonus_certification: bonusCertificationSchema.optional(),
+});
+
+type FacilitiesTimingsTabData = z.infer<typeof facilitiesTimingsTabSchema>;
+
+// Blocks the "Add" button for flat string arrays while the last string is empty.
+function isLastStringIncomplete(items: string[]): boolean {
+  if (!items || items.length === 0) return false;
+  return !String(items[items.length - 1] ?? "").trim();
+}
+
+function FacilitiesEmptyState({
+  label,
+  icon: Icon,
+}: {
+  label: string;
+  icon: typeof Wrench;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
+      <Icon className="h-6 w-6 text-muted-foreground/40" />
+      <span className="text-xs text-muted-foreground max-w-xs">
+        No {label} yet — click above to add your first one.
+      </span>
+    </div>
+  );
+}
+
+function normalizeClassTimings(existing: any[] | undefined) {
+  const list = Array.isArray(existing) ? existing : [];
+  return CLASS_TIMING_DAYS.map((day) => {
+    const found = list.find((t: any) => t?.day === day);
+    return found
+      ? {
+          day,
+          closed: !!found.closed,
+          start: found.start || "",
+          end: found.end || "",
+        }
+      : { day, closed: false, start: "", end: "" };
+  });
+}
 
 export function FacilitiesTimingsTab({
   payload,
@@ -22,9 +89,45 @@ export function FacilitiesTimingsTab({
     onSuccess: (url: string) => void,
   ) => void;
 }) {
-  const getActiveTabPayload = () => payload;
-  const updateActiveTabPayload = (updates: any) => onChange(updates);
-  const handleCourseFieldUpload = onFieldUpload;
+  const [deleteToolIdx, setDeleteToolIdx] = useState<number | null>(null);
+  const [deleteLabIdx, setDeleteLabIdx] = useState<number | null>(null);
+  const [deleteClassroomIdx, setDeleteClassroomIdx] = useState<number | null>(
+    null,
+  );
+
+  const { register, control, watch, setValue } =
+    useForm<FacilitiesTimingsTabData>({
+      resolver: zodResolver(facilitiesTimingsTabSchema as any),
+      values: {
+        ...payload,
+        class_timings: normalizeClassTimings(payload?.class_timings),
+      },
+    });
+
+  const industryToolsArray = useFieldArray({
+    control: control as any,
+    name: "industry_tools",
+  });
+  const labFacilitiesArray = useFieldArray({
+    control: control as any,
+    name: "lab_facilities",
+  });
+  const classroomFacilitiesArray = useFieldArray({
+    control: control as any,
+    name: "classroom_facilities",
+  });
+
+  const watchedClassTimings: any[] = watch("class_timings") || [];
+  const watchedIndustryTools: string[] = watch("industry_tools") || [];
+  const watchedLabFacilities: string[] = watch("lab_facilities") || [];
+  const watchedClassroomFacilities: string[] =
+    watch("classroom_facilities") || [];
+
+  useEffect(() => {
+    const subscription = watch((value) => onChange(value));
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch]);
 
   return (
     <div className="space-y-6">
@@ -32,27 +135,11 @@ export function FacilitiesTimingsTab({
         <Label className="font-bold">Class Timings</Label>
         <div className="space-y-2">
           {CLASS_TIMING_DAYS.map((day) => {
-            const timings = getActiveTabPayload().class_timings || [];
-            const entry = timings.find((t: any) => t?.day === day) || {
-              day,
-              closed: false,
-              start: "",
-              end: "",
-            };
-            const updateDay = (patch: Record<string, unknown>) => {
-              const next = CLASS_TIMING_DAYS.map((d) => {
-                const existing = timings.find((t: any) => t?.day === d) || {
-                  day: d,
-                  closed: false,
-                  start: "",
-                  end: "",
-                };
-                return d === day ? { ...existing, ...patch } : existing;
-              });
-              updateActiveTabPayload({
-                class_timings: next,
-              });
-            };
+            const dayIdx = watchedClassTimings.findIndex(
+              (t: any) => t?.day === day,
+            );
+            if (dayIdx === -1) return null;
+            const entry = watchedClassTimings[dayIdx] || {};
             return (
               <div
                 key={day}
@@ -64,9 +151,10 @@ export function FacilitiesTimingsTab({
                     type="checkbox"
                     checked={!!entry.closed}
                     onChange={(e) =>
-                      updateDay({
-                        closed: e.target.checked,
-                      })
+                      setValue(
+                        `class_timings.${dayIdx}.closed`,
+                        e.target.checked,
+                      )
                     }
                   />
                   Closed
@@ -76,23 +164,13 @@ export function FacilitiesTimingsTab({
                     <Input
                       type="time"
                       className="w-32"
-                      value={entry.start || ""}
-                      onChange={(e) =>
-                        updateDay({
-                          start: e.target.value,
-                        })
-                      }
+                      {...register(`class_timings.${dayIdx}.start`)}
                     />
                     <span className="text-xs text-muted-foreground">to</span>
                     <Input
                       type="time"
                       className="w-32"
-                      value={entry.end || ""}
-                      onChange={(e) =>
-                        updateDay({
-                          end: e.target.value,
-                        })
-                      }
+                      {...register(`class_timings.${dayIdx}.end`)}
                     />
                   </div>
                 )}
@@ -109,52 +187,31 @@ export function FacilitiesTimingsTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().industry_tools || []),
-                "",
-              ];
-              updateActiveTabPayload({
-                industry_tools: next,
-              });
-            }}
+            disabled={isLastStringIncomplete(watchedIndustryTools)}
+            onClick={() => industryToolsArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Industry Tool
           </Button>
         </div>
-        {(getActiveTabPayload().industry_tools || []).map(
-          (tool: string, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
+        {industryToolsArray.fields.length === 0 ? (
+          <FacilitiesEmptyState label="industry tools" icon={Wrench} />
+        ) : (
+          industryToolsArray.fields.map((field, idx) => (
+            <div key={field.id} className="flex gap-2 items-center">
               <Input
                 placeholder="e.g. Python, Docker, Tableau"
-                value={tool || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().industry_tools || []),
-                  ];
-                  next[idx] = e.target.value;
-                  updateActiveTabPayload({
-                    industry_tools: next,
-                  });
-                }}
+                {...register(`industry_tools.${idx}`)}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().industry_tools || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    industry_tools: next,
-                  });
-                }}
+                onClick={() => setDeleteToolIdx(idx)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -165,52 +222,31 @@ export function FacilitiesTimingsTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().lab_facilities || []),
-                "",
-              ];
-              updateActiveTabPayload({
-                lab_facilities: next,
-              });
-            }}
+            disabled={isLastStringIncomplete(watchedLabFacilities)}
+            onClick={() => labFacilitiesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Lab Facility
           </Button>
         </div>
-        {(getActiveTabPayload().lab_facilities || []).map(
-          (lab: string, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
+        {labFacilitiesArray.fields.length === 0 ? (
+          <FacilitiesEmptyState label="lab facilities" icon={FlaskConical} />
+        ) : (
+          labFacilitiesArray.fields.map((field, idx) => (
+            <div key={field.id} className="flex gap-2 items-center">
               <Input
                 placeholder="e.g. Advanced IoT & Robotics Lab"
-                value={lab || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().lab_facilities || []),
-                  ];
-                  next[idx] = e.target.value;
-                  updateActiveTabPayload({
-                    lab_facilities: next,
-                  });
-                }}
+                {...register(`lab_facilities.${idx}`)}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().lab_facilities || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    lab_facilities: next,
-                  });
-                }}
+                onClick={() => setDeleteLabIdx(idx)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -221,52 +257,31 @@ export function FacilitiesTimingsTab({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              const next = [
-                ...(getActiveTabPayload().classroom_facilities || []),
-                "",
-              ];
-              updateActiveTabPayload({
-                classroom_facilities: next,
-              });
-            }}
+            disabled={isLastStringIncomplete(watchedClassroomFacilities)}
+            onClick={() => classroomFacilitiesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Classroom Facility
           </Button>
         </div>
-        {(getActiveTabPayload().classroom_facilities || []).map(
-          (cr: string, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
+        {classroomFacilitiesArray.fields.length === 0 ? (
+          <FacilitiesEmptyState label="classroom facilities" icon={Building2} />
+        ) : (
+          classroomFacilitiesArray.fields.map((field, idx) => (
+            <div key={field.id} className="flex gap-2 items-center">
               <Input
                 placeholder="e.g. Smart Projector, Centrally Air-Conditioned"
-                value={cr || ""}
-                onChange={(e) => {
-                  const next = [
-                    ...(getActiveTabPayload().classroom_facilities || []),
-                  ];
-                  next[idx] = e.target.value;
-                  updateActiveTabPayload({
-                    classroom_facilities: next,
-                  });
-                }}
+                {...register(`classroom_facilities.${idx}`)}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  const next = (
-                    getActiveTabPayload().classroom_facilities || []
-                  ).filter((_: any, i: number) => i !== idx);
-                  updateActiveTabPayload({
-                    classroom_facilities: next,
-                  });
-                }}
+                onClick={() => setDeleteClassroomIdx(idx)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
-          ),
+          ))
         )}
       </div>
 
@@ -279,30 +294,14 @@ export function FacilitiesTimingsTab({
             <Label className="text-xs">Title</Label>
             <Input
               placeholder="e.g. Tally Prime Certification"
-              value={getActiveTabPayload().bonus_certification?.title || ""}
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  bonus_certification: {
-                    ...(getActiveTabPayload().bonus_certification || {}),
-                    title: e.target.value,
-                  },
-                })
-              }
+              {...register("bonus_certification.title")}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Tag</Label>
             <Input
               placeholder="e.g. BONUS CERTIFICATION"
-              value={getActiveTabPayload().bonus_certification?.tag || ""}
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  bonus_certification: {
-                    ...(getActiveTabPayload().bonus_certification || {}),
-                    tag: e.target.value,
-                  },
-                })
-              }
+              {...register("bonus_certification.tag")}
             />
           </div>
           <div className="space-y-1">
@@ -313,17 +312,11 @@ export function FacilitiesTimingsTab({
                 accept="application/pdf,image/jpeg,image/png,image/webp"
                 disabled={uploadingField === "bonus_certification_link"}
                 onChange={(e) =>
-                  handleCourseFieldUpload(
+                  onFieldUpload(
                     e.target.files?.[0] ?? null,
                     "bonus_certification_link",
                     "bonus-certification/link",
-                    (url) =>
-                      updateActiveTabPayload({
-                        bonus_certification: {
-                          ...(getActiveTabPayload().bonus_certification || {}),
-                          link: url,
-                        },
-                      }),
+                    (url) => setValue("bonus_certification.link", url),
                   )
                 }
               />
@@ -333,21 +326,53 @@ export function FacilitiesTimingsTab({
             <Label className="text-xs">Description</Label>
             <Input
               placeholder="e.g. Included with Finance specialization at no extra cost."
-              value={
-                getActiveTabPayload().bonus_certification?.description || ""
-              }
-              onChange={(e) =>
-                updateActiveTabPayload({
-                  bonus_certification: {
-                    ...(getActiveTabPayload().bonus_certification || {}),
-                    description: e.target.value,
-                  },
-                })
-              }
+              {...register("bonus_certification.description")}
             />
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteToolIdx !== null}
+        title="Remove Industry Tool"
+        description="Remove this industry tool? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteToolIdx(null)}
+        onConfirm={() => {
+          if (deleteToolIdx === null) return;
+          industryToolsArray.remove(deleteToolIdx);
+          setDeleteToolIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteLabIdx !== null}
+        title="Remove Lab Facility"
+        description="Remove this lab facility? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteLabIdx(null)}
+        onConfirm={() => {
+          if (deleteLabIdx === null) return;
+          labFacilitiesArray.remove(deleteLabIdx);
+          setDeleteLabIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteClassroomIdx !== null}
+        title="Remove Classroom Facility"
+        description="Remove this classroom facility? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteClassroomIdx(null)}
+        onConfirm={() => {
+          if (deleteClassroomIdx === null) return;
+          classroomFacilitiesArray.remove(deleteClassroomIdx);
+          setDeleteClassroomIdx(null);
+        }}
+      />
     </div>
   );
 }
