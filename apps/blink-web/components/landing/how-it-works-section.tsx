@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 const STEPS = [
   {
     step: "01",
@@ -9,46 +11,63 @@ const STEPS = [
     step: "02",
     title: "Send your request",
     description:
-      "Tell us about your background, qualifications, and experience. No account is created yet — your request goes straight to the Blink team for review.",
+      "Tell us about your background, qualifications, and experience.",
   },
   {
     step: "03",
-    title: "Get reviewed by the Blink team",
+    title: "Meet the Blink team",
     description:
-      "Our team verifies your details and approves your request — you'll be notified by email once you're cleared to go.",
+      "Our team reviews your details and lets you know when you're cleared to go.",
   },
   {
     step: "04",
-    title: "Start counselling and making an impact",
+    title: "Make an impact",
     description:
-      "Set up your profile, share your availability, and start running sessions — with your earnings tracked in your counsellor wallet.",
+      "Set your availability, start sessions, and track your earnings.",
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="border-t border-border/60 py-20">
+    <section
+      id="how-it-works"
+      className="bg-primary py-20 text-primary-foreground"
+    >
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            How it works
-          </h2>
-          <p className="mt-3 text-balance text-muted-foreground">
-            From application to your first payout — here&apos;s what to expect.
+        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white">
+              From hello to impact
+            </p>
+            <h2 className="mt-3 max-w-xl text-balance font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
+              Start with a request.
+              <br />
+              Grow from there.
+            </h2>
+          </div>
+          <p className="max-w-sm text-balance text-primary-foreground/70">
+            A considered, human process from your first application to your
+            first student session.
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((item) => (
+        <div className="mt-12 grid overflow-hidden rounded-2xl border border-white/20 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((item, index) => (
             <div
               key={item.step}
-              className="rounded-xl border border-border bg-card p-6"
+              className={cn(
+                "p-8 transition-colors hover:bg-white/10",
+                index !== 0 && "sm:border-l sm:border-white/20",
+                index === 2 && "sm:border-l-0 lg:border-l",
+              )}
             >
-              <span className="text-sm font-semibold text-primary">
+              <span className="text-sm font-semibold text-white">
                 {item.step}
               </span>
-              <h3 className="mt-2 text-base font-semibold">{item.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+              <h3 className="mt-4 font-serif text-xl font-semibold">
+                {item.title}
+              </h3>
+              <p className="mt-2 text-sm text-primary-foreground/70">
                 {item.description}
               </p>
             </div>

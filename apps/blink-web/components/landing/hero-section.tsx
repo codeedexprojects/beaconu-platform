@@ -1,46 +1,51 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative isolate flex min-h-[640px] items-center overflow-hidden sm:min-h-[720px]">
+      <Image src="/hero-bg.jpg" alt="" fill priority className="object-cover" />
       <div
-        className="pointer-events-none absolute inset-x-0 -top-40 -z-10 h-[480px] bg-[radial-gradient(closest-side,hsl(var(--primary)/0.18),transparent)]"
+        className="absolute inset-0 bg-gradient-to-r from-navy-dark/90 via-navy-dark/70 to-navy-dark/30"
         aria-hidden
       />
-      <div className="container flex flex-col items-center gap-6 py-20 text-center sm:py-28">
-        <Badge variant="secondary" className="gap-1.5 px-3 py-1">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          BeaconU&apos;s counsellor network
-        </Badge>
 
-        <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-          Counsel with BeaconU.
-          <br />
-          <span className="text-primary">
-            Support students. Grow your practice.
+      <div className="container relative py-20 sm:py-28">
+        <div className="flex max-w-3xl flex-col items-start gap-8">
+          <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
+            <Sparkles className="h-4 w-4" />
+            BeaconU&apos;s counsellor network
           </span>
-        </h1>
 
-        <p className="max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
-          Blink is BeaconU&apos;s counsellor network — for academic counsellors
-          guiding students toward the right course, and MindCare counsellors
-          supporting student wellbeing. Run sessions, get paid, and make a real
-          impact.
-        </p>
+          <h1 className="text-balance font-serif text-6xl font-semibold leading-[1.05] tracking-tight text-white sm:text-7xl md:text-8xl">
+            Counsel with
+            <br />
+            <span className="text-primary">purpose.</span>
+          </h1>
 
-        <div className="flex flex-col items-center gap-3 sm:flex-row">
-          <Button asChild size="lg" className="gap-2">
-            <Link href="#roles">
+          <p className="max-w-xl text-balance text-lg text-white/80 sm:text-xl">
+            Support students as they find their next step. Run meaningful
+            sessions, grow your practice, and make a real difference through
+            BeaconU.
+          </p>
+
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <Link
+              href="#roles"
+              className="inline-flex h-14 items-center gap-2 rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
+            >
               Join as a counsellor
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
             </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="#how-it-works">See how it works</Link>
-          </Button>
+            <Link
+              href="#how-it-works"
+              className="inline-flex h-14 items-center gap-2 rounded-full bg-white px-8 text-base font-semibold text-foreground shadow-lg transition-colors hover:bg-white/90"
+            >
+              See how it works
+              <ArrowUpRight className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

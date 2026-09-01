@@ -21,9 +21,9 @@ const config: Config = {
           DEFAULT: "#0F172A",
           dark: "#1A1A2E",
         },
-        gold: {
-          DEFAULT: "#B6904F",
-          pale: "#FBEFD6",
+        violet: {
+          DEFAULT: "#6D28D9",
+          pale: "#EDE9FE",
         },
         cream: {
           DEFAULT: "#FDFBF7",
