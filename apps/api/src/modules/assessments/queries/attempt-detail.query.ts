@@ -52,6 +52,7 @@ export class AttemptDetailQuery {
         sectionId: ts.sectionId,
         name: ts.section.name,
         description: ts.section.description,
+        isCoreSection: ts.section.isCoreSection,
         questionCount: ts.questionCount,
         timeLimitMins: ts.timeLimitMins,
         answeredCount,

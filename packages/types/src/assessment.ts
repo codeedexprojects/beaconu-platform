@@ -416,6 +416,7 @@ export interface AttemptSectionSummary {
   sectionId: string;
   name: string;
   description: string | null;
+  isCoreSection: boolean;
   questionCount: number;
   timeLimitMins: number;
   answeredCount: number;

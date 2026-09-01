@@ -32,6 +32,7 @@ export class TrialService {
       sectionId: ts.sectionId,
       name: ts.section.name,
       description: ts.section.description,
+      isCoreSection: ts.section.isCoreSection,
       questionCount: ts.questionCount,
       timeLimitMins: ts.timeLimitMins,
       // Demo questions are never answered/submitted — these two fields
