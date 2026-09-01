@@ -51,18 +51,14 @@ function FacilityCard({
   );
 }
 
-export function AmenitiesSection({
-  facilities,
-  locationText,
-  view360Url,
-}: AmenitiesSectionProps) {
+export function AmenitiesSection({ facilities }: AmenitiesSectionProps) {
   if (facilities.length === 0) return null;
 
   const [featured, ...rest] = facilities;
   const smallFacilities = rest.slice(0, 3);
 
   return (
-    <section id="campus-life" className="bg-muted/40 py-16">
+    <section id="campus" className="bg-muted/40 py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
           <span className="h-px w-6 bg-headerTeal" />
@@ -88,7 +84,7 @@ export function AmenitiesSection({
           </div>
         ) : null}
 
-        <div className="relative mt-6 overflow-hidden rounded-2xl">
+        {/* <div className="relative mt-6 overflow-hidden rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950" />
           <div className="absolute inset-0 bg-black/45" />
           <div className="relative flex flex-col items-center px-6 py-16 text-center">
@@ -113,7 +109,7 @@ export function AmenitiesSection({
               </a>
             ) : null}
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

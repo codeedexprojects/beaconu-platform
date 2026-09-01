@@ -14,7 +14,7 @@ export function CoursesSection({ courses, subdomain }: CoursesSectionProps) {
   const featured = courses.slice(0, 8);
 
   return (
-    <section id="courses" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section id="courses" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">

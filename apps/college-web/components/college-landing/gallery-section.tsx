@@ -18,7 +18,7 @@ export function GallerySection({ gallery, subdomain }: GallerySectionProps) {
       : Array.from({ length: PLACEHOLDER_IMAGE_COUNT }, () => null);
 
   return (
-    <section id="gallery" className="bg-muted/40 py-16">
+    <section id="gallery" className="bg-muted/40 py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>

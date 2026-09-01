@@ -11,7 +11,7 @@ interface CtaFooterProps {
 export function CtaFooter({ collegeName, campusVisitHref }: CtaFooterProps) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-headerTeal to-headerTeal-dark">
-      <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-10 text-center sm:px-6">
         <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Begin Your Admission Journey
         </h2>

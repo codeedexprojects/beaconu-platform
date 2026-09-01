@@ -16,7 +16,7 @@ export function AboutSection({
   if (!about && accolades.length === 0) return null;
 
   return (
-    <section id="about" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section id="about" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
         <div className="relative h-80 w-full overflow-hidden rounded-2xl bg-muted sm:h-96 lg:h-full lg:min-h-[420px]">
           {imageUrl ? (

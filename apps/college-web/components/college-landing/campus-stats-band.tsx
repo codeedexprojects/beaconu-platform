@@ -49,7 +49,7 @@ export function CampusStatsBand({
       </div>
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="relative mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-14 sm:grid-cols-4 sm:px-6">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 sm:grid-cols-4 sm:px-6">
         {items.map((stat, i) => {
           const { number, suffix } = splitValue(stat.value ?? "");
           return (

@@ -1,20 +1,18 @@
 import Image from "next/image";
-import { ArrowRight, GraduationCap } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { ApplyNowButton } from "@/components/college-landing/apply-now-button";
 
 interface AdmissionsCtaSectionProps {
   admissionCycleLabel: string;
   imageUrl?: string | null;
-  prospectusUrl?: string | null;
 }
 
 export function AdmissionsCtaSection({
   admissionCycleLabel,
   imageUrl,
-  prospectusUrl,
 }: AdmissionsCtaSectionProps) {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <div className="grid gap-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8 lg:grid-cols-2 lg:items-center lg:gap-10">
         <div className="flex flex-col justify-center">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-headerTeal">
@@ -31,21 +29,9 @@ export function AdmissionsCtaSection({
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-5">
-            <ApplyNowButton
-              size="lg"
-              className="rounded-full bg-headerTeal-dark px-8 text-white hover:bg-headerTeal-dark/90"
-            >
+            <ApplyNowButton className="h-12 rounded-full bg-headerTeal-dark px-8 text-sm font-semibold text-white hover:bg-headerTeal-dark/90">
               Apply Now
             </ApplyNowButton>
-            <a
-              href={prospectusUrl ?? "#"}
-              target={prospectusUrl ? "_blank" : undefined}
-              rel={prospectusUrl ? "noopener noreferrer" : undefined}
-              className="flex items-center gap-1.5 text-sm font-medium text-headerTeal hover:text-headerTeal-dark"
-            >
-              Download Prospectus
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
           </div>
         </div>
 

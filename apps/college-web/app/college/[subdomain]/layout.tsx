@@ -19,13 +19,16 @@ const TAB_ROUTES: Record<string, { label: string; path: string }> = {
 };
 
 const CORE_SECTIONS = [
-  { id: "about", label: "About" },
-  { id: "courses", label: "Courses" },
-  { id: "campus", label: "Campus" },
-  { id: "scholarships", label: "Scholarships" },
-  { id: "gallery", label: "Gallery" },
-  { id: "reviews", label: "Reviews" },
-  { id: "ambassadors", label: "Ambassadors" },
+  { id: "about", label: "About", anchor: "about" },
+  { id: "courses", label: "Courses", anchor: "courses" },
+  { id: "scholarships", label: "Scholarships", anchor: "scholarships" },
+  { id: "campus", label: "Facilities", anchor: "campus" },
+  { id: "highlights", label: "Highlights", anchor: "highlights" },
+  { id: "our-stories", label: "Our Stories", anchor: "our-stories" },
+  { id: "achievements", label: "Achievements", anchor: "achievements" },
+  { id: "gallery", label: "Gallery", anchor: "gallery" },
+  { id: "reviews", label: "Reviews", anchor: "sharing-experience" },
+  { id: "ambassadors", label: "Ambassadors", anchor: "ambassadors" },
 ];
 
 const EXTRA_LINKS = [
@@ -58,7 +61,7 @@ export default async function CollegeLayout({
   const coreLinks = CORE_SECTIONS.map((section) => ({
     id: section.id,
     label: section.label,
-    href: `${homeHref}#${section.id}`,
+    href: `${homeHref}#${section.anchor}`,
   }));
 
   const tabLinks = tabs
