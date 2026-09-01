@@ -139,8 +139,8 @@ export function CounsellorRequestForm({
   }
 
   return (
-    <Card>
-      <CardContent className="p-6">
+    <Card className="rounded-2xl shadow-md">
+      <CardContent className="p-6 sm:p-8">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-6"

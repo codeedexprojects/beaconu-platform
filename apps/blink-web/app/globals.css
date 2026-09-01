@@ -18,8 +18,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 231 30% 14%;
 
-    /* Primary — Gold #B6904F */
-    --primary: 38 41% 51%;
+    /* Primary — Violet #6D28D9 */
+    --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -31,7 +31,7 @@
     --muted-foreground: 215 16% 47%; /* #6B7280 */
 
     /* Accent */
-    --accent: 38 41% 51%;
+    --accent: 263 70% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -41,7 +41,7 @@
     /* Borders & Inputs */
     --border: 240 76% 87%; /* #C4C4F7 */
     --input: 214 32% 91%;
-    --ring: 38 41% 51%;
+    --ring: 263 70% 50%;
 
     --radius: 1rem; /* 16px */
 
@@ -49,17 +49,25 @@
     --sidebar: 222 47% 11%;
     --sidebar-foreground: 222 17% 60%; /* #8B93A7 */
     --sidebar-border: 222 47% 11%;
-    --sidebar-accent: 38 41% 51%; /* Gold */
+    --sidebar-accent: 263 70% 50%; /* Violet */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-ring: 38 41% 51%;
+    --sidebar-ring: 263 70% 50%;
   }
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
   * {
     @apply border-border;
   }
-  
+
   body {
     background-color: theme('colors.cream.DEFAULT') !important;
     color: theme('colors.navy.dark') !important;
@@ -83,7 +91,7 @@
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(182, 144, 79, 0.4);
+    background: rgba(109, 40, 217, 0.4);
   }
 }
 
@@ -119,8 +127,8 @@ textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #B6904F !important;
-  box-shadow: 0 0 0 2px rgba(182, 144, 79, 0.2) !important;
+  border-color: #6D28D9 !important;
+  box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.2) !important;
   outline: none;
 }
 
@@ -230,7 +238,7 @@ th {
   background: transparent !important;
   color: #0F172A !important;
   border: none !important;
-  border-bottom: 2px solid #B6904F !important;
+  border-bottom: 2px solid #6D28D9 !important;
   box-shadow: none !important;
 }
 
@@ -243,13 +251,13 @@ th {
 
 /* Buttons */
 button.bg-primary {
-  background-color: #B6904F !important;
+  background-color: #6D28D9 !important;
   color: #FFFFFF !important;
   border-radius: 8px !important;
 }
 
 button.bg-primary:hover {
-  background-color: #9D7B40 !important;
+  background-color: #5B21B6 !important;
 }
 
 /* Text overrides */

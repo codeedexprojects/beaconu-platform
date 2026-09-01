@@ -6,12 +6,12 @@ import type { BlinkRole } from "@/lib/roles";
 
 export function SubmissionSuccess({ role }: { role: BlinkRole }) {
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-md">
       <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <CheckCircle2 className="h-6 w-6" />
         </span>
-        <h2 className="text-lg font-semibold">
+        <h2 className="font-serif text-xl font-semibold">
           Your request has been received
         </h2>
         <p className="max-w-sm text-sm text-muted-foreground">

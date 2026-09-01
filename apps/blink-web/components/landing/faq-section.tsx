@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 const FAQS = [
   {
     question: "Who can join Blink?",
@@ -28,27 +34,56 @@ const FAQS = [
 ];
 
 export function FaqSection() {
-  return (
-    <section
-      id="faq"
-      className="border-t border-border/60 bg-secondary/40 py-20"
-    >
-      <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Frequently asked questions
-          </h2>
-        </div>
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-        <div className="mx-auto mt-10 max-w-3xl divide-y divide-border rounded-xl border border-border bg-card">
-          {FAQS.map((faq) => (
-            <div key={faq.question} className="p-6">
-              <h3 className="text-sm font-semibold sm:text-base">
-                {faq.question}
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">{faq.answer}</p>
-            </div>
-          ))}
+  return (
+    <section id="faq" className="border-t border-border/60 py-20">
+      <div className="container">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="lg:pt-24">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Good to know
+            </p>
+            <h2 className="mt-3 text-balance font-serif text-4xl font-semibold tracking-tight sm:text-5xl">
+              Questions,
+              <br />
+              answered.
+            </h2>
+            <p className="mt-4 max-w-sm text-balance text-muted-foreground">
+              Everything you need to feel ready for your first step with Blink.
+            </p>
+          </div>
+
+          <div className="border-t border-border">
+            {FAQS.map((faq, index) => {
+              const isOpen = openIndex === index;
+              return (
+                <div key={faq.question} className="border-b border-border">
+                  <button
+                    type="button"
+                    onClick={() => setOpenIndex(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-4 py-6 text-left"
+                  >
+                    <span className="font-serif text-xl font-medium tracking-tight">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-5 w-5 shrink-0 text-primary transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                    />
+                  </button>
+                  {isOpen && (
+                    <p className="animate-fade-in pb-6 text-sm text-muted-foreground">
+                      {faq.answer}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

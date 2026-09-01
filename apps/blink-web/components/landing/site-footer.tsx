@@ -1,35 +1,21 @@
-import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 py-10">
+    <footer className="border-t border-border/60 py-8">
       <div className="container flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Sparkles className="h-4 w-4" />
           </span>
-          <span>Blink</span>
-          <span className="text-sm font-normal text-muted-foreground">
-            by BeaconU
+          <span>
+            &copy; {new Date().getFullYear()} BeaconU. Blink counsellor network.
           </span>
-        </Link>
+        </div>
 
-        <p className="text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} BeaconU. All rights reserved.
+        <p className="text-sm text-muted-foreground">
+          Support students. Grow your practice.
         </p>
-
-        <nav className="flex items-center gap-5 text-sm text-muted-foreground">
-          <Link
-            href="#roles"
-            className="transition-colors hover:text-foreground"
-          >
-            Who can join
-          </Link>
-          <Link href="#faq" className="transition-colors hover:text-foreground">
-            FAQ
-          </Link>
-        </nav>
       </div>
     </footer>
   );
