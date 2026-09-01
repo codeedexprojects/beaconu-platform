@@ -199,8 +199,9 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
   }
 
   const isLastSection = sectionIndex === sections.length - 1;
+  const isCalculatorSection = currentSection?.isCoreSection === false;
 
-  const calculatorFab = (
+  const calculatorFab = isCalculatorSection ? (
     <>
       <button
         type="button"
@@ -215,7 +216,7 @@ export function AttemptRunner({ attempt, onComplete }: AttemptRunnerProps) {
         onClose={() => setIsCalculatorOpen(false)}
       />
     </>
-  );
+  ) : null;
 
   if (isReviewing) {
     return (

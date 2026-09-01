@@ -147,7 +147,14 @@ export class AttemptRepository {
     return prisma.templateSection.findMany({
       where: { templateId },
       include: {
-        section: { select: { id: true, name: true, description: true } },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            isCoreSection: true,
+          },
+        },
       },
       orderBy: { sortOrder: "asc" },
     });
