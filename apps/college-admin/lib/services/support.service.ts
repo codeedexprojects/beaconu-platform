@@ -3,9 +3,14 @@ import type {
   SendTicketMessageInput,
   TicketAdminListResponse,
   TicketDetail,
+  TicketStats,
   TicketStatus,
   UpdateTicketStatusInput,
 } from "@beaconu/types";
+
+export async function getTicketStats(): Promise<TicketStats> {
+  return api.get<TicketStats>("/api/v1/college-admin/support/stats");
+}
 
 export interface TicketListFilters {
   status?: TicketStatus;

@@ -1798,7 +1798,11 @@ export default function ApplicationDetailPage() {
                       <TableCell>{c.quotaName ?? "—"}</TableCell>
                       <TableCell>₹{c.applicationFee}</TableCell>
                       <TableCell className="space-x-2 text-right">
-                        {c.status === "submitted" && (
+                        {[
+                          "submitted",
+                          "assessment_completed",
+                          "interview_completed",
+                        ].includes(c.status) && (
                           <Button
                             size="sm"
                             variant="outline"

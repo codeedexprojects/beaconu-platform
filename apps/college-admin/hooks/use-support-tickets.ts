@@ -5,6 +5,7 @@ import { QUERY_KEYS } from "@/lib/query-keys";
 import {
   getCollegeTickets,
   getCollegeTicket,
+  getTicketStats,
   replyToTicket,
   updateTicketStatus,
   type TicketListFilters,
@@ -13,6 +14,13 @@ import type {
   SendTicketMessageInput,
   UpdateTicketStatusInput,
 } from "@beaconu/types";
+
+export function useTicketStats() {
+  return useQuery({
+    queryKey: QUERY_KEYS.supportTicketStats,
+    queryFn: () => getTicketStats(),
+  });
+}
 
 export function useCollegeTickets(filters: TicketListFilters = {}) {
   return useQuery({

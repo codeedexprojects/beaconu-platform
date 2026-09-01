@@ -730,6 +730,26 @@ export interface PendingEnrollmentItem {
   statusUpdatedAt: string | null;
 }
 
+export interface PendingShortlistItem {
+  applicationCourseId: string;
+  applicationId: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  courseName: string;
+  courseCode: string;
+  isPrimary: boolean;
+  admissionCycleName: string;
+  currentStage: string;
+  statusUpdatedAt: string | null;
+}
+
+export interface PendingShortlistDetail extends PendingShortlistItem {
+  applicationFee: string;
+}
+
 export interface PendingEnrollmentListQuery {
   admission_cycle_id?: string;
   search?: string;

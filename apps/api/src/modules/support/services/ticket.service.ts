@@ -4,6 +4,9 @@ import { PaginationHelper } from "@/shared/responses/pagination";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
+import { ApplicationService } from "@/modules/admissions/services/application.service";
+import { AttemptService } from "@/modules/assessments/services/attempt.service";
+import { InterviewBookingService } from "@/modules/interviews/services/interview-booking.service";
 import { TicketRepository } from "../repositories/ticket.repository";
 import { TicketDetailQuery } from "../queries/ticket-detail.query";
 import type {
@@ -36,6 +39,7 @@ function mapListItem(row: {
   id: string;
   ticketNumber: string;
   subject: string;
+  description: string;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -44,9 +48,73 @@ function mapListItem(row: {
     id: row.id,
     ticketNumber: row.ticketNumber,
     subject: row.subject,
+    preview: row.description,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+/** Composes the "Applicant Status" panel shown alongside a ticket —
+ * derives Application/Assessment/Interview progress off the student's
+ * most recent application at this college (Design Decision, Plan
+ * Admission-Inquiry-Desk). Each cross-module call is a Service, never a
+ * Repository/Query, per the layering rule — this lives in support since
+ * nothing imports support back (no cycle risk). */
+async function buildApplicantStatus(studentId: string, collegeId: string) {
+  const app = await ApplicationService.getMostRecentForStudentAtCollege(
+    studentId,
+    collegeId,
+  );
+  if (!app) return null;
+
+  const applicationStep =
+    app.formStatus === "submitted"
+      ? { status: "completed" as const, detail: null }
+      : { status: "pending" as const, detail: "Draft — not yet submitted" };
+
+  const attempt = await AttemptService.findStatusForApplication(
+    studentId,
+    app.applicationId,
+  );
+  const assessmentStep = !attempt
+    ? { status: "pending" as const, detail: null }
+    : attempt.status === "result_published"
+      ? { status: "completed" as const, detail: null }
+      : { status: "in_progress" as const, detail: null };
+
+  let interviewStep: {
+    status: "completed" | "scheduled" | "pending";
+    detail: string | null;
+  } = { status: "pending", detail: null };
+  try {
+    const booking = await InterviewBookingService.getMine(
+      studentId,
+      app.applicationId,
+    );
+    interviewStep =
+      booking.status === "completed"
+        ? { status: "completed", detail: null }
+        : booking.status === "scheduled"
+          ? {
+              status: "scheduled",
+              detail:
+                booking.scheduledDate && booking.startTime
+                  ? `Scheduled on ${booking.scheduledDate}, ${booking.startTime}`
+                  : null,
+            }
+          : { status: "pending", detail: null };
+  } catch {
+    // No booking yet — stays "pending", the normal not-scheduled state.
+  }
+
+  return {
+    applicationId: app.applicationId,
+    applicationNumber: app.applicationNumber,
+    programName: app.programName,
+    application: applicationStep,
+    assessment: assessmentStep,
+    interview: interviewStep,
   };
 }
 
@@ -63,6 +131,14 @@ async function assertEnrolled(studentId: string, collegeId: string) {
 export class TicketService {
   static async countAwaitingResponse(collegeId: string) {
     return TicketRepository.countAwaitingResponseForCollege(collegeId);
+  }
+
+  static async getStats(collegeId: string) {
+    const [activeCount, resolvedTodayCount] = await Promise.all([
+      TicketRepository.countActiveForCollege(collegeId),
+      TicketRepository.countResolvedTodayForCollege(collegeId),
+    ]);
+    return { activeCount, resolvedTodayCount };
   }
 
   static async create(studentId: string, data: CreateTicketInput) {
@@ -170,6 +246,7 @@ export class TicketService {
         ...mapListItem(r),
         studentName: r.student.fullName,
         studentEmail: r.student.email,
+        studentPhotoUrl: r.student.avatarUrl,
       })),
       meta: PaginationHelper.createMeta(
         total,
@@ -180,7 +257,12 @@ export class TicketService {
   }
 
   static async getForCollege(collegeId: string, ticketId: string) {
-    return TicketDetailQuery.getForCollege(collegeId, ticketId);
+    const ticket = await TicketDetailQuery.getForCollege(collegeId, ticketId);
+    const applicantStatus = await buildApplicantStatus(
+      ticket.studentId,
+      collegeId,
+    );
+    return { ...ticket, applicantStatus };
   }
 
   static async addAdminMessage(

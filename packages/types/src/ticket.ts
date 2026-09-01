@@ -16,6 +16,7 @@ export interface TicketListItem {
   id: string;
   ticketNumber: string;
   subject: string;
+  preview: string | null;
   status: TicketStatus;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,7 @@ export interface TicketListItem {
 export interface TicketAdminListItem extends TicketListItem {
   studentName: string;
   studentEmail: string | null;
+  studentPhotoUrl: string | null;
 }
 
 export interface TicketMessageItem {
@@ -34,6 +36,25 @@ export interface TicketMessageItem {
   attachments: TicketAttachmentItem[];
   isSystem: boolean;
   createdAt: string;
+}
+
+export interface ApplicantStatusStep {
+  status:
+    | "completed"
+    | "in_progress"
+    | "scheduled"
+    | "pending"
+    | "not_required";
+  detail: string | null;
+}
+
+export interface ApplicantStatusSummary {
+  applicationId: string;
+  applicationNumber: string;
+  programName: string | null;
+  application: ApplicantStatusStep;
+  assessment: ApplicantStatusStep;
+  interview: ApplicantStatusStep;
 }
 
 export interface TicketDetail {
@@ -47,6 +68,12 @@ export interface TicketDetail {
   createdAt: string;
   updatedAt: string;
   messages: TicketMessageItem[];
+  applicantStatus?: ApplicantStatusSummary | null;
+}
+
+export interface TicketStats {
+  activeCount: number;
+  resolvedTodayCount: number;
 }
 
 export interface TicketListMeta {

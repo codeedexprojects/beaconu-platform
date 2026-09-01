@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import Image from "next/image";
+import {
+  Search,
+  SlidersHorizontal,
+  Mail,
+  CheckCircle2,
+  Calendar,
+} from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,16 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCollegeTickets } from "@/hooks/use-support-tickets";
+import { useCollegeTickets, useTicketStats } from "@/hooks/use-support-tickets";
 import type { TicketStatus } from "@beaconu/types";
 
 const STATUS_OPTIONS: { label: string; value: TicketStatus | "all" }[] = [
@@ -35,23 +32,7 @@ const STATUS_OPTIONS: { label: string; value: TicketStatus | "all" }[] = [
   { label: "Reopened", value: "reopened" },
 ];
 
-const STATUS_BADGE_CLASS: Record<TicketStatus, string> = {
-  in_progress: "bg-amber-50 text-amber-700 border-amber-200",
-  awaiting_response: "bg-red-50 text-red-700 border-red-200",
-  resolved: "bg-green-50 text-green-700 border-green-200",
-  closed: "bg-blue-50 text-blue-700 border-blue-200",
-  reopened: "bg-amber-50 text-amber-700 border-amber-200",
-};
-
-const STATUS_LABEL: Record<TicketStatus, string> = {
-  in_progress: "In Progress",
-  awaiting_response: "Awaiting Response",
-  resolved: "Resolved",
-  closed: "Closed",
-  reopened: "Reopened",
-};
-
-function formatDate(dateStr: string) {
+function formatDateTime(dateStr: string) {
   return new Date(dateStr).toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -61,13 +42,43 @@ function formatDate(dateStr: string) {
   });
 }
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value: number | undefined;
+}) {
+  return (
+    <div className="flex-1 rounded-2xl border border-border bg-white p-5">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-pale text-gold">
+          <Icon className="h-4 w-4" />
+        </span>
+        {label}
+      </div>
+      <p className="font-serif text-3xl font-bold text-navy">{value ?? "—"}</p>
+    </div>
+  );
+}
+
 export default function SupportTicketsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TicketStatus | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const limit = 20;
 
+  const { data: stats } = useTicketStats();
   const { data, isLoading } = useCollegeTickets({
     search: search || undefined,
     status: status === "all" ? undefined : status,
@@ -80,114 +91,131 @@ export default function SupportTicketsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Student Queries</h1>
-          <p className="text-sm text-muted-foreground">
-            Review and respond to queries students have submitted from the
-            Student Hub.
-          </p>
-        </div>
+      <div className="flex items-start justify-between">
+        <h1 className="font-serif text-2xl font-bold tracking-tight text-navy">
+          Admission Inquiry Desk
+        </h1>
+        <Button variant="outline" onClick={() => setShowFilters((s) => !s)}>
+          <SlidersHorizontal className="mr-2 h-4 w-4" />
+          Filter View
+        </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by subject, ticket #, or student name"
-            className="pl-9"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <StatCard
+          icon={Mail}
+          label="Active Inquiries"
+          value={stats?.activeCount}
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Resolved Today"
+          value={stats?.resolvedTodayCount}
+        />
+      </div>
+
+      {showFilters && (
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-white p-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              placeholder="Search by subject, ticket #, or student name"
+              className="h-10 w-full rounded-full border border-border pl-10 pr-4 text-sm outline-none focus:border-gold"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <Select
+            value={status}
+            onValueChange={(v) => {
+              setStatus(v as TicketStatus | "all");
               setPage(1);
             }}
-          />
+          >
+            <SelectTrigger className="w-full sm:w-56">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v as TicketStatus | "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      )}
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Updated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 4 }).map((__, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : tickets.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-10 text-center text-sm text-muted-foreground"
-                >
-                  No student queries yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              tickets.map((ticket) => (
-                <TableRow
-                  key={ticket.id}
-                  className="cursor-pointer hover:bg-muted/50"
+      <div className="space-y-4">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-border bg-white p-6"
+            >
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="mt-3 h-16 w-full" />
+            </div>
+          ))
+        ) : tickets.length === 0 ? (
+          <div className="rounded-2xl border border-dashed py-16 text-center text-sm text-muted-foreground">
+            No student queries yet.
+          </div>
+        ) : (
+          tickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-6 shadow-sm sm:flex-row sm:items-start sm:justify-between"
+            >
+              <div className="flex flex-1 gap-4">
+                {ticket.studentPhotoUrl ? (
+                  <Image
+                    src={ticket.studentPhotoUrl}
+                    alt={ticket.studentName}
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gold-pale font-serif text-base font-bold text-gold">
+                    {initials(ticket.studentName)}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-serif text-base font-bold text-navy">
+                    {ticket.studentName}
+                  </p>
+                  <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                    Ticket #{ticket.ticketNumber.slice(-6).toUpperCase()}
+                  </p>
+                  <div className="mt-2 rounded-lg bg-muted/40 p-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gold">
+                      Student Query
+                    </p>
+                    <p className="text-sm italic text-navy">
+                      &quot;{ticket.preview ?? ticket.subject}&quot;
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  Received on {formatDateTime(ticket.createdAt)}
+                </p>
+                <Button
+                  className="bg-navy text-white hover:bg-navy/90"
                   onClick={() => router.push(`/support/${ticket.id}`)}
                 >
-                  <TableCell>
-                    <div className="font-medium">{ticket.studentName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {ticket.studentEmail ?? "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{ticket.subject}</div>
-                    <div className="text-xs text-muted-foreground">
-                      #{ticket.ticketNumber.slice(-6).toUpperCase()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={STATUS_BADGE_CLASS[ticket.status]}
-                    >
-                      {STATUS_LABEL[ticket.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(ticket.updatedAt)}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                  Respond →
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {meta && meta.totalPages > 1 && (

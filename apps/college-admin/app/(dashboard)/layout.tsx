@@ -448,6 +448,12 @@ export default function DashboardLayout({
                     permission: "staff.view",
                   },
                   {
+                    name: "Pending Shortlisting",
+                    path: "/pending-shortlist",
+                    icon: Star,
+                    permission: "staff.view",
+                  },
+                  {
                     name: "Pending Enrollment",
                     path: "/pending-enrollment",
                     icon: UserCheck,

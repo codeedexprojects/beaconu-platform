@@ -3,6 +3,7 @@ import { ApiResponse } from "@/shared/responses/api-response";
 import {
   listApplicationsQuerySchema,
   listPendingEnrollmentQuerySchema,
+  listPendingShortlistQuerySchema,
   rejectApplicationCourseSchema,
 } from "../validators/application.validator";
 import { ApplicationListQuery } from "../queries/application-list.query";
@@ -55,6 +56,33 @@ export class ApplicationsCollegeAdminController {
       req.params.applicationCourseId as string,
     );
     res.status(200).json(ApiResponse.success("Student enrolled", result));
+  }
+
+  static async listPendingShortlist(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const query = listPendingShortlistQuerySchema.parse(req.query);
+    const result = await ApplicationCourseService.listPendingShortlist(
+      req.collegeId!,
+      { search: query.search },
+    );
+    res
+      .status(200)
+      .json(ApiResponse.success("Pending shortlisting fetched", result));
+  }
+
+  static async getPendingShortlistDetail(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const result = await ApplicationCourseService.getPendingShortlistDetail(
+      req.collegeId!,
+      req.params.applicationCourseId as string,
+    );
+    res
+      .status(200)
+      .json(ApiResponse.success("Pending shortlist detail fetched", result));
   }
 
   static async rejectCourse(req: Request, res: Response): Promise<void> {

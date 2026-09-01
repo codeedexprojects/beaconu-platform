@@ -8,6 +8,7 @@ const LIST_SELECT = {
   id: true,
   ticketNumber: true,
   subject: true,
+  description: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -15,7 +16,7 @@ const LIST_SELECT = {
 
 const ADMIN_LIST_SELECT = {
   ...LIST_SELECT,
-  student: { select: { fullName: true, email: true } },
+  student: { select: { fullName: true, email: true, avatarUrl: true } },
 } as const;
 
 function buildSearchFilter(search: string) {
@@ -31,6 +32,23 @@ export class TicketRepository {
   static async countAwaitingResponseForCollege(collegeId: string) {
     return prisma.supportTicket.count({
       where: { collegeId, status: "awaiting_response" },
+    });
+  }
+
+  static async countActiveForCollege(collegeId: string) {
+    return prisma.supportTicket.count({
+      where: {
+        collegeId,
+        status: { in: ["in_progress", "awaiting_response"] },
+      },
+    });
+  }
+
+  static async countResolvedTodayForCollege(collegeId: string) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return prisma.supportTicket.count({
+      where: { collegeId, status: "resolved", resolvedAt: { gte: startOfDay } },
     });
   }
 

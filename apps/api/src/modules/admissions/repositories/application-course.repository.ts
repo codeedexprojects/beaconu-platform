@@ -262,6 +262,106 @@ export class ApplicationCourseRepository {
     });
   }
 
+  /** Bulk read for ApplicationCourseService.listPendingShortlist — every
+   * non-withdrawn course at this college currently sitting at ANY of the
+   * three statuses that could be "ready" (submitted / assessment_completed
+   * / interview_completed) — final per-cycle filtering (which one is
+   * actually correct for that course's cycle) happens in the service,
+   * same "duplicate a minimal cross-module read, filter in code" pattern
+   * already used by findInterviewEligibleForCollege. */
+  static async findPendingShortlistCandidatesForCollege(
+    collegeId: string,
+    filters: { search?: string } = {},
+  ) {
+    return prisma.applicationCourse.findMany({
+      where: {
+        status: {
+          in: ["submitted", "assessment_completed", "interview_completed"],
+        },
+        application: {
+          collegeId,
+          ...(filters.search && {
+            OR: [
+              {
+                applicationNumber: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                student: {
+                  fullName: {
+                    contains: filters.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            ],
+          }),
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        isPrimary: true,
+        statusUpdatedAt: true,
+        course: { select: { name: true, code: true } },
+        application: {
+          select: {
+            id: true,
+            applicationNumber: true,
+            studentId: true,
+            student: {
+              select: { fullName: true, email: true, phoneNumber: true },
+            },
+            admissionCycle: {
+              select: {
+                name: true,
+                assessmentRequired: true,
+                interviewRequired: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { statusUpdatedAt: "desc" },
+    });
+  }
+
+  static async findPendingShortlistDetailForCollege(
+    id: string,
+    collegeId: string,
+  ) {
+    return prisma.applicationCourse.findFirst({
+      where: { id, application: { collegeId } },
+      select: {
+        id: true,
+        status: true,
+        isPrimary: true,
+        applicationFee: true,
+        statusUpdatedAt: true,
+        course: { select: { name: true, code: true } },
+        application: {
+          select: {
+            id: true,
+            applicationNumber: true,
+            studentId: true,
+            student: {
+              select: { fullName: true, email: true, phoneNumber: true },
+            },
+            admissionCycle: {
+              select: {
+                name: true,
+                assessmentRequired: true,
+                interviewRequired: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   static async findByIdWithOwnership(id: string) {
     return prisma.applicationCourse.findUnique({
       where: { id },

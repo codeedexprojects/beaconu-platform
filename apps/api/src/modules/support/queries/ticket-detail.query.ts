@@ -8,6 +8,7 @@ const TICKET_SELECT = {
   subject: true,
   status: true,
   collegeId: true,
+  studentId: true,
   resolvedAt: true,
   closedAt: true,
   createdAt: true,
@@ -21,6 +22,7 @@ type TicketRow = {
   subject: string;
   status: string;
   collegeId: string;
+  studentId: string;
   resolvedAt: Date | null;
   closedAt: Date | null;
   createdAt: Date;
@@ -55,6 +57,7 @@ async function assemble(row: TicketRow) {
     subject: row.subject,
     status: row.status,
     collegeId: row.collegeId,
+    studentId: row.studentId,
     resolvedAt: row.resolvedAt ? row.resolvedAt.toISOString() : null,
     closedAt: row.closedAt ? row.closedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),

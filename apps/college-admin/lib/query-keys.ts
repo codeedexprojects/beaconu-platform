@@ -31,6 +31,10 @@ export const QUERY_KEYS = {
   sidebarHints: ["sidebar-hints"] as const,
   pendingEnrollments: (filters?: object) =>
     filters ? ["pending-enrollments", filters] : ["pending-enrollments"],
+  pendingShortlist: (search?: string) =>
+    search ? ["pending-shortlist", search] : ["pending-shortlist"],
+  pendingShortlistDetail: (id: string) =>
+    ["pending-shortlist-detail", id] as const,
   interviewBookings: (filters?: object) =>
     filters ? ["interview-bookings", filters] : ["interview-bookings"],
   interviewBooking: (id: string) => ["interview-booking", id] as const,
@@ -59,6 +63,7 @@ export const QUERY_KEYS = {
       ? (["support-tickets", filters] as const)
       : (["support-tickets"] as const),
   supportTicket: (id: string) => ["support-ticket", id] as const,
+  supportTicketStats: ["support-ticket-stats"] as const,
   platformTickets: (filters?: unknown) =>
     filters
       ? (["platform-tickets", filters] as const)

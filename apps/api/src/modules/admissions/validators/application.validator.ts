@@ -55,6 +55,10 @@ export const listPendingEnrollmentQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
+export const listPendingShortlistQuerySchema = z.object({
+  search: z.string().trim().min(1).optional(),
+});
+
 export const rejectApplicationCourseSchema = z.object({
   reason: z.string().trim().max(1000).optional(),
 });
