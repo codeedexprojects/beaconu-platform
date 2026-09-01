@@ -708,15 +708,57 @@ export class CollegeRegistrationService {
         }
       : undefined;
 
-    await CollegeRegistrationRepository.updateCollegeProfile(
-      collegeId,
-      mergedProfileSections
+    const existingSettings = this.isRecord(college.settings)
+      ? (college.settings as Record<string, unknown>)
+      : {};
+
+    const registrationMetaPatch: Record<string, unknown> = {};
+    if (normalizedData.leadId !== undefined) {
+      registrationMetaPatch.leadId = normalizedData.leadId;
+    }
+    if (normalizedData.addressFromLead !== undefined) {
+      registrationMetaPatch.addressFromLead = normalizedData.addressFromLead;
+    }
+    if (normalizedData.registrationTabs !== undefined) {
+      registrationMetaPatch.registrationTabs = normalizedData.registrationTabs;
+    }
+    const hasRegistrationMetaPatch =
+      Object.keys(registrationMetaPatch).length > 0;
+
+    // Always merge onto the college's CURRENT settings from the DB — never
+    // onto just the incoming payload — so a save that only touches
+    // registrationMeta (or only `settings`) can't blow away unrelated keys
+    // like `isListed` that already live in the settings JSON blob.
+    const mergedSettings =
+      this.isRecord(normalizedData.settings) || hasRegistrationMetaPatch
         ? {
-            ...normalizedData,
-            profileSections: mergedProfileSections,
+            ...existingSettings,
+            ...(this.isRecord(normalizedData.settings)
+              ? (normalizedData.settings as Record<string, unknown>)
+              : {}),
+            ...(hasRegistrationMetaPatch
+              ? {
+                  registrationMeta: {
+                    ...(this.isRecord(existingSettings.registrationMeta)
+                      ? (existingSettings.registrationMeta as Record<
+                          string,
+                          unknown
+                        >)
+                      : {}),
+                    ...registrationMetaPatch,
+                  },
+                }
+              : {}),
           }
-        : normalizedData,
-    );
+        : undefined;
+
+    await CollegeRegistrationRepository.updateCollegeProfile(collegeId, {
+      ...normalizedData,
+      ...(mergedProfileSections
+        ? { profileSections: mergedProfileSections }
+        : {}),
+      ...(mergedSettings ? { settings: mergedSettings } : {}),
+    });
 
     const updatedCollege =
       await CollegeRegistrationRepository.findCollegeById(collegeId);

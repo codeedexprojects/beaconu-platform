@@ -158,41 +158,11 @@ export class CollegeRegistrationRepository {
     collegeId: string,
     data: UpdateCollegeProfileData,
   ) {
-    const registrationMetaPatch: Record<string, unknown> = {};
-
-    if (data.leadId !== undefined) {
-      registrationMetaPatch.leadId = data.leadId;
-    }
-
-    if (data.addressFromLead !== undefined) {
-      registrationMetaPatch.addressFromLead = data.addressFromLead;
-    }
-
-    if (data.registrationTabs !== undefined) {
-      registrationMetaPatch.registrationTabs = data.registrationTabs;
-    }
-
-    const hasRegistrationMetaPatch =
-      Object.keys(registrationMetaPatch).length > 0;
-
-    const incomingSettings = isRecord(data.settings)
-      ? { ...(data.settings as Record<string, unknown>) }
-      : {};
-
-    const existingRegistrationMeta = isRecord(incomingSettings.registrationMeta)
-      ? (incomingSettings.registrationMeta as Record<string, unknown>)
-      : {};
-
-    const mergedSettings = hasRegistrationMetaPatch
-      ? {
-          ...incomingSettings,
-          registrationMeta: {
-            ...existingRegistrationMeta,
-            ...registrationMetaPatch,
-          },
-        }
-      : data.settings;
-
+    // `data.settings` is expected to already be the final, fully-merged
+    // settings object (merged against the college's current DB settings by
+    // the service layer) — this repository must not re-derive or partially
+    // rebuild it, or it risks silently dropping unrelated keys (e.g.
+    // `isListed`) the way it used to.
     const payload: Record<string, unknown> = {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.code !== undefined ? { code: data.code } : {}),
@@ -235,7 +205,7 @@ export class CollegeRegistrationRepository {
       ...(data.registrationTabs !== undefined
         ? { registrationTabs: data.registrationTabs }
         : {}),
-      ...(mergedSettings !== undefined ? { settings: mergedSettings } : {}),
+      ...(data.settings !== undefined ? { settings: data.settings } : {}),
     };
 
     return prisma.college.update({
