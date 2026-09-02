@@ -70,7 +70,7 @@ const COPY: Record<
     specializationLabel: "Streams / subjects you counsel on",
     specializationPlaceholder:
       "e.g. Science, Commerce, Engineering, Medical, Arts",
-    messageLabel: "Why do you want to counsel students with BeaconU?",
+    messageLabel: "Why do you want to counsel students with Blink?",
     messagePlaceholder:
       "Tell us about your academic counselling background and the kind of students you'd like to support...",
     showLicense: false,
@@ -82,7 +82,7 @@ const COPY: Record<
       "e.g. Anxiety, Academic Stress, Depression, Relationship Issues",
     messageLabel: "Tell us about your mental health practice",
     messagePlaceholder:
-      "Share your areas of focus, certifications, and why you'd like to support student wellbeing on BeaconU...",
+      "Share your areas of focus, certifications, and why you'd like to support student wellbeing with Blink...",
     showLicense: true,
   },
 };

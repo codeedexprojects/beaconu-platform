@@ -15,7 +15,7 @@ const POINTS = [
   {
     icon: Check,
     title: "Real reach",
-    description: "Meet students across BeaconU's college network.",
+    description: "Meet students across our partner college network.",
   },
 ];
 
@@ -56,9 +56,8 @@ export function WhatIsBlinkSection() {
               A better conversation can change the direction of a day.
             </h2>
             <p className="mt-4 max-w-lg text-balance text-muted-foreground">
-              Blink is BeaconU&apos;s counsellor network — connecting thoughtful
-              professionals with students looking for guidance on their course,
-              college, and wellbeing.
+              Blink connects thoughtful professionals with students looking for
+              guidance on their course, college, and wellbeing.
             </p>
 
             <div className="mt-8 grid gap-6 sm:grid-cols-3">

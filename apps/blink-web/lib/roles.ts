@@ -20,12 +20,12 @@ export const BLINK_ROLES: BlinkRole[] = [
     shortLabel: "Academic Counsellor",
     tagline: "Guide students toward the right course",
     description:
-      "Help students choose the right stream, course, and college through one-on-one academic counselling sessions on the BeaconU platform.",
+      "Help students choose the right stream, course, and college through one-on-one academic counselling sessions.",
     icon: GraduationCap,
     highlights: [
       "Flexible, session-based engagements",
-      "Reach students across BeaconU's network of colleges",
-      "Get paid through the BeaconU counsellor wallet",
+      "Reach students across our network of colleges",
+      "Get paid through your counsellor wallet",
     ],
     ctaLabel: "Send a request to join",
   },
@@ -35,7 +35,7 @@ export const BLINK_ROLES: BlinkRole[] = [
     shortLabel: "MindCare Counsellor",
     tagline: "Support student mental wellbeing",
     description:
-      "Licensed mental health professionals who provide confidential counselling sessions to students through BeaconU's MindCare program.",
+      "Licensed mental health professionals who provide confidential counselling sessions to students through the MindCare program.",
     icon: HeartHandshake,
     highlights: [
       "Make a real impact on student wellbeing",

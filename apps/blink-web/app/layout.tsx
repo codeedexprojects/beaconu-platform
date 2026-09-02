@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Blink — Partner with BeaconU",
+  title: "Blink — Counsellor Network",
   description:
-    "Join Blink as an Agency, Campus Ambassador, or Counsellor and grow with BeaconU.",
+    "Join Blink as an Academic Counsellor or MindCare Counsellor and grow your practice.",
 };
 
 export default function RootLayout({
