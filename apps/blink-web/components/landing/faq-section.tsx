@@ -23,7 +23,7 @@ const FAQS = [
   {
     question: "How do I earn through Blink?",
     answer:
-      "Counsellors are compensated for the sessions they conduct with students, paid out through the BeaconU counsellor wallet.",
+      "Counsellors are compensated for the sessions they conduct with students, paid out through your counsellor wallet.",
   },
   {
     question:

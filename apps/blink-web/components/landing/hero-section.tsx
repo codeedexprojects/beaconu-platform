@@ -15,7 +15,7 @@ export function HeroSection() {
         <div className="flex max-w-3xl flex-col items-start gap-8">
           <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
             <Sparkles className="h-4 w-4" />
-            BeaconU&apos;s counsellor network
+            The counsellor network
           </span>
 
           <h1 className="text-balance font-serif text-6xl font-semibold leading-[1.05] tracking-tight text-white sm:text-7xl md:text-8xl">
@@ -26,8 +26,7 @@ export function HeroSection() {
 
           <p className="max-w-xl text-balance text-lg text-white/80 sm:text-xl">
             Support students as they find their next step. Run meaningful
-            sessions, grow your practice, and make a real difference through
-            BeaconU.
+            sessions, grow your practice, and make a real difference.
           </p>
 
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">

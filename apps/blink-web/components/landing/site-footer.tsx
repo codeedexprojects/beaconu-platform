@@ -9,7 +9,7 @@ export function SiteFooter() {
             <Sparkles className="h-4 w-4" />
           </span>
           <span>
-            &copy; {new Date().getFullYear()} BeaconU. Blink counsellor network.
+            &copy; {new Date().getFullYear()} Blink counsellor network.
           </span>
         </div>
 
