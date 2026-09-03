@@ -1,0 +1,20 @@
+meta {
+  name: Get Feed Item
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/feed/{{feedId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Fetches a single feed item by id. Requires platform_admin auth +
+  content.view. 404 if not found.
+}

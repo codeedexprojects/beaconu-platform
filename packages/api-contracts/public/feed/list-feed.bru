@@ -1,0 +1,26 @@
+meta {
+  name: List Feed (Public)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/feed
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists active feed items, paginated, ordered by display order then
+  newest first. No auth required. Inactive items are never returned.
+
+  Each item: { id, caption, thumbnailUrl, videoUrl, displayOrder,
+  isActive, createdAt, updatedAt }. Response includes `meta` (page,
+  limit, total, totalPages, hasNextPage, hasPreviousPage) alongside
+  `data`.
+}

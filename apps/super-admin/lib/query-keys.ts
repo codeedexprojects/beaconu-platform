@@ -54,6 +54,9 @@ export const QUERY_KEYS = {
   shorts: (params?: object) =>
     params ? ["shorts", params] : (["shorts"] as const),
   short: (id: string) => ["shorts", id] as const,
+  feedItems: (params?: object) =>
+    params ? ["feed-items", params] : (["feed-items"] as const),
+  feedItem: (id: string) => ["feed-items", id] as const,
   videoTestimonials: (params?: object) =>
     params ? ["video-testimonials", params] : (["video-testimonials"] as const),
   videoTestimonial: (id: string) => ["video-testimonials", id] as const,
