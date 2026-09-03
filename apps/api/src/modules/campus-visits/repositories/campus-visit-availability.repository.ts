@@ -6,12 +6,8 @@ export class CampusVisitAvailabilityRepository {
   static async upsert(
     collegeId: string,
     weekday: number,
-    data: { time: string | null; maxCapacity: number; isOff: boolean },
+    data: { maxCapacity: number; isOff: boolean },
   ) {
-    const timeValue = data.time
-      ? new Date(`1970-01-01T${data.time}:00Z`)
-      : null;
-
     return prisma.campusVisitAvailability.upsert({
       where: {
         uq_visit_availability_college_weekday: { collegeId, weekday },
@@ -19,12 +15,10 @@ export class CampusVisitAvailabilityRepository {
       create: {
         collegeId,
         weekday,
-        time: timeValue,
         maxCapacity: data.maxCapacity,
         isOff: data.isOff,
       },
       update: {
-        time: timeValue,
         maxCapacity: data.maxCapacity,
         isOff: data.isOff,
       },

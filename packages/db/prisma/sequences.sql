@@ -29,6 +29,8 @@ CREATE SEQUENCE IF NOT EXISTS "call_request_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_seq";
 CREATE SEQUENCE IF NOT EXISTS "campus_visit_availability_seq";
+CREATE SEQUENCE IF NOT EXISTS "campus_visit_settings_seq";
+CREATE SEQUENCE IF NOT EXISTS "campus_visit_date_override_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_conversation_seq";
 CREATE SEQUENCE IF NOT EXISTS "chat_message_seq";
 CREATE SEQUENCE IF NOT EXISTS "college_seq";

@@ -1,0 +1,20 @@
+meta {
+  name: Remove Date Holiday (College Admin)
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/date-overrides/{{campusVisitDateOverrideId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Un-marks a date so it's bookable again (subject to its weekday's normal
+  pattern). Soft-removal — the override row stays, just flagged inactive.
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Mark Date as Holiday (College Admin)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/date-overrides
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "date": "2026-10-24",
+    "reason": "Founder's Day"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("campusVisitDateOverrideId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Marks one specific calendar date as unavailable, independent of its
+  weekday's normal recurring pattern (e.g. a normally-open Tuesday can
+  still be closed just for one date). Blocks new bookings on that date
+  but does NOT touch any visits already booked there — use Cancel All
+  Bookings For Date separately if those need clearing too.
+
+  Idempotent — re-marking an already-holiday date just updates its reason.
+}

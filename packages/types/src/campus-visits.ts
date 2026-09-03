@@ -139,7 +139,6 @@ export interface CampusVisitAvailabilityEntry {
   id: string | null;
   collegeId: string;
   weekday: WeekdayName;
-  time: string | null;
   maxCapacity: number;
   isOff: boolean;
   createdAt: string | null;
@@ -148,7 +147,49 @@ export interface CampusVisitAvailabilityEntry {
 
 export interface UpsertCampusVisitAvailabilityInput {
   weekday: number;
-  time?: string;
   max_capacity?: number;
   is_off?: boolean;
+}
+
+export interface CampusVisitSettingsItem {
+  collegeId: string;
+  visitStartTime: string | null;
+  visitEndTime: string | null;
+}
+
+export interface UpsertCampusVisitSettingsInput {
+  visit_start_time: string;
+  visit_end_time: string;
+}
+
+export interface CampusVisitDateOverrideItem {
+  id: string;
+  date: string;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface CreateCampusVisitDateOverrideInput {
+  date: string;
+  reason?: string;
+}
+
+export interface CampusVisitCalendarDay {
+  date: string;
+  isWeekdayOff: boolean;
+  isHoliday: boolean;
+  holidayReason: string | null;
+  holidayOverrideId: string | null;
+  bookingCount: number;
+  capacity: number;
+  visits: CampusVisitListItem[];
+}
+
+export interface CancelCampusVisitByAdminInput {
+  message: string;
+}
+
+export interface BulkCancelVisitsForDateInput {
+  date: string;
+  message: string;
 }

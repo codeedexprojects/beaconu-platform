@@ -1,0 +1,31 @@
+meta {
+  name: Get Campus Visit Calendar (College Admin)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/calendar?year=2026&month=9
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  year: 2026
+  month: 9
+}
+
+docs {
+  One entry per calendar date in the given month:
+  `{ date, isWeekdayOff, isHoliday, holidayReason, holidayOverrideId,
+     bookingCount, capacity, visits: CampusVisitListItem[] }`
+
+  `visits` is embedded directly (no extra request needed to see a date's
+  bookings) and includes every status, including already-cancelled ones —
+  `bookingCount` only counts non-cancelled visits against `capacity`.
+  Marking a date a holiday does NOT remove or cancel its existing visits.
+}

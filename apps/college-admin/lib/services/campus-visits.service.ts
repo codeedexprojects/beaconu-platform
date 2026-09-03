@@ -5,6 +5,13 @@ import type {
   CampusVisitAvailabilityEntry,
   UpsertCampusVisitAvailabilityInput,
   CampusVisitStats,
+  CampusVisitSettingsItem,
+  UpsertCampusVisitSettingsInput,
+  CampusVisitCalendarDay,
+  CampusVisitDateOverrideItem,
+  CreateCampusVisitDateOverrideInput,
+  CancelCampusVisitByAdminInput,
+  BulkCancelVisitsForDateInput,
   PaginationMeta,
 } from "@beaconu/types";
 
@@ -47,4 +54,53 @@ export async function upsertCampusVisitAvailability(
   data: UpsertCampusVisitAvailabilityInput,
 ): Promise<CampusVisitAvailabilityEntry> {
   return api.put(`/api/v1/college-admin/campus-visits/availability`, data);
+}
+
+export async function getCampusVisitSettings(): Promise<CampusVisitSettingsItem> {
+  return api.get(`/api/v1/college-admin/campus-visits/settings`);
+}
+
+export async function upsertCampusVisitSettings(
+  data: UpsertCampusVisitSettingsInput,
+): Promise<CampusVisitSettingsItem> {
+  return api.put(`/api/v1/college-admin/campus-visits/settings`, data);
+}
+
+export async function getCampusVisitCalendar(
+  year: number,
+  month: number,
+): Promise<CampusVisitCalendarDay[]> {
+  return api.get(
+    `/api/v1/college-admin/campus-visits/calendar?year=${year}&month=${month}`,
+  );
+}
+
+export async function addCampusVisitDateOverride(
+  data: CreateCampusVisitDateOverrideInput,
+): Promise<CampusVisitDateOverrideItem> {
+  return api.post(`/api/v1/college-admin/campus-visits/date-overrides`, data);
+}
+
+export async function removeCampusVisitDateOverride(
+  overrideId: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/campus-visits/date-overrides/${overrideId}`,
+  );
+}
+
+export async function cancelCampusVisitByAdmin(
+  visitId: string,
+  data: CancelCampusVisitByAdminInput,
+): Promise<CampusVisit> {
+  return api.patch(
+    `/api/v1/college-admin/campus-visits/${visitId}/cancel`,
+    data,
+  );
+}
+
+export async function cancelCampusVisitsForDate(
+  data: BulkCancelVisitsForDateInput,
+): Promise<{ cancelledCount: number }> {
+  return api.post(`/api/v1/college-admin/campus-visits/cancel-date`, data);
 }

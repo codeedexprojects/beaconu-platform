@@ -6,6 +6,8 @@ import { BlinkService } from "@/modules/blink/services/blink.service";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { CampusVisitsRepository } from "../repositories/campus-visits.repository";
 import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
+import { CampusVisitSettingsRepository } from "../repositories/campus-visit-settings.repository";
+import { CampusVisitDateOverrideRepository } from "../repositories/campus-visit-date-override.repository";
 import { CampusVisitsQuery } from "../queries/campus-visits.query";
 import type {
   CreateCampusVisitInput,
@@ -53,19 +55,50 @@ function assertMinAdvanceNotice(dateStr: string, time: Date) {
   }
 }
 
-async function assertDateBookable(collegeId: string, date: string) {
+/** Resolves the visit time + that weekday's capacity once the date passes
+ * every blocking check — recurring weekday off-days AND one-off date
+ * holidays. The visit time itself is the college's single shared
+ * CampusVisitSettings.visitStartTime, not per-weekday anymore — the
+ * start/end pair is purely descriptive "working hours" shown to
+ * students; the booking itself is recorded at the start time since
+ * students never pick a time. */
+async function assertDateBookable(
+  collegeId: string,
+  date: string,
+): Promise<{ visitTime: Date; maxCapacity: number }> {
   const availability =
     await CampusVisitAvailabilityRepository.findByCollegeAndWeekday(
       collegeId,
       weekdayOf(date),
     );
-  if (!availability || availability.isOff || !availability.time) {
+  if (!availability || availability.isOff) {
     throw new ConflictError(
       "Selected date is not available for campus visits. Please choose a different date.",
     );
   }
-  assertMinAdvanceNotice(date, availability.time);
-  return availability;
+
+  const override = await CampusVisitDateOverrideRepository.findByCollegeAndDate(
+    collegeId,
+    date,
+  );
+  if (override && override.isActive) {
+    throw new ConflictError(
+      "This date is marked as a holiday and isn't available for campus visits.",
+    );
+  }
+
+  const settings = await CampusVisitSettingsRepository.findByCollege(collegeId);
+  if (!settings) {
+    throw new ConflictError(
+      "This college hasn't configured a campus visit time yet.",
+    );
+  }
+
+  assertMinAdvanceNotice(date, settings.visitStartTime);
+  return {
+    visitTime: settings.visitStartTime,
+    maxCapacity: availability.maxCapacity,
+  };
 }
 
 function mapBookingResponse(visit: {
@@ -225,6 +258,27 @@ async function notifyAmbassadorOfCancellation(visit: {
   }
 }
 
+/** The one place in this codebase where an admin-typed free-text message
+ * is sent verbatim as the push body — college-admin composes `message`
+ * themselves (why they're cancelling), no fixed template. */
+async function notifyStudentOfAdminCancellation(
+  visit: { id: string; studentId: string },
+  message: string,
+): Promise<void> {
+  try {
+    await PushService.sendToUser(visit.studentId, "student", {
+      title: "Your campus visit was cancelled",
+      body: message,
+      data: { type: "campus_visit_admin_cancelled", visitId: visit.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, visitId: visit.id },
+      "Failed to notify student of admin campus visit cancellation",
+    );
+  }
+}
+
 export class CampusVisitsService {
   static async book(data: CreateCampusVisitInput, studentId: string) {
     const existing = await CampusVisitsRepository.findActiveVisitOnDate(
@@ -261,7 +315,7 @@ export class CampusVisitsService {
       }
 
       return CampusVisitsRepository.create(
-        { ...data, studentId, proposedTime: availability.time! },
+        { ...data, studentId, proposedTime: availability.visitTime },
         tx,
       );
     });
@@ -321,7 +375,7 @@ export class CampusVisitsService {
       return CampusVisitsRepository.reschedule(
         visitId,
         new Date(data.proposed_date),
-        availability.time!,
+        availability.visitTime,
         visit.proposedDate,
         visit.proposedTime,
         tx,
@@ -559,6 +613,102 @@ export class CampusVisitsService {
       count += 1;
     }
 
+    return count;
+  }
+
+  static async getSettings(collegeId: string) {
+    return CampusVisitSettingsRepository.findByCollege(collegeId);
+  }
+
+  static async upsertSettings(
+    collegeId: string,
+    startTime: string,
+    endTime: string,
+  ) {
+    return CampusVisitSettingsRepository.upsert(collegeId, startTime, endTime);
+  }
+
+  static async getMonthCalendar(
+    collegeId: string,
+    year: number,
+    month: number,
+  ) {
+    return CampusVisitsQuery.getMonthCalendar(collegeId, year, month);
+  }
+
+  static async addDateOverride(
+    collegeId: string,
+    staffId: string,
+    date: string,
+    reason: string | undefined,
+  ) {
+    return CampusVisitDateOverrideRepository.upsertActive(
+      collegeId,
+      date,
+      reason ?? null,
+      staffId,
+    );
+  }
+
+  static async removeDateOverride(collegeId: string, overrideId: string) {
+    const override = await CampusVisitDateOverrideRepository.findByIdForCollege(
+      overrideId,
+      collegeId,
+    );
+    if (!override) throw new NotFoundError("Date override not found");
+    await CampusVisitDateOverrideRepository.softDeactivate(overrideId);
+  }
+
+  /** College-admin cancels one specific booking — the admin's own typed
+   * `message` is sent verbatim to the student as the notification. */
+  static async cancelByAdmin(
+    collegeId: string,
+    visitId: string,
+    message: string,
+  ) {
+    const visit = await CampusVisitsRepository.findById(visitId);
+    if (!visit || visit.collegeId !== collegeId) {
+      throw new NotFoundError("Campus visit not found");
+    }
+    if (!CANCELLABLE_STATUSES.includes(visit.status)) {
+      throw new ForbiddenError(
+        `Cannot cancel a visit with status '${visit.status}'`,
+      );
+    }
+
+    const cancelled = await CampusVisitsRepository.updateStatus(
+      visitId,
+      "cancelled",
+      { cancellationReason: message },
+    );
+    await notifyStudentOfAdminCancellation(cancelled, message);
+    await notifyAmbassadorOfCancellation(cancelled);
+    return cancelled;
+  }
+
+  /** Same as cancelByAdmin, applied to every active booking on one date —
+   * each student gets their own notification with the same message. */
+  static async cancelAllForDate(
+    collegeId: string,
+    date: string,
+    message: string,
+  ) {
+    const visits = await CampusVisitsRepository.findActiveForDate(
+      collegeId,
+      date,
+    );
+
+    let count = 0;
+    for (const visit of visits) {
+      const cancelled = await CampusVisitsRepository.updateStatus(
+        visit.id,
+        "cancelled",
+        { cancellationReason: message },
+      );
+      await notifyStudentOfAdminCancellation(cancelled, message);
+      await notifyAmbassadorOfCancellation(cancelled);
+      count += 1;
+    }
     return count;
   }
 }

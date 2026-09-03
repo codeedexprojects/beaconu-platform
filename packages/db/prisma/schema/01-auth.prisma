@@ -212,6 +212,7 @@ model StaffMember {
   refundsProcessed              Refund[]
   antiRaggingAssigned           AntiRaggingComplaint[]
   supportTicketsAssigned        SupportTicket[]
+  campusVisitDateOverridesMade  CampusVisitDateOverride[]
   callRequestsHandled           CallRequest[]
   platformTicketsRaised         PlatformTicket[]
   announcements                 Announcement[]

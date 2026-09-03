@@ -1,0 +1,21 @@
+meta {
+  name: Get Campus Visit Settings (College Admin)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/settings
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  The college's shared campus working hours window
+  (`{ visitStartTime, visitEndTime }`), used for every open day. Both are
+  `null` until the college sets them for the first time.
+}

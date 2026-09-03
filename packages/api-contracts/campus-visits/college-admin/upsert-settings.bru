@@ -1,0 +1,32 @@
+meta {
+  name: Upsert Campus Visit Settings (College Admin)
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/settings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "visit_start_time": "09:00",
+    "visit_end_time": "17:00"
+  }
+}
+
+docs {
+  Sets the college's shared campus working hours (e.g. 9 AM-5 PM),
+  replacing the old per-weekday single time. Purely descriptive — shown
+  to students so they know when to expect to be received, but they never
+  pick a time themselves, only a date. Every booking is internally
+  recorded at `visit_start_time`. `visit_end_time` must be after
+  `visit_start_time`.
+}

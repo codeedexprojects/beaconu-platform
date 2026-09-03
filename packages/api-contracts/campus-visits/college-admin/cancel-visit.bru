@@ -1,0 +1,29 @@
+meta {
+  name: Cancel Visit (College Admin)
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/{{campusVisitId}}/cancel
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "message": "We're sorry, but due to an unforeseen campus event we need to cancel your visit. Please rebook for another date — we apologize for the inconvenience."
+  }
+}
+
+docs {
+  College-admin cancels one specific booking (pending/confirmed/arrived
+  only). `message` is required and is sent verbatim as the push
+  notification body to the student — there's no fixed template, the
+  admin writes exactly what the student sees.
+}

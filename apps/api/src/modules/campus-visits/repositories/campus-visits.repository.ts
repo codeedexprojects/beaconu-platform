@@ -98,6 +98,18 @@ export class CampusVisitsRepository {
     });
   }
 
+  /** Every not-yet-terminal visit on one exact date, for the college-admin
+   * "cancel all bookings on this date" bulk action. */
+  static async findActiveForDate(collegeId: string, date: string) {
+    return prisma.campusVisit.findMany({
+      where: {
+        collegeId,
+        proposedDate: new Date(date + "T00:00:00Z"),
+        status: { in: ["pending", "confirmed", "arrived"] },
+      },
+    });
+  }
+
   static async countByAmbassador(ambassadorId: string) {
     return prisma.campusVisit.groupBy({
       by: ["status"],

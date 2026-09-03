@@ -104,6 +104,9 @@ export const QUERY_KEYS = {
   campusVisit: (id: string) => ["college-campus-visits", id] as const,
   campusVisitStats: ["college-campus-visit-stats"] as const,
   campusVisitAvailability: ["college-campus-visit-availability"] as const,
+  campusVisitSettings: ["college-campus-visit-settings"] as const,
+  campusVisitCalendar: (year: number, month: number) =>
+    ["college-campus-visit-calendar", year, month] as const,
   submissionRequests: (filters?: object) =>
     filters
       ? ["college-submission-requests", filters]

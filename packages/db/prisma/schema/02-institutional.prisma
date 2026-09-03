@@ -167,6 +167,8 @@ model College {
   mediaKits                  MediaKit[]
   campusVisits               CampusVisit[]
   campusVisitAvailabilities  CampusVisitAvailability[]
+  campusVisitSettings        CampusVisitSettings?
+  campusVisitDateOverrides   CampusVisitDateOverride[]
   announcements              Announcement[]
   siteAnnouncements          SiteAnnouncement[]
   supportTickets             SupportTicket[]

@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCampusVisitAvailability,
   useUpsertCampusVisitAvailability,
+  useCampusVisitSettings,
+  useUpsertCampusVisitSettings,
 } from "@/hooks/use-campus-visits";
 import type { CampusVisitAvailabilityEntry } from "@beaconu/types";
 
@@ -35,7 +37,6 @@ const WEEKDAY_LABELS = [
 ];
 
 interface RowState {
-  time: string;
   maxCapacity: string;
   isOff: boolean;
 }
@@ -48,10 +49,76 @@ function parseMaxCapacity(value: string): number | null {
 
 function toRowState(entry: CampusVisitAvailabilityEntry): RowState {
   return {
-    time: entry.time ?? "",
     maxCapacity: String(entry.maxCapacity),
     isOff: entry.isOff,
   };
+}
+
+function VisitTimeCard() {
+  const { data: settings, isLoading } = useCampusVisitSettings();
+  const { mutate: upsert, isPending } = useUpsertCampusVisitSettings();
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  useEffect(() => {
+    if (settings?.visitStartTime) setStartTime(settings.visitStartTime);
+    if (settings?.visitEndTime) setEndTime(settings.visitEndTime);
+  }, [settings?.visitStartTime, settings?.visitEndTime]);
+
+  function handleSave() {
+    if (!startTime || !endTime) {
+      toast.error("Set both a start and end time first");
+      return;
+    }
+    if (endTime <= startTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
+    upsert(
+      { visit_start_time: startTime, visit_end_time: endTime },
+      { onSuccess: () => toast.success("Campus working hours saved") },
+    );
+  }
+
+  return (
+    <div className="rounded-xl border bg-card p-5">
+      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Campus Visiting Hours
+      </h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        The college&apos;s working hours, shown to students — students only pick
+        a date, never a specific time. Every open day uses this same window.
+      </p>
+      {isLoading ? (
+        <Skeleton className="h-9 w-64" />
+      ) : (
+        <div className="flex items-end gap-3">
+          <div>
+            <Label className="sr-only">Start time</Label>
+            <Input
+              type="time"
+              className="h-9 w-32"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          <span className="pb-2 text-sm text-muted-foreground">to</span>
+          <div>
+            <Label className="sr-only">End time</Label>
+            <Input
+              type="time"
+              className="h-9 w-32"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
+          <Button size="sm" disabled={isPending} onClick={handleSave}>
+            {isPending ? "Saving..." : "Save"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function CampusVisitAvailabilityPage() {
@@ -86,10 +153,6 @@ export default function CampusVisitAvailabilityPage() {
   function handleSave(weekday: number) {
     const row = rows[weekday];
     if (!row) return;
-    if (!row.isOff && !row.time) {
-      toast.error("Set a time before opening this day for visits");
-      return;
-    }
     const maxCapacityValue = parseMaxCapacity(row.maxCapacity);
     if (maxCapacityValue === null) {
       toast.error("Max capacity must be a whole number of 1 or more");
@@ -99,7 +162,6 @@ export default function CampusVisitAvailabilityPage() {
     upsert(
       {
         weekday,
-        time: row.isOff ? undefined : row.time,
         max_capacity: maxCapacityValue,
         is_off: row.isOff,
       },
@@ -125,10 +187,13 @@ export default function CampusVisitAvailabilityPage() {
           Visit Availability
         </h1>
         <p className="text-sm text-muted-foreground">
-          Set one visiting time per weekday and mark any day off. Students can
-          only book dates that fall on an open weekday.
+          Set the recurring weekly pattern — which weekdays are open and how
+          many visits each can hold. One-off holidays/leave days are marked
+          directly from the calendar.
         </p>
       </div>
+
+      <VisitTimeCard />
 
       <div className="flex-1 overflow-hidden rounded-xl border shadow-sm">
         <div className="overflow-x-auto">
@@ -137,9 +202,6 @@ export default function CampusVisitAvailabilityPage() {
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="py-4 pl-6 text-xs font-semibold uppercase tracking-wide">
                   Day
-                </TableHead>
-                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
-                  Time
                 </TableHead>
                 <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide">
                   Max Visits
@@ -156,7 +218,7 @@ export default function CampusVisitAvailabilityPage() {
               {isLoading || !entries
                 ? Array.from({ length: 7 }).map((_, i) => (
                     <TableRow key={i} className="border-b last:border-0">
-                      {Array.from({ length: 5 }).map((__, j) => (
+                      {Array.from({ length: 4 }).map((__, j) => (
                         <TableCell key={j} className="py-4">
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
@@ -165,7 +227,6 @@ export default function CampusVisitAvailabilityPage() {
                   ))
                 : WEEKDAY_LABELS.map((label, weekday) => {
                     const row = rows[weekday] ?? {
-                      time: "",
                       maxCapacity: "1",
                       isOff: true,
                     };
@@ -176,20 +237,6 @@ export default function CampusVisitAvailabilityPage() {
                       >
                         <TableCell className="py-4 pl-6 font-medium">
                           {label}
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="space-y-1">
-                            <Label className="sr-only">Time</Label>
-                            <Input
-                              type="time"
-                              className="h-9 w-32"
-                              value={row.time}
-                              disabled={row.isOff}
-                              onChange={(e) =>
-                                updateRow(weekday, { time: e.target.value })
-                              }
-                            />
-                          </div>
                         </TableCell>
                         <TableCell className="py-4">
                           <Input

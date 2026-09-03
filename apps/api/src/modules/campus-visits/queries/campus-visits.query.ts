@@ -1,11 +1,14 @@
 import { prisma } from "@beaconu/db";
 import type {
   CampusVisit,
+  CampusVisitCalendarDay,
   CampusVisitListItem,
   CampusVisitListResponse,
   PaginationMeta,
 } from "@beaconu/types";
 import type { CampusVisitListQuery } from "../validators/campus-visits.validator";
+import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
+import { CampusVisitDateOverrideRepository } from "../repositories/campus-visit-date-override.repository";
 
 function mapAmbassador(
   ambassador: {
@@ -223,6 +226,79 @@ export class CampusVisitsQuery {
     };
 
     return { visits: rows.map(mapToListItem), meta };
+  }
+
+  /** One composed read for the whole month calendar — every date gets its
+   * weekday-off/holiday state, active booking count vs. capacity, and its
+   * actual visits embedded directly (bounded by capacity, realistically
+   * small per day) so clicking a calendar cell needs no extra round-trip. */
+  static async getMonthCalendar(
+    collegeId: string,
+    year: number,
+    month: number,
+  ): Promise<CampusVisitCalendarDay[]> {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const startDate = `${year}-${pad(month)}-01`;
+    const endDate = `${year}-${pad(month)}-${pad(daysInMonth)}`;
+
+    const [visits, availabilityRows, overrides] = await Promise.all([
+      prisma.campusVisit.findMany({
+        where: {
+          collegeId,
+          proposedDate: {
+            gte: new Date(startDate + "T00:00:00Z"),
+            lte: new Date(endDate + "T00:00:00Z"),
+          },
+        },
+        include: { ambassador: ambassadorInclude, college: collegeInclude },
+        orderBy: { proposedDate: "asc" },
+      }),
+      CampusVisitAvailabilityRepository.listByCollege(collegeId),
+      CampusVisitDateOverrideRepository.listForCollegeInRange(
+        collegeId,
+        startDate,
+        endDate,
+      ),
+    ]);
+
+    const availabilityByWeekday = new Map(
+      availabilityRows.map((a) => [a.weekday, a]),
+    );
+    const overrideByDate = new Map(
+      overrides.map((o) => [o.date.toISOString().split("T")[0], o]),
+    );
+    const visitsByDate = new Map<string, typeof visits>();
+    for (const v of visits) {
+      const dateStr = v.proposedDate.toISOString().split("T")[0]!;
+      const bucket = visitsByDate.get(dateStr) ?? [];
+      bucket.push(v);
+      visitsByDate.set(dateStr, bucket);
+    }
+
+    const days: CampusVisitCalendarDay[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${pad(month)}-${pad(d)}`;
+      const weekday = new Date(dateStr + "T00:00:00Z").getUTCDay();
+      const availability = availabilityByWeekday.get(weekday);
+      const override = overrideByDate.get(dateStr);
+      const dayVisits = visitsByDate.get(dateStr) ?? [];
+      const activeCount = dayVisits.filter(
+        (v) => v.status !== "cancelled",
+      ).length;
+
+      days.push({
+        date: dateStr,
+        isWeekdayOff: !availability || availability.isOff,
+        isHoliday: !!override,
+        holidayReason: override?.reason ?? null,
+        holidayOverrideId: override?.id ?? null,
+        bookingCount: activeCount,
+        capacity: availability?.maxCapacity ?? 0,
+        visits: dayVisits.map(mapToListItem),
+      });
+    }
+    return days;
   }
 
   static async getDetail(id: string): Promise<CampusVisit | null> {
