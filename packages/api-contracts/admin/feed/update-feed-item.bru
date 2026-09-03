@@ -1,0 +1,33 @@
+meta {
+  name: Update Feed Item
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/feed/{{feedId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "caption": "Updated caption for this feed post.",
+    "display_order": 1
+  }
+}
+
+docs {
+  Partial update — all fields optional (caption, thumbnail_url, video_url,
+  display_order, is_active), at least one required. video_url must still
+  be a youtube.com/youtu.be URL if provided. Requires platform_admin auth
+  + content.manage.
+}

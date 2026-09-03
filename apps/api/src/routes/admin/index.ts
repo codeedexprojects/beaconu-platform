@@ -23,6 +23,7 @@ import iconsRoutes from "@/modules/platform-admin/routes/icons.routes";
 import financialAidLoansRoutes from "@/modules/platform-admin/routes/financial-aid-loans.routes";
 import starterGuideRoutes from "@/modules/platform-admin/routes/starter-guide.routes";
 import shortsRoutes from "@/modules/platform-admin/routes/shorts.routes";
+import feedRoutes from "@/modules/platform-admin/routes/feed.routes";
 import videoTestimonialsRoutes from "@/modules/platform-admin/routes/video-testimonials.routes";
 import collegeTicketsRoutes from "@/modules/support/routes/platform-ticket-super-admin.routes";
 import notificationsRoutes from "@/modules/notifications/routes/platform-admin.routes";
@@ -53,6 +54,7 @@ router.use("/icons", iconsRoutes);
 router.use("/financial-aid/loans", financialAidLoansRoutes);
 router.use("/starter-guide", starterGuideRoutes);
 router.use("/shorts", shortsRoutes);
+router.use("/feed", feedRoutes);
 router.use("/video-testimonials", videoTestimonialsRoutes);
 router.use("/college-tickets", collegeTicketsRoutes);
 

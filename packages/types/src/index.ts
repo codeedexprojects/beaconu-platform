@@ -10,6 +10,7 @@ export * from "./students";
 export * from "./financial-aid";
 export * from "./starter-guide";
 export * from "./short";
+export * from "./feed";
 export * from "./video-testimonial";
 export * from "./events";
 export * from "./counselling";

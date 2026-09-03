@@ -33,6 +33,7 @@ import {
   Clapperboard,
   MessageSquareQuote,
   Headset,
+  Rss,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -208,6 +209,12 @@ const navSections: NavSection[] = [
         href: "/shorts",
         label: "Shorts",
         icon: Clapperboard,
+        permission: "content.view",
+      },
+      {
+        href: "/feed",
+        label: "Feed",
+        icon: Rss,
         permission: "content.view",
       },
       {

@@ -1,0 +1,27 @@
+meta {
+  name: List Feed
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/feed
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+params:query {
+  ~is_active: true
+  ~page: 1
+  ~limit: 20
+}
+
+docs {
+  Lists feed items for the admin panel, paginated. Requires platform_admin
+  auth + content.view. Response includes `meta` (page, limit, total,
+  totalPages, hasNextPage, hasPreviousPage) alongside `data`.
+}

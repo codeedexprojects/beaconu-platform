@@ -82,6 +82,7 @@ CREATE SEQUENCE IF NOT EXISTS "entrance_exam_seq";
 CREATE SEQUENCE IF NOT EXISTS "event_seq";
 CREATE SEQUENCE IF NOT EXISTS "event_registration_seq";
 CREATE SEQUENCE IF NOT EXISTS "fee_structure_seq";
+CREATE SEQUENCE IF NOT EXISTS "feed_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_addon_service_seq";
 CREATE SEQUENCE IF NOT EXISTS "hostel_enrollment_seq";

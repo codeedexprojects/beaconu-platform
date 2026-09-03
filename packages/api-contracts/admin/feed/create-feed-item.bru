@@ -1,0 +1,49 @@
+meta {
+  name: Create Feed Item
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/feed
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "caption": "Highlights from our latest campus fest — students, faculty, and a lot of energy.",
+    "thumbnail_url": "https://cdn.example.com/feed/thumb-1.jpg",
+    "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "display_order": 0
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("feedId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Creates a new feed item. Requires platform_admin auth + content.manage.
+
+  - caption: required, plain text, up to 2000 chars.
+  - thumbnail_url: required, must be a valid URL. Upload via the generic
+    /api/v1/admin/uploads/presign + /verify flow first, then pass the
+    resulting permanent URL here.
+  - video_url: required, must be a youtube.com or youtu.be URL — no file
+    upload, just the link.
+  - display_order: optional, defaults to 0.
+}
