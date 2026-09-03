@@ -1,0 +1,23 @@
+meta {
+  name: Deactivate Referral Code
+  type: http
+  seq: 16
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/associate/referral-codes/{{referralCodeId}}/deactivate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deactivates one of the authenticated associate admin's own referral codes
+  (isActive: false). Ownership-checked — 404 if the code belongs to someone else.
+  Requires: associate admin access token (blink_associate userType).
+
+  Tables: referral_codes
+}

@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { getReferralCodeCookie } from "@/lib/cookies";
 import type {
   AchievementsDetailsInput,
   AddApplicationCourseInput,
@@ -105,10 +106,11 @@ export async function startApplication(
   cycleId: string,
   input: StartApplicationInput,
 ): Promise<StudentApplicationDto> {
-  return api.post(
-    `/api/v1/student/application-forms/${cycleId}/application`,
-    input,
-  );
+  const referralCode = getReferralCodeCookie();
+  return api.post(`/api/v1/student/application-forms/${cycleId}/application`, {
+    ...input,
+    ...(referralCode ? { referral_code: referralCode } : {}),
+  });
 }
 
 export async function addApplicationCourse(

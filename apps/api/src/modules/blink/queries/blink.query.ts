@@ -16,6 +16,105 @@ import type {
   EmployeeListQuery,
 } from "../validators/blink.validator";
 
+/** Human labels for ApplicationCourse.status, for display on the referral
+ * list screen ("Submitted", "Under Review", "Rejected" etc). Falls back to
+ * the raw status string for anything not explicitly mapped. */
+const APPLICATION_STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  submitted: "Submitted",
+  under_review: "Under Review",
+  eligibility_check: "Eligibility Check",
+  assessment_pending: "Assessment Pending",
+  assessment_completed: "Assessment Completed",
+  interview_pending: "Interview Pending",
+  interview_completed: "Interview Completed",
+  shortlisted: "Shortlisted",
+  offer_issued: "Offer Issued",
+  token_paid: "Token Paid",
+  enrolled: "Enrolled",
+  rejected: "Rejected",
+  dropped_out: "Dropped Out",
+  deferred: "Deferred",
+  withdrawn: "Withdrawn",
+};
+
+function mapReferralListRow(r: {
+  id: string;
+  status: string;
+  createdAt: Date;
+  statusUpdatedAt: Date | null;
+  student: {
+    id: string;
+    fullName: string;
+    email: string | null;
+    phoneNumber: string | null;
+    avatarUrl: string | null;
+  };
+  blinkUser: { id: string; fullName: string; email: string };
+  referralCode: {
+    college: { id: string; name: string };
+    course: { id: string; name: string } | null;
+  };
+  commission: { id: string; netPayout: unknown; status: string } | null;
+  applicationCourse: {
+    status: string;
+    course: {
+      id: string;
+      name: string;
+      department: { id: string; name: string } | null;
+    };
+    application: { college: { id: string; name: string } };
+  } | null;
+}) {
+  return {
+    id: r.id,
+    student: {
+      id: r.student.id,
+      fullName: r.student.fullName,
+      email: r.student.email ?? null,
+      phoneNumber: r.student.phoneNumber ?? null,
+      avatarUrl: r.student.avatarUrl ?? null,
+    },
+    employee: {
+      id: r.blinkUser.id,
+      fullName: r.blinkUser.fullName,
+      email: r.blinkUser.email,
+    },
+    // Referral-code-level college/course — where the code was generated for,
+    // not necessarily what the student ended up applying to.
+    college: {
+      id: r.referralCode.college.id,
+      name: r.referralCode.college.name,
+    },
+    course: r.referralCode.course
+      ? { id: r.referralCode.course.id, name: r.referralCode.course.name }
+      : null,
+    status: r.status,
+    // Application-level detail — the student's actual applied course,
+    // institution (department/faculty), university, and pipeline status.
+    application: r.applicationCourse
+      ? {
+          status: r.applicationCourse.status,
+          statusLabel:
+            APPLICATION_STATUS_LABELS[r.applicationCourse.status] ??
+            r.applicationCourse.status,
+          courseName: r.applicationCourse.course.name,
+          institutionName: r.applicationCourse.course.department?.name ?? null,
+          universityName: r.applicationCourse.application.college.name,
+        }
+      : null,
+    commission: r.commission
+      ? {
+          id: r.commission.id,
+          netPayout: Number(r.commission.netPayout),
+          status: r.commission.status,
+        }
+      : null,
+    createdAt: r.createdAt.toISOString(),
+    statusUpdatedAt: r.statusUpdatedAt?.toISOString() ?? null,
+  };
+}
+
 export class BlinkQuery {
   static async getDashboardSummary(
     adminId: string,
@@ -108,46 +207,29 @@ export class BlinkQuery {
           commission: {
             select: { id: true, netPayout: true, status: true },
           },
+          applicationCourse: {
+            select: {
+              status: true,
+              course: {
+                select: {
+                  id: true,
+                  name: true,
+                  department: { select: { id: true, name: true } },
+                },
+              },
+              application: {
+                select: {
+                  college: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
         },
       }),
     ]);
 
     return {
-      referrals: rows.map((r) => ({
-        id: r.id,
-        student: {
-          id: r.student.id,
-          fullName: r.student.fullName,
-          email: r.student.email ?? null,
-          phoneNumber: r.student.phoneNumber ?? null,
-          avatarUrl: r.student.avatarUrl ?? null,
-        },
-        employee: {
-          id: r.blinkUser.id,
-          fullName: r.blinkUser.fullName,
-          email: r.blinkUser.email,
-        },
-        college: {
-          id: r.referralCode.college.id,
-          name: r.referralCode.college.name,
-        },
-        course: r.referralCode.course
-          ? {
-              id: r.referralCode.course.id,
-              name: r.referralCode.course.name,
-            }
-          : null,
-        status: r.status,
-        commission: r.commission
-          ? {
-              id: r.commission.id,
-              netPayout: Number(r.commission.netPayout),
-              status: r.commission.status,
-            }
-          : null,
-        createdAt: r.createdAt.toISOString(),
-        statusUpdatedAt: r.statusUpdatedAt?.toISOString() ?? null,
-      })),
+      referrals: rows.map(mapReferralListRow),
       meta: {
         total,
         page,
@@ -216,46 +298,29 @@ export class BlinkQuery {
           commission: {
             select: { id: true, netPayout: true, status: true },
           },
+          applicationCourse: {
+            select: {
+              status: true,
+              course: {
+                select: {
+                  id: true,
+                  name: true,
+                  department: { select: { id: true, name: true } },
+                },
+              },
+              application: {
+                select: {
+                  college: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
         },
       }),
     ]);
 
     return {
-      referrals: rows.map((r) => ({
-        id: r.id,
-        student: {
-          id: r.student.id,
-          fullName: r.student.fullName,
-          email: r.student.email ?? null,
-          phoneNumber: r.student.phoneNumber ?? null,
-          avatarUrl: r.student.avatarUrl ?? null,
-        },
-        employee: {
-          id: r.blinkUser.id,
-          fullName: r.blinkUser.fullName,
-          email: r.blinkUser.email,
-        },
-        college: {
-          id: r.referralCode.college.id,
-          name: r.referralCode.college.name,
-        },
-        course: r.referralCode.course
-          ? {
-              id: r.referralCode.course.id,
-              name: r.referralCode.course.name,
-            }
-          : null,
-        status: r.status,
-        commission: r.commission
-          ? {
-              id: r.commission.id,
-              netPayout: Number(r.commission.netPayout),
-              status: r.commission.status,
-            }
-          : null,
-        createdAt: r.createdAt.toISOString(),
-        statusUpdatedAt: r.statusUpdatedAt?.toISOString() ?? null,
-      })),
+      referrals: rows.map(mapReferralListRow),
       meta: {
         total,
         page,

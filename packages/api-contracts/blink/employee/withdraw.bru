@@ -1,0 +1,49 @@
+meta {
+  name: Request Withdrawal
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/employee/wallet/withdraw
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "amount": 500,
+    "description": "Monthly payout"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.transactionId) {
+      bru.setEnvVar("blinkWithdrawalTxnId", data.data.transactionId);
+    }
+  }
+}
+
+docs {
+  Submits a withdrawal request against the authenticated associate employee's wallet balance.
+  Requires: associate employee access token (blink_employee userType).
+
+  Validation:
+    amount      — positive number, must not exceed current balance
+    description — optional, max 255 chars
+
+  On success: creates a blink_wallet_transaction (type: debit, withdrawalStatus: pending)
+  and decrements the wallet balance atomically.
+
+  Returns 422 if amount exceeds available balance.
+  Returns 422 if no wallet exists (no commissions recorded yet).
+
+  Tables: blink_wallets, blink_wallet_transactions
+}

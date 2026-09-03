@@ -1,0 +1,23 @@
+meta {
+  name: Deactivate Referral Code
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/ambassador/referral-codes/{{referralCodeId}}/deactivate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Soft-deactivates one of the authenticated campus ambassador's own referral codes
+  (isActive: false). Ownership-checked — 404 if the code belongs to someone else.
+  Requires: campus ambassador access token (blink_ambassador userType).
+
+  Tables: referral_codes
+}

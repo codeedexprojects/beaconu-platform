@@ -1,4 +1,8 @@
-import { CryptoUtils } from "@/shared/utils";
+import { prisma } from "@beaconu/db";
+import { logger } from "@/shared/lib/logger";
+import { PaginationHelper } from "@/shared/responses/pagination";
+import { CryptoUtils, generateShortCode } from "@/shared/utils";
+import { buildCollegeReferralUrl } from "@/shared/utils/college-url.utils";
 import {
   ConflictError,
   ForbiddenError,
@@ -17,6 +21,9 @@ import {
   BankDetailsInput,
   WithdrawalInput,
   UpdateServiceChargeInput,
+  CreateReferralCodeInput,
+  ListWithdrawalRequestsQueryInput,
+  UpdateWithdrawalStatusInput,
 } from "../validators/blink.validator";
 
 function mapAmbassadorDto(a: {
@@ -358,12 +365,54 @@ export class BlinkService {
     };
   }
 
-  static async getStudentByReferral(adminId: string, referralId: string) {
-    const row = await BlinkRepository.findReferralWithStudentForAdmin(
-      referralId,
-      adminId,
-    );
-    if (!row) throw new NotFoundError("Referral not found");
+  /** Human labels for the ApplicationCourse status pipeline, in the order the
+   * "Referred Student Detail" screen's progress timeline expects. Statuses
+   * not in this map (e.g. rejected/dropped_out) are shown with their raw
+   * value rather than dropped, so nothing silently disappears. */
+  private static readonly TIMELINE_STEP_LABELS: Record<string, string> = {
+    submitted: "Application completed",
+    under_review: "Application under review",
+    eligibility_check: "Eligibility check",
+    assessment_pending: "Assessment scheduled",
+    assessment_completed: "Assessment completed",
+    interview_pending: "Interview scheduled",
+    interview_completed: "Interview completed",
+    shortlisted: "Shortlisted",
+    offer_issued: "Offer letter issued",
+    token_paid: "Token fee payment",
+    enrolled: "Admission confirmed",
+  };
+
+  private static mapReferralDetail(
+    row: NonNullable<
+      Awaited<
+        ReturnType<typeof BlinkRepository.findReferralWithStudentForAdmin>
+      >
+    >,
+  ) {
+    const applicationCourse = row.applicationCourse;
+
+    const timeline = [
+      // Every referral starts here — not an ApplicationCourse status, so it's
+      // seeded from the referral's own creation, matching "Referral link
+      // shared" as the first step regardless of what happens afterward.
+      { label: "Referral link shared", at: row.createdAt.toISOString() },
+      ...(applicationCourse?.statusLogs.map((log) => ({
+        label: this.TIMELINE_STEP_LABELS[log.toStatus] ?? log.toStatus,
+        at: log.createdAt.toISOString(),
+      })) ?? []),
+    ];
+
+    const fees =
+      applicationCourse?.studentFeeLedger.map((entry) => ({
+        label: entry.description || entry.feeCategory,
+        amount: Number(entry.netAmount),
+        paidAmount: Number(entry.paidAmount),
+        status: entry.status,
+        paymentMethod: entry.transactions[0]?.paymentMethod ?? null,
+        paidAt: entry.transactions[0]?.paidAt?.toISOString() ?? null,
+      })) ?? [];
+    const totalFeesCleared = fees.reduce((sum, f) => sum + f.paidAmount, 0);
 
     return {
       id: row.student.id,
@@ -376,16 +425,41 @@ export class BlinkService {
       referral: {
         id: row.id,
         status: row.status,
+        currentStatus: applicationCourse?.status ?? row.status,
+        timeline,
+        fees: { items: fees, totalCleared: totalFeesCleared },
+        academicDetails: applicationCourse
+          ? {
+              courseName: applicationCourse.course.name,
+              collegeName: applicationCourse.application.college.name,
+              intake:
+                applicationCourse.application.admissionCycle?.admissionYear ??
+                null,
+              studyMode: applicationCourse.course.studyMode,
+            }
+          : null,
         commission: row.commission
           ? {
               id: row.commission.id,
               netPayout: Number(row.commission.netPayout),
               status: row.commission.status,
+              payoutDueDate:
+                row.commission.payoutDueDate?.toISOString() ?? null,
+              paidAt: row.commission.paidAt?.toISOString() ?? null,
             }
           : null,
         createdAt: row.createdAt.toISOString(),
       },
     };
+  }
+
+  static async getStudentByReferral(adminId: string, referralId: string) {
+    const row = await BlinkRepository.findReferralWithStudentForAdmin(
+      referralId,
+      adminId,
+    );
+    if (!row) throw new NotFoundError("Referral not found");
+    return this.mapReferralDetail(row);
   }
 
   static async getStudentByReferralForEmployee(
@@ -397,28 +471,7 @@ export class BlinkService {
       employeeId,
     );
     if (!row) throw new NotFoundError("Referral not found");
-
-    return {
-      id: row.student.id,
-      fullName: row.student.fullName,
-      email: row.student.email ?? null,
-      phoneNumber: row.student.phoneNumber ?? null,
-      avatarUrl: row.student.avatarUrl ?? null,
-      status: row.student.status,
-      createdAt: row.student.createdAt.toISOString(),
-      referral: {
-        id: row.id,
-        status: row.status,
-        commission: row.commission
-          ? {
-              id: row.commission.id,
-              netPayout: Number(row.commission.netPayout),
-              status: row.commission.status,
-            }
-          : null,
-        createdAt: row.createdAt.toISOString(),
-      },
-    };
+    return this.mapReferralDetail(row);
   }
 
   static async getWallet(userId: string) {
@@ -457,12 +510,14 @@ export class BlinkService {
     userId: string,
     page: number,
     limit: number,
+    type?: "credit" | "debit",
   ) {
     const skip = (page - 1) * limit;
     const { total, transactions } = await BlinkRepository.getWalletTransactions(
       userId,
       skip,
       limit,
+      type,
     );
     return {
       transactions: transactions.map((t) => ({
@@ -510,6 +565,237 @@ export class BlinkService {
       withdrawalStatus: result.transaction.withdrawalStatus,
       balanceAfter: Number(result.wallet.balance),
     };
+  }
+
+  static async generateReferralCode(
+    blinkUserId: string,
+    data: CreateReferralCodeInput,
+  ) {
+    const college = await BlinkRepository.findCollegeById(data.collegeId);
+    if (!college) throw new NotFoundError("College not found");
+
+    const courseId = data.courseId ?? null;
+    if (courseId) {
+      const course = await BlinkRepository.findCourseInCollege(
+        courseId,
+        data.collegeId,
+      );
+      if (!course) throw new NotFoundError("Course not found in this college");
+    }
+
+    const existing =
+      await BlinkRepository.findActiveReferralCodeByUserCollegeCourse(
+        blinkUserId,
+        data.collegeId,
+        courseId,
+      );
+    if (existing) return existing;
+
+    // The @@unique(blinkUserId, collegeId, courseId) constraint allows only
+    // one row for this triple ever — if a previous code here was
+    // deactivated, that row still occupies the slot, so a plain create()
+    // would violate the constraint. Reactivate it with a fresh code instead.
+    const inactiveSlot =
+      await BlinkRepository.findAnyReferralCodeByUserCollegeCourse(
+        blinkUserId,
+        data.collegeId,
+        courseId,
+      );
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateShortCode();
+      const existingCode =
+        await BlinkRepository.findReferralCodeByCodeValue(code);
+      if (existingCode) continue;
+
+      const referralUrl = buildCollegeReferralUrl(college.slug, code);
+      try {
+        return inactiveSlot
+          ? await BlinkRepository.reactivateReferralCode(inactiveSlot.id, {
+              code,
+              referralUrl,
+            })
+          : await BlinkRepository.createReferralCode({
+              blinkUserId,
+              collegeId: data.collegeId,
+              courseId,
+              code,
+              referralUrl,
+            });
+      } catch (error) {
+        // Unique-constraint race on `code` — retry with a fresh code.
+        if (attempt === 4) throw error;
+      }
+    }
+    throw new ConflictError("Could not generate a unique referral code, retry");
+  }
+
+  static async listOwnReferralCodes(blinkUserId: string) {
+    const codes = await BlinkRepository.findReferralCodesByUser(blinkUserId);
+    return codes.map((c) => ({
+      id: c.id,
+      code: c.code,
+      referralUrl: c.referralUrl,
+      collegeId: c.collegeId,
+      collegeName: c.college.name,
+      courseId: c.courseId,
+      totalClicks: c.totalClicks,
+      totalRegistrations: c.totalRegistrations,
+      isActive: c.isActive,
+      createdAt: c.createdAt.toISOString(),
+    }));
+  }
+
+  static async deactivateReferralCode(blinkUserId: string, codeId: string) {
+    const code = await BlinkRepository.findReferralCodeById(codeId);
+    if (!code || code.blinkUserId !== blinkUserId) {
+      throw new NotFoundError("Referral code not found");
+    }
+    const updated = await BlinkRepository.updateReferralCodeActive(
+      codeId,
+      false,
+    );
+    return { id: updated.id, isActive: updated.isActive };
+  }
+
+  static async listWithdrawalRequests(query: ListWithdrawalRequestsQueryInput) {
+    const { status, page, limit } = query;
+    const { rows, total } = await BlinkRepository.listWithdrawalRequests(
+      { status },
+      page,
+      limit,
+    );
+
+    return {
+      requests: rows.map((r) => ({
+        id: r.id,
+        blinkUser: {
+          id: r.blinkUser.id,
+          fullName: r.blinkUser.fullName,
+          email: r.blinkUser.email,
+        },
+        amount: Number(r.amount),
+        withdrawalStatus: r.withdrawalStatus,
+        description: r.description ?? null,
+        reviewRemarks: r.reviewRemarks ?? null,
+        createdAt: r.createdAt.toISOString(),
+      })),
+      meta: PaginationHelper.createMeta(total, page, limit),
+    };
+  }
+
+  static async updateWithdrawalStatus(
+    transactionId: string,
+    data: UpdateWithdrawalStatusInput,
+    adminId: string,
+  ) {
+    const transaction =
+      await BlinkRepository.findWithdrawalTransactionById(transactionId);
+    if (!transaction || transaction.withdrawalStatus === null) {
+      throw new NotFoundError("Withdrawal request not found");
+    }
+    if (transaction.withdrawalStatus !== "pending") {
+      throw new ConflictError(
+        "This withdrawal request has already been reviewed",
+      );
+    }
+
+    const amount = Number(transaction.amount);
+    const updated =
+      data.status === "approved"
+        ? await BlinkRepository.approveWithdrawal(
+            transactionId,
+            adminId,
+            data.remarks,
+          )
+        : await BlinkRepository.rejectWithdrawal(
+            transactionId,
+            transaction.blinkUserId,
+            amount,
+            adminId,
+            data.remarks,
+          );
+
+    logger.info(
+      {
+        transactionId,
+        blinkUserId: transaction.blinkUserId,
+        status: updated.withdrawalStatus,
+        adminId,
+      },
+      "Blink withdrawal request reviewed",
+    );
+
+    return {
+      id: updated.id,
+      withdrawalStatus: updated.withdrawalStatus,
+      reviewRemarks: updated.reviewRemarks ?? null,
+    };
+  }
+
+  static async resolveReferralCode(code: string) {
+    const referralCode =
+      await BlinkRepository.findReferralCodeByCodeWithDetails(code);
+    if (!referralCode || !referralCode.isActive) {
+      throw new NotFoundError("Referral code not found");
+    }
+    await BlinkRepository.incrementReferralCodeClicks(referralCode.id);
+    return {
+      isValid: true,
+      collegeSlug: referralCode.college.slug,
+      collegeName: referralCode.college.name,
+      courseId: referralCode.course?.id ?? null,
+      courseName: referralCode.course?.name ?? null,
+    };
+  }
+
+  /**
+   * Best-effort referral attachment at application-start time. Never throws —
+   * a bad/expired referral code, or any other failure here, must not prevent
+   * the student's application from being created.
+   */
+  static async attachReferral(
+    studentId: string,
+    applicationId: string,
+    applicationCourseId: string,
+    referralCode: string,
+  ) {
+    try {
+      const code =
+        await BlinkRepository.findActiveReferralCodeByCode(referralCode);
+      if (!code) return;
+
+      await prisma.application.update({
+        where: { id: applicationId },
+        data: { referralCodeId: code.id },
+      });
+
+      const existingReferral =
+        await BlinkRepository.findExistingReferralForStudentAndUser(
+          studentId,
+          code.blinkUserId,
+        );
+      if (existingReferral) return;
+
+      await BlinkRepository.createReferral({
+        referralCodeId: code.id,
+        blinkUserId: code.blinkUserId,
+        studentId,
+        applicationCourseId,
+        status: "registered",
+        statusHistory: [{ status: "registered", at: new Date().toISOString() }],
+      });
+
+      logger.info(
+        { studentId, applicationId, referralCodeId: code.id },
+        "Referral attached to application",
+      );
+    } catch (error) {
+      logger.warn(
+        { error, studentId, applicationId, referralCode },
+        "Failed to attach referral to application — continuing without it",
+      );
+    }
   }
 
   static async updateServiceCharge(id: string, data: UpdateServiceChargeInput) {

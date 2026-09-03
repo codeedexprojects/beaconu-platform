@@ -483,6 +483,9 @@ model Course {
   appFeeCommissionValue  Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
   tuitionCommissionType  String?  @map("tuition_commission_type") @db.VarChar(10)
   tuitionCommissionValue Decimal? @map("tuition_commission_value") @db.Decimal(10, 2)
+  // Flat referral commission paid to the blink_user who referred an enrolled
+  // student through this course — a direct amount, not derived from any fee.
+  referralCommissionAmount Decimal? @map("referral_commission_amount") @db.Decimal(10, 2)
   name                   String   @db.VarChar(255)
   code                   String   @db.VarChar(30)
   duration               String?  @db.VarChar(50)

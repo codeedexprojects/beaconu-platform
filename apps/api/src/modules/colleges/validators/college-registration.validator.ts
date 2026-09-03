@@ -257,6 +257,11 @@ export const createCourseSchema = z.object({
   intakeCapacity: z.number().int().positive().optional().nullable(),
   studyMode: z.enum(["full_time", "part_time", "online"]).default("full_time"),
   coverImageUrl: optionalUrlSchema,
+  referralCommissionAmount: z.coerce
+    .number()
+    .nonnegative()
+    .optional()
+    .nullable(),
   tabs: courseCreateTabsSchema.optional(),
   tabData: courseCreateTabDataSchema.optional(),
 });

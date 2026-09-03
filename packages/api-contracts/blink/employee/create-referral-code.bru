@@ -1,0 +1,58 @@
+meta {
+  name: Create Referral Code
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/employee/referral-codes
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "collegeId": "{{collegeId}}",
+    "courseId": "{{courseId}}"
+  }
+}
+
+vars:pre-request {
+  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJCTFUtNDkiLCJ1c2VyVHlwZSI6ImJsaW5rX2VtcGxveWVlIiwicm9sZUlkIjoiQkxSLTIiLCJwZXJtaXNzaW9ucyI6WyJibGluazpkYXNoYm9hcmQ6dmlldyIsImJsaW5rOnJlZmVycmFsczptYW5hZ2UiLCJibGluazpwcm9maWxlOnZpZXciXSwic2Vzc2lvbklkIjoiVVNTLTU0NSIsImlhdCI6MTc4ODMzMzg0MCwiZXhwIjoxNzk2MTA5ODQwfQ.Qaj7hRDXZowIVu-nA2mBVe9kVE4zNZXTiQtQ8Ajhgzg
+  collegeId: CLG-10
+  courseId: CRS-19
+  baseUrl: http://localhost:4000
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("referralCodeId", data.data.id);
+    }
+    if (data.data && data.data.code) {
+      bru.setEnvVar("referralCodeValue", data.data.code);
+    }
+  }
+}
+
+docs {
+  Generates (or returns the existing) referral code for the authenticated associate
+  employee, scoped to a college and optionally a specific course.
+  Requires: associate employee access token (blink_employee userType).
+  
+  Body:
+    collegeId — required
+    courseId  — optional; omit for a college-wide code
+  
+  Get-or-create: calling this again with the same collegeId+courseId returns the
+  SAME code rather than generating a new one (unique on blinkUserId+collegeId+courseId).
+  
+  Sets referralCodeId and referralCodeValue env vars for downstream requests.
+  Tables: referral_codes
+}

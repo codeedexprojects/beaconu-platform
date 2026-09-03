@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
+import { BlinkCommissionService } from "@/modules/blink/services/commission.service";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
 import { PendingEnrollmentQuery } from "../queries/pending-enrollment.query";
@@ -175,6 +176,12 @@ export class EnrollmentService {
         changedByType: "staff_member",
         changedById: staffId,
       });
+
+      await BlinkCommissionService.creditCommissionForEnrollment(
+        tx,
+        applicationCourseId,
+        course.course.referralCommissionAmount,
+      );
 
       await BeaconuCardService.ensureCardForStudent(
         tx,

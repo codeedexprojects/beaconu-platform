@@ -44,6 +44,14 @@ export interface ReferralCommissionSnippet {
   status: string;
 }
 
+export interface ReferralApplicationSnippet {
+  status: string;
+  statusLabel: string;
+  courseName: string;
+  institutionName: string | null;
+  universityName: string;
+}
+
 export interface ReferralListItem {
   id: string;
   student: ReferralStudentSnippet;
@@ -61,6 +69,7 @@ export interface ReferralListItem {
     name: string;
   } | null;
   status: string;
+  application: ReferralApplicationSnippet | null;
   commission: ReferralCommissionSnippet | null;
   createdAt: string;
   statusUpdatedAt: string | null;

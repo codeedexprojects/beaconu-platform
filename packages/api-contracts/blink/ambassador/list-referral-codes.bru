@@ -1,0 +1,32 @@
+meta {
+  name: List Referral Codes
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/referral-codes
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("referralCodeId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists all referral codes owned by the authenticated campus ambassador, with
+  click and registration counts.
+  Requires: campus ambassador access token (blink_ambassador userType).
+
+  Tables: referral_codes
+}

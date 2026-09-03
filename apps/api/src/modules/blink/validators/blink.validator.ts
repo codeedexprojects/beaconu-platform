@@ -105,12 +105,19 @@ export type EmployeeListQuery = z.infer<typeof employeeListQuerySchema>;
 
 export const referralListQuerySchema = z.object({
   status: z
-    .enum(["registered", "rejected", "confirmed", "dropped_out"])
+    .enum(["registered", "rejected", "confirmed", "dropped_out", "enrolled"])
     .optional(),
   search: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+export const createReferralCodeSchema = z.object({
+  collegeId: z.string().trim().min(1, "collegeId is required"),
+  courseId: z.string().trim().min(1).optional().nullable(),
+});
+
+export type CreateReferralCodeInput = z.infer<typeof createReferralCodeSchema>;
 
 export type RegisterAssociateEmployeeInput = z.infer<
   typeof registerAssociateEmployeeSchema
@@ -141,6 +148,7 @@ export const withdrawalSchema = z.object({
 });
 
 export const walletTransactionQuerySchema = z.object({
+  type: z.enum(["credit", "debit"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -149,6 +157,23 @@ export type BankDetailsInput = z.infer<typeof bankDetailsSchema>;
 export type WithdrawalInput = z.infer<typeof withdrawalSchema>;
 export type WalletTransactionQuery = z.infer<
   typeof walletTransactionQuerySchema
+>;
+
+export const listWithdrawalRequestsQuerySchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+export type ListWithdrawalRequestsQueryInput = z.infer<
+  typeof listWithdrawalRequestsQuerySchema
+>;
+
+export const updateWithdrawalStatusSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  remarks: z.string().max(500).optional(),
+});
+export type UpdateWithdrawalStatusInput = z.infer<
+  typeof updateWithdrawalStatusSchema
 >;
 
 export const ambassadorProfileUpdateSchema = z.object({

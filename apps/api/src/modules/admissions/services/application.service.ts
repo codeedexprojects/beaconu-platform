@@ -6,6 +6,7 @@ import { ApplicationCourseService } from "./application-course.service";
 import { ApplicationDocumentService } from "./application-document.service";
 import { StudentsService } from "@/modules/students/services/students.service";
 import { AttemptService } from "@/modules/assessments/services/attempt.service";
+import { BlinkService } from "@/modules/blink/services/blink.service";
 import type { StartApplicationInput } from "../validators/application.validator";
 import type {
   PersonalDetailsInput,
@@ -538,8 +539,9 @@ export class ApplicationService {
     // withdrawn and so the payments module knows which selection to
     // charge. Quota-less at creation — set afterward via Change
     // Application Course Quota, same as every other course.
+    let primaryCourse;
     try {
-      await ApplicationCourseService.addCourse(
+      primaryCourse = await ApplicationCourseService.addCourse(
         created.id,
         studentId,
         {
@@ -555,6 +557,15 @@ export class ApplicationService {
       // would leave a permanently broken, course-less draft behind.
       await ApplicationRepository.hardDeleteFailedDraft(created.id);
       throw error;
+    }
+
+    if (body.referral_code) {
+      await BlinkService.attachReferral(
+        studentId,
+        created.id,
+        primaryCourse.id,
+        body.referral_code,
+      );
     }
 
     const row = await ApplicationRepository.findByIdForStudent(

@@ -344,6 +344,7 @@ export class CollegeRegistrationRepository {
         intakeCapacity: data.intakeCapacity,
         studyMode: data.studyMode,
         coverImageUrl: data.coverImageUrl || null,
+        referralCommissionAmount: data.referralCommissionAmount ?? null,
         metadata: {
           tabs,
           tabData: payloadTabData as Prisma.InputJsonValue,
@@ -407,6 +408,9 @@ export class CollegeRegistrationRepository {
         studyMode: data.studyMode,
         ...(data.coverImageUrl !== undefined && {
           coverImageUrl: data.coverImageUrl || null,
+        }),
+        ...(data.referralCommissionAmount !== undefined && {
+          referralCommissionAmount: data.referralCommissionAmount,
         }),
       },
     });

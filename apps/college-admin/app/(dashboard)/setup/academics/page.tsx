@@ -154,6 +154,7 @@ export default function SetupAcademicsPage() {
             intakeCapacity: data.intakeCapacity || null,
             eligibility: data.eligibility || null,
             coverImageUrl: data.coverImageUrl || null,
+            referralCommissionAmount: data.referralCommissionAmount ?? null,
           },
         },
         {
@@ -177,6 +178,7 @@ export default function SetupAcademicsPage() {
           intakeCapacity: data.intakeCapacity || null,
           eligibility: data.eligibility || null,
           coverImageUrl: data.coverImageUrl || null,
+          referralCommissionAmount: data.referralCommissionAmount ?? null,
           tabData: {},
         },
         {

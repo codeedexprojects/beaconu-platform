@@ -281,12 +281,11 @@ export class InterviewBookingService {
       );
     }
 
-    const application = existing
-      ? { studentId: existing.studentId }
-      : await ApplicationService.getForCollegeWithCourseStatuses(
-          applicationId,
-          collegeId,
-        );
+    const application =
+      await ApplicationService.getForCollegeWithCourseStatuses(
+        applicationId,
+        collegeId,
+      );
 
     const scheduleData: ScheduleBookingData = {
       mode: data.mode,
@@ -303,6 +302,26 @@ export class InterviewBookingService {
       application.studentId,
       collegeId,
       scheduleData,
+    );
+
+    // Scheduling an interview is what moves a course from
+    // assessment_completed/submitted into interview_pending — without this
+    // the course status never leaves its pre-interview stage even though
+    // the booking itself shows "scheduled"/"completed" (see
+    // InterviewBookingService.completeInterview, which only advances
+    // courses currently sitting in interview_pending).
+    const preInterviewStatus = application.assessmentRequired
+      ? "assessment_completed"
+      : "submitted";
+    await Promise.all(
+      application.courses
+        .filter((c) => c.status === preInterviewStatus)
+        .map((c) =>
+          ApplicationCourseService.markInterviewPending(
+            c.applicationCourseId,
+            staffId,
+          ),
+        ),
     );
 
     await this.syncMeetEvent(row);

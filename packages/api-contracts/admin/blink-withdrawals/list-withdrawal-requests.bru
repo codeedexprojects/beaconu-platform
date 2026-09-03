@@ -1,0 +1,43 @@
+meta {
+  name: List Withdrawal Requests
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/blink/withdrawals
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  ~status: pending
+  ~page: 1
+  ~limit: 20
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("blinkWithdrawalTxnId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists Blink wallet withdrawal requests (blink_wallet_transactions where type=debit)
+  for platform-admin review.
+  Requires: Platform Admin access token, blink.view permission.
+
+  Query params:
+    status (optional) — pending | approved | rejected
+    page   (optional, default 1)
+    limit  (optional, default 20, max 100)
+
+  Tables: blink_wallet_transactions, blink_users
+}

@@ -1,0 +1,44 @@
+meta {
+  name: Update Withdrawal Status
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/blink/withdrawals/{{blinkWithdrawalTxnId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "approved",
+    "remarks": "Verified and processed"
+  }
+}
+
+docs {
+  Approves or rejects a pending Blink wallet withdrawal request.
+  Requires: Platform Admin access token, blink.manage permission.
+
+  Body:
+    status  — "approved" | "rejected"
+    remarks — optional, max 500 chars
+
+  IMPORTANT — money-movement behavior differs by outcome, since the wallet
+  balance is already debited at REQUEST time (not at approval, unlike the
+  counselling module's withdrawal flow):
+    approved — status flips only, no balance change (funds already sent).
+    rejected — status flips AND the balance is credited back (reverses the
+               earlier debit); totalWithdrawn is decremented accordingly.
+
+  Returns 409 if the transaction has already been reviewed (not pending).
+  Returns 404 if the transaction id doesn't exist or isn't a withdrawal.
+
+  Tables: blink_wallet_transactions, blink_wallets
+}

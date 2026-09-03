@@ -8,6 +8,8 @@ import type {
   CollegeListQuery,
   UniversityListQuery,
   StreamListQuery,
+  CreateReferralCodeInput,
+  WalletTransactionQuery,
 } from "../validators/blink.validator";
 
 export class AssociateEmployeeController {
@@ -161,5 +163,74 @@ export class AssociateEmployeeController {
     return res
       .status(200)
       .json(ApiResponse.success("Course fetched successfully", result));
+  }
+
+  static async createReferralCode(req: Request, res: Response) {
+    const data = req.body as CreateReferralCodeInput;
+    const result = await BlinkService.generateReferralCode(req.userId!, data);
+    return res
+      .status(201)
+      .json(ApiResponse.success("Referral code ready", result));
+  }
+
+  static async listReferralCodes(req: Request, res: Response) {
+    const result = await BlinkService.listOwnReferralCodes(req.userId!);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Referral codes fetched successfully", result));
+  }
+
+  static async deactivateReferralCode(req: Request, res: Response) {
+    const id = req.params["id"] as string;
+    const result = await BlinkService.deactivateReferralCode(req.userId!, id);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Referral code deactivated", result));
+  }
+
+  static async getWallet(req: Request, res: Response) {
+    const result = await BlinkService.getWallet(req.userId!);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Wallet fetched successfully", result));
+  }
+
+  static async getWalletTransactions(req: Request, res: Response) {
+    const { page, limit, type } =
+      req.query as unknown as WalletTransactionQuery;
+    const result = await BlinkService.getWalletTransactions(
+      req.userId!,
+      page,
+      limit,
+      type,
+    );
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Transactions fetched successfully",
+          result.transactions,
+          result.meta,
+        ),
+      );
+  }
+
+  static async updateBankDetails(req: Request, res: Response) {
+    const result = await BlinkService.updateBankDetails(req.userId!, req.body);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Bank details updated successfully", result));
+  }
+
+  static async requestWithdrawal(req: Request, res: Response) {
+    const result = await BlinkService.requestWithdrawal(req.userId!, req.body);
+    return res
+      .status(201)
+      .json(
+        ApiResponse.success(
+          "Withdrawal request submitted successfully",
+          result,
+        ),
+      );
   }
 }

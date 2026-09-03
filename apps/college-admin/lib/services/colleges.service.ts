@@ -51,6 +51,7 @@ export interface Course {
   code: string;
   studyMode: string;
   coverImageUrl?: string | null;
+  referralCommissionAmount?: number | null;
   campus?: { id: string; name: string } | null;
   studyLevel?: { id: string; name: string } | null;
   discipline?: { id: string; name: string } | null;
@@ -98,6 +99,7 @@ export interface CreateCourseInput {
   eligibility?: string | null;
   campusId?: string | null;
   coverImageUrl?: string | null;
+  referralCommissionAmount?: number | null;
   tabs?: string[];
   tabData?: Record<string, unknown>;
 }

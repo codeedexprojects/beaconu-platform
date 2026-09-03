@@ -45,6 +45,11 @@ export const courseSchema = z.object({
   intakeCapacity: z.coerce.number().optional().nullable(),
   eligibility: z.string().optional().nullable(),
   coverImageUrl: z.string().optional().nullable(),
+  referralCommissionAmount: z.coerce
+    .number()
+    .nonnegative()
+    .optional()
+    .nullable(),
 });
 
 export type CourseFormData = z.infer<typeof courseSchema>;
@@ -141,6 +146,8 @@ export function BasicDetailsTab({
         intakeCapacity: editingCourse.intakeCapacity || null,
         eligibility: editingCourse.eligibility || "",
         coverImageUrl: editingCourse.coverImageUrl || "",
+        referralCommissionAmount:
+          editingCourse.referralCommissionAmount ?? null,
       });
       setNameQuery(editingCourse.name || "");
     } else {
@@ -429,6 +436,32 @@ export function BasicDetailsTab({
                 placeholder="e.g. 60"
                 {...register("intakeCapacity")}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="referralCommissionAmount"
+                className="font-semibold text-foreground"
+              >
+                Referral Commission (₹)
+              </Label>
+              <Input
+                id="referralCommissionAmount"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="e.g. 500"
+                {...register("referralCommissionAmount")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Flat amount paid to a Blink referrer when a student enrolls in
+                this course via their referral link.
+              </p>
+              {errors.referralCommissionAmount && (
+                <p className="text-xs text-destructive">
+                  {errors.referralCommissionAmount.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2 md:col-span-2">

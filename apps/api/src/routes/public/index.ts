@@ -10,9 +10,11 @@ import countriesPublicRoutes from "@/modules/countries/routes/public.routes";
 import indiaStatesPublicRoutes from "@/modules/india-states/routes/public.routes";
 import mediumsPublicRoutes from "@/modules/mediums/routes/public.routes";
 import coursesPublicRoutes from "@/modules/courses/routes/public.routes";
+import blinkReferralPublicRoutes from "@/modules/blink/routes/public.routes";
 
 const router: Router = Router();
 
+router.use("/referrals", blinkReferralPublicRoutes);
 router.use("/universities", publicUniversityRoutes);
 router.use("/college-onboarding", collegeOnboardingRoutes);
 router.use("/counsellor-requests", counsellorRequestPublicRoutes);

@@ -395,7 +395,13 @@ export class ApplicationCourseRepository {
         status: true,
         courseId: true,
         courseQuotaSeatId: true,
-        course: { select: { name: true, code: true } },
+        course: {
+          select: {
+            name: true,
+            code: true,
+            referralCommissionAmount: true,
+          },
+        },
         application: {
           select: {
             studentId: true,

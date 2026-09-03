@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, Prisma } from "@beaconu/db";
 import { BlinkUserCreateData } from "../validators/blink.validator";
 
 export class BlinkRepository {
@@ -108,6 +108,67 @@ export class BlinkRepository {
     return prisma.blinkRole.findUnique({ where: { slug } });
   }
 
+  private static readonly REFERRAL_DETAIL_INCLUDE = {
+    student: {
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phoneNumber: true,
+        avatarUrl: true,
+        status: true,
+        createdAt: true,
+      },
+    },
+    commission: {
+      select: {
+        id: true,
+        netPayout: true,
+        status: true,
+        payoutDueDate: true,
+        paidAt: true,
+      },
+    },
+    applicationCourse: {
+      select: {
+        id: true,
+        status: true,
+        course: {
+          select: {
+            name: true,
+            studyMode: true,
+          },
+        },
+        application: {
+          select: {
+            college: { select: { name: true } },
+            admissionCycle: { select: { admissionYear: true } },
+          },
+        },
+        statusLogs: {
+          orderBy: { createdAt: "asc" as const },
+          select: { fromStatus: true, toStatus: true, createdAt: true },
+        },
+        studentFeeLedger: {
+          orderBy: { createdAt: "asc" as const },
+          select: {
+            feeCategory: true,
+            description: true,
+            netAmount: true,
+            paidAmount: true,
+            status: true,
+            transactions: {
+              where: { status: "completed" },
+              orderBy: { paidAt: "desc" as const },
+              take: 1,
+              select: { paymentMethod: true, paidAt: true },
+            },
+          },
+        },
+      },
+    },
+  } satisfies Prisma.ReferralInclude;
+
   static async findReferralWithStudentForAdmin(
     referralId: string,
     adminId: string,
@@ -117,22 +178,7 @@ export class BlinkRepository {
         id: referralId,
         blinkUser: { associateParentId: adminId },
       },
-      include: {
-        student: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phoneNumber: true,
-            avatarUrl: true,
-            status: true,
-            createdAt: true,
-          },
-        },
-        commission: {
-          select: { id: true, netPayout: true, status: true },
-        },
-      },
+      include: this.REFERRAL_DETAIL_INCLUDE,
     });
   }
 
@@ -142,22 +188,7 @@ export class BlinkRepository {
   ) {
     return prisma.referral.findFirst({
       where: { id: referralId, blinkUserId: employeeId },
-      include: {
-        student: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phoneNumber: true,
-            avatarUrl: true,
-            status: true,
-            createdAt: true,
-          },
-        },
-        commission: {
-          select: { id: true, netPayout: true, status: true },
-        },
-      },
+      include: this.REFERRAL_DETAIL_INCLUDE,
     });
   }
 
@@ -219,11 +250,13 @@ export class BlinkRepository {
     blinkUserId: string,
     skip: number,
     take: number,
+    type?: "credit" | "debit",
   ) {
+    const where = { blinkUserId, ...(type ? { type } : {}) };
     const [total, transactions] = await Promise.all([
-      prisma.blinkWalletTransaction.count({ where: { blinkUserId } }),
+      prisma.blinkWalletTransaction.count({ where }),
       prisma.blinkWalletTransaction.findMany({
-        where: { blinkUserId },
+        where,
         skip,
         take,
         orderBy: { createdAt: "desc" },
@@ -306,6 +339,144 @@ export class BlinkRepository {
     });
   }
 
+  static async findCollegeById(collegeId: string) {
+    return prisma.college.findUnique({
+      where: { id: collegeId },
+      select: { id: true, name: true, slug: true },
+    });
+  }
+
+  static async findCourseInCollege(courseId: string, collegeId: string) {
+    return prisma.course.findFirst({
+      where: { id: courseId, collegeId },
+      select: { id: true, name: true },
+    });
+  }
+
+  static async findActiveReferralCodeByUserCollegeCourse(
+    blinkUserId: string,
+    collegeId: string,
+    courseId: string | null,
+  ) {
+    // Always filter by isActive here — the @@unique constraint on
+    // (blinkUserId, collegeId, courseId) means there's at most one row for
+    // this triple, so a plain findUnique/findFirst-without-isActive would
+    // keep returning a deactivated code forever and block ever creating a
+    // fresh one for the same college+course. findUnique can't express a
+    // secondary filter alongside a compound-unique `where`, so both branches
+    // use findFirst here (courseId: null is handled the same way Prisma's
+    // compound-unique lookup can't take null for a nullable member anyway).
+    return prisma.referralCode.findFirst({
+      where: { blinkUserId, collegeId, courseId, isActive: true },
+    });
+  }
+
+  static async createReferralCode(data: {
+    blinkUserId: string;
+    collegeId: string;
+    courseId: string | null;
+    code: string;
+    referralUrl: string;
+  }) {
+    return prisma.referralCode.create({ data });
+  }
+
+  /** Any row (active or not) for this triple — the @@unique constraint
+   * allows only one, so this is what createReferralCode must check before
+   * inserting, to decide between create and reactivate. */
+  static async findAnyReferralCodeByUserCollegeCourse(
+    blinkUserId: string,
+    collegeId: string,
+    courseId: string | null,
+  ) {
+    return prisma.referralCode.findFirst({
+      where: { blinkUserId, collegeId, courseId },
+    });
+  }
+
+  /** Reactivates a previously-deactivated code slot with a fresh code/url —
+   * used instead of create() when the unique (blinkUserId, collegeId,
+   * courseId) triple is already occupied by an inactive row. */
+  static async reactivateReferralCode(
+    id: string,
+    data: { code: string; referralUrl: string },
+  ) {
+    return prisma.referralCode.update({
+      where: { id },
+      data: { ...data, isActive: true, totalClicks: 0, totalRegistrations: 0 },
+    });
+  }
+
+  static async findReferralCodeByCodeValue(code: string) {
+    return prisma.referralCode.findUnique({ where: { code } });
+  }
+
+  static async findReferralCodeByCodeWithDetails(code: string) {
+    return prisma.referralCode.findUnique({
+      where: { code },
+      include: {
+        college: { select: { slug: true, name: true } },
+        course: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  static async incrementReferralCodeClicks(id: string) {
+    return prisma.referralCode.update({
+      where: { id },
+      data: { totalClicks: { increment: 1 } },
+    });
+  }
+
+  static async findActiveReferralCodeByCode(code: string) {
+    return prisma.referralCode.findFirst({
+      where: { code, isActive: true },
+    });
+  }
+
+  static async findExistingReferralForStudentAndUser(
+    studentId: string,
+    blinkUserId: string,
+  ) {
+    return prisma.referral.findUnique({
+      where: { uq_referral_student: { studentId, blinkUserId } },
+    });
+  }
+
+  static async createReferral(data: {
+    referralCodeId: string;
+    blinkUserId: string;
+    studentId: string;
+    applicationCourseId: string;
+    status: string;
+    statusHistory: Array<{ status: string; at: string }>;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const referral = await tx.referral.create({ data });
+      await tx.referralCode.update({
+        where: { id: data.referralCodeId },
+        data: { totalRegistrations: { increment: 1 } },
+      });
+      return referral;
+    });
+  }
+
+  static async findReferralCodesByUser(blinkUserId: string) {
+    return prisma.referralCode.findMany({
+      where: { blinkUserId },
+      include: { college: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async findReferralCodeById(id: string) {
+    return prisma.referralCode.findUnique({ where: { id } });
+  }
+
+  static async updateReferralCodeActive(id: string, isActive: boolean) {
+    return prisma.referralCode.update({ where: { id }, data: { isActive } });
+  }
+
   static async findActiveAmbassadorsByCollegePublic(collegeId: string) {
     return prisma.blinkUser.findMany({
       where: {
@@ -319,6 +490,155 @@ export class BlinkRepository {
         profileMetadata: true,
       },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // ── Commission (enrollment-time, tx-bound) ─────────────────────────────────
+
+  static async findReferralByApplicationCourseId(
+    tx: Prisma.TransactionClient,
+    applicationCourseId: string,
+  ) {
+    return tx.referral.findUnique({ where: { applicationCourseId } });
+  }
+
+  static async updateReferralStatus(
+    tx: Prisma.TransactionClient,
+    referralId: string,
+    status: string,
+    statusHistory: Prisma.InputJsonValue,
+  ) {
+    return tx.referral.update({
+      where: { id: referralId },
+      data: { status, statusHistory, statusUpdatedAt: new Date() },
+    });
+  }
+
+  static async createCommission(
+    tx: Prisma.TransactionClient,
+    data: {
+      referralId: string;
+      blinkUserId: string;
+      grossAmount: number;
+      gstAmount: number;
+      netPayout: number;
+      status: string;
+    },
+  ) {
+    return tx.commission.create({ data: { ...data, serviceChargeId: null } });
+  }
+
+  static async creditWallet(
+    tx: Prisma.TransactionClient,
+    blinkUserId: string,
+    commissionId: string,
+    amount: number,
+  ) {
+    const wallet = await tx.blinkWallet.upsert({
+      where: { blinkUserId },
+      create: { blinkUserId, balance: amount, totalEarned: amount },
+      update: {
+        balance: { increment: amount },
+        totalEarned: { increment: amount },
+      },
+    });
+    return tx.blinkWalletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        blinkUserId,
+        type: "credit",
+        amount,
+        description: "Commission for enrollment",
+        commissionId,
+        balanceAfter: wallet.balance,
+      },
+    });
+  }
+
+  // ── Withdrawal approval (platform-admin) ───────────────────────────────────
+
+  static async listWithdrawalRequests(
+    filters: { status?: string },
+    page: number,
+    limit: number,
+  ) {
+    const where: Prisma.BlinkWalletTransactionWhereInput = {
+      type: "debit",
+      withdrawalStatus: filters.status ?? { not: null },
+    };
+    const skip = (page - 1) * limit;
+
+    const [total, rows] = await Promise.all([
+      prisma.blinkWalletTransaction.count({ where }),
+      prisma.blinkWalletTransaction.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          blinkUser: {
+            select: { id: true, fullName: true, email: true },
+          },
+        },
+      }),
+    ]);
+
+    return { rows, total };
+  }
+
+  static async findWithdrawalTransactionById(id: string) {
+    return prisma.blinkWalletTransaction.findUnique({
+      where: { id },
+      include: {
+        blinkUser: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+  }
+
+  /** No wallet change — processWithdrawal already debited the balance at
+   * request time, so approving just confirms the payout went out. */
+  static async approveWithdrawal(
+    transactionId: string,
+    adminId: string,
+    remarks: string | undefined,
+  ) {
+    return prisma.blinkWalletTransaction.update({
+      where: { id: transactionId },
+      data: {
+        withdrawalStatus: "approved",
+        reviewedBy: adminId,
+        reviewRemarks: remarks,
+      },
+    });
+  }
+
+  /** Reverses the earlier eager debit from processWithdrawal, since the
+   * money never actually left. */
+  static async rejectWithdrawal(
+    transactionId: string,
+    blinkUserId: string,
+    amount: number,
+    adminId: string,
+    remarks: string | undefined,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const wallet = await tx.blinkWallet.update({
+        where: { blinkUserId },
+        data: {
+          balance: { increment: amount },
+          totalWithdrawn: { decrement: amount },
+        },
+      });
+
+      return tx.blinkWalletTransaction.update({
+        where: { id: transactionId },
+        data: {
+          withdrawalStatus: "rejected",
+          reviewedBy: adminId,
+          reviewRemarks: remarks,
+          balanceAfter: wallet.balance,
+        },
+      });
     });
   }
 }
