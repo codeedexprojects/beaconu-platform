@@ -404,6 +404,10 @@ export default function DashboardLayout({
                     permission: "staff.view",
                     children: [
                       {
+                        name: "Visit Requests",
+                        path: "/campus-visits",
+                      },
+                      {
                         name: "Availability",
                         path: "/campus-visits/availability",
                       },

@@ -1,4 +1,3 @@
-import { ConflictError } from "@/shared/errors";
 import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
 import type { UpsertAvailabilityInput } from "../validators/campus-visit-availability.validator";
 
@@ -16,7 +15,6 @@ function toDto(row: {
   id: string;
   collegeId: string;
   weekday: number;
-  time: Date | null;
   maxCapacity: number;
   isOff: boolean;
   createdAt: Date;
@@ -26,7 +24,6 @@ function toDto(row: {
     id: row.id,
     collegeId: row.collegeId,
     weekday: WEEKDAY_NAMES[row.weekday],
-    time: row.time ? row.time.toISOString().split("T")[1]!.slice(0, 5) : null,
     maxCapacity: row.maxCapacity,
     isOff: row.isOff,
     createdAt: row.createdAt.toISOString(),
@@ -39,7 +36,6 @@ function defaultDto(collegeId: string, weekday: number) {
     id: null,
     collegeId,
     weekday: WEEKDAY_NAMES[weekday],
-    time: null,
     maxCapacity: 1,
     isOff: true,
     createdAt: null,
@@ -49,17 +45,10 @@ function defaultDto(collegeId: string, weekday: number) {
 
 export class CampusVisitAvailabilityService {
   static async upsert(collegeId: string, data: UpsertAvailabilityInput) {
-    if (!data.is_off && !data.time) {
-      throw new ConflictError(
-        "Time is required for a weekday that is open for visits",
-      );
-    }
-
     const row = await CampusVisitAvailabilityRepository.upsert(
       collegeId,
       data.weekday,
       {
-        time: data.is_off ? null : (data.time ?? null),
         maxCapacity: data.max_capacity,
         isOff: data.is_off,
       },

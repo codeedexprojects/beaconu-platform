@@ -1,47 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Calendar, Clock, ExternalLink, Users } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  Settings,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useCollegeCampusVisits,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getErrorMessage } from "@/lib/api";
+import {
   useCollegeCampusVisitStats,
+  useCampusVisitCalendar,
+  useAddCampusVisitDateOverride,
+  useRemoveCampusVisitDateOverride,
+  useCancelCampusVisitByAdmin,
+  useCancelCampusVisitsForDate,
 } from "@/hooks/use-campus-visits";
-import { useAmbassadors } from "@/hooks/use-ambassadors";
-import type { CampusVisitStatus } from "@beaconu/types";
+import type {
+  CampusVisitCalendarDay,
+  CampusVisitListItem,
+} from "@beaconu/types";
 
-const STATUS_LABELS: Record<CampusVisitStatus, string> = {
-  pending: "Pending",
-  arrived: "Arrived",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  reassigned: "Reassigned",
-};
+const WEEKDAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const STATUS_VARIANTS: Record<
-  CampusVisitStatus,
+  string,
   "default" | "secondary" | "destructive" | "outline"
 > = {
   pending: "secondary",
@@ -52,45 +65,311 @@ const STATUS_VARIANTS: Record<
   reassigned: "secondary",
 };
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+function buildGrid(
+  days: CampusVisitCalendarDay[],
+  year: number,
+  month: number,
+) {
+  if (days.length === 0) return [];
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const cells: (CampusVisitCalendarDay | null)[] =
+    Array(firstWeekday).fill(null);
+  cells.push(...days);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (CampusVisitCalendarDay | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+function VisitRow({
+  visit,
+  onCancelled,
+}: {
+  visit: CampusVisitListItem;
+  onCancelled: () => void;
+}) {
+  const [cancelling, setCancelling] = useState(false);
+  const [message, setMessage] = useState("");
+  const { mutate: cancel, isPending } = useCancelCampusVisitByAdmin();
+  const isTerminal =
+    visit.status === "cancelled" || visit.status === "completed";
+
+  function confirm() {
+    if (!message.trim()) {
+      toast.error("A message for the student is required");
+      return;
+    }
+    cancel(
+      { visitId: visit.id, data: { message: message.trim() } },
+      {
+        onSuccess: () => {
+          toast.success(`"${visit.studentName}"'s visit cancelled`);
+          setCancelling(false);
+          setMessage("");
+          onCancelled();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{visit.studentName}</p>
+          <p className="text-xs text-muted-foreground">
+            {visit.proposedTime}
+            {visit.ambassador
+              ? ` · ${visit.ambassador.fullName}`
+              : " · Unassigned"}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant={STATUS_VARIANTS[visit.status] ?? "secondary"}>
+            {visit.status}
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-7 px-2" asChild>
+            <Link href={`/campus-visits/${visit.id}`}>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          {!isTerminal && !cancelling && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs text-destructive"
+              onClick={() => setCancelling(true)}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+      {cancelling && (
+        <div className="mt-2 space-y-2">
+          <Textarea
+            placeholder="Message to send the student..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={2}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setCancelling(false);
+                setMessage("");
+              }}
+            >
+              Back
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={isPending}
+              onClick={confirm}
+            >
+              {isPending && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              )}
+              Confirm Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DateDetailDialog({
+  day,
+  onClose,
+}: {
+  day: CampusVisitCalendarDay;
+  onClose: () => void;
+}) {
+  const { mutate: addOverride, isPending: isMarking } =
+    useAddCampusVisitDateOverride();
+  const { mutate: removeOverride, isPending: isUnmarking } =
+    useRemoveCampusVisitDateOverride();
+  const { mutate: cancelAll, isPending: isCancellingAll } =
+    useCancelCampusVisitsForDate();
+  const [bulkCancelling, setBulkCancelling] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("");
+
+  const activeVisits = day.visits.filter((v) => v.status !== "cancelled");
+
+  function toggleHoliday() {
+    if (day.isHoliday && day.holidayOverrideId) {
+      removeOverride(day.holidayOverrideId, {
+        onSuccess: () => toast.success("Holiday removed"),
+      });
+    } else {
+      addOverride(
+        { date: day.date },
+        { onSuccess: () => toast.success("Date marked as holiday") },
+      );
+    }
+  }
+
+  function confirmBulkCancel() {
+    if (!bulkMessage.trim()) {
+      toast.error("A message for the students is required");
+      return;
+    }
+    cancelAll(
+      { date: day.date, message: bulkMessage.trim() },
+      {
+        onSuccess: (result) => {
+          toast.success(`Cancelled ${result.cancelledCount} booking(s)`);
+          setBulkCancelling(false);
+          setBulkMessage("");
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {new Date(day.date + "T00:00:00Z").toLocaleDateString("en-IN", {
+              weekday: "long",
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              timeZone: "UTC",
+            })}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <p className="text-sm font-medium">
+              {day.isWeekdayOff
+                ? "Weekday closed (recurring)"
+                : day.isHoliday
+                  ? `Marked as holiday${day.holidayReason ? `: ${day.holidayReason}` : ""}`
+                  : `${day.bookingCount} / ${day.capacity} booked`}
+            </p>
+          </div>
+          {!day.isWeekdayOff && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isMarking || isUnmarking}
+              onClick={toggleHoliday}
+            >
+              {(isMarking || isUnmarking) && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              )}
+              {day.isHoliday ? "Remove Holiday" : "Mark as Holiday"}
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          {day.visits.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No bookings on this date.
+            </p>
+          ) : (
+            day.visits.map((v) => (
+              <VisitRow key={v.id} visit={v} onCancelled={() => {}} />
+            ))
+          )}
+        </div>
+
+        {activeVisits.length > 0 && (
+          <div className="border-t pt-3">
+            {!bulkCancelling ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkCancelling(true)}
+              >
+                Cancel All Bookings on This Date
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Cancels all {activeVisits.length} active booking(s) below and
+                  notifies each student.
+                </p>
+                <Textarea
+                  placeholder="Message to send every affected student..."
+                  value={bulkMessage}
+                  onChange={(e) => setBulkMessage(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setBulkCancelling(false);
+                      setBulkMessage("");
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={isCancellingAll}
+                    onClick={confirmBulkCancel}
+                  >
+                    {isCancellingAll && (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    )}
+                    Confirm Cancel All
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function CampusVisitsPage() {
-  const [statusFilter, setStatusFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [ambassadorFilter, setAmbassadorFilter] = useState("");
-  const [page, setPage] = useState(1);
-
-  const { data: ambassadorsData } = useAmbassadors();
-  const ambassadors = ambassadorsData ?? [];
+  const now = new Date();
+  const [year, setYear] = useState(now.getUTCFullYear());
+  const [month, setMonth] = useState(now.getUTCMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { data: stats, isLoading: isLoadingStats } =
     useCollegeCampusVisitStats();
+  const { data: days, isLoading } = useCampusVisitCalendar(year, month);
 
-  const { data, isLoading } = useCollegeCampusVisits({
-    status: statusFilter || undefined,
-    date: dateFilter || undefined,
-    ambassador_id: ambassadorFilter || undefined,
-    page,
-    limit: 20,
-  });
+  const weeks = useMemo(
+    () => buildGrid(days ?? [], year, month),
+    [days, year, month],
+  );
+  const selectedDay = days?.find((d) => d.date === selectedDate) ?? null;
 
-  const visits = data?.visits ?? [];
-  const meta = data?.meta;
+  function goToPrevMonth() {
+    if (month === 1) {
+      setMonth(12);
+      setYear((y) => y - 1);
+    } else {
+      setMonth((m) => m - 1);
+    }
+  }
 
-  const hasFilters = statusFilter || dateFilter || ambassadorFilter;
-
-  function clearFilters() {
-    setStatusFilter("");
-    setDateFilter("");
-    setAmbassadorFilter("");
-    setPage(1);
+  function goToNextMonth() {
+    if (month === 12) {
+      setMonth(1);
+      setYear((y) => y + 1);
+    } else {
+      setMonth((m) => m + 1);
+    }
   }
 
   return (
@@ -99,23 +378,15 @@ export default function CampusVisitsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Campus Visits</h1>
           <p className="text-sm text-muted-foreground">
-            All scheduled visits across your campus
+            All scheduled visits, by date
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {meta && (
-            <div className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>{meta.total} total visits</span>
-            </div>
-          )}
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/campus-visits/availability">
-              <Calendar className="mr-1.5 h-3.5 w-3.5" />
-              Manage Availability
-            </Link>
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/campus-visits/availability">
+            <Settings className="mr-1.5 h-3.5 w-3.5" />
+            Manage Availability
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -169,237 +440,90 @@ export default function CampusVisitsPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v === "all" ? "" : v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-9 w-48">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="arrived">Arrived</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-            <SelectItem value="reassigned">Reassigned</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => {
-            setDateFilter(e.target.value);
-            setPage(1);
-          }}
-          className="h-9 w-44"
-        />
-
-        <Select
-          value={ambassadorFilter}
-          onValueChange={(v) => {
-            setAmbassadorFilter(v === "all" ? "" : v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-9 w-56">
-            <SelectValue placeholder="All ambassadors" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All ambassadors</SelectItem>
-            {ambassadors.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.fullName}
-                {a.campusCode ? ` · ${a.campusCode}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear filters
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={goToPrevMonth}>
+            <ChevronLeft className="h-4 w-4" />
           </Button>
+          <span className="w-40 text-center text-sm font-semibold">
+            {MONTH_NAMES[month - 1]} {year}
+          </span>
+          <Button variant="outline" size="icon" onClick={goToNextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden rounded-xl border shadow-sm">
+        <div className="grid grid-cols-7 border-b bg-muted/50">
+          {WEEKDAY_HEADERS.map((d) => (
+            <div
+              key={d}
+              className="py-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-7 gap-px bg-border p-px">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        ) : (
+          <div className="divide-y">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="grid grid-cols-7 divide-x">
+                {week.map((day, di) => {
+                  if (!day)
+                    return <div key={di} className="min-h-24 bg-muted/20" />;
+                  const dayNum = Number(day.date.split("-")[2]);
+                  const closed = day.isWeekdayOff || day.isHoliday;
+                  return (
+                    <button
+                      key={di}
+                      type="button"
+                      onClick={() => setSelectedDate(day.date)}
+                      className={`flex min-h-24 flex-col items-start gap-1 p-2 text-left transition-colors hover:bg-muted/30 ${
+                        closed ? "bg-muted/40" : ""
+                      }`}
+                    >
+                      <span
+                        className={`text-sm font-medium ${closed ? "text-muted-foreground" : ""}`}
+                      >
+                        {dayNum}
+                      </span>
+                      {day.isHoliday && (
+                        <Badge variant="destructive" className="text-[10px]">
+                          Holiday
+                        </Badge>
+                      )}
+                      {!day.isHoliday && day.isWeekdayOff && (
+                        <span className="text-[10px] text-muted-foreground">
+                          Closed
+                        </span>
+                      )}
+                      {day.bookingCount > 0 && (
+                        <span className="mt-auto inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          <CalendarIcon className="h-3 w-3" />
+                          {day.bookingCount}/{day.capacity || "—"}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-hidden rounded-xl border shadow-sm">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="w-[220px] py-4 pl-6 text-xs font-semibold uppercase tracking-wide">
-                  Visitor
-                </TableHead>
-                <TableHead className="w-[200px] py-4 text-xs font-semibold uppercase tracking-wide">
-                  Contact
-                </TableHead>
-                <TableHead className="w-[180px] py-4 text-xs font-semibold uppercase tracking-wide">
-                  Ambassador
-                </TableHead>
-                <TableHead className="w-[180px] py-4 text-xs font-semibold uppercase tracking-wide">
-                  Date &amp; Time
-                </TableHead>
-                <TableHead className="w-[100px] py-4 text-xs font-semibold uppercase tracking-wide">
-                  Guests
-                </TableHead>
-                <TableHead className="w-[120px] py-4 text-xs font-semibold uppercase tracking-wide">
-                  Status
-                </TableHead>
-                <TableHead className="w-[80px] py-4 pr-6" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i} className="border-b last:border-0">
-                    {Array.from({ length: 7 }).map((__, j) => (
-                      <TableCell key={j} className="py-4">
-                        <Skeleton className="h-4 w-28" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : visits.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="py-20 text-center text-muted-foreground"
-                  >
-                    No campus visits found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                visits.map((visit) => (
-                  <TableRow
-                    key={visit.id}
-                    className="border-b last:border-0 transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="py-4 pl-6">
-                      <div className="space-y-0.5">
-                        <p className="font-medium leading-snug">
-                          {visit.studentName}
-                        </p>
-                        {visit.reasonForVisit && (
-                          <p className="max-w-[200px] truncate text-xs text-muted-foreground">
-                            {visit.reasonForVisit}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="space-y-0.5 text-sm">
-                        {visit.email && (
-                          <p className="truncate max-w-[180px]">
-                            {visit.email}
-                          </p>
-                        )}
-                        {visit.phoneNumber && (
-                          <p className="text-muted-foreground">
-                            {visit.phoneNumber}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4 text-sm">
-                      {visit.ambassador ? (
-                        <div className="space-y-0.5">
-                          <p className="font-medium">
-                            {visit.ambassador.fullName}
-                          </p>
-                          {visit.ambassador.campusCode && (
-                            <p className="text-xs text-muted-foreground">
-                              {visit.ambassador.campusCode}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">
-                          Unassigned
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex flex-col gap-1 text-sm">
-                        <span className="flex items-center gap-1.5 font-medium">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          {formatDate(visit.proposedDate)}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          {visit.proposedTime}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4 text-sm">
-                      {visit.additionalVisitorsCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                          <Users className="h-3 w-3" />+
-                          {visit.additionalVisitorsCount}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge variant={STATUS_VARIANTS[visit.status]}>
-                        {STATUS_LABELS[visit.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4 pr-6 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1.5 text-xs"
-                        asChild
-                      >
-                        <Link href={`/campus-visits/${visit.id}`}>
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          View
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {meta && meta.total > 20 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {meta.page} of {Math.ceil(meta.total / 20)} · {meta.total}{" "}
-            total
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!meta.hasNext}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      {selectedDay && (
+        <DateDetailDialog
+          day={selectedDay}
+          onClose={() => setSelectedDate(null)}
+        />
       )}
     </div>
   );

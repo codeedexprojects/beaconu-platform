@@ -20,6 +20,33 @@ router.put(
   manage,
   CollegeAdminCampusVisitController.upsertAvailability,
 );
+router.get("/settings", manage, CollegeAdminCampusVisitController.getSettings);
+router.put(
+  "/settings",
+  manage,
+  CollegeAdminCampusVisitController.upsertSettings,
+);
+router.get("/calendar", manage, CollegeAdminCampusVisitController.getCalendar);
+router.post(
+  "/date-overrides",
+  manage,
+  CollegeAdminCampusVisitController.addDateOverride,
+);
+router.delete(
+  "/date-overrides/:overrideId",
+  manage,
+  CollegeAdminCampusVisitController.removeDateOverride,
+);
+router.post(
+  "/cancel-date",
+  manage,
+  CollegeAdminCampusVisitController.cancelForDate,
+);
 router.get("/:visitId", manage, CollegeAdminCampusVisitController.getOne);
+router.patch(
+  "/:visitId/cancel",
+  manage,
+  CollegeAdminCampusVisitController.cancelVisit,
+);
 
 export default router;

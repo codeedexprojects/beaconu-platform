@@ -1,0 +1,31 @@
+meta {
+  name: Cancel All Bookings For Date (College Admin)
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/college-admin/campus-visits/cancel-date
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "date": "2026-10-24",
+    "message": "We're sorry, but the campus is closed today due to an unforeseen event. Please rebook for another date — we apologize for the inconvenience."
+  }
+}
+
+docs {
+  Cancels every pending/confirmed/arrived booking on one date at once —
+  each affected student gets their own push notification with the same
+  `message`. Response: `{ cancelledCount: number }`. Doesn't mark the
+  date as a holiday by itself — pair with Mark Date as Holiday if future
+  bookings on that date should also be blocked.
+}

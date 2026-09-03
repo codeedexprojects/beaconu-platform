@@ -187,20 +187,57 @@ model CampusVisit {
 }
 
 model CampusVisitAvailability {
-  id          String    @id @default(dbgenerated("('CVA-'::text || (nextval('campus_visit_availability_seq'::regclass))::text)"))
-  collegeId   String    @map("college_id")
-  weekday     Int       @db.SmallInt
-  time        DateTime? @db.Time
-  maxCapacity Int       @default(1) @map("max_capacity")
-  isOff       Boolean   @default(false) @map("is_off")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id          String   @id @default(dbgenerated("('CVA-'::text || (nextval('campus_visit_availability_seq'::regclass))::text)"))
+  collegeId   String   @map("college_id")
+  weekday     Int      @db.SmallInt
+  maxCapacity Int      @default(1) @map("max_capacity")
+  isOff       Boolean  @default(false) @map("is_off")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
   @@unique([collegeId, weekday], name: "uq_visit_availability_college_weekday")
   @@index([collegeId], name: "idx_visit_availability_college")
   @@map("campus_visit_availability")
+}
+
+/// One row per college — the shared campus working-hours window shown to
+/// students (e.g. 9 AM-5 PM), replacing the old per-weekday `time` field.
+/// Purely descriptive: a booking's own `proposedTime` is recorded as
+/// `visitStartTime`, students never pick a time themselves. See Plan AF.
+model CampusVisitSettings {
+  id             String   @id @default(dbgenerated("('CVS-'::text || (nextval('campus_visit_settings_seq'::regclass))::text)"))
+  collegeId      String   @unique @map("college_id")
+  visitStartTime DateTime @map("visit_start_time") @db.Time
+  visitEndTime   DateTime @map("visit_end_time") @db.Time
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@map("campus_visit_settings")
+}
+
+/// A specific calendar date marked closed regardless of its weekday's
+/// normal open/closed status (holiday, leave day, one-off closure).
+/// Distinct from CampusVisitAvailability's recurring weekly pattern.
+model CampusVisitDateOverride {
+  id        String    @id @default(dbgenerated("('CVH-'::text || (nextval('campus_visit_date_override_seq'::regclass))::text)"))
+  collegeId String    @map("college_id")
+  date      DateTime  @db.Date
+  reason    String?   @db.Text
+  isActive  Boolean   @default(true) @map("is_active")
+  createdBy String?   @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  college College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  creator StaffMember? @relation(fields: [createdBy], references: [id])
+
+  @@unique([collegeId, date], name: "uq_visit_date_override")
+  @@index([collegeId, date], name: "idx_visit_date_override_college_date")
+  @@map("campus_visit_date_overrides")
 }
 
 model MediaKit {

@@ -18,8 +18,14 @@ headers {
 body:json {
   {
     "weekday": 1,
-    "time": "10:30",
     "max_capacity": 5,
     "is_off": false
   }
+}
+
+docs {
+  Sets the recurring weekly pattern for one weekday — whether it's open
+  at all (`is_off`) and how many visits it can hold (`max_capacity`).
+  No `time` anymore — every open day uses the single college-wide time
+  set via Upsert Campus Visit Settings instead of a per-weekday time.
 }
