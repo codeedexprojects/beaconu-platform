@@ -1,0 +1,45 @@
+meta {
+  name: Get Wallet Transactions
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/wallet/transactions
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  ~page: 1
+  ~limit: 20
+  ~type: credit
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("blinkWalletTxnId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Returns paginated wallet transaction history for the authenticated campus ambassador.
+  Requires: campus ambassador access token (blink_ambassador userType).
+
+  Each item includes: type (credit/debit), amount, description, withdrawalStatus, balanceAfter, createdAt.
+
+  Query params:
+    type  (optional): credit | debit — filters to only that transaction type
+    page  (optional, default 1)
+    limit (optional, default 20, max 100)
+
+  Table: blink_wallet_transactions
+}

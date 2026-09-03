@@ -7,6 +7,7 @@ export const startApplicationSchema = z.object({
   state_of_domicile: z.string().trim().max(100).optional().nullable(),
   passport_country: z.string().trim().max(100).optional().nullable(),
   passport_number: z.string().trim().max(50).optional().nullable(),
+  referral_code: z.string().trim().max(30).optional().nullable(),
 });
 
 export const applicationCycleParamSchema = z.object({

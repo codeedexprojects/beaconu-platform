@@ -7,6 +7,10 @@ import {
   universityListQuerySchema,
   collegeListQuerySchema,
   streamListQuerySchema,
+  createReferralCodeSchema,
+  bankDetailsSchema,
+  withdrawalSchema,
+  walletTransactionQuerySchema,
 } from "../validators/blink.validator";
 import { AssociateEmployeeController } from "../controllers/associate-employee.controller";
 
@@ -71,6 +75,59 @@ router.get(
   authorizeUserType("blink_employee"),
   validate(streamListQuerySchema, "query"),
   AssociateEmployeeController.getStreamDetail,
+);
+
+router.post(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(createReferralCodeSchema),
+  AssociateEmployeeController.createReferralCode,
+);
+
+router.get(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  AssociateEmployeeController.listReferralCodes,
+);
+
+router.patch(
+  "/referral-codes/:id/deactivate",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  AssociateEmployeeController.deactivateReferralCode,
+);
+
+router.get(
+  "/wallet",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  AssociateEmployeeController.getWallet,
+);
+
+router.get(
+  "/wallet/transactions",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(walletTransactionQuerySchema, "query"),
+  AssociateEmployeeController.getWalletTransactions,
+);
+
+router.put(
+  "/wallet/bank-details",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(bankDetailsSchema),
+  AssociateEmployeeController.updateBankDetails,
+);
+
+router.post(
+  "/wallet/withdraw",
+  authenticate,
+  authorizeUserType("blink_employee"),
+  validate(withdrawalSchema),
+  AssociateEmployeeController.requestWithdrawal,
 );
 
 export default router;

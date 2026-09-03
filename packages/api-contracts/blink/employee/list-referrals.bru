@@ -10,16 +10,21 @@ get {
   auth: none
 }
 
+params:query {
+  page: 1
+  limit: 20
+  status: 
+  search: 
+}
+
 headers {
   Content-Type: application/json
   Authorization: Bearer {{accessToken}}
 }
 
-params:query {
-  page: 1
-  limit: 20
-  status:
-  search:
+vars:pre-request {
+  baseUrl: http://localhost:4000
+  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJCTFUtNDkiLCJ1c2VyVHlwZSI6ImJsaW5rX2VtcGxveWVlIiwicm9sZUlkIjoiQkxSLTIiLCJwZXJtaXNzaW9ucyI6WyJibGluazpkYXNoYm9hcmQ6dmlldyIsImJsaW5rOnJlZmVycmFsczptYW5hZ2UiLCJibGluazpwcm9maWxlOnZpZXciXSwic2Vzc2lvbklkIjoiVVNTLTU0NSIsImlhdCI6MTc4ODMzMzg0MCwiZXhwIjoxNzk2MTA5ODQwfQ.Qaj7hRDXZowIVu-nA2mBVe9kVE4zNZXTiQtQ8Ajhgzg
 }
 
 script:post-response {
@@ -34,12 +39,18 @@ script:post-response {
 docs {
   Returns a paginated list of referrals created by the authenticated associate employee.
   Requires: blink_employee access token.
-
+  
   Query params:
   - status (optional): registered | rejected | confirmed | dropped_out
   - search (optional): matches student full name, email, or phone (case-insensitive)
   - page (default: 1)
   - limit (default: 20, max: 100)
-
-  Tables: referrals, students, blink_users, referral_codes, commissions
+  
+  Each item also includes an "application" block — the student's actual applied
+  course/institution/university + pipeline status (statusLabel: Submitted, Under
+  Review, Rejected, Enrolled, etc) — null if the student hasn't started an
+  application yet.
+  
+  Tables: referrals, students, blink_users, referral_codes, colleges, courses,
+          departments, application_courses, applications, commissions
 }

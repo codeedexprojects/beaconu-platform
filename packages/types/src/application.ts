@@ -183,6 +183,7 @@ export interface StartApplicationInput {
   state_of_domicile?: string | null;
   passport_country?: string | null;
   passport_number?: string | null;
+  referral_code?: string | null;
 }
 
 export interface ApplicationCourseQuotaOption {

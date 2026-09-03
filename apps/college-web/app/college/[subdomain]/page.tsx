@@ -26,6 +26,7 @@ import { ReviewsSection } from "@/components/college-landing/reviews-section";
 import { AmbassadorsSection } from "@/components/college-landing/ambassadors-section";
 import { CtaFooter } from "@/components/college-landing/cta-footer";
 import { SiteFooter } from "@/components/college-landing/site-footer";
+import { ReferralClickTracker } from "@/components/college-landing/referral-click-tracker";
 
 interface CollegeLandingPageProps {
   params: Promise<{ subdomain: string }>;
@@ -83,6 +84,8 @@ export default async function CollegeLandingPage({
 
   return (
     <>
+      <ReferralClickTracker />
+
       <HeroSection
         collegeName={collegeDetails.name}
         altName={overviewData?.alt_name}

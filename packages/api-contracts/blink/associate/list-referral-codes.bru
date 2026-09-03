@@ -1,0 +1,32 @@
+meta {
+  name: List Referral Codes
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/associate/referral-codes
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("referralCodeId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists all referral codes owned by the authenticated associate admin, with click
+  and registration counts.
+  Requires: associate admin access token (blink_associate userType).
+
+  Tables: referral_codes
+}

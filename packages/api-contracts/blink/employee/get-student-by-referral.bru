@@ -15,14 +15,41 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+vars:pre-request {
+  referralId: RFL-1
+  baseUrl: http://localhost:4000
+  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJCTFUtNDkiLCJ1c2VyVHlwZSI6ImJsaW5rX2VtcGxveWVlIiwicm9sZUlkIjoiQkxSLTIiLCJwZXJtaXNzaW9ucyI6WyJibGluazpkYXNoYm9hcmQ6dmlldyIsImJsaW5rOnJlZmVycmFsczptYW5hZ2UiLCJibGluazpwcm9maWxlOnZpZXciXSwic2Vzc2lvbklkIjoiVVNTLTU0NSIsImlhdCI6MTc4ODMzMzg0MCwiZXhwIjoxNzk2MTA5ODQwfQ.Qaj7hRDXZowIVu-nA2mBVe9kVE4zNZXTiQtQ8Ajhgzg
+}
+
 docs {
-  Returns the student profile for a specific referral owned by the authenticated employee.
+  Returns the full "referred student detail" view — student profile, admissions
+  progress timeline, fees cleared, academic details, and commission/payout status.
   Requires: blink_employee access token.
-
+  
   Returns 404 if the referral does not exist or does not belong to this employee.
-
-  Response includes student details (name, email, phone, status) and referral
-  metadata (status, commission earned).
-
-  Tables: referrals, students, commissions
+  
+  Response shape (referral block):
+  {
+    ...student fields...,
+    "referral": {
+      "id": "RFL-...",
+      "status": "enrolled",
+      "currentStatus": "enrolled",        // live ApplicationCourse.status
+      "timeline": [
+        { "label": "Referral link shared", "at": "..." },
+        { "label": "Application completed", "at": "..." },
+        ...
+      ],
+      "fees": { "items": [...], "totalCleared": 10000 },
+      "academicDetails": { "courseName": "...", "collegeName": "...", "intake": "2024-25", "studyMode": "full_time" } | null,
+      "commission": { "id": "...", "netPayout": 500, "status": "credited", "payoutDueDate": "...", "paidAt": null } | null
+    }
+  }
+  
+  academicDetails/commission are null until the referral has a linked application/
+  commission respectively. timeline stops at whatever the current application
+  status is — no future steps fabricated.
+  
+  Tables: referrals, students, commissions, application_courses, application_status_logs,
+          student_fee_ledger, transactions, courses, colleges, admission_cycles
 }

@@ -41,6 +41,13 @@ docs {
     page    (optional, default 1)
     limit   (optional, default 20, max 100)
 
-  Each item includes: student snippet, employee snippet, college/course, commission status.
-  Tables: referrals, blink_users, students, referral_codes, colleges, courses, commissions
+  Each item includes: student snippet, employee snippet, referral-code college/course,
+  the student's actual applied course/institution/university + pipeline status
+  ("application" block — null if not yet applied), and commission status.
+
+  application.statusLabel gives a human-readable status (Submitted, Under Review,
+  Rejected, Enrolled, etc) matching ApplicationCourse.status.
+
+  Tables: referrals, blink_users, students, referral_codes, colleges, courses,
+          departments, application_courses, applications, commissions
 }

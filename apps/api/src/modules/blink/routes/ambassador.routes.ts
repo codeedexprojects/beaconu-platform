@@ -5,6 +5,10 @@ import { validate } from "@/shared/middleware/validate";
 import {
   registerAmbassadorSchema,
   collegeListQuerySchema,
+  createReferralCodeSchema,
+  bankDetailsSchema,
+  withdrawalSchema,
+  walletTransactionQuerySchema,
 } from "../validators/blink.validator";
 import { AmbassadorController } from "../controllers/ambassador.controller";
 
@@ -53,6 +57,59 @@ router.get(
   authenticate,
   authorizeUserType("blink_ambassador"),
   AmbassadorController.getCourseDetail,
+);
+
+router.post(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  validate(createReferralCodeSchema),
+  AmbassadorController.createReferralCode,
+);
+
+router.get(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.listReferralCodes,
+);
+
+router.patch(
+  "/referral-codes/:id/deactivate",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.deactivateReferralCode,
+);
+
+router.get(
+  "/wallet",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.getWallet,
+);
+
+router.get(
+  "/wallet/transactions",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  validate(walletTransactionQuerySchema, "query"),
+  AmbassadorController.getWalletTransactions,
+);
+
+router.put(
+  "/wallet/bank-details",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  validate(bankDetailsSchema),
+  AmbassadorController.updateBankDetails,
+);
+
+router.post(
+  "/wallet/withdraw",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  validate(withdrawalSchema),
+  AmbassadorController.requestWithdrawal,
 );
 
 export default router;

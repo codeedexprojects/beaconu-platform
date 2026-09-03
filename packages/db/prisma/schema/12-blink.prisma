@@ -16,6 +16,7 @@ model ReferralCode {
   referrals    Referral[]
   applications Application[]
 
+  @@unique([blinkUserId, collegeId, courseId], name: "uq_refcode_user_college_course")
   @@index([blinkUserId], name: "idx_refcodes_user")
   @@index([collegeId], name: "idx_refcodes_college")
   @@index([code], name: "idx_refcodes_code")
@@ -28,6 +29,7 @@ model Referral {
   blinkUserId         String    @map("blink_user_id")
   studentId           String    @map("student_id")
   applicationCourseId String?   @unique @map("application_course_id")
+  // Free-text: registered | confirmed | rejected | dropped_out | enrolled
   status              String    @default("registered") @db.VarChar(30)
   statusHistory       Json      @default("[]") @map("status_history")
   statusUpdatedAt     DateTime? @map("status_updated_at") @db.Timestamptz
@@ -78,7 +80,7 @@ model Commission {
   id              String    @id @default(dbgenerated("('CMN-'::text || (nextval('commission_seq'::regclass))::text)"))
   referralId      String    @unique @map("referral_id")
   blinkUserId     String    @map("blink_user_id")
-  serviceChargeId String    @map("service_charge_id")
+  serviceChargeId String?   @map("service_charge_id")
   grossAmount     Decimal   @map("gross_amount") @db.Decimal(10, 2)
   gstAmount       Decimal   @map("gst_amount") @db.Decimal(10, 2)
   netPayout       Decimal   @map("net_payout") @db.Decimal(10, 2)
@@ -91,7 +93,7 @@ model Commission {
 
   referral      Referral                 @relation(fields: [referralId], references: [id])
   blinkUser     BlinkUser                @relation(fields: [blinkUserId], references: [id])
-  serviceCharge ServiceChargeConfig      @relation(fields: [serviceChargeId], references: [id])
+  serviceCharge ServiceChargeConfig?     @relation(fields: [serviceChargeId], references: [id])
   walletTxns    BlinkWalletTransaction[]
 
   @@index([blinkUserId], name: "idx_comm_user")
@@ -126,6 +128,8 @@ model BlinkWalletTransaction {
   description      String?  @db.VarChar(255)
   commissionId     String?  @map("commission_id")
   withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
+  reviewedBy       String?  @map("reviewed_by")
+  reviewRemarks    String?  @map("review_remarks") @db.VarChar(500)
   balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 

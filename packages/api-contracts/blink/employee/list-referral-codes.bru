@@ -1,0 +1,37 @@
+meta {
+  name: List Referral Codes
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/referral-codes
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:4000
+  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJCTFUtNDkiLCJ1c2VyVHlwZSI6ImJsaW5rX2VtcGxveWVlIiwicm9sZUlkIjoiQkxSLTIiLCJwZXJtaXNzaW9ucyI6WyJibGluazpkYXNoYm9hcmQ6dmlldyIsImJsaW5rOnJlZmVycmFsczptYW5hZ2UiLCJibGluazpwcm9maWxlOnZpZXciXSwic2Vzc2lvbklkIjoiVVNTLTU0NSIsImlhdCI6MTc4ODMzMzg0MCwiZXhwIjoxNzk2MTA5ODQwfQ.Qaj7hRDXZowIVu-nA2mBVe9kVE4zNZXTiQtQ8Ajhgzg
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("referralCodeId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists all referral codes owned by the authenticated associate employee, with
+  click and registration counts.
+  Requires: associate employee access token (blink_employee userType).
+  
+  Tables: referral_codes
+}

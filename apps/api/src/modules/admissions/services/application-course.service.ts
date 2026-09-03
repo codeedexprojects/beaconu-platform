@@ -418,13 +418,13 @@ export class ApplicationCourseService {
 
   static async markInterviewPending(
     applicationCourseId: string,
-    studentId: string,
+    staffId: string,
   ) {
     await this.transitionStatus(
       applicationCourseId,
       "interview_pending",
-      "student",
-      studentId,
+      "staff_member",
+      staffId,
     );
   }
 

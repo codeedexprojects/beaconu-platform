@@ -1,0 +1,39 @@
+meta {
+  name: Get Wallet
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/employee/wallet
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:4000
+  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJCTFUtNDkiLCJ1c2VyVHlwZSI6ImJsaW5rX2VtcGxveWVlIiwicm9sZUlkIjoiQkxSLTIiLCJwZXJtaXNzaW9ucyI6WyJibGluazpkYXNoYm9hcmQ6dmlldyIsImJsaW5rOnJlZmVycmFsczptYW5hZ2UiLCJibGluazpwcm9maWxlOnZpZXciXSwic2Vzc2lvbklkIjoiVVNTLTU0NSIsImlhdCI6MTc4ODMzMzg0MCwiZXhwIjoxNzk2MTA5ODQwfQ.Qaj7hRDXZowIVu-nA2mBVe9kVE4zNZXTiQtQ8Ajhgzg
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("blinkWalletId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Returns the authenticated associate employee's wallet: balance, totalEarned, totalWithdrawn, and bank details.
+  Requires: associate employee access token (blink_employee userType).
+  
+  If no wallet exists yet (no commissions credited), returns zeroed balances with bankDetails: null.
+  
+  Table: blink_wallets
+}

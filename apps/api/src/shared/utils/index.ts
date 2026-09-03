@@ -24,3 +24,10 @@ export class CryptoUtils {
 
 export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Random unambiguous-charset short code (e.g. referral codes) — same alphabet as enrollment numbers. */
+export function generateShortCode(length = 8): string {
+  return Array.from({ length }, () =>
+    "23456789ABCDEFGHJKLMNPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 33)),
+  ).join("");
+}

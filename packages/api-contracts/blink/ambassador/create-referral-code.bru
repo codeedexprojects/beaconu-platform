@@ -1,0 +1,51 @@
+meta {
+  name: Create Referral Code
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/ambassador/referral-codes
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "collegeId": "{{collegeId}}",
+    "courseId": "{{courseId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("referralCodeId", data.data.id);
+    }
+    if (data.data && data.data.code) {
+      bru.setEnvVar("referralCodeValue", data.data.code);
+    }
+  }
+}
+
+docs {
+  Generates (or returns the existing) referral code for the authenticated campus
+  ambassador, scoped to a college and optionally a specific course.
+  Requires: campus ambassador access token (blink_ambassador userType).
+
+  Body:
+    collegeId — required
+    courseId  — optional; omit for a college-wide code
+
+  Get-or-create: calling this again with the same collegeId+courseId returns the
+  SAME code rather than generating a new one (unique on blinkUserId+collegeId+courseId).
+
+  Sets referralCodeId and referralCodeValue env vars for downstream requests.
+  Tables: referral_codes
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Resolve Referral Code
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/referrals/{{referralCodeValue}}
+  body: none
+  auth: none
+}
+
+docs {
+  Resolves a referral code by its code value (not its id) — used by college-web
+  when a visitor lands with ?ref=<code> in the URL. Increments the code's
+  totalClicks counter on every call (not deduped by session/IP in v1).
+
+  Auth: none required — public endpoint.
+
+  Returns 404 if the code doesn't exist or has been deactivated (isActive: false).
+
+  Response shape:
+  {
+    "isValid": true,
+    "collegeSlug": "...",
+    "collegeName": "...",
+    "courseId": "..." | null,
+    "courseName": "..." | null
+  }
+
+  Tables: referral_codes
+}

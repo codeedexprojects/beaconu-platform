@@ -14,6 +14,7 @@ import {
   employeeRankingQuerySchema,
   employeeListQuerySchema,
   dashboardSummaryQuerySchema,
+  createReferralCodeSchema,
 } from "../validators/blink.validator";
 import { AssociateAdminController } from "../controllers/associate-admin.controller";
 
@@ -133,6 +134,28 @@ router.patch(
   authorizeUserType("blink_associate"),
   validate(updateServiceChargeSchema),
   AssociateAdminController.updateServiceCharge,
+);
+
+router.post(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  validate(createReferralCodeSchema),
+  AssociateAdminController.createReferralCode,
+);
+
+router.get(
+  "/referral-codes",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.listReferralCodes,
+);
+
+router.patch(
+  "/referral-codes/:id/deactivate",
+  authenticate,
+  authorizeUserType("blink_associate"),
+  AssociateAdminController.deactivateReferralCode,
 );
 
 export default router;
