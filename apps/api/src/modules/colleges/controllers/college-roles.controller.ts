@@ -496,6 +496,9 @@ export class CollegeRolesController {
     const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
     const schema = z.object({
+      fullName: z.string().trim().min(2).max(255).optional(),
+      email: z.string().trim().email().optional(),
+      phoneNumber: z.string().trim().optional().nullable(),
       collegeRoleId: z.string().optional(),
       status: z.enum(["active", "inactive"]).optional(),
     });
@@ -522,9 +525,25 @@ export class CollegeRolesController {
       }
     }
 
+    if (body.email && body.email !== staff.email) {
+      const existing = await prisma.staffMember.findUnique({
+        where: { uq_staff_email_college: { email: body.email, collegeId } },
+      });
+      if (existing && existing.id !== id) {
+        throw new ConflictError(
+          "Another staff member with this email already exists",
+        );
+      }
+    }
+
     const updated = await prisma.staffMember.update({
       where: { id },
       data: {
+        ...(body.fullName !== undefined ? { fullName: body.fullName } : {}),
+        ...(body.email !== undefined ? { email: body.email } : {}),
+        ...(body.phoneNumber !== undefined
+          ? { phoneNumber: body.phoneNumber }
+          : {}),
         ...(body.collegeRoleId ? { collegeRoleId: body.collegeRoleId } : {}),
         ...(body.status ? { status: body.status } : {}),
       },

@@ -353,9 +353,17 @@ export async function inviteStaffMember(
   return api.post<StaffMemberDto>("/api/v1/college-admin/staff", data);
 }
 
+export interface UpdateStaffInput {
+  fullName?: string;
+  email?: string;
+  phoneNumber?: string | null;
+  collegeRoleId?: string;
+  status?: "active" | "inactive";
+}
+
 export async function updateStaffMember(
   id: string,
-  data: { collegeRoleId?: string; status?: "active" | "inactive" },
+  data: UpdateStaffInput,
 ): Promise<StaffMemberDto> {
   return api.patch<StaffMemberDto>(`/api/v1/college-admin/staff/${id}`, data);
 }

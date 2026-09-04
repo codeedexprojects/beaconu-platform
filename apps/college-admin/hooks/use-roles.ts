@@ -14,6 +14,7 @@ import {
   type CreateCollegeRoleInput,
   type UpdateCollegeRoleInput,
   type InviteStaffInput,
+  type UpdateStaffInput,
 } from "@/lib/services/colleges.service";
 
 export function useCollegePermissions(enabled = true) {
@@ -101,13 +102,8 @@ export function useUpdateStaffMember() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: { collegeRoleId?: string; status?: "active" | "inactive" };
-    }) => updateStaffMember(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateStaffInput }) =>
+      updateStaffMember(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.staff });
     },

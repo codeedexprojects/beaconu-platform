@@ -20,6 +20,23 @@ auth:bearer {
 
 body:json {
   {
+    "fullName": "Jane Doe",
+    "email": "jane@college.edu",
+    "phoneNumber": "+91 98765 43210",
+    "collegeRoleId": "",
     "status": "inactive"
   }
+}
+
+docs {
+  Partial update of a staff member. All fields optional, at least one
+  expected. Requires staff.manage; cannot be used to modify your own
+  staff record (403).
+
+  fullName / email / phoneNumber — profile edit fields.
+  collegeRoleId — must belong to the same college.
+  status — active | inactive.
+
+  Returns 409 if email is changed to one already used by another staff
+  member at this college.
 }
