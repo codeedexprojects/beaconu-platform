@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,6 +50,7 @@ import {
   useUpdateStaffMember,
 } from "@/hooks/use-roles";
 import { useAuthStore } from "@/store";
+import type { StaffMemberDto } from "@/lib/services/colleges.service";
 
 const staffSchema = z.object({
   fullName: z
@@ -63,6 +65,19 @@ const staffSchema = z.object({
 });
 
 type StaffFormData = z.infer<typeof staffSchema>;
+
+const editStaffSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(2, "Full name must be at least 2 characters")
+    .max(255),
+  email: z.string().trim().email("Enter a valid email address"),
+  phoneNumber: z.string().trim().optional().nullable(),
+  collegeRoleId: z.string().min(1, "Please select a security role"),
+});
+
+type EditStaffFormData = z.infer<typeof editStaffSchema>;
 
 export default function StaffDirectoryPage() {
   const user = useAuthStore((state) => state.user);
@@ -80,6 +95,7 @@ export default function StaffDirectoryPage() {
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showStaffPassword, setShowStaffPassword] = useState(false);
+  const [editTarget, setEditTarget] = useState<StaffMemberDto | null>(null);
   const [statusTarget, setStatusTarget] = useState<{
     id: string;
     name: string;
@@ -98,6 +114,21 @@ export default function StaffDirectoryPage() {
       email: "",
       phoneNumber: "",
       password: "",
+      collegeRoleId: "",
+    },
+  });
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleEditSubmit,
+    reset: resetEdit,
+    formState: { errors: editErrors },
+  } = useForm<EditStaffFormData>({
+    resolver: zodResolver(editStaffSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phoneNumber: "",
       collegeRoleId: "",
     },
   });
@@ -147,6 +178,30 @@ export default function StaffDirectoryPage() {
         reset();
       },
     });
+  };
+
+  const handleOpenEdit = (member: StaffMemberDto) => {
+    if (!canManageStaff || isSelf(member.id)) return;
+    setEditTarget(member);
+    resetEdit({
+      fullName: member.fullName,
+      email: member.email,
+      phoneNumber: member.phoneNumber ?? "",
+      collegeRoleId: member.collegeRoleId,
+    });
+  };
+
+  const onEditSubmit = (data: EditStaffFormData) => {
+    if (!editTarget) return;
+    updateStaff(
+      { id: editTarget.id, data },
+      {
+        onSuccess: () => {
+          toast.success(`Staff member "${data.fullName}" updated`);
+          setEditTarget(null);
+        },
+      },
+    );
   };
 
   if (loadingRoles || loadingStaff) {
@@ -271,26 +326,37 @@ export default function StaffDirectoryPage() {
 
                     <TableCell className="text-right pr-6">
                       {canManageStaff && !isSelf(member.id) ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`text-xs px-2.5 py-1 h-7 ${
-                            member.status === "active"
-                              ? "text-amber-600 hover:text-amber-700"
-                              : "text-green-600 hover:text-green-700"
-                          }`}
-                          onClick={() =>
-                            handleToggleStatus(
-                              member.id,
-                              member.status,
-                              member.fullName,
-                            )
-                          }
-                        >
-                          {member.status === "active"
-                            ? "Suspend"
-                            : "Re-activate"}
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => handleOpenEdit(member)}
+                          >
+                            <Pencil className="mr-1 h-3 w-3" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`text-xs px-2.5 py-1 h-7 ${
+                              member.status === "active"
+                                ? "text-amber-600 hover:text-amber-700"
+                                : "text-green-600 hover:text-green-700"
+                            }`}
+                            onClick={() =>
+                              handleToggleStatus(
+                                member.id,
+                                member.status,
+                                member.fullName,
+                              )
+                            }
+                          >
+                            {member.status === "active"
+                              ? "Suspend"
+                              : "Re-activate"}
+                          </Button>
+                        </div>
                       ) : null}
                     </TableCell>
                   </TableRow>
@@ -429,6 +495,101 @@ export default function StaffDirectoryPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     Send Invitation
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Staff Modal */}
+      {editTarget && canManageStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg shadow-2xl border-border bg-card/90">
+            <CardHeader>
+              <CardTitle>Edit Staff Member</CardTitle>
+              <CardDescription>
+                Update profile details and role assignment for{" "}
+                {editTarget.fullName}.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={handleEditSubmit(onEditSubmit)}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="edit-staff-name">Full Name</Label>
+                  <Input
+                    id="edit-staff-name"
+                    placeholder="e.g. John Doe"
+                    {...registerEdit("fullName")}
+                  />
+                  {editErrors.fullName && (
+                    <p className="text-xs text-destructive">
+                      {editErrors.fullName.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-staff-email">Email Address</Label>
+                  <Input
+                    id="edit-staff-email"
+                    placeholder="e.g. john@college.edu"
+                    {...registerEdit("email")}
+                  />
+                  {editErrors.email && (
+                    <p className="text-xs text-destructive">
+                      {editErrors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-staff-phone">Phone Number</Label>
+                  <Input
+                    id="edit-staff-phone"
+                    placeholder="e.g. +91 98765 43210"
+                    {...registerEdit("phoneNumber")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-staff-role">Role Scope Binding</Label>
+                  <select
+                    id="edit-staff-role"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    {...registerEdit("collegeRoleId")}
+                  >
+                    <option value="">Select a security role...</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </select>
+                  {editErrors.collegeRoleId && (
+                    <p className="text-xs text-destructive">
+                      {editErrors.collegeRoleId.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditTarget(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isUpdatingStaff}>
+                    {isUpdatingStaff && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save Changes
                   </Button>
                 </div>
               </form>
